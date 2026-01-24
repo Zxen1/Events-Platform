@@ -422,18 +422,22 @@
                         };
                         
                         // Check for editable field customizations
-                        var customNameInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Field name"]');
-                        var customPlaceholderInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Placeholder text"]');
-                        var customTooltipInput = wrapper.querySelector('.formbuilder-field-input[placeholder="Tooltip text"]');
+                        var customNameInput = wrapper.querySelector('.formbuilder-field-input');
+                        var customPlaceholderInput = wrapper.querySelector('.formbuilder-field-placeholder');
+                        var customTooltipInput = wrapper.querySelector('.formbuilder-field-tooltip');
+                        var customInstructionInput = wrapper.querySelector('.formbuilder-field-instruction');
                         
                         if (customNameInput && customNameInput.value.trim()) {
                             field.name = customNameInput.value.trim();
                         }
                         if (customPlaceholderInput && customPlaceholderInput.value.trim()) {
-                            field.customPlaceholder = customPlaceholderInput.value.trim();
+                            field.placeholder = customPlaceholderInput.value.trim();
                         }
                         if (customTooltipInput && customTooltipInput.value.trim()) {
-                            field.customTooltip = customTooltipInput.value.trim();
+                            field.tooltip = customTooltipInput.value.trim();
+                        }
+                        if (customInstructionInput && customInstructionInput.value.trim()) {
+                            field.instruction = customInstructionInput.value.trim();
                         }
                         
                         // Collect options for dropdown/radio fields
@@ -2549,12 +2553,13 @@
             // Declare variables that will be used in checkModifiedState
             var selectedAmenities = fieldData.selectedAmenities;
             var optionsContainer = null;
-            var nameInput, placeholderInput, tooltipInput, modifyButton;
+            var nameInput, placeholderInput, tooltipInput, instructionInput, modifyButton;
             
             // Get default values from fieldset definition
             var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name) : '';
             var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || '') : '';
             var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || '') : '';
+            var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
             var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
             
             // Track modification state (must be defined before it's called)
@@ -2562,10 +2567,12 @@
                 var nameValue = nameInput ? nameInput.value.trim() : '';
                 var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
                 var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
+                var instructionValue = instructionInput ? instructionInput.value.trim() : '';
                 
                 var hasNameOverride = nameValue !== '' && nameValue !== defaultName;
                 var hasPlaceholderOverride = placeholderValue !== '' && placeholderValue !== defaultPlaceholder;
                 var hasTooltipOverride = tooltipValue !== '' && tooltipValue !== defaultTooltip;
+                var hasInstructionOverride = instructionValue !== '' && instructionValue !== defaultInstruction;
                 
                 // Check if options differ from defaults (default is empty array)
                 var hasOptions = false;
@@ -2579,7 +2586,7 @@
                 // Check if amenities differ from defaults (default is empty array)
                 var hasAmenities = needsAmenities && selectedAmenities && selectedAmenities.length > 0;
                 
-                var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasOptions || hasAmenities;
+                var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasInstructionOverride || hasOptions || hasAmenities;
                 
                 if (modifyButton) {
                     if (isModified) {
@@ -2598,10 +2605,12 @@
                     var nameValue = nameInput ? nameInput.value.trim() : '';
                     var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
                     var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
+                    var instructionValue = instructionInput ? instructionInput.value.trim() : '';
                     var currentState = {
                         name: hasNameOverride ? nameValue : '',
                         placeholder: hasPlaceholderOverride ? placeholderValue : '',
                         tooltip: hasTooltipOverride ? tooltipValue : '',
+                        instruction: hasInstructionOverride ? instructionValue : '',
                         options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
                         selectedAmenities: hasAmenities ? selectedAmenities : []
                     };
@@ -2768,7 +2777,7 @@
             placeholderLabel.className = 'formbuilder-field-label';
             placeholderLabel.textContent = 'Placeholder';
             placeholderInput = document.createElement('textarea');
-            placeholderInput.className = 'formbuilder-field-textarea';
+            placeholderInput.className = 'formbuilder-field-textarea formbuilder-field-placeholder';
             placeholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
             placeholderInput.rows = 3;
             // Only set value if it's different from default (meaning it was modified)
@@ -2797,7 +2806,7 @@
             tooltipLabel.className = 'formbuilder-field-label';
             tooltipLabel.textContent = 'Tooltip';
             tooltipInput = document.createElement('textarea');
-            tooltipInput.className = 'formbuilder-field-textarea';
+            tooltipInput.className = 'formbuilder-field-textarea formbuilder-field-tooltip';
             tooltipInput.placeholder = defaultTooltip || 'Tooltip text';
             tooltipInput.rows = 3;
             // Only set value if it's different from default (meaning it was modified)
@@ -2822,39 +2831,34 @@
             modifyContainer.appendChild(tooltipLabel);
             modifyContainer.appendChild(tooltipInput);
             
-            // Instruction text (only for ticket_pricing and sessions fieldsets)
-            var instructionInput = null;
-            var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
-            var fieldsetKeyForInstruction = fieldsetDef && fieldsetDef.fieldset_key ? String(fieldsetDef.fieldset_key).toLowerCase() : '';
-            if (fieldsetKeyForInstruction === 'ticket_pricing' || fieldsetKeyForInstruction === 'sessions') {
-                var instructionLabel = document.createElement('label');
-                instructionLabel.className = 'formbuilder-field-label';
-                instructionLabel.textContent = 'Instruction';
-                instructionInput = document.createElement('textarea');
-                instructionInput.className = 'formbuilder-field-textarea';
-                instructionInput.placeholder = defaultInstruction || 'Instruction text shown to users';
-                instructionInput.rows = 3;
-                var customInstruction = fieldData.instruction || fieldData.fieldset_instruction || '';
-                if (customInstruction && customInstruction !== defaultInstruction) {
-                    instructionInput.value = customInstruction;
+            // Instruction text (available for all fieldsets, same as placeholder and tooltip)
+            var instructionLabel = document.createElement('label');
+            instructionLabel.className = 'formbuilder-field-label';
+            instructionLabel.textContent = 'Instruction';
+            instructionInput = document.createElement('textarea');
+            instructionInput.className = 'formbuilder-field-textarea formbuilder-field-instruction';
+            instructionInput.placeholder = defaultInstruction || 'Instruction text shown to users';
+            instructionInput.rows = 3;
+            var customInstruction = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
+            if (customInstruction && customInstruction !== defaultInstruction) {
+                instructionInput.value = customInstruction;
+                instructionInput.style.color = '#fff';
+            } else {
+                instructionInput.value = '';
+                instructionInput.style.color = '#888';
+            }
+            instructionInput.addEventListener('input', function() {
+                if (instructionInput.value && instructionInput.value !== defaultInstruction) {
                     instructionInput.style.color = '#fff';
                 } else {
                     instructionInput.value = '';
                     instructionInput.style.color = '#888';
                 }
-                instructionInput.addEventListener('input', function() {
-                    if (instructionInput.value && instructionInput.value !== defaultInstruction) {
-                        instructionInput.style.color = '#fff';
-                    } else {
-                        instructionInput.value = '';
-                        instructionInput.style.color = '#888';
-                    }
-                    checkModifiedState();
-                    notifyChange();
-                });
-                modifyContainer.appendChild(instructionLabel);
-                modifyContainer.appendChild(instructionInput);
-            }
+                checkModifiedState();
+                notifyChange();
+            });
+            modifyContainer.appendChild(instructionLabel);
+            modifyContainer.appendChild(instructionInput);
             
             fieldEditPanel.appendChild(modifyContainer);
             
@@ -2865,7 +2869,7 @@
                     name: fieldData.name || defaultName || '',
                     placeholder: fieldData.placeholder || defaultPlaceholder || '',
                     tooltip: fieldData.tooltip || fieldData.fieldset_tooltip || defaultTooltip || '',
-                    instruction: fieldData.instruction || fieldData.fieldset_instruction || defaultInstruction || '',
+                    instruction: fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || defaultInstruction || '',
                     options: fieldData.options || [],
                     selectedAmenities: fieldData.selectedAmenities || []
                 };

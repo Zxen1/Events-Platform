@@ -166,6 +166,31 @@ PREVIOUS ERRORS TO AVOID
 10. DO NOT delete this file until testing is complete
 
 ================================================================================
+INSTRUCTION SYSTEM FIX (2024-01-24)
+================================================================================
+Issue: Instructions weren't showing in forms and didn't trigger "Modified" state.
+Also: Placeholder and tooltip changes weren't triggering save/discard buttons.
+
+Root cause: captureFormbuilderState() used wrong selectors that couldn't find elements.
+
+Fixed:
+[x] formbuilder-new.js: Moved instructionInput declaration before checkModifiedState()
+[x] formbuilder-new.js: Added hasInstructionOverride to checkModifiedState()
+[x] formbuilder-new.js: Added instruction to currentState object
+[x] formbuilder-new.js: Added formbuilder-field-instruction class to textarea
+[x] formbuilder-new.js: Added formbuilder-field-placeholder class to textarea
+[x] formbuilder-new.js: Added formbuilder-field-tooltip class to textarea
+[x] formbuilder-new.js: Fixed captureFormbuilderState() to use correct selectors
+[x] formbuilder-new.js: Removed restriction - instruction now available for ALL fieldsets
+[x] save-form.php: Added instruction saving to fieldset_mods JSON
+[x] get-form.php: Added $customInstruction loading from fieldEdit
+[x] get-form.php: Added customInstruction to builtField array
+[x] fieldsets-new.js: Modified buildLabel() to accept optional instruction parameter
+[x] fieldsets-new.js: Updated ALL buildLabel calls to pass instruction
+[x] fieldsets-new.js: ticket_pricing and sessions keep their own instruction handling
+[x] fieldsets-new.css: Added generic .fieldset-instruction class
+
+================================================================================
 TESTING CHECKLIST
 ================================================================================
 [ ] 1. Clear browser cache (or use incognito mode)

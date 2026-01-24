@@ -437,7 +437,10 @@ const FieldsetBuilder = (function(){
     }
     
     // Build label with required indicator (dot) and tooltip
-    function buildLabel(name, tooltip, minLength, maxLength) {
+    // Optional 5th parameter: instruction text to display after the label
+    function buildLabel(name, tooltip, minLength, maxLength, instructionText) {
+        var wrapper = document.createDocumentFragment();
+        
         var label = document.createElement('div');
         label.className = 'fieldset-label';
         label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">●</span>';
@@ -477,7 +480,19 @@ const FieldsetBuilder = (function(){
             tipBox.textContent = tooltipText;
             label.appendChild(tipBox);
         }
-        return label;
+        
+        wrapper.appendChild(label);
+        
+        // Add instruction text if provided
+        if (instructionText && typeof instructionText === 'string' && instructionText.trim()) {
+            var instructionEl = document.createElement('div');
+            instructionEl.className = 'fieldset-instruction';
+            instructionEl.textContent = instructionText.trim();
+            instructionEl.style.marginBottom = '10px';
+            wrapper.appendChild(instructionEl);
+        }
+        
+        return wrapper;
     }
     
     // Add validation with char limit and invalid state
@@ -900,6 +915,8 @@ const FieldsetBuilder = (function(){
         
         // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder (from fieldset_mods).
         var placeholder = fieldData.customPlaceholder || fieldData.fieldset_placeholder;
+        // Canonical: fieldset_instruction (from DB). Editable override: customInstruction (from fieldset_mods).
+        var instruction = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction;
         var minLength = fieldData.min_length;
         var maxLength = fieldData.max_length;
         var fieldOptions = fieldData.fieldset_options || fieldData.options;
@@ -972,7 +989,7 @@ const FieldsetBuilder = (function(){
                 }
                 
                 // Build label with dynamic tooltip (pass null for min/max to prevent double display)
-                fieldset.appendChild(buildLabel(name, pwTooltipText, null, null));
+                fieldset.appendChild(buildLabel(name, pwTooltipText, null, null, instruction));
                 
                 // Store password settings on fieldset for computeComplete validation
                 fieldset.dataset.pwMinLength = pwMinLength;
@@ -999,7 +1016,7 @@ const FieldsetBuilder = (function(){
                 break;
 
             case 'title':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'fieldset-input input-class-1';
@@ -1011,7 +1028,7 @@ const FieldsetBuilder = (function(){
                 break;
             
             case 'coupon':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var couponInput = document.createElement('input');
                 couponInput.type = 'text';
                 couponInput.className = 'fieldset-input input-class-1';
@@ -1022,7 +1039,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'description':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var descTextarea = document.createElement('textarea');
                 descTextarea.className = 'fieldset-textarea input-class-1';
                 applyPlaceholder(descTextarea, placeholder);
@@ -1032,7 +1049,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'custom_text': // post_map_cards.custom_text
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
                 textBoxInput.className = 'fieldset-input input-class-1';
@@ -1043,7 +1060,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'custom_textarea': // post_map_cards.custom_textarea
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var editableTextarea = document.createElement('textarea');
                 editableTextarea.className = 'fieldset-textarea input-class-1';
                 applyPlaceholder(editableTextarea, placeholder);
@@ -1053,7 +1070,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'custom_dropdown': // post_map_cards.custom_dropdown
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Custom dropdown menu (no native <select> arrow). Uses MenuManager + animated ▼ arrow like Formbuilder menus.
                 // menu-class-1 supplies appearance; component CSS supplies layout only.
@@ -1146,7 +1163,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'custom_radio': // post_map_cards.custom_radio
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Radio icons from Admin Settings (system_images)
                 function crGetSystemIconUrl(settingKey) {
@@ -1228,7 +1245,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'custom_checklist': // post_map_cards.custom_checklist
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Checkbox/checkmark icons from Admin Settings (system_images)
                 function ccGetSystemIconUrl(settingKey) {
@@ -1351,7 +1368,7 @@ const FieldsetBuilder = (function(){
             case 'email':
             case 'account_email':
             case 'public_email':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input input-class-1';
@@ -1363,7 +1380,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'public_phone':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
                 var prefixMenu = buildPhonePrefixMenu(container);
@@ -1391,7 +1408,7 @@ const FieldsetBuilder = (function(){
                 
             case 'address':
             case 'location': // legacy support
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var addrWrap = document.createElement('div');
                 addrWrap.className = 'fieldset-location-inputwrap';
                 var addrInputEl = document.createElement('input');
@@ -1437,7 +1454,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'city':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var cityWrap = document.createElement('div');
                 cityWrap.className = 'fieldset-location-inputwrap';
                 var cityInputEl = document.createElement('input');
@@ -1483,7 +1500,7 @@ const FieldsetBuilder = (function(){
                 
             case 'website-url':
             case 'tickets-url':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
                 urlInput.className = 'fieldset-input input-class-1';
@@ -1538,7 +1555,7 @@ const FieldsetBuilder = (function(){
                     imageTooltipText = imageRequirements;
                 }
                 
-                fieldset.appendChild(buildLabel(name, imageTooltipText, null, null));
+                fieldset.appendChild(buildLabel(name, imageTooltipText, null, null, instruction));
                 
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
@@ -2051,7 +2068,7 @@ const FieldsetBuilder = (function(){
                 break;
             
             case 'amenities':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, null, null, instruction));
                 var amenitiesGrid = document.createElement('div');
                 amenitiesGrid.className = 'fieldset-amenities-container';
                 
@@ -2242,7 +2259,7 @@ const FieldsetBuilder = (function(){
                 break;
             
             case 'age_rating':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, null, null, instruction));
                 var ageMenu = buildAgeRatingMenu(container);
                 fieldset.appendChild(ageMenu);
                 fieldset._setValue = function(val) {
@@ -2254,7 +2271,7 @@ const FieldsetBuilder = (function(){
                 
             case 'item-pricing':
                 // Item Name, Currency, Item Price (full width), then list of variants
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
 
                 function ipGetSystemPlusIconUrl() {
                     try {
@@ -4616,10 +4633,10 @@ const FieldsetBuilder = (function(){
                 tpLabelEl.style.marginBottom = '10px';
                 fieldset.appendChild(tpLabelEl);
 
-                // Instruction text from database (not hardcoded)
+                // Instruction text from database or customization
                 var tpInstructionText = '';
-                if (fieldData && fieldData.fieldset_instruction) {
-                    tpInstructionText = fieldData.fieldset_instruction;
+                if (fieldData) {
+                    tpInstructionText = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
                 }
                 if (tpInstructionText) {
                     var tpInstructionEl = document.createElement('div');
@@ -5637,10 +5654,10 @@ const FieldsetBuilder = (function(){
                 sessLabelEl.style.marginBottom = '10px';
                 fieldset.appendChild(sessLabelEl);
 
-                // Instruction text from database (not hardcoded)
+                // Instruction text from database or customization
                 var sessInstructionText = '';
-                if (fieldData && fieldData.fieldset_instruction) {
-                    sessInstructionText = fieldData.fieldset_instruction;
+                if (fieldData) {
+                    sessInstructionText = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
                 }
                 if (sessInstructionText) {
                     var sessInstructionEl = document.createElement('div');
@@ -6400,7 +6417,7 @@ const FieldsetBuilder = (function(){
                 // - Both inputs have Google Places (unrestricted)
                 // - Auto-fill ONLY empty boxes
                 // - User edits are protected
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Hidden lat/lng fields
                 var smartLatInput = document.createElement('input');
@@ -6689,7 +6706,7 @@ const FieldsetBuilder = (function(){
                 
             default:
                 // Unknown field type - use generic text input
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'fieldset-input input-class-1';

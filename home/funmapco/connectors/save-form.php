@@ -809,6 +809,13 @@ try {
                         $hasCustomizations = true;
                     }
                     
+                    // Save instruction if provided
+                    $customInstructionValue = $fieldData['customInstruction'] ?? $fieldData['instruction'] ?? '';
+                    if (is_string($customInstructionValue) && trim($customInstructionValue) !== '') {
+                        $fieldsetCustom['instruction'] = trim($customInstructionValue);
+                        $hasCustomizations = true;
+                    }
+                    
                     // Only add to JSON if there are customizations
                     if ($hasCustomizations) {
                         $fieldsetModified[$fieldsetKey] = $fieldsetCustom;

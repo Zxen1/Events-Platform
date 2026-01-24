@@ -62,6 +62,13 @@
     color: #fff;
 }
 
+/* Instruction Text (generic, for all fieldsets) */
+.fieldset-instruction {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.5;
+}
+
 .fieldset-label-tooltip {
     width: 16px;
     height: 16px;

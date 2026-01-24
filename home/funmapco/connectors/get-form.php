@@ -1176,6 +1176,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $customCheckoutOptions = null;
                 $customPlaceholder = null;
                 $customTooltip = null;
+                $customInstruction = null;
                 $selectedAmenities = null;
                 
                 // Load customizations from fieldset_mods JSON
@@ -1194,6 +1195,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     }
                     if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
                         $customTooltip = trim($fieldEdit['tooltip']);
+                    }
+                    if (isset($fieldEdit['instruction']) && is_string($fieldEdit['instruction']) && trim($fieldEdit['instruction']) !== '') {
+                        $customInstruction = trim($fieldEdit['instruction']);
                     }
                 }
                 
@@ -1225,12 +1229,15 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     $builtField['options'] = $customOptions;
                 }
                 
-                // Add custom placeholder and tooltip for editable fieldsets
+                // Add custom placeholder, tooltip, and instruction for editable fieldsets
                 if ($customPlaceholder !== null) {
                     $builtField['customPlaceholder'] = $customPlaceholder;
                 }
                 if ($customTooltip !== null) {
                     $builtField['customTooltip'] = $customTooltip;
+                }
+                if ($customInstruction !== null) {
+                    $builtField['customInstruction'] = $customInstruction;
                 }
                 
                 // Add checkout options if available
