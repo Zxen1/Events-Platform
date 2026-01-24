@@ -4618,9 +4618,7 @@ const FieldsetBuilder = (function(){
 
                 // Instruction text from database (not hardcoded)
                 var tpInstructionText = '';
-                if (instruction) {
-                    tpInstructionText = instruction;
-                } else if (fieldData && fieldData.fieldset_instruction) {
+                if (fieldData && fieldData.fieldset_instruction) {
                     tpInstructionText = fieldData.fieldset_instruction;
                 }
                 if (tpInstructionText) {
@@ -5641,9 +5639,7 @@ const FieldsetBuilder = (function(){
 
                 // Instruction text from database (not hardcoded)
                 var sessInstructionText = '';
-                if (instruction) {
-                    sessInstructionText = instruction;
-                } else if (fieldData && fieldData.fieldset_instruction) {
+                if (fieldData && fieldData.fieldset_instruction) {
                     sessInstructionText = fieldData.fieldset_instruction;
                 }
                 if (sessInstructionText) {
