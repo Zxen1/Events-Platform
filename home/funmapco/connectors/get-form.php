@@ -1200,12 +1200,16 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $fieldsetName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
                 $fieldsetKeyValue = isset($matchingFieldset['fieldset_key']) ? $matchingFieldset['fieldset_key'] : (isset($matchingFieldset['key']) ? $matchingFieldset['key'] : '');
                 
+                // Default placeholder from field table (for Form Builder comparison)
+                $fieldDefaultPlaceholder = $field['field_placeholder'] ?? '';
+                
                 $builtField = [
                     'id' => $matchingFieldset['id'],
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($field['field_placeholder'] ?? ''),
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : $fieldDefaultPlaceholder,
+                    'defaultPlaceholder' => $fieldDefaultPlaceholder,
                     'tooltip' => $customTooltip !== null ? $customTooltip : ($matchingFieldset['fieldset_tooltip'] ?? null),
                     'instruction' => $customInstruction !== null ? $customInstruction : ($matchingFieldset['fieldset_instruction'] ?? null),
                     'min_length' => $matchingFieldset['min_length'] ?? null,

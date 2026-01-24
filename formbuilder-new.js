@@ -2555,10 +2555,9 @@
             var optionsContainer = null;
             var nameInput, placeholderInput, tooltipInput, instructionInput, modifyButton;
             
-            // Get default values from fieldset definition
-            // Note: placeholder now comes from field_placeholder (fields table), not fieldset_placeholder
+            // Get default values from fieldset definition and field data
             var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name) : '';
-            var defaultPlaceholder = ''; // Placeholder comes from field_placeholder in fields table
+            var defaultPlaceholder = fieldData.defaultPlaceholder || ''; // From field_placeholder in fields table
             var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || '') : '';
             var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
             var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
