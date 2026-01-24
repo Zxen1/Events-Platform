@@ -1934,7 +1934,7 @@ const PostModule = (function() {
   function filterPosts(posts, filters) {
     if (!filters) return posts;
 
-    // Get current map bounds for viewport filtering (only at zoom 8+)
+    // Get current map bounds for viewport filtering (only at or above postsLoadZoom)
     var threshold = getPostsMinZoom();
     var bounds = (lastZoom >= threshold) ? getMapBounds() : null;
 

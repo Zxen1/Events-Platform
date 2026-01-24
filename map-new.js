@@ -213,8 +213,8 @@ const MapModule = (function() {
 
   function applySavedMapViewToStart(view) {
     if (!view) return false;
-    // Only restore (and therefore "persist") a user viewport when they last used the site at zoom 8+.
-    // If their last view was zoomed out (<8), we treat it as "world view" and use admin starting/spin logic.
+    // Only restore (and therefore "persist") a user viewport when they last used the site at or above postsLoadZoom.
+    // If their last view was zoomed out below threshold, we treat it as "world view" and use admin starting/spin logic.
     if (!Number.isFinite(view.zoom) || view.zoom < getMarkerZoomThreshold()) {
       try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch (_eRm) {}
       hasSavedMapView = false;
@@ -240,7 +240,7 @@ const MapModule = (function() {
         if (!map) return;
         const zoom = map.getZoom();
 
-        // Rule: if the user leaves while zoomed out (<8), do NOT persist their view.
+        // Rule: if the user leaves while zoomed out below postsLoadZoom, do NOT persist their view.
         // We clear the memory so it reverts to the default worldwide view on next load.
         if (!Number.isFinite(zoom) || zoom < getMarkerZoomThreshold()) {
           try {

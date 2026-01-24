@@ -21,7 +21,7 @@ const FilterModule = (function() {
           - Calls `/gateway.php?action=get-clusters` (+ filter params)
           - Renders cluster markers (aggregated, lightweight)
 
-       2) HIGH ZOOM (zoom >= postsLoadZoom; default 8): `post-new.js`
+       2) HIGH ZOOM (zoom >= postsLoadZoom): `post-new.js`
           - Listens to `filter:changed` AND `map:boundsChanged`
           - Calls `/gateway.php?action=get-posts` with BOTH:
               - saved filter params
@@ -254,8 +254,9 @@ const FilterModule = (function() {
             var mapModule = App.getModule('map');
             if (mapModule && typeof mapModule.getMapState === 'function') {
                 var state = mapModule.getMapState();
-                // Rule: Only persist map memory if zoom level is 8 or above.
-                if (state && state.zoom >= 8) {
+                // Rule: Only persist map memory if zoom level is at or above postsLoadZoom threshold.
+                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                if (state && state.zoom >= threshold) {
                     return state;
                 }
             }
@@ -426,7 +427,8 @@ const FilterModule = (function() {
                 try {
                     if (window.MapModule && typeof MapModule.getMap === 'function') {
                         var m = MapModule.getMap();
-                        if (m && typeof m.getZoom === 'function' && m.getZoom() >= 8) areaActive = true;
+                        var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                        if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) areaActive = true;
                     }
                 } catch (_eArea) {}
                 updateFilterCounts(lastFilteredCount, lastTotalCount, areaActive);
@@ -1452,7 +1454,7 @@ const FilterModule = (function() {
                         // SwitchComponent renders a <label><input type="checkbox">...</label>.
                         // Clicking it will toggle the checkbox by default. We also toggle manually below.
                         // Without preventDefault(), that can double-toggle and leave the checkbox unchanged,
-                        // which breaks category filtering at zoom 8+ (subcategoryKeys won't update).
+                        // which breaks category filtering at or above map_card_breakpoint (subcategoryKeys won't update).
                         e.preventDefault();
                         e.stopPropagation();
                         headerSwitch.toggle();
@@ -1571,7 +1573,8 @@ const FilterModule = (function() {
                         try {
                             if (window.MapModule && typeof MapModule.getMap === 'function') {
                                 var m = MapModule.getMap();
-                                if (m && typeof m.getZoom === 'function' && m.getZoom() >= 8) scopeText = 'in this area';
+                                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                                if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) scopeText = 'in this area';
                             }
                         } catch (_eScope) {}
                         summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText + '.';
