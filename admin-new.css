@@ -2339,14 +2339,47 @@
   margin: 0 0 10px 0;
 }
 
-.admin-panel-note {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 5px;
+.admin-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  cursor: help;
+}
+
+.admin-tooltip-icon {
+  width: 14px;
+  height: 14px;
+  stroke: rgba(255, 255, 255, 0.4);
+  vertical-align: middle;
+}
+
+.admin-tooltip:hover .admin-tooltip-icon {
+  stroke: rgba(255, 255, 255, 0.8);
+}
+
+.admin-tooltip-text {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 250px;
+  max-width: 350px;
   padding: 10px;
-  margin-bottom: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
+  white-space: normal;
+  z-index: 100;
+}
+
+.admin-tooltip:hover .admin-tooltip-text {
+  display: block;
 }
 
 .admin-panel-field--spaced {
