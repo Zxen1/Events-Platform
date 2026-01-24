@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 24, 2026 at 07:42 PM
+-- Generation Time: Jan 24, 2026 at 07:46 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -569,7 +569,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (10, 'Website (URL)', 'website-url', 'subcategory', 8, '[\"website\"]', NULL, 'Enter the full website URL (including https://) where visitors can find more information.', NULL, '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (11, 'Tickets (URL)', 'tickets-url', 'subcategory', 9, '[\"website\"]', NULL, 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', NULL, '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (12, 'Images', 'images', 'subcategory', 10, '[]', NULL, 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', NULL, '2025-10-29 19:03:05', '2026-01-05 21:39:44'),
-(13, 'Coupon', 'coupon', 'subcategory', 11, '[\"text-box\"]', NULL, 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', NULL, '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(13, 'Coupon', 'coupon', 'subcategory', 11, '[\"coupon\"]', NULL, 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', NULL, '2025-10-29 19:03:05', '2026-01-24 08:44:25'),
 (14, 'Item Pricing', 'item-pricing', 'subcategory', 12, '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', NULL, 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', NULL, '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (16, 'City', 'city', 'subcategory', 5, '[\"city\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Enter the city or town where your listing should appear. For online or private address listings.', NULL, '2025-12-14 15:49:27', '2026-01-01 08:41:37'),
 (17, 'Venue', 'venue', 'subcategory', 7, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', NULL, '2025-12-14 18:30:38', '2026-01-01 08:41:37'),
