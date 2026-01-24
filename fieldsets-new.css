@@ -1691,12 +1691,7 @@
    TICKET PRICING FIELDSET
    ============================================================================ */
 
-/* Instruction Text */
-.fieldset-ticketpricing-instruction {
-    font-size: 13px;
-    color: #aaa;
-    line-height: 1.5;
-}
+/* Instruction Text - uses generic .fieldset-instruction class */
 
 /* Ticket Groups Container */
 .fieldset-ticketpricing-ticketgroups-container {
@@ -1831,12 +1826,7 @@
    SESSIONS FIELDSET
    ============================================================================ */
 
-/* Instruction Text */
-.fieldset-sessions-instruction {
-    font-size: 13px;
-    color: #aaa;
-    line-height: 1.5;
-}
+/* Instruction Text - uses generic .fieldset-instruction class */
 
 /* Sessions Container */
 .fieldset-sessions-sessions-container {

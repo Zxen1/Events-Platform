@@ -186,9 +186,10 @@ Fixed:
 [x] get-form.php: Added $customInstruction loading from fieldEdit
 [x] get-form.php: Added customInstruction to builtField array
 [x] fieldsets-new.js: Modified buildLabel() to accept optional instruction parameter
-[x] fieldsets-new.js: Updated ALL buildLabel calls to pass instruction
-[x] fieldsets-new.js: ticket_pricing and sessions keep their own instruction handling
+[x] fieldsets-new.js: Updated ALL buildLabel calls to pass instruction (including ticket_pricing and sessions)
+[x] fieldsets-new.js: Removed biased ticket_pricing/sessions custom instruction handling
 [x] fieldsets-new.css: Added generic .fieldset-instruction class
+[x] fieldsets-new.css: Removed biased .fieldset-ticketpricing-instruction and .fieldset-sessions-instruction
 
 ================================================================================
 TESTING CHECKLIST

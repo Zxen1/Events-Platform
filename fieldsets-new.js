@@ -4629,22 +4629,7 @@ const FieldsetBuilder = (function(){
                 // This fieldset exists ONCE in the primary container (above the line).
                 // Sessions fieldset reads ticket group keys from this fieldset.
                 
-                var tpLabelEl = buildLabel(name, tooltip, minLength, maxLength);
-                tpLabelEl.style.marginBottom = '10px';
-                fieldset.appendChild(tpLabelEl);
-
-                // Instruction text from database or customization
-                var tpInstructionText = '';
-                if (fieldData) {
-                    tpInstructionText = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
-                }
-                if (tpInstructionText) {
-                    var tpInstructionEl = document.createElement('div');
-                    tpInstructionEl.className = 'fieldset-ticketpricing-instruction';
-                    tpInstructionEl.textContent = tpInstructionText;
-                    tpInstructionEl.style.marginBottom = '10px';
-                    fieldset.appendChild(tpInstructionEl);
-                }
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
 
                 // Ticket group state
                 var tpTicketGroups = {}; // { A: itemEl, B: itemEl, ... }
@@ -5650,22 +5635,7 @@ const FieldsetBuilder = (function(){
                 // This fieldset exists in location containers (below the line).
                 // Reads ticket group keys from ticket_pricing fieldset.
                 
-                var sessLabelEl = buildLabel(name, tooltip, minLength, maxLength);
-                sessLabelEl.style.marginBottom = '10px';
-                fieldset.appendChild(sessLabelEl);
-
-                // Instruction text from database or customization
-                var sessInstructionText = '';
-                if (fieldData) {
-                    sessInstructionText = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
-                }
-                if (sessInstructionText) {
-                    var sessInstructionEl = document.createElement('div');
-                    sessInstructionEl.className = 'fieldset-sessions-instruction';
-                    sessInstructionEl.textContent = sessInstructionText;
-                    sessInstructionEl.style.marginBottom = '10px';
-                    fieldset.appendChild(sessInstructionEl);
-                }
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
 
                 // Track selected dates
                 var sessSessionData = {};
