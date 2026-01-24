@@ -62,6 +62,11 @@
     color: #fff;
 }
 
+/* Label wrapper (contains label + instruction when instruction exists) */
+.fieldset-label-wrapper {
+    display: block;
+}
+
 /* Instruction Text (generic, for all fieldsets) */
 .fieldset-instruction {
     font-size: 13px;

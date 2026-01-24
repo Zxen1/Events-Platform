@@ -438,9 +438,8 @@ const FieldsetBuilder = (function(){
     
     // Build label with required indicator (dot) and tooltip
     // Optional 5th parameter: instruction text to display after the label
+    // Returns: label element if no instruction, or a wrapper div containing label + instruction
     function buildLabel(name, tooltip, minLength, maxLength, instructionText) {
-        var wrapper = document.createDocumentFragment();
-        
         var label = document.createElement('div');
         label.className = 'fieldset-label';
         label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">●</span>';
@@ -481,16 +480,21 @@ const FieldsetBuilder = (function(){
             label.appendChild(tipBox);
         }
         
+        // If no instruction, return just the label element (backward compatible)
+        if (!instructionText || typeof instructionText !== 'string' || !instructionText.trim()) {
+            return label;
+        }
+        
+        // If instruction exists, wrap label + instruction in a container
+        var wrapper = document.createElement('div');
+        wrapper.className = 'fieldset-label-wrapper';
         wrapper.appendChild(label);
         
-        // Add instruction text if provided
-        if (instructionText && typeof instructionText === 'string' && instructionText.trim()) {
-            var instructionEl = document.createElement('div');
-            instructionEl.className = 'fieldset-instruction';
-            instructionEl.textContent = instructionText.trim();
-            instructionEl.style.marginBottom = '10px';
-            wrapper.appendChild(instructionEl);
-        }
+        var instructionEl = document.createElement('div');
+        instructionEl.className = 'fieldset-instruction';
+        instructionEl.textContent = instructionText.trim();
+        instructionEl.style.marginBottom = '10px';
+        wrapper.appendChild(instructionEl);
         
         return wrapper;
     }
