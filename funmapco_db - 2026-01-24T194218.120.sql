@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 24, 2026 at 07:29 PM
+-- Generation Time: Jan 24, 2026 at 07:42 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -518,7 +518,7 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_placeholder`, `fie
 (16, 'dropdown', 'dropdown', 'Please Select', 'Select the most appropriate option from the list.', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-19 15:53:03'),
 (17, 'radio', 'radio', 'Choose one', 'Select one of the available options.', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-19 15:53:03'),
 (18, 'email', 'email', 'eg. you@example.com', 'A valid email address for contact purposes.', 5, 50, 1, '2025-10-30 17:25:10', '2026-01-19 15:53:03'),
-(19, 'phone', 'tel', NULL, 'A contact phone number including area code.', 6, 30, 1, '2025-10-30 17:25:10', '2026-01-22 17:17:05'),
+(19, 'phone', 'tel', 'eg. 405 555 555', 'A contact phone number including area code.', 6, 30, 1, '2025-10-30 17:25:10', '2026-01-24 19:38:15'),
 (20, 'website', 'url', 'eg. https://www.website.com', 'The full URL of the official website.', 5, 500, 1, '2025-10-30 17:25:10', '2026-01-19 15:53:03'),
 (21, 'item-name', 'text', 'eg. T-Shirt', 'The name of the item or product being offered.', 2, 200, 1, '2025-10-30 18:33:09', '2026-01-19 15:53:03'),
 (23, 'item-price', 'decimal(10,2)', '0.00', 'The unit price of the item.', 1, 50, 0, '2025-10-30 18:39:14', '2026-01-19 15:53:03'),
@@ -530,7 +530,8 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_placeholder`, `fie
 (39, 'username', 'text', 'eg. UrbanExplorer', 'Choose a unique name to represent you on the platform.', 3, 50, 1, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
 (40, 'password', 'password', '••••••••', 'Choose a secure password for your account.', 4, 50, 0, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
 (41, 'confirm-password', 'password', '••••••••', 'Type your password again to ensure it is correct.', 4, 50, 0, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
-(42, 'checklist', 'checklist', 'Select options', 'Select multiple options from the list.', NULL, NULL, 0, '2026-01-08 09:50:42', '2026-01-19 15:53:03');
+(42, 'checklist', 'checklist', 'Select options', 'Select multiple options from the list.', NULL, NULL, 0, '2026-01-08 09:50:42', '2026-01-19 15:53:03'),
+(43, 'coupon', 'text', 'eg. FUNMAP10', NULL, NULL, NULL, 1, '2026-01-24 19:41:41', '2026-01-24 19:41:41');
 
 -- --------------------------------------------------------
 
@@ -10114,7 +10115,7 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `fields`
 --
 ALTER TABLE `fields`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `fieldsets`
