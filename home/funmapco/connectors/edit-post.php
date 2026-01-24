@@ -786,9 +786,15 @@ if ($stmtRev) {
   $stmtRev->close();
 }
 
-// Update member's preferred_currency if a currency was used in this post
-if ($detectedCurrency !== null && $memberType === 'member' && $memberId > 0) {
-  $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
+// Update user's preferred_currency if a currency was used in this post
+if ($detectedCurrency !== null && $memberId > 0) {
+  if ($memberType === 'member') {
+    $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
+  } elseif ($memberType === 'admin') {
+    $stmtCurr = $mysqli->prepare("UPDATE admins SET preferred_currency = ? WHERE id = ?");
+  } else {
+    $stmtCurr = null;
+  }
   if ($stmtCurr) {
     $stmtCurr->bind_param('si', $detectedCurrency, $memberId);
     $stmtCurr->execute();

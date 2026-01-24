@@ -5488,10 +5488,14 @@ const FieldsetBuilder = (function(){
                         state.ageRating = ageMenu.dataset.value;
                     }
                     
-                    // Get currency
+                    // Get currency (extract just the code, not "USD - US Dollar")
                     var currInput = editor.querySelector('.component-currencyfull-menu-button-input');
                     if (currInput) {
-                        state.currency = currInput.value || '';
+                        var currVal = String(currInput.value || '').trim();
+                        if (currVal.indexOf(' - ') !== -1) {
+                            currVal = currVal.split(' - ')[0].trim();
+                        }
+                        state.currency = currVal;
                     }
                     
                     // Get allocated areas radio state

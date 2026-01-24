@@ -193,6 +193,13 @@ Fixed:
 [x] fieldsets-new.css: Added generic .fieldset-instruction class
 [x] fieldsets-new.css: Removed biased .fieldset-ticketpricing-instruction and .fieldset-sessions-instruction
 
+Instruction Not Showing Fix (2024-01-24):
+Root cause: ensureFieldDefaults() in member-new.js wasn't copying fieldset_instruction or customInstruction
+[x] member-new.js: Added fieldset_instruction to default object
+[x] member-new.js: Added customInstruction to default object  
+[x] member-new.js: Added copying logic for field.fieldset_instruction
+[x] member-new.js: Added copying logic for field.customInstruction
+
 ================================================================================
 TICKET GROUP AUTOFILL FEATURE (2024-01-24)
 ================================================================================
@@ -227,6 +234,10 @@ Implementation:
 [x] tpAddTicketGroup() calls tpGetGroupAState() and passes to tpEnsureTicketGroup()
 [x] tpRemoveTicketGroup() remaps tracking when groups re-lettered
 [x] tpRemoveTicketGroup() resets tracking when reduced to 1 group
+
+Currency Autofill Fix (2024-01-24):
+[x] tpGetGroupAState() now extracts currency CODE only (not "USD - US Dollar")
+    - Applied same parsing as other currency extractions: split on " - " and take first part
 
 ================================================================================
 TESTING CHECKLIST

@@ -4782,10 +4782,12 @@ const MemberModule = (function() {
                 // Canonical DB-driven strings
                 fieldset_placeholder: '',
                 fieldset_tooltip: '',
+                fieldset_instruction: '',
                 
                 // Editable overrides from fieldset_mods
                 customPlaceholder: '',
                 customTooltip: '',
+                customInstruction: '',
                 
                 // Legacy/compat (do not rely on these for new-site behavior)
                 placeholder: '',
@@ -4808,10 +4810,12 @@ const MemberModule = (function() {
             // Canonical DB-driven strings
             fieldset_placeholder: '',
             fieldset_tooltip: '',
+            fieldset_instruction: '',
             
             // Editable overrides from fieldset_mods
             customPlaceholder: '',
             customTooltip: '',
+            customInstruction: '',
             
             // Legacy/compat (do not rely on these for new-site behavior)
             placeholder: '',
@@ -4833,12 +4837,15 @@ const MemberModule = (function() {
             result.name = field.name;
         }
         
-        // Canonical fieldset placeholder/tooltip from DB
+        // Canonical fieldset placeholder/tooltip/instruction from DB
         if (field.fieldset_placeholder && typeof field.fieldset_placeholder === 'string') {
             result.fieldset_placeholder = field.fieldset_placeholder;
         }
         if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
             result.fieldset_tooltip = field.fieldset_tooltip;
+        }
+        if (field.fieldset_instruction && typeof field.fieldset_instruction === 'string') {
+            result.fieldset_instruction = field.fieldset_instruction;
         }
         
         // Editable overrides from fieldset_mods JSON
@@ -4847,6 +4854,9 @@ const MemberModule = (function() {
         }
         if (field.customTooltip && typeof field.customTooltip === 'string') {
             result.customTooltip = field.customTooltip;
+        }
+        if (field.customInstruction && typeof field.customInstruction === 'string') {
+            result.customInstruction = field.customInstruction;
         }
         
         // Legacy/compat (do not rely on these for new-site behavior)

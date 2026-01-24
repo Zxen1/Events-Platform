@@ -45,8 +45,8 @@ try {
     json_fail('Missing credentials');
   }
 
-  // Table-specific column lists (admins and members have different schemas)
-  $adminCols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
+  // Table-specific column lists (admins and members now have same schema)
+  $adminCols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
   $memberCols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
 
   // Attempt login against a table; allow email OR username match
