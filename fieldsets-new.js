@@ -4862,7 +4862,7 @@ const FieldsetBuilder = (function(){
                 }
 
                 // --- Pricing editor builders ---
-                function tpCreatePricingTierBlock(tiersContainer, yesRadio) {
+                function tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey) {
                     var block = document.createElement('div');
                     block.className = 'fieldset-ticketpricing-pricing-tier-block';
                     block.style.marginBottom = '8px';
@@ -4920,7 +4920,13 @@ const FieldsetBuilder = (function(){
                         this.setSelectionRange(cursor, cursor);
                         updateTierCompleteness();
                     });
-                    tierInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
+                    tierInput.addEventListener('change', function() {
+                        this.dataset.manuallyEdited = 'true';
+                        // Track manual edit for ticket areas (covers tier name edits)
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
+                    });
 
                     priceInput.addEventListener('input', updateTierCompleteness);
 
@@ -4936,9 +4942,13 @@ const FieldsetBuilder = (function(){
                         addBtn.appendChild(plusImg);
                     }
                     addBtn.addEventListener('click', function() {
-                        tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio));
+                        tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey));
                         tpUpdateTierButtons(tiersContainer);
                         updateTierCompleteness();
+                        // Track manual edit when adding tiers
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     inputRow.appendChild(addBtn);
@@ -4958,6 +4968,10 @@ const FieldsetBuilder = (function(){
                         block.remove();
                         tpUpdateTierButtons(tiersContainer);
                         updateTierCompleteness();
+                        // Track manual edit when removing tiers
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     inputRow.appendChild(removeBtn);
@@ -4980,7 +4994,7 @@ const FieldsetBuilder = (function(){
                     });
                 }
 
-                function tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio) {
+                function tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio, groupKey) {
                     var block = document.createElement('div');
                     block.className = 'fieldset-ticketpricing-pricing-ticketarea-block';
                     block.style.marginBottom = '12px'; 
@@ -5037,7 +5051,13 @@ const FieldsetBuilder = (function(){
                         seatReq.classList.toggle('fieldset-label-required--complete', hasVal);
                     });
 
-                    seatInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
+                    seatInput.addEventListener('change', function() {
+                        this.dataset.manuallyEdited = 'true';
+                        // Track manual edit for ticket areas
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
+                    });
                     seatInputRow.appendChild(seatInput);
 
                     // Add/Remove ticket area block buttons
@@ -5053,8 +5073,12 @@ const FieldsetBuilder = (function(){
                         addBtn.appendChild(plusImg2);
                     }
                     addBtn.addEventListener('click', function() {
-                        ticketAreasContainer.appendChild(tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio));
+                        ticketAreasContainer.appendChild(tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio, groupKey));
                         tpUpdateTicketAreaButtons(ticketAreasContainer, true);
+                        // Track manual edit when adding ticket areas
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     seatInputRow.appendChild(addBtn);
@@ -5073,6 +5097,10 @@ const FieldsetBuilder = (function(){
                     removeBtn.addEventListener('click', function() {
                         block.remove();
                         tpUpdateTicketAreaButtons(ticketAreasContainer, true);
+                        // Track manual edit when removing ticket areas
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
+                        }
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     seatInputRow.appendChild(removeBtn);
@@ -5119,7 +5147,7 @@ const FieldsetBuilder = (function(){
                     tierLabelRow.appendChild(btnSpacer);
                     tiersContainer.appendChild(tierLabelRow);
 
-                    tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio));
+                    tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey));
                     block.appendChild(tiersContainer);
 
                     return block;
@@ -5197,9 +5225,12 @@ const FieldsetBuilder = (function(){
                     }
                 }
 
-                function tpReplaceEditorFromPricing(editorEl, pricingArr) {
+                function tpReplaceEditorFromPricing(editorEl, pricingArr, groupKey, autofillState) {
                     if (!editorEl) return;
                     editorEl.innerHTML = '';
+                    
+                    // Determine if we should use autofill (non-A group, no existing data, autofill state exists)
+                    var useAutofill = groupKey && groupKey !== 'A' && (!pricingArr || pricingArr.length === 0) && autofillState;
                     
                     // Row 1 & 2: Age Rating
                     var ageLabel = buildLabel('Age Rating', '', null, null);
@@ -5207,10 +5238,22 @@ const FieldsetBuilder = (function(){
                     var ageDot = ageLabel.querySelector('.fieldset-label-required');
                     editorEl.appendChild(ageLabel);
                     
+                    // Determine initial age rating value
+                    var initialAgeValue = null;
+                    if (pricingArr && pricingArr[0] && pricingArr[0].age_rating) {
+                        initialAgeValue = pricingArr[0].age_rating;
+                    } else if (useAutofill && autofillState.ageRating && !tpIsManuallyEdited(groupKey, 'ageRating')) {
+                        initialAgeValue = autofillState.ageRating;
+                    }
+                    
                     var ageMenu = buildAgeRatingMenu(fieldset, {
-                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null,
+                        initialValue: initialAgeValue,
                         onSelect: function(val) {
                             if (ageDot) ageDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                            // Track manual edit for non-A groups
+                            if (groupKey && groupKey !== 'A') {
+                                tpMarkAsManuallyEdited(groupKey, 'ageRating');
+                            }
                         }
                     });
                     ageMenu.style.width = '100%';
@@ -5218,8 +5261,7 @@ const FieldsetBuilder = (function(){
                     editorEl.appendChild(ageMenu);
                     
                     if (ageDot) {
-                        var initialAge = (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null;
-                        ageDot.classList.toggle('fieldset-label-required--complete', !!String(initialAge || '').trim());
+                        ageDot.classList.toggle('fieldset-label-required--complete', !!String(initialAgeValue || '').trim());
                     }
 
                     // Row 3 & 4: Currency
@@ -5228,10 +5270,22 @@ const FieldsetBuilder = (function(){
                     var currDot = currLabel.querySelector('.fieldset-label-required');
                     editorEl.appendChild(currLabel);
                     
+                    // Determine initial currency value
+                    var initialCurrValue = tpTicketCurrencyState.code;
+                    if (pricingArr && pricingArr[0] && pricingArr[0].currency) {
+                        initialCurrValue = pricingArr[0].currency;
+                    } else if (useAutofill && autofillState.currency && !tpIsManuallyEdited(groupKey, 'currency')) {
+                        initialCurrValue = autofillState.currency;
+                    }
+                    
                     var currResult = tpBuildTicketCurrencyMenu({
-                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].currency) || tpTicketCurrencyState.code,
+                        initialValue: initialCurrValue,
                         onSelect: function(val) {
                             if (currDot) currDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                            // Track manual edit for non-A groups
+                            if (groupKey && groupKey !== 'A') {
+                                tpMarkAsManuallyEdited(groupKey, 'currency');
+                            }
                         }
                     });
                     var currMenu = currResult.element;
@@ -5240,8 +5294,7 @@ const FieldsetBuilder = (function(){
                     editorEl.appendChild(currMenu);
                     
                     if (currDot) {
-                        var initialCurr = (pricingArr && pricingArr[0] && pricingArr[0].currency) || tpTicketCurrencyState.code;
-                        currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurr || '').trim());
+                        currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurrValue || '').trim());
                     }
 
                     // Row 5: Allocated Ticket Areas
@@ -5325,18 +5378,51 @@ const FieldsetBuilder = (function(){
                         });
                         tpUpdateTicketAreaButtons(ticketAreasContainer, isYes);
                     }
-                    yesRadio.addEventListener('change', updateAllVisibility);
-                    noRadio.addEventListener('change', updateAllVisibility);
+                    yesRadio.addEventListener('change', function() {
+                        updateAllVisibility();
+                        // Track manual edit for non-A groups
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'allocatedAreas');
+                        }
+                    });
+                    noRadio.addEventListener('change', function() {
+                        updateAllVisibility();
+                        // Track manual edit for non-A groups
+                        if (groupKey && groupKey !== 'A') {
+                            tpMarkAsManuallyEdited(groupKey, 'allocatedAreas');
+                        }
+                    });
 
+                    // Determine seats/ticket areas data source
                     var seats = Array.isArray(pricingArr) ? pricingArr : [];
-                    if (seats.length === 0) seats = [{}];
+                    var isAllocated = true;
                     
-                    var isAllocated = seats[0] && seats[0].allocated_areas !== undefined ? (parseInt(seats[0].allocated_areas) === 1) : true;
+                    // Use autofill for ticket areas if applicable and not manually edited
+                    if (useAutofill && autofillState.ticketAreas && autofillState.ticketAreas.length > 0 && !tpIsManuallyEdited(groupKey, 'ticketAreas')) {
+                        // Convert autofill state to seats format (without prices)
+                        seats = autofillState.ticketAreas.map(function(area) {
+                            return {
+                                ticket_area: area.ticketArea || '',
+                                tiers: (area.tiers || []).map(function(tier) {
+                                    return { pricing_tier: tier.pricing_tier || '', price: '' }; // Price always blank
+                                }),
+                                allocated_areas: autofillState.allocatedAreas ? 1 : 0
+                            };
+                        });
+                        isAllocated = autofillState.allocatedAreas;
+                    } else if (seats.length === 0) {
+                        seats = [{}];
+                    }
+                    
+                    if (seats.length > 0 && seats[0] && seats[0].allocated_areas !== undefined) {
+                        isAllocated = parseInt(seats[0].allocated_areas) === 1;
+                    }
+                    
                     if (isAllocated) yesRadio.checked = true;
                     else noRadio.checked = true;
 
-                    seats.forEach(function(seat) {
-                        var block = tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio);
+                    seats.forEach(function(seat, seatIdx) {
+                        var block = tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio, groupKey);
                         ticketAreasContainer.appendChild(block);
                         
                         var seatInput = block.querySelector('.fieldset-ticketpricing-input-ticketarea');
@@ -5351,7 +5437,7 @@ const FieldsetBuilder = (function(){
                             var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
                             if (tiers.length === 0) tiers = [{}];
                             tiers.forEach(function(tierObj) {
-                                var tierBlock = tpCreatePricingTierBlock(tiersContainer, yesRadio);
+                                var tierBlock = tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey);
                                 tiersContainer.appendChild(tierBlock);
                                 var tierNameInput = tierBlock.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
                                 if (tierNameInput) {
@@ -5359,9 +5445,11 @@ const FieldsetBuilder = (function(){
                                     tierNameInput.dispatchEvent(new Event('input'));
                                 }
                                 
+                                // Price is always blank for autofilled groups
                                 var priceInput = tierBlock.querySelector('.fieldset-ticketpricing-input-price');
                                 if (priceInput) {
-                                    priceInput.value = String((tierObj && tierObj.price) || '');
+                                    var priceValue = (tierObj && tierObj.price) || '';
+                                    priceInput.value = String(priceValue);
                                     priceInput.dispatchEvent(new Event('input'));
                                 }
                             });
@@ -5374,12 +5462,96 @@ const FieldsetBuilder = (function(){
                 }
 
                 var tpMaxTicketGroups = 10;
+                
+                // Track manual edits per group per element
+                // Structure: { 'B': { ageRating: true, currency: true }, 'C': { currency: true } }
+                var tpManualEditTracking = {};
+                
+                // Extract current state from group A (first group) for autofill
+                function tpGetGroupAState() {
+                    var groupA = tpTicketGroups['A'];
+                    if (!groupA) return null;
+                    
+                    var editor = groupA.querySelector('.fieldset-ticketpricing-pricing-editor');
+                    if (!editor) return null;
+                    
+                    var state = {
+                        ageRating: null,
+                        currency: null,
+                        allocatedAreas: true,
+                        ticketAreas: []
+                    };
+                    
+                    // Get age rating
+                    var ageMenu = editor.querySelector('.component-ageratingpicker-menu');
+                    if (ageMenu && ageMenu.dataset && ageMenu.dataset.value) {
+                        state.ageRating = ageMenu.dataset.value;
+                    }
+                    
+                    // Get currency
+                    var currInput = editor.querySelector('.component-currencyfull-menu-button-input');
+                    if (currInput) {
+                        state.currency = currInput.value || '';
+                    }
+                    
+                    // Get allocated areas radio state
+                    var yesRadio = editor.querySelector('input[type="radio"][value="1"]');
+                    state.allocatedAreas = yesRadio ? yesRadio.checked : true;
+                    
+                    // Get ticket areas and tiers (without prices)
+                    var ticketAreaBlocks = editor.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                    ticketAreaBlocks.forEach(function(block) {
+                        var areaData = {
+                            ticketArea: '',
+                            tiers: []
+                        };
+                        
+                        var ticketAreaInput = block.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                        if (ticketAreaInput) {
+                            areaData.ticketArea = ticketAreaInput.value || '';
+                        }
+                        
+                        var tierBlocks = block.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block');
+                        tierBlocks.forEach(function(tierBlock) {
+                            var tierNameInput = tierBlock.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
+                            var tierName = tierNameInput ? (tierNameInput.value || '') : '';
+                            // Note: price is intentionally NOT copied
+                            areaData.tiers.push({ pricing_tier: tierName, price: '' });
+                        });
+                        
+                        state.ticketAreas.push(areaData);
+                    });
+                    
+                    return state;
+                }
+                
+                // Reset manual edit tracking (called when reduced to 1 group)
+                function tpResetManualEditTracking() {
+                    tpManualEditTracking = {};
+                }
+                
+                // Check if a specific element in a group has been manually edited
+                function tpIsManuallyEdited(groupKey, elementKey) {
+                    return tpManualEditTracking[groupKey] && tpManualEditTracking[groupKey][elementKey] === true;
+                }
+                
+                // Mark an element as manually edited
+                function tpMarkAsManuallyEdited(groupKey, elementKey) {
+                    if (!tpManualEditTracking[groupKey]) {
+                        tpManualEditTracking[groupKey] = {};
+                    }
+                    tpManualEditTracking[groupKey][elementKey] = true;
+                }
 
                 function tpAddTicketGroup() {
                     var keys = Object.keys(tpTicketGroups).sort();
                     if (keys.length >= tpMaxTicketGroups) return;
                     var newKey = tpFirstUnusedLetter();
-                    tpEnsureTicketGroup(newKey);
+                    
+                    // Get state from group A to autofill the new group
+                    var autofillState = tpGetGroupAState();
+                    
+                    tpEnsureTicketGroup(newKey, autofillState);
                     tpUpdateAllGroupButtons();
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
@@ -5421,6 +5593,15 @@ const FieldsetBuilder = (function(){
                     if (g) try { g.remove(); } catch (e1) {}
                     delete tpTicketGroups[keyToRemove];
                     
+                    // Remap manual edit tracking to match new group letters
+                    var newTracking = {};
+                    Object.keys(tpManualEditTracking).forEach(function(oldKey) {
+                        if (keyMap[oldKey]) {
+                            newTracking[keyMap[oldKey]] = tpManualEditTracking[oldKey];
+                        }
+                    });
+                    tpManualEditTracking = newTracking;
+                    
                     var newGroups = {};
                     Object.keys(tpTicketGroups).sort().forEach(function(oldKey) {
                         var newKey = keyMap[oldKey];
@@ -5431,6 +5612,11 @@ const FieldsetBuilder = (function(){
                         newGroups[newKey] = groupEl;
                     });
                     tpTicketGroups = newGroups;
+                    
+                    // Reset manual edit tracking when reduced to 1 group
+                    if (Object.keys(tpTicketGroups).length === 1) {
+                        tpResetManualEditTracking();
+                    }
                     
                     tpUpdateAllGroupButtons();
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
@@ -5461,7 +5647,7 @@ const FieldsetBuilder = (function(){
                     });
                 }
 
-                function tpEnsureTicketGroup(groupKey) {
+                function tpEnsureTicketGroup(groupKey, autofillState) {
                     var key = String(groupKey || '').trim();
                     if (!key) return null;
                     if (tpTicketGroups[key]) return tpTicketGroups[key];
@@ -5542,7 +5728,8 @@ const FieldsetBuilder = (function(){
                     editor.className = 'fieldset-ticketpricing-pricing-editor';
                     editorWrap.appendChild(editor);
                     
-                    tpReplaceEditorFromPricing(editor, []);
+                    // Pass autofill state and group key for autofill and manual edit tracking
+                    tpReplaceEditorFromPricing(editor, [], key, autofillState);
                     group.appendChild(editorWrap);
 
                     group.addEventListener('click', function(e) {

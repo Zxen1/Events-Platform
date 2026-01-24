@@ -48,6 +48,8 @@ DATABASE REQUIREMENTS
 [x] fieldsets table: sessions row (ID 29)
 [x] fieldsets table: fieldset_instruction column added
 [x] fieldsets table: fieldset_instruction populated for 28 and 29
+    - Ticket Pricing (28): "Ticket groups allow you to create age-specific and..."
+    - Sessions (29): "Click a date box on the left to open the date pick..."
 [x] subcategories table: Event types (101-106, 108, 109) updated with fieldset IDs 28, 29
 
 ================================================================================
@@ -192,6 +194,41 @@ Fixed:
 [x] fieldsets-new.css: Removed biased .fieldset-ticketpricing-instruction and .fieldset-sessions-instruction
 
 ================================================================================
+TICKET GROUP AUTOFILL FEATURE (2024-01-24)
+================================================================================
+When creating a new ticket group (B, C, D...), automatically copy from Group A:
+- Age Rating (menu)
+- Currency (menu)
+- Allocated Ticket Areas (Yes/No radio)
+- Ticket Areas (names and structure)
+- Pricing Tiers (names and structure)
+- Prices are ALWAYS left BLANK
+
+Manual Edit Tracking:
+- Per-element, per-group tracking (e.g. Group B's ageRating edited)
+- Elements tracked: ageRating, currency, allocatedAreas, ticketAreas
+- If a user edits an element, it stops autofilling for that element in that group
+- Adding/removing ticket areas or tiers marks ticketAreas as manually edited
+- Changes to Group A do NOT retroactively update existing groups (only new ones)
+
+Reset Condition:
+- When ticket groups reduced to 1, all manual edit tracking is reset
+- Next time a new group is added, full autofill resumes
+
+Implementation:
+[x] tpManualEditTracking object added
+[x] tpGetGroupAState() - extracts current state from Group A
+[x] tpIsManuallyEdited(groupKey, elementKey) - checks tracking
+[x] tpMarkAsManuallyEdited(groupKey, elementKey) - sets tracking
+[x] tpResetManualEditTracking() - clears all tracking
+[x] tpReplaceEditorFromPricing() accepts groupKey and autofillState
+[x] tpCreateTicketAreaBlock() accepts groupKey for tracking
+[x] tpCreatePricingTierBlock() accepts groupKey for tracking
+[x] tpAddTicketGroup() calls tpGetGroupAState() and passes to tpEnsureTicketGroup()
+[x] tpRemoveTicketGroup() remaps tracking when groups re-lettered
+[x] tpRemoveTicketGroup() resets tracking when reduced to 1 group
+
+================================================================================
 TESTING CHECKLIST
 ================================================================================
 [ ] 1. Clear browser cache (or use incognito mode)
@@ -211,6 +248,35 @@ TESTING CHECKLIST
 [ ] 10. Edit the post and verify data loads correctly
 [ ] 11. Save the edit and verify post still displays correctly
 [ ] 12. Test with multiple locations (increase location quantity)
+
+AUTOFILL TESTING:
+[ ] 13. In ticket_pricing, fill out Group A completely (age, currency, areas, tiers, prices)
+[ ] 14. Click "+" to add Group B
+[ ] 15. Verify Group B has same Age Rating, Currency, Ticket Areas, Pricing Tiers as A
+[ ] 16. Verify Group B prices are BLANK
+[ ] 17. Edit Group B's Currency to something different
+[ ] 18. Add Group C
+[ ] 19. Verify Group C Currency matches Group A (not B's edited value)
+[ ] 20. Verify Group C Age Rating, Ticket Areas, Pricing Tiers match Group A
+[ ] 21. Delete Group B, verify Group C becomes B
+[ ] 22. Delete until only 1 group remains
+[ ] 23. Add a new group, verify full autofill works again
+
+INSTRUCTION TESTING:
+[ ] 24. Clear browser cache or use incognito mode
+[ ] 25. Create a new post with Event subcategory
+[ ] 26. Verify instruction text appears below "Ticket Pricing" label:
+    "Ticket groups allow you to create age-specific and..."
+[ ] 27. Verify instruction text appears below "Sessions" label:
+    "Click a date box on the left to open the date pick..."
+[ ] 28. If instructions don't show:
+    - Check Network tab in DevTools
+    - Look for get-form.php response
+    - Verify fieldset_instruction is in JSON response
+[ ] 29. In Form Builder, test custom instruction override:
+    - Select any fieldset, add instruction in Modify panel
+    - Verify "Discard" and "Save" buttons appear
+    - Save and verify custom instruction shows in post form
 
 ================================================================================
 CLASS NAME REFERENCE
