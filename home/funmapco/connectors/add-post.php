@@ -634,7 +634,7 @@ foreach ($byLoc as $locNum => $entries) {
       $sessions = is_array($val) ? $val : [];
       continue;
     }
-    if ($baseType === 'ticket-pricing') {
+    if ($baseType === 'ticket_pricing' || $baseType === 'ticket-pricing') {
       $ticketPricing = is_array($val) ? $val : [];
       continue;
     }
@@ -825,20 +825,43 @@ foreach ($byLoc as $locNum => $entries) {
   }
 
   // Insert sessions + ticket pricing
-  // - New merged `session_pricing` is the ONLY supported format.
-  //   (Legacy post_children-based writes were removed; table is not part of the new DB.)
+  // Supports both:
+  // 1. Legacy merged `session_pricing` fieldset (sessions + pricing in one)
+  // 2. New split fieldsets: `sessions` (dates/times) + `ticket_pricing` (pricing groups)
 
-  $sessionsToWrite = $sessions;
-  $ticketPricingToWrite = $ticketPricing;
+  $sessionsToWrite = [];
+  $pricingGroupsToWrite = [];
+  $ageRatingsToWrite = [];
   $writeSessionPricingToNewTables = false;
 
-  $pricingGroupsToWrite = null;
-  $ageRatingsToWrite = [];
+  // Check for legacy session_pricing fieldset
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsToWrite = $sessionPricing['sessions'];
     $pricingGroupsToWrite = (isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) ? $sessionPricing['pricing_groups'] : [];
     $ageRatingsToWrite = (isset($sessionPricing['age_ratings']) && is_array($sessionPricing['age_ratings'])) ? $sessionPricing['age_ratings'] : [];
     $writeSessionPricingToNewTables = true;
+  }
+
+  // Check for new separate sessions fieldset
+  if (is_array($sessions) && isset($sessions['sessions']) && is_array($sessions['sessions']) && count($sessions['sessions']) > 0) {
+    $sessionsToWrite = $sessions['sessions'];
+    $writeSessionPricingToNewTables = true;
+    // Get session_summary if provided
+    if (isset($sessions['session_summary']) && is_string($sessions['session_summary']) && trim($sessions['session_summary']) !== '') {
+      $card['session_summary'] = trim($sessions['session_summary']);
+    }
+  }
+
+  // Check for new separate ticket_pricing fieldset
+  if (is_array($ticketPricing) && isset($ticketPricing['pricing_groups']) && is_array($ticketPricing['pricing_groups']) && count($ticketPricing['pricing_groups']) > 0) {
+    $pricingGroupsToWrite = $ticketPricing['pricing_groups'];
+    $ageRatingsToWrite = (isset($ticketPricing['age_ratings']) && is_array($ticketPricing['age_ratings'])) ? $ticketPricing['age_ratings'] : [];
+    $writeSessionPricingToNewTables = true;
+    // Get price_summary if provided
+    if (isset($ticketPricing['price_summary']) && is_string($ticketPricing['price_summary']) && trim($ticketPricing['price_summary']) !== '') {
+      $card['price_summary'] = trim($ticketPricing['price_summary']);
+      $hasTicketPrice = true;
+    }
   }
 
   if ($writeSessionPricingToNewTables) {

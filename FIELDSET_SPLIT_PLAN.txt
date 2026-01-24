@@ -1,0 +1,231 @@
+================================================================================
+FIELDSET SPLIT PLAN - DO NOT DELETE
+================================================================================
+
+This file tracks the refactoring of session_pricing into ticket_pricing and sessions.
+KEEP THIS FILE until the user confirms all testing is complete.
+
+================================================================================
+SOURCE
+================================================================================
+- File: fieldsets-new.js
+- Case: session_pricing (lines 2521-4607, ~2086 lines)
+- This is the ONLY source. Copy from here. Do not invent.
+
+================================================================================
+TARGETS
+================================================================================
+1. ticket_pricing (fieldset ID 28)
+   - Contains: ticket groups, age rating, currency, ticket areas, pricing tiers
+   - Location: Primary container (ABOVE the line)
+   - NOT location_specific
+   - Class prefix: fieldset-ticketpricing-*
+   - Function prefix: tp*
+
+2. sessions (fieldset ID 29)
+   - Contains: calendar, date picker, session times, ticket group selector
+   - Location: Location containers (BELOW the line)
+   - IS location_specific
+   - Class prefix: fieldset-sessions-*
+   - Function prefix: sess*
+   - Reads ticket group keys from ticket_pricing via _getTicketGroupKeys()
+
+================================================================================
+RULES (FROM AGENT ESSENTIALS)
+================================================================================
+- COPY AND PASTE ONLY
+- NO INVENTING
+- NO REWRITING
+- NO SIMPLIFYING
+- Replace "seating" with "ticketarea"
+- Replace "sp" prefix with "tp" or "sess"
+- Replace "fieldset-sessionpricing-" with "fieldset-ticketpricing-" or "fieldset-sessions-"
+
+================================================================================
+DATABASE REQUIREMENTS
+================================================================================
+[x] fieldsets table: ticket_pricing row (ID 28)
+[x] fieldsets table: sessions row (ID 29)
+[x] fieldsets table: fieldset_instruction column added
+[x] fieldsets table: fieldset_instruction populated for 28 and 29
+[x] subcategories table: Event types (101-106, 108, 109) updated with fieldset IDs 28, 29
+
+================================================================================
+FILE CHANGES CHECKLIST
+================================================================================
+
+get-form.php:
+[x] Check for fieldset_instruction column existence
+[x] Include fieldset_instruction in SELECT query
+[x] Add fieldset_instruction to $entry array
+[x] Add fieldset_instruction to $builtField arrays (2 locations)
+
+fieldsets-new.js:
+[x] ticket_pricing case added
+[x] sessions case added
+[x] All sp* functions copied to tp* for ticket_pricing
+[x] All sp* functions copied to sess* for sessions
+[x] fieldset-sessionpricing-* classes changed to fieldset-ticketpricing-*
+[x] fieldset-sessionpricing-* classes changed to fieldset-sessions-*
+[x] "seating" changed to "ticketarea" in ticket_pricing
+[x] ticket_pricing exposes _getTicketGroupKeys()
+[x] sessions calls sessGetTicketGroupKeys() to read from ticket_pricing
+[x] _setValue implemented for both
+[x] _getValue implemented for both
+[x] Instruction text read from fieldset_instruction (not hardcoded)
+
+fieldsets-new.css:
+[x] fieldset-ticketpricing-instruction
+[x] fieldset-ticketpricing-ticketgroups-container
+[x] fieldset-ticketpricing-ticketgroup-item and variants
+[x] fieldset-ticketpricing-pricing-button-add/remove
+[x] fieldset-sessions-instruction
+[x] fieldset-sessions-sessions-container
+[x] fieldset-sessions-session-row and variants
+[x] fieldset-sessions-session-button-add/remove
+[x] fieldset-sessions-ticketgroup-menu and variants
+[x] fieldset-sessions-calendar-popover
+
+formbuilder-new.js:
+[x] Instruction textarea for ticket_pricing and sessions
+[x] isLockedEventFieldset detection
+[x] isEventFieldsetTicketPricing detection
+[x] isEventFieldsetSessions detection
+[x] Required checkbox locked for event fieldsets
+[x] More menu disabled for event fieldsets (prevents deletion)
+[x] Sessions forced to location_specific
+[x] autoAddEventFieldsets() function
+[x] ticket_pricing auto-added above divider for Events type
+[x] sessions auto-added below divider for Events type
+[x] updateEventOnlyFieldsets() handles ticket_pricing, sessions, session_pricing
+[x] Fieldset menu greys out event-only fieldsets for General type
+
+member-new.js:
+[x] case 'ticket_pricing' added to getValue switch (form submission)
+[x] case 'sessions' added to getValue switch (form submission)
+[x] Extracts pricing_groups, age_ratings, price_summary from ticket_pricing
+[x] Extracts sessions, session_summary from sessions
+[x] Validation message handling updated for ticket_pricing and sessions
+[x] extractCurrencyFromPayload handles ticket_pricing
+[x] getMaxSelectedIso lookup checks sessions fieldset first, then session_pricing
+[x] case 'ticket_pricing' added to data loading (edit existing post)
+[x] case 'sessions' added to data loading (edit existing post)
+
+add-post.php:
+[x] Accepts both ticket_pricing and ticket-pricing baseType
+[x] Handles separate sessions fieldset (with sessions array)
+[x] Handles separate ticket_pricing fieldset (with pricing_groups)
+[x] Writes session_summary and price_summary to map card
+[x] Writes to post_sessions table from sessions fieldset
+[x] Writes to post_ticket_pricing table from ticket_pricing fieldset
+
+edit-post.php:
+[x] Accepts both ticket_pricing and ticket-pricing baseType
+[x] Handles separate sessions fieldset (with sessions array)
+[x] Handles separate ticket_pricing fieldset (with pricing_groups)
+[x] Writes session_summary and price_summary to map card
+[x] Writes to post_sessions table from sessions fieldset
+[x] Writes to post_ticket_pricing table from ticket_pricing fieldset
+
+================================================================================
+FUNCTIONALITY THAT MUST BE COPIED (from session_pricing)
+================================================================================
+[x] buildLabel call
+[x] instruction text display
+[x] capitalize() function
+[x] updateTierCompleteness() function
+[x] applyFieldsetRowItemClasses() calls
+[x] applyPlaceholder() calls
+[x] manuallyEdited tracking (dataset.manuallyEdited = 'true')
+[x] Price input focus handler (strips symbol)
+[x] Price input blur handler (formats with symbol)
+[x] Price input input handler (sanitizes)
+[x] updatePricePlaceholder() calls
+[x] Currency state management
+[x] Ticket group add/remove buttons
+[x] Pricing tier add/remove buttons
+[x] Ticket area add/remove buttons
+[x] Calendar date selection
+[x] Session time inputs with HH:MM formatting
+[x] Session time autofill logic
+[x] Session time sorting on blur
+[x] Ticket group dropdown for sessions
+
+================================================================================
+PREVIOUS ERRORS TO AVOID
+================================================================================
+1. DO NOT add language tags to code references
+2. DO NOT use "seating" - use "ticketarea"
+3. DO NOT use "sessionpricing" in new class names
+4. DO NOT invent simplified code - copy exactly
+5. DO NOT forget capitalize() function
+6. DO NOT forget manuallyEdited tracking
+7. DO NOT forget price focus/blur behavior
+8. DO NOT forget updateTierCompleteness()
+9. DO NOT use terminal commands
+10. DO NOT delete this file until testing is complete
+
+================================================================================
+CLASS NAME REFERENCE
+================================================================================
+
+TICKET_PRICING classes (fieldset-ticketpricing-*):
+- fieldset-ticketpricing-instruction
+- fieldset-ticketpricing-ticketgroups-container
+- fieldset-ticketpricing-ticketgroup-item
+- fieldset-ticketpricing-ticketgroup-item--active
+- fieldset-ticketpricing-ticketgroup-item-header
+- fieldset-ticketpricing-ticketgroup-item-header-content
+- fieldset-ticketpricing-ticketgroup-header-label
+- fieldset-ticketpricing-ticketgroup-arrow
+- fieldset-ticketpricing-ticketgroup-arrow-icon
+- fieldset-ticketpricing-ticketgroup-button-add
+- fieldset-ticketpricing-ticketgroup-button-remove
+- fieldset-ticketpricing-ticketgroup-button-icon
+- fieldset-ticketpricing-ticketgroup-item-editorwrap
+- fieldset-ticketpricing-pricing-editor
+- fieldset-ticketpricing-pricing-ticketareas-container
+- fieldset-ticketpricing-pricing-ticketarea-block
+- fieldset-ticketpricing-ticketarea-label-row
+- fieldset-ticketpricing-ticketarea-input-row
+- fieldset-ticketpricing-input-ticketarea
+- fieldset-ticketpricing-pricing-tiers-container
+- fieldset-ticketpricing-tier-label-row
+- fieldset-ticketpricing-tier-input-row
+- fieldset-ticketpricing-pricing-tier-block
+- fieldset-ticketpricing-input-price
+- fieldset-ticketpricing-pricing-button-add
+- fieldset-ticketpricing-pricing-button-remove
+- fieldset-ticketpricing-pricing-button-icon
+
+SESSIONS classes (fieldset-sessions-*):
+- fieldset-sessions-instruction
+- fieldset-sessions-calendar-container
+- fieldset-sessions-calendar-popover
+- fieldset-sessions-calendar-popover--open
+- fieldset-sessions-calendar-popover-body
+- fieldset-sessions-sessions-container
+- fieldset-sessions-session-container-item
+- fieldset-sessions-session-row
+- fieldset-sessions-session-row--picker
+- fieldset-sessions-session-field-label
+- fieldset-sessions-session-field-label--picker
+- fieldset-sessions-session-field-label--selected
+- fieldset-sessions-session-field-label--open
+- fieldset-sessions-session-field-label-spacer
+- fieldset-sessions-session-field-time
+- fieldset-sessions-session-field-time-input
+- fieldset-sessions-session-button-add
+- fieldset-sessions-session-button-remove
+- fieldset-sessions-session-button-icon
+- fieldset-sessions-ticketgroup-menu
+- fieldset-sessions-ticketgroup-menu--open
+- fieldset-sessions-ticketgroup-menu-options
+- fieldset-sessions-ticketgroup-menu-option
+- fieldset-sessions-ticketgroup-menu-option-icon
+- fieldset-sessions-ticketgroup-menu-option-label
+- fieldset-sessions-ticketgroup-button-toggle
+- fieldset-sessions-ticketgroup-button-icon
+- fieldset-sessions-ticketgroup-button-label
+
+================================================================================

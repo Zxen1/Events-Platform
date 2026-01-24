@@ -1679,6 +1679,52 @@
             });
         }
         
+        // Function to auto-add mandatory event fieldsets (ticket_pricing, sessions) when Events type is selected
+        function autoAddEventFieldsets() {
+            if (!fieldsContainer || !fieldsetOpts) return;
+            
+            var eventFieldsetKeys = ['ticket_pricing', 'sessions'];
+            
+            eventFieldsetKeys.forEach(function(keyToAdd) {
+                // Check if already added
+                var existingWrapper = fieldsContainer.querySelector('.formbuilder-field-wrapper[data-fieldset-id="' + keyToAdd + '"]');
+                if (existingWrapper) return; // Already exists
+                
+                // Find the fieldset definition
+                var fs = fieldsets.find(function(f) {
+                    var fKey = f.fieldset_key || f.key || '';
+                    return fKey.toLowerCase() === keyToAdd;
+                });
+                if (!fs) return; // Fieldset not found
+                
+                // Create and add the fieldset
+                var result = createFieldElement(fs, true, fs);
+                
+                // ticket_pricing goes above the divider line (primary container)
+                // sessions goes below the divider line (location-specific)
+                if (keyToAdd === 'ticket_pricing') {
+                    // Find the divider and insert before it
+                    var divider = fieldsContainer.querySelector('.formbuilder-location-divider');
+                    if (divider) {
+                        fieldsContainer.insertBefore(result.wrapper, divider);
+                    } else {
+                        fieldsContainer.appendChild(result.wrapper);
+                    }
+                } else if (keyToAdd === 'sessions') {
+                    // Append at the end (below the divider)
+                    fieldsContainer.appendChild(result.wrapper);
+                }
+                
+                // Mark as added in the menu
+                addedFieldsets[result.fsId] = true;
+                var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + keyToAdd + '"]');
+                if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+            });
+            
+            // Update divider and repeat switches
+            updateLocationDividerAndRepeatSwitches();
+        }
+        
         // Function to update divider line and location repeat switches based on location type selection
         function updateLocationDividerAndRepeatSwitches() {
             if (!fieldsContainer) return;
@@ -2097,6 +2143,8 @@
                 cat.subFees[subName].subcategory_type = 'Events';
                 // Enable event-only fieldsets for Events type
                 updateEventOnlyFieldsets('Events');
+                // Auto-add mandatory event fieldsets (ticket_pricing, sessions)
+                autoAddEventFieldsets();
                 notifyChange();
             }
         });
@@ -2298,6 +2346,25 @@
                 isRequired = true;
             }
             
+            // Event fieldsets (ticket_pricing, sessions) are mandatory for Event subcategories
+            // ticket_pricing: above the line (not location_specific)
+            // sessions: below the line (location_specific)
+            var isLockedEventFieldset = false;
+            var isEventFieldsetTicketPricing = false;
+            var isEventFieldsetSessions = false;
+            var isEventSubcategory = (currentType === 'Events') || (subFeeData && subFeeData.subcategory_type === 'Events');
+            if (isEventSubcategory && fieldsetDef && fieldsetDef.fieldset_key) {
+                var eventFieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
+                isEventFieldsetTicketPricing = (eventFieldsetKeyLower === 'ticket_pricing');
+                isEventFieldsetSessions = (eventFieldsetKeyLower === 'sessions');
+                isLockedEventFieldset = isEventFieldsetTicketPricing || isEventFieldsetSessions;
+            }
+            
+            // Event fieldsets must always be required
+            if (isLockedEventFieldset) {
+                isRequired = true;
+            }
+            
             var fieldWrapper = document.createElement('div');
             fieldWrapper.className = 'formbuilder-field-wrapper';
             fieldWrapper.setAttribute('data-fieldset-id', fsId);
@@ -2362,8 +2429,8 @@
                 fieldWrapper.classList.add('formbuilder-field-wrapper--required');
             }
             
-            // Lock required checkbox for location fieldsets
-            if (isLockedLocationFieldset) {
+            // Lock required checkbox for location fieldsets and event fieldsets
+            if (isLockedLocationFieldset || isLockedEventFieldset) {
                 requiredCheckbox.checked = true;
                 requiredCheckbox.disabled = true;
                 requiredLabel.classList.add('disabled');
@@ -2371,8 +2438,8 @@
             
             syncFieldWrapperUi(fieldWrapper);
             requiredCheckbox.onchange = function() {
-                if (isLockedLocationFieldset) {
-                    // Prevent unchecking location fieldsets - force it back to checked
+                if (isLockedLocationFieldset || isLockedEventFieldset) {
+                    // Prevent unchecking locked fieldsets - force it back to checked
                     requiredCheckbox.checked = true;
                     return;
                 }
@@ -2393,8 +2460,8 @@
             fieldMoreBtn.innerHTML = '<div class="formbuilder-field-more-icon"></div><div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
-            // Lock more menu for location fieldsets - prevent deletion
-            if (isLockedLocationFieldset) {
+            // Lock more menu for location fieldsets and event fieldsets - prevent deletion
+            if (isLockedLocationFieldset || isLockedEventFieldset) {
                 fieldMoreBtn.classList.add('disabled');
                 fieldMoreBtn.style.pointerEvents = 'none';
                 fieldMoreBtn.style.opacity = '0.5';
@@ -2433,8 +2500,13 @@
                 fieldWrapper.classList.add('formbuilder-field-wrapper--location-specific');
             }
             
+            // Force sessions fieldset to be location-specific (below the line)
+            if (isEventFieldsetSessions) {
+                fieldWrapper.classList.add('formbuilder-field-wrapper--location-specific');
+            }
+            
             // Initialize location-specific state from fieldData (loaded from database)
-            if (!isLockedLocationFieldset && fieldData) {
+            if (!isLockedLocationFieldset && !isLockedEventFieldset && fieldData) {
                 var initialLocationSpecific = false;
                 if (fieldData.location_specific !== undefined) {
                     initialLocationSpecific = !!fieldData.location_specific;
@@ -2921,14 +2993,16 @@
                 return;
             }
             
-            // Check if this is session_pricing (only available for Events, not General)
-            var isSessionPricing = fieldsetKeyLower === 'session_pricing';
+            // Check if this is an event-only fieldset (only available for Events, not General)
+            var isEventOnlyFieldset = fieldsetKeyLower === 'session_pricing' || 
+                                      fieldsetKeyLower === 'ticket_pricing' || 
+                                      fieldsetKeyLower === 'sessions';
             
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
             
-            // Grey out session_pricing for General subcategory type
-            if (isSessionPricing && currentSubcategoryType !== 'Events') {
+            // Grey out event-only fieldsets for General subcategory type
+            if (isEventOnlyFieldset && currentSubcategoryType !== 'Events') {
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
             }
             var displayName = '';

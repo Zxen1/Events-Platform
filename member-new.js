@@ -896,13 +896,13 @@ const MemberModule = (function() {
     }
     
     function extractCurrencyFromPayload(payload) {
-        // Extract first currency found in the payload (session_pricing or item-pricing)
+        // Extract first currency found in the payload (session_pricing, ticket_pricing, or item-pricing)
         if (!payload || !Array.isArray(payload.fields)) return null;
         for (var i = 0; i < payload.fields.length; i++) {
             var f = payload.fields[i];
             if (!f || !f.value) continue;
             var t = f.type || f.key || '';
-            if (t === 'session_pricing' && f.value.pricing_groups) {
+            if ((t === 'session_pricing' || t === 'ticket_pricing') && f.value.pricing_groups) {
                 var groups = f.value.pricing_groups;
                 for (var gk in groups) {
                     if (!groups.hasOwnProperty(gk)) continue;
@@ -2646,7 +2646,8 @@ const MemberModule = (function() {
                 var isoCsv = fieldsetEl.dataset.selectedIsos || '';
                 if (!isoCsv) {
                     // Fallback to labels if attribute not synced yet
-                    var days = fieldsetEl.querySelectorAll('.fieldset-sessionpricing-session-field-label--selected[data-iso]');
+                    // Check both sessions (new) and sessionpricing (legacy) class names
+                    var days = fieldsetEl.querySelectorAll('.fieldset-sessions-session-field-label--selected[data-iso], .fieldset-sessionpricing-session-field-label--selected[data-iso]');
                     var latest = null;
                     days.forEach(function(el) {
                         var iso = el.dataset.iso;
@@ -2662,15 +2663,17 @@ const MemberModule = (function() {
             var result = [];
 
             // Location 1 sessions are in the main form (not inside .member-location-container with location > 1)
-            // Use session_pricing fieldset.
-            var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"]');
+            // Check for sessions fieldset first (new split), then session_pricing (legacy)
+            var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="sessions"]') || 
+                               formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"]');
             var mainIso = getMaxSelectedIso(mainSessions);
             result.push(mainIso ? daysToIso(mainIso) : 0);
 
             // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
                 var container = formFields.querySelector('.member-location-container[data-location-number="' + i + '"]');
-                var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
+                var fs = container ? (container.querySelector('.fieldset[data-fieldset-key="sessions"]') || 
+                                       container.querySelector('.fieldset[data-fieldset-key="session_pricing"]')) : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
             }
@@ -2868,7 +2871,7 @@ const MemberModule = (function() {
             if (baseType === 'custom_checklist') msgKey = 'msg_post_validation_choose';
             if (baseType === 'custom_radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
             if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
-            if (baseType === 'item-pricing' || baseType === 'session_pricing') msgKey = 'msg_post_validation_pricing';
+            if (baseType === 'item-pricing' || baseType === 'session_pricing' || baseType === 'ticket_pricing' || baseType === 'sessions') msgKey = 'msg_post_validation_pricing';
             if (baseType === 'address' || baseType === 'city' || baseType === 'venue') msgKey = 'msg_post_validation_location';
 
             return { key: msgKey, placeholders: { field: name } };
@@ -3755,6 +3758,19 @@ const MemberModule = (function() {
                             age_ratings: mapCard.age_ratings || {}
                         };
                         break;
+                    
+                    case 'ticket_pricing':
+                        val = {
+                            pricing_groups: mapCard.pricing_groups || {},
+                            age_ratings: mapCard.age_ratings || {}
+                        };
+                        break;
+                    
+                    case 'sessions':
+                        val = {
+                            sessions: mapCard.sessions || []
+                        };
+                        break;
                         
                     case 'item-pricing':
                         val = {
@@ -4283,6 +4299,172 @@ const MemberModule = (function() {
                     };
                 } catch (e33) {
                     throw e33; // Do not swallow errors
+                }
+
+            case 'ticket_pricing':
+                try {
+                    // Ticket pricing groups: { [ticket_group_key]: [ { allocated_areas, ticket_area, tiers:[...] } ] }
+                    // Age ratings per group: { [ticket_group_key]: 'rating_value' }
+                    var tpPricingGroups = {};
+                    var tpAgeRatings = {};
+                    var tpAllPrices = [];
+                    var tpSharedCurrency = '';
+                    var tpGroupsWrap = el.querySelector('.fieldset-ticketpricing-ticketgroups-container');
+                    if (tpGroupsWrap) {
+                        tpGroupsWrap.querySelectorAll('.fieldset-ticketpricing-ticketgroup-item').forEach(function(groupEl) {
+                            if (!groupEl) return;
+                            var gk = groupEl.dataset ? String(groupEl.dataset.ticketGroupKey || '').trim() : '';
+                            if (!gk) return;
+                            var editorEl = groupEl.querySelector('.fieldset-ticketpricing-pricing-editor') || groupEl;
+                            
+                            // Extract age rating for this ticket group
+                            var ageRatingMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                            if (ageRatingMenu) {
+                                tpAgeRatings[gk] = String(ageRatingMenu.dataset.value || '').trim();
+                            }
+                            
+                            var allocatedVal = 1;
+                            var yesRadio = editorEl.querySelector('input[type="radio"][value="1"]');
+                            if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
+                            var ticketAreaBlocks = editorEl.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                            var tpSeatOut = [];
+                            ticketAreaBlocks.forEach(function(block) {
+                                if (allocatedVal === 0 && tpSeatOut.length > 0) return;
+
+                                var ticketArea = '';
+                                var seatInput = block.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                                if (seatInput) ticketArea = String(seatInput.value || '').trim();
+
+                                var tiers = [];
+                                block.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block').forEach(function(tier) {
+                                    var tierName = '';
+                                    var tierInput = tier.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
+                                    if (tierInput) tierName = String(tierInput.value || '').trim();
+                                    
+                                    var currInput = editorEl.querySelector('.component-currencyfull-menu-button-input');
+                                    var curr = currInput ? String(currInput.value || '').trim() : '';
+                                    
+                                    if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                    
+                                    if (curr && !tpSharedCurrency) tpSharedCurrency = curr;
+
+                                    var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
+                                    var rawPrice = priceInput ? String(priceInput.value || '').trim() : '';
+                                    
+                                    var price = '';
+                                    if (rawPrice) {
+                                        if (curr) {
+                                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                                                throw new Error('[Member] CurrencyComponent.parseInput is required');
+                                            }
+                                            var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
+                                            if (Number.isFinite(numericValue)) {
+                                                price = numericValue.toString();
+                                                tpAllPrices.push(numericValue);
+                                            }
+                                        } else {
+                                            var normalized = rawPrice.replace(/,/g, '.');
+                                            var numericValue = parseFloat(normalized.replace(/[^0-9.-]/g, ''));
+                                            if (Number.isFinite(numericValue)) {
+                                                price = numericValue.toString();
+                                                tpAllPrices.push(numericValue);
+                                            }
+                                        }
+                                    }
+                                    
+                                    tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                });
+                                tpSeatOut.push({ 
+                                    allocated_areas: allocatedVal,
+                                    ticket_area: ticketArea, 
+                                    tiers: tiers 
+                                });
+                            });
+                            tpPricingGroups[gk] = tpSeatOut;
+                        });
+                    }
+
+                    // Generate pre-formatted price_summary for fast display
+                    var tpPriceSummary = '';
+                    if (tpAllPrices.length > 0 && tpSharedCurrency) {
+                        var min = Math.min.apply(null, tpAllPrices);
+                        var max = Math.max.apply(null, tpAllPrices);
+                        
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            var countryCode = '';
+                            if (typeof CurrencyComponent.getCurrencyByCode === 'function') {
+                                var currData = CurrencyComponent.getCurrencyByCode(tpSharedCurrency);
+                                if (currData && currData.filename) {
+                                    countryCode = currData.filename.replace('.svg', '');
+                                }
+                            }
+
+                            var prefix = countryCode ? '[' + countryCode + '] ' : '';
+                            if (min === max) {
+                                tpPriceSummary = prefix + CurrencyComponent.formatWithSymbol(min.toString(), tpSharedCurrency);
+                            } else {
+                                tpPriceSummary = prefix + CurrencyComponent.formatWithSymbol(min.toString(), tpSharedCurrency) + ' - ' + CurrencyComponent.formatWithSymbol(max.toString(), tpSharedCurrency);
+                            }
+                        }
+                    }
+
+                    return {
+                        pricing_groups: tpPricingGroups,
+                        age_ratings: tpAgeRatings,
+                        price_summary: tpPriceSummary
+                    };
+                } catch (e34) {
+                    throw e34;
+                }
+
+            case 'sessions':
+                try {
+                    // Sessions portion: each time includes ticket_group_key
+                    var sessIsoCsv = el.dataset.selectedIsos || '';
+                    var sessDates = [];
+                    if (sessIsoCsv) {
+                        sessDates = sessIsoCsv.split(',').filter(Boolean);
+                    } else {
+                        var selectedDays = el.querySelectorAll('.fieldset-sessions-session-field-label--selected[data-iso]');
+                        selectedDays.forEach(function(d) {
+                            var iso = d.dataset.iso;
+                            if (iso) sessDates.push(String(iso));
+                        });
+                    }
+                    sessDates.sort();
+                    
+                    var sessSessionsOut = [];
+                    for (var si = 0; si < sessDates.length; si++) {
+                        var dateStr = sessDates[si];
+                        var times = [];
+                        el.querySelectorAll('input.fieldset-sessions-session-field-time-input[data-date="' + dateStr + '"]').forEach(function(t) {
+                            if (!t) return;
+                            var v = String(t.value || '').trim();
+                            var tgk = t.dataset ? String(t.dataset.ticketGroupKey || '').trim() : '';
+                            times.push({ time: v, ticket_group_key: tgk });
+                        });
+                        sessSessionsOut.push({ date: dateStr, times: times });
+                    }
+
+                    // Generate pre-formatted session_summary for fast display
+                    var sessSessionSummary = '';
+                    if (sessDates.length > 0) {
+                        var firstDate = sessDates[0];
+                        var lastDate = sessDates[sessDates.length - 1];
+                        if (firstDate === lastDate) {
+                            sessSessionSummary = App.formatDateShort(firstDate);
+                        } else {
+                            sessSessionSummary = App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
+                        }
+                    }
+
+                    return {
+                        sessions: sessSessionsOut,
+                        session_summary: sessSessionSummary
+                    };
+                } catch (e35) {
+                    throw e35;
                 }
 
             case 'item-pricing':
