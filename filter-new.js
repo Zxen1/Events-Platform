@@ -1662,9 +1662,46 @@ const FilterModule = (function() {
         requestCountsFn = requestCounts;
         requestCounts();
 
-        // Recompute counts when filters change or map moves
+        // Recompute counts when filters change
         App.on('filter:changed', function() { requestCounts(); });
-        App.on('map:boundsChanged', function() { requestCounts(); });
+        
+        // Track whether we were above/below threshold to detect crossings
+        var wasAboveThreshold = false;
+        try {
+            var initThreshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                var initMap = MapModule.getMap();
+                if (initMap && typeof initMap.getZoom === 'function') {
+                    wasAboveThreshold = initMap.getZoom() >= initThreshold;
+                }
+            }
+        } catch (_eInitZoom) {}
+        
+        // Recompute counts when map moves:
+        // - Always refresh if zoom crosses threshold (scope changes between worldwide/area)
+        // - Refresh if at/above threshold (area changed)
+        // - Skip if below threshold and didn't cross (worldwide, position irrelevant)
+        App.on('map:boundsChanged', function() {
+            try {
+                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                var currentZoom = 0;
+                if (window.MapModule && typeof MapModule.getMap === 'function') {
+                    var m = MapModule.getMap();
+                    if (m && typeof m.getZoom === 'function') {
+                        currentZoom = m.getZoom();
+                    }
+                }
+                var isAboveThreshold = currentZoom >= threshold;
+                var crossedThreshold = isAboveThreshold !== wasAboveThreshold;
+                wasAboveThreshold = isAboveThreshold;
+                
+                // Refresh if crossed threshold OR if above threshold (area matters)
+                if (!crossedThreshold && !isAboveThreshold) {
+                    return;
+                }
+            } catch (_eZoomCheck) {}
+            requestCounts();
+        });
     }
 
 
