@@ -2339,11 +2339,23 @@
   margin: 0 0 10px 0;
 }
 
+.admin-settings-field-label--has-tooltip {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.admin-settings-field-label-text {
+  font-size: 13px;
+  color: #fff;
+}
+
 .admin-tooltip {
   width: 16px;
   height: 16px;
   margin-left: 6px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   cursor: help;
@@ -2364,22 +2376,22 @@
   display: none;
   position: absolute;
   top: calc(100% + 10px);
-  left: 0;
-  width: 320px;
+  left: 10px;
+  right: 10px;
   background: #000;
   border: 1px solid #777;
   border-radius: 4px;
   padding: 10px;
   font-size: 13px;
   font-style: normal;
-  font-weight: normal;
   color: #fff;
+  width: auto;
   white-space: pre-line;
   z-index: var(--layer-dialog, 86);
   line-height: 1.4;
 }
 
-.admin-tooltip:hover .admin-tooltip-text,
+.admin-tooltip:hover + .admin-tooltip-text,
 .admin-tooltip-text:hover {
   display: block;
 }
