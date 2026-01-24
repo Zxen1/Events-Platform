@@ -3247,37 +3247,50 @@ const AdminModule = (function() {
     }
     
     function loadCountdownInfoMessage() {
-        var infoEl = document.getElementById('adminCountdownInfo');
-        if (!infoEl) return;
+        var countdownTooltipEls = document.querySelectorAll('.admin-countdown-tooltip');
+        var mapCardTooltipEl = document.querySelector('.admin-map-card-breakpoint-tooltip');
         
-        // Fetch the timezone info message from admin_messages
+        if (!countdownTooltipEls.length && !mapCardTooltipEl) return;
+        
+        // Fetch messages from admin_messages
         fetch('/gateway.php?action=get-admin-settings&include_messages=true')
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success && data.messages) {
-                    // Find the timezone info message by key
                     var timezoneMsg = null;
+                    var mapCardMsg = null;
+                    
                     // Messages are grouped by container
                     for (var containerKey in data.messages) {
                         var container = data.messages[containerKey];
                         if (container.messages) {
                             for (var i = 0; i < container.messages.length; i++) {
-                                if (container.messages[i].message_key === 'msg_timezone_info') {
-                                    timezoneMsg = container.messages[i];
-                                    break;
+                                var msg = container.messages[i];
+                                if (msg.message_key === 'msg_timezone_info') {
+                                    timezoneMsg = msg;
+                                }
+                                if (msg.message_key === 'msg_map_card_breakpoint_info') {
+                                    mapCardMsg = msg;
                                 }
                             }
                         }
-                        if (timezoneMsg) break;
                     }
                     
-                    if (timezoneMsg && timezoneMsg.message_text) {
-                        infoEl.textContent = timezoneMsg.message_text;
+                    // Populate countdown tooltips
+                    if (timezoneMsg && timezoneMsg.message_text && countdownTooltipEls.length) {
+                        countdownTooltipEls.forEach(function(el) {
+                            el.textContent = timezoneMsg.message_text;
+                        });
+                    }
+                    
+                    // Populate map card breakpoint tooltip
+                    if (mapCardMsg && mapCardMsg.message_text && mapCardTooltipEl) {
+                        mapCardTooltipEl.textContent = mapCardMsg.message_text;
                     }
                 }
             })
             .catch(function(err) {
-                console.warn('[Admin] Could not load countdown info message:', err);
+                console.warn('[Admin] Could not load tooltip messages:', err);
             });
     }
     
