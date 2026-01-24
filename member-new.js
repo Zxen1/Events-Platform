@@ -4792,6 +4792,7 @@ const MemberModule = (function() {
                 // Legacy/compat (do not rely on these for new-site behavior)
                 placeholder: '',
                 tooltip: '',
+                instruction: '',
                 options: [],
                 selectedAmenities: null,
                 fieldsetKey: '',
@@ -4820,6 +4821,7 @@ const MemberModule = (function() {
             // Legacy/compat (do not rely on these for new-site behavior)
             placeholder: '',
             tooltip: '',
+            instruction: '',
             options: [],
             selectedAmenities: null,
             fieldsetKey: '',
@@ -4860,11 +4862,14 @@ const MemberModule = (function() {
         }
         
         // Legacy/compat (do not rely on these for new-site behavior)
-        if (field.placeholder && typeof field.placeholder === 'string') {
+        if (typeof field.placeholder === 'string') {
             result.placeholder = field.placeholder;
         }
-        if (field.tooltip && typeof field.tooltip === 'string') {
+        if (typeof field.tooltip === 'string') {
             result.tooltip = field.tooltip;
+        }
+        if (typeof field.instruction === 'string') {
+            result.instruction = field.instruction;
         }
         if (Array.isArray(field.options)) {
             result.options = field.options;

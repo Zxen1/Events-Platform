@@ -917,10 +917,26 @@ const FieldsetBuilder = (function(){
             }
         }
         
-        // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder (from fieldset_mods).
-        var placeholder = fieldData.customPlaceholder || fieldData.fieldset_placeholder;
-        // Canonical: fieldset_instruction (from DB). Editable override: customInstruction (from fieldset_mods).
-        var instruction = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction;
+        // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder/placeholder (from fieldset_mods).
+        // Note: empty string is falsy, so we check typeof instead of using || chain
+        var placeholder = '';
+        if (fieldData.customPlaceholder && typeof fieldData.customPlaceholder === 'string') {
+            placeholder = fieldData.customPlaceholder;
+        } else if (typeof fieldData.placeholder === 'string') {
+            placeholder = fieldData.placeholder;
+        } else if (fieldData.fieldset_placeholder && typeof fieldData.fieldset_placeholder === 'string') {
+            placeholder = fieldData.fieldset_placeholder;
+        }
+        // Canonical: fieldset_instruction (from DB). Editable override: customInstruction/instruction (from fieldset_mods).
+        // Note: empty string is falsy, so we check typeof instead of using || chain
+        var instruction = '';
+        if (fieldData.customInstruction && typeof fieldData.customInstruction === 'string') {
+            instruction = fieldData.customInstruction;
+        } else if (typeof fieldData.instruction === 'string') {
+            instruction = fieldData.instruction;
+        } else if (fieldData.fieldset_instruction && typeof fieldData.fieldset_instruction === 'string') {
+            instruction = fieldData.fieldset_instruction;
+        }
         var minLength = fieldData.min_length;
         var maxLength = fieldData.max_length;
         var fieldOptions = fieldData.fieldset_options || fieldData.options;
