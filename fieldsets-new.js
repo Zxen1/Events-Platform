@@ -942,13 +942,20 @@ const FieldsetBuilder = (function(){
         var fieldOptions = fieldData.fieldset_options || fieldData.options;
         
         // Parse fieldset_fields - can be JSON string, array, or object
-        var fields = fieldData.fieldset_fields;
+        // Also check fieldData.fields (API returns sub-fields there)
+        var fields = fieldData.fieldset_fields || fieldData.fields;
         if (typeof fields === 'string') {
             try { fields = JSON.parse(fields); } catch (e) { fields = null; }
         }
-        // If fields is an array (legacy format), convert to empty object (no sub-field placeholders)
+        // If fields is an array, convert to object keyed by field key for easy lookup
         if (Array.isArray(fields)) {
-            fields = {};
+            var fieldsObj = {};
+            fields.forEach(function(f) {
+                if (f && f.key) {
+                    fieldsObj[f.key] = f;
+                }
+            });
+            fields = fieldsObj;
         }
         if (!fields || typeof fields !== 'object') {
             fields = {};

@@ -1299,12 +1299,20 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     if ($item['type'] === 'field' && isset($fieldsById[$item['id']])) {
                         $childField = $fieldsById[$item['id']];
                         $childInputType = isset($childField['input_type']) ? trim((string) $childField['input_type']) : 'text';
-                        $builtField['fields'][] = [
+                        $childFieldData = [
                             'id' => $childField['id'],
                             'key' => $childField['field_key'],
                             'type' => $childInputType,
                             'name' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
                         ];
+                        // Include field-level placeholder and tooltip if available
+                        if (isset($childField['field_placeholder']) && $childField['field_placeholder'] !== null && $childField['field_placeholder'] !== '') {
+                            $childFieldData['placeholder'] = $childField['field_placeholder'];
+                        }
+                        if (isset($childField['field_tooltip']) && $childField['field_tooltip'] !== null && $childField['field_tooltip'] !== '') {
+                            $childFieldData['tooltip'] = $childField['field_tooltip'];
+                        }
+                        $builtField['fields'][] = $childFieldData;
                     }
                 }
                 
