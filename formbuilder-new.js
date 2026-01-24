@@ -2781,7 +2781,7 @@
             placeholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
             placeholderInput.rows = 3;
             // Only set value if it's different from default (meaning it was modified)
-            var customPlaceholder = fieldData.customPlaceholder || fieldData.placeholder || '';
+            var customPlaceholder = fieldData.placeholder || '';
             if (customPlaceholder && customPlaceholder !== defaultPlaceholder) {
                 placeholderInput.value = customPlaceholder;
                 placeholderInput.style.color = '#fff';
@@ -2810,7 +2810,7 @@
             tooltipInput.placeholder = defaultTooltip || 'Tooltip text';
             tooltipInput.rows = 3;
             // Only set value if it's different from default (meaning it was modified)
-            var customTooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip || '';
+            var customTooltip = fieldData.tooltip || '';
             if (customTooltip && customTooltip !== defaultTooltip) {
                 tooltipInput.value = customTooltip;
                 tooltipInput.style.color = '#fff';
@@ -2839,7 +2839,7 @@
             instructionInput.className = 'formbuilder-field-textarea formbuilder-field-instruction';
             instructionInput.placeholder = defaultInstruction || 'Instruction text shown to users';
             instructionInput.rows = 3;
-            var customInstruction = fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || '';
+            var customInstruction = fieldData.instruction || '';
             if (customInstruction && customInstruction !== defaultInstruction) {
                 instructionInput.value = customInstruction;
                 instructionInput.style.color = '#fff';
@@ -2868,8 +2868,8 @@
                 var originalState = {
                     name: fieldData.name || defaultName || '',
                     placeholder: fieldData.placeholder || defaultPlaceholder || '',
-                    tooltip: fieldData.tooltip || fieldData.fieldset_tooltip || defaultTooltip || '',
-                    instruction: fieldData.customInstruction || fieldData.instruction || fieldData.fieldset_instruction || defaultInstruction || '',
+                    tooltip: fieldData.tooltip || defaultTooltip || '',
+                    instruction: fieldData.instruction || defaultInstruction || '',
                     options: fieldData.options || [],
                     selectedAmenities: fieldData.selectedAmenities || []
                 };

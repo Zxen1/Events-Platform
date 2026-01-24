@@ -1214,9 +1214,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'fieldset_placeholder' => $matchingFieldset['fieldset_placeholder'] ?? '',
-                    'fieldset_tooltip' => $matchingFieldset['fieldset_tooltip'] ?? null,
-                    'fieldset_instruction' => $matchingFieldset['fieldset_instruction'] ?? null,
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['fieldset_placeholder'] ?? ''),
+                    'tooltip' => $customTooltip !== null ? $customTooltip : ($matchingFieldset['fieldset_tooltip'] ?? null),
+                    'instruction' => $customInstruction !== null ? $customInstruction : ($matchingFieldset['fieldset_instruction'] ?? null),
                     'min_length' => $matchingFieldset['min_length'] ?? null,
                     'max_length' => $matchingFieldset['max_length'] ?? null,
                     'required' => $requiredValue,
@@ -1227,17 +1227,6 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 // Use custom options from editable_fieldsets if available
                 if ($customOptions !== null && is_array($customOptions)) {
                     $builtField['options'] = $customOptions;
-                }
-                
-                // Add custom placeholder, tooltip, and instruction for editable fieldsets
-                if ($customPlaceholder !== null) {
-                    $builtField['customPlaceholder'] = $customPlaceholder;
-                }
-                if ($customTooltip !== null) {
-                    $builtField['customTooltip'] = $customTooltip;
-                }
-                if ($customInstruction !== null) {
-                    $builtField['customInstruction'] = $customInstruction;
                 }
                 
                 // Add checkout options if available
@@ -1258,10 +1247,22 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $customName = null;
+                $customPlaceholder = null;
+                $customTooltip = null;
+                $customInstruction = null;
                 $customCheckoutOptions = null;
                 if ($fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
+                    }
+                    if (isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) && trim($fieldEdit['placeholder']) !== '') {
+                        $customPlaceholder = trim($fieldEdit['placeholder']);
+                    }
+                    if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
+                        $customTooltip = trim($fieldEdit['tooltip']);
+                    }
+                    if (isset($fieldEdit['instruction']) && is_string($fieldEdit['instruction']) && trim($fieldEdit['instruction']) !== '') {
+                        $customInstruction = trim($fieldEdit['instruction']);
                     }
                 }
                 // For checkout fields, use checkout_options_id column
@@ -1277,9 +1278,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'fieldset_placeholder' => $matchingFieldset['fieldset_placeholder'] ?? '',
-                    'fieldset_tooltip' => $matchingFieldset['fieldset_tooltip'] ?? null,
-                    'fieldset_instruction' => $matchingFieldset['fieldset_instruction'] ?? null,
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['fieldset_placeholder'] ?? ''),
+                    'tooltip' => $customTooltip !== null ? $customTooltip : ($matchingFieldset['fieldset_tooltip'] ?? null),
+                    'instruction' => $customInstruction !== null ? $customInstruction : ($matchingFieldset['fieldset_instruction'] ?? null),
                     'min_length' => $matchingFieldset['min_length'] ?? null,
                     'max_length' => $matchingFieldset['max_length'] ?? null,
                     'required' => $requiredValue,
