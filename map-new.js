@@ -2053,7 +2053,10 @@ const MapModule = (function() {
   }
 
   /**
-   * Handle cluster click - fly directly to zoom 12
+   * Handle cluster click
+   * - From below zoom 7.5: fly to cluster center, stop at 7.5 (shows finest cluster breakdown)
+   * - From zoom 7.5+: fly straight to zoom 12 (map card territory)
+   * This prevents landing in empty space when clicking large clusters from far out.
    */
   function handleClusterClick(e) {
     // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
@@ -2062,10 +2065,17 @@ const MapModule = (function() {
     if (!e || !e.features || !e.features[0]) return;
     
     var coords = e.features[0].geometry.coordinates;
+    var currentZoom = map.getZoom();
+    
+    // Below 7.5: stop at 7.5 to show finest cluster breakdown
+    // At 7.5+: go straight to zoom 12 (map cards)
+    var FINEST_CLUSTER_ZOOM = 7.5;
+    var MAP_CARD_ZOOM = 12;
+    var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM ? FINEST_CLUSTER_ZOOM : MAP_CARD_ZOOM;
     
     map.flyTo({
       center: coords,
-      zoom: 12,
+      zoom: targetZoom,
       pitch: map.getPitch(),
       speed: 1.35,
       curve: 1.5,
