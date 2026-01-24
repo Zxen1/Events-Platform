@@ -542,10 +542,18 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if ($baseType === 'sessions') {
       $sessions = is_array($val) ? $val : [];
+      // Extract session_summary early so it's available for map card UPDATE
+      if (is_array($sessions) && isset($sessions['session_summary']) && is_string($sessions['session_summary']) && trim($sessions['session_summary']) !== '') {
+        $card['session_summary'] = trim($sessions['session_summary']);
+      }
       continue;
     }
     if ($baseType === 'ticket_pricing' || $baseType === 'ticket-pricing') {
       $ticketPricing = is_array($val) ? $val : [];
+      // Extract price_summary early so it's available for map card UPDATE
+      if (is_array($ticketPricing) && isset($ticketPricing['price_summary']) && is_string($ticketPricing['price_summary']) && trim($ticketPricing['price_summary']) !== '') {
+        $card['price_summary'] = trim($ticketPricing['price_summary']);
+      }
       continue;
     }
     if ($baseType === 'item-pricing') {
@@ -692,9 +700,7 @@ foreach ($byLoc as $locNum => $entries) {
     if (is_array($sessions) && isset($sessions['sessions']) && is_array($sessions['sessions']) && count($sessions['sessions']) > 0) {
       $sessionsToWrite = $sessions['sessions'];
       $writeSessionPricing = true;
-      if (isset($sessions['session_summary']) && is_string($sessions['session_summary']) && trim($sessions['session_summary']) !== '') {
-        $card['session_summary'] = trim($sessions['session_summary']);
-      }
+      // Note: session_summary is extracted early in fieldset processing loop
     }
 
     // Check for new separate ticket_pricing fieldset
@@ -702,9 +708,7 @@ foreach ($byLoc as $locNum => $entries) {
       $pricingGroupsToWrite = $ticketPricing['pricing_groups'];
       $ageRatingsToWrite = $ticketPricing['age_ratings'] ?? [];
       $writeSessionPricing = true;
-      if (isset($ticketPricing['price_summary']) && is_string($ticketPricing['price_summary']) && trim($ticketPricing['price_summary']) !== '') {
-        $card['price_summary'] = trim($ticketPricing['price_summary']);
-      }
+      // Note: price_summary is extracted early in fieldset processing loop
     }
 
     if ($writeSessionPricing) {

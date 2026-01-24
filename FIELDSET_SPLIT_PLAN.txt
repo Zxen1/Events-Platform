@@ -166,6 +166,27 @@ PREVIOUS ERRORS TO AVOID
 10. DO NOT delete this file until testing is complete
 
 ================================================================================
+TESTING CHECKLIST
+================================================================================
+[ ] 1. Clear browser cache (or use incognito mode)
+[ ] 2. Create NEW test post with Event subcategory
+[ ] 3. Verify ticket_pricing fieldset appears in primary container
+[ ] 4. Verify sessions fieldset appears in each location container
+[ ] 5. Fill out ticket groups (currency, age rating, ticket areas, pricing tiers)
+[ ] 6. Select dates in calendar and add session times
+[ ] 7. Select ticket groups for each session time
+[ ] 8. Submit the post
+[ ] 9. Verify post card shows:
+    - Date range (from session_summary)
+    - Price range (from price_summary)
+    - Venue menu
+    - Session/calendar menu
+    - Info block with ticket details
+[ ] 10. Edit the post and verify data loads correctly
+[ ] 11. Save the edit and verify post still displays correctly
+[ ] 12. Test with multiple locations (increase location quantity)
+
+================================================================================
 CLASS NAME REFERENCE
 ================================================================================
 
