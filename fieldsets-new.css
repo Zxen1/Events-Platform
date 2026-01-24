@@ -1775,6 +1775,16 @@
     padding: 10px;
 }
 
+/* Editor body - hidden by default, shown when open */
+.fieldset-ticketpricing-ticketgroup-item-editorwrap {
+    display: none;
+    padding: 10px;
+}
+
+.fieldset-ticketpricing-ticketgroup-item.accordion-class-1--open .fieldset-ticketpricing-ticketgroup-item-editorwrap {
+    display: block;
+}
+
 .fieldset-ticketpricing-ticketgroup-item--active .accordion-header {
     border-color: var(--blue-500);
 }

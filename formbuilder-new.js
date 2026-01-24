@@ -2825,7 +2825,8 @@
             // Instruction text (only for ticket_pricing and sessions fieldsets)
             var instructionInput = null;
             var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
-            if (fieldsetKey === 'ticket_pricing' || fieldsetKey === 'sessions') {
+            var fieldsetKeyForInstruction = fieldsetDef && fieldsetDef.fieldset_key ? String(fieldsetDef.fieldset_key).toLowerCase() : '';
+            if (fieldsetKeyForInstruction === 'ticket_pricing' || fieldsetKeyForInstruction === 'sessions') {
                 var instructionLabel = document.createElement('label');
                 instructionLabel.className = 'formbuilder-field-label';
                 instructionLabel.textContent = 'Instruction';
