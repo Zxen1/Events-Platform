@@ -4779,8 +4779,7 @@ const MemberModule = (function() {
         if (!field || typeof field !== 'object') {
             return {
                 name: '',
-                // Canonical DB-driven strings
-                fieldset_placeholder: '',
+                // Canonical DB-driven strings (tooltip/instruction from fieldsets table)
                 fieldset_tooltip: '',
                 fieldset_instruction: '',
                 
@@ -4789,7 +4788,7 @@ const MemberModule = (function() {
                 customTooltip: '',
                 customInstruction: '',
                 
-                // Legacy/compat (do not rely on these for new-site behavior)
+                // Main values (placeholder from field_placeholder, or custom override)
                 placeholder: '',
                 tooltip: '',
                 instruction: '',
@@ -4808,8 +4807,7 @@ const MemberModule = (function() {
         }
         var result = {
             name: '',
-            // Canonical DB-driven strings
-            fieldset_placeholder: '',
+            // Canonical DB-driven strings (tooltip/instruction from fieldsets table)
             fieldset_tooltip: '',
             fieldset_instruction: '',
             
@@ -4818,7 +4816,7 @@ const MemberModule = (function() {
             customTooltip: '',
             customInstruction: '',
             
-            // Legacy/compat (do not rely on these for new-site behavior)
+            // Main values (placeholder from field_placeholder, or custom override)
             placeholder: '',
             tooltip: '',
             instruction: '',
@@ -4839,10 +4837,7 @@ const MemberModule = (function() {
             result.name = field.name;
         }
         
-        // Canonical fieldset placeholder/tooltip/instruction from DB
-        if (field.fieldset_placeholder && typeof field.fieldset_placeholder === 'string') {
-            result.fieldset_placeholder = field.fieldset_placeholder;
-        }
+        // Canonical fieldset tooltip/instruction from DB
         if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
             result.fieldset_tooltip = field.fieldset_tooltip;
         }

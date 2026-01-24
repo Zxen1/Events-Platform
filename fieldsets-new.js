@@ -917,15 +917,13 @@ const FieldsetBuilder = (function(){
             }
         }
         
-        // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder/placeholder (from fieldset_mods).
-        // Note: empty string is falsy, so we check typeof instead of using || chain
+        // Placeholder: from field_placeholder (fields table) or custom override (fieldset_mods)
+        // API returns field_placeholder as 'placeholder', custom override as 'customPlaceholder' or 'placeholder'
         var placeholder = '';
         if (fieldData.customPlaceholder && typeof fieldData.customPlaceholder === 'string') {
             placeholder = fieldData.customPlaceholder;
         } else if (typeof fieldData.placeholder === 'string') {
             placeholder = fieldData.placeholder;
-        } else if (fieldData.fieldset_placeholder && typeof fieldData.fieldset_placeholder === 'string') {
-            placeholder = fieldData.fieldset_placeholder;
         }
         // Canonical: fieldset_instruction (from DB). Editable override: customInstruction/instruction (from fieldset_mods).
         // Note: empty string is falsy, so we check typeof instead of using || chain

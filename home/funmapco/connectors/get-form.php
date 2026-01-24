@@ -597,11 +597,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasName = in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
     $hasFieldsetType = in_array('fieldset_type', $columns, true);
-    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
-    if (!$hasPlaceholder) {
-        http_response_code(500);
-        throw new RuntimeException('Fieldsets table must include `fieldset_placeholder` (new site requires canonical column names).');
-    }
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
     if (!$hasFieldsetTooltip) {
         http_response_code(500);
@@ -631,7 +626,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $selectColumns[] = '`fieldset_name`';
         }
     }
-    $selectColumns[] = '`fieldset_placeholder`';
     $selectColumns[] = '`fieldset_tooltip`';
     if ($hasFieldsetInstruction) {
         $selectColumns[] = '`fieldset_instruction`';
@@ -747,9 +741,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $entry['name'] = (string) $row['fieldset_name'];
         } else {
             $entry['name'] = $rawName;
-        }
-        if (isset($row['fieldset_placeholder']) && is_string($row['fieldset_placeholder'])) {
-            $entry['fieldset_placeholder'] = trim($row['fieldset_placeholder']);
         }
         // Allow NULL in DB, but column must exist.
         if (array_key_exists('fieldset_tooltip', $row) && $row['fieldset_tooltip'] !== null) {
@@ -1214,7 +1205,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $normalizedType,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['fieldset_placeholder'] ?? ''),
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($field['field_placeholder'] ?? ''),
                     'tooltip' => $customTooltip !== null ? $customTooltip : ($matchingFieldset['fieldset_tooltip'] ?? null),
                     'instruction' => $customInstruction !== null ? $customInstruction : ($matchingFieldset['fieldset_instruction'] ?? null),
                     'min_length' => $matchingFieldset['min_length'] ?? null,
@@ -1278,7 +1269,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'key' => $fieldsetKeyValue,
                     'type' => $fieldsetKeyValue,
                     'name' => $customName !== null ? $customName : $fieldsetName,
-                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : ($matchingFieldset['fieldset_placeholder'] ?? ''),
+                    'placeholder' => $customPlaceholder !== null ? $customPlaceholder : '',
                     'tooltip' => $customTooltip !== null ? $customTooltip : ($matchingFieldset['fieldset_tooltip'] ?? null),
                     'instruction' => $customInstruction !== null ? $customInstruction : ($matchingFieldset['fieldset_instruction'] ?? null),
                     'min_length' => $matchingFieldset['min_length'] ?? null,

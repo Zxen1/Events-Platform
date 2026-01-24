@@ -2061,13 +2061,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
         } elseif (in_array('fieldset_key', $columns, true)) {
             $select[] = 'fieldset_key';
         }
-        // Check for new column name, fallback to old column name
-        $hasPlaceholder = in_array('fieldset_placeholder', $columns, true) || in_array('placeholder', $columns, true);
-        $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
-        if ($hasPlaceholder) {
-            $select[] = $placeholderColumnName;
-        }
-
         $sql = 'SELECT ' . implode(', ', array_map(static function (string $col): string {
             return '`' . str_replace('`', '``', $col) . '`';
         }, $select)) . ' FROM fieldsets';
@@ -2086,9 +2079,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
                 'name' => $name,
                 'key' => $key,
             ];
-            if ($hasPlaceholder && isset($row[$placeholderColumnName])) {
-                $entry['fieldset_placeholder'] = trim((string) $row[$placeholderColumnName]);
-            }
             $map[$id] = $entry;
         }
 
