@@ -2340,45 +2340,47 @@
 }
 
 .admin-tooltip {
-  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
   display: inline-flex;
   align-items: center;
-  margin-left: 6px;
+  justify-content: center;
   cursor: help;
+  position: relative;
 }
 
 .admin-tooltip-icon {
-  width: 14px;
-  height: 14px;
-  stroke: rgba(255, 255, 255, 0.4);
-  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  stroke: #888;
 }
 
 .admin-tooltip:hover .admin-tooltip-icon {
-  stroke: rgba(255, 255, 255, 0.8);
+  stroke: #fff;
 }
 
 .admin-tooltip-text {
   display: none;
   position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 250px;
-  max-width: 350px;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 320px;
+  background: #000;
+  border: 1px solid #777;
+  border-radius: 4px;
   padding: 10px;
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
   font-size: 13px;
+  font-style: normal;
   font-weight: normal;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.5;
-  white-space: normal;
-  z-index: 100;
+  color: #fff;
+  white-space: pre-line;
+  z-index: var(--layer-dialog, 86);
+  line-height: 1.4;
 }
 
-.admin-tooltip:hover .admin-tooltip-text {
+.admin-tooltip:hover .admin-tooltip-text,
+.admin-tooltip-text:hover {
   display: block;
 }
 
