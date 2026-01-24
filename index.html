@@ -654,11 +654,11 @@
               <input type="hidden" id="adminStartingLat" />
               <input type="hidden" id="adminStartingLng" />
             </div>
-            <div class="admin-panel-note">
-              Sets when clusters become map cards. (Cluster clicks are hardcoded to stop at zoom 7.5 from below, or go to zoom 12 from 7.5+.)
-            </div>
             <div class="admin-panel-field admin-panel-field--spaced">
               <label class="admin-settings-field-label" for="adminMapCardBreakpoint">Map Card Breakpoint</label>
+              <div class="admin-panel-note">
+                Sets when clusters become map cards. (Cluster clicks are hardcoded to stop at zoom 7.5 from below, or go to zoom 12 from 7.5+.)
+              </div>
               <div class="admin-spin-control-row row-class-1">
                 <span id="adminMapCardBreakpointDisplay" class="admin-slider-value">8</span>
                 <input type="range" id="adminMapCardBreakpoint" min="0" max="22" step="1" value="8" class="admin-spin-slider" />
