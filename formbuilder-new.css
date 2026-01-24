@@ -1082,6 +1082,8 @@
   resize: vertical;
   line-height: 1.4;
   margin-bottom: 0;
+  cursor: text;
+  caret-color: #fff;
 }
 
 .formbuilder-field-textarea:hover,
