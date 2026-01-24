@@ -1552,12 +1552,21 @@ function sanitizeField(array $field, array $fieldsetDefinitions = []): array
         ));
     }
     
-    // Include customPlaceholder and customTooltip for editable fieldsets
+    // Include customPlaceholder/placeholder, customTooltip/tooltip, customInstruction/instruction for editable fieldsets
     if (isset($field['customPlaceholder']) && is_string($field['customPlaceholder'])) {
         $safe['customPlaceholder'] = sanitizeString($field['customPlaceholder'], 512);
     }
     if (isset($field['customTooltip']) && is_string($field['customTooltip'])) {
         $safe['customTooltip'] = sanitizeString($field['customTooltip'], 512);
+    } elseif (isset($field['tooltip']) && is_string($field['tooltip'])) {
+        // Frontend sends 'tooltip', not 'customTooltip'
+        $safe['tooltip'] = sanitizeString($field['tooltip'], 1024);
+    }
+    if (isset($field['customInstruction']) && is_string($field['customInstruction'])) {
+        $safe['customInstruction'] = sanitizeString($field['customInstruction'], 1024);
+    } elseif (isset($field['instruction']) && is_string($field['instruction'])) {
+        // Frontend sends 'instruction', not 'customInstruction'
+        $safe['instruction'] = sanitizeString($field['instruction'], 1024);
     }
 
     return $safe;
