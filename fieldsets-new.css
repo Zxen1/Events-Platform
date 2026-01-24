@@ -1711,6 +1711,7 @@
     display: flex;
     align-items: center;
     height: 36px;
+    padding: 0 10px;
 }
 
 .fieldset-ticketpricing-ticketgroup-header-label {
