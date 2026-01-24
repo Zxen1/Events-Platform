@@ -2319,6 +2319,16 @@ const PostModule = (function() {
     // Highlight the map marker
     highlightMapMarker(post.id);
 
+    // Create animated wallpaper for the post
+    try {
+      if (window.PostWallpaperComponent && typeof PostWallpaperComponent.create === 'function') {
+        var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+        if (mapCard && typeof mapCard.latitude === 'number' && typeof mapCard.longitude === 'number') {
+          PostWallpaperComponent.create(detail, mapCard.latitude, mapCard.longitude);
+        }
+      }
+    } catch (_eWallpaper) {}
+
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
       App.emit('post:opened', { post: post });
@@ -2334,6 +2344,13 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var postId = openPost.dataset.id;
+
+    // Destroy wallpaper if present
+    try {
+      if (window.PostWallpaperComponent && typeof PostWallpaperComponent.destroyActive === 'function') {
+        PostWallpaperComponent.destroyActive();
+      }
+    } catch (_eWallpaper) {}
 
     // Restore the original card element (recent-card stays recent-card).
     // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
@@ -3174,6 +3191,13 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var container = openPost.parentElement;
+
+    // Destroy wallpaper if present
+    try {
+      if (window.PostWallpaperComponent && typeof PostWallpaperComponent.destroyActive === 'function') {
+        PostWallpaperComponent.destroyActive();
+      }
+    } catch (_eWallpaper) {}
 
     // Restore the original card element (recent-card stays recent-card).
     try {

@@ -2404,6 +2404,23 @@
   margin-top: 0;
 }
 
+/* Temporarily disabled controls - greyed out but visible as reminder */
+.admin-panel-field--disabled-test {
+  opacity: 0.4;
+  pointer-events: none;
+  position: relative;
+}
+
+.admin-panel-field--disabled-test::after {
+  content: '(Testing member preference)';
+  position: absolute;
+  top: 2px;
+  right: 0;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
 /* Remove row margin when inside field wrapper to prevent double margins */
 .admin-panel-field .row-class-1 {
   margin-bottom: 0;

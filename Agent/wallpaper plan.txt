@@ -1,0 +1,128 @@
+WALLPAPER PLAN - Post Location Wallpapers
+==========================================
+
+CONTEXT
+-------
+- Posts only open above map_card_breakpoint, so globe spin can't be happening
+- Only one post visible at a time
+- Current location wallpaper in member forms works well as reference
+- Goal: Animated map wallpaper in both posts and location containers
+
+
+CURRENT IMPLEMENTATION STATUS
+-----------------------------
+- Member profile tab has Animation setting: Full / Basic / Still
+- Setting saved to member table (animation_preference column) for members
+- Setting saved to admin table (animation_preference column) for admins
+- Guests use localStorage
+
+- PostWallpaperComponent created for open posts
+- LocationWallpaperComponent modified to respect member preference
+- Admin wallpaper controls TEMPORARILY DISABLED (greyed out, visible as reminder)
+
+
+ANIMATION MODES
+---------------
+1. FULL: Live Mapbox orbit animation (identical to location container behavior)
+   - Real-time WebGL rendering
+   - Map orbits around location point
+   - Background captures every 3 seconds for smooth transitions
+
+2. BASIC: CSS slideshow animation
+   - Captures 4 frames at different bearings (0°, 90°, 180°, 270°)
+   - CSS keyframe animation crossfades between captures with subtle pan
+   - Lighter weight than live map, but not as "live" looking
+
+3. STILL: Static capture only
+   - Single capture from map, no animation
+   - Lowest resource usage
+
+
+WALLPAPER POSITIONING
+---------------------
+- Covers FULL height of open post (header to footer, including images/thumbnails)
+- Center of rotation is at the location coordinates
+- Blue background (#1f2750) shows until wallpaper loads
+- Dimmer overlay uses admin's location_wallpaper_dimmer setting (default 30%)
+
+
+ADMIN CONTROLS (TEMPORARILY DISABLED)
+-------------------------------------
+- location_wallpaper_mode (off/still/orbit) - GREYED OUT
+- location_wallpaper_dimmer slider - GREYED OUT
+- Controls visible but disabled while testing member-level preference
+- TODO: Decide if admin control should coexist with member preference
+  * Option A: Admin sets site-wide default, member can override
+  * Option B: Member preference only (current test mode)
+  * Option C: Admin controls whether feature is available at all
+
+
+COMPACT vs EXPANDED POSTS
+-------------------------
+- Currently: Wallpaper only loads when post is fully open
+- Consideration: Could load wallpaper in compact mode too
+- Issue: Map would need to resize when post expands (might be jarring)
+- Decision: TBD - will test both approaches
+
+
+BI-DIRECTIONAL HOVER (map_cards ↔ postcards)
+--------------------------------------------
+- Currently: Blue background highlight on hover
+- Future consideration: Blue BORDER instead of background
+- Reason: If wallpaper is behind the postcard, background color change
+  wouldn't be visible; border would still show the relationship
+- Decision: TBD - depends on final wallpaper appearance
+
+
+OPTION 1: LIVE MAPBOX ANIMATION (Current "Full" mode)
+-----------------------------------------------------
+- Real Mapbox map orbiting around location
+- GPU-accelerated WebGL rendering
+- Pros: Live, authentic, beautiful
+- Cons: Heavy initialization, JS main thread involvement during setup
+- Current behavior: Map is transient, destroyed on close; still capture persists for smooth re-entry
+
+
+OPTION 2: CSS-ONLY ANIMATION (Current "Basic" mode)
+---------------------------------------------------
+- Capture static images, animate with CSS transforms
+- CSS animations run on compositor thread, zero JS involvement
+- Current approach: 4 captures at different bearings, crossfade slideshow
+- Pros: Bulletproof performance, no stutter ever
+- Cons: Not "live", may look inferior compared to real rotation
+
+
+PERFORMANCE CONSIDERATIONS
+--------------------------
+- Intersection Observer: Could pause/stop animation when post scrolls off-screen
+- Caching: Keep still captures for fast re-entry when reopening same post
+- Device capability: Could detect and serve CSS fallback for low-end devices
+- No cache buildup: One post = one map instance max, cleaned up on close
+
+
+LOCATION MENU vs FULL POST WALLPAPER
+------------------------------------
+- Alternative approach: Put animation only inside location menu dropdown
+- This would be less dramatic but also less resource-intensive
+- Current test: Full post wallpaper to see if it looks good
+- May fall back to location menu only if full post is too heavy/ugly
+
+
+DATABASE CHANGES REQUIRED
+-------------------------
+-- Add animation_preference column to members table
+ALTER TABLE `members` 
+ADD COLUMN `animation_preference` VARCHAR(20) DEFAULT 'full' AFTER `map_style`;
+
+-- Add animation_preference column to admins table  
+ALTER TABLE `admins` 
+ADD COLUMN `animation_preference` VARCHAR(20) DEFAULT 'full' AFTER `map_style`;
+
+
+OPEN QUESTIONS
+--------------
+- Does wallpaper look good behind the entire post or is it too busy?
+- Should compact posts also have wallpaper (with resize on expand)?
+- Should admin have final say on whether wallpaper is available site-wide?
+- Is the blue border approach better for bi-directional hover highlighting?
+- What's the right dimmer level for posts vs location containers?
