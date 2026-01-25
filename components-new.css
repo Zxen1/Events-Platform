@@ -3091,7 +3091,7 @@
 }
 
 .component-locationwallpaper-basic-image[data-index="1"] {
-    animation: locationwallpaper-basic-rotate 20s linear infinite alternate;
+    animation: locationwallpaper-basic-rotate 60s linear infinite;
 }
 
 /* Slow pan left-to-right, alternates back */
@@ -3104,13 +3104,13 @@
     }
 }
 
-/* Slow rotation, alternates back */
+/* Slow continuous rotation - one full revolution per 60s */
 @keyframes locationwallpaper-basic-rotate {
     0% {
-        transform: scale(1.15) rotate(-5deg);
+        transform: scale(1.15) rotate(0deg);
     }
     100% {
-        transform: scale(1.15) rotate(5deg);
+        transform: scale(1.15) rotate(360deg);
     }
 }
 
