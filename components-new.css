@@ -3034,7 +3034,6 @@
     width: 100%;
     height: calc(100% + 200px); /* Match the buffer */
     object-fit: cover;
-    object-position: left top;
     z-index: 2; /* Image layers on top of map for seamless crossfade */
 }
 
@@ -3079,7 +3078,7 @@
     object-fit: cover;
     object-position: left top;
     opacity: 0;
-    transform: translateX(0);
+    transform: translateX(-100px);
     transition: opacity 1.5s ease-in-out;
     transform: translateX(-100px);
 }
@@ -3109,6 +3108,7 @@
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
         transition: none;
+        transform: translateX(-50px);
     }
     .component-locationwallpaper-basic-image--active {
         animation: none;
