@@ -3014,27 +3014,28 @@
     border-radius: inherit;
 }
 
-.component-locationwallpaper-mapmount,
-.component-locationwallpaper-image {
+.component-locationwallpaper-mapmount {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: -200px; /* 200px buffer underneath to prevent flicker on resize */
+    bottom: -200px;
     opacity: 0;
     transition: opacity 0.8s ease;
     will-change: opacity;
-}
-
-.component-locationwallpaper-mapmount {
     z-index: 1;
 }
 
 .component-locationwallpaper-image {
-    width: 100%;
-    height: calc(100% + 200px); /* Match the buffer */
-    object-fit: cover;
-    z-index: 2; /* Image layers on top of map for seamless crossfade */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 2500px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    will-change: opacity;
+    z-index: 2;
 }
 
 /* Move Mapbox logo to top-right for location wallpaper */

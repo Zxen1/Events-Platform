@@ -8382,11 +8382,11 @@ const LocationWallpaperComponent = (function() {
         function ensureResizeObserver() {
             if (st.resizeObs || !window.ResizeObserver) return;
             st.resizeObs = new ResizeObserver(function() {
-                if (!st.map) return;
                 if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
                 st.resizeRaf = requestAnimationFrame(function() {
                     st.resizeRaf = 0;
-                    try { if (st.map) st.map.resize(); } catch (e) {}
+                    if (st.map) try { st.map.resize(); } catch (e) {}
+                    if (st.mode === 'still' && st.isActive) positionStillImage();
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8547,17 +8547,42 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
-        // STILL MODE - Single static image, displayed once
+        // STILL MODE - Single static 700x2500 image, displayed once
         // ============================================================
+        var stillOriginalHeight = 0;
+        var STILL_WIDTH = 700;
+        var STILL_HEIGHT = 2500;
+
+        function positionStillImage() {
+            if (!stillOriginalHeight) stillOriginalHeight = contentEl.offsetHeight || 400;
+            var containerHeight = contentEl.offsetHeight || 400;
+            var imageCenter = stillOriginalHeight / 2;
+            var threshold = imageCenter + (STILL_HEIGHT / 2);
+
+            if (containerHeight >= threshold) {
+                img.style.top = 'auto';
+                img.style.bottom = '0';
+            } else {
+                img.style.top = (imageCenter - (STILL_HEIGHT / 2)) + 'px';
+                img.style.bottom = 'auto';
+            }
+        }
+
         function startStillMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
+            ensureResizeObserver();
+            stillOriginalHeight = contentEl.offsetHeight || 400;
             var camera = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearing = camera.bearing || 0;
 
             function display(url) {
                 st.latestCaptureUrl = url;
-                img.onload = function() { img.onload = null; showImage(); };
+                img.onload = function() {
+                    img.onload = null;
+                    positionStillImage();
+                    showImage();
+                };
                 setImageUrl(url);
             }
 
@@ -8569,16 +8594,15 @@ const LocationWallpaperComponent = (function() {
             WallpaperCache.get(lat, lng, bearing, function(cached) {
                 if (cached) { display(cached); return; }
 
-                if (!st.map) createMap(camera);
-                if (!st.map) return;
-
-                st.map.once('load', function() {
-                    if (!st.map) return;
-                    var url = captureMapToDataUrl();
+                SecondaryMap.capture(camera, STILL_WIDTH, STILL_HEIGHT, function(url) {
                     if (!url) return;
                     st.latestCaptureUrl = url;
                     WallpaperCache.put(lat, lng, bearing, url, function() {});
-                    img.onload = function() { img.onload = null; showImage(); removeMap(); };
+                    img.onload = function() {
+                        img.onload = null;
+                        positionStillImage();
+                        showImage();
+                    };
                     setImageUrl(url);
                 });
             });
