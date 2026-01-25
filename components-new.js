@@ -8640,13 +8640,6 @@ const LocationWallpaperComponent = (function() {
         var basicImgs = [];
         var basicIndex = 0;
         var basicTimer = null;
-        var basicHeights = [0, 0, 0, 0];
-        var basicRecapturing = false;
-
-        // Use shared SecondaryMap utility for captures
-        function captureMap(camera, w, h, cb) {
-            SecondaryMap.capture(camera, w, h, cb);
-        }
 
         function startBasicMode(lat, lng) {
             cancelLazyCleanup();
@@ -8667,7 +8660,7 @@ const LocationWallpaperComponent = (function() {
             if (basicContainer) basicContainer.remove();
             basicContainer = document.createElement('div');
             basicContainer.className = 'component-locationwallpaper-basic-container';
-            basicImgs = []; basicHeights = [0, 0, 0, 0]; basicIndex = 0;
+            basicImgs = []; basicIndex = 0;
             for (var i = 0; i < 4; i++) {
                 var el = document.createElement('img');
                 el.className = 'component-locationwallpaper-basic-image';
@@ -8690,10 +8683,7 @@ const LocationWallpaperComponent = (function() {
                 if (cacheHits === 4) {
                     // All 4 images cached - use them
                     for (var i = 0; i < 4; i++) {
-                        if (basicImgs[i] && cached[i]) {
-                            basicImgs[i].src = cached[i];
-                            basicHeights[i] = ch - 300;
-                        }
+                        if (basicImgs[i] && cached[i]) basicImgs[i].src = cached[i];
                     }
                     if (basicImgs[0]) {
                         basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
@@ -8711,10 +8701,7 @@ const LocationWallpaperComponent = (function() {
                         SecondaryMap.capture(cameras[idx], cw, ch, function(url) {
                             if (!basicContainer) return; // Abort if mode switched
                             capturedUrls[idx] = url;
-                            if (url && basicImgs[idx]) {
-                                basicImgs[idx].src = url;
-                                basicHeights[idx] = ch - 300;
-                            }
+                            if (url && basicImgs[idx]) basicImgs[idx].src = url;
                             if (idx === 0 && basicImgs[0]) {
                                 basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                                 basicTimer = setInterval(advanceBasic, 20000);
@@ -8731,26 +8718,12 @@ const LocationWallpaperComponent = (function() {
             if (!basicImgs.length) return;
             var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
-            // Add active to new image first (starts fading in)
+            // Add active to new image (starts fade in + pan animation)
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
             // Remove active from old image after crossfade completes (1.5s)
             setTimeout(function() {
                 if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
             }, 1500);
-
-            // Recapture if container grew beyond 300px buffer
-            if (!basicRecapturing && contentEl) {
-                var h = contentEl.offsetHeight || 0;
-                var chk = (basicIndex + 2) % 4;
-                if (h > basicHeights[chk] + 300) {
-                    basicRecapturing = true;
-                    var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [st.basicCapturedLng, st.basicCapturedLat]);
-                    captureMap(cameras[chk], (contentEl.offsetWidth || 400) + 100, h + 300, function(url) {
-                        if (url && basicImgs[chk]) { basicImgs[chk].src = url; basicHeights[chk] = h; }
-                        basicRecapturing = false;
-                    });
-                }
-            }
         }
 
         function stopBasicMode() {
