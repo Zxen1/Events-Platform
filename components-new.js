@@ -8574,12 +8574,6 @@ const LocationWallpaperComponent = (function() {
                     return;
                 }
 
-                // Show existing image while new one loads (smooth transition)
-                if (st.latestCaptureUrl) {
-                    setImageUrl(st.latestCaptureUrl);
-                    showImage();
-                }
-
                 if (!st.map) {
                     createMap(desired);
                 } else {
