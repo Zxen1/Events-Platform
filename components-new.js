@@ -8448,25 +8448,11 @@ const LocationWallpaperComponent = (function() {
                 }
 
                 var camera = cameras[currentCaptureIndex];
-                var isRotationCapture = (currentCaptureIndex === 1);
-
-                // For rotation image, make map 3x larger to capture more area
-                if (isRotationCapture) {
-                    var containerWidth = contentEl.offsetWidth || 400;
-                    var containerHeight = contentEl.offsetHeight || 300;
-                    mapMount.style.width = (containerWidth * 3) + 'px';
-                    mapMount.style.height = (containerHeight * 3) + 'px';
-                    mapMount.style.left = '-' + containerWidth + 'px';
-                    mapMount.style.top = '-' + containerHeight + 'px';
-                }
 
                 if (!st.map) {
                     createMap(camera);
                 } else {
                     try { st.map.jumpTo(camera); } catch (e) {}
-                    if (isRotationCapture) {
-                        try { st.map.resize(); } catch (e) {}
-                    }
                 }
 
                 if (!st.map) {
@@ -8485,14 +8471,6 @@ const LocationWallpaperComponent = (function() {
                             if (basicImages[currentCaptureIndex]) {
                                 basicImages[currentCaptureIndex].src = url;
                             }
-                        }
-
-                        // Reset map size after rotation capture
-                        if (isRotationCapture) {
-                            mapMount.style.width = '';
-                            mapMount.style.height = '';
-                            mapMount.style.left = '';
-                            mapMount.style.top = '';
                         }
 
                         currentCaptureIndex++;
