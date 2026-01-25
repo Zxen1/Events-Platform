@@ -8636,24 +8636,23 @@ const LocationWallpaperComponent = (function() {
         var BASIC_HEIGHT = 2500;
 
         function positionBasicContainer() {
-            if (!basicOriginalHeight) return;
+            if (!basicContainer || !basicOriginalHeight) return;
             var containerHeight = contentEl.offsetHeight || 400;
             var imageCenter = basicOriginalHeight / 2;
             var threshold = imageCenter + (BASIC_HEIGHT / 2);
 
-            var top, bottom, height;
             if (containerHeight > BASIC_HEIGHT) {
-                top = '0'; bottom = '0'; height = '100%';
+                basicContainer.style.top = '0';
+                basicContainer.style.bottom = '0';
+                basicContainer.style.height = '100%';
             } else if (containerHeight >= threshold) {
-                top = 'auto'; bottom = '0'; height = BASIC_HEIGHT + 'px';
+                basicContainer.style.top = 'auto';
+                basicContainer.style.bottom = '0';
+                basicContainer.style.height = BASIC_HEIGHT + 'px';
             } else {
-                top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px'; bottom = 'auto'; height = BASIC_HEIGHT + 'px';
-            }
-
-            for (var i = 0; i < basicImgs.length; i++) {
-                basicImgs[i].style.top = top;
-                basicImgs[i].style.bottom = bottom;
-                basicImgs[i].style.height = height;
+                basicContainer.style.top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px';
+                basicContainer.style.bottom = 'auto';
+                basicContainer.style.height = BASIC_HEIGHT + 'px';
             }
         }
 
