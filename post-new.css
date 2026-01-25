@@ -113,7 +113,7 @@
 .recent-panel-content {
   --panel-transition-duration: 0.3s;
   position: absolute;
-  left: 0;
+  right: 0;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
   width: var(--post-panel-max-w);
@@ -124,8 +124,7 @@
   border-radius: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -134,8 +133,8 @@
   color: #fff;
 }
 
-.recent-panel-content--side-left {
-  transform: translateX(-100%);
+.recent-panel-content--side-right {
+  transform: translateX(100%);
 }
 
 .recent-panel-content--hidden {
@@ -148,54 +147,31 @@
 }
 
 /* ============================================================================
-   POST LIST (inside post-panel)
+   POST LIST - Shared by both panels
    ============================================================================ */
 
 .post-list {
   flex: 1 1 auto;
-  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0;
   margin: 0;
-  scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.4) rgba(0, 0, 0, 0);
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .post-list::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
 }
 
 .post-list::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0);
+  background: transparent;
 }
 
 .post-list::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
-}
-
-.post-list::-webkit-scrollbar-corner {
-  background-color: rgba(0, 0, 0, 0);
-}
-
-/* Recent panel scrollbar */
-.recent-panel-content::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.recent-panel-content::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0);
-}
-
-.recent-panel-content::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .recent-panel-content::-webkit-scrollbar-corner {
@@ -627,7 +603,6 @@
   flex-direction: column;
   gap: 0;
   position: relative;
-  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 .post-panel-content .open-post {
@@ -644,13 +619,12 @@
   background: var(--panel-bg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
-  box-shadow: none;
+  box-shadow: inset 1px 1px 0 0 var(--blue-500), inset -1px 0 0 0 var(--blue-500);
 }
 
 .open-post .post-card:hover,
-.open-post .recent-card:hover {
+.recent-card:hover {
   background: var(--panel-bg);
-  box-shadow: none;
 }
 
 .open-post .post-card-container-actions,
@@ -718,6 +692,7 @@
   background: transparent;
   margin-top: 0;
   border: none;
+  box-shadow: inset 1px 0 0 0 var(--blue-500), inset -1px -1px 0 0 var(--blue-500);
 }
 
 .open-post.open-post--collapsed .open-post-body {
@@ -912,493 +887,87 @@
   overflow: hidden;
   cursor: pointer;
   border: none;
-  padding: 10px 0;
-  margin: 0;
-  background: transparent;
-  transition: opacity 0.2s ease;
-  border-radius: 0;
-  box-sizing: border-box;
-  outline: none;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  transition: transform 0.2s ease;
 }
 
 .open-post-button-venue:hover,
-.open-post-button-venue:focus,
-.open-post-button-session:hover,
-.open-post-button-session:focus {
-  opacity: 0.85;
-  outline: none;
-  background: transparent;
+.open-post-button-session:hover {
+  transform: scale(1.02);
 }
 
-.open-post-button-venue:focus-visible,
-.open-post-button-session:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
-}
-
-.open-post-image-navpreview {
+.open-post-button-image {
   position: absolute;
-  top: 10px;
-  left: 0;
+  inset: 0;
   width: 100%;
-  height: 100px;
-  display: block;
-  border-radius: 8px;
-  pointer-events: none;
-  background: linear-gradient(135deg, rgba(60, 70, 100, 0.8) 0%, rgba(40, 50, 80, 0.9) 100%);
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
 }
 
-.open-post-image-navpreview--map {
-  background: linear-gradient(135deg, rgba(50, 80, 100, 0.8) 0%, rgba(30, 60, 80, 0.9) 100%);
+.open-post-button-venue:hover .open-post-button-image,
+.open-post-button-session:hover .open-post-button-image {
+  opacity: 0.6;
 }
 
-.open-post-image-navpreview--calendar {
-  background: linear-gradient(135deg, rgba(80, 60, 100, 0.8) 0%, rgba(60, 40, 80, 0.9) 100%);
-}
-
-.open-post-text-venuename,
-.open-post-text-address {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
+.open-post-button-content {
+  position: relative;
   z-index: 1;
-  text-align: left;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 8px;
-  border-radius: 4px;
-  line-height: 1.2;
-  font-size: 12px;
-  pointer-events: none;
-}
-
-.open-post-text-venuename {
-  font-weight: bold;
-  bottom: 30px;
-  font-size: 13px;
-}
-
-.open-post-icon-arrow {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #fff;
-  pointer-events: none;
-}
-
-.open-post-button-session {
-  color: #fff;
-  text-shadow: 0 0 4px #000;
-  font-weight: bold;
-  font-size: 14px;
+  height: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  padding: 15px;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+}
+
+.open-post-button-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  color: rgba(255,255,255,0.8);
+}
+
+.open-post-button-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
 }
 
 /* ============================================================================
-   OPEN POST DROPDOWNS [FUTURE: VenueMenuComponent, SessionMenuComponent]
-   Dropdown panels for venue map/selection and session calendar/selection.
+   INFO GRID
    ============================================================================ */
 
-.open-post-dropdown-venue,
-.open-post-dropdown-session {
-  margin-top: 0;
-  width: calc(100% - 20px);
-  max-width: calc(100% - 20px);
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
-}
-
-.open-post-menu-venue,
-.open-post-menu-session {
-  display: flex;
-  flex-direction: column;
+.open-post-container-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  width: calc(100% - 20px);
+  margin: 0 auto;
+}
+
+.open-post-info-item {
+  background: rgba(255, 255, 255, 0.05);
   padding: 10px;
-  background: var(--popup-bg, #222222);
-  border-radius: 8px;
-  margin-top: 10px;
-}
-
-.open-post-menu-venue[hidden],
-.open-post-menu-session[hidden] {
-  display: none;
-}
-
-.open-post-container-map {
-  width: 100%;
-  height: 200px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.open-post-map {
-  width: 100%;
-  height: 100%;
-}
-
-.open-post-container-venueopts {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.open-post-button-venueopt {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
-}
-
-.open-post-button-venueopt:hover {
-  background: var(--btn-hover);
-}
-
-.open-post-container-venueopts .open-post-text-venuename {
-  position: static;
-  background: none;
-  padding: 0;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.open-post-container-venueopts .open-post-text-address {
-  position: static;
-  background: none;
-  padding: 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.open-post-container-calendar {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.open-post-scroll-calendar {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.open-post-calendar {
-  min-width: 280px;
-}
-
-.open-post-container-sessionopts {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.open-post-button-sessionopt {
-  height: 36px;
-  padding: 0 10px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: left;
-  color: inherit;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-.open-post-button-sessionopt:hover {
-  background: var(--btn-hover);
-}
-
-.open-post-button-sessionopt.selected {
-  background: #2e3a72;
-  border-color: #2e3a72;
-  color: var(--button-text);
-}
-
-.open-post-text-sessiondate {
-  flex: 0 0 auto;
-}
-
-.open-post-text-sessiontime {
-  margin-left: auto;
-  padding-right: 20px;
-}
-
-.open-post-container-calendar .open-post-popup-time {
-  position: absolute;
-  z-index: 1000;
-}
-
-.open-post-popup-time .open-post-list-time {
-  background: #222222;
-  color: #ffffff;
-  padding: 8px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.open-post-popup-time .open-post-list-time button {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--btn);
-  color: #ffffff;
-  border-radius: 8px;
-  height: 35px;
-  min-height: 35px;
-  max-height: 35px;
-  flex: 0 0 35px;
-  padding: 0 10px;
-  cursor: pointer;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.open-post-info-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* ============================================================================
-   EMPTY STATE MESSAGES
-   ============================================================================ */
-
-.post-panel-empty {
-  padding: 20px 16px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
+.open-post-info-value {
+  font-size: 14px;
+  font-weight: 600;
 }
-
-.post-panel-empty-summary {
-  margin: 0 0 10px;
-  width: 100%;
-  max-width: var(--post-panel-max-w);
-}
-
-.post-panel-summary {
-  padding: 10px 12px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.post-panel-empty-image {
-  margin-top: 10px;
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-}
-
-.post-panel-empty-message {
-  margin: 10px 0 0;
-}
-
-.recent-panel-reminder {
-  margin: 10px 0 20px;
-  padding: 0 12px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.recent-panel-reminder-image {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-}
-
-.recent-panel-reminder-text {
-  margin: 0;
-}
-
-/* Last opened label */
-.post-last-opened-label {
-  font-size: 12px;
-  margin: 0;
-  background: #000;
-  color: #fff;
-  padding: 2px 4px;
-}
-
-/* ============================================================================
-   FAV TOGGLE (header)
-   ============================================================================ */
-
-.post-fav-toggle {
-  white-space: nowrap;
-}
-
-.post-fav-toggle-icon {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 1.5;
-  vertical-align: middle;
-  margin-left: 6px;
-}
-
-.post-fav-toggle-icon--active {
-  fill: var(--gold);
-  stroke: var(--gold);
-}
-
-/* ============================================================================
-   RESPONSIVE
-   ============================================================================ */
-
-@media (max-width: 600px) {
-  .post-mode-panels {
-    top: calc(var(--header-h) + var(--safe-top));
-    bottom: var(--footer-h);
-    padding: 0;
-    gap: 0;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .post-panel {
-    width: 100%;
-    max-width: 100%;
-    left: 0;
-    right: 0;
-    padding: 0;
-    border-radius: 0;
-    flex: 0 0 auto;
-    min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-    max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  }
-  
-  .recent-panel {
-    width: 100%;
-    max-width: 100%;
-    left: 0;
-    right: 0;
-    padding: 0;
-    border-radius: 0;
-    flex: 0 0 auto;
-    min-height: 0;
-    height: auto;
-    max-height: 100%;
-  }
-  
-  .post-card {
-    margin: 0;
-    border-radius: 0;
-    padding: 10px 10px 0;
-  }
-  
-  .recent-card {
-    margin: 0;
-    border-radius: 0;
-    padding: 10px 10px 0;
-  }
-  
-  .post-card-image,
-  .recent-card-image {
-    border-radius: 8px;
-  }
-  
-  .open-post-container-hero {
-    width: 100%;
-    max-width: 100%;
-    aspect-ratio: 1/1;
-    margin: 0;
-    border-radius: 0;
-  }
-  
-  .open-post-image-hero {
-    border-radius: 0;
-  }
-  
-  .open-post-image-thumb {
-    width: 60px;
-    height: 60px;
-  }
-}
-
-@media (max-width: 440px) {
-  .post-panel {
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .recent-panel {
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .post-list {
-    padding: 0;
-    margin: 0;
-  }
-  
-  .post-card {
-    grid-template-columns: 100px 1fr 36px;
-    gap: 12px;
-    padding: 10px 10px 0;
-    border-radius: 0;
-    width: 100%;
-    margin: 0;
-  }
-  
-  .recent-card {
-    grid-template-columns: 100px 1fr 36px;
-    gap: 12px;
-    padding: 10px 10px 0;
-    border-radius: 0;
-    width: 100%;
-    margin: 0;
-  }
-  
-  .open-post {
-    width: 100%;
-    border-radius: 0;
-    margin: 0;
-  }
-  
-  .open-post-body {
-    flex-direction: column;
-    gap: var(--gap);
-    padding: 0;
-  }
-  
-  .open-post-container-images {
-    flex: 0 0 100%;
-    width: 100%;
-  }
-  
-  .open-post-container-details {
-    width: calc(100% - 20px);
-    max-width: calc(100% - 20px);
-    padding: 10px 0;
-  }
-  
-  .open-post-container-hero {
-    width: 100%;
-    max-width: 100%;
-    aspect-ratio: 1/1;
-    height: auto;
-    flex: 0 0 auto;
-    border-radius: 0;
-  }
-}
-
