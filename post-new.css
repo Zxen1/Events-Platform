@@ -591,23 +591,10 @@
    Class naming: .open-post-{type}-{part}--{state}
    ============================================================================ */
 
-.open-post {
-  border: none;
-  border-radius: 0;
-  margin: 0;
-  padding-top: 0;
-  overflow: visible;
-  color: #fff;
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-/* Unified ::after border removed */
-
 .post-panel-content .open-post {
+  width: 100%;
+  max-width: 100%;
+}
   width: 100%;
   max-width: 100%;
 }
@@ -621,13 +608,20 @@
   background: var(--panel-bg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
-  box-shadow: none;
+  /* Top, Left, and Right blue lines using box-shadow */
+  box-shadow: 
+    inset 0 1px 0 0 var(--blue-500),
+    inset 1px 0 0 0 var(--blue-500),
+    inset -1px 0 0 0 var(--blue-500);
 }
 
 .open-post .post-card:hover,
 .recent-card:hover {
   background: var(--panel-bg);
-  box-shadow: none;
+  box-shadow: 
+    inset 0 1px 0 0 var(--blue-500),
+    inset 1px 0 0 0 var(--blue-500),
+    inset -1px 0 0 0 var(--blue-500);
 }
 
 .open-post .post-card-container-actions,
@@ -695,11 +689,19 @@
   background: transparent;
   margin-top: 0;
   border: none;
-  /* Bottom, Left, and Right blue lines using box-shadow */
+  box-shadow: none;
+}
+
+.open-post-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   box-shadow: 
     inset 0 -1px 0 0 var(--blue-500),
     inset 1px 0 0 0 var(--blue-500),
     inset -1px 0 0 0 var(--blue-500);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .open-post.open-post--collapsed .open-post-body {
