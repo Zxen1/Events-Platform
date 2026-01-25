@@ -8387,6 +8387,7 @@ const LocationWallpaperComponent = (function() {
                     st.resizeRaf = 0;
                     if (st.map) try { st.map.resize(); } catch (e) {}
                     if (st.mode === 'still' && st.isActive) positionStillImage();
+                    if (st.mode === 'basic' && st.isActive) positionBasicImages();
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8630,23 +8631,38 @@ const LocationWallpaperComponent = (function() {
         var basicImgs = [];
         var basicIndex = 0;
         var basicTimer = null;
-        var basicHeights = [0, 0, 0, 0];
-        var basicRecapturing = false;
+        var basicOriginalHeight = 0;
+        var BASIC_WIDTH = 700;
+        var BASIC_HEIGHT = 2500;
 
-        // Use shared SecondaryMap utility for captures
-        function captureMap(camera, w, h, cb) {
-            SecondaryMap.capture(camera, w, h, cb);
+        function positionBasicImages() {
+            if (!basicContainer || !basicImgs.length) return;
+            if (!basicOriginalHeight) basicOriginalHeight = contentEl.offsetHeight || 400;
+            var containerHeight = contentEl.offsetHeight || 400;
+            var imageCenter = basicOriginalHeight / 2;
+            var threshold = imageCenter + (BASIC_HEIGHT / 2);
+
+            var top, bottom, height;
+            if (containerHeight > BASIC_HEIGHT) {
+                top = '0'; bottom = '0'; height = '100%';
+            } else if (containerHeight >= threshold) {
+                top = 'auto'; bottom = '0'; height = BASIC_HEIGHT + 'px';
+            } else {
+                top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px'; bottom = 'auto'; height = BASIC_HEIGHT + 'px';
+            }
+
+            basicImgs.forEach(function(el) {
+                el.style.top = top;
+                el.style.bottom = bottom;
+                el.style.height = height;
+            });
         }
 
         function startBasicMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
-
-            // Already captured for this location in memory - resume from image 0
-            if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImgs[0] && basicImgs[0].src) {
-                resumeBasicMode();
-                return;
-            }
+            ensureResizeObserver();
+            basicOriginalHeight = contentEl.offsetHeight || 400;
 
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearings = cameras.map(function(c) { return c.bearing; });
@@ -8655,60 +8671,56 @@ const LocationWallpaperComponent = (function() {
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
             img.style.opacity = '0'; mapMount.style.opacity = '0';
             if (basicContainer) basicContainer.remove();
+            
             basicContainer = document.createElement('div');
             basicContainer.className = 'component-locationwallpaper-basic-container';
-            basicImgs = []; basicHeights = [0, 0, 0, 0]; basicIndex = 0;
+            basicImgs = []; basicIndex = 0;
             for (var i = 0; i < 4; i++) {
                 var el = document.createElement('img');
                 el.className = 'component-locationwallpaper-basic-image';
                 el.alt = '';
+                el.decoding = 'sync';
+                el.loading = 'eager';
                 basicImgs.push(el);
                 basicContainer.appendChild(el);
             }
             root.appendChild(basicContainer);
 
-            var cw = (contentEl.offsetWidth || 400) + 100;
-            var ch = (contentEl.offsetHeight || 300) + 300;
-
-            // Check IndexedDB cache first
-            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-                if (!basicContainer) return; // Abort if mode switched
-                
-                // Count how many images we got from cache
-                var cacheHits = cached.filter(function(url) { return url; }).length;
-                
-                if (cacheHits === 4) {
-                    // All 4 images cached - use them
-                    for (var i = 0; i < 4; i++) {
-                        if (basicImgs[i] && cached[i]) {
-                            basicImgs[i].src = cached[i];
-                            basicHeights[i] = ch - 300;
+            function display(urls) {
+                if (!basicContainer) return;
+                var loaded = 0;
+                urls.forEach(function(url, idx) {
+                    if (!url || !basicImgs[idx]) return;
+                    basicImgs[idx].onload = function() {
+                        basicImgs[idx].onload = null;
+                        loaded++;
+                        if (loaded === 4) {
+                            positionBasicImages();
+                            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                            if (basicTimer) clearInterval(basicTimer);
+                            basicTimer = setInterval(advanceBasic, 18500);
                         }
-                    }
-                    if (basicImgs[0]) {
-                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                        basicTimer = setInterval(advanceBasic, 18500);
-                    }
+                    };
+                    basicImgs[idx].src = url;
+                });
+            }
+
+            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+                if (!basicContainer) return;
+                var cacheHits = cached.filter(function(url) { return url; }).length;
+                if (cacheHits === 4) {
+                    display(cached);
                 } else {
-                    // Capture fresh images and store to cache
                     var capturedUrls = [];
                     var captureNext = function(idx) {
-                        if (idx >= 4 || !basicContainer) {
-                            // Store all captured images to cache
+                        if (idx >= 4) {
                             WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            display(capturedUrls);
                             return;
                         }
-                        SecondaryMap.capture(cameras[idx], cw, ch, function(url) {
-                            if (!basicContainer) return; // Abort if mode switched
+                        SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                            if (!basicContainer) return;
                             capturedUrls[idx] = url;
-                            if (url && basicImgs[idx]) {
-                                basicImgs[idx].src = url;
-                                basicHeights[idx] = ch - 300;
-                            }
-                            if (idx === 0 && basicImgs[0]) {
-                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                                basicTimer = setInterval(advanceBasic, 18500);
-                            }
                             captureNext(idx + 1);
                         });
                     };
@@ -8718,32 +8730,17 @@ const LocationWallpaperComponent = (function() {
         }
 
         function advanceBasic() {
-            if (!basicImgs.length) return;
+            if (!basicImgs.length || !basicContainer) return;
             var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
-            // Old image: move to outgoing (stays visible underneath, no fade out)
-            basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
-            basicImgs[prev].classList.add('component-locationwallpaper-basic-image--outgoing');
-            // New image: start active (fades in on top over 1.5s)
+            // Old image stays active (100% opacity) while new one fades in on top
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
-            // After fade complete, hide old image
+            // After fade complete (1.5s), remove active from previous
             setTimeout(function() {
-                if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--outgoing');
-            }, 1500);
-
-            // Recapture if container grew beyond 300px buffer
-            if (!basicRecapturing && contentEl) {
-                var h = contentEl.offsetHeight || 0;
-                var chk = (basicIndex + 2) % 4;
-                if (h > basicHeights[chk] + 300) {
-                    basicRecapturing = true;
-                    var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [st.basicCapturedLng, st.basicCapturedLat]);
-                    captureMap(cameras[chk], (contentEl.offsetWidth || 400) + 100, h + 300, function(url) {
-                        if (url && basicImgs[chk]) { basicImgs[chk].src = url; basicHeights[chk] = h; }
-                        basicRecapturing = false;
-                    });
+                if (basicImgs[prev] && basicContainer) {
+                    basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
                 }
-            }
+            }, 1500);
         }
 
         function stopBasicMode() {
@@ -8751,26 +8748,16 @@ const LocationWallpaperComponent = (function() {
         }
 
         function resumeBasicMode() {
-            // Resume with fade from current static to image 0 animating
             if (!basicImgs.length || !basicContainer) return;
-            
-            // Remove paused state (allows animation to run)
             basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
-            
             var prev = basicIndex;
             basicIndex = 0;
-            
-            // Add active to image 0 (fades in over 1.5s, animation starts)
             basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-            
-            // Remove active from previous after crossfade completes + buffer
             if (prev !== 0) {
                 setTimeout(function() {
-                    if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
-                }, 2000);
+                    if (basicImgs[prev] && basicContainer) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                }, 1500);
             }
-            
-            // Start timer after crossfade completes
             setTimeout(function() {
                 if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 18500);
             }, 1500);
@@ -8785,9 +8772,6 @@ const LocationWallpaperComponent = (function() {
         function deactivateBasicMode() {
             st.isActive = false;
             stopBasicMode();
-            
-            // Fade to static: add paused class after brief delay to let current frame settle
-            // The paused class stops animation and keeps image at end position
             setTimeout(function() {
                 if (basicContainer) basicContainer.classList.add('component-locationwallpaper-basic-container--paused');
             }, 100);

@@ -3072,16 +3072,14 @@
 
 .component-locationwallpaper-basic-image {
     position: absolute;
-    top: 0;
     left: 0;
-    width: calc(100% + 100px);
-    height: 100%;
+    width: 700px;
+    height: 2500px;
     object-fit: cover;
     object-position: left top;
     opacity: 0;
-    transform: translateX(-100px);
     transition: opacity 1.5s ease-in-out;
-    transform: translateX(-100px);
+    z-index: 1;
 }
 
 /* Active image: visible, on top, starts pan animation fresh */
@@ -3089,13 +3087,6 @@
     opacity: 1;
     z-index: 2;
     animation: locationwallpaper-basic-pan 20s linear forwards;
-}
-
-/* Outgoing image: stays fully visible underneath while new fades in on top */
-.component-locationwallpaper-basic-image--outgoing {
-    opacity: 1;
-    z-index: 1;
-    transition: none;
 }
 
 /* Paused state: freeze animation at current position */
