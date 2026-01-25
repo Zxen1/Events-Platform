@@ -8080,8 +8080,8 @@ const LocationWallpaperComponent = (function() {
         var mode = 'basic'; // default
         try {
             // Check member preference (logged in user)
-            if (window.MemberModule && typeof MemberModule.getUser === 'function') {
-                var user = MemberModule.getUser();
+            if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+                var user = MemberModule.getCurrentUser();
                 if (user && user.animation_preference) {
                     mode = String(user.animation_preference).trim().toLowerCase();
                 }
