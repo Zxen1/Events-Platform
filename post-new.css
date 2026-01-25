@@ -609,7 +609,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 0 1px var(--blue-500);
+  /* 3-sided frame: lid is owned by the sticky header so it doesn't scroll away */
+  border-left: 1px solid var(--blue-500);
+  border-right: 1px solid var(--blue-500);
+  border-bottom: 1px solid var(--blue-500);
+  border-top: 0;
+  box-sizing: border-box;
   pointer-events: none;
   z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
 }
@@ -626,6 +631,8 @@
   top: 0;
   z-index: var(--layer-sticky);
   background: var(--panel-bg);
+  /* Lid: replaces the missing top edge when the open-post wrapper scrolls up */
+  border-top: 1px solid var(--blue-500);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
