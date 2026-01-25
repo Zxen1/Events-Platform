@@ -8387,7 +8387,7 @@ const LocationWallpaperComponent = (function() {
                     st.resizeRaf = 0;
                     if (st.map) try { st.map.resize(); } catch (e) {}
                     if (st.mode === 'still' && st.isActive) positionStillImage();
-                    if (st.mode === 'basic' && st.isActive) positionBasicContainer();
+                    if (st.mode === 'basic' && st.isActive) positionBasicImages();
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8635,24 +8635,25 @@ const LocationWallpaperComponent = (function() {
         var BASIC_WIDTH = 700;
         var BASIC_HEIGHT = 2500;
 
-        function positionBasicContainer() {
-            if (!basicContainer || !basicOriginalHeight) return;
+        function positionBasicImages() {
+            if (!basicOriginalHeight) basicOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
             var imageCenter = basicOriginalHeight / 2;
             var threshold = imageCenter + (BASIC_HEIGHT / 2);
 
+            var top, bottom, height;
             if (containerHeight > BASIC_HEIGHT) {
-                basicContainer.style.top = '0';
-                basicContainer.style.bottom = '0';
-                basicContainer.style.height = '100%';
+                top = '0'; bottom = '0'; height = '100%';
             } else if (containerHeight >= threshold) {
-                basicContainer.style.top = 'auto';
-                basicContainer.style.bottom = '0';
-                basicContainer.style.height = BASIC_HEIGHT + 'px';
+                top = 'auto'; bottom = '0'; height = BASIC_HEIGHT + 'px';
             } else {
-                basicContainer.style.top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px';
-                basicContainer.style.bottom = 'auto';
-                basicContainer.style.height = BASIC_HEIGHT + 'px';
+                top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px'; bottom = 'auto'; height = BASIC_HEIGHT + 'px';
+            }
+
+            for (var i = 0; i < basicImgs.length; i++) {
+                basicImgs[i].style.top = top;
+                basicImgs[i].style.bottom = bottom;
+                basicImgs[i].style.height = height;
             }
         }
 
@@ -8664,7 +8665,7 @@ const LocationWallpaperComponent = (function() {
 
             // Already captured for this location in memory - resume from image 0
             if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImgs[0] && basicImgs[0].src) {
-                positionBasicContainer();
+                positionBasicImages();
                 resumeBasicMode();
                 return;
             }
@@ -8687,7 +8688,7 @@ const LocationWallpaperComponent = (function() {
                 basicContainer.appendChild(el);
             }
             root.appendChild(basicContainer);
-            positionBasicContainer();
+            positionBasicImages();
 
             var cw = 700;
             var ch = 2500;
@@ -8705,7 +8706,7 @@ const LocationWallpaperComponent = (function() {
                         if (basicImgs[i] && cached[i]) basicImgs[i].src = cached[i];
                     }
                     if (basicImgs[0]) {
-                        positionBasicContainer();
+                        positionBasicImages();
                         basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                         basicTimer = setInterval(advanceBasic, 18500);
                     }
@@ -8723,7 +8724,7 @@ const LocationWallpaperComponent = (function() {
                             capturedUrls[idx] = url;
                             if (url && basicImgs[idx]) basicImgs[idx].src = url;
                             if (idx === 0 && basicImgs[0]) {
-                                positionBasicContainer();
+                                positionBasicImages();
                                 basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                                 basicTimer = setInterval(advanceBasic, 18500);
                             }

@@ -3064,8 +3064,7 @@
 
 .component-locationwallpaper-basic-container {
     position: absolute;
-    left: 0;
-    right: 0;
+    inset: 0;
     z-index: 3;
     pointer-events: none;
     overflow: hidden;
@@ -3073,10 +3072,9 @@
 
 .component-locationwallpaper-basic-image {
     position: absolute;
-    top: 0;
-    bottom: 0;
     left: 0;
     width: calc(100% + 100px);
+    height: 2500px;
     object-fit: cover;
     object-position: left top;
     opacity: 0;
