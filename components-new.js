@@ -8409,9 +8409,9 @@ const LocationWallpaperComponent = (function() {
             st.basicCapturedLat = null;
             st.basicCapturedLng = null;
 
-            // Hide orbit/still image, show map for capture
+            // Keep map hidden during capture (renders off-screen)
             img.style.opacity = '0';
-            mapMount.style.opacity = '1';
+            mapMount.style.opacity = '0';
 
             // Create container for 5 images
             removeBasicImagesContainer();

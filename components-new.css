@@ -3079,51 +3079,53 @@
     will-change: opacity, transform;
 }
 
-/* Animation only runs when --running class is added */
+/* Animation only runs when --running class is added
+   45s cycle with 9s delays creates 1s crossfade overlap between images */
 .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="0"] {
-    animation: locationwallpaper-basic-pan 50s linear infinite;
+    animation: locationwallpaper-basic-pan 45s linear infinite;
     animation-delay: 0s;
 }
 
 .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="1"] {
-    animation: locationwallpaper-basic-pan 50s linear infinite;
-    animation-delay: 10s;
+    animation: locationwallpaper-basic-pan 45s linear infinite;
+    animation-delay: 9s;
 }
 
 .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="2"] {
-    animation: locationwallpaper-basic-pan 50s linear infinite;
-    animation-delay: 20s;
+    animation: locationwallpaper-basic-pan 45s linear infinite;
+    animation-delay: 18s;
 }
 
 .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="3"] {
-    animation: locationwallpaper-basic-pan 50s linear infinite;
-    animation-delay: 30s;
+    animation: locationwallpaper-basic-pan 45s linear infinite;
+    animation-delay: 27s;
 }
 
 .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="4"] {
-    animation: locationwallpaper-basic-rotate 50s linear infinite;
-    animation-delay: 40s;
+    animation: locationwallpaper-basic-rotate 45s linear infinite;
+    animation-delay: 36s;
 }
 
 /* Pan animation for pitched images (1-4)
-   - Fade in over 1s (0-2%)
-   - Slow pan left-to-right while visible (2-18%)
-   - Fade out over 1s (18-20%)
-   - Hidden for remaining 80% of cycle */
+   45s cycle, 9s delays = 1s crossfade overlap between images
+   - Fade in over 1s (0-2.2%)
+   - Slow pan left-to-right while visible (2.2-20%)
+   - Fade out over 1s (20-22.2%)
+   - Hidden for remaining cycle */
 @keyframes locationwallpaper-basic-pan {
     0% {
         opacity: 0;
         transform: scale(1.15) translateX(-3%);
     }
-    2% {
+    2.2% {
         opacity: 1;
         transform: scale(1.15) translateX(-2.5%);
     }
-    18% {
+    20% {
         opacity: 1;
         transform: scale(1.15) translateX(2.5%);
     }
-    20% {
+    22.2% {
         opacity: 0;
         transform: scale(1.15) translateX(3%);
     }
@@ -3134,24 +3136,25 @@
 }
 
 /* Rotate animation for aerial image (5)
-   - Fade in over 1s (0-2%)
-   - Slow rotation while visible (2-18%)
-   - Fade out over 1s (18-20%)
-   - Hidden for remaining 80% of cycle */
+   45s cycle, starts at 36s delay
+   - Fade in over 1s (0-2.2%)
+   - Slow rotation while visible (2.2-20%)
+   - Fade out over 1s (20-22.2%)
+   - Hidden for remaining cycle */
 @keyframes locationwallpaper-basic-rotate {
     0% {
         opacity: 0;
         transform: scale(1.15) rotate(-5deg);
     }
-    2% {
+    2.2% {
         opacity: 1;
         transform: scale(1.15) rotate(-4deg);
     }
-    18% {
+    20% {
         opacity: 1;
         transform: scale(1.15) rotate(4deg);
     }
-    20% {
+    22.2% {
         opacity: 0;
         transform: scale(1.15) rotate(5deg);
     }
