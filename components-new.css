@@ -3057,7 +3057,7 @@
 }
 
 /* ----------------------------------------------------------------------------
-   BASIC MODE - 5 static images with class-toggled crossfade (like marquee)
+   BASIC MODE - 2 static images with class-toggled crossfade (like marquee)
    Lightweight alternative to orbit mode for slower PCs
    ---------------------------------------------------------------------------- */
 
@@ -3085,16 +3085,13 @@
     opacity: 1;
 }
 
-/* Pan animation for pitched images (1-4) - runs while active */
-.component-locationwallpaper-basic-image--active[data-index="0"],
-.component-locationwallpaper-basic-image--active[data-index="1"],
-.component-locationwallpaper-basic-image--active[data-index="2"],
-.component-locationwallpaper-basic-image--active[data-index="3"] {
+/* Pan animation for pitched image (index 0) */
+.component-locationwallpaper-basic-image--active[data-index="0"] {
     animation: locationwallpaper-basic-pan 10s linear forwards;
 }
 
-/* Rotate animation for aerial image (5) - runs while active */
-.component-locationwallpaper-basic-image--active[data-index="4"] {
+/* Rotate animation for aerial image (index 1) */
+.component-locationwallpaper-basic-image--active[data-index="1"] {
     animation: locationwallpaper-basic-rotate 10s linear forwards;
 }
 

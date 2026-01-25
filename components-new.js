@@ -7738,10 +7738,9 @@ const AgeRatingComponent = (function(){
    - "off": No wallpaper shown
    - "still": Show map visually while loading, wait for full render, capture
               and swap to static image
-   - "basic": Capture 5 static images at different angles, remove map, use
-              CSS-only pan/rotate animations. Lightweight for slower PCs.
-              Images 1-4: pitched views (slow pan), Image 5: aerial (slow rotate)
-              Each image displays for 10s, total cycle 50s.
+   - "basic": Capture 2 static images, remove map, use class-toggled crossfade.
+              Lightweight for slower PCs. Image 1: pitched (pan), Image 2: aerial
+              (rotate). Each image displays for 10s with 1.5s crossfade.
    - "orbit": Live orbiting map while container is active; continuous background
               captures every few seconds; on click-away, stop orbit but keep map
               running briefly, show pre-captured image, then lazy cleanup
@@ -7808,9 +7807,9 @@ const LocationWallpaperComponent = (function() {
         };
     }
 
-    // Camera presets for basic mode - 5 captures per location type
-    // Images 1-4: pitched views at different bearings (slow pan animation)
-    // Image 5: aerial view (slow rotation animation)
+    // Camera presets for basic mode - 2 captures per location type
+    // Image 1: pitched view (slow pan animation)
+    // Image 2: aerial view (slow rotation animation)
     function getBasicModeCameras(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
         var isCity = (t === 'city');
@@ -7822,9 +7821,6 @@ const LocationWallpaperComponent = (function() {
 
         return [
             { center: centerLngLat, zoom: pitchedZoom, pitch: 70, bearing: 0 },
-            { center: centerLngLat, zoom: pitchedZoom, pitch: 70, bearing: 90 },
-            { center: centerLngLat, zoom: pitchedZoom, pitch: 70, bearing: 180 },
-            { center: centerLngLat, zoom: pitchedZoom, pitch: 70, bearing: 270 },
             { center: centerLngLat, zoom: aerialZoom, pitch: 0, bearing: 0 }
         ];
     }
@@ -8346,9 +8342,9 @@ const LocationWallpaperComponent = (function() {
 
         // ============================================================
         // BASIC MODE
-        // Captures 5 still images, removes map, uses class-toggled crossfade
-        // Images 1-4: pitched views with slow pan animation
-        // Image 5: aerial view with slow rotation animation
+        // Captures 2 still images, removes map, uses class-toggled crossfade
+        // Image 1: pitched view with slow pan animation
+        // Image 2: aerial view with slow rotation animation
         // ============================================================
         var basicImagesContainer = null;
         var basicImages = [];
@@ -8360,7 +8356,7 @@ const LocationWallpaperComponent = (function() {
             if (basicImagesContainer) return;
             basicImagesContainer = document.createElement('div');
             basicImagesContainer.className = 'component-locationwallpaper-basic-container';
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < 2; i++) {
                 var imgEl = document.createElement('img');
                 imgEl.className = 'component-locationwallpaper-basic-image';
                 imgEl.setAttribute('data-index', String(i));
