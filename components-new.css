@@ -3077,7 +3077,6 @@
     object-fit: cover;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
-    transform: scale(1.15);
 }
 
 /* Active image is visible */
@@ -3085,17 +3084,17 @@
     opacity: 1;
 }
 
-/* Pan animation for pitched image (index 0) */
-.component-locationwallpaper-basic-image--active[data-index="0"] {
-    animation: locationwallpaper-basic-pan 10s linear forwards;
+/* Animations run continuously (infinite) to avoid snap-back on fade out
+   Visibility controlled by opacity only */
+.component-locationwallpaper-basic-image[data-index="0"] {
+    animation: locationwallpaper-basic-pan 20s linear infinite alternate;
 }
 
-/* Rotate animation for aerial image (index 1) */
-.component-locationwallpaper-basic-image--active[data-index="1"] {
-    animation: locationwallpaper-basic-rotate 10s linear forwards;
+.component-locationwallpaper-basic-image[data-index="1"] {
+    animation: locationwallpaper-basic-rotate 20s linear infinite alternate;
 }
 
-/* Slow pan left-to-right over 10s */
+/* Slow pan left-to-right, alternates back */
 @keyframes locationwallpaper-basic-pan {
     0% {
         transform: scale(1.15) translateX(-3%);
@@ -3105,7 +3104,7 @@
     }
 }
 
-/* Slow rotation over 10s */
+/* Slow rotation, alternates back */
 @keyframes locationwallpaper-basic-rotate {
     0% {
         transform: scale(1.15) rotate(-5deg);
@@ -3118,8 +3117,6 @@
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
         transition: none;
-    }
-    .component-locationwallpaper-basic-image--active {
         animation: none;
         transform: scale(1.05);
     }
