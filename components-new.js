@@ -8344,15 +8344,15 @@ const LocationWallpaperComponent = (function() {
         // BASIC MODE
         // Captures 2 still images, removes map, uses class-toggled crossfade
         // Image 1: pitched view with slow pan animation (left-panning)
-        // Image 2: aerial view with slow rotation animation (starts at 330°)
+        // Image 2: aerial view with segmented rotation (11→1 o'clock, 5→7 o'clock)
         // Fixed pixel buffers - simple and predictable
         // ============================================================
         var basicImagesContainer = null;
         var basicImages = [];
         var basicCurrentIndex = 0;
         var basicRotationInterval = null;
-        var BASIC_SLIDE_DURATION = 10000; // 10 seconds per image
-        var PAN_BUFFER_WIDTH = 100; // Extra pixels for pan travel
+        var BASIC_SLIDE_DURATION = 20000; // 20 seconds per image (matches marquee)
+        var PAN_BUFFER_WIDTH = 200; // Extra pixels for pan travel (maintains drift speed)
         var ROTATION_BUFFER = 400; // Extra pixels on all sides for rotation
         var basicPanCaptureHeight = 0; // Track captured pan image height
         var basicRotationCaptureHeight = 0; // Track captured rotation image height
@@ -8387,11 +8387,11 @@ const LocationWallpaperComponent = (function() {
 
         function showBasicSlide(index) {
             if (!basicImages.length) return;
-            // Remove active from all
+            // Remove active from all (they stay at opacity 1, just lose z-index)
             for (var i = 0; i < basicImages.length; i++) {
                 basicImages[i].classList.remove('component-locationwallpaper-basic-image--active');
             }
-            // Add active to target
+            // Add active to target (triggers fade-in animation, no fade-out on other)
             if (basicImages[index]) {
                 basicImages[index].classList.add('component-locationwallpaper-basic-image--active');
             }
@@ -8467,7 +8467,7 @@ const LocationWallpaperComponent = (function() {
                     try { tempMap.remove(); } catch (e) {}
                     try { document.body.removeChild(tempMount); } catch (e) {}
                     onComplete(url && url.indexOf('data:image') === 0 ? url : null);
-                }, 400);
+                }, 200);
             });
         }
 
