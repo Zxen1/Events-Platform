@@ -639,6 +639,7 @@
   top: 0;
   z-index: var(--layer-sticky);
   background: var(--panel-bg);
+  border: 1px solid var(--blue-500);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
 }
@@ -646,7 +647,7 @@
 .open-post .post-card:hover,
 .open-post .recent-card:hover {
   background: var(--panel-bg);
-  border-color: transparent;
+  border-color: var(--blue-500);
 }
 
 .open-post .post-card-container-actions,
@@ -711,8 +712,9 @@
   transition: none;
   max-height: 5000px;
   opacity: 1;
-  background: #1f2750;
+  background: transparent;
   margin-top: 0;
+  border: 1px solid var(--blue-500);
   border-top: none;
 }
 

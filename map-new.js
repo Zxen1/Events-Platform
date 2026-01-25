@@ -600,6 +600,10 @@ const MapModule = (function() {
       .map-card-container.is-active .map-card-pill {
         outline: 2px solid var(--blue-500);
         outline-offset: -2px;
+        border-radius: 30px;
+      }
+      
+      .map-card-container:not(.is-active):hover .map-card-pill {
         border-radius: 20px;
       }
       
