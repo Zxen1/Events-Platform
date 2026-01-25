@@ -3074,9 +3074,9 @@
 .component-locationwallpaper-basic-image {
     position: absolute;
     top: 0;
+    bottom: 0;
     left: 0;
     width: calc(100% + 100px);
-    height: 100%;
     object-fit: cover;
     object-position: left top;
     opacity: 0;

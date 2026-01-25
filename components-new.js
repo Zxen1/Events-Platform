@@ -8636,23 +8636,24 @@ const LocationWallpaperComponent = (function() {
         var BASIC_HEIGHT = 2500;
 
         function positionBasicContainer() {
-            if (!basicContainer || !basicOriginalHeight) return;
+            if (!basicOriginalHeight) return;
             var containerHeight = contentEl.offsetHeight || 400;
             var imageCenter = basicOriginalHeight / 2;
             var threshold = imageCenter + (BASIC_HEIGHT / 2);
 
+            var top, bottom, height;
             if (containerHeight > BASIC_HEIGHT) {
-                basicContainer.style.top = '0';
-                basicContainer.style.bottom = '0';
-                basicContainer.style.height = '100%';
+                top = '0'; bottom = '0'; height = '100%';
             } else if (containerHeight >= threshold) {
-                basicContainer.style.top = 'auto';
-                basicContainer.style.bottom = '0';
-                basicContainer.style.height = BASIC_HEIGHT + 'px';
+                top = 'auto'; bottom = '0'; height = BASIC_HEIGHT + 'px';
             } else {
-                basicContainer.style.top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px';
-                basicContainer.style.bottom = 'auto';
-                basicContainer.style.height = BASIC_HEIGHT + 'px';
+                top = (imageCenter - (BASIC_HEIGHT / 2)) + 'px'; bottom = 'auto'; height = BASIC_HEIGHT + 'px';
+            }
+
+            for (var i = 0; i < basicImgs.length; i++) {
+                basicImgs[i].style.top = top;
+                basicImgs[i].style.bottom = bottom;
+                basicImgs[i].style.height = height;
             }
         }
 
@@ -8687,6 +8688,7 @@ const LocationWallpaperComponent = (function() {
                 basicContainer.appendChild(el);
             }
             root.appendChild(basicContainer);
+            positionBasicContainer();
 
             var cw = 700;
             var ch = 2500;
