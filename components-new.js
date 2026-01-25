@@ -8083,32 +8083,41 @@ const LocationWallpaperComponent = (function() {
     function startCaptureForLocation(containerEl, lat, lng) {
         var key = makeCaptureKey(lat, lng);
         
+        // Already capturing this location? Let it continue
+        if (captureInProgress[key] && !captureInProgress[key].cancelled) {
+            return;
+        }
+        
+        // Mark capture as in progress IMMEDIATELY (before async cache check)
+        // This prevents race conditions with isCaptureReady/onCaptureReady
+        captureInProgress[key] = { cancelled: false, callbacks: [], results: [null, null, null, null] };
+        
         // Check if already captured in cache
         var locationType = getLocationTypeFromContainer(containerEl);
         var cameras = getBasicModeCameras(locationType, [lng, lat]);
         var bearings = cameras.map(function(c) { return c.bearing; });
         
         WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-            var cacheHits = cached.filter(function(url) { return url; }).length;
-            
-            if (cacheHits === 4) {
-                // All 4 already cached - notify any waiting callbacks
-                if (captureInProgress[key] && captureInProgress[key].callbacks) {
-                    captureInProgress[key].callbacks.forEach(function(cb) {
-                        try { cb(cached); } catch (e) {}
-                    });
-                }
+            // Check if cancelled during cache lookup
+            if (!captureInProgress[key] || captureInProgress[key].cancelled) {
                 delete captureInProgress[key];
                 return;
             }
             
-            // Already capturing this location?
-            if (captureInProgress[key] && !captureInProgress[key].cancelled) {
-                return; // Let existing capture continue
+            var cacheHits = cached.filter(function(url) { return url; }).length;
+            
+            if (cacheHits === 4) {
+                // All 4 already cached - notify any waiting callbacks
+                var callbacks = captureInProgress[key].callbacks || [];
+                delete captureInProgress[key];
+                callbacks.forEach(function(cb) {
+                    try { cb(cached); } catch (e) {}
+                });
+                return;
             }
             
-            // Start new capture
-            captureInProgress[key] = { cancelled: false, callbacks: [], results: cached.slice() };
+            // Store cached results
+            captureInProgress[key].results = cached.slice();
             
             var captureNext = function(idx) {
                 if (captureInProgress[key] && captureInProgress[key].cancelled) {
@@ -8803,6 +8812,9 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
+            // Ensure capture is started (may already be in progress or cached)
+            startCaptureForLocation(locationContainerEl, lat, lng);
+
             // Wait for capture manager to have all 4 images ready, display bearing 0
             var displayImage = function(cached) {
                 if (!cached || !cached[0]) return;
@@ -8845,6 +8857,9 @@ const LocationWallpaperComponent = (function() {
                 resumeBasicMode();
                 return;
             }
+
+            // Ensure capture is started (may already be in progress or cached)
+            startCaptureForLocation(locationContainerEl, lat, lng);
 
             // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
