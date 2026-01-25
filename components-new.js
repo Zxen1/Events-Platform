@@ -8559,12 +8559,21 @@ const LocationWallpaperComponent = (function() {
             var imageCenter = stillOriginalHeight / 2;
             var threshold = imageCenter + (STILL_HEIGHT / 2);
 
-            if (containerHeight >= threshold) {
+            if (containerHeight > STILL_HEIGHT) {
+                // Stretch to cover
+                img.style.top = '0';
+                img.style.bottom = '0';
+                img.style.height = '100%';
+            } else if (containerHeight >= threshold) {
+                // Anchor bottom
                 img.style.top = 'auto';
                 img.style.bottom = '0';
+                img.style.height = STILL_HEIGHT + 'px';
             } else {
+                // Center at original position
                 img.style.top = (imageCenter - (STILL_HEIGHT / 2)) + 'px';
                 img.style.bottom = 'auto';
+                img.style.height = STILL_HEIGHT + 'px';
             }
         }
 
