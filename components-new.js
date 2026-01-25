@@ -7801,10 +7801,10 @@ const LocationWallpaperComponent = (function() {
         
         // Map member preference to wallpaper mode
         // full -> orbit (live rotating map)
-        // basic -> still (TODO: CSS animation in location containers)
+        // basic -> basic (CSS slideshow with captured frames)
         // still -> still (static capture)
         if (memberPref === 'still') return 'still';
-        if (memberPref === 'basic') return 'still'; // TODO: support CSS animation in location containers
+        if (memberPref === 'basic') return 'basic';
         return 'orbit'; // memberPref === 'full'
     }
 
@@ -8518,9 +8518,356 @@ const LocationWallpaperComponent = (function() {
         }, true);
     }
 
+    // ========================================================================
+    // POST WALLPAPER - Simplified version for open posts
+    // Uses same core map/orbit logic but with simpler lifecycle (no click-away)
+    // Supports all three modes: orbit (full), basic (CSS slideshow), still
+    // ========================================================================
+    
+    var activePostWallpaper = null;
+    var BASIC_BEARINGS = [0, 90, 180, 270]; // Capture angles for basic mode
+    
+    function createForPost(containerEl, lat, lng) {
+        if (!containerEl) return null;
+        if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        if (!window.mapboxgl || !mapboxgl.accessToken) return null;
+        
+        var mode = getWallpaperMode();
+        if (mode === 'off') return null;
+        
+        // Destroy any existing post wallpaper
+        if (activePostWallpaper) {
+            try { activePostWallpaper.destroy(); } catch (e) {}
+            activePostWallpaper = null;
+        }
+        
+        // Create wallpaper elements
+        var root = document.createElement('div');
+        root.className = 'component-locationwallpaper component-locationwallpaper--post';
+        root.setAttribute('aria-hidden', 'true');
+        
+        var mapMount = document.createElement('div');
+        mapMount.className = 'component-locationwallpaper-mapmount';
+        mapMount.style.opacity = '0';
+        mapMount.style.transition = 'opacity 0.8s ease';
+        
+        var img = document.createElement('img');
+        img.className = 'component-locationwallpaper-image';
+        img.alt = '';
+        img.decoding = 'sync';
+        img.loading = 'eager';
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.8s ease';
+        
+        // Slideshow container for basic mode
+        var slideshow = document.createElement('div');
+        slideshow.className = 'component-locationwallpaper-slideshow';
+        slideshow.style.opacity = '0';
+        slideshow.style.transition = 'opacity 0.8s ease';
+        
+        root.appendChild(mapMount);
+        root.appendChild(img);
+        root.appendChild(slideshow);
+        
+        // Apply dimmer setting from admin
+        var dimmerValue = 30;
+        try {
+            var settings = App.getState('settings') || {};
+            if (settings.location_wallpaper_dimmer !== undefined) {
+                dimmerValue = parseInt(settings.location_wallpaper_dimmer, 10) || 30;
+            }
+        } catch (e) {}
+        root.style.setProperty('--locationwallpaper-dimmer', (dimmerValue / 100).toString());
+        
+        // Insert wallpaper and add class to container
+        containerEl.insertBefore(root, containerEl.firstChild);
+        containerEl.classList.add('open-post--has-wallpaper');
+        
+        var st = {
+            map: null,
+            orbiting: false,
+            imageUrl: '',
+            latestCaptureUrl: '',
+            reducedMotion: prefersReducedMotion(),
+            revealTimeout: null,
+            captureIntervalId: null,
+            basicCaptureIndex: 0,
+            basicCaptures: [],
+            destroyed: false
+        };
+        
+        function setImageUrl(url) {
+            st.imageUrl = url || '';
+            if (st.imageUrl) {
+                img.src = st.imageUrl;
+            } else {
+                img.removeAttribute('src');
+                img.style.opacity = '0';
+            }
+        }
+        
+        function showImage() {
+            if (!st.imageUrl) return;
+            img.style.opacity = '1';
+            slideshow.style.opacity = '0';
+            setTimeout(function() { mapMount.style.opacity = '0'; }, 100);
+        }
+        
+        function showSlideshow() {
+            slideshow.style.opacity = '1';
+            img.style.opacity = '0';
+            setTimeout(function() { mapMount.style.opacity = '0'; }, 100);
+        }
+        
+        function showMap() {
+            mapMount.style.opacity = '1';
+            img.style.opacity = '0';
+            slideshow.style.opacity = '0';
+        }
+        
+        function captureMapToDataUrl() {
+            if (!st.map) return null;
+            var canvas = null;
+            try { canvas = st.map.getCanvas(); } catch (e) { return null; }
+            if (!canvas) return null;
+            var dataUrl = '';
+            try { dataUrl = canvas.toDataURL('image/webp', 0.85); } catch (e1) { dataUrl = ''; }
+            if (!dataUrl || dataUrl.indexOf('data:image') !== 0) {
+                try { dataUrl = canvas.toDataURL('image/jpeg', 0.85); } catch (e2) { dataUrl = ''; }
+            }
+            return (dataUrl && dataUrl.indexOf('data:image') === 0) ? dataUrl : null;
+        }
+        
+        function doBackgroundCapture() {
+            if (!st.map || st.destroyed) return;
+            var url = captureMapToDataUrl();
+            if (url) st.latestCaptureUrl = url;
+        }
+        
+        function startBackgroundCaptures() {
+            if (st.captureIntervalId) return;
+            st.captureIntervalId = setInterval(doBackgroundCapture, CAPTURE_INTERVAL_MS);
+            doBackgroundCapture();
+        }
+        
+        function stopBackgroundCaptures() {
+            if (st.captureIntervalId) {
+                clearInterval(st.captureIntervalId);
+                st.captureIntervalId = null;
+            }
+        }
+        
+        function stopOrbit() {
+            st.orbiting = false;
+            try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (e) {}
+        }
+        
+        function startOrbit(baseZoom) {
+            if (!st.map || st.destroyed) return;
+            if (st.reducedMotion) return;
+            st.orbiting = true;
+            
+            function step(firstStep) {
+                if (!st.map || !st.orbiting || st.destroyed) return;
+                var b = 0;
+                try { b = st.map.getBearing() || 0; } catch (e) { b = 0; }
+                
+                var opts = {
+                    bearing: b + 12,
+                    duration: 6500,
+                    easing: function(t) { return t; },
+                    essential: true
+                };
+                if (firstStep && typeof baseZoom === 'number') {
+                    opts.zoom = baseZoom;
+                }
+                try {
+                    st.map.easeTo(opts);
+                } catch (e2) {
+                    st.orbiting = false;
+                    return;
+                }
+                st.map.once('moveend', function() {
+                    if (!st.orbiting || st.destroyed) return;
+                    step(false);
+                });
+            }
+            
+            step(true);
+        }
+        
+        // Basic mode: capture at multiple bearings then create CSS slideshow
+        function captureBasicFrames() {
+            if (!st.map || st.destroyed) return;
+            st.basicCaptureIndex = 0;
+            st.basicCaptures = [];
+            
+            function captureNext() {
+                if (st.destroyed || !st.map) return;
+                if (st.basicCaptureIndex >= BASIC_BEARINGS.length) {
+                    finishBasicCaptures();
+                    return;
+                }
+                
+                var targetBearing = BASIC_BEARINGS[st.basicCaptureIndex];
+                try {
+                    st.map.jumpTo({ bearing: targetBearing });
+                } catch (e) {}
+                
+                // Wait for render then capture
+                setTimeout(function() {
+                    if (st.destroyed || !st.map) return;
+                    var url = captureMapToDataUrl();
+                    if (url) {
+                        st.basicCaptures.push(url);
+                    }
+                    st.basicCaptureIndex++;
+                    captureNext();
+                }, 400);
+            }
+            
+            captureNext();
+        }
+        
+        function finishBasicCaptures() {
+            if (st.destroyed) return;
+            
+            // Clean up map
+            try { if (st.map) st.map.remove(); } catch (e) {}
+            st.map = null;
+            
+            if (!st.basicCaptures.length) return;
+            
+            // Build slideshow with CSS animation
+            slideshow.innerHTML = '';
+            st.basicCaptures.forEach(function(url, idx) {
+                var slide = document.createElement('div');
+                slide.className = 'component-locationwallpaper-slide';
+                slide.style.backgroundImage = 'url(' + url + ')';
+                slide.style.animationDelay = (idx * 8) + 's'; // 8 seconds per slide
+                slideshow.appendChild(slide);
+            });
+            
+            // Set CSS variable for total slides
+            var totalDuration = st.basicCaptures.length * 8;
+            slideshow.style.setProperty('--slide-count', st.basicCaptures.length);
+            slideshow.style.setProperty('--total-duration', totalDuration + 's');
+            slideshow.classList.add('component-locationwallpaper-slideshow--active');
+            
+            showSlideshow();
+        }
+        
+        function createMap() {
+            if (st.map || st.destroyed) return;
+            
+            var zoom = 18;
+            var pitch = 70;
+            var bearing = 0;
+            
+            try {
+                st.map = new mapboxgl.Map({
+                    container: mapMount,
+                    style: getStyleUrlForWallpaper(),
+                    projection: 'globe',
+                    center: [lng, lat],
+                    zoom: zoom,
+                    pitch: pitch,
+                    bearing: bearing,
+                    interactive: false,
+                    attributionControl: false,
+                    renderWorldCopies: false,
+                    antialias: false,
+                    pixelRatio: 1,
+                    preserveDrawingBuffer: true
+                });
+            } catch (eMap) {
+                st.map = null;
+                return;
+            }
+            
+            st.map.once('style.load', function() {
+                if (st.destroyed) return;
+                try {
+                    if (st.map && typeof st.map.setConfigProperty === 'function') {
+                        st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
+                    }
+                } catch (eLP) {}
+                try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR) {}
+            });
+            
+            var onMapLoad = function() {
+                if (st.destroyed || !st.map) return;
+                showMap();
+                
+                if (mode === 'orbit') {
+                    // Full mode: continuous orbit with live map
+                    startOrbit(zoom);
+                    startBackgroundCaptures();
+                } else if (mode === 'basic') {
+                    // Basic mode: capture 4 frames, then CSS animate
+                    setTimeout(function() {
+                        if (st.destroyed) return;
+                        captureBasicFrames();
+                    }, 1000); // Wait for tiles to fully render
+                } else {
+                    // Still mode: capture single frame and remove map
+                    setTimeout(function() {
+                        if (st.destroyed) return;
+                        var url = captureMapToDataUrl();
+                        if (url) {
+                            setImageUrl(url);
+                            st.latestCaptureUrl = url;
+                        }
+                        showImage();
+                        setTimeout(function() {
+                            try { if (st.map) st.map.remove(); } catch (e) {}
+                            st.map = null;
+                        }, 600);
+                    }, STILL_POLISH_DELAY_MS);
+                }
+            };
+            
+            try { st.map.once('load', onMapLoad); } catch (e) {}
+            st.revealTimeout = setTimeout(onMapLoad, 3000);
+        }
+        
+        function destroy() {
+            st.destroyed = true;
+            stopOrbit();
+            stopBackgroundCaptures();
+            if (st.revealTimeout) {
+                clearTimeout(st.revealTimeout);
+                st.revealTimeout = null;
+            }
+            try { if (st.map) st.map.remove(); } catch (e) {}
+            st.map = null;
+            st.basicCaptures = [];
+            try { root.remove(); } catch (e2) {}
+            try { containerEl.classList.remove('open-post--has-wallpaper'); } catch (e3) {}
+            if (activePostWallpaper === ctrl) activePostWallpaper = null;
+        }
+        
+        // Start immediately
+        createMap();
+        
+        var ctrl = { destroy: destroy };
+        activePostWallpaper = ctrl;
+        return ctrl;
+    }
+    
+    function destroyActivePostWallpaper() {
+        if (activePostWallpaper) {
+            try { activePostWallpaper.destroy(); } catch (e) {}
+            activePostWallpaper = null;
+        }
+    }
+
     return {
         install: install,
-        handleActiveContainerChange: handleActiveContainerChange
+        handleActiveContainerChange: handleActiveContainerChange,
+        createForPost: createForPost,
+        destroyActivePostWallpaper: destroyActivePostWallpaper
     };
 })();
 
@@ -8552,396 +8899,3 @@ window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
-
-/* ============================================================================
-   POST WALLPAPER COMPONENT
-   ============================================================================
-   Animated map wallpaper for open posts, similar to LocationWallpaperComponent.
-   Respects member's animation_preference setting (full/basic/still).
-   ============================================================================ */
-
-const PostWallpaperComponent = (function() {
-    'use strict';
-
-    var activeInstance = null;
-    var BASIC_BEARINGS = [0, 90, 180, 270]; // Capture angles for basic mode
-
-    function isWallpaperEnabledByAdmin() {
-        // TEMPORARILY: Admin setting bypassed while testing member-level animation_preference.
-        // Wallpaper is always enabled; controlled by member's Animation setting in Profile tab.
-        // TODO: Decide whether to restore admin control once testing is complete.
-        
-        /* ORIGINAL ADMIN CHECK - commented out during test:
-        try {
-            if (window.App && typeof App.getState === 'function') {
-                var s = App.getState('settings');
-                var v = s ? String(s.location_wallpaper_mode || '').trim().toLowerCase() : '';
-                return v !== 'off';
-            }
-        } catch (e) {}
-        return false;
-        */
-        
-        return true; // Always enabled during test - member preference controls behavior
-    }
-
-    function getAnimationPreference() {
-        // Priority: member setting > localStorage > default
-        if (window.MemberModule && typeof MemberModule.getAnimationPreference === 'function') {
-            return MemberModule.getAnimationPreference();
-        }
-        try {
-            var stored = localStorage.getItem('animation_preference');
-            if (stored) return stored;
-        } catch (e) {}
-        return 'full';
-    }
-
-    function create(containerEl, lat, lng) {
-        if (!containerEl) return null;
-        if (typeof lat !== 'number' || typeof lng !== 'number') return null;
-        if (!window.mapboxgl || !mapboxgl.accessToken) return null;
-        
-        // Check if admin has disabled wallpaper site-wide
-        if (!isWallpaperEnabledByAdmin()) return null;
-
-        var pref = getAnimationPreference();
-        
-        // Create wallpaper elements
-        var root = document.createElement('div');
-        root.className = 'post-wallpaper';
-        root.setAttribute('aria-hidden', 'true');
-
-        var mapMount = document.createElement('div');
-        mapMount.className = 'post-wallpaper-mapmount';
-        mapMount.style.opacity = '0';
-        mapMount.style.transition = 'opacity 0.8s ease';
-
-        // For still/full mode, single image; for basic mode, slideshow container
-        var img = document.createElement('img');
-        img.className = 'post-wallpaper-image';
-        img.alt = '';
-        img.decoding = 'sync';
-        img.loading = 'eager';
-        img.style.opacity = '0';
-        img.style.transition = 'opacity 0.8s ease';
-
-        // Slideshow container for basic mode
-        var slideshow = document.createElement('div');
-        slideshow.className = 'post-wallpaper-slideshow';
-        slideshow.style.opacity = '0';
-        slideshow.style.transition = 'opacity 0.8s ease';
-
-        root.appendChild(mapMount);
-        root.appendChild(img);
-        root.appendChild(slideshow);
-
-        // Apply dimmer from admin settings (same as location wallpaper)
-        var dimmerValue = 30;
-        try {
-            if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                if (settings.location_wallpaper_dimmer !== undefined) {
-                    dimmerValue = parseInt(settings.location_wallpaper_dimmer, 10) || 30;
-                }
-            }
-        } catch (e) {}
-        root.style.setProperty('--postwallpaper-dimmer', (dimmerValue / 100).toString());
-
-        // Insert at the beginning of the container
-        containerEl.insertBefore(root, containerEl.firstChild);
-        containerEl.classList.add('open-post--has-wallpaper');
-
-        var st = {
-            map: null,
-            orbiting: false,
-            imageUrl: '',
-            latestCaptureUrl: '',
-            captureIntervalId: null,
-            revealTimeout: null,
-            basicCaptureIndex: 0,
-            basicCaptures: [],
-            basicAnimationFrame: null,
-            destroyed: false
-        };
-
-        function captureMapToDataUrl() {
-            if (!st.map) return null;
-            var canvas = null;
-            try { canvas = st.map.getCanvas(); } catch (e) { return null; }
-            if (!canvas) return null;
-            var dataUrl = '';
-            try { dataUrl = canvas.toDataURL('image/webp', 0.85); } catch (e1) { dataUrl = ''; }
-            if (!dataUrl || dataUrl.indexOf('data:image') !== 0) {
-                try { dataUrl = canvas.toDataURL('image/jpeg', 0.85); } catch (e2) { dataUrl = ''; }
-            }
-            return (dataUrl && dataUrl.indexOf('data:image') === 0) ? dataUrl : null;
-        }
-
-        function setImageUrl(url) {
-            st.imageUrl = url || '';
-            if (st.imageUrl) {
-                img.src = st.imageUrl;
-            } else {
-                img.removeAttribute('src');
-                img.style.opacity = '0';
-            }
-        }
-
-        function showImage() {
-            if (!st.imageUrl) return;
-            img.style.opacity = '1';
-            slideshow.style.opacity = '0';
-            setTimeout(function() { mapMount.style.opacity = '0'; }, 100);
-        }
-
-        function showSlideshow() {
-            slideshow.style.opacity = '1';
-            img.style.opacity = '0';
-            setTimeout(function() { mapMount.style.opacity = '0'; }, 100);
-        }
-
-        function showMap() {
-            mapMount.style.opacity = '1';
-            img.style.opacity = '0';
-            slideshow.style.opacity = '0';
-        }
-
-        function stopOrbit() {
-            st.orbiting = false;
-            try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (e) {}
-        }
-
-        function startOrbit(baseZoom) {
-            if (!st.map || st.destroyed) return;
-            if (pref !== 'full') return;
-            st.orbiting = true;
-
-            function step(firstStep) {
-                if (!st.map || !st.orbiting || st.destroyed) return;
-                var b = 0;
-                try { b = st.map.getBearing() || 0; } catch (e) { b = 0; }
-
-                var opts = {
-                    bearing: b + 12,
-                    duration: 6500,
-                    easing: function(t) { return t; },
-                    essential: true
-                };
-                if (firstStep && typeof baseZoom === 'number') {
-                    opts.zoom = baseZoom;
-                }
-                try {
-                    st.map.easeTo(opts);
-                } catch (e2) {
-                    st.orbiting = false;
-                    return;
-                }
-                st.map.once('moveend', function() {
-                    if (!st.orbiting || st.destroyed) return;
-                    step(false);
-                });
-            }
-
-            step(true);
-        }
-
-        function doBackgroundCapture() {
-            if (!st.map || st.destroyed) return;
-            var url = captureMapToDataUrl();
-            if (url) st.latestCaptureUrl = url;
-        }
-
-        function startBackgroundCaptures() {
-            if (st.captureIntervalId) return;
-            st.captureIntervalId = setInterval(doBackgroundCapture, 3000);
-            doBackgroundCapture();
-        }
-
-        function stopBackgroundCaptures() {
-            if (st.captureIntervalId) {
-                clearInterval(st.captureIntervalId);
-                st.captureIntervalId = null;
-            }
-        }
-
-        // Basic mode: capture at multiple bearings then create CSS slideshow
-        function captureBasicFrames() {
-            if (!st.map || st.destroyed) return;
-            st.basicCaptureIndex = 0;
-            st.basicCaptures = [];
-
-            function captureNext() {
-                if (st.destroyed || !st.map) return;
-                if (st.basicCaptureIndex >= BASIC_BEARINGS.length) {
-                    finishBasicCaptures();
-                    return;
-                }
-
-                var targetBearing = BASIC_BEARINGS[st.basicCaptureIndex];
-                try {
-                    st.map.jumpTo({ bearing: targetBearing });
-                } catch (e) {}
-
-                // Wait for render then capture
-                setTimeout(function() {
-                    if (st.destroyed || !st.map) return;
-                    var url = captureMapToDataUrl();
-                    if (url) {
-                        st.basicCaptures.push(url);
-                    }
-                    st.basicCaptureIndex++;
-                    captureNext();
-                }, 400);
-            }
-
-            captureNext();
-        }
-
-        function finishBasicCaptures() {
-            if (st.destroyed) return;
-            
-            // Clean up map
-            try { if (st.map) st.map.remove(); } catch (e) {}
-            st.map = null;
-
-            if (!st.basicCaptures.length) return;
-
-            // Build slideshow with CSS animation
-            slideshow.innerHTML = '';
-            st.basicCaptures.forEach(function(url, idx) {
-                var slide = document.createElement('div');
-                slide.className = 'post-wallpaper-slide';
-                slide.style.backgroundImage = 'url(' + url + ')';
-                slide.style.animationDelay = (idx * 8) + 's'; // 8 second per slide
-                slideshow.appendChild(slide);
-            });
-
-            // Set CSS variable for total slides
-            var totalDuration = st.basicCaptures.length * 8;
-            slideshow.style.setProperty('--slide-count', st.basicCaptures.length);
-            slideshow.style.setProperty('--total-duration', totalDuration + 's');
-            slideshow.classList.add('post-wallpaper-slideshow--active');
-
-            showSlideshow();
-        }
-
-        function createMap() {
-            if (st.map || st.destroyed) return;
-
-            var zoom = 16;
-            var pitch = 70;
-            var bearing = 0;
-
-            try {
-                st.map = new mapboxgl.Map({
-                    container: mapMount,
-                    style: 'mapbox://styles/mapbox/standard',
-                    projection: 'globe',
-                    center: [lng, lat],
-                    zoom: zoom,
-                    pitch: pitch,
-                    bearing: bearing,
-                    interactive: false,
-                    attributionControl: false,
-                    renderWorldCopies: false,
-                    antialias: false,
-                    pixelRatio: 1,
-                    preserveDrawingBuffer: true
-                });
-            } catch (eMap) {
-                st.map = null;
-                return;
-            }
-
-            st.map.once('style.load', function() {
-                if (st.destroyed) return;
-                try {
-                    if (st.map && typeof st.map.setConfigProperty === 'function') {
-                        st.map.setConfigProperty('basemap', 'lightPreset', 'night');
-                        st.map.setConfigProperty('basemap', 'showPlaceLabels', false);
-                        st.map.setConfigProperty('basemap', 'showRoadLabels', false);
-                        st.map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
-                        st.map.setConfigProperty('basemap', 'showTransitLabels', false);
-                        st.map.setConfigProperty('basemap', 'showRoads', false);
-                    }
-                } catch (e) {}
-            });
-
-            var onMapLoad = function() {
-                if (st.destroyed) return;
-                showMap();
-                
-                if (pref === 'full') {
-                    startOrbit(zoom);
-                    startBackgroundCaptures();
-                } else if (pref === 'basic') {
-                    // Basic mode: capture 4 directional frames, then CSS animate
-                    setTimeout(function() {
-                        captureBasicFrames();
-                    }, 1000);
-                } else {
-                    // Still mode: capture single frame and remove map
-                    setTimeout(function() {
-                        var url = captureMapToDataUrl();
-                        if (url) {
-                            setImageUrl(url);
-                            showImage();
-                        }
-                        try { if (st.map) st.map.remove(); } catch (e) {}
-                        st.map = null;
-                    }, 1500);
-                }
-            };
-
-            try { st.map.once('load', onMapLoad); } catch (e) {}
-            st.revealTimeout = setTimeout(onMapLoad, 3000);
-        }
-
-        function destroy() {
-            st.destroyed = true;
-            stopOrbit();
-            stopBackgroundCaptures();
-            if (st.revealTimeout) {
-                clearTimeout(st.revealTimeout);
-                st.revealTimeout = null;
-            }
-            if (st.basicAnimationFrame) {
-                cancelAnimationFrame(st.basicAnimationFrame);
-                st.basicAnimationFrame = null;
-            }
-            try { if (st.map) st.map.remove(); } catch (e) {}
-            st.map = null;
-            st.basicCaptures = [];
-            try { root.remove(); } catch (e2) {}
-            try { containerEl.classList.remove('open-post--has-wallpaper'); } catch (e3) {}
-            if (activeInstance === ctrl) activeInstance = null;
-        }
-
-        // Start immediately
-        createMap();
-
-        var ctrl = {
-            destroy: destroy
-        };
-
-        activeInstance = ctrl;
-        return ctrl;
-    }
-
-    function destroyActive() {
-        if (activeInstance) {
-            try { activeInstance.destroy(); } catch (e) {}
-            activeInstance = null;
-        }
-    }
-
-    return {
-        create: create,
-        destroyActive: destroyActive
-    };
-})();
-
-window.PostWallpaperComponent = PostWallpaperComponent;
-
-
