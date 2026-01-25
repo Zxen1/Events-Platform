@@ -3034,6 +3034,7 @@
     width: 100%;
     height: calc(100% + 200px); /* Match the buffer */
     object-fit: cover;
+    object-position: center center;
     z-index: 2; /* Image layers on top of map for seamless crossfade */
 }
 
@@ -3076,11 +3077,10 @@
     width: calc(100% + 100px);
     height: 100%;
     object-fit: cover;
-    object-position: left top;
+    object-position: left center;
     opacity: 0;
     transform: translateX(-100px);
-    transition: opacity 1.5s ease-in-out;
-    transform: translateX(-100px);
+    transition: opacity 1.5s ease-in-out, object-position 0.4s ease;
 }
 
 /* Active image: visible, on top, starts pan animation fresh */
