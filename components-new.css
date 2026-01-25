@@ -3071,55 +3071,42 @@
 
 .component-locationwallpaper-basic-image {
     position: absolute;
-    height: 100%;
-    object-fit: cover;
-    opacity: 1;
-}
-
-/* Active image fades in on top (no fade-out on inactive = no black dip) */
-.component-locationwallpaper-basic-image--active {
-    z-index: 2;
-}
-
-@keyframes locationwallpaper-basic-fadein {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* All 4 pan images: anchor top-left, grows downward
-   Captured with +100px width buffer, 100px traveled over 20s */
-.component-locationwallpaper-basic-image[data-index="0"],
-.component-locationwallpaper-basic-image[data-index="1"],
-.component-locationwallpaper-basic-image[data-index="2"],
-.component-locationwallpaper-basic-image[data-index="3"] {
     top: 0;
     left: 0;
     width: calc(100% + 100px);
+    height: 100%;
+    object-fit: cover;
     object-position: left top;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
     animation: locationwallpaper-basic-pan 20s linear infinite;
 }
 
-.component-locationwallpaper-basic-image--active[data-index="0"],
-.component-locationwallpaper-basic-image--active[data-index="1"],
-.component-locationwallpaper-basic-image--active[data-index="2"],
-.component-locationwallpaper-basic-image--active[data-index="3"] {
-    animation: locationwallpaper-basic-pan 20s linear infinite, locationwallpaper-basic-fadein 1.5s ease-in-out;
+/* Active image is visible and on top */
+.component-locationwallpaper-basic-image--active {
+    opacity: 1;
+    z-index: 2;
 }
 
-/* Pan: start at right edge, travel left 100px */
+/* Pan: left edge starts at container left, moves 100px leftward */
 @keyframes locationwallpaper-basic-pan {
     0% {
-        transform: translateX(-100px);
+        transform: translateX(0);
     }
     100% {
-        transform: translateX(0);
+        transform: translateX(-100px);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
         animation: none;
+        transition: none;
         transform: translateX(-50px);
+        opacity: 1;
+    }
+    .component-locationwallpaper-basic-image:not(.component-locationwallpaper-basic-image--active) {
+        opacity: 0;
     }
 }
 

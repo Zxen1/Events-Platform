@@ -7738,9 +7738,8 @@ const AgeRatingComponent = (function(){
    - "off": No wallpaper shown
    - "still": Show map visually while loading, wait for full render, capture
               and swap to static image
-   - "basic": Capture 2 static images, remove map, use class-toggled crossfade.
-              Lightweight for slower PCs. Image 1: pitched (pan), Image 2: aerial
-              (rotate). Each image displays for 10s with 1.5s crossfade.
+   - "basic": Capture 4 pan images (N/E/S/W), remove map, use class-toggled crossfade.
+              Lightweight for slower PCs. Each image displays for 20s with 1.5s crossfade.
    - "orbit": Live orbiting map while container is active; continuous background
               captures every few seconds; on click-away, stop orbit but keep map
               running briefly, show pre-captured image, then lazy cleanup
@@ -7807,9 +7806,7 @@ const LocationWallpaperComponent = (function() {
         };
     }
 
-    // Camera presets for basic mode - 2 captures per location type
-    // Image 1: pitched view (slow pan animation)
-    // Image 2: aerial view (slow rotation animation)
+    // Camera presets for basic mode - 4 pan views from N/E/S/W
     function getBasicModeCameras(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
         var isCity = (t === 'city');
@@ -7946,7 +7943,7 @@ const LocationWallpaperComponent = (function() {
                 clearTimeout(st.cleanupTimeoutId);
                 st.cleanupTimeoutId = null;
             }
-            stopBasicAnimation();
+            stopBasicMode();
         }
 
         function setImageUrl(url) {
@@ -8342,231 +8339,118 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
-        // BASIC MODE
-        // Captures 2 still images, removes map, uses class-toggled crossfade
-        // Image 1: pitched view with slow pan animation (left-panning)
-        // Image 2: aerial view with segmented rotation (11→1 o'clock, 5→7 o'clock)
-        // Fixed pixel buffers - simple and predictable
+        // BASIC MODE - 4 pan images (N/E/S/W), CSS animation, class-toggled crossfade
         // ============================================================
-        var basicImagesContainer = null;
-        var basicImages = [];
-        var basicCurrentIndex = 0;
-        var basicRotationInterval = null;
-        var BASIC_SLIDE_DURATION = 20000; // 20 seconds per image (matches marquee)
-        var PAN_BUFFER_WIDTH = 100; // Extra pixels for pan travel (100px over 20s visibility)
-        var PAN_BUFFER_HEIGHT = 300; // Extra pixels below for container growth
-        var CAPTURE_DELAY = 5000; // 5 seconds between background captures
-        var basicCaptureHeights = [0, 0, 0, 0]; // Track captured heights for each image
-        var basicRecapturing = false; // Flag for background re-capture
+        var basicContainer = null;
+        var basicImgs = [];
+        var basicIndex = 0;
+        var basicTimer = null;
+        var basicHeights = [0, 0, 0, 0];
+        var basicRecapturing = false;
 
-        function createBasicImagesContainer() {
-            if (basicImagesContainer) return;
-            basicImagesContainer = document.createElement('div');
-            basicImagesContainer.className = 'component-locationwallpaper-basic-container';
-            for (var i = 0; i < 4; i++) {
-                var imgEl = document.createElement('img');
-                imgEl.className = 'component-locationwallpaper-basic-image';
-                imgEl.setAttribute('data-index', String(i));
-                imgEl.alt = '';
-                imgEl.decoding = 'sync';
-                imgEl.loading = 'eager';
-                basicImages.push(imgEl);
-                basicImagesContainer.appendChild(imgEl);
-            }
-            root.appendChild(basicImagesContainer);
-        }
-
-        function removeBasicImagesContainer() {
-            stopBasicAnimation();
-            if (basicImagesContainer && basicImagesContainer.parentNode) {
-                basicImagesContainer.parentNode.removeChild(basicImagesContainer);
-            }
-            basicImagesContainer = null;
-            basicImages = [];
-            basicCurrentIndex = 0;
-        }
-
-        function showBasicSlide(index) {
-            if (!basicImages.length) return;
-            // Remove active from all (they stay at opacity 1, just lose z-index)
-            for (var i = 0; i < basicImages.length; i++) {
-                basicImages[i].classList.remove('component-locationwallpaper-basic-image--active');
-            }
-            // Add active to target (triggers fade-in animation, no fade-out on other)
-            if (basicImages[index]) {
-                basicImages[index].classList.add('component-locationwallpaper-basic-image--active');
-            }
-            basicCurrentIndex = index;
-        }
-
-        function advanceBasicSlide() {
-            var nextIndex = (basicCurrentIndex + 1) % basicImages.length;
-            showBasicSlide(nextIndex);
-
-            // Leapfrog: check if any hidden image needs re-capture due to container growth
-            // Only recapture if growth exceeds the 300px buffer
-            if (!basicRecapturing && contentEl) {
-                var containerHeight = contentEl.offsetHeight || 0;
-                var checkIndex = (nextIndex + 1) % basicImages.length;
-                if (containerHeight > basicCaptureHeights[checkIndex] + PAN_BUFFER_HEIGHT) {
-                    basicRecapturing = true;
-                    recaptureImage(checkIndex);
-                }
-            }
-        }
-
-        function captureBasicImage(camera, captureWidth, captureHeight, onComplete) {
-            // Create temporary off-screen map for background capture
-            var tempMount = document.createElement('div');
-            tempMount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + captureWidth + 'px;height:' + captureHeight + 'px';
-            document.body.appendChild(tempMount);
-
-            var tempMap = null;
+        function captureMap(camera, w, h, cb) {
+            var mount = document.createElement('div');
+            mount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + w + 'px;height:' + h + 'px';
+            document.body.appendChild(mount);
+            var m = null;
             try {
-                tempMap = new mapboxgl.Map({
-                    container: tempMount,
-                    style: getStyleUrlForWallpaper(),
-                    projection: 'globe',
-                    center: camera.center,
-                    zoom: camera.zoom,
-                    pitch: camera.pitch || 0,
-                    bearing: camera.bearing || 0,
-                    interactive: false,
-                    attributionControl: false,
-                    renderWorldCopies: false,
-                    antialias: false,
-                    pixelRatio: 1,
-                    preserveDrawingBuffer: true
+                m = new mapboxgl.Map({
+                    container: mount, style: getStyleUrlForWallpaper(), projection: 'globe',
+                    center: camera.center, zoom: camera.zoom, pitch: camera.pitch || 0, bearing: camera.bearing || 0,
+                    interactive: false, attributionControl: false, preserveDrawingBuffer: true
                 });
-            } catch (e) {
-                document.body.removeChild(tempMount);
-                onComplete(null);
-                return;
-            }
-
-            tempMap.once('load', function() {
-                try {
-                    if (typeof tempMap.setConfigProperty === 'function') {
-                        tempMap.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
-                    }
-                    applyWallpaperNoTextNoRoads(tempMap);
-                } catch (e) {}
-
+            } catch (e) { document.body.removeChild(mount); cb(null); return; }
+            m.once('load', function() {
+                try { m.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper()); applyWallpaperNoTextNoRoads(m); } catch (e) {}
                 setTimeout(function() {
                     var url = '';
-                    try {
-                        var canvas = tempMap.getCanvas();
-                        url = canvas.toDataURL('image/webp', 0.85);
-                        if (!url || url.indexOf('data:image') !== 0) {
-                            url = canvas.toDataURL('image/jpeg', 0.85);
-                        }
-                    } catch (e) {}
-                    try { tempMap.remove(); } catch (e) {}
-                    try { document.body.removeChild(tempMount); } catch (e) {}
-                    onComplete(url && url.indexOf('data:image') === 0 ? url : null);
-                }, 200);
+                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) {}
+                    try { m.remove(); } catch (e) {}
+                    try { document.body.removeChild(mount); } catch (e) {}
+                    cb(url && url.indexOf('data:image') === 0 ? url : null);
+                }, 150);
             });
-        }
-
-        function recaptureImage(index) {
-            if (!st.basicCapturedLat || !st.basicCapturedLng) { basicRecapturing = false; return; }
-
-            var locationType = getLocationTypeFromContainer(locationContainerEl);
-            var cameras = getBasicModeCameras(locationType, [st.basicCapturedLng, st.basicCapturedLat]);
-            var containerWidth = contentEl.offsetWidth || 400;
-            var containerHeight = contentEl.offsetHeight || 300;
-            var captureWidth = containerWidth + PAN_BUFFER_WIDTH;
-            var captureHeight = containerHeight + PAN_BUFFER_HEIGHT;
-
-            captureBasicImage(cameras[index], captureWidth, captureHeight, function(url) {
-                if (url && basicImages[index]) {
-                    basicImages[index].src = url;
-                    basicCaptureHeights[index] = containerHeight;
-                }
-                basicRecapturing = false;
-            });
-        }
-
-        function startBasicAnimation() {
-            if (basicRotationInterval || !basicImages.length) return;
-            // Show first image immediately
-            showBasicSlide(0);
-            // Start rotation timer
-            basicRotationInterval = setInterval(advanceBasicSlide, BASIC_SLIDE_DURATION);
-        }
-
-        function stopBasicAnimation() {
-            if (basicRotationInterval) {
-                clearInterval(basicRotationInterval);
-                basicRotationInterval = null;
-            }
         }
 
         function startBasicMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
+            var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
 
-            var locationType = getLocationTypeFromContainer(locationContainerEl);
-            var cameras = getBasicModeCameras(locationType, [lng, lat]);
-
-            // If we already captured for this location, just start animation
-            if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImages.length === 4 && basicImages[0].src) {
-                startBasicAnimation();
+            // Already captured for this location
+            if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImgs[0] && basicImgs[0].src) {
+                if (!basicTimer) { basicImgs[0].classList.add('component-locationwallpaper-basic-image--active'); basicTimer = setInterval(advanceBasic, 20000); }
                 return;
             }
 
-            // Clear previous captures
-            st.basicCapturedLat = null;
-            st.basicCapturedLng = null;
-            basicCaptureHeights = [0, 0, 0, 0];
+            // Setup
+            st.basicCapturedLat = lat; st.basicCapturedLng = lng;
+            img.style.opacity = '0'; mapMount.style.opacity = '0';
+            if (basicContainer) basicContainer.remove();
+            basicContainer = document.createElement('div');
+            basicContainer.className = 'component-locationwallpaper-basic-container';
+            basicImgs = []; basicHeights = [0, 0, 0, 0]; basicIndex = 0;
+            for (var i = 0; i < 4; i++) {
+                var el = document.createElement('img');
+                el.className = 'component-locationwallpaper-basic-image';
+                el.alt = '';
+                basicImgs.push(el);
+                basicContainer.appendChild(el);
+            }
+            root.appendChild(basicContainer);
 
-            // Hide any existing map/image
-            img.style.opacity = '0';
-            mapMount.style.opacity = '0';
+            var cw = (contentEl.offsetWidth || 400) + 100;
+            var ch = (contentEl.offsetHeight || 300) + 300;
+            var loaded = 0;
 
-            // Create container for 4 images
-            removeBasicImagesContainer();
-            createBasicImagesContainer();
+            // Capture all 4 in parallel
+            for (var j = 0; j < 4; j++) {
+                (function(idx) {
+                    captureMap(cameras[idx], cw, ch, function(url) {
+                        if (url && basicImgs[idx]) { basicImgs[idx].src = url; basicHeights[idx] = ch - 300; }
+                        loaded++;
+                        if (loaded === 4) {
+                            removeMap();
+                            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                            basicTimer = setInterval(advanceBasic, 20000);
+                        }
+                    });
+                })(j);
+            }
+        }
 
-            var containerWidth = contentEl.offsetWidth || 400;
-            var containerHeight = contentEl.offsetHeight || 300;
-            var captureWidth = containerWidth + PAN_BUFFER_WIDTH;
-            var captureHeight = containerHeight + PAN_BUFFER_HEIGHT;
+        function advanceBasic() {
+            if (!basicImgs.length) return;
+            for (var i = 0; i < basicImgs.length; i++) basicImgs[i].classList.remove('component-locationwallpaper-basic-image--active');
+            basicIndex = (basicIndex + 1) % 4;
+            basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
 
-            // Capture first image, start animation, then capture rest in background
-            captureBasicImage(cameras[0], captureWidth, captureHeight, function(url) {
-                if (url && basicImages[0]) {
-                    basicImages[0].src = url;
-                    basicCaptureHeights[0] = containerHeight;
+            // Recapture if container grew beyond 300px buffer
+            if (!basicRecapturing && contentEl) {
+                var h = contentEl.offsetHeight || 0;
+                var chk = (basicIndex + 2) % 4;
+                if (h > basicHeights[chk] + 300) {
+                    basicRecapturing = true;
+                    var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [st.basicCapturedLng, st.basicCapturedLat]);
+                    captureMap(cameras[chk], (contentEl.offsetWidth || 400) + 100, h + 300, function(url) {
+                        if (url && basicImgs[chk]) { basicImgs[chk].src = url; basicHeights[chk] = h; }
+                        basicRecapturing = false;
+                    });
                 }
-
-                st.basicCapturedLat = lat;
-                st.basicCapturedLng = lng;
-                removeMap();
-                startBasicAnimation();
-
-                // Capture remaining 3 images with 5s delays to avoid system overload
-                var captureNext = function(idx) {
-                    if (idx >= 4) return;
-                    setTimeout(function() {
-                        captureBasicImage(cameras[idx], captureWidth, captureHeight, function(nextUrl) {
-                            if (nextUrl && basicImages[idx]) {
-                                basicImages[idx].src = nextUrl;
-                                basicCaptureHeights[idx] = containerHeight;
-                            }
-                            captureNext(idx + 1);
-                        });
-                    }, CAPTURE_DELAY);
-                };
-                captureNext(1);
-            });
+            }
         }
 
-        function deactivateBasicMode() {
-            st.isActive = false;
-            // Basic mode animations continue via CSS, nothing to stop
-            // Map should already be removed after capture
+        function stopBasicMode() {
+            if (basicTimer) { clearInterval(basicTimer); basicTimer = null; }
         }
+
+        function removeBasicMode() {
+            stopBasicMode();
+            if (basicContainer) { basicContainer.remove(); basicContainer = null; }
+            basicImgs = []; basicIndex = 0;
+        }
+
+        function deactivateBasicMode() { st.isActive = false; }
 
         // ============================================================
         // PUBLIC API
@@ -8636,7 +8520,7 @@ const LocationWallpaperComponent = (function() {
         function destroy() {
             clearAllTimers();
             removeMap();
-            removeBasicImagesContainer();
+            removeBasicMode();
             try {
                 if (st.resizeObs) st.resizeObs.disconnect();
             } catch (e) {}
