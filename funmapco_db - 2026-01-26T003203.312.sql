@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 25, 2026 at 04:06 PM
+-- Generation Time: Jan 26, 2026 at 12:32 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -75,7 +75,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `animation_preference`, `favorites`, `recent`, `country`, `preferred_currency`, `hidden`, `deleted_at`, `backup_json`, `filters_json`, `filters_hash`, `filters_version`, `filters_updated_at`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '00000001-avatar.png', '$2a$12$rVFSDdsbofrzJIphF2mx4ey3egEJp801Gp0OfLyWbydz15jUZ4mhK', 'night', 'standard', 'full', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, 0, NULL, NULL, '{\"keyword\":\"\",\"minPrice\":\"\",\"maxPrice\":\"\",\"dateStart\":null,\"dateEnd\":null,\"expired\":false,\"favourites\":false,\"sort\":\"recommended\",\"categories\":{\"What\'s On\":{\"enabled\":true,\"subs\":{\"Live Gigs\":true,\"Screenings\":true,\"Live Theatre\":true,\"Artwork\":true,\"Live Sport\":true,\"Other Events\":true,\"Festivals\":true,\"Markets\":true}},\"For Hire\":{\"enabled\":true,\"subs\":{\"Goods and Services\":true,\"Performers\":true,\"Staff\":true}},\"Venues\":{\"enabled\":true,\"subs\":{\"Theme Parks & Attractions\":true,\"Stadiums & Arenas\":true,\"Theatres & Concert Halls\":true,\"Museums & Galleries\":true,\"Zoos, Aquariums & Wildlife\":true,\"Parks & Nature\":true,\"Landmarks\":true,\"Other Venues\":true}},\"Learning\":{\"enabled\":true,\"subs\":{\"Courses\":true,\"Education Centres\":true,\"Other Learning\":true,\"Tutors\":true}},\"Opportunities\":{\"enabled\":true,\"subs\":{\"Clubs\":true,\"Competitions\":true,\"Jobs\":true,\"Other Opportunities\":true,\"Screen Auditions\":true,\"Stage Auditions\":true,\"Volunteers\":true}},\"Buy and Sell\":{\"enabled\":true,\"subs\":{\"Freebies\":true,\"Wanted\":true,\"For Sale\":true}},\"Eat & Drink\":{\"enabled\":true,\"subs\":{\"Restaurants\":true,\"Bars & Pubs\":true,\"Cafes\":true,\"Nightclubs\":true,\"Takeaway\":true,\"Other Eat & Drink\":true}},\"Test\":{\"enabled\":true,\"subs\":{\"Test Subcategory\":true}},\"Stay\":{\"enabled\":true,\"subs\":{\"Hotels & Resorts\":true,\"Motels\":true,\"Hostels\":true,\"Holiday Rentals\":true,\"Caravan & Camping\":true,\"Bed & Breakfast\":true,\"Other Stay\":true}},\"Get Around\":{\"enabled\":true,\"subs\":{\"Car Hire\":true,\"Bike & Scooter\":true,\"Tours & Experiences\":true,\"Transfers\":true,\"Other Transport\":true}}},\"subcategoryKeys\":[\"live-gigs\",\"screenings\",\"live-theatre\",\"artwork\",\"live-sport\",\"other-events\",\"festivals\",\"markets\",\"goods-and-services\",\"performers\",\"staff\",\"theme-parks-attractions\",\"stadiums-arenas\",\"theatres-concert-halls\",\"museums-galleries\",\"zoos-aquariums-wildlife\",\"parks-nature\",\"landmarks\",\"other-venues\",\"courses\",\"education-centres\",\"other-learning\",\"tutors\",\"clubs\",\"competitions\",\"jobs\",\"other-opportunities\",\"screen-auditions\",\"stage-auditions\",\"volunteers\",\"freebies\",\"wanted\",\"for-sale\",\"restaurants\",\"bars-pubs\",\"cafes\",\"nightclubs\",\"takeaway\",\"other-eat-drink\",\"test-subcategory\",\"hotels-resorts\",\"motels\",\"hostels\",\"holiday-rentals\",\"caravan-camping\",\"bed-breakfast\",\"other-stay\",\"car-hire\",\"bike-scooter\",\"tours-experiences\",\"transfers\",\"other-transport\"]}', 'e28c00278439c33b5866a31582f7ec43c435e3a8', 1, '2026-01-25 16:06:24', '2025-10-22 01:00:41', '2026-01-25 16:06:24');
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '00000001-avatar.png', '$2a$12$rVFSDdsbofrzJIphF2mx4ey3egEJp801Gp0OfLyWbydz15jUZ4mhK', 'night', 'standard', 'orbit', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, 0, NULL, NULL, '{\"keyword\":\"\",\"minPrice\":\"\",\"maxPrice\":\"\",\"dateStart\":null,\"dateEnd\":null,\"expired\":false,\"favourites\":false,\"sort\":\"recommended\",\"categories\":{\"What\'s On\":{\"enabled\":true,\"subs\":{\"Live Gigs\":true,\"Screenings\":true,\"Live Theatre\":true,\"Artwork\":true,\"Live Sport\":true,\"Other Events\":true,\"Festivals\":true,\"Markets\":true}},\"For Hire\":{\"enabled\":true,\"subs\":{\"Goods and Services\":true,\"Performers\":true,\"Staff\":true}},\"Venues\":{\"enabled\":true,\"subs\":{\"Theme Parks & Attractions\":true,\"Stadiums & Arenas\":true,\"Theatres & Concert Halls\":true,\"Museums & Galleries\":true,\"Zoos, Aquariums & Wildlife\":true,\"Parks & Nature\":true,\"Landmarks\":true,\"Other Venues\":true}},\"Learning\":{\"enabled\":true,\"subs\":{\"Courses\":true,\"Education Centres\":true,\"Other Learning\":true,\"Tutors\":true}},\"Opportunities\":{\"enabled\":true,\"subs\":{\"Clubs\":true,\"Competitions\":true,\"Jobs\":true,\"Other Opportunities\":true,\"Screen Auditions\":true,\"Stage Auditions\":true,\"Volunteers\":true}},\"Buy and Sell\":{\"enabled\":true,\"subs\":{\"Freebies\":true,\"Wanted\":true,\"For Sale\":true}},\"Eat & Drink\":{\"enabled\":true,\"subs\":{\"Restaurants\":true,\"Bars & Pubs\":true,\"Cafes\":true,\"Nightclubs\":true,\"Takeaway\":true,\"Other Eat & Drink\":true}},\"Test\":{\"enabled\":true,\"subs\":{\"Test Subcategory\":true}},\"Stay\":{\"enabled\":true,\"subs\":{\"Hotels & Resorts\":true,\"Motels\":true,\"Hostels\":true,\"Holiday Rentals\":true,\"Caravan & Camping\":true,\"Bed & Breakfast\":true,\"Other Stay\":true}},\"Get Around\":{\"enabled\":true,\"subs\":{\"Car Hire\":true,\"Bike & Scooter\":true,\"Tours & Experiences\":true,\"Transfers\":true,\"Other Transport\":true}}},\"subcategoryKeys\":[\"live-gigs\",\"screenings\",\"live-theatre\",\"artwork\",\"live-sport\",\"other-events\",\"festivals\",\"markets\",\"goods-and-services\",\"performers\",\"staff\",\"theme-parks-attractions\",\"stadiums-arenas\",\"theatres-concert-halls\",\"museums-galleries\",\"zoos-aquariums-wildlife\",\"parks-nature\",\"landmarks\",\"other-venues\",\"courses\",\"education-centres\",\"other-learning\",\"tutors\",\"clubs\",\"competitions\",\"jobs\",\"other-opportunities\",\"screen-auditions\",\"stage-auditions\",\"volunteers\",\"freebies\",\"wanted\",\"for-sale\",\"restaurants\",\"bars-pubs\",\"cafes\",\"nightclubs\",\"takeaway\",\"other-eat-drink\",\"test-subcategory\",\"hotels-resorts\",\"motels\",\"hostels\",\"holiday-rentals\",\"caravan-camping\",\"bed-breakfast\",\"other-stay\",\"car-hire\",\"bike-scooter\",\"tours-experiences\",\"transfers\",\"other-transport\"]}', 'e28c00278439c33b5866a31582f7ec43c435e3a8', 1, '2026-01-25 16:06:24', '2025-10-22 01:00:41', '2026-01-25 23:19:33');
 
 -- --------------------------------------------------------
 
@@ -268,6 +268,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (111, 'folder_post_system_images', 'https://cdn.funmap.com/system-images', 'string', 'Folder path for Post system images', '2025-12-29 03:38:23', '2025-12-29 03:44:45'),
 (112, 'folder_recent_system_images', 'https://cdn.funmap.com/system-images', 'string', 'Folder path for Recent system images', '2025-12-29 03:38:23', '2025-12-29 03:44:45'),
 (113, 'folder_age_ratings', 'https://cdn.funmap.com/age-ratings', 'string', 'Folder path for age rating icons', '2026-01-05 20:51:20', '2026-01-05 20:56:53'),
+(114, 'folder_map_images', 'https://cdn.funmap.com/map-images', 'string', 'Folder path for map wallpaper images', '2026-01-25 12:54:40', '2026-01-25 12:54:40'),
 (200, 'big_logo', 'funmap welcome message 2025-12-10c.webp', 'string', 'Path to big logo', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (201, 'big_map_card_pill', '225x60-pill-172554.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-12-21 16:28:13', '2026-01-15 01:25:32'),
 (202, 'favicon', 'favicon.ico', 'string', 'Path to favicon', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
@@ -1907,6 +1908,27 @@ CREATE TABLE `logs` (
   `ip_address` varchar(45) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `map_images`
+--
+
+CREATE TABLE `map_images` (
+  `id` int(11) NOT NULL,
+  `latitude` decimal(10,7) NOT NULL,
+  `longitude` decimal(10,7) NOT NULL,
+  `location_type` enum('venue','address','city') NOT NULL DEFAULT 'venue',
+  `bearing` int(11) NOT NULL DEFAULT 0,
+  `file_name` varchar(255) NOT NULL,
+  `file_url` varchar(500) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `width` int(11) DEFAULT NULL,
+  `height` int(11) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -9942,6 +9964,13 @@ ALTER TABLE `logs`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `map_images`
+--
+ALTER TABLE `map_images`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `location_bearing` (`latitude`,`longitude`,`location_type`,`bearing`);
+
+--
 -- Indexes for table `members`
 --
 ALTER TABLE `members`
@@ -10188,6 +10217,12 @@ ALTER TABLE `list_system_images`
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `map_images`
+--
+ALTER TABLE `map_images`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

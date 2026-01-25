@@ -7745,6 +7745,175 @@ const AgeRatingComponent = (function(){
    ============================================================================ */
 
 /* ============================================================================
+   WALLPAPER CACHE - IndexedDB storage for wallpaper images
+   ============================================================================
+   Persists captured images across browser sessions.
+   LRU eviction when limit reached.
+   ============================================================================ */
+var WallpaperCache = (function() {
+    'use strict';
+    var DB_NAME = 'wallpaper_cache';
+    var STORE_NAME = 'images';
+    var DB_VERSION = 1;
+    var MAX_ENTRIES = 20; // 20 locations × 4 images = 80 images max (~24MB)
+    var db = null;
+    var dbReady = false;
+    var dbError = false;
+
+    function openDB(cb) {
+        if (dbReady && db) { cb(db); return; }
+        if (dbError) { cb(null); return; }
+        
+        try {
+            var request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = function() {
+                dbError = true;
+                cb(null);
+            };
+            
+            request.onsuccess = function(e) {
+                db = e.target.result;
+                dbReady = true;
+                cb(db);
+            };
+            
+            request.onupgradeneeded = function(e) {
+                var database = e.target.result;
+                if (!database.objectStoreNames.contains(STORE_NAME)) {
+                    var store = database.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        } catch (err) {
+            dbError = true;
+            cb(null);
+        }
+    }
+
+    function makeKey(lat, lng, bearing) {
+        return lat.toFixed(6) + ',' + lng.toFixed(6) + ',' + bearing;
+    }
+
+    function get(lat, lng, bearing, cb) {
+        openDB(function(database) {
+            if (!database) { cb(null); return; }
+            try {
+                var tx = database.transaction(STORE_NAME, 'readonly');
+                var store = tx.objectStore(STORE_NAME);
+                var key = makeKey(lat, lng, bearing);
+                var request = store.get(key);
+                request.onsuccess = function() {
+                    var result = request.result;
+                    if (result && result.dataUrl) {
+                        // Update timestamp on read (for LRU)
+                        put(lat, lng, bearing, result.dataUrl, function() {});
+                        cb(result.dataUrl);
+                    } else {
+                        cb(null);
+                    }
+                };
+                request.onerror = function() { cb(null); };
+            } catch (err) {
+                cb(null);
+            }
+        });
+    }
+
+    function put(lat, lng, bearing, dataUrl, cb) {
+        openDB(function(database) {
+            if (!database) { cb(false); return; }
+            try {
+                var tx = database.transaction(STORE_NAME, 'readwrite');
+                var store = tx.objectStore(STORE_NAME);
+                var key = makeKey(lat, lng, bearing);
+                store.put({
+                    key: key,
+                    lat: lat,
+                    lng: lng,
+                    bearing: bearing,
+                    dataUrl: dataUrl,
+                    timestamp: Date.now()
+                });
+                tx.oncomplete = function() { cb(true); pruneOldEntries(); };
+                tx.onerror = function() { cb(false); };
+            } catch (err) {
+                cb(false);
+            }
+        });
+    }
+
+    function pruneOldEntries() {
+        openDB(function(database) {
+            if (!database) return;
+            try {
+                var tx = database.transaction(STORE_NAME, 'readwrite');
+                var store = tx.objectStore(STORE_NAME);
+                var countRequest = store.count();
+                countRequest.onsuccess = function() {
+                    var count = countRequest.result;
+                    if (count <= MAX_ENTRIES * 4) return; // 4 images per location
+                    
+                    // Delete oldest entries
+                    var toDelete = count - (MAX_ENTRIES * 4);
+                    var index = store.index('timestamp');
+                    var cursor = index.openCursor();
+                    var deleted = 0;
+                    cursor.onsuccess = function(e) {
+                        var c = e.target.result;
+                        if (c && deleted < toDelete) {
+                            store.delete(c.primaryKey);
+                            deleted++;
+                            c.continue();
+                        }
+                    };
+                };
+            } catch (err) {}
+        });
+    }
+
+    function getAll(lat, lng, bearings, cb) {
+        // Get multiple images for a location (all 4 bearings)
+        var results = [];
+        var pending = bearings.length;
+        if (pending === 0) { cb(results); return; }
+        
+        bearings.forEach(function(bearing, idx) {
+            get(lat, lng, bearing, function(dataUrl) {
+                results[idx] = dataUrl;
+                pending--;
+                if (pending === 0) cb(results);
+            });
+        });
+    }
+
+    function putAll(lat, lng, bearings, dataUrls, cb) {
+        // Store multiple images for a location
+        var pending = bearings.length;
+        if (pending === 0) { cb(); return; }
+        
+        bearings.forEach(function(bearing, idx) {
+            if (dataUrls[idx]) {
+                put(lat, lng, bearing, dataUrls[idx], function() {
+                    pending--;
+                    if (pending === 0) cb();
+                });
+            } else {
+                pending--;
+                if (pending === 0) cb();
+            }
+        });
+    }
+
+    return {
+        get: get,
+        put: put,
+        getAll: getAll,
+        putAll: putAll
+    };
+})();
+
+/* ============================================================================
    SECONDARY MAP - Shared utility for captures
    ============================================================================
    One persistent off-screen map for all capture needs.
@@ -8319,6 +8488,7 @@ const LocationWallpaperComponent = (function() {
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
+            var orbitBearing = 0; // Use 0 as cache key for orbit preview images
 
             // Resume bearing if same location
             if (st.savedCamera && st.lastLat === lat && st.lastLng === lng) {
@@ -8327,32 +8497,44 @@ const LocationWallpaperComponent = (function() {
                 }
             }
 
-            // If we have a pre-captured image, show it while map loads
+            // Show pre-captured image while map loads (from memory or cache)
+            var showPreview = function() {
+                if (!st.map) {
+                    createMap(desired);
+                } else {
+                    try { st.map.jumpTo(desired); } catch (e) {}
+                }
+
+                if (!st.map) return;
+
+                // Reveal and start orbiting once map tiles are loaded
+                st.didReveal = false;
+                var onMapLoad = function() {
+                    if (!st.map || st.didReveal) return;
+                    revealMapCrossfade();
+                    stopOrbit();
+                    startOrbit(desired.zoom);
+                };
+
+                try { st.map.once('load', onMapLoad); } catch (e) {}
+                st.revealTimeout = setTimeout(onMapLoad, 3000);
+            };
+
             if (st.latestCaptureUrl) {
                 setImageUrl(st.latestCaptureUrl);
                 showImage();
-            }
-
-            if (!st.map) {
-                createMap(desired);
+                showPreview();
             } else {
-                try { st.map.jumpTo(desired); } catch (e) {}
+                // Check IndexedDB cache for preview image
+                WallpaperCache.get(lat, lng, orbitBearing, function(cachedUrl) {
+                    if (cachedUrl) {
+                        st.latestCaptureUrl = cachedUrl;
+                        setImageUrl(cachedUrl);
+                        showImage();
+                    }
+                    showPreview();
+                });
             }
-
-            if (!st.map) return;
-
-            // Reveal and start orbiting once map tiles are loaded (not just first render)
-            st.didReveal = false;
-            var onMapLoad = function() {
-                if (!st.map || st.didReveal) return;
-                revealMapCrossfade();
-                stopOrbit();
-                startOrbit(desired.zoom);
-            };
-
-            // Use 'load' event like main map - fires when tiles are ready
-            try { st.map.once('load', onMapLoad); } catch (e) {}
-            st.revealTimeout = setTimeout(onMapLoad, 3000);
         }
 
         function deactivateOrbitMode() {
@@ -8367,6 +8549,10 @@ const LocationWallpaperComponent = (function() {
             if (url) {
                 setImageUrl(url);
                 st.latestCaptureUrl = url;
+                // Store to IndexedDB cache
+                if (st.lastLat && st.lastLng) {
+                    WallpaperCache.put(st.lastLat, st.lastLng, 0, url, function() {});
+                }
             }
             showImage();
 
@@ -8383,57 +8569,70 @@ const LocationWallpaperComponent = (function() {
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
+            var stillBearing = desired.bearing || 0;
 
-            // If we already have a captured image for this location, show it
+            // If we already have a captured image for this location in memory, show it
             if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
                 setImageUrl(st.latestCaptureUrl);
                 showImage();
                 return;
             }
 
-            // Show existing image while new one loads (smooth transition)
-            if (st.latestCaptureUrl) {
-                setImageUrl(st.latestCaptureUrl);
-                showImage();
-            }
-
-            if (!st.map) {
-                createMap(desired);
-            } else {
-                try { st.map.jumpTo(desired); } catch (e) {}
-            }
-
-            if (!st.map) return;
-
-            // For still mode, wait for tiles to load then show and capture
-            st.didReveal = false;
-            var onMapLoad = function() {
-                if (!st.map || st.didReveal) return;
-                st.didReveal = true;
-                
-                // Tiles are ready - fade in the map
-                showMap();
-
-                // Give a moment for any final polish, then capture
-                setTimeout(function() {
-                    if (!st.map) return;
-                    var url = captureMapToDataUrl();
-                    if (url) {
-                        st.latestCaptureUrl = url;
-                        setImageUrl(url);
-                    }
-                    // Crossfade from map back to captured image
+            // Check IndexedDB cache first
+            WallpaperCache.get(lat, lng, stillBearing, function(cachedUrl) {
+                if (cachedUrl) {
+                    st.latestCaptureUrl = cachedUrl;
+                    setImageUrl(cachedUrl);
                     showImage();
-                    // Wait for fade transition to complete before removing map
-                    setTimeout(function() {
-                        removeMap();
-                    }, 600);
-                }, 500); // Short delay since tiles are already loaded
-            };
+                    return;
+                }
 
-            // Use 'load' event like main map - fires when tiles are ready
-            try { st.map.once('load', onMapLoad); } catch (e) {}
-            st.revealTimeout = setTimeout(onMapLoad, 3000);
+                // Show existing image while new one loads (smooth transition)
+                if (st.latestCaptureUrl) {
+                    setImageUrl(st.latestCaptureUrl);
+                    showImage();
+                }
+
+                if (!st.map) {
+                    createMap(desired);
+                } else {
+                    try { st.map.jumpTo(desired); } catch (e) {}
+                }
+
+                if (!st.map) return;
+
+                // For still mode, wait for tiles to load then show and capture
+                st.didReveal = false;
+                var onMapLoad = function() {
+                    if (!st.map || st.didReveal) return;
+                    st.didReveal = true;
+                    
+                    // Tiles are ready - fade in the map
+                    showMap();
+
+                    // Give a moment for any final polish, then capture
+                    setTimeout(function() {
+                        if (!st.map) return;
+                        var url = captureMapToDataUrl();
+                        if (url) {
+                            st.latestCaptureUrl = url;
+                            setImageUrl(url);
+                            // Store to IndexedDB cache
+                            WallpaperCache.put(lat, lng, stillBearing, url, function() {});
+                        }
+                        // Crossfade from map back to captured image
+                        showImage();
+                        // Wait for fade transition to complete before removing map
+                        setTimeout(function() {
+                            removeMap();
+                        }, 600);
+                    }, 500); // Short delay since tiles are already loaded
+                };
+
+                // Use 'load' event like main map - fires when tiles are ready
+                try { st.map.once('load', onMapLoad); } catch (e) {}
+                st.revealTimeout = setTimeout(onMapLoad, 3000);
+            });
         }
 
         function deactivateStillMode() {
@@ -8466,13 +8665,14 @@ const LocationWallpaperComponent = (function() {
             cancelLazyCleanup();
             st.isActive = true;
 
-            // Already captured for this location - resume from image 0
+            // Already captured for this location in memory - resume from image 0
             if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImgs[0] && basicImgs[0].src) {
                 resumeBasicMode();
                 return;
             }
 
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
+            var bearings = cameras.map(function(c) { return c.bearing; });
 
             // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
@@ -8493,23 +8693,51 @@ const LocationWallpaperComponent = (function() {
             var cw = (contentEl.offsetWidth || 400) + 100;
             var ch = (contentEl.offsetHeight || 300) + 300;
 
-            // Capture all 4 images using shared SecondaryMap utility
-            var captureNext = function(idx) {
-                if (idx >= 4 || !basicContainer) return;
-                SecondaryMap.capture(cameras[idx], cw, ch, function(url) {
-                    if (!basicContainer) return; // Abort if mode switched
-                    if (url && basicImgs[idx]) {
-                        basicImgs[idx].src = url;
-                        basicHeights[idx] = ch - 300;
+            // Check IndexedDB cache first
+            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+                if (!basicContainer) return; // Abort if mode switched
+                
+                // Count how many images we got from cache
+                var cacheHits = cached.filter(function(url) { return url; }).length;
+                
+                if (cacheHits === 4) {
+                    // All 4 images cached - use them
+                    for (var i = 0; i < 4; i++) {
+                        if (basicImgs[i] && cached[i]) {
+                            basicImgs[i].src = cached[i];
+                            basicHeights[i] = ch - 300;
+                        }
                     }
-                    if (idx === 0 && basicImgs[0]) {
+                    if (basicImgs[0]) {
                         basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                         basicTimer = setInterval(advanceBasic, 20000);
                     }
-                    captureNext(idx + 1);
-                });
-            };
-            captureNext(0);
+                } else {
+                    // Capture fresh images and store to cache
+                    var capturedUrls = [];
+                    var captureNext = function(idx) {
+                        if (idx >= 4 || !basicContainer) {
+                            // Store all captured images to cache
+                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            return;
+                        }
+                        SecondaryMap.capture(cameras[idx], cw, ch, function(url) {
+                            if (!basicContainer) return; // Abort if mode switched
+                            capturedUrls[idx] = url;
+                            if (url && basicImgs[idx]) {
+                                basicImgs[idx].src = url;
+                                basicHeights[idx] = ch - 300;
+                            }
+                            if (idx === 0 && basicImgs[0]) {
+                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                basicTimer = setInterval(advanceBasic, 20000);
+                            }
+                            captureNext(idx + 1);
+                        });
+                    };
+                    captureNext(0);
+                }
+            });
         }
 
         function advanceBasic() {

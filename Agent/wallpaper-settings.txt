@@ -130,10 +130,40 @@ Auto-downgrade rule:
   - Otherwise: use member's chosen setting
 
 
+IMAGE CACHE (IndexedDB)
+-----------------------
+
+Storage: IndexedDB (WallpaperCache utility)
+Database: wallpaper_cache
+Store: images
+
+Entry structure:
+  key         lat,lng,bearing (string)
+  lat         number
+  lng         number  
+  bearing     number
+  dataUrl     image data URL
+  timestamp   last access time
+
+Limits:
+  MAX_ENTRIES   20 locations (80 images total, ~24MB)
+  Eviction      LRU (oldest by timestamp deleted when limit hit)
+
+Flow:
+  1. Check cache for all 4 bearings
+  2. If all 4 found: use cached images (no capture)
+  3. If not: capture fresh, store to cache
+
+Persistence:
+  Survives browser close/reopen
+  Ready for future session persistence feature
+
+
 NETWORK ACTIVITY
 ----------------
 
 Basic mode: Zero after initial 4 captures (unless recapture from growth)
+             Zero if images found in IndexedDB cache
 Still mode: Zero after initial capture
 Orbit mode: Continuous tile loading while active
 
@@ -152,6 +182,11 @@ JS UTILITIES (components-new.js)
 
 SecondaryMap.capture(camera, w, h, cb)  - Queue a capture request
 SecondaryMap.destroy()                   - Clean up (rarely needed)
+
+WallpaperCache.get(lat, lng, bearing, cb)      - Get single image from cache
+WallpaperCache.put(lat, lng, bearing, url, cb) - Store single image to cache
+WallpaperCache.getAll(lat, lng, bearings, cb)  - Get all 4 images for location
+WallpaperCache.putAll(lat, lng, bearings, urls, cb) - Store all 4 images
 
 
 JS FUNCTIONS (components-new.js)
