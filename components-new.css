@@ -3079,13 +3079,13 @@
     object-position: left top;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
-    animation: locationwallpaper-basic-pan 20s linear infinite;
 }
 
-/* Active image is visible and on top */
+/* Active image: visible, on top, starts pan animation fresh */
 .component-locationwallpaper-basic-image--active {
     opacity: 1;
     z-index: 2;
+    animation: locationwallpaper-basic-pan 20s linear;
 }
 
 /* Pan: left edge starts at container left, moves 100px leftward */
@@ -3100,13 +3100,11 @@
 
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
-        animation: none;
         transition: none;
         transform: translateX(-50px);
-        opacity: 1;
     }
-    .component-locationwallpaper-basic-image:not(.component-locationwallpaper-basic-image--active) {
-        opacity: 0;
+    .component-locationwallpaper-basic-image--active {
+        animation: none;
     }
 }
 
