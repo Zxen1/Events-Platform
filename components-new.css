@@ -3034,7 +3034,6 @@
     width: 100%;
     height: calc(100% + 200px); /* Match the buffer */
     object-fit: cover;
-    object-position: center top; /* Horizontal center, vertical set by JS */
     z-index: 2; /* Image layers on top of map for seamless crossfade */
 }
 
@@ -3077,10 +3076,11 @@
     width: calc(100% + 100px);
     height: 100%;
     object-fit: cover;
-    object-position: left top; /* Horizontal left for pan, vertical set by JS */
+    object-position: left top;
     opacity: 0;
     transform: translateX(-100px);
     transition: opacity 1.5s ease-in-out;
+    transform: translateX(-100px);
 }
 
 /* Active image: visible, on top, starts pan animation fresh */

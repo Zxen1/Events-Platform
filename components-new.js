@@ -8061,159 +8061,6 @@ const LocationWallpaperComponent = (function() {
     var CLEANUP_DELAY_MS = 2000;
     // Still mode: wait this long for map to "polish" before capturing (ms)
     var STILL_POLISH_DELAY_MS = 1500;
-    
-    // ========================================================================
-    // FIXED CAPTURE DIMENSIONS (for Bunny CDN compatibility)
-    // ========================================================================
-    var CAPTURE_WIDTH = 700;
-    var CAPTURE_HEIGHT = 2500;
-    
-    // ========================================================================
-    // CAPTURE MANAGER
-    // Handles background capture of 4 images per location.
-    // Triggered by lat/lng confirmation from Google Places API.
-    // Uses SecondaryMap queue - all captures wait their turn.
-    // ========================================================================
-    var captureInProgress = {}; // key: "lat,lng" -> { cancelled: bool, callbacks: [] }
-    
-    function makeCaptureKey(lat, lng) {
-        return lat.toFixed(6) + ',' + lng.toFixed(6);
-    }
-    
-    function startCaptureForLocation(containerEl, lat, lng) {
-        var key = makeCaptureKey(lat, lng);
-        
-        // Already capturing this location? Let it continue
-        if (captureInProgress[key] && !captureInProgress[key].cancelled) {
-            return;
-        }
-        
-        // Mark capture as in progress IMMEDIATELY (before async cache check)
-        // This prevents race conditions with isCaptureReady/onCaptureReady
-        captureInProgress[key] = { cancelled: false, callbacks: [], results: [null, null, null, null] };
-        
-        // Check if already captured in cache
-        var locationType = getLocationTypeFromContainer(containerEl);
-        var cameras = getBasicModeCameras(locationType, [lng, lat]);
-        var bearings = cameras.map(function(c) { return c.bearing; });
-        
-        WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-            // Check if cancelled during cache lookup
-            if (!captureInProgress[key] || captureInProgress[key].cancelled) {
-                delete captureInProgress[key];
-                return;
-            }
-            
-            var cacheHits = cached.filter(function(url) { return url; }).length;
-            
-            if (cacheHits === 4) {
-                // All 4 already cached - notify any waiting callbacks
-                var callbacks = captureInProgress[key].callbacks || [];
-                delete captureInProgress[key];
-                callbacks.forEach(function(cb) {
-                    try { cb(cached); } catch (e) {}
-                });
-                return;
-            }
-            
-            // Store cached results
-            captureInProgress[key].results = cached.slice();
-            
-            var captureNext = function(idx) {
-                if (captureInProgress[key] && captureInProgress[key].cancelled) {
-                    delete captureInProgress[key];
-                    return;
-                }
-                
-                if (idx >= 4) {
-                    // All done - store to cache
-                    var results = captureInProgress[key].results;
-                    WallpaperCache.putAll(lat, lng, bearings, results, function() {});
-                    
-                    // Notify callbacks
-                    if (captureInProgress[key].callbacks) {
-                        captureInProgress[key].callbacks.forEach(function(cb) {
-                            try { cb(results); } catch (e) {}
-                        });
-                    }
-                    delete captureInProgress[key];
-                    return;
-                }
-                
-                // Skip if already cached
-                if (cached[idx]) {
-                    captureInProgress[key].results[idx] = cached[idx];
-                    captureNext(idx + 1);
-                    return;
-                }
-                
-                // Capture this bearing
-                SecondaryMap.capture(cameras[idx], CAPTURE_WIDTH, CAPTURE_HEIGHT, function(url) {
-                    if (captureInProgress[key] && captureInProgress[key].cancelled) {
-                        delete captureInProgress[key];
-                        return;
-                    }
-                    if (url && captureInProgress[key]) {
-                        captureInProgress[key].results[idx] = url;
-                    }
-                    captureNext(idx + 1);
-                });
-            };
-            
-            captureNext(0);
-        });
-    }
-    
-    function cancelCaptureForLocation(lat, lng) {
-        var key = makeCaptureKey(lat, lng);
-        if (captureInProgress[key]) {
-            captureInProgress[key].cancelled = true;
-        }
-    }
-    
-    function onCaptureReady(lat, lng, callback) {
-        var key = makeCaptureKey(lat, lng);
-        
-        // If capture in progress, add callback
-        if (captureInProgress[key] && !captureInProgress[key].cancelled) {
-            captureInProgress[key].callbacks.push(callback);
-            return;
-        }
-        
-        // Check cache directly
-        var cameras = getBasicModeCameras('venue', [lng, lat]); // type doesn't matter for bearings
-        var bearings = cameras.map(function(c) { return c.bearing; });
-        
-        WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-            var cacheHits = cached.filter(function(url) { return url; }).length;
-            if (cacheHits === 4) {
-                callback(cached);
-            } else {
-                // Not ready yet - callback will be called when capture completes
-                // This shouldn't happen if startCaptureForLocation was called first
-                callback(null);
-            }
-        });
-    }
-    
-    function isCaptureReady(lat, lng, callback) {
-        var key = makeCaptureKey(lat, lng);
-        
-        // If capture in progress, not ready
-        if (captureInProgress[key] && !captureInProgress[key].cancelled) {
-            callback(false, null);
-            return;
-        }
-        
-        // Check cache
-        var cameras = getBasicModeCameras('venue', [lng, lat]);
-        var bearings = cameras.map(function(c) { return c.bearing; });
-        
-        WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-            var cacheHits = cached.filter(function(url) { return url; }).length;
-            callback(cacheHits === 4, cached);
-        });
-    }
 
     function safeNum(v) {
         var n = parseFloat(String(v || '').trim());
@@ -8389,72 +8236,8 @@ const LocationWallpaperComponent = (function() {
             mode: 'off',
             isActive: false,
             basicCapturedLat: null,  // Lat/lng of last basic mode capture
-            basicCapturedLng: null,
-            lockedYPosition: null,   // Locked vertical position (set once on first display)
-            initialContainerHeight: null  // Container height when position was locked
+            basicCapturedLng: null
         };
-        
-        // ============================================================
-        // VERTICAL POSITION LOCKING
-        // - Lock center position when image first displays
-        // - Only adjust downward if black bars would appear
-        // - Never re-center when container shrinks
-        // ============================================================
-        var IMAGE_HEIGHT = 2500; // Fixed capture height
-        
-        function calculateCenteredYPosition(containerHeight) {
-            // Center the 2500px image on the container
-            // Returns the Y offset needed to center
-            if (containerHeight >= IMAGE_HEIGHT) {
-                // Container taller than image - can't center, anchor to top
-                return 0;
-            }
-            // Center: offset = (imageHeight - containerHeight) / 2
-            return Math.round((IMAGE_HEIGHT - containerHeight) / 2);
-        }
-        
-        function applyYPositionToImage(imgEl, yOffset) {
-            // Apply via object-position (horizontal stays as CSS default)
-            // object-position: left Ypx (for basic) or center Ypx (for still)
-            if (!imgEl) return;
-            var currentPos = imgEl.style.objectPosition || '';
-            var xPart = 'center';
-            if (currentPos.indexOf('left') === 0) {
-                xPart = 'left';
-            }
-            imgEl.style.objectPosition = xPart + ' ' + yOffset + 'px';
-        }
-        
-        function lockImagePosition(imgEl, containerHeight) {
-            // Called when image is first displayed
-            // Calculate centered position and lock it
-            var yOffset = calculateCenteredYPosition(containerHeight);
-            st.lockedYPosition = yOffset;
-            st.initialContainerHeight = containerHeight;
-            applyYPositionToImage(imgEl, yOffset);
-        }
-        
-        function checkAndAdjustForBlackBars(imgEl, containerHeight) {
-            // Called when container height changes
-            // Only adjust if black bars would appear at bottom
-            if (st.lockedYPosition === null) return; // Not yet locked
-            
-            // Calculate how much of the image is visible from the locked position
-            // Image top is at -lockedYPosition (negative because we're showing from offset)
-            // Image bottom is at: IMAGE_HEIGHT - lockedYPosition
-            var imageBottomFromContainerTop = IMAGE_HEIGHT - st.lockedYPosition;
-            
-            // If container is now taller than where image bottom would be, we need to adjust
-            if (containerHeight > imageBottomFromContainerTop) {
-                // Black bars would appear - anchor image bottom to container bottom
-                // New offset: IMAGE_HEIGHT - containerHeight
-                var newYOffset = IMAGE_HEIGHT - containerHeight;
-                if (newYOffset < 0) newYOffset = 0; // Can't go negative
-                st.lockedYPosition = newYOffset;
-                applyYPositionToImage(imgEl, newYOffset);
-            }
-            // If container shrinks, do NOT re-center - keep locked position
-        }
 
         function clearAllTimers() {
             if (st.pendingRevealTimer) {
@@ -8500,13 +8283,6 @@ const LocationWallpaperComponent = (function() {
                 mapMount.style.opacity = '0';
                 return;
             }
-            
-            // Lock vertical position on first display
-            if (st.lockedYPosition === null) {
-                var containerHeight = contentEl.offsetHeight || 400;
-                lockImagePosition(img, containerHeight);
-            }
-            
             // Fade in the image on top (transition already set on element)
             img.style.opacity = '1';
             // Keep map visible during transition, then fade it out
@@ -8606,38 +8382,11 @@ const LocationWallpaperComponent = (function() {
         function ensureResizeObserver() {
             if (st.resizeObs || !window.ResizeObserver) return;
             st.resizeObs = new ResizeObserver(function() {
+                if (!st.map) return;
                 if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
                 st.resizeRaf = requestAnimationFrame(function() {
                     st.resizeRaf = 0;
-                    // Resize map if present
                     try { if (st.map) st.map.resize(); } catch (e) {}
-                    
-                    // Check for black bars on wallpaper images (only adjust downward if needed)
-                    if (st.lockedYPosition !== null && st.mode !== 'orbit') {
-                        var containerHeight = contentEl.offsetHeight || 400;
-                        
-                        // For still mode image
-                        if (st.mode === 'still' && img) {
-                            checkAndAdjustForBlackBars(img, containerHeight);
-                        }
-                        
-                        // For basic mode images
-                        if (st.mode === 'basic' && basicImgs && basicImgs.length === 4) {
-                            // Check if adjustment needed
-                            var imageBottomFromTop = IMAGE_HEIGHT - st.lockedYPosition;
-                            if (containerHeight > imageBottomFromTop) {
-                                // Black bars would appear - adjust
-                                var newYOffset = IMAGE_HEIGHT - containerHeight;
-                                if (newYOffset < 0) newYOffset = 0;
-                                st.lockedYPosition = newYOffset;
-                                for (var i = 0; i < 4; i++) {
-                                    if (basicImgs[i]) {
-                                        basicImgs[i].style.objectPosition = 'left ' + newYOffset + 'px';
-                                    }
-                                }
-                            }
-                        }
-                    }
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8799,11 +8548,15 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
-        // STILL MODE - displays bearing 0 only
+        // STILL MODE
         // ============================================================
         function startStillMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
+
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var desired = getDefaultCameraForType(locationType, [lng, lat]);
+            var stillBearing = desired.bearing || 0;
 
             // If we already have a captured image for this location in memory, show it
             if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
@@ -8812,32 +8565,72 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
-            // Ensure capture is started (may already be in progress or cached)
-            startCaptureForLocation(locationContainerEl, lat, lng);
-
-            // Wait for capture manager to have all 4 images ready, display bearing 0
-            var displayImage = function(cached) {
-                if (!cached || !cached[0]) return;
-                st.latestCaptureUrl = cached[0];
-                setImageUrl(cached[0]);
-                showImage();
-            };
-            
-            // Check if capture is ready, or wait for it
-            isCaptureReady(lat, lng, function(ready, cached) {
-                if (ready && cached && cached[0]) {
-                    displayImage(cached);
-                } else {
-                    // Wait for capture to complete
-                    onCaptureReady(lat, lng, displayImage);
+            // Check IndexedDB cache first
+            WallpaperCache.get(lat, lng, stillBearing, function(cachedUrl) {
+                if (cachedUrl) {
+                    st.latestCaptureUrl = cachedUrl;
+                    setImageUrl(cachedUrl);
+                    showImage();
+                    return;
                 }
+
+                // Show existing image while new one loads (smooth transition)
+                if (st.latestCaptureUrl) {
+                    setImageUrl(st.latestCaptureUrl);
+                    showImage();
+                }
+
+                if (!st.map) {
+                    createMap(desired);
+                } else {
+                    try { st.map.jumpTo(desired); } catch (e) {}
+                }
+
+                if (!st.map) return;
+
+                // For still mode, wait for tiles to load then show and capture
+                st.didReveal = false;
+                var onMapLoad = function() {
+                    if (!st.map || st.didReveal) return;
+                    st.didReveal = true;
+                    
+                    // Tiles are ready - fade in the map
+                    showMap();
+
+                    // Give a moment for any final polish, then capture
+                    setTimeout(function() {
+                        if (!st.map) return;
+                        var url = captureMapToDataUrl();
+                        if (url) {
+                            st.latestCaptureUrl = url;
+                            setImageUrl(url);
+                            // Store to IndexedDB cache
+                            WallpaperCache.put(lat, lng, stillBearing, url, function() {});
+                        }
+                        // Crossfade from map back to captured image
+                        showImage();
+                        // Wait for fade transition to complete before removing map
+                        setTimeout(function() {
+                            removeMap();
+                        }, 600);
+                    }, 500); // Short delay since tiles are already loaded
+                };
+
+                // Use 'load' event like main map - fires when tiles are ready
+                try { st.map.once('load', onMapLoad); } catch (e) {}
+                st.revealTimeout = setTimeout(onMapLoad, 3000);
             });
         }
 
         function deactivateStillMode() {
             st.isActive = false;
+            // In still mode the map should already be removed after capture
             // Just ensure we're showing the image
             showImage();
+            // Delay removal to allow fade transition
+            setTimeout(function() {
+                removeMap();
+            }, 600);
         }
 
         // ============================================================
@@ -8847,19 +8640,26 @@ const LocationWallpaperComponent = (function() {
         var basicImgs = [];
         var basicIndex = 0;
         var basicTimer = null;
+        var basicHeights = [0, 0, 0, 0];
+        var basicRecapturing = false;
+
+        // Use shared SecondaryMap utility for captures
+        function captureMap(camera, w, h, cb) {
+            SecondaryMap.capture(camera, w, h, cb);
+        }
 
         function startBasicMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
 
-            // Already displayed for this location - resume
+            // Already captured for this location in memory - resume from image 0
             if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImgs[0] && basicImgs[0].src) {
                 resumeBasicMode();
                 return;
             }
 
-            // Ensure capture is started (may already be in progress or cached)
-            startCaptureForLocation(locationContainerEl, lat, lng);
+            var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
+            var bearings = cameras.map(function(c) { return c.bearing; });
 
             // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
@@ -8867,7 +8667,7 @@ const LocationWallpaperComponent = (function() {
             if (basicContainer) basicContainer.remove();
             basicContainer = document.createElement('div');
             basicContainer.className = 'component-locationwallpaper-basic-container';
-            basicImgs = []; basicIndex = 0;
+            basicImgs = []; basicHeights = [0, 0, 0, 0]; basicIndex = 0;
             for (var i = 0; i < 4; i++) {
                 var el = document.createElement('img');
                 el.className = 'component-locationwallpaper-basic-image';
@@ -8877,38 +8677,52 @@ const LocationWallpaperComponent = (function() {
             }
             root.appendChild(basicContainer);
 
-            // Wait for capture manager to have all 4 images ready
-            var displayImages = function(cached) {
+            var cw = (contentEl.offsetWidth || 400) + 100;
+            var ch = (contentEl.offsetHeight || 300) + 300;
+
+            // Check IndexedDB cache first
+            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
                 if (!basicContainer) return; // Abort if mode switched
-                if (!cached || cached.length < 4) return;
                 
-                // Lock vertical position on first display
-                if (st.lockedYPosition === null) {
-                    var containerHeight = contentEl.offsetHeight || 400;
-                    st.lockedYPosition = calculateCenteredYPosition(containerHeight);
-                    st.initialContainerHeight = containerHeight;
-                }
+                // Count how many images we got from cache
+                var cacheHits = cached.filter(function(url) { return url; }).length;
                 
-                // Apply locked position to all 4 images
-                for (var i = 0; i < 4; i++) {
-                    if (basicImgs[i] && cached[i]) {
-                        basicImgs[i].src = cached[i];
-                        basicImgs[i].style.objectPosition = 'left ' + st.lockedYPosition + 'px';
+                if (cacheHits === 4) {
+                    // All 4 images cached - use them
+                    for (var i = 0; i < 4; i++) {
+                        if (basicImgs[i] && cached[i]) {
+                            basicImgs[i].src = cached[i];
+                            basicHeights[i] = ch - 300;
+                        }
                     }
-                }
-                if (basicImgs[0]) {
-                    basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                    basicTimer = setInterval(advanceBasic, 20000);
-                }
-            };
-            
-            // Check if capture is ready, or wait for it
-            isCaptureReady(lat, lng, function(ready, cached) {
-                if (ready && cached) {
-                    displayImages(cached);
+                    if (basicImgs[0]) {
+                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                        basicTimer = setInterval(advanceBasic, 20000);
+                    }
                 } else {
-                    // Wait for capture to complete
-                    onCaptureReady(lat, lng, displayImages);
+                    // Capture fresh images and store to cache
+                    var capturedUrls = [];
+                    var captureNext = function(idx) {
+                        if (idx >= 4 || !basicContainer) {
+                            // Store all captured images to cache
+                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            return;
+                        }
+                        SecondaryMap.capture(cameras[idx], cw, ch, function(url) {
+                            if (!basicContainer) return; // Abort if mode switched
+                            capturedUrls[idx] = url;
+                            if (url && basicImgs[idx]) {
+                                basicImgs[idx].src = url;
+                                basicHeights[idx] = ch - 300;
+                            }
+                            if (idx === 0 && basicImgs[0]) {
+                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                basicTimer = setInterval(advanceBasic, 20000);
+                            }
+                            captureNext(idx + 1);
+                        });
+                    };
+                    captureNext(0);
                 }
             });
         }
@@ -8917,16 +8731,26 @@ const LocationWallpaperComponent = (function() {
             if (!basicImgs.length) return;
             var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
-            
-            // No recalculation - keep same locked position for all images
-            // Position only changes if black bars would appear (handled by resize observer)
-            
             // Add active to new image first (starts fading in)
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
             // Remove active from old image after crossfade completes (1.5s)
             setTimeout(function() {
                 if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
             }, 1500);
+
+            // Recapture if container grew beyond 300px buffer
+            if (!basicRecapturing && contentEl) {
+                var h = contentEl.offsetHeight || 0;
+                var chk = (basicIndex + 2) % 4;
+                if (h > basicHeights[chk] + 300) {
+                    basicRecapturing = true;
+                    var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [st.basicCapturedLng, st.basicCapturedLat]);
+                    captureMap(cameras[chk], (contentEl.offsetWidth || 400) + 100, h + 300, function(url) {
+                        if (url && basicImgs[chk]) { basicImgs[chk].src = url; basicHeights[chk] = h; }
+                        basicRecapturing = false;
+                    });
+                }
+            }
         }
 
         function stopBasicMode() {
@@ -8999,17 +8823,11 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
-                // Reset locked position for new location
-                st.lockedYPosition = null;
-                st.initialContainerHeight = null;
             }
 
             // Clean up other modes before starting new one (never more than 2 maps)
             if (mode !== 'basic') removeBasicMode();
             if (mode !== 'orbit' && mode !== 'still') removeMap();
-            
-            // Ensure resize observer is set up for black bar detection
-            ensureResizeObserver();
 
             if (mode === 'orbit') {
                 startOrbitMode(lat, lng);
@@ -9112,6 +8930,9 @@ const LocationWallpaperComponent = (function() {
             rootEl.__locationWallpaperInstalled = true;
         } catch (e) {}
 
+        var mode = getWallpaperMode();
+        if (mode === 'off') return;
+
         // One-time Mapbox prewarm
         if (!didPrewarm) {
             didPrewarm = true;
@@ -9138,39 +8959,15 @@ const LocationWallpaperComponent = (function() {
             }, true);
         }
 
-        // Listen for lat/lng changes - ALWAYS trigger capture, regardless of mode or active state
-        // This is Priority 1: capture 4 images when Google Places confirms location
+        // Listen for lat/lng changes
         rootEl.addEventListener('change', function(e) {
+            if (!activeCtrl) return;
             var t = e && e.target ? e.target : null;
             if (!t || !(t instanceof Element)) return;
-            if (!t.classList || (!t.classList.contains('fieldset-lat') && !t.classList.contains('fieldset-lng'))) return;
-            
-            // Find the location container
-            var locationContainer = t.closest('.member-location-container');
-            if (!locationContainer) return;
-            
-            // Read lat/lng
-            var ll = readLatLng(locationContainer);
-            if (!ll) return;
-            
-            // Cancel any previous capture for this container (location changed)
-            var prevLat = locationContainer.__wallpaperLastLat;
-            var prevLng = locationContainer.__wallpaperLastLng;
-            if (prevLat !== undefined && prevLng !== undefined) {
-                if (prevLat !== ll.lat || prevLng !== ll.lng) {
-                    cancelCaptureForLocation(prevLat, prevLng);
-                }
-            }
-            
-            // Store current lat/lng
-            locationContainer.__wallpaperLastLat = ll.lat;
-            locationContainer.__wallpaperLastLng = ll.lng;
-            
-            // Start capture immediately (Priority 1)
-            startCaptureForLocation(locationContainer, ll.lat, ll.lng);
-            
-            // If this container is active and has a controller, refresh display (Priority 2)
-            if (activeCtrl && activeContainerEl === locationContainer) {
+            var activeContainer = t.closest('.member-location-container[data-active="true"]');
+            if (!activeContainer) return;
+            if (activeCtrl !== (activeContainer.__locationWallpaperCtrl || null)) return;
+            if (t.classList && (t.classList.contains('fieldset-lat') || t.classList.contains('fieldset-lng'))) {
                 try { activeCtrl.refresh(); } catch (e2) {}
             }
         }, true);
