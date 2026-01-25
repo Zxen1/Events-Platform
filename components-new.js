@@ -7949,6 +7949,7 @@ const LocationWallpaperComponent = (function() {
                 clearTimeout(st.cleanupTimeoutId);
                 st.cleanupTimeoutId = null;
             }
+            stopBasicAnimation();
         }
 
         function setImageUrl(url) {
@@ -8345,13 +8346,15 @@ const LocationWallpaperComponent = (function() {
 
         // ============================================================
         // BASIC MODE
-        // Captures 5 still images, removes map, uses CSS animation
+        // Captures 5 still images, removes map, uses class-toggled crossfade
         // Images 1-4: pitched views with slow pan animation
         // Image 5: aerial view with slow rotation animation
         // ============================================================
         var basicImagesContainer = null;
         var basicImages = [];
-        var basicAnimationStarted = false;
+        var basicCurrentIndex = 0;
+        var basicRotationInterval = null;
+        var BASIC_SLIDE_DURATION = 10000; // 10 seconds per image
 
         function createBasicImagesContainer() {
             if (basicImagesContainer) return;
@@ -8371,25 +8374,46 @@ const LocationWallpaperComponent = (function() {
         }
 
         function removeBasicImagesContainer() {
+            stopBasicAnimation();
             if (basicImagesContainer && basicImagesContainer.parentNode) {
                 basicImagesContainer.parentNode.removeChild(basicImagesContainer);
             }
             basicImagesContainer = null;
             basicImages = [];
-            basicAnimationStarted = false;
+            basicCurrentIndex = 0;
+        }
+
+        function showBasicSlide(index) {
+            if (!basicImages.length) return;
+            // Remove active from all
+            for (var i = 0; i < basicImages.length; i++) {
+                basicImages[i].classList.remove('component-locationwallpaper-basic-image--active');
+            }
+            // Add active to target
+            if (basicImages[index]) {
+                basicImages[index].classList.add('component-locationwallpaper-basic-image--active');
+            }
+            basicCurrentIndex = index;
+        }
+
+        function advanceBasicSlide() {
+            var nextIndex = (basicCurrentIndex + 1) % basicImages.length;
+            showBasicSlide(nextIndex);
         }
 
         function startBasicAnimation() {
-            if (basicAnimationStarted || !basicImagesContainer) return;
-            basicAnimationStarted = true;
-            // Add running class to trigger CSS animations
-            basicImagesContainer.classList.add('component-locationwallpaper-basic-container--running');
+            if (basicRotationInterval || !basicImages.length) return;
+            // Show first image immediately
+            showBasicSlide(0);
+            // Start rotation timer
+            basicRotationInterval = setInterval(advanceBasicSlide, BASIC_SLIDE_DURATION);
         }
 
         function stopBasicAnimation() {
-            if (!basicImagesContainer) return;
-            basicImagesContainer.classList.remove('component-locationwallpaper-basic-container--running');
-            basicAnimationStarted = false;
+            if (basicRotationInterval) {
+                clearInterval(basicRotationInterval);
+                basicRotationInterval = null;
+            }
         }
 
         function startBasicMode(lat, lng) {

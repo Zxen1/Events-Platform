@@ -3057,7 +3057,7 @@
 }
 
 /* ----------------------------------------------------------------------------
-   BASIC MODE - 5 static images with CSS-only pan/rotate animations
+   BASIC MODE - 5 static images with class-toggled crossfade (like marquee)
    Lightweight alternative to orbit mode for slower PCs
    ---------------------------------------------------------------------------- */
 
@@ -3076,101 +3076,54 @@
     height: calc(100% + 200px);
     object-fit: cover;
     opacity: 0;
-    will-change: opacity, transform;
+    transition: opacity 1.5s ease-in-out;
+    transform: scale(1.15);
 }
 
-/* Animation only runs when --running class is added
-   45s cycle with 9s delays creates 1s crossfade overlap between images */
-.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="0"] {
-    animation: locationwallpaper-basic-pan 45s linear infinite;
-    animation-delay: 0s;
+/* Active image is visible */
+.component-locationwallpaper-basic-image--active {
+    opacity: 1;
 }
 
-.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="1"] {
-    animation: locationwallpaper-basic-pan 45s linear infinite;
-    animation-delay: 9s;
+/* Pan animation for pitched images (1-4) - runs while active */
+.component-locationwallpaper-basic-image--active[data-index="0"],
+.component-locationwallpaper-basic-image--active[data-index="1"],
+.component-locationwallpaper-basic-image--active[data-index="2"],
+.component-locationwallpaper-basic-image--active[data-index="3"] {
+    animation: locationwallpaper-basic-pan 10s linear forwards;
 }
 
-.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="2"] {
-    animation: locationwallpaper-basic-pan 45s linear infinite;
-    animation-delay: 18s;
+/* Rotate animation for aerial image (5) - runs while active */
+.component-locationwallpaper-basic-image--active[data-index="4"] {
+    animation: locationwallpaper-basic-rotate 10s linear forwards;
 }
 
-.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="3"] {
-    animation: locationwallpaper-basic-pan 45s linear infinite;
-    animation-delay: 27s;
-}
-
-.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="4"] {
-    animation: locationwallpaper-basic-rotate 45s linear infinite;
-    animation-delay: 36s;
-}
-
-/* Pan animation for pitched images (1-4)
-   45s cycle, 9s delays = 1s crossfade overlap between images
-   - Fade in over 1s (0-2.2%)
-   - Slow pan left-to-right while visible (2.2-20%)
-   - Fade out over 1s (20-22.2%)
-   - Hidden for remaining cycle */
+/* Slow pan left-to-right over 10s */
 @keyframes locationwallpaper-basic-pan {
     0% {
-        opacity: 0;
         transform: scale(1.15) translateX(-3%);
     }
-    2.2% {
-        opacity: 1;
-        transform: scale(1.15) translateX(-2.5%);
-    }
-    20% {
-        opacity: 1;
-        transform: scale(1.15) translateX(2.5%);
-    }
-    22.2% {
-        opacity: 0;
-        transform: scale(1.15) translateX(3%);
-    }
     100% {
-        opacity: 0;
         transform: scale(1.15) translateX(3%);
     }
 }
 
-/* Rotate animation for aerial image (5)
-   45s cycle, starts at 36s delay
-   - Fade in over 1s (0-2.2%)
-   - Slow rotation while visible (2.2-20%)
-   - Fade out over 1s (20-22.2%)
-   - Hidden for remaining cycle */
+/* Slow rotation over 10s */
 @keyframes locationwallpaper-basic-rotate {
     0% {
-        opacity: 0;
         transform: scale(1.15) rotate(-5deg);
     }
-    2.2% {
-        opacity: 1;
-        transform: scale(1.15) rotate(-4deg);
-    }
-    20% {
-        opacity: 1;
-        transform: scale(1.15) rotate(4deg);
-    }
-    22.2% {
-        opacity: 0;
-        transform: scale(1.15) rotate(5deg);
-    }
     100% {
-        opacity: 0;
         transform: scale(1.15) rotate(5deg);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image {
-        animation: none;
+    .component-locationwallpaper-basic-image {
+        transition: none;
     }
-    /* Show first image statically for reduced motion users */
-    .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="0"] {
-        opacity: 1;
+    .component-locationwallpaper-basic-image--active {
+        animation: none;
         transform: scale(1.05);
     }
 }
