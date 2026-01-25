@@ -8520,21 +8520,8 @@ const LocationWallpaperComponent = (function() {
                 st.revealTimeout = setTimeout(onMapLoad, 3000);
             };
 
-            if (st.latestCaptureUrl) {
-                setImageUrl(st.latestCaptureUrl);
-                showImage();
-                showPreview();
-            } else {
-                // Check IndexedDB cache for preview image
-                WallpaperCache.get(lat, lng, orbitBearing, function(cachedUrl) {
-                    if (cachedUrl) {
-                        st.latestCaptureUrl = cachedUrl;
-                        setImageUrl(cachedUrl);
-                        showImage();
-                    }
-                    showPreview();
-                });
-            }
+            // Orbit mode: fade directly into orbiting map (no preview still)
+            showPreview();
         }
 
         function deactivateOrbitMode() {
@@ -8771,29 +8758,14 @@ const LocationWallpaperComponent = (function() {
         }
 
         function resumeBasicMode() {
-            // Resume with fade from current static to image 0 animating
+            // Resume from current position (no reset to image 0)
             if (!basicImgs.length || !basicContainer) return;
             
-            // Remove paused state (allows animation to run)
+            // Remove paused state - animation continues from where it left off
             basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
             
-            var prev = basicIndex;
-            basicIndex = 0;
-            
-            // Add active to image 0 (fades in over 1.5s, animation starts)
-            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-            
-            // Remove active from previous after crossfade completes + buffer
-            if (prev !== 0) {
-                setTimeout(function() {
-                    if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
-                }, 2000);
-            }
-            
-            // Start timer after crossfade completes
-            setTimeout(function() {
-                if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 20000);
-            }, 1500);
+            // Restart interval timer (continue from current basicIndex)
+            if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 20000);
         }
 
         function removeBasicMode() {
