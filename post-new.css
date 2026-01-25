@@ -113,7 +113,7 @@
 .recent-panel-content {
   --panel-transition-duration: 0.3s;
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
   width: var(--post-panel-max-w);
@@ -133,8 +133,8 @@
   color: #fff;
 }
 
-.recent-panel-content--side-right {
-  transform: translateX(100%);
+.recent-panel-content--side-left {
+  transform: translateX(-100%);
 }
 
 .recent-panel-content--hidden {
