@@ -2321,13 +2321,13 @@ const PostModule = (function() {
 
     // Create animated wallpaper for the post
     try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.createForPost === 'function') {
+      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.createPostWallpaper === 'function') {
         var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
         if (mapCard && mapCard.latitude && mapCard.longitude) {
           var wallpaperLat = Number(mapCard.latitude);
           var wallpaperLng = Number(mapCard.longitude);
           if (Number.isFinite(wallpaperLat) && Number.isFinite(wallpaperLng)) {
-            LocationWallpaperComponent.createForPost(detail, wallpaperLat, wallpaperLng);
+            LocationWallpaperComponent.createPostWallpaper(detail, wallpaperLat, wallpaperLng);
           }
         }
       }
@@ -2351,8 +2351,8 @@ const PostModule = (function() {
 
     // Destroy wallpaper if present
     try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyActivePostWallpaper === 'function') {
-        LocationWallpaperComponent.destroyActivePostWallpaper();
+      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyPostWallpaper === 'function') {
+        LocationWallpaperComponent.destroyPostWallpaper();
       }
     } catch (_eWallpaper) {}
 
@@ -3198,8 +3198,8 @@ const PostModule = (function() {
 
     // Destroy wallpaper if present
     try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyActivePostWallpaper === 'function') {
-        LocationWallpaperComponent.destroyActivePostWallpaper();
+      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyPostWallpaper === 'function') {
+        LocationWallpaperComponent.destroyPostWallpaper();
       }
     } catch (_eWallpaper) {}
 

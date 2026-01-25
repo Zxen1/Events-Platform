@@ -8527,7 +8527,7 @@ const LocationWallpaperComponent = (function() {
     var activePostWallpaper = null;
     var BASIC_BEARINGS = [0, 90, 180, 270]; // Capture angles for basic mode
     
-    function createForPost(containerEl, lat, lng) {
+    function createPostWallpaper(containerEl, lat, lng) {
         if (!containerEl) return null;
         if (typeof lat !== 'number' || typeof lng !== 'number') return null;
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
@@ -8866,8 +8866,8 @@ const LocationWallpaperComponent = (function() {
     return {
         install: install,
         handleActiveContainerChange: handleActiveContainerChange,
-        createForPost: createForPost,
-        destroyActivePostWallpaper: destroyActivePostWallpaper
+        createPostWallpaper: createPostWallpaper,
+        destroyPostWallpaper: destroyActivePostWallpaper
     };
 })();
 
