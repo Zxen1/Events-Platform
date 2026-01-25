@@ -654,6 +654,12 @@
   box-shadow: none;
 }
 
+/* Let wallpaper show behind the sticky header when expanded */
+.open-post.open-post--desc-expanded .post-card,
+.open-post.open-post--desc-expanded .recent-card {
+  background: transparent;
+}
+
 .open-post .post-card:hover,
 .recent-card:hover {
   background: var(--panel-bg);
