@@ -605,6 +605,22 @@
   position: relative;
 }
 
+/* Location wallpaper integration (reuses LocationWallpaperComponent styles) */
+.open-post .member-postform-location-content {
+  /* Neutralize form padding: open post layout owns spacing */
+  padding: 0;
+}
+
+/* Only show wallpaper when open post is expanded */
+.open-post:not(.open-post--desc-expanded) .component-locationwallpaper {
+  display: none;
+}
+
+/* Open post wallpaper should be square (no rounding) */
+.open-post .component-locationwallpaper {
+  border-radius: 0;
+}
+
 .open-post::after {
   content: "";
   position: absolute;

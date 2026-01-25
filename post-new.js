@@ -2423,6 +2423,18 @@ const PostModule = (function() {
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
 
+    // Location wallpaper integration (reuses LocationWallpaperComponent pattern):
+    // - Only activates when post is expanded (handled in setupPostDetailEvents)
+    // - Uses lat/lng from first map card (already provided by API)
+    // - Must not block interactions (component uses pointer-events: none)
+    var lat = null;
+    var lng = null;
+    try {
+      lat = (loc0 && loc0.latitude !== undefined && loc0.latitude !== null) ? Number(loc0.latitude) : null;
+      lng = (loc0 && loc0.longitude !== undefined && loc0.longitude !== null) ? Number(loc0.longitude) : null;
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) { lat = null; lng = null; }
+    } catch (_eLL) { lat = null; lng = null; }
+
     // Use existing card or create new one
     var cardEl = existingCard;
     var isValidCard = cardEl && (cardEl.classList.contains('post-card') || cardEl.classList.contains('recent-card'));
@@ -2521,8 +2533,28 @@ const PostModule = (function() {
     }
 
     // Assemble structure
-    wrap.appendChild(cardEl);
-    wrap.appendChild(postBody);
+    // Wrap content in a container compatible with LocationWallpaperComponent, but neutralize form padding in CSS.
+    var contentWrap = document.createElement('div');
+    contentWrap.className = 'member-postform-location-content';
+    wrap.appendChild(contentWrap);
+
+    // Hidden lat/lng inputs for LocationWallpaperComponent to read
+    if (lat !== null && lng !== null) {
+      wrap.classList.add('member-location-container');
+      var latEl = document.createElement('input');
+      latEl.type = 'hidden';
+      latEl.className = 'fieldset-lat';
+      latEl.value = String(lat);
+      var lngEl = document.createElement('input');
+      lngEl.type = 'hidden';
+      lngEl.className = 'fieldset-lng';
+      lngEl.value = String(lng);
+      wrap.appendChild(latEl);
+      wrap.appendChild(lngEl);
+    }
+
+    contentWrap.appendChild(cardEl);
+    contentWrap.appendChild(postBody);
 
     // Event handlers
     setupPostDetailEvents(wrap, post);
@@ -3116,11 +3148,42 @@ const PostModule = (function() {
 
     var descEl = wrap.querySelector('.open-post-text-desc');
     if (descEl) {
+      function syncLocationWallpaper(isExpandedNow) {
+        // Only for open-post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
+        if (!wrap || !(wrap instanceof Element)) return;
+        if (!wrap.classList || !wrap.classList.contains('member-location-container')) return;
+
+        try {
+          if (isExpandedNow) {
+            // Activate and refresh wallpaper
+            wrap.setAttribute('data-active', 'true');
+            if (wrap.__locationWallpaperCtrl && typeof wrap.__locationWallpaperCtrl.refresh === 'function') {
+              wrap.__locationWallpaperCtrl.refresh();
+              return;
+            }
+            if (window.LocationWallpaperComponent &&
+                typeof LocationWallpaperComponent.install === 'function' &&
+                typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+              LocationWallpaperComponent.install(wrap);
+              LocationWallpaperComponent.handleActiveContainerChange(wrap, wrap);
+            }
+          } else {
+            // Freeze wallpaper (do not affect other active containers)
+            wrap.removeAttribute('data-active');
+            if (wrap.__locationWallpaperCtrl && typeof wrap.__locationWallpaperCtrl.freeze === 'function') {
+              wrap.__locationWallpaperCtrl.freeze();
+            }
+          }
+        } catch (_eLWPost) {}
+      }
+
       descEl.addEventListener('click', function(e) {
         e.preventDefault();
         var isExpanded = wrap.classList.contains('open-post--desc-expanded');
-        wrap.classList.toggle('open-post--desc-expanded', !isExpanded);
-        descEl.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+        var nextExpanded = !isExpanded;
+        wrap.classList.toggle('open-post--desc-expanded', nextExpanded);
+        descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+        syncLocationWallpaper(nextExpanded);
       });
       
       // Also handle keyboard for accessibility
@@ -3128,8 +3191,10 @@ const PostModule = (function() {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           var isExpanded = wrap.classList.contains('open-post--desc-expanded');
-          wrap.classList.toggle('open-post--desc-expanded', !isExpanded);
-          descEl.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+          var nextExpanded = !isExpanded;
+          wrap.classList.toggle('open-post--desc-expanded', nextExpanded);
+          descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+          syncLocationWallpaper(nextExpanded);
         }
       });
     }
