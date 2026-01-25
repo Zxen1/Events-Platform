@@ -8547,81 +8547,45 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
-        // STILL MODE
+        // STILL MODE - Single static image, displayed once
         // ============================================================
         function startStillMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
+            var camera = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
+            var bearing = camera.bearing || 0;
 
-            var locationType = getLocationTypeFromContainer(locationContainerEl);
-            var desired = getDefaultCameraForType(locationType, [lng, lat]);
-            var stillBearing = desired.bearing || 0;
-
-            // If we already have a captured image for this location in memory, show it
-            if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
+            function display(url) {
+                st.latestCaptureUrl = url;
                 img.onload = function() { img.onload = null; showImage(); };
-                setImageUrl(st.latestCaptureUrl);
+                setImageUrl(url);
+            }
+
+            if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
+                display(st.latestCaptureUrl);
                 return;
             }
 
-            // Check IndexedDB cache first
-            WallpaperCache.get(lat, lng, stillBearing, function(cachedUrl) {
-                if (cachedUrl) {
-                    st.latestCaptureUrl = cachedUrl;
-                    img.onload = function() { img.onload = null; showImage(); };
-                    setImageUrl(cachedUrl);
-                    return;
-                }
+            WallpaperCache.get(lat, lng, bearing, function(cached) {
+                if (cached) { display(cached); return; }
 
-                if (!st.map) {
-                    createMap(desired);
-                } else {
-                    try { st.map.jumpTo(desired); } catch (e) {}
-                }
-
+                if (!st.map) createMap(camera);
                 if (!st.map) return;
 
-                // For still mode, wait for tiles to load then show and capture
-                st.didReveal = false;
-                var onMapLoad = function() {
-                    if (!st.map || st.didReveal) return;
-                    st.didReveal = true;
-                    
-                    // Tiles are ready - fade in the map
-                    showMap();
-
-                    // Give a moment for any final polish, then capture
-                    setTimeout(function() {
-                        if (!st.map) return;
-                        var url = captureMapToDataUrl();
-                        if (url) {
-                            st.latestCaptureUrl = url;
-                            img.onload = function() {
-                                img.onload = null;
-                                showImage();
-                                setTimeout(removeMap, 600);
-                            };
-                            setImageUrl(url);
-                            WallpaperCache.put(lat, lng, stillBearing, url, function() {});
-                        }
-                    }, 500);
-                };
-
-                // Use 'load' event like main map - fires when tiles are ready
-                try { st.map.once('load', onMapLoad); } catch (e) {}
-                st.revealTimeout = setTimeout(onMapLoad, 3000);
+                st.map.once('load', function() {
+                    if (!st.map) return;
+                    var url = captureMapToDataUrl();
+                    if (!url) return;
+                    st.latestCaptureUrl = url;
+                    WallpaperCache.put(lat, lng, bearing, url, function() {});
+                    img.onload = function() { img.onload = null; showImage(); removeMap(); };
+                    setImageUrl(url);
+                });
             });
         }
 
         function deactivateStillMode() {
             st.isActive = false;
-            // In still mode the map should already be removed after capture
-            // Just ensure we're showing the image
-            showImage();
-            // Delay removal to allow fade transition
-            setTimeout(function() {
-                removeMap();
-            }, 600);
         }
 
         // ============================================================
