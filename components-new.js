@@ -8520,21 +8520,7 @@ const LocationWallpaperComponent = (function() {
                 st.revealTimeout = setTimeout(onMapLoad, 3000);
             };
 
-            if (st.latestCaptureUrl) {
-                setImageUrl(st.latestCaptureUrl);
-                showImage();
-                showPreview();
-            } else {
-                // Check IndexedDB cache for preview image
-                WallpaperCache.get(lat, lng, orbitBearing, function(cachedUrl) {
-                    if (cachedUrl) {
-                        st.latestCaptureUrl = cachedUrl;
-                        setImageUrl(cachedUrl);
-                        showImage();
-                    }
-                    showPreview();
-                });
-            }
+            showPreview();
         }
 
         function deactivateOrbitMode() {
@@ -8573,8 +8559,8 @@ const LocationWallpaperComponent = (function() {
 
             // If we already have a captured image for this location in memory, show it
             if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
+                img.onload = function() { img.onload = null; showImage(); };
                 setImageUrl(st.latestCaptureUrl);
-                showImage();
                 return;
             }
 
@@ -8582,15 +8568,9 @@ const LocationWallpaperComponent = (function() {
             WallpaperCache.get(lat, lng, stillBearing, function(cachedUrl) {
                 if (cachedUrl) {
                     st.latestCaptureUrl = cachedUrl;
+                    img.onload = function() { img.onload = null; showImage(); };
                     setImageUrl(cachedUrl);
-                    showImage();
                     return;
-                }
-
-                // Show existing image while new one loads (smooth transition)
-                if (st.latestCaptureUrl) {
-                    setImageUrl(st.latestCaptureUrl);
-                    showImage();
                 }
 
                 if (!st.map) {
@@ -8616,17 +8596,15 @@ const LocationWallpaperComponent = (function() {
                         var url = captureMapToDataUrl();
                         if (url) {
                             st.latestCaptureUrl = url;
+                            img.onload = function() {
+                                img.onload = null;
+                                showImage();
+                                setTimeout(removeMap, 600);
+                            };
                             setImageUrl(url);
-                            // Store to IndexedDB cache
                             WallpaperCache.put(lat, lng, stillBearing, url, function() {});
                         }
-                        // Crossfade from map back to captured image
-                        showImage();
-                        // Wait for fade transition to complete before removing map
-                        setTimeout(function() {
-                            removeMap();
-                        }, 600);
-                    }, 500); // Short delay since tiles are already loaded
+                    }, 500);
                 };
 
                 // Use 'load' event like main map - fires when tiles are ready
@@ -8710,7 +8688,7 @@ const LocationWallpaperComponent = (function() {
                     }
                     if (basicImgs[0]) {
                         basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                        basicTimer = setInterval(advanceBasic, 20000);
+                        basicTimer = setInterval(advanceBasic, 18500);
                     }
                 } else {
                     // Capture fresh images and store to cache
@@ -8730,7 +8708,7 @@ const LocationWallpaperComponent = (function() {
                             }
                             if (idx === 0 && basicImgs[0]) {
                                 basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                                basicTimer = setInterval(advanceBasic, 20000);
+                                basicTimer = setInterval(advanceBasic, 18500);
                             }
                             captureNext(idx + 1);
                         });
@@ -8744,11 +8722,14 @@ const LocationWallpaperComponent = (function() {
             if (!basicImgs.length) return;
             var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
-            // Add active to new image first (starts fading in)
+            // Old image: move to outgoing (stays visible underneath, no fade out)
+            basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+            basicImgs[prev].classList.add('component-locationwallpaper-basic-image--outgoing');
+            // New image: start active (fades in on top over 1.5s)
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
-            // Remove active from old image after crossfade completes (1.5s)
+            // After fade complete, hide old image
             setTimeout(function() {
-                if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--outgoing');
             }, 1500);
 
             // Recapture if container grew beyond 300px buffer
@@ -8792,7 +8773,7 @@ const LocationWallpaperComponent = (function() {
             
             // Start timer after crossfade completes
             setTimeout(function() {
-                if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 20000);
+                if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 18500);
             }, 1500);
         }
 

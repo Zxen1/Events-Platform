@@ -3090,6 +3090,13 @@
     animation: locationwallpaper-basic-pan 20s linear forwards;
 }
 
+/* Outgoing image: stays fully visible underneath while new fades in on top */
+.component-locationwallpaper-basic-image--outgoing {
+    opacity: 1;
+    z-index: 1;
+    transition: none;
+}
+
 /* Paused state: freeze animation at current position */
 .component-locationwallpaper-basic-container--paused .component-locationwallpaper-basic-image--active {
     animation-play-state: paused;
