@@ -159,6 +159,9 @@ Communicate in plain, simple English. Avoid technical jargon.
 
 ## DATABASE RULES
 
+### Admin and Member Tables Are Identical
+The `admins` and `members` tables have the same structure. They are separated for security only. The admin needs to experience the platform exactly as members do, so both tables share identical columns.
+
 ### SQL in Chat Only
 Never edit SQL backup/export files. Paste SQL directly in chat for the user to run.
 
