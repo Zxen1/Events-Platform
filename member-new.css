@@ -579,48 +579,6 @@
   white-space: nowrap;
 }
 
-.member-animation-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.member-animation-button {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.member-animation-button:hover {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--blue-500);
-}
-
-.member-animation-button--active,
-.member-animation-button[aria-pressed="true"] {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--blue-500);
-}
-
-.member-animation-button-text {
-  font-size: 14px;
-  white-space: nowrap;
-}
-
 .member-panel-field-title {
   color: var(--panel-title-color);
   font-size: var(--panel-title-size);

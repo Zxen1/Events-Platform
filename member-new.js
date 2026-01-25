@@ -696,9 +696,6 @@ const MemberModule = (function() {
         // Map Style buttons
         initMapStyleButtons();
         
-        // Animation preference buttons
-        initAnimationButtons();
-        
         // Panel toggle is handled by lazy init wrapper outside module
     }
     
@@ -818,52 +815,6 @@ const MemberModule = (function() {
                     saveMemberSetting('map_style', style);
                 } else {
                     localStorage.setItem('map_style', style);
-                }
-            });
-        });
-    }
-    
-    function initAnimationButtons() {
-        var animationButtons = panel.querySelectorAll('.member-animation-button');
-        if (!animationButtons.length) return;
-        
-        // Load from member data (logged in) or localStorage (guest)
-        var currentAnimation = 'full';
-        if (currentUser) {
-            currentAnimation = currentUser.animation_preference || 'full';
-        } else {
-            var storedAnimation = localStorage.getItem('animation_preference');
-            if (storedAnimation) {
-                currentAnimation = storedAnimation;
-            }
-        }
-        
-        animationButtons.forEach(function(btn) {
-            var animation = btn.dataset.animation;
-            var isActive = animation === currentAnimation;
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            btn.classList.toggle('member-animation-button--active', isActive);
-            
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
-                
-                animationButtons.forEach(function(b) {
-                    b.setAttribute('aria-pressed', 'false');
-                    b.classList.remove('member-animation-button--active');
-                });
-                btn.setAttribute('aria-pressed', 'true');
-                btn.classList.add('member-animation-button--active');
-                
-                // Emit event for components that need to react
-                if (window.App && typeof App.emit === 'function') {
-                    App.emit('member:animationPreferenceChanged', { preference: animation });
-                }
-                
-                // Save to localStorage (guests) or database (members)
-                if (currentUser) {
-                    saveMemberSetting('animation_preference', animation);
-                } else {
-                    localStorage.setItem('animation_preference', animation);
                 }
             });
         });
@@ -1998,7 +1949,6 @@ const MemberModule = (function() {
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
-        initAnimationButtons();
         // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
         ensureAvatarChoicesReady();
         
@@ -6028,7 +5978,6 @@ const MemberModule = (function() {
             // Refresh map settings buttons
             initMapLightingButtons();
             initMapStyleButtons();
-            initAnimationButtons();
             
             var displayName = currentUser.name || currentUser.account_email || currentUser.username;
             
@@ -6364,7 +6313,6 @@ const MemberModule = (function() {
         // Refresh map settings buttons
         initMapLightingButtons();
         initMapStyleButtons();
-        initAnimationButtons();
         
         getMessage('msg_auth_logout_success', {}, false).then(function(message) {
             if (message) {
@@ -6440,7 +6388,6 @@ const MemberModule = (function() {
             country_code: (payload.country_code !== undefined) ? payload.country_code : null,
             map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
             map_style: (payload.map_style !== undefined) ? payload.map_style : null,
-            animation_preference: (payload.animation_preference !== undefined) ? payload.animation_preference : null,
             timezone: (payload.timezone !== undefined) ? payload.timezone : null
             ,
             // Filters (DB-first; localStorage is secondary)
@@ -6803,15 +6750,6 @@ const MemberModule = (function() {
         isLoggedIn: function() { return !!currentUser; },
         isAdmin: function() { return currentUser && currentUser.isAdmin === true; },
         saveSetting: function(key, value) { return saveMemberSetting(key, value); },
-        getAnimationPreference: function() {
-            // Priority: member setting > localStorage > default
-            if (currentUser && currentUser.animation_preference) {
-                return currentUser.animation_preference;
-            }
-            var stored = localStorage.getItem('animation_preference');
-            if (stored) return stored;
-            return 'full';
-        },
         showStatus: showStatus
     };
 

@@ -2377,11 +2377,7 @@ const AdminModule = (function() {
             });
         }
         
-        // TEMPORARILY DISABLED: Location Wallpaper Mode radios (off | still | orbit)
-        // These controls are greyed out while testing member-level animation_preference setting.
-        // The wallpaper is now controlled by the member's Animation setting in their Profile tab.
-        // TODO: Decide whether to keep admin-level control, member-level control, or both.
-        /*
+        // Location Wallpaper Mode radios (off | still | orbit)
         var wallpaperModeRadios = mapTabContainer.querySelectorAll('input[name="adminLocationWallpaperMode"]');
         if (wallpaperModeRadios.length) {
             var initialWallpaperMode = mapTabData.location_wallpaper_mode || 'off';
@@ -2399,11 +2395,8 @@ const AdminModule = (function() {
                 });
             });
         }
-        */
         
-        // TEMPORARILY DISABLED: Location Wallpaper Dimmer slider
-        // Greyed out while testing member-level animation_preference setting.
-        /*
+        // Location Wallpaper Dimmer slider
         var wallpaperDimmerSlider = document.getElementById('adminLocationWallpaperDimmer');
         var wallpaperDimmerDisplay = document.getElementById('adminLocationWallpaperDimmerDisplay');
         if (wallpaperDimmerSlider && wallpaperDimmerDisplay) {
@@ -2419,7 +2412,6 @@ const AdminModule = (function() {
                 updateField('map.location_wallpaper_dimmer', val);
             });
         }
-        */
         
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();

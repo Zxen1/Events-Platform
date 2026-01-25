@@ -2319,20 +2319,6 @@ const PostModule = (function() {
     // Highlight the map marker
     highlightMapMarker(post.id);
 
-    // Create animated wallpaper for the post
-    try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.createPostWallpaper === 'function') {
-        var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-        if (mapCard && mapCard.latitude && mapCard.longitude) {
-          var wallpaperLat = Number(mapCard.latitude);
-          var wallpaperLng = Number(mapCard.longitude);
-          if (Number.isFinite(wallpaperLat) && Number.isFinite(wallpaperLng)) {
-            LocationWallpaperComponent.createPostWallpaper(detail, wallpaperLat, wallpaperLng);
-          }
-        }
-      }
-    } catch (_eWallpaper) {}
-
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
       App.emit('post:opened', { post: post });
@@ -2348,13 +2334,6 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var postId = openPost.dataset.id;
-
-    // Destroy wallpaper if present
-    try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyPostWallpaper === 'function') {
-        LocationWallpaperComponent.destroyPostWallpaper();
-      }
-    } catch (_eWallpaper) {}
 
     // Restore the original card element (recent-card stays recent-card).
     // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
@@ -3195,13 +3174,6 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var container = openPost.parentElement;
-
-    // Destroy wallpaper if present
-    try {
-      if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.destroyPostWallpaper === 'function') {
-        LocationWallpaperComponent.destroyPostWallpaper();
-      }
-    } catch (_eWallpaper) {}
 
     // Restore the original card element (recent-card stays recent-card).
     try {

@@ -622,29 +622,6 @@
   position: relative;
 }
 
-/* Post Wallpaper - uses LocationWallpaperComponent from components-new.css */
-.open-post--has-wallpaper {
-  position: relative;
-}
-
-/* Post-specific: remove bottom buffer, no border-radius */
-.component-locationwallpaper--post {
-  border-radius: 0;
-}
-
-.component-locationwallpaper--post .component-locationwallpaper-mapmount,
-.component-locationwallpaper--post .component-locationwallpaper-image {
-  bottom: 0; /* Override the -200px buffer used in forms */
-}
-
-/* Ensure post content appears above wallpaper */
-.open-post--has-wallpaper > .post-card,
-.open-post--has-wallpaper > .recent-card,
-.open-post--has-wallpaper > .open-post-body {
-  position: relative;
-  z-index: 2;
-}
-
 .post-panel-content .open-post {
   width: 100%;
   max-width: 100%;

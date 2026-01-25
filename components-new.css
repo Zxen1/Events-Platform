@@ -3056,44 +3056,6 @@
     }
 }
 
-/* Basic mode: CSS-animated slideshow */
-.component-locationwallpaper-slideshow {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0;
-    transition: opacity 0.8s ease;
-}
-
-.component-locationwallpaper-slide {
-    position: absolute;
-    top: -10%;
-    left: -10%;
-    width: 120%;
-    height: 120%;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    transform: scale(1);
-}
-
-.component-locationwallpaper-slideshow--active .component-locationwallpaper-slide {
-    animation: locationwallpaper-slide-fade 32s ease-in-out infinite;
-}
-
-.component-locationwallpaper-slideshow--active .component-locationwallpaper-slide:nth-child(1) { animation-delay: 0s; }
-.component-locationwallpaper-slideshow--active .component-locationwallpaper-slide:nth-child(2) { animation-delay: 8s; }
-.component-locationwallpaper-slideshow--active .component-locationwallpaper-slide:nth-child(3) { animation-delay: 16s; }
-.component-locationwallpaper-slideshow--active .component-locationwallpaper-slide:nth-child(4) { animation-delay: 24s; }
-
-@keyframes locationwallpaper-slide-fade {
-    0% { opacity: 0; transform: scale(1) translate(0, 0); }
-    3% { opacity: 1; }
-    22% { opacity: 1; transform: scale(1.05) translate(2%, 1%); }
-    25% { opacity: 0; transform: scale(1.05) translate(2%, 1%); }
-    100% { opacity: 0; transform: scale(1) translate(0, 0); }
-}
-
 
 /* ============================================================================
    IMAGE MODAL (LIGHTBOX)
