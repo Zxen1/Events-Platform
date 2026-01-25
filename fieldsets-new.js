@@ -4061,7 +4061,7 @@ const FieldsetBuilder = (function(){
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
                         var fsRect = fieldset.getBoundingClientRect();
-                        var sessionsRect = sessSessionsContainer.getBoundingClientRect();
+                        var anchorRect = anchorEl.getBoundingClientRect();
                         
                         sessDatePickerPopover.style.visibility = 'hidden';
                         sessDatePickerPopover.style.display = 'block';
@@ -4071,7 +4071,7 @@ const FieldsetBuilder = (function(){
                         sessDatePickerPopover.style.display = '';
                         sessDatePickerPopover.style.visibility = '';
                         
-                        var top = (sessionsRect.top - fsRect.top) - popHeight - 10;
+                        var top = (anchorRect.top - fsRect.top) - popHeight - 10;
                         sessDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
 
