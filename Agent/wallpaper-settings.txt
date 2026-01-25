@@ -1,0 +1,67 @@
+LOCATION WALLPAPER SETTINGS
+===========================
+
+Four modes: Off, Still, Basic, Orbit
+
+
+OFF
+---
+No wallpaper. Default container background.
+
+
+STILL
+-----
+Single static map image. Captured once, no animation.
+
+
+BASIC
+-----
+4 pan images from N/E/S/W, pure CSS animation after initial capture.
+
+CAPTURE:
+- Width: container + 100px
+- Height: container + 300px
+- Anchor: top-left
+- 4 images captured sequentially (5s apart to avoid system load)
+
+CAMERA SETTINGS:
+| Type          | Zoom | Pitch | Bearings        |
+|---------------|------|-------|-----------------|
+| Venue/Address | 16   | 70°   | 0, 90, 180, 270 |
+| City          | 11   | 70°   | 0, 90, 180, 270 |
+
+ANIMATION:
+- Slide duration: 20 seconds per image
+- Pan: 100px leftward over 20 seconds (5px/sec)
+- Crossfade: 1.5 seconds (matches marquee)
+- Full cycle: 80 seconds (4 images × 20s)
+
+CONTAINER GROWTH:
+- 300px height buffer handles most growth without stretching
+- If growth exceeds buffer: image stretches temporarily
+- Re-capture happens while ANOTHER image is visible (never current)
+- Fresh image ready for next cycle
+
+NETWORK:
+- Initial: 4 Mapbox requests (spaced 5s apart)
+- After: zero network activity unless container grows 300px+
+
+
+ORBIT
+-----
+Live Mapbox GL JS rendering. Camera orbits location continuously.
+Highest quality, highest resource usage.
+
+
+CONFIGURATION
+-------------
+JS (components-new.js):
+- BASIC_SLIDE_DURATION = 20000
+- PAN_BUFFER_WIDTH = 100
+- PAN_BUFFER_HEIGHT = 300
+- CAPTURE_DELAY = 5000
+
+CSS (components-new.css):
+- Pan animation: 20s linear infinite
+- Fade animation: 1.5s ease-in-out
+- translateX: -100px to 0

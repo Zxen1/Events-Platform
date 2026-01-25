@@ -3057,7 +3057,7 @@
 }
 
 /* ----------------------------------------------------------------------------
-   BASIC MODE - 2 static images with class-toggled crossfade (like marquee)
+   BASIC MODE - 4 pan images (N/E/S/W) with class-toggled crossfade
    Lightweight alternative to orbit mode for slower PCs
    ---------------------------------------------------------------------------- */
 
@@ -3079,7 +3079,6 @@
 /* Active image fades in on top (no fade-out on inactive = no black dip) */
 .component-locationwallpaper-basic-image--active {
     z-index: 2;
-    animation: locationwallpaper-basic-fadein 1.5s ease-in-out;
 }
 
 @keyframes locationwallpaper-basic-fadein {
@@ -3087,64 +3086,40 @@
     to { opacity: 1; }
 }
 
-/* Pan image: anchor top-left, grows downward
-   Captured with +200px width buffer for drift */
-.component-locationwallpaper-basic-image[data-index="0"] {
+/* All 4 pan images: anchor top-left, grows downward
+   Captured with +100px width buffer, 100px traveled over 20s */
+.component-locationwallpaper-basic-image[data-index="0"],
+.component-locationwallpaper-basic-image[data-index="1"],
+.component-locationwallpaper-basic-image[data-index="2"],
+.component-locationwallpaper-basic-image[data-index="3"] {
     top: 0;
     left: 0;
-    width: calc(100% + 200px);
+    width: calc(100% + 100px);
     object-position: left top;
-    animation: locationwallpaper-basic-pan 40s linear infinite alternate;
+    animation: locationwallpaper-basic-pan 20s linear infinite;
 }
 
-/* Rotation image: anchor center (rotation pivot)
-   Captured with +400px buffer, grows outward from center
-   10° per 20s visible = 240s for both arcs with jump */
-.component-locationwallpaper-basic-image[data-index="1"] {
-    top: 50%;
-    left: 50%;
-    width: auto;
-    max-width: none;
-    max-height: none;
-    animation: locationwallpaper-basic-rotate 240s linear infinite;
+.component-locationwallpaper-basic-image--active[data-index="0"],
+.component-locationwallpaper-basic-image--active[data-index="1"],
+.component-locationwallpaper-basic-image--active[data-index="2"],
+.component-locationwallpaper-basic-image--active[data-index="3"] {
+    animation: locationwallpaper-basic-pan 20s linear infinite, locationwallpaper-basic-fadein 1.5s ease-in-out;
 }
 
-/* Pan: start at right edge, travel left 200px, alternate back */
+/* Pan: start at right edge, travel left 100px */
 @keyframes locationwallpaper-basic-pan {
     0% {
-        transform: translateX(-200px);
+        transform: translateX(-100px);
     }
     100% {
         transform: translateX(0);
     }
 }
 
-/* Rotation: 11→1 o'clock (330°→390°), jump to 5→7 o'clock (150°→210°)
-   Jump at 50% is ~2ms = invisible */
-@keyframes locationwallpaper-basic-rotate {
-    0% {
-        transform: translate(-50%, -50%) rotate(330deg);
-    }
-    50% {
-        transform: translate(-50%, -50%) rotate(390deg);
-    }
-    50.001% {
-        transform: translate(-50%, -50%) rotate(150deg);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(210deg);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
         animation: none;
-    }
-    .component-locationwallpaper-basic-image[data-index="0"] {
-        transform: translateX(-100px);
-    }
-    .component-locationwallpaper-basic-image[data-index="1"] {
-        transform: translate(-50%, -50%);
+        transform: translateX(-50px);
     }
 }
 

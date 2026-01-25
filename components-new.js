@@ -7814,14 +7814,15 @@ const LocationWallpaperComponent = (function() {
         var t = String(locationType || '').toLowerCase();
         var isCity = (t === 'city');
 
-        // Venue/Address: zoom 16 pitched, zoom 14 aerial
-        // City: zoom 11 pitched, zoom 9 aerial
-        var pitchedZoom = isCity ? 11 : 16;
-        var aerialZoom = isCity ? 9 : 14;
+        // Venue/Address: zoom 16, City: zoom 11
+        // 4 pan views from N, E, S, W bearings
+        var zoom = isCity ? 11 : 16;
 
         return [
-            { center: centerLngLat, zoom: pitchedZoom, pitch: 70, bearing: 0 },
-            { center: centerLngLat, zoom: aerialZoom, pitch: 0, bearing: 0 }
+            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 0 },    // North
+            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 90 },   // East
+            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 180 },  // South
+            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 270 }   // West
         ];
     }
 
@@ -8352,17 +8353,17 @@ const LocationWallpaperComponent = (function() {
         var basicCurrentIndex = 0;
         var basicRotationInterval = null;
         var BASIC_SLIDE_DURATION = 20000; // 20 seconds per image (matches marquee)
-        var PAN_BUFFER_WIDTH = 200; // Extra pixels for pan travel (maintains drift speed)
-        var ROTATION_BUFFER = 400; // Extra pixels on all sides for rotation
-        var basicPanCaptureHeight = 0; // Track captured pan image height
-        var basicRotationCaptureHeight = 0; // Track captured rotation image height
+        var PAN_BUFFER_WIDTH = 100; // Extra pixels for pan travel (100px over 20s visibility)
+        var PAN_BUFFER_HEIGHT = 300; // Extra pixels below for container growth
+        var CAPTURE_DELAY = 5000; // 5 seconds between background captures
+        var basicCaptureHeights = [0, 0, 0, 0]; // Track captured heights for each image
         var basicRecapturing = false; // Flag for background re-capture
 
         function createBasicImagesContainer() {
             if (basicImagesContainer) return;
             basicImagesContainer = document.createElement('div');
             basicImagesContainer.className = 'component-locationwallpaper-basic-container';
-            for (var i = 0; i < 2; i++) {
+            for (var i = 0; i < 4; i++) {
                 var imgEl = document.createElement('img');
                 imgEl.className = 'component-locationwallpaper-basic-image';
                 imgEl.setAttribute('data-index', String(i));
@@ -8402,18 +8403,14 @@ const LocationWallpaperComponent = (function() {
             var nextIndex = (basicCurrentIndex + 1) % basicImages.length;
             showBasicSlide(nextIndex);
 
-            // Leapfrog: when showing one image, check if the other needs re-capture
-            // Only re-capture if container HEIGHT grew (never on shrink)
+            // Leapfrog: check if any hidden image needs re-capture due to container growth
+            // Only recapture if growth exceeds the 300px buffer
             if (!basicRecapturing && contentEl) {
                 var containerHeight = contentEl.offsetHeight || 0;
-                if (nextIndex === 0 && containerHeight > basicRotationCaptureHeight - ROTATION_BUFFER) {
-                    // Showing pan - rotation image needs larger capture
+                var checkIndex = (nextIndex + 1) % basicImages.length;
+                if (containerHeight > basicCaptureHeights[checkIndex] + PAN_BUFFER_HEIGHT) {
                     basicRecapturing = true;
-                    recaptureRotationImage();
-                } else if (nextIndex === 1 && containerHeight > basicPanCaptureHeight) {
-                    // Showing rotation - pan image needs larger capture
-                    basicRecapturing = true;
-                    recapturePanImage();
+                    recaptureImage(checkIndex);
                 }
             }
         }
@@ -8471,26 +8468,7 @@ const LocationWallpaperComponent = (function() {
             });
         }
 
-        function recaptureRotationImage() {
-            if (!st.basicCapturedLat || !st.basicCapturedLng) { basicRecapturing = false; return; }
-
-            var locationType = getLocationTypeFromContainer(locationContainerEl);
-            var cameras = getBasicModeCameras(locationType, [st.basicCapturedLng, st.basicCapturedLat]);
-            var containerWidth = contentEl.offsetWidth || 400;
-            var containerHeight = contentEl.offsetHeight || 300;
-            var captureWidth = containerWidth + ROTATION_BUFFER;
-            var captureHeight = containerHeight + ROTATION_BUFFER;
-
-            captureBasicImage(cameras[1], captureWidth, captureHeight, function(url) {
-                if (url && basicImages[1]) {
-                    basicImages[1].src = url;
-                    basicRotationCaptureHeight = containerHeight;
-                }
-                basicRecapturing = false;
-            });
-        }
-
-        function recapturePanImage() {
+        function recaptureImage(index) {
             if (!st.basicCapturedLat || !st.basicCapturedLng) { basicRecapturing = false; return; }
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
@@ -8498,11 +8476,12 @@ const LocationWallpaperComponent = (function() {
             var containerWidth = contentEl.offsetWidth || 400;
             var containerHeight = contentEl.offsetHeight || 300;
             var captureWidth = containerWidth + PAN_BUFFER_WIDTH;
+            var captureHeight = containerHeight + PAN_BUFFER_HEIGHT;
 
-            captureBasicImage(cameras[0], captureWidth, containerHeight, function(url) {
-                if (url && basicImages[0]) {
-                    basicImages[0].src = url;
-                    basicPanCaptureHeight = containerHeight;
+            captureBasicImage(cameras[index], captureWidth, captureHeight, function(url) {
+                if (url && basicImages[index]) {
+                    basicImages[index].src = url;
+                    basicCaptureHeights[index] = containerHeight;
                 }
                 basicRecapturing = false;
             });
@@ -8531,7 +8510,7 @@ const LocationWallpaperComponent = (function() {
             var cameras = getBasicModeCameras(locationType, [lng, lat]);
 
             // If we already captured for this location, just start animation
-            if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImages.length === 2 && basicImages[0].src) {
+            if (st.basicCapturedLat === lat && st.basicCapturedLng === lng && basicImages.length === 4 && basicImages[0].src) {
                 startBasicAnimation();
                 return;
             }
@@ -8539,47 +8518,47 @@ const LocationWallpaperComponent = (function() {
             // Clear previous captures
             st.basicCapturedLat = null;
             st.basicCapturedLng = null;
-            basicPanCaptureHeight = 0;
-            basicRotationCaptureHeight = 0;
+            basicCaptureHeights = [0, 0, 0, 0];
 
             // Hide any existing map/image
             img.style.opacity = '0';
             mapMount.style.opacity = '0';
 
-            // Create container for 2 images
+            // Create container for 4 images
             removeBasicImagesContainer();
             createBasicImagesContainer();
 
             var containerWidth = contentEl.offsetWidth || 400;
             var containerHeight = contentEl.offsetHeight || 300;
-            var panCaptureWidth = containerWidth + PAN_BUFFER_WIDTH;
+            var captureWidth = containerWidth + PAN_BUFFER_WIDTH;
+            var captureHeight = containerHeight + PAN_BUFFER_HEIGHT;
 
-            // Capture pan image first (smaller, faster)
-            captureBasicImage(cameras[0], panCaptureWidth, containerHeight, function(url) {
+            // Capture first image, start animation, then capture rest in background
+            captureBasicImage(cameras[0], captureWidth, captureHeight, function(url) {
                 if (url && basicImages[0]) {
                     basicImages[0].src = url;
-                    basicPanCaptureHeight = containerHeight;
+                    basicCaptureHeights[0] = containerHeight;
                 }
 
-                // Store location for rotation capture
                 st.basicCapturedLat = lat;
                 st.basicCapturedLng = lng;
-
-                // Remove any lingering map
                 removeMap();
-
-                // Start animation immediately with pan image
                 startBasicAnimation();
 
-                // Capture rotation image in background while pan plays
-                var rotCaptureWidth = containerWidth + ROTATION_BUFFER;
-                var rotCaptureHeight = containerHeight + ROTATION_BUFFER;
-                captureBasicImage(cameras[1], rotCaptureWidth, rotCaptureHeight, function(rotUrl) {
-                    if (rotUrl && basicImages[1]) {
-                        basicImages[1].src = rotUrl;
-                        basicRotationCaptureHeight = containerHeight;
-                    }
-                });
+                // Capture remaining 3 images with 5s delays to avoid system overload
+                var captureNext = function(idx) {
+                    if (idx >= 4) return;
+                    setTimeout(function() {
+                        captureBasicImage(cameras[idx], captureWidth, captureHeight, function(nextUrl) {
+                            if (nextUrl && basicImages[idx]) {
+                                basicImages[idx].src = nextUrl;
+                                basicCaptureHeights[idx] = containerHeight;
+                            }
+                            captureNext(idx + 1);
+                        });
+                    }, CAPTURE_DELAY);
+                };
+                captureNext(1);
             });
         }
 
