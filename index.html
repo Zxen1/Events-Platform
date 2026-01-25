@@ -784,28 +784,29 @@
                 </div>
               </div>
             </div>
-            <div class="admin-panel-field">
-              <label class="admin-settings-field-label">Location Wallpaper</label>
+            <!-- DISABLED: Wallpaper settings moved to member profile. Each user controls their own. -->
+            <div class="admin-panel-field admin-panel-field--disabled">
+              <label class="admin-settings-field-label">Location Wallpaper (see Member Profile)</label>
               <div class="admin-wallpaper-buttons">
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="off" aria-pressed="true">
+                <button type="button" class="admin-wallpaper-button" data-wallpaper="off" aria-pressed="true" disabled>
                   <span class="admin-wallpaper-button-text">Off</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="still" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button" data-wallpaper="still" aria-pressed="false" disabled>
                   <span class="admin-wallpaper-button-text">Still</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="basic" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button" data-wallpaper="basic" aria-pressed="false" disabled>
                   <span class="admin-wallpaper-button-text">Basic</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="orbit" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button" data-wallpaper="orbit" aria-pressed="false" disabled>
                   <span class="admin-wallpaper-button-text">Orbit</span>
                 </button>
               </div>
             </div>
-            <div class="admin-panel-field admin-panel-field--spaced">
-              <label class="admin-settings-field-label" for="adminLocationWallpaperDimmer">Wallpaper Dimmer</label>
+            <div class="admin-panel-field admin-panel-field--spaced admin-panel-field--disabled">
+              <label class="admin-settings-field-label" for="adminLocationWallpaperDimmer">Wallpaper Dimmer (see Member Profile)</label>
               <div class="admin-spin-control-row row-class-1">
                 <span id="adminLocationWallpaperDimmerDisplay" class="admin-slider-value">30%</span>
-                <input type="range" id="adminLocationWallpaperDimmer" min="0" max="100" step="5" value="30" class="admin-spin-slider" />
+                <input type="range" id="adminLocationWallpaperDimmer" min="0" max="100" step="5" value="30" class="admin-spin-slider" disabled />
               </div>
             </div>
           </div>
@@ -983,6 +984,23 @@
                 </button>
                 <button type="button" class="member-style-button member-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
                   <span class="member-style-button-text">Satellite</span>
+                </button>
+              </div>
+            </div>
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Wallpaper Animation</label>
+              <div class="member-wallpaper-buttons">
+                <button type="button" class="member-wallpaper-button" data-wallpaper="off" aria-pressed="false">
+                  <span class="member-wallpaper-button-text">Off</span>
+                </button>
+                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="still" aria-pressed="false">
+                  <span class="member-wallpaper-button-text">Still</span>
+                </button>
+                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="basic" aria-pressed="true">
+                  <span class="member-wallpaper-button-text">Basic</span>
+                </button>
+                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="orbit" aria-pressed="false">
+                  <span class="member-wallpaper-button-text">Orbit</span>
                 </button>
               </div>
             </div>

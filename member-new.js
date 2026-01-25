@@ -696,6 +696,9 @@ const MemberModule = (function() {
         // Map Style buttons
         initMapStyleButtons();
         
+        // Wallpaper Animation buttons
+        initWallpaperButtons();
+        
         // Panel toggle is handled by lazy init wrapper outside module
     }
     
@@ -815,6 +818,47 @@ const MemberModule = (function() {
                     saveMemberSetting('map_style', style);
                 } else {
                     localStorage.setItem('map_style', style);
+                }
+            });
+        });
+    }
+    
+    function initWallpaperButtons() {
+        var wallpaperButtons = panel.querySelectorAll('.member-wallpaper-button');
+        if (!wallpaperButtons.length) return;
+        
+        // Load from member data (logged in) or localStorage (guest) or default
+        var currentWallpaper = 'basic';
+        if (currentUser) {
+            currentWallpaper = currentUser.animation_preference || 'basic';
+        } else {
+            var storedWallpaper = localStorage.getItem('animation_preference');
+            if (storedWallpaper) {
+                currentWallpaper = storedWallpaper;
+            }
+        }
+        
+        wallpaperButtons.forEach(function(btn) {
+            var wallpaper = btn.dataset.wallpaper;
+            var isActive = wallpaper === currentWallpaper;
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            btn.classList.toggle('member-wallpaper-button--active', isActive);
+            
+            btn.addEventListener('click', function() {
+                if (btn.getAttribute('aria-pressed') === 'true') return;
+                
+                wallpaperButtons.forEach(function(b) {
+                    b.setAttribute('aria-pressed', 'false');
+                    b.classList.remove('member-wallpaper-button--active');
+                });
+                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.add('member-wallpaper-button--active');
+                
+                // Save to localStorage (guests) or database (members)
+                if (currentUser) {
+                    saveMemberSetting('animation_preference', wallpaper);
+                } else {
+                    localStorage.setItem('animation_preference', wallpaper);
                 }
             });
         });
@@ -1949,6 +1993,7 @@ const MemberModule = (function() {
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
+        initWallpaperButtons();
         // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
         ensureAvatarChoicesReady();
         
@@ -5978,6 +6023,7 @@ const MemberModule = (function() {
             // Refresh map settings buttons
             initMapLightingButtons();
             initMapStyleButtons();
+            initWallpaperButtons();
             
             var displayName = currentUser.name || currentUser.account_email || currentUser.username;
             
@@ -6313,6 +6359,7 @@ const MemberModule = (function() {
         // Refresh map settings buttons
         initMapLightingButtons();
         initMapStyleButtons();
+        initWallpaperButtons();
         
         getMessage('msg_auth_logout_success', {}, false).then(function(message) {
             if (message) {

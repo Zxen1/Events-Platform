@@ -504,7 +504,8 @@
 /* member-preferences-container removed (no language/currency filters) */
 
 .member-lighting-buttons,
-.member-style-buttons {
+.member-style-buttons,
+.member-wallpaper-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   width: 100%;
@@ -519,7 +520,8 @@
 }
 
 .member-lighting-button,
-.member-style-button {
+.member-style-button,
+.member-wallpaper-button {
   width: 100%;
   height: 100%;
   padding: 0;
@@ -539,7 +541,8 @@
 }
 
 .member-lighting-button:hover,
-.member-style-button:hover {
+.member-style-button:hover,
+.member-wallpaper-button:hover {
   background: rgba(0, 0, 0, 0.2);
   color: var(--blue-500);
 }
@@ -547,7 +550,9 @@
 .member-lighting-button--active,
 .member-lighting-button[aria-pressed="true"],
 .member-style-button--active,
-.member-style-button[aria-pressed="true"] {
+.member-style-button[aria-pressed="true"],
+.member-wallpaper-button--active,
+.member-wallpaper-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
   color: var(--blue-500);
 }
@@ -574,7 +579,8 @@
   display: none;
 }
 
-.member-style-button-text {
+.member-style-button-text,
+.member-wallpaper-button-text {
   font-size: 14px;
   white-space: nowrap;
 }

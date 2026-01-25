@@ -102,6 +102,11 @@ if (isset($input['map_style'])) {
   $types .= 's';
   $vals[] = (string)$input['map_style'];
 }
+if (isset($input['animation_preference'])) {
+  $updates[] = 'animation_preference=?';
+  $types .= 's';
+  $vals[] = (string)$input['animation_preference'];
+}
 if (isset($input['timezone'])) {
   $updates[] = 'timezone=?';
   $types .= 's';

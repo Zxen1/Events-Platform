@@ -312,6 +312,11 @@
   box-sizing: border-box;
 }
 
+.admin-panel-field--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .admin-panel-field-label {
   display: block;
   text-align: left;

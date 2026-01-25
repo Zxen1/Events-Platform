@@ -1,49 +1,173 @@
-LOCATION WALLPAPER SETTINGS
-===========================
+LOCATION WALLPAPER COMPONENT
+============================
+
+Standalone component. Inputs: lat/lng, container dimensions.
+Used by: location container, posts, anything else.
+
+
+MAP ARCHITECTURE
+----------------
+
+Main map        Spinning globe, clusters, always visible
+Secondary map   Swiss army knife - wallpaper captures, anything needing a map
+
+Rule: NEVER more than 2 live maps. Everything else uses captured images.
+
+Secondary map location:
+  Lives in components-new.js as SecondaryMap utility
+  Persistent - created once on first capture, reused for all subsequent captures
+  Any component can request captures via SecondaryMap.capture(camera, w, h, callback)
+  Queue system handles multiple capture requests
+  Eliminates WebGL stutter from repeated map creation
+
+Directions: handled by user's native device map system (external).
+
+
+USER PREFERENCE
+---------------
+
+Source of truth: member's animation_preference column
+  - Logged in: reads from members/admins table
+  - Guest: reads from localStorage
+  - Default: 'basic'
+
+Setting location:
+  - Member profile (Map Settings section)
+  - 4 buttons: Off, Still, Basic, Orbit
+  - Saved to animation_preference column
+
+Admin panel:
+  - Wallpaper controls DISABLED (greyed out)
+  - Redirects to "see Member Profile"
+  - Each user controls their own preference
+
+
+WALLPAPER MODES
+---------------
 
 OFF     No wallpaper
 STILL   Single static capture, no animation
-BASIC   4 pan images (N/E/S/W), CSS animation
-ORBIT   Live Mapbox rendering, camera orbits
+BASIC   4 pan images (N/E/S/W), CSS animation only
+ORBIT   Live secondary map rendering, camera orbits
 
 
 BASIC MODE
 ----------
 
 Camera:
-  Venue/Address  zoom 16, pitch 70°
-  City           zoom 11, pitch 70°
-  Bearings       0°, 90°, 180°, 270° (N/E/S/W)
+  Venue/Address  zoom 16, pitch 70
+  City           zoom 11, pitch 70
+  Bearings       0, 90, 180, 270 (N/E/S/W)
 
-Capture size:
-  Width          container + 100px
-  Height         container + 300px
+Capture:
+  Uses SecondaryMap.capture() for all 4 images
+  First image shows immediately when ready
+  Remaining 3 captured sequentially via queue
+  No new WebGL context creation (reuses existing)
 
-Animation:
-  Slide          20 seconds
-  Pan            100px leftward over 20s (left edge starts at container left)
-  Crossfade      1.5 seconds
+Image size:
+  Width          container + 100px (pan buffer)
+  Height         container + 300px (growth buffer)
+  Anchor         top-left
 
-Loading:
-  All 4 images captured in parallel at start
-  Animation begins when all 4 are ready
+Animation (CSS only):
+  Pan            100px leftward over 20s
+  Crossfade      1.5s opacity transition
+  Base transform translateX(-100px) to prevent jump when animation ends
+  Timer          setInterval 20s advances to next image
 
 Container growth:
   300px buffer handles growth without stretch
   If exceeded: image stretches temporarily
-  Recapture runs while another image is visible
-  Fresh image ready next cycle
+  Recapture of image 2-ahead runs in background
+  Fresh image ready before needed
+
+Deactivate:
+  Timer stops
+  Current animation finishes naturally (CSS cannot be stopped mid-way)
+  Static image remains visible
+
+Reactivate:
+  Crossfade to image 0
+  Timer restarts
 
 
-CSS (components-new.css):
-  .component-locationwallpaper-basic-container
-  .component-locationwallpaper-basic-image
-  .component-locationwallpaper-basic-image--active
-  @keyframes locationwallpaper-basic-pan (20s, 0 to -100px)
+ORBIT MODE
+----------
 
-JS (components-new.js):
-  startBasicMode(lat, lng)
-  advanceBasic()
-  captureMap(camera, w, h, cb)
-  stopBasicMode()
-  removeBasicMode()
+Secondary map runs continuously with orbit animation.
+
+Deactivate:
+  Capture current view ONCE (no background captures)
+  Show captured image
+  Stop orbit animation
+  Schedule lazy cleanup (map stays briefly in case user returns)
+
+Reactivate:
+  Show captured image while map loads
+  Resume orbit from saved camera position
+
+
+STILL MODE
+----------
+
+Uses SecondaryMap.capture() for single image.
+Static image displayed permanently.
+
+
+AUTO-DETECTION (Future)
+-----------------------
+
+Signals to detect:
+  - navigator.connection.effectiveType (slow connection)
+  - navigator.deviceMemory (low memory)
+  - prefers-reduced-motion (user preference)
+  - navigator.getBattery() (low battery)
+
+Auto-downgrade rule:
+  - prefers-reduced-motion: force Still
+  - Slow connection OR low memory OR low battery: force Basic
+  - Otherwise: use member's chosen setting
+
+
+NETWORK ACTIVITY
+----------------
+
+Basic mode: Zero after initial 4 captures (unless recapture from growth)
+Still mode: Zero after initial capture
+Orbit mode: Continuous tile loading while active
+
+
+CSS CLASSES (components-new.css)
+--------------------------------
+
+.component-locationwallpaper-basic-container
+.component-locationwallpaper-basic-image
+.component-locationwallpaper-basic-image--active
+@keyframes locationwallpaper-basic-pan
+
+
+JS UTILITIES (components-new.js)
+--------------------------------
+
+SecondaryMap.capture(camera, w, h, cb)  - Queue a capture request
+SecondaryMap.destroy()                   - Clean up (rarely needed)
+
+
+JS FUNCTIONS (components-new.js)
+--------------------------------
+
+startBasicMode(lat, lng)
+advanceBasic()
+resumeBasicMode()
+stopBasicMode()
+removeBasicMode()
+deactivateBasicMode()
+
+startOrbitMode(lat, lng)
+deactivateOrbitMode()
+
+startStillMode(lat, lng)
+deactivateStillMode()
+
+getWallpaperMode()  - Returns member's animation_preference
