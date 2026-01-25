@@ -2377,23 +2377,30 @@ const AdminModule = (function() {
             });
         }
         
-        // Location Wallpaper Mode radios (off | still | basic | orbit)
-        var wallpaperModeRadios = mapTabContainer.querySelectorAll('input[name="adminLocationWallpaperMode"]');
-        if (wallpaperModeRadios.length) {
+        // Location Wallpaper Mode buttons (off | still | basic | orbit)
+        var wallpaperButtons = mapTabContainer.querySelectorAll('.admin-wallpaper-button');
+        if (wallpaperButtons.length) {
             var initialWallpaperMode = mapTabData.location_wallpaper_mode || 'off';
-            wallpaperModeRadios.forEach(function(radio) {
-                radio.checked = (radio.value === initialWallpaperMode);
-            });
-            
-            registerField('map.location_wallpaper_mode', initialWallpaperMode);
-            
-            wallpaperModeRadios.forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    if (radio.checked) {
-                        updateField('map.location_wallpaper_mode', radio.value);
-                    }
+            wallpaperButtons.forEach(function(btn) {
+                var mode = btn.dataset.wallpaper;
+                var isActive = mode === initialWallpaperMode;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                btn.classList.toggle('admin-wallpaper-button--active', isActive);
+                
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+                    
+                    wallpaperButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                        b.classList.remove('admin-wallpaper-button--active');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.classList.add('admin-wallpaper-button--active');
+                    
+                    updateField('map.location_wallpaper_mode', mode);
                 });
             });
+            registerField('map.location_wallpaper_mode', initialWallpaperMode);
         }
         
         // Location Wallpaper Dimmer slider
@@ -2593,8 +2600,7 @@ const AdminModule = (function() {
         // Reset radio groups
         var radioGroups = [
             { name: 'adminSpinType', fieldId: 'map.spin_load_type' },
-            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' },
-            { name: 'adminLocationWallpaperMode', fieldId: 'map.location_wallpaper_mode' }
+            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' }
         ];
         
         radioGroups.forEach(function(rg) {
@@ -2603,6 +2609,24 @@ const AdminModule = (function() {
             if (radios.length && entry && entry.type === 'simple') {
                 radios.forEach(function(radio) {
                     radio.checked = (radio.value === entry.original);
+                });
+            }
+        });
+        
+        // Reset button groups (wallpaper mode)
+        var buttonGroups = [
+            { selector: '.admin-wallpaper-button', dataAttr: 'wallpaper', fieldId: 'map.location_wallpaper_mode', activeClass: 'admin-wallpaper-button--active' }
+        ];
+        
+        buttonGroups.forEach(function(bg) {
+            var buttons = mapTabContainer.querySelectorAll(bg.selector);
+            var entry = fieldRegistry[bg.fieldId];
+            if (buttons.length && entry && entry.type === 'simple') {
+                buttons.forEach(function(btn) {
+                    var value = btn.dataset[bg.dataAttr];
+                    var isActive = value === entry.original;
+                    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    btn.classList.toggle(bg.activeClass, isActive);
                 });
             }
         });

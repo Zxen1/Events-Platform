@@ -820,7 +820,8 @@
 
 
 .admin-lighting-buttons,
-.admin-style-buttons {
+.admin-style-buttons,
+.admin-wallpaper-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   width: 100%;
@@ -835,7 +836,8 @@
 }
 
 .admin-lighting-button,
-.admin-style-button {
+.admin-style-button,
+.admin-wallpaper-button {
   width: 100%;
   height: 100%;
   padding: 0;
@@ -855,7 +857,8 @@
 }
 
 .admin-lighting-button:hover,
-.admin-style-button:hover {
+.admin-style-button:hover,
+.admin-wallpaper-button:hover {
   background: rgba(0, 0, 0, 0.2);
   color: var(--blue-500);
 }
@@ -863,7 +866,9 @@
 .admin-lighting-button--active,
 .admin-lighting-button[aria-pressed="true"],
 .admin-style-button--active,
-.admin-style-button[aria-pressed="true"] {
+.admin-style-button[aria-pressed="true"],
+.admin-wallpaper-button--active,
+.admin-wallpaper-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
   color: var(--blue-500);
 }
@@ -890,7 +895,8 @@
   display: none;
 }
 
-.admin-style-button-text {
+.admin-style-button-text,
+.admin-wallpaper-button-text {
   font-size: 14px;
   white-space: nowrap;
 }
@@ -2406,6 +2412,11 @@
 
 /* Remove row margin when inside field wrapper to prevent double margins */
 .admin-panel-field .row-class-1 {
+  margin-bottom: 0;
+}
+
+/* Remove label margin when inside field wrapper - gap handles spacing (6px rule) */
+.admin-panel-field .admin-settings-field-label {
   margin-bottom: 0;
 }
 
