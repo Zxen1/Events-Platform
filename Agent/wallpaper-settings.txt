@@ -1,67 +1,49 @@
 LOCATION WALLPAPER SETTINGS
 ===========================
 
-Four modes: Off, Still, Basic, Orbit
+OFF     No wallpaper
+STILL   Single static capture, no animation
+BASIC   4 pan images (N/E/S/W), CSS animation
+ORBIT   Live Mapbox rendering, camera orbits
 
 
-OFF
----
-No wallpaper. Default container background.
+BASIC MODE
+----------
 
+Camera:
+  Venue/Address  zoom 16, pitch 70°
+  City           zoom 11, pitch 70°
+  Bearings       0°, 90°, 180°, 270° (N/E/S/W)
 
-STILL
------
-Single static map image. Captured once, no animation.
+Capture size:
+  Width          container + 100px
+  Height         container + 300px
 
+Animation:
+  Slide          20 seconds
+  Pan            100px leftward over 20s (left edge starts at container left)
+  Crossfade      1.5 seconds
 
-BASIC
------
-4 pan images from N/E/S/W, pure CSS animation after initial capture.
+Loading:
+  All 4 images captured in parallel at start
+  Animation begins when all 4 are ready
 
-CAPTURE:
-- Width: container + 100px
-- Height: container + 300px
-- Anchor: top-left
-- 4 images captured sequentially (5s apart to avoid system load)
+Container growth:
+  300px buffer handles growth without stretch
+  If exceeded: image stretches temporarily
+  Recapture runs while another image is visible
+  Fresh image ready next cycle
 
-CAMERA SETTINGS:
-| Type          | Zoom | Pitch | Bearings        |
-|---------------|------|-------|-----------------|
-| Venue/Address | 16   | 70°   | 0, 90, 180, 270 |
-| City          | 11   | 70°   | 0, 90, 180, 270 |
-
-ANIMATION:
-- Slide duration: 20 seconds per image
-- Pan: 100px leftward over 20 seconds (5px/sec)
-- Crossfade: 1.5 seconds (matches marquee)
-- Full cycle: 80 seconds (4 images × 20s)
-
-CONTAINER GROWTH:
-- 300px height buffer handles most growth without stretching
-- If growth exceeds buffer: image stretches temporarily
-- Re-capture happens while ANOTHER image is visible (never current)
-- Fresh image ready for next cycle
-
-NETWORK:
-- Initial: 4 Mapbox requests (spaced 5s apart)
-- After: zero network activity unless container grows 300px+
-
-
-ORBIT
------
-Live Mapbox GL JS rendering. Camera orbits location continuously.
-Highest quality, highest resource usage.
-
-
-CONFIGURATION
--------------
-JS (components-new.js):
-- BASIC_SLIDE_DURATION = 20000
-- PAN_BUFFER_WIDTH = 100
-- PAN_BUFFER_HEIGHT = 300
-- CAPTURE_DELAY = 5000
 
 CSS (components-new.css):
-- Pan animation: 20s linear infinite
-- Fade animation: 1.5s ease-in-out
-- translateX: -100px to 0
+  .component-locationwallpaper-basic-container
+  .component-locationwallpaper-basic-image
+  .component-locationwallpaper-basic-image--active
+  @keyframes locationwallpaper-basic-pan (20s, 0 to -100px)
+
+JS (components-new.js):
+  startBasicMode(lat, lng)
+  advanceBasic()
+  captureMap(camera, w, h, cb)
+  stopBasicMode()
+  removeBasicMode()
