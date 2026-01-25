@@ -3056,6 +3056,122 @@
     }
 }
 
+/* ----------------------------------------------------------------------------
+   BASIC MODE - 5 static images with CSS-only pan/rotate animations
+   Lightweight alternative to orbit mode for slower PCs
+   ---------------------------------------------------------------------------- */
+
+.component-locationwallpaper-basic-container {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.component-locationwallpaper-basic-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% + 200px);
+    object-fit: cover;
+    opacity: 0;
+    will-change: opacity, transform;
+}
+
+/* Animation only runs when --running class is added */
+.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="0"] {
+    animation: locationwallpaper-basic-pan 50s linear infinite;
+    animation-delay: 0s;
+}
+
+.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="1"] {
+    animation: locationwallpaper-basic-pan 50s linear infinite;
+    animation-delay: 10s;
+}
+
+.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="2"] {
+    animation: locationwallpaper-basic-pan 50s linear infinite;
+    animation-delay: 20s;
+}
+
+.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="3"] {
+    animation: locationwallpaper-basic-pan 50s linear infinite;
+    animation-delay: 30s;
+}
+
+.component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="4"] {
+    animation: locationwallpaper-basic-rotate 50s linear infinite;
+    animation-delay: 40s;
+}
+
+/* Pan animation for pitched images (1-4)
+   - Fade in over 1s (0-2%)
+   - Slow pan left-to-right while visible (2-18%)
+   - Fade out over 1s (18-20%)
+   - Hidden for remaining 80% of cycle */
+@keyframes locationwallpaper-basic-pan {
+    0% {
+        opacity: 0;
+        transform: scale(1.15) translateX(-3%);
+    }
+    2% {
+        opacity: 1;
+        transform: scale(1.15) translateX(-2.5%);
+    }
+    18% {
+        opacity: 1;
+        transform: scale(1.15) translateX(2.5%);
+    }
+    20% {
+        opacity: 0;
+        transform: scale(1.15) translateX(3%);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.15) translateX(3%);
+    }
+}
+
+/* Rotate animation for aerial image (5)
+   - Fade in over 1s (0-2%)
+   - Slow rotation while visible (2-18%)
+   - Fade out over 1s (18-20%)
+   - Hidden for remaining 80% of cycle */
+@keyframes locationwallpaper-basic-rotate {
+    0% {
+        opacity: 0;
+        transform: scale(1.15) rotate(-5deg);
+    }
+    2% {
+        opacity: 1;
+        transform: scale(1.15) rotate(-4deg);
+    }
+    18% {
+        opacity: 1;
+        transform: scale(1.15) rotate(4deg);
+    }
+    20% {
+        opacity: 0;
+        transform: scale(1.15) rotate(5deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.15) rotate(5deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image {
+        animation: none;
+    }
+    /* Show first image statically for reduced motion users */
+    .component-locationwallpaper-basic-container--running .component-locationwallpaper-basic-image[data-index="0"] {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
 
 /* ============================================================================
    IMAGE MODAL (LIGHTBOX)

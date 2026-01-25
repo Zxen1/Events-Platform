@@ -2377,7 +2377,7 @@ const AdminModule = (function() {
             });
         }
         
-        // Location Wallpaper Mode radios (off | still | orbit)
+        // Location Wallpaper Mode radios (off | still | basic | orbit)
         var wallpaperModeRadios = mapTabContainer.querySelectorAll('input[name="adminLocationWallpaperMode"]');
         if (wallpaperModeRadios.length) {
             var initialWallpaperMode = mapTabData.location_wallpaper_mode || 'off';
