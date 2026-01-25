@@ -8343,14 +8343,20 @@ const LocationWallpaperComponent = (function() {
         // ============================================================
         // BASIC MODE
         // Captures 2 still images, removes map, uses class-toggled crossfade
-        // Image 1: pitched view with slow pan animation
-        // Image 2: aerial view with slow rotation animation
+        // Image 1: pitched view with slow pan animation (left-panning)
+        // Image 2: aerial view with slow rotation animation (starts at 330°)
+        // Fixed pixel buffers - simple and predictable
         // ============================================================
         var basicImagesContainer = null;
         var basicImages = [];
         var basicCurrentIndex = 0;
         var basicRotationInterval = null;
         var BASIC_SLIDE_DURATION = 10000; // 10 seconds per image
+        var PAN_BUFFER_WIDTH = 100; // Extra pixels for pan travel
+        var ROTATION_BUFFER = 400; // Extra pixels on all sides for rotation
+        var basicPanCaptureHeight = 0; // Track captured pan image height
+        var basicRotationCaptureHeight = 0; // Track captured rotation image height
+        var basicRecapturing = false; // Flag for background re-capture
 
         function createBasicImagesContainer() {
             if (basicImagesContainer) return;
@@ -8395,6 +8401,111 @@ const LocationWallpaperComponent = (function() {
         function advanceBasicSlide() {
             var nextIndex = (basicCurrentIndex + 1) % basicImages.length;
             showBasicSlide(nextIndex);
+
+            // Leapfrog: when showing one image, check if the other needs re-capture
+            // Only re-capture if container HEIGHT grew (never on shrink)
+            if (!basicRecapturing && contentEl) {
+                var containerHeight = contentEl.offsetHeight || 0;
+                if (nextIndex === 0 && containerHeight > basicRotationCaptureHeight - ROTATION_BUFFER) {
+                    // Showing pan - rotation image needs larger capture
+                    basicRecapturing = true;
+                    recaptureRotationImage();
+                } else if (nextIndex === 1 && containerHeight > basicPanCaptureHeight) {
+                    // Showing rotation - pan image needs larger capture
+                    basicRecapturing = true;
+                    recapturePanImage();
+                }
+            }
+        }
+
+        function captureBasicImage(camera, captureWidth, captureHeight, onComplete) {
+            // Create temporary off-screen map for background capture
+            var tempMount = document.createElement('div');
+            tempMount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + captureWidth + 'px;height:' + captureHeight + 'px';
+            document.body.appendChild(tempMount);
+
+            var tempMap = null;
+            try {
+                tempMap = new mapboxgl.Map({
+                    container: tempMount,
+                    style: getStyleUrlForWallpaper(),
+                    projection: 'globe',
+                    center: camera.center,
+                    zoom: camera.zoom,
+                    pitch: camera.pitch || 0,
+                    bearing: camera.bearing || 0,
+                    interactive: false,
+                    attributionControl: false,
+                    renderWorldCopies: false,
+                    antialias: false,
+                    pixelRatio: 1,
+                    preserveDrawingBuffer: true
+                });
+            } catch (e) {
+                document.body.removeChild(tempMount);
+                onComplete(null);
+                return;
+            }
+
+            tempMap.once('load', function() {
+                try {
+                    if (typeof tempMap.setConfigProperty === 'function') {
+                        tempMap.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
+                    }
+                    applyWallpaperNoTextNoRoads(tempMap);
+                } catch (e) {}
+
+                setTimeout(function() {
+                    var url = '';
+                    try {
+                        var canvas = tempMap.getCanvas();
+                        url = canvas.toDataURL('image/webp', 0.85);
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            url = canvas.toDataURL('image/jpeg', 0.85);
+                        }
+                    } catch (e) {}
+                    try { tempMap.remove(); } catch (e) {}
+                    try { document.body.removeChild(tempMount); } catch (e) {}
+                    onComplete(url && url.indexOf('data:image') === 0 ? url : null);
+                }, 400);
+            });
+        }
+
+        function recaptureRotationImage() {
+            if (!st.basicCapturedLat || !st.basicCapturedLng) { basicRecapturing = false; return; }
+
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var cameras = getBasicModeCameras(locationType, [st.basicCapturedLng, st.basicCapturedLat]);
+            var containerWidth = contentEl.offsetWidth || 400;
+            var containerHeight = contentEl.offsetHeight || 300;
+            var captureWidth = containerWidth + ROTATION_BUFFER;
+            var captureHeight = containerHeight + ROTATION_BUFFER;
+
+            captureBasicImage(cameras[1], captureWidth, captureHeight, function(url) {
+                if (url && basicImages[1]) {
+                    basicImages[1].src = url;
+                    basicRotationCaptureHeight = containerHeight;
+                }
+                basicRecapturing = false;
+            });
+        }
+
+        function recapturePanImage() {
+            if (!st.basicCapturedLat || !st.basicCapturedLng) { basicRecapturing = false; return; }
+
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var cameras = getBasicModeCameras(locationType, [st.basicCapturedLng, st.basicCapturedLat]);
+            var containerWidth = contentEl.offsetWidth || 400;
+            var containerHeight = contentEl.offsetHeight || 300;
+            var captureWidth = containerWidth + PAN_BUFFER_WIDTH;
+
+            captureBasicImage(cameras[0], captureWidth, containerHeight, function(url) {
+                if (url && basicImages[0]) {
+                    basicImages[0].src = url;
+                    basicPanCaptureHeight = containerHeight;
+                }
+                basicRecapturing = false;
+            });
         }
 
         function startBasicAnimation() {
@@ -8428,8 +8539,10 @@ const LocationWallpaperComponent = (function() {
             // Clear previous captures
             st.basicCapturedLat = null;
             st.basicCapturedLng = null;
+            basicPanCaptureHeight = 0;
+            basicRotationCaptureHeight = 0;
 
-            // Keep map hidden during capture (renders off-screen)
+            // Hide any existing map/image
             img.style.opacity = '0';
             mapMount.style.opacity = '0';
 
@@ -8437,84 +8550,37 @@ const LocationWallpaperComponent = (function() {
             removeBasicImagesContainer();
             createBasicImagesContainer();
 
-            var capturedUrls = [];
-            var currentCaptureIndex = 0;
+            var containerWidth = contentEl.offsetWidth || 400;
+            var containerHeight = contentEl.offsetHeight || 300;
+            var panCaptureWidth = containerWidth + PAN_BUFFER_WIDTH;
 
-            function captureNext() {
-                if (currentCaptureIndex >= cameras.length) {
-                    // All captures done
-                    finishBasicCapture();
-                    return;
+            // Capture pan image first (smaller, faster)
+            captureBasicImage(cameras[0], panCaptureWidth, containerHeight, function(url) {
+                if (url && basicImages[0]) {
+                    basicImages[0].src = url;
+                    basicPanCaptureHeight = containerHeight;
                 }
 
-                var camera = cameras[currentCaptureIndex];
-
-                if (!st.map) {
-                    createMap(camera);
-                } else {
-                    try { st.map.jumpTo(camera); } catch (e) {}
-                }
-
-                if (!st.map) {
-                    // Map creation failed
-                    return;
-                }
-
-                var onCaptureReady = function() {
-                    if (!st.map) return;
-
-                    // Wait for tiles to settle
-                    setTimeout(function() {
-                        var url = captureMapToDataUrl();
-                        if (url) {
-                            capturedUrls.push(url);
-                            if (basicImages[currentCaptureIndex]) {
-                                basicImages[currentCaptureIndex].src = url;
-                            }
-                        }
-
-                        currentCaptureIndex++;
-                        captureNext();
-                    }, 400);
-                };
-
-                // Wait for map to be ready
-                if (currentCaptureIndex === 0) {
-                    // First capture - wait for load event
-                    try { st.map.once('load', onCaptureReady); } catch (e) {}
-                    // Fallback timeout
-                    setTimeout(function() {
-                        if (currentCaptureIndex === 0) onCaptureReady();
-                    }, 3000);
-                } else {
-                    // Subsequent captures - wait for idle
-                    try { st.map.once('idle', onCaptureReady); } catch (e) {}
-                    // Fallback timeout
-                    setTimeout(function() {
-                        if (capturedUrls.length < currentCaptureIndex + 1) onCaptureReady();
-                    }, 2000);
-                }
-            }
-
-            function finishBasicCapture() {
-                // Hide map mount
-                mapMount.style.opacity = '0';
-
-                // Remove map - no longer needed
-                setTimeout(function() {
-                    removeMap();
-                }, 600);
-
-                // Store captured location
+                // Store location for rotation capture
                 st.basicCapturedLat = lat;
                 st.basicCapturedLng = lng;
 
-                // Start CSS animation
-                startBasicAnimation();
-            }
+                // Remove any lingering map
+                removeMap();
 
-            // Start capture sequence
-            captureNext();
+                // Start animation immediately with pan image
+                startBasicAnimation();
+
+                // Capture rotation image in background while pan plays
+                var rotCaptureWidth = containerWidth + ROTATION_BUFFER;
+                var rotCaptureHeight = containerHeight + ROTATION_BUFFER;
+                captureBasicImage(cameras[1], rotCaptureWidth, rotCaptureHeight, function(rotUrl) {
+                    if (rotUrl && basicImages[1]) {
+                        basicImages[1].src = rotUrl;
+                        basicRotationCaptureHeight = containerHeight;
+                    }
+                });
+            });
         }
 
         function deactivateBasicMode() {
