@@ -8388,6 +8388,7 @@ const LocationWallpaperComponent = (function() {
                     if (st.map) try { st.map.resize(); } catch (e) {}
                     if (st.mode === 'still' && st.isActive) positionStillImage();
                     if (st.mode === 'basic' && st.isActive) positionBasicImages();
+                    if (st.mode === 'orbit' && st.isActive) positionOrbitMap();
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8483,13 +8484,40 @@ const LocationWallpaperComponent = (function() {
         // ============================================================
         // ORBIT MODE
         // ============================================================
+        var orbitOriginalHeight = 0;
+        var ORBIT_WIDTH = 700;
+        var ORBIT_HEIGHT = 2500;
+
+        function positionOrbitMap() {
+            if (!mapMount || !st.map) return;
+            if (!orbitOriginalHeight) orbitOriginalHeight = contentEl.offsetHeight || 400;
+            var containerHeight = contentEl.offsetHeight || 400;
+            var mapCenter = orbitOriginalHeight / 2;
+            var threshold = mapCenter + (ORBIT_HEIGHT / 2);
+
+            if (containerHeight > ORBIT_HEIGHT) {
+                mapMount.style.top = '0';
+                mapMount.style.bottom = '0';
+                mapMount.style.height = '100%';
+            } else if (containerHeight >= threshold) {
+                mapMount.style.top = 'auto';
+                mapMount.style.bottom = '0';
+                mapMount.style.height = ORBIT_HEIGHT + 'px';
+            } else {
+                mapMount.style.top = (mapCenter - (ORBIT_HEIGHT / 2)) + 'px';
+                mapMount.style.bottom = 'auto';
+                mapMount.style.height = ORBIT_HEIGHT + 'px';
+            }
+        }
+
         function startOrbitMode(lat, lng) {
             cancelLazyCleanup();
             st.isActive = true;
+            ensureResizeObserver();
+            orbitOriginalHeight = contentEl.offsetHeight || 400;
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
-            var orbitBearing = 0; // Use 0 as cache key for orbit preview images
 
             // Resume bearing if same location
             if (st.savedCamera && st.lastLat === lat && st.lastLng === lng) {
@@ -8498,30 +8526,27 @@ const LocationWallpaperComponent = (function() {
                 }
             }
 
-            // Show pre-captured image while map loads (from memory or cache)
-            var showPreview = function() {
-                if (!st.map) {
-                    createMap(desired);
-                } else {
-                    try { st.map.jumpTo(desired); } catch (e) {}
-                }
+            if (!st.map) {
+                createMap(desired);
+            } else {
+                try { st.map.jumpTo(desired); } catch (e) {}
+            }
 
-                if (!st.map) return;
+            if (!st.map) return;
+            
+            positionOrbitMap();
 
-                // Reveal and start orbiting once map tiles are loaded
-                st.didReveal = false;
-                var onMapLoad = function() {
-                    if (!st.map || st.didReveal) return;
-                    revealMapCrossfade();
-                    stopOrbit();
-                    startOrbit(desired.zoom);
-                };
-
-                try { st.map.once('load', onMapLoad); } catch (e) {}
-                st.revealTimeout = setTimeout(onMapLoad, 3000);
+            // Reveal and start orbiting once map tiles are loaded
+            st.didReveal = false;
+            var onMapLoad = function() {
+                if (!st.map || st.didReveal) return;
+                revealMapCrossfade();
+                stopOrbit();
+                startOrbit(desired.zoom);
             };
 
-            showPreview();
+            try { st.map.once('load', onMapLoad); } catch (e) {}
+            st.revealTimeout = setTimeout(onMapLoad, 3000);
         }
 
         function deactivateOrbitMode() {

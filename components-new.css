@@ -3017,9 +3017,10 @@
 .component-locationwallpaper-mapmount {
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    bottom: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 2500px;
     opacity: 0;
     transition: opacity 0.8s ease;
     will-change: opacity;
