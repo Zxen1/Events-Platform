@@ -611,6 +611,14 @@
   padding: 0;
 }
 
+/* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
+.open-post .member-postform-location-content--locationwallpaper > .post-card,
+.open-post .member-postform-location-content--locationwallpaper > .recent-card {
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
+}
+
 /* Only show wallpaper when open post is expanded */
 .open-post:not(.open-post--desc-expanded) .component-locationwallpaper {
   display: none;
