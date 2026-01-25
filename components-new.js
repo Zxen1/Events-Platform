@@ -7754,7 +7754,7 @@ var WallpaperCache = (function() {
     'use strict';
     var DB_NAME = 'wallpaper_cache';
     var STORE_NAME = 'images';
-    var DB_VERSION = 1;
+    var DB_VERSION = 2;
     var MAX_ENTRIES = 20; // 20 locations × 4 images = 80 images max (~24MB)
     var db = null;
     var dbReady = false;
@@ -8573,6 +8573,8 @@ const LocationWallpaperComponent = (function() {
             st.isActive = true;
             ensureResizeObserver();
             stillOriginalHeight = contentEl.offsetHeight || 400;
+            img.style.top = '';
+            img.style.bottom = '';
             var camera = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearing = camera.bearing || 0;
 
