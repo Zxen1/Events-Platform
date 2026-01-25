@@ -8380,8 +8380,72 @@ const LocationWallpaperComponent = (function() {
             mode: 'off',
             isActive: false,
             basicCapturedLat: null,  // Lat/lng of last basic mode capture
-            basicCapturedLng: null
+            basicCapturedLng: null,
+            lockedYPosition: null,   // Locked vertical position (set once on first display)
+            initialContainerHeight: null  // Container height when position was locked
         };
+        
+        // ============================================================
+        // VERTICAL POSITION LOCKING
+        // - Lock center position when image first displays
+        // - Only adjust downward if black bars would appear
+        // - Never re-center when container shrinks
+        // ============================================================
+        var IMAGE_HEIGHT = 2500; // Fixed capture height
+        
+        function calculateCenteredYPosition(containerHeight) {
+            // Center the 2500px image on the container
+            // Returns the Y offset needed to center
+            if (containerHeight >= IMAGE_HEIGHT) {
+                // Container taller than image - can't center, anchor to top
+                return 0;
+            }
+            // Center: offset = (imageHeight - containerHeight) / 2
+            return Math.round((IMAGE_HEIGHT - containerHeight) / 2);
+        }
+        
+        function applyYPositionToImage(imgEl, yOffset) {
+            // Apply via object-position (horizontal stays as CSS default)
+            // object-position: left Ypx (for basic) or center Ypx (for still)
+            if (!imgEl) return;
+            var currentPos = imgEl.style.objectPosition || '';
+            var xPart = 'center';
+            if (currentPos.indexOf('left') === 0) {
+                xPart = 'left';
+            }
+            imgEl.style.objectPosition = xPart + ' ' + yOffset + 'px';
+        }
+        
+        function lockImagePosition(imgEl, containerHeight) {
+            // Called when image is first displayed
+            // Calculate centered position and lock it
+            var yOffset = calculateCenteredYPosition(containerHeight);
+            st.lockedYPosition = yOffset;
+            st.initialContainerHeight = containerHeight;
+            applyYPositionToImage(imgEl, yOffset);
+        }
+        
+        function checkAndAdjustForBlackBars(imgEl, containerHeight) {
+            // Called when container height changes
+            // Only adjust if black bars would appear at bottom
+            if (st.lockedYPosition === null) return; // Not yet locked
+            
+            // Calculate how much of the image is visible from the locked position
+            // Image top is at -lockedYPosition (negative because we're showing from offset)
+            // Image bottom is at: IMAGE_HEIGHT - lockedYPosition
+            var imageBottomFromContainerTop = IMAGE_HEIGHT - st.lockedYPosition;
+            
+            // If container is now taller than where image bottom would be, we need to adjust
+            if (containerHeight > imageBottomFromContainerTop) {
+                // Black bars would appear - anchor image bottom to container bottom
+                // New offset: IMAGE_HEIGHT - containerHeight
+                var newYOffset = IMAGE_HEIGHT - containerHeight;
+                if (newYOffset < 0) newYOffset = 0; // Can't go negative
+                st.lockedYPosition = newYOffset;
+                applyYPositionToImage(imgEl, newYOffset);
+            }
+            // If container shrinks, do NOT re-center - keep locked position
+        }
 
         function clearAllTimers() {
             if (st.pendingRevealTimer) {
@@ -8427,6 +8491,13 @@ const LocationWallpaperComponent = (function() {
                 mapMount.style.opacity = '0';
                 return;
             }
+            
+            // Lock vertical position on first display
+            if (st.lockedYPosition === null) {
+                var containerHeight = contentEl.offsetHeight || 400;
+                lockImagePosition(img, containerHeight);
+            }
+            
             // Fade in the image on top (transition already set on element)
             img.style.opacity = '1';
             // Keep map visible during transition, then fade it out
@@ -8526,11 +8597,38 @@ const LocationWallpaperComponent = (function() {
         function ensureResizeObserver() {
             if (st.resizeObs || !window.ResizeObserver) return;
             st.resizeObs = new ResizeObserver(function() {
-                if (!st.map) return;
                 if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
                 st.resizeRaf = requestAnimationFrame(function() {
                     st.resizeRaf = 0;
+                    // Resize map if present
                     try { if (st.map) st.map.resize(); } catch (e) {}
+                    
+                    // Check for black bars on wallpaper images (only adjust downward if needed)
+                    if (st.lockedYPosition !== null && st.mode !== 'orbit') {
+                        var containerHeight = contentEl.offsetHeight || 400;
+                        
+                        // For still mode image
+                        if (st.mode === 'still' && img) {
+                            checkAndAdjustForBlackBars(img, containerHeight);
+                        }
+                        
+                        // For basic mode images
+                        if (st.mode === 'basic' && basicImgs && basicImgs.length === 4) {
+                            // Check if adjustment needed
+                            var imageBottomFromTop = IMAGE_HEIGHT - st.lockedYPosition;
+                            if (containerHeight > imageBottomFromTop) {
+                                // Black bars would appear - adjust
+                                var newYOffset = IMAGE_HEIGHT - containerHeight;
+                                if (newYOffset < 0) newYOffset = 0;
+                                st.lockedYPosition = newYOffset;
+                                for (var i = 0; i < 4; i++) {
+                                    if (basicImgs[i]) {
+                                        basicImgs[i].style.objectPosition = 'left ' + newYOffset + 'px';
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
             });
             try { st.resizeObs.observe(contentEl); } catch (e) {}
@@ -8769,9 +8867,18 @@ const LocationWallpaperComponent = (function() {
                 if (!basicContainer) return; // Abort if mode switched
                 if (!cached || cached.length < 4) return;
                 
+                // Lock vertical position on first display
+                if (st.lockedYPosition === null) {
+                    var containerHeight = contentEl.offsetHeight || 400;
+                    st.lockedYPosition = calculateCenteredYPosition(containerHeight);
+                    st.initialContainerHeight = containerHeight;
+                }
+                
+                // Apply locked position to all 4 images
                 for (var i = 0; i < 4; i++) {
                     if (basicImgs[i] && cached[i]) {
                         basicImgs[i].src = cached[i];
+                        basicImgs[i].style.objectPosition = 'left ' + st.lockedYPosition + 'px';
                     }
                 }
                 if (basicImgs[0]) {
@@ -8795,6 +8902,10 @@ const LocationWallpaperComponent = (function() {
             if (!basicImgs.length) return;
             var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
+            
+            // No recalculation - keep same locked position for all images
+            // Position only changes if black bars would appear (handled by resize observer)
+            
             // Add active to new image first (starts fading in)
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
             // Remove active from old image after crossfade completes (1.5s)
@@ -8873,11 +8984,17 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
+                // Reset locked position for new location
+                st.lockedYPosition = null;
+                st.initialContainerHeight = null;
             }
 
             // Clean up other modes before starting new one (never more than 2 maps)
             if (mode !== 'basic') removeBasicMode();
             if (mode !== 'orbit' && mode !== 'still') removeMap();
+            
+            // Ensure resize observer is set up for black bar detection
+            ensureResizeObserver();
 
             if (mode === 'orbit') {
                 startOrbitMode(lat, lng);
