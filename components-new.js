@@ -8360,15 +8360,13 @@ const LocationWallpaperComponent = (function() {
                     interactive: false, attributionControl: false, preserveDrawingBuffer: true
                 });
             } catch (e) { document.body.removeChild(mount); cb(null); return; }
-            m.once('load', function() {
+            m.once('idle', function() {
                 try { m.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper()); applyWallpaperNoTextNoRoads(m); } catch (e) {}
-                setTimeout(function() {
-                    var url = '';
-                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) {}
-                    try { m.remove(); } catch (e) {}
-                    try { document.body.removeChild(mount); } catch (e) {}
-                    cb(url && url.indexOf('data:image') === 0 ? url : null);
-                }, 150);
+                var url = '';
+                try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) {}
+                try { m.remove(); } catch (e) {}
+                try { document.body.removeChild(mount); } catch (e) {}
+                cb(url && url.indexOf('data:image') === 0 ? url : null);
             });
         }
 
@@ -8383,7 +8381,7 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
-            // Setup
+            // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
             img.style.opacity = '0'; mapMount.style.opacity = '0';
             if (basicContainer) basicContainer.remove();
@@ -8401,22 +8399,21 @@ const LocationWallpaperComponent = (function() {
 
             var cw = (contentEl.offsetWidth || 400) + 100;
             var ch = (contentEl.offsetHeight || 300) + 300;
-            var loaded = 0;
 
-            // Capture all 4 in parallel
-            for (var j = 0; j < 4; j++) {
-                (function(idx) {
-                    captureMap(cameras[idx], cw, ch, function(url) {
-                        if (url && basicImgs[idx]) { basicImgs[idx].src = url; basicHeights[idx] = ch - 300; }
-                        loaded++;
-                        if (loaded === 4) {
-                            removeMap();
-                            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                            basicTimer = setInterval(advanceBasic, 20000);
-                        }
-                    });
-                })(j);
-            }
+            // Capture sequentially: first image shows immediately, rest load in background
+            var captureNext = function(idx) {
+                if (idx >= 4) return;
+                captureMap(cameras[idx], cw, ch, function(url) {
+                    if (url && basicImgs[idx]) { basicImgs[idx].src = url; basicHeights[idx] = ch - 300; }
+                    if (idx === 0) {
+                        removeMap();
+                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                        basicTimer = setInterval(advanceBasic, 20000);
+                    }
+                    captureNext(idx + 1);
+                });
+            };
+            captureNext(0);
         }
 
         function advanceBasic() {
