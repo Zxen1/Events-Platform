@@ -8360,13 +8360,18 @@ const LocationWallpaperComponent = (function() {
                     interactive: false, attributionControl: false, preserveDrawingBuffer: true
                 });
             } catch (e) { document.body.removeChild(mount); cb(null); return; }
-            m.once('idle', function() {
+            // Match Still mode pattern: style.load for lightPreset, load for tiles, setTimeout for capture
+            m.once('style.load', function() {
                 try { m.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper()); applyWallpaperNoTextNoRoads(m); } catch (e) {}
-                var url = '';
-                try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) {}
-                try { m.remove(); } catch (e) {}
-                try { document.body.removeChild(mount); } catch (e) {}
-                cb(url && url.indexOf('data:image') === 0 ? url : null);
+            });
+            m.once('load', function() {
+                setTimeout(function() {
+                    var url = '';
+                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) {}
+                    try { m.remove(); } catch (e) {}
+                    try { document.body.removeChild(mount); } catch (e) {}
+                    cb(url && url.indexOf('data:image') === 0 ? url : null);
+                }, 500);
             });
         }
 
