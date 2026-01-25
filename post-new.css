@@ -214,17 +214,17 @@
   gap: 12px;
   align-items: flex-start;
   background-color: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 8px;
   padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .post-card:hover,
 .recent-card:hover {
-  background: #2e3a72;
+  border-color: var(--blue-500);
 }
 
 /* Card in post-panel */
@@ -237,13 +237,17 @@
 .post-panel-content .open-post {
   background-color: transparent;
   margin: 0;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.post-panel-content .post-card:hover {
+  border-color: var(--blue-500);
+}
+
 .post-panel-content .post-card.post-card--map-highlight {
-  background-color: #2e3a72;
+  border-color: var(--blue-500);
 }
 
 .post-panel-content .post-card:last-child,
@@ -283,13 +287,14 @@
   position: relative;
   z-index: 0;
   background: none;
+  border-color: var(--blue-500);
 }
 
 .recent-card[aria-selected="true"]::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: #2e3a72;
+  background-color: transparent;
   border-radius: 8px;
   z-index: -1;
 }
@@ -633,14 +638,15 @@
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
-  background: #1f2750;
-  border-bottom: none;
+  background: var(--panel-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
 }
 
 .open-post .post-card:hover,
 .open-post .recent-card:hover {
-  background: #1f2750;
+  background: var(--panel-bg);
+  border-color: transparent;
 }
 
 .open-post .post-card-container-actions,

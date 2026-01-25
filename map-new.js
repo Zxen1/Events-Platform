@@ -595,6 +595,14 @@ const MapModule = (function() {
       .map-card-container:hover { z-index: 5; }
       .map-card-container.is-active { z-index: 6; }
       
+      /* Blue border for hover/active states */
+      .map-card-container:hover .map-card-pill,
+      .map-card-container.is-active .map-card-pill {
+        outline: 2px solid var(--blue-500);
+        outline-offset: -2px;
+        border-radius: 20px;
+      }
+      
       /* Icon - center at lat/lng (0,0) */
       .map-card-icon {
         position: absolute;
