@@ -8514,9 +8514,14 @@ const LocationWallpaperComponent = (function() {
 
         function advanceBasic() {
             if (!basicImgs.length) return;
-            for (var i = 0; i < basicImgs.length; i++) basicImgs[i].classList.remove('component-locationwallpaper-basic-image--active');
+            var prev = basicIndex;
             basicIndex = (basicIndex + 1) % 4;
+            // Add active to new image first (starts fading in)
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
+            // Remove active from old image after crossfade completes (1.5s)
+            setTimeout(function() {
+                if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+            }, 1500);
 
             // Recapture if container grew beyond 300px buffer
             if (!basicRecapturing && contentEl) {
@@ -8538,14 +8543,29 @@ const LocationWallpaperComponent = (function() {
         }
 
         function resumeBasicMode() {
-            // Start fresh from image 0 with crossfade
-            if (!basicImgs.length) return;
-            for (var i = 0; i < basicImgs.length; i++) {
-                basicImgs[i].classList.remove('component-locationwallpaper-basic-image--active');
-            }
+            // Resume with fade from current static to image 0 animating
+            if (!basicImgs.length || !basicContainer) return;
+            
+            // Remove paused state (allows animation to run)
+            basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
+            
+            var prev = basicIndex;
             basicIndex = 0;
+            
+            // Add active to image 0 (fades in over 1.5s, animation starts)
             basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-            if (!basicTimer) basicTimer = setInterval(advanceBasic, 20000);
+            
+            // Remove active from previous after crossfade completes + buffer
+            if (prev !== 0) {
+                setTimeout(function() {
+                    if (basicImgs[prev]) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                }, 2000);
+            }
+            
+            // Start timer after crossfade completes
+            setTimeout(function() {
+                if (!basicTimer && basicContainer) basicTimer = setInterval(advanceBasic, 20000);
+            }, 1500);
         }
 
         function removeBasicMode() {
@@ -8557,6 +8577,12 @@ const LocationWallpaperComponent = (function() {
         function deactivateBasicMode() {
             st.isActive = false;
             stopBasicMode();
+            
+            // Fade to static: add paused class after brief delay to let current frame settle
+            // The paused class stops animation and keeps image at end position
+            setTimeout(function() {
+                if (basicContainer) basicContainer.classList.add('component-locationwallpaper-basic-container--paused');
+            }, 100);
         }
 
         // ============================================================
