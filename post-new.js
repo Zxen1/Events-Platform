@@ -2479,11 +2479,11 @@ const PostModule = (function() {
         '<div class="post-expanded-header-text-title">' + escapeHtml(title) + '</div>',
       '</div>',
       '<div class="post-expanded-header-actions">',
-        '<button class="post-expanded-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
-          '<div class="post-expanded-header-icon-fav"></div>',
-        '</button>',
         '<button class="post-expanded-button-share" aria-label="Share post">',
           '<div class="post-expanded-icon-share"></div>',
+        '</button>',
+        '<button class="post-expanded-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+          '<div class="post-expanded-header-icon-fav"></div>',
         '</button>',
       '</div>'
     ].join('');

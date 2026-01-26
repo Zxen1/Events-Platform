@@ -703,7 +703,7 @@
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--blue-500);
@@ -727,12 +727,12 @@
   align-items: center;
 }
 
-/* Future: Actions container with new class naming */
+/* Header actions - horizontal layout to fit 70px header */
 .post-expanded-header-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+  align-items: flex-start;
   margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
