@@ -159,9 +159,23 @@
                     btn.disabled = true;
                     
                     log("Loading full location list...");
-                    const response = await fetch('full_locations.json');
-                    locations = await response.json();
-                    log(`Loaded ${locations.length} locations.`);
+                    try {
+                        const response = await fetch('full_locations.json');
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        locations = await response.json();
+                        log(`Loaded ${locations.length} locations.`);
+                    } catch (fetchErr) {
+                        log("Failed to load full_locations.json from server. Trying local file system...", true);
+                        // Fallback: If fetch fails (CORS/File protocol), ask user to select the JSON file
+                        log("Please select the 'full_locations.json' file in your workspace folder.");
+                        const [fileHandle] = await window.showOpenFilePicker({
+                            types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }],
+                            multiple: false
+                        });
+                        const file = await fileHandle.getFile();
+                        locations = JSON.parse(await file.text());
+                        log(`Loaded ${locations.length} locations from file.`);
+                    }
                     
                     await initMap();
                     btn.innerText = "Select Folder & Begin Capture";
