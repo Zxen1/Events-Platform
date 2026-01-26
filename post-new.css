@@ -703,16 +703,14 @@
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
-  background: var(--panel-bg);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--blue-500);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
   padding: 10px 10px 0;
-}
-
-.post-expanded.post-expanded--desc-expanded .post-expanded-header {
-  background: transparent;
 }
 
 .post-expanded-header:hover {
@@ -1200,30 +1198,72 @@
    INFO GRID
    ============================================================================ */
 
+/* Info container - holds subcategory, location, date, price rows */
 .post-expanded-info {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  width: calc(100% - 20px);
-  margin: 0 auto;
-}
-
-.post-expanded-info-item {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 10px;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
+  width: 100%;
+  margin-bottom: 10px; /* 10-12-6 Rule */
 }
 
-.post-expanded-info-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.post-expanded-info-value {
+/* Info row - each line of info */
+.post-expanded-info-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
-  font-weight: 600;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+.post-expanded-info-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Subcategory icon wrapper */
+.post-expanded-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* Subcategory icon image */
+.post-expanded-info-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Price badge image (currency flag) */
+.post-expanded-info-image-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Badge (emoji icons) */
+.post-expanded-info-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Badge image (flag icons for currency) */
+.post-expanded-info-badge img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Info text */
+.post-expanded-info-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

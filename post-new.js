@@ -2459,26 +2459,24 @@ const PostModule = (function() {
       ? '<img class="post-expanded-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="post-expanded-header-image-minithumb post-expanded-header-image-minithumb--empty" aria-hidden="true"></div>';
     
-    var iconHtml = iconUrl
-      ? '<span class="post-expanded-header-icon-sub"><img class="post-expanded-header-image-sub" src="' + iconUrl + '" alt="" /></span>'
-      : '';
-    
     // Location display
     var locationDisplay = venueName || loc0.city || '';
     
-    // Price badge for header
-    var headerPriceBadgeHtml = priceParts.flagUrl 
-      ? '<img class="post-expanded-header-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+    // Icon HTML for info section (subcategory icon)
+    var infoIconHtml = iconUrl
+      ? '<span class="post-expanded-info-icon"><img class="post-expanded-info-image-sub" src="' + iconUrl + '" alt="" /></span>'
+      : '';
+    
+    // Price badge for info section
+    var infoPriceBadgeHtml = priceParts.flagUrl 
+      ? '<img class="post-expanded-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
       : '💰';
     
+    // Expanded header: minimal - just thumbnail and title
     expandedHeader.innerHTML = [
       thumbHtml,
       '<div class="post-expanded-header-meta">',
         '<div class="post-expanded-header-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="post-expanded-header-row-cat">' + iconHtml + ' ' + escapeHtml(displayName) + '</div>',
-        locationDisplay ? '<div class="post-expanded-header-row-loc"><span class="post-expanded-header-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-        datesText ? '<div class="post-expanded-header-row-date"><span class="post-expanded-header-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
-        priceParts.text ? '<div class="post-expanded-header-row-price"><span class="post-expanded-header-badge" title="Price">' + headerPriceBadgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>' : '',
       '</div>',
       '<div class="post-expanded-header-actions">',
         '<button class="post-expanded-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
@@ -2526,8 +2524,26 @@ const PostModule = (function() {
         '<div class="post-expanded-venueselect"></div>',
         '<div class="post-expanded-sessionselect"></div>',
         '<div class="post-expanded-info">',
-          '<div id="venue-info-' + post.id + '" class="post-expanded-text-venueinfo"></div>',
-          '<div id="session-info-' + post.id + '" class="post-expanded-text-sessioninfo"><div>' + defaultInfo + '</div></div>',
+          // Subcategory row (static)
+          '<div class="post-expanded-info-row post-expanded-info-row-cat">',
+            infoIconHtml,
+            '<span class="post-expanded-info-text">' + escapeHtml(displayName) + '</span>',
+          '</div>',
+          // Location row (updates when venue selected)
+          '<div class="post-expanded-info-row post-expanded-info-row-loc">',
+            '<span class="post-expanded-info-badge" title="Venue">📍</span>',
+            '<span id="venue-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(locationDisplay) + '</span>',
+          '</div>',
+          // Date row (updates when session selected)
+          datesText ? '<div class="post-expanded-info-row post-expanded-info-row-date">' +
+            '<span class="post-expanded-info-badge" title="Dates">📅</span>' +
+            '<span id="session-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(datesText) + '</span>' +
+          '</div>' : '',
+          // Price row (updates when item selected)
+          priceParts.text ? '<div class="post-expanded-info-row post-expanded-info-row-price">' +
+            '<span class="post-expanded-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
+            '<span id="price-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(priceParts.text) + '</span>' +
+          '</div>' : '',
         '</div>',
         '<div class="post-expanded-container-desc">',
           '<div class="post-expanded-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
