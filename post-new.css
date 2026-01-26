@@ -649,7 +649,36 @@
   max-width: 100%;
 }
 
-/* Sticky header inside expanded post - current structure uses .post-card/.recent-card */
+/* ============================================================================
+   HEADER VISIBILITY - Collapsed vs Expanded states
+   - Collapsed: shows .post-card (peek-a-boo accordion)
+   - Expanded: shows .post-expanded-header (full design)
+   ============================================================================ */
+
+/* Default: hide expanded header, show card (collapsed state) */
+.post-expanded .post-expanded-header {
+  display: none;
+}
+
+.post-expanded .post-card,
+.post-expanded .recent-card {
+  display: grid;
+}
+
+/* Expanded state: show expanded header, hide card */
+.post-expanded.post-expanded--desc-expanded .post-expanded-header {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.post-expanded.post-expanded--desc-expanded .post-card,
+.post-expanded.post-expanded--desc-expanded .recent-card {
+  display: none;
+}
+
+/* Sticky header - card (for collapsed peek-a-boo) */
 .post-expanded .post-card,
 .post-expanded .recent-card {
   position: sticky;
@@ -663,19 +692,13 @@
   box-shadow: none;
 }
 
-/* Let wallpaper show behind the sticky header when expanded */
-.post-expanded.post-expanded--desc-expanded .post-card,
-.post-expanded.post-expanded--desc-expanded .recent-card {
-  background: transparent;
-}
-
 .post-expanded .post-card:hover,
 .post-expanded .recent-card:hover {
   background: var(--panel-bg);
   box-shadow: none;
 }
 
-/* Future: Sticky header with new class naming */
+/* Sticky header - expanded header (for full view) */
 .post-expanded-header {
   position: sticky;
   top: 0;
@@ -685,6 +708,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
+  padding: 10px 10px 0;
 }
 
 .post-expanded.post-expanded--desc-expanded .post-expanded-header {
@@ -714,16 +738,25 @@
   margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
-/* Thumbnail image */
+/* Thumbnail image - 50x50 minithumb size */
 .post-expanded-header-image-minithumb {
-  width: 100px;
-  height: 100px;
+  width: 50px;
+  height: 50px;
   border-radius: 8px;
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
-  flex: 0 0 100px;
+  flex: 0 0 50px;
   margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+}
+
+.post-expanded-header-image-minithumb--empty {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 10px;
 }
 
 /* Meta container */

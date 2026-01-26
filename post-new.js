@@ -2447,17 +2447,48 @@ const PostModule = (function() {
       cardEl.classList.remove('post-card--map-highlight');
     }
 
-    // Add share button if not present
-    if (cardEl && !cardEl.querySelector('.post-expanded-button-share')) {
-      var cardActions = cardEl.querySelector('.post-card-container-actions, .recent-card-container-actions');
-      if (cardActions) {
-        var shareBtn = document.createElement('button');
-        shareBtn.className = 'post-expanded-button-share';
-        shareBtn.setAttribute('aria-label', 'Share post');
-        shareBtn.innerHTML = '<div class="post-expanded-icon-share"></div>';
-        cardActions.appendChild(shareBtn);
-      }
-    }
+    // Build expanded header (separate from post-card, used when expanded)
+    var expandedHeader = document.createElement('div');
+    expandedHeader.className = 'post-expanded-header';
+    
+    // Thumbnail for expanded header uses minithumb size
+    var rawThumbUrl = getPostThumbnailUrl(post);
+    var miniThumbUrl = rawThumbUrl ? addImageClass(rawThumbUrl, 'minithumb') : '';
+    
+    var thumbHtml = miniThumbUrl
+      ? '<img class="post-expanded-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="post-expanded-header-image-minithumb post-expanded-header-image-minithumb--empty" aria-hidden="true"></div>';
+    
+    var iconHtml = iconUrl
+      ? '<span class="post-expanded-header-icon-sub"><img class="post-expanded-header-image-sub" src="' + iconUrl + '" alt="" /></span>'
+      : '';
+    
+    // Location display
+    var locationDisplay = venueName || loc0.city || '';
+    
+    // Price badge for header
+    var headerPriceBadgeHtml = priceParts.flagUrl 
+      ? '<img class="post-expanded-header-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+      : '💰';
+    
+    expandedHeader.innerHTML = [
+      thumbHtml,
+      '<div class="post-expanded-header-meta">',
+        '<div class="post-expanded-header-text-title">' + escapeHtml(title) + '</div>',
+        '<div class="post-expanded-header-row-cat">' + iconHtml + ' ' + escapeHtml(displayName) + '</div>',
+        locationDisplay ? '<div class="post-expanded-header-row-loc"><span class="post-expanded-header-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
+        datesText ? '<div class="post-expanded-header-row-date"><span class="post-expanded-header-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
+        priceParts.text ? '<div class="post-expanded-header-row-price"><span class="post-expanded-header-badge" title="Price">' + headerPriceBadgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>' : '',
+      '</div>',
+      '<div class="post-expanded-header-actions">',
+        '<button class="post-expanded-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+          '<div class="post-expanded-header-icon-fav"></div>',
+        '</button>',
+        '<button class="post-expanded-button-share" aria-label="Share post">',
+          '<div class="post-expanded-icon-share"></div>',
+        '</button>',
+      '</div>'
+    ].join('');
 
     // Build venue dropdown options
     var venueOptionsHtml = locationList.map(function(loc, i) {
@@ -2553,7 +2584,9 @@ const PostModule = (function() {
       wrap.appendChild(lngEl);
     }
 
+    // Append both headers: card (for collapsed peek-a-boo) and expanded header (for full view)
     contentWrap.appendChild(cardEl);
+    contentWrap.appendChild(expandedHeader);
     contentWrap.appendChild(postBody);
 
     // Event handlers
@@ -2624,12 +2657,39 @@ const PostModule = (function() {
 
     // Card click does not close post (removed per user request)
 
-    // Favorite button:
-    // IMPORTANT: do not bind a second handler here.
+    // Favorite button on card:
+    // IMPORTANT: do not bind a second handler to the card's fav button.
     // The reused `cardEl` already has its own favourite handler from `renderPostCard` / `renderRecentCard`.
     // Double-binding causes a double-toggle (appears "not working") when the post is open.
 
-    // Share button
+    // Favorite button on expanded header (separate element, needs its own handler)
+    var expandedHeaderFavBtn = wrap.querySelector('.post-expanded-header-button-fav');
+    if (expandedHeaderFavBtn) {
+      expandedHeaderFavBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var postId = post.id;
+        var wasPressed = expandedHeaderFavBtn.getAttribute('aria-pressed') === 'true';
+        var nowPressed = !wasPressed;
+        
+        // Update this button
+        expandedHeaderFavBtn.setAttribute('aria-pressed', String(nowPressed));
+        expandedHeaderFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+        
+        // Sync with card's fav button if present
+        if (cardEl) {
+          var cardFavBtn = cardEl.querySelector('.post-card-button-fav, .recent-card-button-fav');
+          if (cardFavBtn) {
+            cardFavBtn.setAttribute('aria-pressed', String(nowPressed));
+            cardFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+          }
+        }
+        
+        // Toggle favorite state
+        toggleFavorite(postId, nowPressed);
+      });
+    }
+
+    // Share button (in expanded header)
     var shareBtn = wrap.querySelector('.post-expanded-button-share');
     if (shareBtn) {
       shareBtn.addEventListener('click', function(e) {
