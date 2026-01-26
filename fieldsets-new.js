@@ -323,7 +323,7 @@ const FieldsetBuilder = (function(){
                                 try { if (lngInput) lngInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e7) {}
                                 
                                 if (statusElement) {
-                                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(7) + ', ' + lng.toFixed(7);
+                                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                                     statusElement.className = 'fieldset-location-status success';
                                 }
                             } else {
@@ -4749,7 +4749,7 @@ const FieldsetBuilder = (function(){
                                         try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                         
                                         // Update status
-                                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(7) + ', ' + lng.toFixed(7);
+                                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                                         smartStatus.className = 'fieldset-location-status success';
                                     } catch (err) {
                                         console.error('Place details error:', err);

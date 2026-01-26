@@ -429,14 +429,13 @@ function load_bunny_settings(mysqli $mysqli): array
 {
   $out = [
     'folder_post_images' => '',
-    'folder_map_images' => '',
     'storage_api_key' => '',
     'storage_zone_name' => '',
     'image_min_width' => 1000,
     'image_min_height' => 1000,
     'image_max_size' => 5242880, // 5MB default
   ];
-  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','folder_map_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
+  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
   if ($res) {
     while ($row = $res->fetch_assoc()) {
       $k = $row['setting_key'] ?? '';
@@ -1097,84 +1096,6 @@ if (!empty($mediaIds)) {
     $stmtUpd->bind_param('si', $mediaString, $insertId);
     $stmtUpd->execute();
     $stmtUpd->close();
-  }
-}
-
-// Upload wallpaper images (location map images for still/basic modes)
-if (!empty($_POST['wallpaper_images'])) {
-  $wallpaperData = json_decode((string)$_POST['wallpaper_images'], true);
-  if (is_array($wallpaperData) && count($wallpaperData) > 0) {
-    $settings = load_bunny_settings($mysqli);
-    $mapFolder = rtrim((string)$settings['folder_map_images'], '/');
-    
-    if ($mapFolder !== '') {
-      $isExternal = preg_match('#^https?://#i', $mapFolder);
-      $storageApiKey = (string)($settings['storage_api_key'] ?? '');
-      $storageZoneName = (string)($settings['storage_zone_name'] ?? '');
-      
-      if ($isExternal && $storageApiKey !== '' && $storageZoneName !== '') {
-        $cdnPath = preg_replace('#^https?://[^/]+/#', '', $mapFolder);
-        $cdnPath = rtrim((string)$cdnPath, '/');
-        
-        $stmtMapImg = $mysqli->prepare("INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, file_name, file_url, file_size, width, height, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-          ON DUPLICATE KEY UPDATE file_url = VALUES(file_url), file_size = VALUES(file_size), updated_at = NOW()");
-        
-        if ($stmtMapImg) {
-          foreach ($wallpaperData as $wpImg) {
-            $lat = isset($wpImg['latitude']) ? (float)$wpImg['latitude'] : 0;
-            $lng = isset($wpImg['longitude']) ? (float)$wpImg['longitude'] : 0;
-            $locType = isset($wpImg['location_type']) ? (string)$wpImg['location_type'] : 'venue';
-            $bearing = isset($wpImg['bearing']) ? (int)$wpImg['bearing'] : 0;
-            $pitch = isset($wpImg['pitch']) ? (int)$wpImg['pitch'] : 0;
-            $zoom = isset($wpImg['zoom']) ? (int)$wpImg['zoom'] : 0;
-            $dataUrl = isset($wpImg['dataUrl']) ? (string)$wpImg['dataUrl'] : '';
-            
-            // Skip if required fields are missing (no fallbacks - all values must be provided)
-            if ($lat == 0 || $lng == 0 || $pitch == 0 || $zoom == 0 || $dataUrl === '') continue;
-            
-            // Parse data URL: data:image/png;base64,XXXXX
-            if (!preg_match('#^data:image/(png|jpeg|jpg|webp);base64,(.+)$#', $dataUrl, $matches)) {
-              continue;
-            }
-            $imgExt = ($matches[1] === 'jpeg') ? 'jpg' : $matches[1];
-            $imgBytes = base64_decode($matches[2]);
-            if ($imgBytes === false) continue;
-            
-            // Generate filename: {lat}_{lng}_{direction}_p{pitch}_z{zoom}.{ext}
-            // Use 7 decimal places to match Google Places API precision and database decimal(10,7)
-            // Latitude: negative (South) prefixed with 'n', positive (North) as-is
-            // Longitude: negative (West) prefixed with 'n', positive (East) as-is
-            $latPrefix = $lat < 0 ? 'n' : '';
-            $lngPrefix = $lng < 0 ? 'n' : '';
-            $latStr = $latPrefix . number_format(abs($lat), 7, '.', '');
-            $lngStr = $lngPrefix . number_format(abs($lng), 7, '.', '');
-            
-            // Convert bearing to compass direction
-            $directionMap = [0 => 'n', 90 => 'e', 180 => 's', 270 => 'w'];
-            $direction = isset($directionMap[$bearing]) ? $directionMap[$bearing] : $bearing;
-            
-            $filename = $latStr . '_' . $lngStr . '_' . $direction . '_p' . $pitch . '_z' . $zoom . '.' . $imgExt;
-            
-            // Upload to Bunny CDN
-            $fullPath = $cdnPath . '/' . $filename;
-            $httpCode = 0;
-            $resp = '';
-            if (bunny_upload_bytes($storageApiKey, $storageZoneName, $fullPath, $imgBytes, $httpCode, $resp)) {
-              $publicUrl = $mapFolder . '/' . $filename;
-              $fileSize = strlen($imgBytes);
-              $width = 700;
-              $height = 2500;
-              
-              // Insert into map_images table
-              $stmtMapImg->bind_param('ddsiiisissii', $lat, $lng, $locType, $bearing, $pitch, $zoom, $filename, $publicUrl, $fileSize, $width, $height);
-              $stmtMapImg->execute();
-            }
-          }
-          $stmtMapImg->close();
-        }
-      }
-    }
   }
 }
 
