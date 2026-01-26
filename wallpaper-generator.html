@@ -21,6 +21,7 @@
             gap: 10px; 
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
         button {
             padding: 10px 20px;
@@ -75,6 +76,7 @@
             display: flex;
             gap: 30px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .stat {
             background: #2a2a2a;
@@ -105,6 +107,29 @@
             padding: 10px;
             font-family: monospace;
             font-size: 12px;
+        }
+        #map-container {
+            width: 700px;
+            height: 2500px;
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            border: 2px solid #0f0;
+            z-index: 9999;
+            transform: scale(0.15);
+            transform-origin: top right;
+        }
+        .preview-label {
+            position: fixed;
+            right: 130px;
+            top: 5px;
+            background: #0f0;
+            color: #000;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 10000;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -147,31 +172,37 @@
         <textarea id="sql-textarea" readonly></textarea>
     </div>
 
-    <!-- Load the actual SecondaryMap from components-new.js -->
-    <script src="components-new.js"></script>
-    
+    <div class="preview-label">Live Preview</div>
+    <div id="map-container"></div>
+
     <script>
-        // Image dimensions - must match components-new.js
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
         const IMAGE_WIDTH = 700;
         const IMAGE_HEIGHT = 2500;
+        const STYLE_URL = 'mapbox://styles/mapbox/standard';
         
-        // Camera settings by location type - matches getBasicModeCameras() 
+        // Camera settings
         function getCameras(locationType, lat, lng) {
-            const t = String(locationType || '').toLowerCase();
-            const isCity = (t === 'city');
+            const isCity = String(locationType || '').toLowerCase() === 'city';
             const zoom = isCity ? 11 : 18;
             const pitch = 75;
             return [
-                { center: [lng, lat], zoom: zoom, pitch: pitch, bearing: 0, direction: 'n' },
-                { center: [lng, lat], zoom: zoom, pitch: pitch, bearing: 90, direction: 'e' },
-                { center: [lng, lat], zoom: zoom, pitch: pitch, bearing: 180, direction: 's' },
-                { center: [lng, lat], zoom: zoom, pitch: pitch, bearing: 270, direction: 'w' }
+                { center: [lng, lat], zoom, pitch, bearing: 0, direction: 'n' },
+                { center: [lng, lat], zoom, pitch, bearing: 90, direction: 'e' },
+                { center: [lng, lat], zoom, pitch, bearing: 180, direction: 's' },
+                { center: [lng, lat], zoom, pitch, bearing: 270, direction: 'w' }
             ];
         }
         
-        // State
+        // ============================================================
+        // STATE
+        // ============================================================
         let locations = [];
         let saveFolder = null;
+        let map = null;
+        let mapReady = false;
         let isPaused = false;
         let currentIndex = 0;
         let currentCameraIndex = 0;
@@ -180,16 +211,12 @@
         let testMode = false;
         const testLimit = 5;
         
-        // DOM elements
+        // ============================================================
+        // DOM
+        // ============================================================
         const statusEl = document.getElementById('status');
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
-        const btnLoad = document.getElementById('btn-load');
-        const btnFolder = document.getElementById('btn-folder');
-        const btnTest = document.getElementById('btn-test');
-        const btnStart = document.getElementById('btn-start');
-        const btnPause = document.getElementById('btn-pause');
-        const btnDownloadSql = document.getElementById('btn-download-sql');
         
         function log(msg) {
             const time = new Date().toLocaleTimeString();
@@ -206,12 +233,160 @@
             document.getElementById('completed-images').textContent = completedCount;
         }
         
-        function generateFilename(lat, lng, direction, pitch, zoom) {
+        // ============================================================
+        // MAPBOX - Standalone implementation with proper tile detection
+        // ============================================================
+        function initMap(startLng, startLat) {
+            return new Promise((resolve, reject) => {
+                log('Creating Mapbox map...');
+                
+                try {
+                    map = new mapboxgl.Map({
+                        container: 'map-container',
+                        style: STYLE_URL,
+                        projection: 'globe',
+                        center: [startLng, startLat],
+                        zoom: 18,
+                        pitch: 75,
+                        bearing: 0,
+                        interactive: false,
+                        attributionControl: false,
+                        preserveDrawingBuffer: true
+                    });
+                } catch (e) {
+                    reject(new Error('Failed to create map: ' + e.message));
+                    return;
+                }
+                
+                map.once('style.load', function() {
+                    log('Applying night style and hiding labels...');
+                    try {
+                        map.setConfigProperty('basemap', 'lightPreset', 'night');
+                        map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                        map.setConfigProperty('basemap', 'showPlaceLabels', false);
+                        map.setConfigProperty('basemap', 'showRoadLabels', false);
+                        map.setConfigProperty('basemap', 'showTransitLabels', false);
+                    } catch (e) {
+                        log('Warning: Could not set style properties');
+                    }
+                });
+                
+                map.once('idle', function() {
+                    const canvas = map.getCanvas();
+                    log(`Map ready: ${canvas.width}x${canvas.height}`);
+                    log(`Initial position: ${startLat.toFixed(5)}, ${startLng.toFixed(5)}`);
+                    mapReady = true;
+                    resolve();
+                });
+                
+                // Timeout fallback
+                setTimeout(() => {
+                    if (!mapReady) {
+                        log('Warning: Map init timeout, proceeding anyway');
+                        mapReady = true;
+                        resolve();
+                    }
+                }, 15000);
+            });
+        }
+        
+        // Move to position and wait for ALL tiles to load
+        function moveAndWaitForTiles(lng, lat, zoom, pitch, bearing) {
+            return new Promise((resolve) => {
+                // Move camera
+                map.jumpTo({
+                    center: [lng, lat],
+                    zoom: zoom,
+                    pitch: pitch,
+                    bearing: bearing
+                });
+                
+                // Track tile loading
+                let tilesLoading = 0;
+                let tilesLoaded = 0;
+                let checkInterval = null;
+                let resolved = false;
+                
+                function done() {
+                    if (resolved) return;
+                    resolved = true;
+                    if (checkInterval) clearInterval(checkInterval);
+                    map.off('sourcedataloading', onLoading);
+                    map.off('sourcedata', onLoaded);
+                    // Final delay to ensure render completes
+                    setTimeout(resolve, 800);
+                }
+                
+                function onLoading(e) {
+                    if (e.tile) tilesLoading++;
+                }
+                
+                function onLoaded(e) {
+                    if (e.tile) {
+                        tilesLoaded++;
+                    }
+                }
+                
+                map.on('sourcedataloading', onLoading);
+                map.on('sourcedata', onLoaded);
+                
+                // Trigger repaint
+                map.triggerRepaint();
+                
+                // Check periodically if map is idle and tiles are loaded
+                let idleCount = 0;
+                checkInterval = setInterval(() => {
+                    const isIdle = map.areTilesLoaded() && !map.isMoving() && !map.isZooming();
+                    if (isIdle) {
+                        idleCount++;
+                        // Require 3 consecutive idle checks (900ms of being idle)
+                        if (idleCount >= 3) {
+                            log(`  Tiles loaded (${tilesLoaded} tiles)`);
+                            done();
+                        }
+                    } else {
+                        idleCount = 0;
+                    }
+                }, 300);
+                
+                // Timeout fallback
+                setTimeout(() => {
+                    if (!resolved) {
+                        log(`  Timeout - capturing anyway (${tilesLoaded} tiles loaded)`);
+                        done();
+                    }
+                }, 12000);
+            });
+        }
+        
+        // Capture current view to blob
+        function captureToBlob() {
+            return new Promise((resolve) => {
+                const canvas = map.getCanvas();
+                
+                // Try WebP first
+                canvas.toBlob((blob) => {
+                    if (blob && blob.size > 0) {
+                        resolve({ blob, ext: 'webp' });
+                    } else {
+                        // Fallback to JPEG
+                        canvas.toBlob((jpgBlob) => {
+                            resolve({ blob: jpgBlob, ext: 'jpg' });
+                        }, 'image/jpeg', 0.85);
+                    }
+                }, 'image/webp', 0.85);
+            });
+        }
+        
+        // ============================================================
+        // FILENAME & SQL
+        // ============================================================
+        function generateFilename(lat, lng, direction, pitch, zoom, ext) {
             const latPrefix = lat < 0 ? 'n' : '';
             const lngPrefix = lng < 0 ? 'n' : '';
             const latStr = latPrefix + Math.abs(lat).toFixed(7);
             const lngStr = lngPrefix + Math.abs(lng).toFixed(7);
-            return `${latStr}_${lngStr}_${direction}_p${pitch}_z${zoom}`;
+            return `${latStr}_${lngStr}_${direction}_p${pitch}_z${zoom}.${ext}`;
         }
         
         function generateSqlInsert(loc, cam, filename, fileSize) {
@@ -220,88 +395,110 @@
             return `INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, file_name, file_url, file_size, width, height, created_at, updated_at) VALUES (${loc.latitude}, ${loc.longitude}, '${loc.location_type}', ${cam.bearing}, ${cam.pitch}, ${cam.zoom}, '${filename}', '${fileUrl}', ${fileSize}, ${IMAGE_WIDTH}, ${IMAGE_HEIGHT}, NOW(), NOW()) ON DUPLICATE KEY UPDATE file_url = VALUES(file_url), file_size = VALUES(file_size), updated_at = NOW());`;
         }
         
-        // Load locations from database
-        btnLoad.addEventListener('click', async function() {
-            btnLoad.disabled = true;
+        // ============================================================
+        // UI HANDLERS
+        // ============================================================
+        
+        // Load locations
+        document.getElementById('btn-load').addEventListener('click', async function() {
+            this.disabled = true;
             log('Fetching locations from post_map_cards...');
             
             try {
                 const response = await fetch('/gateway.php?action=get-map-card-locations');
                 const data = await response.json();
                 
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to load locations');
-                }
+                if (!data.success) throw new Error(data.message || 'Failed');
                 
                 locations = data.locations || [];
-                
                 document.getElementById('total-locations').textContent = locations.length;
                 document.getElementById('total-images').textContent = locations.length * 4;
                 
-                log(`Loaded ${locations.length} unique locations`);
-                log(`Will generate ${locations.length * 4} images`);
+                log(`Loaded ${locations.length} locations (${locations.length * 4} images)`);
                 
-                // Show first 3 locations for verification
+                // Show samples
                 for (let i = 0; i < Math.min(3, locations.length); i++) {
                     const l = locations[i];
-                    log(`  Sample ${i+1}: lat=${l.latitude}, lng=${l.longitude}, type=${l.location_type}`);
+                    log(`  #${i+1}: ${l.latitude}, ${l.longitude} (${l.location_type})`);
                 }
                 
                 if (locations.length > 0) {
-                    btnFolder.disabled = false;
-                    
                     // Set Mapbox token
                     if (!mapboxgl.accessToken) {
                         const token = prompt('Enter Mapbox Access Token:');
-                        if (token) {
-                            mapboxgl.accessToken = token;
-                            log('Mapbox token set');
-                        }
+                        if (!token) { log('Token required'); return; }
+                        mapboxgl.accessToken = token;
                     }
+                    
+                    // Initialize map at first location
+                    await initMap(locations[0].longitude, locations[0].latitude);
+                    
+                    document.getElementById('btn-folder').disabled = false;
                 }
             } catch (err) {
                 log('Error: ' + err.message);
-                btnLoad.disabled = false;
+                this.disabled = false;
             }
         });
         
-        // Select save folder
-        btnFolder.addEventListener('click', async function() {
+        // Select folder
+        document.getElementById('btn-folder').addEventListener('click', async function() {
             try {
                 if (!('showDirectoryPicker' in window)) {
-                    log('ERROR: Use Chrome or Edge (File System Access API required)');
+                    log('ERROR: Use Chrome or Edge');
                     return;
                 }
-                
                 saveFolder = await window.showDirectoryPicker({ mode: 'readwrite' });
-                log(`Save folder: ${saveFolder.name}`);
-                btnTest.disabled = false;
-                btnStart.disabled = false;
-                btnFolder.textContent = '✓ Folder Selected';
+                log(`Folder selected: ${saveFolder.name}`);
+                document.getElementById('btn-test').disabled = false;
+                document.getElementById('btn-start').disabled = false;
+                this.textContent = '✓ Folder Selected';
             } catch (err) {
-                if (err.name !== 'AbortError') {
-                    log('Error: ' + err.message);
-                }
+                if (err.name !== 'AbortError') log('Error: ' + err.message);
             }
         });
         
-        // Test mode
-        btnTest.addEventListener('click', function() {
+        // Test
+        document.getElementById('btn-test').addEventListener('click', () => {
             testMode = true;
             startGeneration();
         });
         
-        // Full generation
-        btnStart.addEventListener('click', function() {
+        // Full run
+        document.getElementById('btn-start').addEventListener('click', () => {
             testMode = false;
             startGeneration();
         });
         
+        // Pause
+        document.getElementById('btn-pause').addEventListener('click', function() {
+            isPaused = !isPaused;
+            this.textContent = isPaused ? 'Resume' : 'Pause';
+            if (!isPaused) processNext();
+            log(isPaused ? 'Paused' : 'Resuming...');
+        });
+        
+        // Download SQL
+        document.getElementById('btn-download-sql').addEventListener('click', function() {
+            const blob = new Blob([sqlStatements.join('\n')], { type: 'text/sql' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'map_images_insert.sql';
+            a.click();
+            URL.revokeObjectURL(url);
+            log('SQL downloaded');
+        });
+        
+        // ============================================================
+        // GENERATION LOOP
+        // ============================================================
         function startGeneration() {
-            btnTest.disabled = true;
-            btnStart.disabled = true;
-            btnFolder.disabled = true;
-            btnPause.disabled = false;
+            document.getElementById('btn-test').disabled = true;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-folder').disabled = true;
+            document.getElementById('btn-pause').disabled = false;
+            
             isPaused = false;
             sqlStatements = [];
             completedCount = 0;
@@ -310,25 +507,11 @@
             
             const maxLocs = testMode ? Math.min(testLimit, locations.length) : locations.length;
             log(`Starting: ${maxLocs} locations × 4 = ${maxLocs * 4} images`);
-            log('Using SecondaryMap.capture() from components-new.js');
             
             processNext();
         }
         
-        // Pause/Resume
-        btnPause.addEventListener('click', function() {
-            isPaused = !isPaused;
-            btnPause.textContent = isPaused ? 'Resume' : 'Pause';
-            if (!isPaused) {
-                log('Resuming...');
-                processNext();
-            } else {
-                log('Paused');
-            }
-        });
-        
-        // Process next image
-        function processNext() {
+        async function processNext() {
             if (isPaused) return;
             
             const maxLocs = testMode ? Math.min(testLimit, locations.length) : locations.length;
@@ -341,100 +524,75 @@
             const cameras = getCameras(loc.location_type, loc.latitude, loc.longitude);
             const cam = cameras[currentCameraIndex];
             
-            const baseFilename = generateFilename(loc.latitude, loc.longitude, cam.direction, cam.pitch, cam.zoom);
+            log(`[${currentIndex + 1}/${maxLocs}] ${cam.direction.toUpperCase()} @ ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`);
             
-            log(`[${currentIndex + 1}/${maxLocs}] ${cam.direction.toUpperCase()} @ ${loc.latitude}, ${loc.longitude}`);
-            log(`  Camera: center=[${cam.center[0]}, ${cam.center[1]}] zoom=${cam.zoom} pitch=${cam.pitch} bearing=${cam.bearing}`);
-            
-            // Verify coordinates are valid
-            if (!cam.center || cam.center[0] === 0 || cam.center[1] === 0) {
-                log('  ERROR: Invalid coordinates - skipping');
-                moveToNext();
-                return;
-            }
-            
-            // Use SecondaryMap.capture() - the working code from components-new.js
-            SecondaryMap.capture(cam, IMAGE_WIDTH, IMAGE_HEIGHT, async function(dataUrl) {
-                if (!dataUrl) {
-                    log('  ERROR: Capture failed');
-                    moveToNext();
-                    return;
+            try {
+                // Move and wait for tiles
+                await moveAndWaitForTiles(cam.center[0], cam.center[1], cam.zoom, cam.pitch, cam.bearing);
+                
+                // Verify we're at the right place
+                const center = map.getCenter();
+                const expectedLat = loc.latitude;
+                const expectedLng = loc.longitude;
+                const latDiff = Math.abs(center.lat - expectedLat);
+                const lngDiff = Math.abs(center.lng - expectedLng);
+                
+                if (latDiff > 0.0001 || lngDiff > 0.0001) {
+                    log(`  WARNING: Position mismatch! Expected ${expectedLat},${expectedLng} got ${center.lat},${center.lng}`);
                 }
                 
-                try {
-                    // Determine format from data URL
-                    let ext = 'webp';
-                    if (dataUrl.indexOf('data:image/jpeg') === 0) ext = 'jpg';
-                    else if (dataUrl.indexOf('data:image/png') === 0) ext = 'png';
+                // Capture
+                const { blob, ext } = await captureToBlob();
+                
+                if (!blob || blob.size < 1000) {
+                    log('  ERROR: Capture failed or too small');
+                } else {
+                    const filename = generateFilename(loc.latitude, loc.longitude, cam.direction, cam.pitch, cam.zoom, ext);
                     
-                    const filename = baseFilename + '.' + ext;
-                    
-                    // Convert data URL to blob
-                    const response = await fetch(dataUrl);
-                    const blob = await response.blob();
-                    
-                    // Save to folder
+                    // Save
                     const fileHandle = await saveFolder.getFileHandle(filename, { create: true });
                     const writable = await fileHandle.createWritable();
                     await writable.write(blob);
                     await writable.close();
                     
-                    // Generate SQL
-                    const sql = generateSqlInsert(loc, cam, filename, blob.size);
-                    sqlStatements.push(sql);
+                    // SQL
+                    sqlStatements.push(generateSqlInsert(loc, cam, filename, blob.size));
                     
                     completedCount++;
                     updateProgress();
-                    log(`  ✓ Saved: ${filename} (${(blob.size/1024).toFixed(0)}KB)`);
-                    
-                } catch (err) {
-                    log(`  ERROR: ${err.message}`);
+                    log(`  ✓ ${filename} (${(blob.size/1024).toFixed(0)}KB)`);
                 }
-                
-                moveToNext();
-            });
-        }
-        
-        function moveToNext() {
+            } catch (err) {
+                log(`  ERROR: ${err.message}`);
+            }
+            
+            // Next
             currentCameraIndex++;
             if (currentCameraIndex >= 4) {
                 currentCameraIndex = 0;
                 currentIndex++;
             }
-            // Small delay between captures
-            setTimeout(processNext, 100);
+            
+            // Small delay then continue
+            setTimeout(processNext, 200);
         }
         
         function finishGeneration() {
-            log('='.repeat(50));
-            log(`COMPLETE! Generated ${completedCount} images`);
+            log('=' .repeat(50));
+            log(`COMPLETE! ${completedCount} images saved`);
             if (testMode) {
-                log('Check the images, then click "Generate All" for full run');
-                btnTest.disabled = false;
-                btnStart.disabled = false;
-                btnFolder.disabled = false;
+                log('Check images, then click "Generate All"');
+                document.getElementById('btn-test').disabled = false;
+                document.getElementById('btn-start').disabled = false;
+                document.getElementById('btn-folder').disabled = false;
             }
             log('='.repeat(50));
             
-            btnPause.disabled = true;
-            btnDownloadSql.disabled = false;
-            
+            document.getElementById('btn-pause').disabled = true;
+            document.getElementById('btn-download-sql').disabled = false;
             document.getElementById('sql-output').style.display = 'block';
             document.getElementById('sql-textarea').value = sqlStatements.join('\n');
         }
-        
-        // Download SQL
-        btnDownloadSql.addEventListener('click', function() {
-            const sql = sqlStatements.join('\n');
-            const blob = new Blob([sql], { type: 'text/sql' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'map_images_insert.sql';
-            link.click();
-            URL.revokeObjectURL(url);
-            log('SQL file downloaded');
-        });
     </script>
 </body>
 </html>
