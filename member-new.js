@@ -3223,8 +3223,11 @@ const MemberModule = (function() {
         try { requestTabSwitch('myposts'); } catch (e0) {}
         showMyPostsLoadingPlaceholder(validation.payload);
         
-        // Submit the post
-        submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta)
+        // Collect wallpaper images for all locations before submitting
+        collectWallpaperImages(validation.payload)
+            .then(function(wallpaperImages) {
+                return submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, wallpaperImages);
+            })
             .then(function(result) {
                 isSubmittingPost = false;
                 updateSubmitButtonState();
@@ -4623,7 +4626,70 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta) {
+    // Collect wallpaper images from WallpaperCache for all locations in payload
+    function collectWallpaperImages(payload) {
+        return new Promise(function(resolve) {
+            if (!window.WallpaperCache || typeof WallpaperCache.getForUpload !== 'function') {
+                resolve([]);
+                return;
+            }
+            
+            // Extract location coordinates from payload fields
+            var locations = [];
+            if (payload && payload.fields && Array.isArray(payload.fields)) {
+                payload.fields.forEach(function(field) {
+                    var type = field.type ? field.type.replace(/-locked$/, '').replace(/-hidden$/, '') : '';
+                    if ((type === 'venue' || type === 'address' || type === 'city') && field.value) {
+                        var lat = parseFloat(field.value.latitude);
+                        var lng = parseFloat(field.value.longitude);
+                        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                            locations.push({
+                                location_number: field.location_number || 1,
+                                location_type: type,
+                                latitude: lat,
+                                longitude: lng
+                            });
+                        }
+                    }
+                });
+            }
+            
+            if (locations.length === 0) {
+                resolve([]);
+                return;
+            }
+            
+            // Get wallpaper images for each location
+            var allImages = [];
+            var pending = locations.length;
+            
+            locations.forEach(function(loc) {
+                WallpaperCache.getForUpload(loc.latitude, loc.longitude, loc.location_type)
+                    .then(function(images) {
+                        images.forEach(function(img) {
+                            allImages.push({
+                                location_number: loc.location_number,
+                                location_type: loc.location_type,
+                                latitude: loc.latitude,
+                                longitude: loc.longitude,
+                                bearing: img.bearing,
+                                pitch: img.pitch,
+                                zoom: img.zoom,
+                                dataUrl: img.dataUrl
+                            });
+                        });
+                        pending--;
+                        if (pending === 0) resolve(allImages);
+                    })
+                    .catch(function() {
+                        pending--;
+                        if (pending === 0) resolve(allImages);
+                    });
+            });
+        });
+    }
+    
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, wallpaperImages) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
@@ -4670,6 +4736,11 @@ const MemberModule = (function() {
                 });
             }
             fd.set('images_meta', imagesMeta || '[]');
+
+            // Attach wallpaper images (base64 data URLs from WallpaperCache)
+            if (wallpaperImages && wallpaperImages.length > 0) {
+                fd.set('wallpaper_images', JSON.stringify(wallpaperImages));
+            }
 
             var action = effectivePostId ? 'edit-post' : 'add-post';
             fetch('/gateway.php?action=' + action, {

@@ -7791,23 +7791,26 @@ var WallpaperCache = (function() {
         }
     }
 
-    function makeKey(lat, lng, bearing) {
-        return lat.toFixed(6) + ',' + lng.toFixed(6) + ',' + bearing;
+    function makeKey(lat, lng, bearing, pitch, zoom) {
+        // Use 7 decimal places to match Google Places API precision and database decimal(10,7)
+        // Include pitch and zoom for unique identification of camera settings
+        // All parameters are required - no fallbacks
+        return lat.toFixed(7) + ',' + lng.toFixed(7) + ',' + bearing + ',' + pitch + ',' + zoom;
     }
 
-    function get(lat, lng, bearing, cb) {
+    function get(lat, lng, bearing, pitch, zoom, cb) {
         openDB(function(database) {
             if (!database) { cb(null); return; }
             try {
                 var tx = database.transaction(STORE_NAME, 'readonly');
                 var store = tx.objectStore(STORE_NAME);
-                var key = makeKey(lat, lng, bearing);
+                var key = makeKey(lat, lng, bearing, pitch, zoom);
                 var request = store.get(key);
                 request.onsuccess = function() {
                     var result = request.result;
                     if (result && result.dataUrl) {
                         // Update timestamp on read (for LRU)
-                        put(lat, lng, bearing, result.dataUrl, function() {});
+                        put(lat, lng, bearing, pitch, zoom, result.dataUrl, function() {});
                         cb(result.dataUrl);
                     } else {
                         cb(null);
@@ -7820,18 +7823,20 @@ var WallpaperCache = (function() {
         });
     }
 
-    function put(lat, lng, bearing, dataUrl, cb) {
+    function put(lat, lng, bearing, pitch, zoom, dataUrl, cb) {
         openDB(function(database) {
             if (!database) { cb(false); return; }
             try {
                 var tx = database.transaction(STORE_NAME, 'readwrite');
                 var store = tx.objectStore(STORE_NAME);
-                var key = makeKey(lat, lng, bearing);
+                var key = makeKey(lat, lng, bearing, pitch, zoom);
                 store.put({
                     key: key,
                     lat: lat,
                     lng: lng,
                     bearing: bearing,
+                    pitch: pitch,
+                    zoom: zoom,
                     dataUrl: dataUrl,
                     timestamp: Date.now()
                 });
@@ -7872,14 +7877,14 @@ var WallpaperCache = (function() {
         });
     }
 
-    function getAll(lat, lng, bearings, cb) {
-        // Get multiple images for a location (all 4 bearings)
+    function getAll(lat, lng, cameras, cb) {
+        // Get multiple images for a location (array of camera objects with bearing, pitch, zoom)
         var results = [];
-        var pending = bearings.length;
+        var pending = cameras.length;
         if (pending === 0) { cb(results); return; }
         
-        bearings.forEach(function(bearing, idx) {
-            get(lat, lng, bearing, function(dataUrl) {
+        cameras.forEach(function(cam, idx) {
+            get(lat, lng, cam.bearing, cam.pitch, cam.zoom, function(dataUrl) {
                 results[idx] = dataUrl;
                 pending--;
                 if (pending === 0) cb(results);
@@ -7887,14 +7892,14 @@ var WallpaperCache = (function() {
         });
     }
 
-    function putAll(lat, lng, bearings, dataUrls, cb) {
-        // Store multiple images for a location
-        var pending = bearings.length;
+    function putAll(lat, lng, cameras, dataUrls, cb) {
+        // Store multiple images for a location (array of camera objects with bearing, pitch, zoom)
+        var pending = cameras.length;
         if (pending === 0) { cb(); return; }
         
-        bearings.forEach(function(bearing, idx) {
+        cameras.forEach(function(cam, idx) {
             if (dataUrls[idx]) {
-                put(lat, lng, bearing, dataUrls[idx], function() {
+                put(lat, lng, cam.bearing, cam.pitch, cam.zoom, dataUrls[idx], function() {
                     pending--;
                     if (pending === 0) cb();
                 });
@@ -7905,11 +7910,45 @@ var WallpaperCache = (function() {
         });
     }
 
+    // Get all 4 wallpaper images for upload (bearings 0, 90, 180, 270)
+    // Returns Promise that resolves to array of { bearing, pitch, zoom, dataUrl } objects
+    function getForUpload(lat, lng, locationType) {
+        return new Promise(function(resolve) {
+            // Determine pitch and zoom based on location type
+            var t = String(locationType || '').toLowerCase();
+            var zoom = (t === 'city') ? 11 : 16;
+            var pitch = 70;
+            
+            var cameras = [
+                { bearing: 0, pitch: pitch, zoom: zoom },
+                { bearing: 90, pitch: pitch, zoom: zoom },
+                { bearing: 180, pitch: pitch, zoom: zoom },
+                { bearing: 270, pitch: pitch, zoom: zoom }
+            ];
+            
+            getAll(lat, lng, cameras, function(dataUrls) {
+                var results = [];
+                for (var i = 0; i < cameras.length; i++) {
+                    if (dataUrls[i]) {
+                        results.push({
+                            bearing: cameras[i].bearing,
+                            pitch: cameras[i].pitch,
+                            zoom: cameras[i].zoom,
+                            dataUrl: dataUrls[i]
+                        });
+                    }
+                }
+                resolve(results);
+            });
+        });
+    }
+
     return {
         get: get,
         put: put,
         getAll: getAll,
-        putAll: putAll
+        putAll: putAll,
+        getForUpload: getForUpload
     };
 })();
 
@@ -8561,9 +8600,10 @@ const LocationWallpaperComponent = (function() {
             if (url) {
                 setImageUrl(url);
                 st.latestCaptureUrl = url;
-                // Store to IndexedDB cache
+                // Store to IndexedDB cache (orbit mode uses default camera settings)
                 if (st.lastLat && st.lastLng) {
-                    WallpaperCache.put(st.lastLat, st.lastLng, 0, url, function() {});
+                    var cam = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [st.lastLng, st.lastLat]);
+                    WallpaperCache.put(st.lastLat, st.lastLng, 0, cam.pitch, cam.zoom, url, function() {});
                 }
             }
             showImage();
@@ -8628,13 +8668,13 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
-            WallpaperCache.get(lat, lng, bearing, function(cached) {
+            WallpaperCache.get(lat, lng, bearing, camera.pitch, camera.zoom, function(cached) {
                 if (cached) { display(cached); return; }
 
                 SecondaryMap.capture(camera, STILL_WIDTH, STILL_HEIGHT, function(url) {
                     if (!url) return;
                     st.latestCaptureUrl = url;
-                    WallpaperCache.put(lat, lng, bearing, url, function() {});
+                    WallpaperCache.put(lat, lng, bearing, camera.pitch, camera.zoom, url, function() {});
                     img.onload = function() {
                         img.onload = null;
                         positionStillImage();
@@ -8690,7 +8730,6 @@ const LocationWallpaperComponent = (function() {
             basicOriginalHeight = contentEl.offsetHeight || 400;
 
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
-            var bearings = cameras.map(function(c) { return c.bearing; });
 
             // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
@@ -8730,7 +8769,7 @@ const LocationWallpaperComponent = (function() {
                 });
             }
 
-            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+            WallpaperCache.getAll(lat, lng, cameras, function(cached) {
                 if (!basicContainer) return;
                 var cacheHits = cached.filter(function(url) { return url; }).length;
                 if (cacheHits === 4) {
@@ -8739,7 +8778,7 @@ const LocationWallpaperComponent = (function() {
                     var capturedUrls = [];
                     var captureNext = function(idx) {
                         if (idx >= 4) {
-                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            WallpaperCache.putAll(lat, lng, cameras, capturedUrls, function() {});
                             display(capturedUrls);
                             return;
                         }
