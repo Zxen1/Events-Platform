@@ -136,24 +136,41 @@
         let mount;
 
         async function initMap() {
+            log("Initializing Mapbox...");
             mount = document.createElement('div');
             mount.style.cssText = `position:absolute;left:-9999px;top:-9999px;width:${WIDTH}px;height:${HEIGHT}px;`;
             document.body.appendChild(mount);
             
             mapboxgl.accessToken = ACCESS_TOKEN;
-            map = new mapboxgl.Map({
-                container: mount,
-                style: MAP_STYLE,
-                projection: 'globe',
-                center: [0, 0],
-                zoom: 1,
-                interactive: false,
-                attributionControl: false,
-                preserveDrawingBuffer: true,
-                antialias: true
-            });
+            try {
+                map = new mapboxgl.Map({
+                    container: mount,
+                    style: MAP_STYLE,
+                    projection: 'globe',
+                    center: [0, 0],
+                    zoom: 1,
+                    interactive: false,
+                    attributionControl: false,
+                    preserveDrawingBuffer: true,
+                    antialias: true
+                });
+            } catch (e) {
+                log("Mapbox initialization failed: " + e.message, true);
+                throw e;
+            }
 
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error("Mapbox load timeout")), 10000);
+                map.on('load', () => {
+                    clearTimeout(timeout);
+                    log("Mapbox loaded successfully.");
+                    resolve();
+                });
+                map.on('error', (e) => {
+                    clearTimeout(timeout);
+                    log("Mapbox error: " + (e.message || e.error?.message || "Unknown error"), true);
+                    reject(e);
+                });
                 map.on('style.load', () => {
                     try {
                         map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
@@ -163,7 +180,6 @@
                         map.setConfigProperty('basemap', 'showTransitLabels', false);
                         map.setConfigProperty('basemap', 'showRoads', false);
                     } catch(e) {}
-                    resolve();
                 });
             });
         }
