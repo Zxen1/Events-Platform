@@ -160,7 +160,7 @@
     <div id="map-container"></div>
 
     <script>
-        // Configuration
+        // Configuration - MUST match SecondaryMap in components-new.js
         const IMAGE_WIDTH = 700;
         const IMAGE_HEIGHT = 2500;
         const STYLE_URL = 'mapbox://styles/mapbox/standard';
@@ -170,14 +170,16 @@
         
         // Camera settings by location type
         function getCameraSettings(locationType) {
-            const isCity = locationType === 'city';
-            const zoom = isCity ? 11 : 16;
-            const pitch = 70;
+            const t = String(locationType || '').toLowerCase();
+            const isCity = (t === 'city');
+            // Venue/Address: zoom 18, pitch 75 | City: zoom 11, pitch 75
+            const zoom = isCity ? 11 : 18;
+            const pitch = 75;
             return [
-                { bearing: 0, pitch, zoom, direction: 'n' },
-                { bearing: 90, pitch, zoom, direction: 'e' },
-                { bearing: 180, pitch, zoom, direction: 's' },
-                { bearing: 270, pitch, zoom, direction: 'w' }
+                { bearing: 0, pitch, zoom, direction: 'n' },    // North
+                { bearing: 90, pitch, zoom, direction: 'e' },   // East
+                { bearing: 180, pitch, zoom, direction: 's' },  // South
+                { bearing: 270, pitch, zoom, direction: 'w' }   // West
             ];
         }
         
@@ -218,13 +220,14 @@
             document.getElementById('skipped-images').textContent = skippedCount;
         }
         
-        // Generate filename
-        function generateFilename(lat, lng, direction, pitch, zoom, ext) {
+        // Generate filename - uses 7 decimal places to match Google Places API precision
+        function generateFilename(lat, lng, direction, pitch, zoom) {
             const latPrefix = lat < 0 ? 'n' : '';
             const lngPrefix = lng < 0 ? 'n' : '';
             const latStr = latPrefix + Math.abs(lat).toFixed(7);
             const lngStr = lngPrefix + Math.abs(lng).toFixed(7);
-            return `${latStr}_${lngStr}_${direction}_p${pitch}_z${zoom}.${ext}`;
+            // Extension will be added during capture (webp or jpg)
+            return `${latStr}_${lngStr}_${direction}_p${pitch}_z${zoom}.png`;
         }
         
         // Load locations from database
@@ -314,32 +317,22 @@
                 preserveDrawingBuffer: true
             });
             
-            map.on('load', function() {
-                log('Map initialized');
-                // Apply night lighting
+            // Apply settings on style.load - matches SecondaryMap in components-new.js
+            map.once('style.load', function() {
                 try {
                     map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
-                } catch (e) {}
-                // Hide labels and roads
-                applyCleanStyle();
+                    map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                    map.setConfigProperty('basemap', 'showPlaceLabels', false);
+                    map.setConfigProperty('basemap', 'showRoadLabels', false);
+                    map.setConfigProperty('basemap', 'showTransitLabels', false);
+                } catch (e) {
+                    log('Warning: Could not set config properties: ' + e.message);
+                }
             });
-        }
-        
-        function applyCleanStyle() {
-            try {
-                // Hide all labels
-                map.setLayoutProperty('country-label', 'visibility', 'none');
-                map.setLayoutProperty('state-label', 'visibility', 'none');
-                map.setLayoutProperty('settlement-label', 'visibility', 'none');
-                map.setLayoutProperty('poi-label', 'visibility', 'none');
-                map.setLayoutProperty('water-point-label', 'visibility', 'none');
-                map.setLayoutProperty('water-line-label', 'visibility', 'none');
-                map.setLayoutProperty('natural-point-label', 'visibility', 'none');
-                map.setLayoutProperty('natural-line-label', 'visibility', 'none');
-                map.setLayoutProperty('road-label', 'visibility', 'none');
-            } catch (e) {
-                // Some layers may not exist
-            }
+            
+            map.on('load', function() {
+                log('Map initialized with night preset and labels hidden');
+            });
         }
         
         // Start generation
@@ -391,8 +384,7 @@
                 loc.longitude, 
                 cam.direction, 
                 cam.pitch, 
-                cam.zoom, 
-                'png'
+                cam.zoom
             );
             
             log(`[${currentIndex + 1}/${locations.length}] Capturing ${filename}...`);
@@ -408,23 +400,33 @@
             // Wait for tiles to load
             await waitForMapReady();
             
-            // Capture and save directly to folder
+            // Capture and save directly to folder - matches SecondaryMap capture format
             try {
                 const canvas = map.getCanvas();
                 
-                // Convert canvas to blob
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                // Try webp first (0.85 quality), fallback to jpeg - matches components-new.js
+                let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.85));
+                let ext = 'webp';
+                
+                // Fallback to jpeg if webp not supported
+                if (!blob || blob.size === 0) {
+                    blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                    ext = 'jpg';
+                }
+                
+                // Update filename extension
+                const actualFilename = filename.replace('.png', '.' + ext);
                 
                 // Save directly to folder using File System Access API
-                const fileHandle = await saveFolder.getFileHandle(filename, { create: true });
+                const fileHandle = await saveFolder.getFileHandle(actualFilename, { create: true });
                 const writable = await fileHandle.createWritable();
                 await writable.write(blob);
                 await writable.close();
                 
                 const fileSize = blob.size;
                 
-                // Generate SQL
-                const sql = generateSqlInsert(loc, cam, filename, fileSize);
+                // Generate SQL with correct filename
+                const sql = generateSqlInsert(loc, cam, actualFilename, fileSize);
                 sqlStatements.push(sql);
                 
                 completedCount++;
