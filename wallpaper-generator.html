@@ -186,8 +186,8 @@
         // Camera settings
         function getCameras(locationType, lat, lng) {
             const isCity = String(locationType || '').toLowerCase() === 'city';
-            const zoom = isCity ? 11 : 18;
-            const pitch = 75;
+            const zoom = isCity ? 11 : 16;
+            const pitch = 70;
             return [
                 { center: [lng, lat], zoom, pitch, bearing: 0, direction: 'n' },
                 { center: [lng, lat], zoom, pitch, bearing: 90, direction: 'e' },
@@ -246,8 +246,8 @@
                         style: STYLE_URL,
                         projection: 'globe',
                         center: [startLng, startLat],
-                        zoom: 18,
-                        pitch: 75,
+                        zoom: 16,
+                        pitch: 70,
                         bearing: 0,
                         interactive: false,
                         attributionControl: false,
