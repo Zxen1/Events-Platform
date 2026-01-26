@@ -211,7 +211,7 @@
 }
 
 .post-panel-content .post-card,
-.post-panel-content .post-expanded {
+.post-panel-content .open-post {
   background-color: transparent;
   margin: 0;
   border: none;
@@ -229,7 +229,7 @@
 }
 
 .post-panel-content .post-card:last-child,
-.post-panel-content .post-expanded:last-child {
+.post-panel-content .open-post:last-child {
   border-bottom: none;
 }
 
@@ -413,7 +413,7 @@
 /* Badge image sizing (No Hardcode Rule) */
 .post-card-image-badge,
 .recent-card-image-badge,
-.post-expanded-image-badge {
+.open-post-image-badge {
   width: 16px;
   height: 16px;
   object-fit: contain;
@@ -421,7 +421,7 @@
 }
 
 /* Inline badge image (e.g. in expanded post detail) */
-.post-expanded-badge-image--inline {
+.open-post-badge-image--inline {
   display: inline-block;
   vertical-align: middle;
   margin-right: 5px;
@@ -588,10 +588,10 @@
 
 /* ============================================================================
    OPEN POST
-   Class naming: .post-expanded-{type}-{part}--{state}
+   Class naming: .open-post-{type}-{part}--{state}
    ============================================================================ */
 
-.post-expanded {
+.open-post {
   border: none;
   border-radius: 0;
   margin: 0;
@@ -606,29 +606,30 @@
 }
 
 /* Location wallpaper integration (reuses LocationWallpaperComponent styles) */
-.post-expanded .member-postform-location-content {
+.open-post .member-postform-location-content {
   /* Neutralize form padding: open post layout owns spacing */
   padding: 0;
 }
 
 /* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
-.post-expanded .member-postform-location-content--locationwallpaper > .post-expanded-header {
+.open-post .member-postform-location-content--locationwallpaper > .post-card,
+.open-post .member-postform-location-content--locationwallpaper > .recent-card {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
 }
 
 /* Only show wallpaper when open post is expanded */
-.post-expanded:not(.post-expanded--desc-expanded) .component-locationwallpaper {
+.open-post:not(.open-post--desc-expanded) .component-locationwallpaper {
   display: none;
 }
 
 /* Open post wallpaper should be square (no rounding) */
-.post-expanded .component-locationwallpaper {
+.open-post .component-locationwallpaper {
   border-radius: 0;
 }
 
-.post-expanded::after {
+.open-post::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -642,22 +643,19 @@
   z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
 }
 
-.post-panel-content .post-expanded {
+.post-panel-content .open-post {
   width: 100%;
   max-width: 100%;
 }
 
-/* Expanded post header */
-.post-expanded-header {
-  display: grid;
-  grid-template-columns: 50px 1fr 36px;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px 10px 0;
+/* Card inside open post - sticky header */
+.open-post .post-card,
+.open-post .recent-card {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
   background: var(--panel-bg);
+  /* Lid: replaces the missing top edge when the open-post wrapper scrolls up */
   border-top: 1px solid var(--blue-500);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
@@ -665,164 +663,31 @@
 }
 
 /* Let wallpaper show behind the sticky header when expanded */
-.post-expanded.post-expanded--desc-expanded .post-expanded-header {
+.open-post.open-post--desc-expanded .post-card,
+.open-post.open-post--desc-expanded .recent-card {
   background: transparent;
 }
 
-.post-expanded-header:hover {
+.open-post .post-card:hover,
+.recent-card:hover {
   background: var(--panel-bg);
   box-shadow: none;
 }
 
-.post-expanded-header-actions {
+.open-post .post-card-container-actions,
+.open-post .recent-card-container-actions {
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: center;
-  margin-bottom: 10px;
 }
 
-/* Header thumbnail - minithumb (50x50) */
-.post-expanded-header-image-minithumb {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
-  background: var(--panel-bg);
-  flex: 0 0 50px;
-  margin-bottom: 10px;
-}
-
-/* Header meta */
-.post-expanded-header-meta {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-/* Header title */
-.post-expanded-header-text-title {
-  margin: 0;
-  font-weight: bold;
-  font-size: 16px;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-/* Header info rows */
-.post-expanded-header-row-cat,
-.post-expanded-header-row-loc,
-.post-expanded-header-row-date,
-.post-expanded-header-row-price {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 6px;
-}
-
-.post-expanded-header-meta > *:last-child {
-  margin-bottom: 0;
-}
-
-/* Header subcategory icon image/svg */
-.post-expanded-header-image-sub {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.post-expanded-header-row-cat .post-expanded-header-icon-sub {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding-right: 5px;
-}
-
-.post-expanded-header-row-cat .post-expanded-header-icon-sub:empty {
-  display: none;
-  padding-right: 0;
-}
-
-.post-expanded-header-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  padding-right: 5px;
-}
-
-.post-expanded-header-image-badge {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  display: block;
-}
-
-/* Header favorite button */
-.post-expanded-header-button-fav {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: none;
-  transition: background-color 0.2s ease;
-}
-
-.post-expanded-header-button-fav:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.post-expanded-header-icon-fav {
-  width: 18px;
-  height: 18px;
-  background-color: #888;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  pointer-events: none;
-}
-
-.post-expanded-header-button-fav[aria-pressed="true"] .post-expanded-header-icon-fav {
-  background-color: #fbbf24;
-  -webkit-mask-image: none;
-  mask-image: none;
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
-}
-
-.post-expanded.post-expanded--collapsed .post-expanded-button-share {
+.open-post.open-post--collapsed .open-post-button-share {
   display: none;
 }
 
 /* Share button in open post */
-.post-expanded-button-share {
+.open-post-button-share {
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -833,11 +698,11 @@
   transition: background-color 0.2s ease;
 }
 
-.post-expanded-button-share:hover {
+.open-post-button-share:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.post-expanded-icon-share {
+.open-post-icon-share {
   width: 18px;
   height: 18px;
   background-color: var(--button-text);
@@ -856,7 +721,7 @@
    OPEN POST BODY
    ============================================================================ */
 
-.post-expanded-body {
+.open-post-body {
   padding: 0 0 10px;
   display: flex;
   flex-direction: column;
@@ -877,7 +742,7 @@
   box-shadow: none;
 }
 
-.post-expanded.post-expanded--collapsed .post-expanded-body {
+.open-post.open-post--collapsed .open-post-body {
   max-height: 0;
   opacity: 0;
   padding-top: 0;
@@ -889,7 +754,7 @@
    OPEN POST DETAILS
    ============================================================================ */
 
-.post-expanded-details {
+.open-post-container-details {
   margin-top: 0;
   width: calc(100% - 20px);
   max-width: calc(100% - 20px);
@@ -904,15 +769,15 @@
   margin-right: auto;
 }
 
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-nav,
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-venueselect,
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-sessionselect,
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-info,
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-row-member {
+.open-post:not(.open-post--desc-expanded) .open-post-container-nav,
+.open-post:not(.open-post--desc-expanded) .open-post-container-venueselect,
+.open-post:not(.open-post--desc-expanded) .open-post-container-sessionselect,
+.open-post:not(.open-post--desc-expanded) .open-post-container-info,
+.open-post:not(.open-post--desc-expanded) .open-post-row-member {
   display: none;
 }
 
-.post-expanded:not(.post-expanded--desc-expanded) .post-expanded-text-desc {
+.open-post:not(.open-post--desc-expanded) .open-post-text-desc {
   margin-top: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -923,7 +788,7 @@
 }
 
 /* Description */
-.post-expanded-text-desc {
+.open-post-text-desc {
   margin-top: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -931,7 +796,7 @@
 }
 
 /* Member row */
-.post-expanded-row-member {
+.open-post-row-member {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -940,7 +805,7 @@
   margin-top: 10px;
 }
 
-.post-expanded-image-avatar {
+.open-post-image-avatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -948,7 +813,7 @@
   flex: 0 0 auto;
 }
 
-.post-expanded-text-postedby {
+.open-post-text-postedby {
   line-height: 1.3;
 }
 
@@ -957,7 +822,7 @@
    Hero image + thumbnail row. Will become a separate component.
    ============================================================================ */
 
-.post-expanded-images {
+.open-post-container-images {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -969,12 +834,12 @@
   align-self: stretch;
 }
 
-.post-expanded.post-expanded--desc-expanded .post-expanded-images {
+.open-post.open-post--desc-expanded .open-post-container-images {
   position: static;
   margin-top: var(--gap);
 }
 
-.post-expanded-hero {
+.open-post-container-hero {
   width: 100%;
   max-width: 100%;
   aspect-ratio: 1/1;
@@ -988,11 +853,11 @@
   position: relative;
 }
 
-.post-expanded-hero--clickable {
+.open-post-container-hero--clickable {
   cursor: pointer;
 }
 
-.post-expanded-track-hero {
+.open-post-track-hero {
   display: flex;
   width: 100%;
   height: 100%;
@@ -1003,7 +868,7 @@
   touch-action: pan-y;
 }
 
-.post-expanded-image-hero {
+.open-post-image-hero {
   width: 100%;
   height: 100%;
   aspect-ratio: 1/1;
@@ -1013,19 +878,19 @@
   flex: 0 0 100%;
 }
 
-.post-expanded-image-hero--ready {
+.open-post-image-hero--ready {
   object-fit: cover;
 }
 
 /* Thumbnail container */
-.post-expanded-thumbs {
+.open-post-container-thumbs {
   position: relative;
   display: flex;
   gap: 5px;
   padding: 0 10px;
 }
 
-.post-expanded-image-thumb {
+.open-post-image-thumb {
   width: 50px;
   height: 50px;
   object-fit: cover;
@@ -1038,7 +903,7 @@
   z-index: 1;
 }
 
-.post-expanded-image-thumb--active {
+.open-post-image-thumb--active {
   border-color: var(--gold);
 }
 
@@ -1047,7 +912,7 @@
    Navigation buttons that open venue/session dropdowns.
    ============================================================================ */
 
-.post-expanded-nav {
+.open-post-container-nav {
   display: flex;
   gap: 10px;
   width: calc(100% - 20px);
@@ -1061,8 +926,8 @@
   box-sizing: border-box;
 }
 
-.post-expanded-button-venue,
-.post-expanded-button-session {
+.open-post-button-venue,
+.open-post-button-session {
   flex: 1 1 50%;
   height: 120px;
   position: relative;
@@ -1074,12 +939,12 @@
   transition: transform 0.2s ease;
 }
 
-.post-expanded-button-venue:hover,
-.post-expanded-button-session:hover {
+.open-post-button-venue:hover,
+.open-post-button-session:hover {
   transform: scale(1.02);
 }
 
-.post-expanded-button-image {
+.open-post-button-image {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1089,12 +954,12 @@
   transition: opacity 0.3s ease;
 }
 
-.post-expanded-button-venue:hover .post-expanded-button-image,
-.post-expanded-button-session:hover .post-expanded-button-image {
+.open-post-button-venue:hover .open-post-button-image,
+.open-post-button-session:hover .open-post-button-image {
   opacity: 0.6;
 }
 
-.post-expanded-button-content {
+.open-post-button-content {
   position: relative;
   z-index: 1;
   height: 100%;
@@ -1107,7 +972,7 @@
   background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
 }
 
-.post-expanded-button-label {
+.open-post-button-label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1115,7 +980,7 @@
   color: rgba(255,255,255,0.8);
 }
 
-.post-expanded-button-value {
+.open-post-button-value {
   font-size: 16px;
   font-weight: 700;
   color: #fff;
@@ -1126,7 +991,7 @@
    INFO GRID
    ============================================================================ */
 
-.post-expanded-info {
+.open-post-container-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
@@ -1134,7 +999,7 @@
   margin: 0 auto;
 }
 
-.post-expanded-info-item {
+.open-post-info-item {
   background: rgba(255, 255, 255, 0.05);
   padding: 10px;
   border-radius: 8px;
@@ -1143,13 +1008,13 @@
   gap: 4px;
 }
 
-.post-expanded-info-label {
+.open-post-info-label {
   font-size: 11px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
 }
 
-.post-expanded-info-value {
+.open-post-info-value {
   font-size: 14px;
   font-weight: 600;
 }
