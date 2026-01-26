@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        const ACCESS_TOKEN = 'pk.eyJ1IjoiZnVubWFwY28iLCJhIjoiY202YTh3Z2ZpMDN0ODJqcHh2N2J2ZzZ6MiJ9.8_N9Ym7h_M-y8W-n8X_v6A';
+        const ACCESS_TOKEN = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
         const ZOOM = 17;
         const PITCH = 75;
         const WIDTH = 700;
@@ -160,7 +160,7 @@
             }
 
             return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => reject(new Error("Mapbox load timeout")), 10000);
+                const timeout = setTimeout(() => reject(new Error("Mapbox load timeout")), 15000);
                 map.on('load', () => {
                     clearTimeout(timeout);
                     log("Mapbox loaded successfully.");
