@@ -214,12 +214,32 @@
         }
 
         document.getElementById('btnStart').addEventListener('click', async () => {
+            const btn = document.getElementById('btnStart');
+            
             try {
-                directoryHandle = await window.showDirectoryPicker();
-                document.getElementById('btnStart').disabled = true;
-                log("Folder access granted. Initializing Mapbox Engine...");
+                // Step 1: Initialize Map if not already done
+                if (!map) {
+                    btn.disabled = true;
+                    await initMap();
+                    btn.innerText = "Select Folder & Begin Capture";
+                    btn.disabled = false;
+                    log("Map engine ready. Now select your save folder.");
+                    return;
+                }
+
+                // Step 2: Get Folder Handle (This is the user gesture)
+                directoryHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite'
+                });
                 
-                await initMap();
+                // Step 3: Explicitly request permission to write (to be safe)
+                if (await directoryHandle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
+                    log("Permission denied. Cannot save files.", true);
+                    return;
+                }
+
+                btn.disabled = true;
+                log("Folder access granted. Starting capture...");
                 
                 const total = locations.length * BEARINGS.length;
                 let count = 0;
@@ -250,6 +270,12 @@
                             log(`Saved: ${fileName}`);
                         } catch (err) {
                             log(`FAILED: ${loc.name} (B:${bearing}) - ${err.message}`, true);
+                            // If it's a permission error, stop the whole thing
+                            if (err.name === 'NotAllowedError' || err.message.includes('activation')) {
+                                log("CRITICAL: Browser blocked the save. Try refreshing and selecting the folder again.", true);
+                                btn.disabled = false;
+                                return;
+                            }
                         }
                     }
                 }
@@ -258,7 +284,7 @@
                 document.getElementById('current-task').innerText = "Finished! All images saved to your folder.";
             } catch (err) {
                 log("FATAL ERROR: " + err.message, true);
-                document.getElementById('btnStart').disabled = false;
+                btn.disabled = false;
             }
         });
     </script>
