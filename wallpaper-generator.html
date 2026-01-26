@@ -241,6 +241,12 @@
                 log(`Loaded ${locations.length} unique locations`);
                 log(`Will generate ${locations.length * 4} images`);
                 
+                // Show first 3 locations for verification
+                for (let i = 0; i < Math.min(3, locations.length); i++) {
+                    const l = locations[i];
+                    log(`  Sample ${i+1}: lat=${l.latitude}, lng=${l.longitude}, type=${l.location_type}`);
+                }
+                
                 if (locations.length > 0) {
                     btnFolder.disabled = false;
                     
@@ -337,7 +343,15 @@
             
             const baseFilename = generateFilename(loc.latitude, loc.longitude, cam.direction, cam.pitch, cam.zoom);
             
-            log(`[${currentIndex + 1}/${maxLocs}] ${cam.direction.toUpperCase()} @ ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`);
+            log(`[${currentIndex + 1}/${maxLocs}] ${cam.direction.toUpperCase()} @ ${loc.latitude}, ${loc.longitude}`);
+            log(`  Camera: center=[${cam.center[0]}, ${cam.center[1]}] zoom=${cam.zoom} pitch=${cam.pitch} bearing=${cam.bearing}`);
+            
+            // Verify coordinates are valid
+            if (!cam.center || cam.center[0] === 0 || cam.center[1] === 0) {
+                log('  ERROR: Invalid coordinates - skipping');
+                moveToNext();
+                return;
+            }
             
             // Use SecondaryMap.capture() - the working code from components-new.js
             SecondaryMap.capture(cam, IMAGE_WIDTH, IMAGE_HEIGHT, async function(dataUrl) {

@@ -8050,19 +8050,33 @@ var SecondaryMap = (function() {
                 });
             } catch (e) {}
             
-            // Wait for render then capture
-            m.once('idle', function() {
-                setTimeout(function() {
-                    var url = '';
-                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
-                    if (!url || url.indexOf('data:image') !== 0) {
-                        try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
-                    }
-                    isCapturing = false;
-                    task.cb(url && url.indexOf('data:image') === 0 ? url : null);
-                    processQueue();
-                }, 300);
-            });
+            // Force repaint to trigger tile loading
+            m.triggerRepaint();
+            
+            // Wait for tiles to load then capture
+            // Use setTimeout first to let jumpTo take effect, then wait for idle
+            setTimeout(function() {
+                var captureTimeout = setTimeout(function() {
+                    // Timeout fallback - capture even if idle doesn't fire
+                    doCapture();
+                }, 10000);
+                
+                function doCapture() {
+                    clearTimeout(captureTimeout);
+                    setTimeout(function() {
+                        var url = '';
+                        try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                        }
+                        isCapturing = false;
+                        task.cb(url && url.indexOf('data:image') === 0 ? url : null);
+                        processQueue();
+                    }, 500);
+                }
+                
+                m.once('idle', doCapture);
+            }, 100);
         });
     }
 
