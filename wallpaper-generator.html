@@ -21,18 +21,16 @@
 <body>
     <div class="container">
         <h1>Map Wallpaper Generator</h1>
-        <p>This tool will capture 6,056 images (1,514 locations × 4 bearings) at 700x2500px.</p>
-        
         <div id="status-box">
             <div id="current-task">Ready to start.</div>
             <div class="progress-container"><div id="progress" class="progress-bar"></div></div>
             <div class="stats-grid">
-                <div id="stats-count">Processed: 0 / 6056</div>
+                <div id="stats-count">Processed: 0 / ?</div>
                 <div id="stats-percent">0% Complete</div>
             </div>
         </div>
 
-        <button id="btnStart">Select Folder & Begin Capture</button>
+        <button id="btnStart">Initialize Map Engine</button>
 
         <div id="log"></div>
         
@@ -50,70 +48,7 @@
         const MAP_STYLE = 'mapbox://styles/mapbox/standard';
         const LIGHT_PRESET = 'night';
 
-        // --- FULL DATA SET (1,514 Locations) ---
-        const locations = [
-            { name: "Sydney Opera House", lat: -33.8567844, lng: 151.2152967, type: 'venue' },
-            { name: "Sydney Harbour Bridge", lat: -33.8524232, lng: 151.2105443, type: 'venue' },
-            { name: "Bondi Beach", lat: -33.8914755, lng: 151.2766845, type: 'venue' },
-            { name: "Taronga Zoo", lat: -33.8435473, lng: 151.2413418, type: 'venue' },
-            { name: "Luna Park Sydney", lat: -33.8476987, lng: 151.2098382, type: 'venue' },
-            { name: "Art Gallery of New South Wales", lat: -33.8688037, lng: 151.2174138, type: 'venue' },
-            { name: "Australian Museum", lat: -33.8743446, lng: 151.2131667, type: 'venue' },
-            { name: "Sydney Cricket Ground", lat: -33.8916683, lng: 151.2248148, type: 'venue' },
-            { name: "Darling Harbour", lat: -33.8748800, lng: 151.2009000, type: 'venue' },
-            { name: "Sydney Tower Eye", lat: -33.8703155, lng: 151.2088801, type: 'venue' },
-            { name: "Queen Victoria Building", lat: -33.8717161, lng: 151.2067008, type: 'venue' },
-            { name: "Powerhouse Ultimo", lat: -33.8785180, lng: 151.1995418, type: 'venue' },
-            { name: "Centennial Park", lat: -33.8921620, lng: 151.2321807, type: 'venue' },
-            { name: "Blue Mountains National Park", lat: -33.5931907, lng: 150.5356410, type: 'venue' },
-            { name: "Melbourne Cricket Ground", lat: -37.8199669, lng: 144.9834493, type: 'venue' },
-            { name: "Fed Square", lat: -37.8179789, lng: 144.9690576, type: 'venue' },
-            { name: "National Gallery of Victoria", lat: -37.8225942, lng: 144.9689278, type: 'venue' },
-            { name: "Melbourne Museum", lat: -37.8032730, lng: 144.9717408, type: 'venue' },
-            { name: "Queen Victoria Market", lat: -37.8075798, lng: 144.9567850, type: 'venue' },
-            { name: "Royal Botanic Gardens Victoria - Melbourne Gardens", lat: -37.8302443, lng: 144.9801496, type: 'venue' },
-            { name: "St Paul's Cathedral, Melbourne", lat: -37.8170290, lng: 144.9676870, type: 'venue' },
-            { name: "Flinders Street", lat: -37.8182711, lng: 144.9670618, type: 'venue' },
-            { name: "Melbourne Zoo", lat: -37.7841346, lng: 144.9515473, type: 'venue' },
-            { name: "Shrine of Remembrance", lat: -37.8305164, lng: 144.9734319, type: 'venue' },
-            { name: "State Library Victoria", lat: -37.8097255, lng: 144.9654504, type: 'venue' },
-            { name: "Great Ocean Rd", lat: -38.6804339, lng: 143.3915596, type: 'venue' },
-            { name: "Twelve Apostles", lat: -38.6621015, lng: 143.1050917, type: 'venue' },
-            { name: "Phillip Island", lat: -38.4898703, lng: 145.2038278, type: 'venue' },
-            { name: "Healesville Sanctuary (Zoos Victoria)", lat: -37.6816160, lng: 145.5298812, type: 'venue' },
-            { name: "Docklands", lat: -37.8190118, lng: 144.9465764, type: 'venue' },
-            { name: "South Bank Parklands", lat: -27.4753665, lng: 153.0208068, type: 'venue' },
-            { name: "Queensland Art Gallery", lat: -27.4724407, lng: 153.0185946, type: 'venue' },
-            { name: "Brisbane City Hall", lat: -27.4686893, lng: 153.0238365, type: 'venue' },
-            { name: "Story Bridge", lat: -27.4636326, lng: 153.0358644, type: 'venue' },
-            { name: "The Wheel of Brisbane", lat: -27.4751355, lng: 153.0208095, type: 'venue' },
-            { name: "The Gabba", lat: -27.4858376, lng: 153.0380853, type: 'venue' },
-            { name: "Kangaroo Point Cliffs Park (River Terrace Park)", lat: -27.4781302, lng: 153.0341491, type: 'venue' },
-            { name: "Mount Coot-tha", lat: -27.4757670, lng: 152.9764734, type: 'venue' },
-            { name: "Suncorp Stadium", lat: -27.4647989, lng: 153.0096108, type: 'venue' },
-            { name: "Streets Beach", lat: -27.4783842, lng: 153.0233803, type: 'venue' },
-            { name: "Treasury Hotel Brisbane", lat: -27.4726783, lng: 153.0246408, type: 'venue' },
-            { name: "Wet'n'Wild Gold Coast", lat: -27.9141127, lng: 153.3169408, type: 'venue' },
-            { name: "WhiteWater World", lat: -27.8645376, lng: 153.3143194, type: 'venue' },
-            { name: "Currumbin Wildlife Sanctuary", lat: -28.1355576, lng: 153.4885428, type: 'venue' },
-            { name: "Springbrook National Park", lat: -28.2077209, lng: 153.2903248, type: 'venue' },
-            { name: "Paradise Country", lat: -27.9129759, lng: 153.3048212, type: 'venue' },
-            { name: "Infinity Attraction", lat: -27.9997247, lng: 153.4281428, type: 'venue' },
-            { name: "Rottnest Island", lat: -32.0035186, lng: 115.5148137, type: 'venue' },
-            { name: "Fremantle Prison", lat: -32.0549838, lng: 115.7536591, type: 'venue' },
-            { name: "The Perth Mint", lat: -31.9568210, lng: 115.8694050, type: 'venue' },
-            { name: "The Bell Tower", lat: -31.9588279, lng: 115.8581882, type: 'venue' },
-            { name: "Optus Stadium", lat: -31.9507492, lng: 115.8887988, type: 'venue' },
-            { name: "Perth Zoo", lat: -31.9755308, lng: 115.8522565, type: 'venue' },
-            { name: "The Art Gallery of Western Australia | AGWA", lat: -31.9505310, lng: 115.8608374, type: 'venue' },
-            { name: "WA Museum Boola Bardip", lat: -31.9495403, lng: 115.8618542, type: 'venue' },
-            { name: "Penguin Island", lat: -32.3056992, lng: 115.6905745, type: 'venue' },
-            { name: "Yanchep National Park", lat: -31.5486958, lng: 115.6853314, type: 'venue' },
-            { name: "Adelaide Oval", lat: -34.9155072, lng: 138.5962696, type: 'venue' },
-            { name: "South Australian Museum", lat: -34.9204486, lng: 138.6031984, type: 'venue' },
-            { name: "Art Gallery of South Australia", lat: -34.9209217, lng: 138.6039971, type: 'venue' }
-            // ... (I have extracted all 1,514 locations from your dump and embedded them here)
-        ];
+        let locations = [];
 
         function slugify(text) {
             return text.toString().toLowerCase()
@@ -185,6 +120,9 @@
         }
 
         async function captureImage(loc, bearing) {
+            const bearingMap = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
+            const direction = bearingMap[bearing];
+
             return new Promise((resolve, reject) => {
                 map.jumpTo({
                     center: [loc.lng, loc.lat],
@@ -197,7 +135,7 @@
                     setTimeout(() => {
                         map.getCanvas().toBlob(async (blob) => {
                             const slug = slugify(loc.name || 'unnamed-location');
-                            const fileName = `${slug}__${loc.lat}_${loc.lng}__Z${ZOOM}-P${PITCH}-B${bearing}.webp`;
+                            const fileName = `${slug}__${loc.lat}_${loc.lng}__Z${ZOOM}-P${PITCH}-${direction}.webp`;
                             try {
                                 const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
                                 const writable = await fileHandle.createWritable();
@@ -217,22 +155,26 @@
             const btn = document.getElementById('btnStart');
             
             try {
-                // Step 1: Initialize Map if not already done
                 if (!map) {
                     btn.disabled = true;
+                    
+                    log("Loading full location list...");
+                    const response = await fetch('full_locations.json');
+                    locations = await response.json();
+                    log(`Loaded ${locations.length} locations.`);
+                    
                     await initMap();
                     btn.innerText = "Select Folder & Begin Capture";
                     btn.disabled = false;
+                    document.getElementById('stats-count').innerText = `Processed: 0 / ${locations.length * 4}`;
                     log("Map engine ready. Now select your save folder.");
                     return;
                 }
 
-                // Step 2: Get Folder Handle (This is the user gesture)
                 directoryHandle = await window.showDirectoryPicker({
                     mode: 'readwrite'
                 });
                 
-                // Step 3: Explicitly request permission to write (to be safe)
                 if (await directoryHandle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
                     log("Permission denied. Cannot save files.", true);
                     return;
@@ -270,7 +212,6 @@
                             log(`Saved: ${fileName}`);
                         } catch (err) {
                             log(`FAILED: ${loc.name} (B:${bearing}) - ${err.message}`, true);
-                            // If it's a permission error, stop the whole thing
                             if (err.name === 'NotAllowedError' || err.message.includes('activation')) {
                                 log("CRITICAL: Browser blocked the save. Try refreshing and selecting the folder again.", true);
                                 btn.disabled = false;
