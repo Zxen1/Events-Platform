@@ -140,9 +140,10 @@
     <div class="controls">
         <button id="btn-load">1. Load Locations</button>
         <button id="btn-folder" disabled>2. Select Save Folder</button>
-        <button id="btn-start" disabled>3. Start Generation</button>
+        <button id="btn-test" disabled>3. Test (first 5 locations)</button>
+        <button id="btn-start" disabled>4. Generate All</button>
         <button id="btn-pause" disabled>Pause</button>
-        <button id="btn-download-sql" disabled>4. Download SQL</button>
+        <button id="btn-download-sql" disabled>5. Download SQL</button>
     </div>
     
     <div id="progress">
@@ -165,8 +166,8 @@
         const IMAGE_HEIGHT = 2500;
         const STYLE_URL = 'mapbox://styles/mapbox/standard';
         const LIGHT_PRESET = 'night';
-        const CAPTURE_DELAY = 2000; // ms to wait for map to render
-        const BATCH_DELAY = 100; // ms between captures
+        const CAPTURE_DELAY = 5000; // ms to wait after idle for full render (zoom 18 needs time)
+        const BATCH_DELAY = 500; // ms between captures
         
         // Camera settings by location type
         function getCameraSettings(locationType) {
@@ -200,9 +201,13 @@
         const progressText = document.getElementById('progress-text');
         const btnLoad = document.getElementById('btn-load');
         const btnFolder = document.getElementById('btn-folder');
+        const btnTest = document.getElementById('btn-test');
         const btnStart = document.getElementById('btn-start');
         const btnPause = document.getElementById('btn-pause');
         const btnDownloadSql = document.getElementById('btn-download-sql');
+        
+        let testMode = false;
+        let testLimit = 5; // Number of locations to test (5 locations × 4 images = 20 images)
         
         function log(msg) {
             const time = new Date().toLocaleTimeString();
@@ -211,7 +216,8 @@
         }
         
         function updateProgress() {
-            const total = locations.length * 4;
+            const maxLocations = testMode ? Math.min(testLimit, locations.length) : locations.length;
+            const total = maxLocations * 4;
             const done = completedCount + skippedCount;
             const pct = total > 0 ? (done / total * 100).toFixed(1) : 0;
             progressFill.style.width = pct + '%';
@@ -251,9 +257,10 @@
                 log(`Loaded ${locations.length} unique locations`);
                 log(`Will generate ${locations.length * 4} images (4 per location)`);
                 
-                if (locations.length > 0) {
+                    if (locations.length > 0) {
                     btnFolder.disabled = false;
-                    initMap();
+                    // Initialize map centered on first location (not ocean)
+                    initMap(locations[0].longitude, locations[0].latitude);
                 }
             } catch (err) {
                 log('Error: ' + err.message);
@@ -274,6 +281,8 @@
                 saveFolder = await window.showDirectoryPicker({ mode: 'readwrite' });
                 log(`Save folder selected: ${saveFolder.name}`);
                 log('Images will be saved directly to this folder as they are generated.');
+                log('Tip: Run "Test" first to verify image quality before generating all.');
+                btnTest.disabled = false;
                 btnStart.disabled = false;
                 btnFolder.textContent = '✓ Folder Selected';
             } catch (err) {
@@ -286,8 +295,10 @@
         });
         
         // Initialize Mapbox
-        function initMap() {
-            log('Initializing Mapbox...');
+        let mapReady = false;
+        
+        function initMap(startLng, startLat) {
+            log('Initializing Mapbox at first location...');
             
             // Get Mapbox token from the page or prompt
             if (!mapboxgl.accessToken) {
@@ -306,12 +317,15 @@
             
             const container = document.getElementById('map-container');
             
+            // Start at first location with correct zoom, not at [0,0] ocean
             map = new mapboxgl.Map({
                 container: container,
                 style: STYLE_URL,
                 projection: 'globe',
-                center: [0, 0],
-                zoom: 1,
+                center: [startLng, startLat],
+                zoom: 18,
+                pitch: 75,
+                bearing: 0,
                 interactive: false,
                 attributionControl: false,
                 preserveDrawingBuffer: true
@@ -325,22 +339,31 @@
                     map.setConfigProperty('basemap', 'showPlaceLabels', false);
                     map.setConfigProperty('basemap', 'showRoadLabels', false);
                     map.setConfigProperty('basemap', 'showTransitLabels', false);
+                    log('Style configured: night preset, labels hidden');
                 } catch (e) {
                     log('Warning: Could not set config properties: ' + e.message);
                 }
             });
             
             map.on('load', function() {
-                log('Map initialized with night preset and labels hidden');
+                mapReady = true;
+                log('Map loaded at: ' + startLat.toFixed(4) + ', ' + startLng.toFixed(4));
+                log('Map ready - you can now start generation');
             });
         }
         
-        // Start generation
-        btnStart.addEventListener('click', function() {
+        // Test mode - first 5 locations only
+        btnTest.addEventListener('click', async function() {
             if (!saveFolder) {
                 log('ERROR: Please select a save folder first.');
                 return;
             }
+            if (!mapReady) {
+                log('ERROR: Map not ready yet. Please wait...');
+                return;
+            }
+            testMode = true;
+            btnTest.disabled = true;
             btnStart.disabled = true;
             btnFolder.disabled = true;
             btnPause.disabled = false;
@@ -350,8 +373,34 @@
             skippedCount = 0;
             currentIndex = 0;
             currentCameraIndex = 0;
-            log('Starting image generation...');
-            log('Images will be saved directly to your selected folder.');
+            log('=== TEST MODE: First ' + testLimit + ' locations (' + (testLimit * 4) + ' images) ===');
+            log('Check the output folder to verify image quality before running full generation.');
+            processNext();
+        });
+        
+        // Full generation
+        btnStart.addEventListener('click', async function() {
+            if (!saveFolder) {
+                log('ERROR: Please select a save folder first.');
+                return;
+            }
+            if (!mapReady) {
+                log('ERROR: Map not ready yet. Please wait...');
+                return;
+            }
+            testMode = false;
+            btnTest.disabled = true;
+            btnStart.disabled = true;
+            btnFolder.disabled = true;
+            btnPause.disabled = false;
+            isPaused = false;
+            sqlStatements = [];
+            completedCount = 0;
+            skippedCount = 0;
+            currentIndex = 0;
+            currentCameraIndex = 0;
+            log('Starting FULL generation of ' + locations.length + ' locations (' + (locations.length * 4) + ' images)...');
+            log('Estimated time: ~' + Math.round(locations.length * 4 * 6 / 3600) + ' hours');
             processNext();
         });
         
@@ -370,7 +419,10 @@
         // Process next location/camera
         async function processNext() {
             if (isPaused) return;
-            if (currentIndex >= locations.length) {
+            
+            // Check if done (respect test mode limit)
+            const maxLocations = testMode ? Math.min(testLimit, locations.length) : locations.length;
+            if (currentIndex >= maxLocations) {
                 finishGeneration();
                 return;
             }
@@ -387,7 +439,7 @@
                 cam.zoom
             );
             
-            log(`[${currentIndex + 1}/${locations.length}] Capturing ${filename}...`);
+            log(`[${currentIndex + 1}/${locations.length}] Capturing ${filename} (${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)})...`);
             
             // Move map to position
             map.jumpTo({
@@ -396,6 +448,9 @@
                 pitch: cam.pitch,
                 bearing: cam.bearing
             });
+            
+            // Force a render cycle to trigger tile loading
+            map.triggerRepaint();
             
             // Wait for tiles to load
             await waitForMapReady();
@@ -449,20 +504,28 @@
         
         function waitForMapReady() {
             return new Promise(resolve => {
-                if (map.areTilesLoaded()) {
-                    setTimeout(resolve, CAPTURE_DELAY);
-                } else {
-                    const onIdle = () => {
+                let idleCount = 0;
+                const targetIdles = 2; // Wait for 2 idle events to ensure full load
+                
+                const onIdle = () => {
+                    idleCount++;
+                    if (idleCount >= targetIdles) {
                         map.off('idle', onIdle);
+                        // Additional delay after idle to ensure full render at zoom 18
                         setTimeout(resolve, CAPTURE_DELAY);
-                    };
-                    map.on('idle', onIdle);
-                    // Timeout fallback
-                    setTimeout(() => {
-                        map.off('idle', onIdle);
-                        resolve();
-                    }, 10000);
-                }
+                    } else {
+                        // Trigger another render cycle to get another idle
+                        map.triggerRepaint();
+                    }
+                };
+                map.on('idle', onIdle);
+                
+                // Timeout fallback (20 seconds max wait)
+                setTimeout(() => {
+                    map.off('idle', onIdle);
+                    log('Warning: Tile load timeout after ' + idleCount + ' idles, capturing anyway...');
+                    resolve();
+                }, 20000);
             });
         }
         
@@ -474,10 +537,20 @@
         
         function finishGeneration() {
             log('='.repeat(50));
-            log(`COMPLETE! Generated ${completedCount} images`);
-            log(`Images saved to: ${saveFolder.name}`);
+            if (testMode) {
+                log(`TEST COMPLETE! Generated ${completedCount} images`);
+                log(`Check the images in: ${saveFolder.name}`);
+                log('If they look good, click "Generate All" to create all images.');
+                // Re-enable buttons for full run
+                btnTest.disabled = false;
+                btnStart.disabled = false;
+                btnFolder.disabled = false;
+            } else {
+                log(`COMPLETE! Generated ${completedCount} images`);
+                log(`Images saved to: ${saveFolder.name}`);
+                log('Click "Download SQL" to get the database INSERT statements.');
+            }
             log('='.repeat(50));
-            log('Click "Download SQL" to get the database INSERT statements.');
             
             btnPause.disabled = true;
             btnDownloadSql.disabled = false;
