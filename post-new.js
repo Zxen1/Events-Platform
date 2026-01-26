@@ -2445,7 +2445,7 @@ const PostModule = (function() {
     var headerPriceParts = parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary || '');
 
     var headerIconHtml = iconUrl
-      ? '<span class="post-expanded-header-icon-sub"><img class="post-expanded-header-image-minithumb-sub" src="' + iconUrl + '" alt="" /></span>'
+      ? '<span class="post-expanded-header-icon-sub"><img class="post-expanded-header-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
     headerEl.innerHTML = [

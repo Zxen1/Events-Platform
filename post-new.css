@@ -733,6 +733,26 @@
   margin-bottom: 0;
 }
 
+/* Header subcategory icon */
+.post-expanded-header-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.post-expanded-header-row-cat .post-expanded-header-icon-sub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-right: 5px;
+}
+
+.post-expanded-header-row-cat .post-expanded-header-icon-sub:empty {
+  display: none;
+  padding-right: 0;
+}
+
 .post-expanded-header-badge {
   display: inline-flex;
   align-items: center;
