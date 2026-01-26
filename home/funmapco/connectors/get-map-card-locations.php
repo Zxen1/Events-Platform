@@ -42,18 +42,11 @@ require_once $configPath;
 
 try {
     // Get unique lat/lng combinations from post_map_cards
-    // Determine location_type based on which fields are populated:
-    // - venue: has venue_name
-    // - address: has address_line but no venue_name
-    // - city: has city but no address_line and no venue_name
+    // location_type is read directly from the column
     $sql = "SELECT DISTINCT 
                 latitude,
                 longitude,
-                CASE 
-                    WHEN venue_name IS NOT NULL AND venue_name != '' THEN 'venue'
-                    WHEN address_line IS NOT NULL AND address_line != '' THEN 'address'
-                    ELSE 'city'
-                END AS location_type
+                location_type
             FROM post_map_cards 
             WHERE latitude IS NOT NULL 
               AND longitude IS NOT NULL 
