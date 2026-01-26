@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallpaper Image Generator</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: #fff;
+            margin: 0;
+        }
+        h1 { margin: 0 0 20px 0; }
+        .controls { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background: #0055aa;
+        }
+        #status {
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #progress {
+            margin-bottom: 20px;
+        }
+        #progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066cc, #00cc66);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        #progress-text {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        #map-container {
+            width: 700px;
+            height: 2500px;
+            position: absolute;
+            left: -9999px;
+            top: 0;
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: #2a2a2a;
+            padding: 15px 25px;
+            border-radius: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0099ff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        #sql-output {
+            display: none;
+            margin-top: 20px;
+        }
+        #sql-output textarea {
+            width: 100%;
+            height: 300px;
+            background: #1a1a1a;
+            color: #0f0;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wallpaper Image Generator</h1>
+    
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="total-locations">-</div>
+            <div class="stat-label">Unique Locations</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="total-images">-</div>
+            <div class="stat-label">Images to Generate</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="completed-images">0</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="skipped-images">0</div>
+            <div class="stat-label">Skipped (exists)</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="btn-load">1. Load Locations</button>
+        <button id="btn-start" disabled>2. Start Generation</button>
+        <button id="btn-pause" disabled>Pause</button>
+        <button id="btn-download-zip" disabled>3. Download Images (ZIP)</button>
+        <button id="btn-download-sql" disabled>4. Download SQL</button>
+    </div>
+    
+    <div id="progress">
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div id="progress-text">Ready</div>
+    </div>
+    
+    <div id="status">Click "Load Locations" to fetch unique coordinates from post_map_cards...</div>
+    
+    <div id="sql-output">
+        <h3>Generated SQL</h3>
+        <textarea id="sql-textarea" readonly></textarea>
+    </div>
+    
+    <div id="map-container"></div>
+
+    <script>
+        // Configuration
+        const IMAGE_WIDTH = 700;
+        const IMAGE_HEIGHT = 2500;
+        const STYLE_URL = 'mapbox://styles/mapbox/standard';
+        const LIGHT_PRESET = 'night';
+        const CAPTURE_DELAY = 2000; // ms to wait for map to render
+        const BATCH_DELAY = 100; // ms between captures
+        
+        // Camera settings by location type
+        function getCameraSettings(locationType) {
+            const isCity = locationType === 'city';
+            const zoom = isCity ? 11 : 16;
+            const pitch = 70;
+            return [
+                { bearing: 0, pitch, zoom, direction: 'n' },
+                { bearing: 90, pitch, zoom, direction: 'e' },
+                { bearing: 180, pitch, zoom, direction: 's' },
+                { bearing: 270, pitch, zoom, direction: 'w' }
+            ];
+        }
+        
+        // State
+        let locations = [];
+        let map = null;
+        let isPaused = false;
+        let currentIndex = 0;
+        let currentCameraIndex = 0;
+        let completedCount = 0;
+        let skippedCount = 0;
+        let sqlStatements = [];
+        let zip = null;
+        
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const btnLoad = document.getElementById('btn-load');
+        const btnStart = document.getElementById('btn-start');
+        const btnPause = document.getElementById('btn-pause');
+        const btnDownloadZip = document.getElementById('btn-download-zip');
+        const btnDownloadSql = document.getElementById('btn-download-sql');
+        
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            statusEl.textContent = `[${time}] ${msg}\n` + statusEl.textContent;
+            console.log(msg);
+        }
+        
+        function updateProgress() {
+            const total = locations.length * 4;
+            const done = completedCount + skippedCount;
+            const pct = total > 0 ? (done / total * 100).toFixed(1) : 0;
+            progressFill.style.width = pct + '%';
+            progressText.textContent = `${done} / ${total} (${pct}%)`;
+            document.getElementById('completed-images').textContent = completedCount;
+            document.getElementById('skipped-images').textContent = skippedCount;
+        }
+        
+        // Generate filename
+        function generateFilename(lat, lng, direction, pitch, zoom, ext) {
+            const latPrefix = lat < 0 ? 'n' : '';
+            const lngPrefix = lng < 0 ? 'n' : '';
+            const latStr = latPrefix + Math.abs(lat).toFixed(7);
+            const lngStr = lngPrefix + Math.abs(lng).toFixed(7);
+            return `${latStr}_${lngStr}_${direction}_p${pitch}_z${zoom}.${ext}`;
+        }
+        
+        // Load locations from database
+        btnLoad.addEventListener('click', async function() {
+            btnLoad.disabled = true;
+            log('Fetching unique locations from post_map_cards...');
+            
+            try {
+                const response = await fetch('/gateway.php?action=get-map-card-locations');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load locations');
+                }
+                
+                locations = data.locations || [];
+                
+                document.getElementById('total-locations').textContent = locations.length;
+                document.getElementById('total-images').textContent = locations.length * 4;
+                
+                log(`Loaded ${locations.length} unique locations`);
+                log(`Will generate ${locations.length * 4} images (4 per location)`);
+                
+                if (locations.length > 0) {
+                    btnStart.disabled = false;
+                    initMap();
+                }
+            } catch (err) {
+                log('Error: ' + err.message);
+                btnLoad.disabled = false;
+            }
+        });
+        
+        // Initialize Mapbox
+        function initMap() {
+            log('Initializing Mapbox...');
+            
+            // Get Mapbox token from the page or prompt
+            if (!mapboxgl.accessToken) {
+                // Try to get from existing app
+                if (window.MAPBOX_TOKEN) {
+                    mapboxgl.accessToken = window.MAPBOX_TOKEN;
+                } else {
+                    const token = prompt('Enter Mapbox Access Token:');
+                    if (!token) {
+                        log('Error: Mapbox token required');
+                        return;
+                    }
+                    mapboxgl.accessToken = token;
+                }
+            }
+            
+            const container = document.getElementById('map-container');
+            
+            map = new mapboxgl.Map({
+                container: container,
+                style: STYLE_URL,
+                projection: 'globe',
+                center: [0, 0],
+                zoom: 1,
+                interactive: false,
+                attributionControl: false,
+                preserveDrawingBuffer: true
+            });
+            
+            map.on('load', function() {
+                log('Map initialized');
+                // Apply night lighting
+                try {
+                    map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
+                } catch (e) {}
+                // Hide labels and roads
+                applyCleanStyle();
+            });
+        }
+        
+        function applyCleanStyle() {
+            try {
+                // Hide all labels
+                map.setLayoutProperty('country-label', 'visibility', 'none');
+                map.setLayoutProperty('state-label', 'visibility', 'none');
+                map.setLayoutProperty('settlement-label', 'visibility', 'none');
+                map.setLayoutProperty('poi-label', 'visibility', 'none');
+                map.setLayoutProperty('water-point-label', 'visibility', 'none');
+                map.setLayoutProperty('water-line-label', 'visibility', 'none');
+                map.setLayoutProperty('natural-point-label', 'visibility', 'none');
+                map.setLayoutProperty('natural-line-label', 'visibility', 'none');
+                map.setLayoutProperty('road-label', 'visibility', 'none');
+            } catch (e) {
+                // Some layers may not exist
+            }
+        }
+        
+        // Start generation
+        btnStart.addEventListener('click', function() {
+            btnStart.disabled = true;
+            btnPause.disabled = false;
+            isPaused = false;
+            zip = new JSZip();
+            sqlStatements = [];
+            completedCount = 0;
+            skippedCount = 0;
+            currentIndex = 0;
+            currentCameraIndex = 0;
+            log('Starting image generation...');
+            log('Images will be stored in memory and available as ZIP when complete.');
+            processNext();
+        });
+        
+        // Pause/Resume
+        btnPause.addEventListener('click', function() {
+            isPaused = !isPaused;
+            btnPause.textContent = isPaused ? 'Resume' : 'Pause';
+            if (!isPaused) {
+                log('Resuming...');
+                processNext();
+            } else {
+                log('Paused');
+            }
+        });
+        
+        // Process next location/camera
+        async function processNext() {
+            if (isPaused) return;
+            if (currentIndex >= locations.length) {
+                finishGeneration();
+                return;
+            }
+            
+            const loc = locations[currentIndex];
+            const cameras = getCameraSettings(loc.location_type);
+            const cam = cameras[currentCameraIndex];
+            
+            const filename = generateFilename(
+                loc.latitude, 
+                loc.longitude, 
+                cam.direction, 
+                cam.pitch, 
+                cam.zoom, 
+                'png'
+            );
+            
+            log(`[${currentIndex + 1}/${locations.length}] Capturing ${filename}...`);
+            
+            // Move map to position
+            map.jumpTo({
+                center: [loc.longitude, loc.latitude],
+                zoom: cam.zoom,
+                pitch: cam.pitch,
+                bearing: cam.bearing
+            });
+            
+            // Wait for tiles to load
+            await waitForMapReady();
+            
+            // Capture
+            try {
+                const canvas = map.getCanvas();
+                const dataUrl = canvas.toDataURL('image/png');
+                
+                // Extract base64 data and add to ZIP
+                const base64Data = dataUrl.split(',')[1];
+                zip.file(filename, base64Data, { base64: true });
+                
+                // Calculate approximate file size (base64 is ~33% larger than binary)
+                const fileSize = Math.round(base64Data.length * 0.75);
+                
+                // Generate SQL
+                const sql = generateSqlInsert(loc, cam, filename, fileSize);
+                sqlStatements.push(sql);
+                
+                completedCount++;
+                updateProgress();
+                
+            } catch (err) {
+                log(`Error capturing: ${err.message}`);
+            }
+            
+            // Move to next camera or next location
+            currentCameraIndex++;
+            if (currentCameraIndex >= 4) {
+                currentCameraIndex = 0;
+                currentIndex++;
+            }
+            
+            // Continue after delay
+            setTimeout(processNext, BATCH_DELAY);
+        }
+        
+        function waitForMapReady() {
+            return new Promise(resolve => {
+                if (map.areTilesLoaded()) {
+                    setTimeout(resolve, CAPTURE_DELAY);
+                } else {
+                    const onIdle = () => {
+                        map.off('idle', onIdle);
+                        setTimeout(resolve, CAPTURE_DELAY);
+                    };
+                    map.on('idle', onIdle);
+                    // Timeout fallback
+                    setTimeout(() => {
+                        map.off('idle', onIdle);
+                        resolve();
+                    }, 10000);
+                }
+            });
+        }
+        
+        function generateSqlInsert(loc, cam, filename, fileSize) {
+            const folderUrl = 'https://cdn.funmap.com/map-images';
+            const fileUrl = `${folderUrl}/${filename}`;
+            return `INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, file_name, file_url, file_size, width, height, created_at, updated_at) VALUES (${loc.latitude}, ${loc.longitude}, '${loc.location_type}', ${cam.bearing}, ${cam.pitch}, ${cam.zoom}, '${filename}', '${fileUrl}', ${fileSize}, ${IMAGE_WIDTH}, ${IMAGE_HEIGHT}, NOW(), NOW()) ON DUPLICATE KEY UPDATE file_url = VALUES(file_url), file_size = VALUES(file_size), updated_at = NOW());`;
+        }
+        
+        function finishGeneration() {
+            log('='.repeat(50));
+            log(`COMPLETE! Generated ${completedCount} images`);
+            log(`Skipped ${skippedCount} (already exist)`);
+            log('='.repeat(50));
+            log('Click "Download Images (ZIP)" to get all images.');
+            log('Click "Download SQL" to get the database INSERT statements.');
+            
+            btnPause.disabled = true;
+            btnDownloadZip.disabled = false;
+            btnDownloadSql.disabled = false;
+            
+            // Show SQL output
+            document.getElementById('sql-output').style.display = 'block';
+            document.getElementById('sql-textarea').value = sqlStatements.join('\n');
+        }
+        
+        // Download ZIP file with all images
+        btnDownloadZip.addEventListener('click', async function() {
+            btnDownloadZip.disabled = true;
+            btnDownloadZip.textContent = 'Generating ZIP...';
+            log('Generating ZIP file (this may take a moment)...');
+            
+            try {
+                const content = await zip.generateAsync({ 
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                }, function(metadata) {
+                    progressText.textContent = `Creating ZIP: ${metadata.percent.toFixed(0)}%`;
+                });
+                
+                const url = URL.createObjectURL(content);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'map-images.zip';
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                log(`ZIP file downloaded (${(content.size / 1024 / 1024).toFixed(1)} MB)`);
+                btnDownloadZip.textContent = 'Download Images (ZIP)';
+                btnDownloadZip.disabled = false;
+                progressText.textContent = 'ZIP downloaded!';
+            } catch (err) {
+                log('Error creating ZIP: ' + err.message);
+                btnDownloadZip.textContent = 'Download Images (ZIP)';
+                btnDownloadZip.disabled = false;
+            }
+        });
+        
+        // Download SQL file
+        btnDownloadSql.addEventListener('click', function() {
+            const sql = sqlStatements.join('\n');
+            const blob = new Blob([sql], { type: 'text/sql' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'map_images_insert.sql';
+            link.click();
+            URL.revokeObjectURL(url);
+            log('SQL file downloaded');
+        });
+    </script>
+</body>
+</html>
