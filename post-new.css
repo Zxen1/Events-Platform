@@ -670,7 +670,7 @@
   display: grid;
   grid-template-columns: 50px 1fr auto;
   gap: 10px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .post-expanded.post-expanded--desc-expanded .post-card,
@@ -698,7 +698,7 @@
   box-shadow: none;
 }
 
-/* Sticky header - expanded header (for full view) */
+/* Sticky header - expanded header (for full view) - 70px total height */
 .post-expanded-header {
   position: sticky;
   top: 0;
@@ -710,7 +710,9 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
-  padding: 10px 10px 0;
+  padding: 10px;
+  height: 70px;
+  box-sizing: border-box;
 }
 
 .post-expanded-header:hover {
@@ -732,8 +734,7 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+  align-items: center;
 }
 
 /* Thumbnail image - 50x50 minithumb size */
@@ -745,7 +746,6 @@
   display: block;
   background: var(--panel-bg);
   flex: 0 0 50px;
-  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 .post-expanded-header-image-minithumb--empty {
@@ -754,7 +754,6 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  margin-bottom: 10px;
 }
 
 /* Meta container */
@@ -764,7 +763,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 /* Title */
