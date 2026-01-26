@@ -6,7 +6,6 @@
     <title>Wallpaper Image Generator</title>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.2/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -140,9 +139,9 @@
     
     <div class="controls">
         <button id="btn-load">1. Load Locations</button>
-        <button id="btn-start" disabled>2. Start Generation</button>
+        <button id="btn-folder" disabled>2. Select Save Folder</button>
+        <button id="btn-start" disabled>3. Start Generation</button>
         <button id="btn-pause" disabled>Pause</button>
-        <button id="btn-download-zip" disabled>3. Download Images (ZIP)</button>
         <button id="btn-download-sql" disabled>4. Download SQL</button>
     </div>
     
@@ -191,16 +190,16 @@
         let completedCount = 0;
         let skippedCount = 0;
         let sqlStatements = [];
-        let zip = null;
+        let saveFolder = null; // File System Access API directory handle
         
         // DOM elements
         const statusEl = document.getElementById('status');
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
         const btnLoad = document.getElementById('btn-load');
+        const btnFolder = document.getElementById('btn-folder');
         const btnStart = document.getElementById('btn-start');
         const btnPause = document.getElementById('btn-pause');
-        const btnDownloadZip = document.getElementById('btn-download-zip');
         const btnDownloadSql = document.getElementById('btn-download-sql');
         
         function log(msg) {
@@ -250,12 +249,36 @@
                 log(`Will generate ${locations.length * 4} images (4 per location)`);
                 
                 if (locations.length > 0) {
-                    btnStart.disabled = false;
+                    btnFolder.disabled = false;
                     initMap();
                 }
             } catch (err) {
                 log('Error: ' + err.message);
                 btnLoad.disabled = false;
+            }
+        });
+        
+        // Select save folder using File System Access API
+        btnFolder.addEventListener('click', async function() {
+            try {
+                // Check browser support
+                if (!('showDirectoryPicker' in window)) {
+                    log('ERROR: Your browser does not support the File System Access API.');
+                    log('Please use Chrome, Edge, or another Chromium-based browser.');
+                    return;
+                }
+                
+                saveFolder = await window.showDirectoryPicker({ mode: 'readwrite' });
+                log(`Save folder selected: ${saveFolder.name}`);
+                log('Images will be saved directly to this folder as they are generated.');
+                btnStart.disabled = false;
+                btnFolder.textContent = '✓ Folder Selected';
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    log('Folder selection cancelled.');
+                } else {
+                    log('Error selecting folder: ' + err.message);
+                }
             }
         });
         
@@ -321,17 +344,21 @@
         
         // Start generation
         btnStart.addEventListener('click', function() {
+            if (!saveFolder) {
+                log('ERROR: Please select a save folder first.');
+                return;
+            }
             btnStart.disabled = true;
+            btnFolder.disabled = true;
             btnPause.disabled = false;
             isPaused = false;
-            zip = new JSZip();
             sqlStatements = [];
             completedCount = 0;
             skippedCount = 0;
             currentIndex = 0;
             currentCameraIndex = 0;
             log('Starting image generation...');
-            log('Images will be stored in memory and available as ZIP when complete.');
+            log('Images will be saved directly to your selected folder.');
             processNext();
         });
         
@@ -381,17 +408,20 @@
             // Wait for tiles to load
             await waitForMapReady();
             
-            // Capture
+            // Capture and save directly to folder
             try {
                 const canvas = map.getCanvas();
-                const dataUrl = canvas.toDataURL('image/png');
                 
-                // Extract base64 data and add to ZIP
-                const base64Data = dataUrl.split(',')[1];
-                zip.file(filename, base64Data, { base64: true });
+                // Convert canvas to blob
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                 
-                // Calculate approximate file size (base64 is ~33% larger than binary)
-                const fileSize = Math.round(base64Data.length * 0.75);
+                // Save directly to folder using File System Access API
+                const fileHandle = await saveFolder.getFileHandle(filename, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                
+                const fileSize = blob.size;
                 
                 // Generate SQL
                 const sql = generateSqlInsert(loc, cam, filename, fileSize);
@@ -401,7 +431,7 @@
                 updateProgress();
                 
             } catch (err) {
-                log(`Error capturing: ${err.message}`);
+                log(`Error saving ${filename}: ${err.message}`);
             }
             
             // Move to next camera or next location
@@ -443,52 +473,17 @@
         function finishGeneration() {
             log('='.repeat(50));
             log(`COMPLETE! Generated ${completedCount} images`);
-            log(`Skipped ${skippedCount} (already exist)`);
+            log(`Images saved to: ${saveFolder.name}`);
             log('='.repeat(50));
-            log('Click "Download Images (ZIP)" to get all images.');
             log('Click "Download SQL" to get the database INSERT statements.');
             
             btnPause.disabled = true;
-            btnDownloadZip.disabled = false;
             btnDownloadSql.disabled = false;
             
             // Show SQL output
             document.getElementById('sql-output').style.display = 'block';
             document.getElementById('sql-textarea').value = sqlStatements.join('\n');
         }
-        
-        // Download ZIP file with all images
-        btnDownloadZip.addEventListener('click', async function() {
-            btnDownloadZip.disabled = true;
-            btnDownloadZip.textContent = 'Generating ZIP...';
-            log('Generating ZIP file (this may take a moment)...');
-            
-            try {
-                const content = await zip.generateAsync({ 
-                    type: 'blob',
-                    compression: 'DEFLATE',
-                    compressionOptions: { level: 6 }
-                }, function(metadata) {
-                    progressText.textContent = `Creating ZIP: ${metadata.percent.toFixed(0)}%`;
-                });
-                
-                const url = URL.createObjectURL(content);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'map-images.zip';
-                link.click();
-                URL.revokeObjectURL(url);
-                
-                log(`ZIP file downloaded (${(content.size / 1024 / 1024).toFixed(1)} MB)`);
-                btnDownloadZip.textContent = 'Download Images (ZIP)';
-                btnDownloadZip.disabled = false;
-                progressText.textContent = 'ZIP downloaded!';
-            } catch (err) {
-                log('Error creating ZIP: ' + err.message);
-                btnDownloadZip.textContent = 'Download Images (ZIP)';
-                btnDownloadZip.disabled = false;
-            }
-        });
         
         // Download SQL file
         btnDownloadSql.addEventListener('click', function() {
