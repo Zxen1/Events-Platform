@@ -612,6 +612,8 @@
 }
 
 /* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
+.post-expanded .member-postform-location-content--locationwallpaper > .post-card,
+.post-expanded .member-postform-location-content--locationwallpaper > .recent-card,
 .post-expanded .member-postform-location-content--locationwallpaper > .post-expanded-header {
   position: sticky;
   top: 0;
@@ -647,8 +649,9 @@
   max-width: 100%;
 }
 
-/* Sticky header inside expanded post */
-.post-expanded-header {
+/* Sticky header inside expanded post - current structure uses .post-card/.recent-card */
+.post-expanded .post-card,
+.post-expanded .recent-card {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
@@ -661,6 +664,29 @@
 }
 
 /* Let wallpaper show behind the sticky header when expanded */
+.post-expanded.post-expanded--desc-expanded .post-card,
+.post-expanded.post-expanded--desc-expanded .recent-card {
+  background: transparent;
+}
+
+.post-expanded .post-card:hover,
+.post-expanded .recent-card:hover {
+  background: var(--panel-bg);
+  box-shadow: none;
+}
+
+/* Future: Sticky header with new class naming */
+.post-expanded-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
+  background: var(--panel-bg);
+  border-top: 1px solid var(--blue-500);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
 .post-expanded.post-expanded--desc-expanded .post-expanded-header {
   background: transparent;
 }
@@ -670,6 +696,16 @@
   box-shadow: none;
 }
 
+/* Actions container - current structure */
+.post-expanded .post-card-container-actions,
+.post-expanded .recent-card-container-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Future: Actions container with new class naming */
 .post-expanded-header-actions {
   display: flex;
   flex-direction: column;
