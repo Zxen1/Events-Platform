@@ -35,13 +35,7 @@ if ($configPath === null) {
 
 require_once $configPath;
 
-require '../config/config-auth.php';
 header('Content-Type: application/json');
-
-if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
-    http_response_code(403);
-    exit(json_encode(['success' => false, 'error' => 'Forbidden']));
-}
 
 // Get lat/lng from query params
 $lat = isset($_GET['lat']) ? (float)$_GET['lat'] : null;

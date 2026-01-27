@@ -8142,54 +8142,27 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {}
 
         // 3. Fetch from API (for form/profile contexts)
-        try {
-            var apiBase = '';
-            if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                apiBase = settings.api_base_url || '';
-            }
-            if (!apiBase) {
-                callback(null);
-                return;
-            }
-
-            var url = apiBase + '/get-map-wallpapers.php?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng);
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            
-            // Add API key header
-            var apiKey = '';
-            if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                apiKey = settings.api_key || '';
-            }
-            if (apiKey) {
-                xhr.setRequestHeader('X-API-KEY', apiKey);
-            }
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState !== 4) return;
-                if (xhr.status === 200) {
-                    try {
-                        var resp = JSON.parse(xhr.responseText);
-                        if (resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length > 0) {
-                            // Cache on container for future use
-                            containerEl.__libraryWallpapers = {
-                                lat: lat,
-                                lng: lng,
-                                wallpapers: resp.wallpapers
-                            };
-                            callback(resp.wallpapers);
-                            return;
-                        }
-                    } catch (e) {}
+        fetch('/gateway.php?action=get-map-wallpapers&lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng))
+            .then(function(response) {
+                if (!response.ok) return null;
+                return response.json();
+            })
+            .then(function(resp) {
+                if (resp && resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length > 0) {
+                    // Cache on container for future use
+                    containerEl.__libraryWallpapers = {
+                        lat: lat,
+                        lng: lng,
+                        wallpapers: resp.wallpapers
+                    };
+                    callback(resp.wallpapers);
+                } else {
+                    callback(null);
                 }
+            })
+            .catch(function() {
                 callback(null);
-            };
-            xhr.send();
-        } catch (e) {
-            callback(null);
-        }
+            });
     }
 
     function getDefaultCameraForType(locationType, centerLngLat) {
