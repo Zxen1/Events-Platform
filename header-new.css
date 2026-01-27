@@ -18,6 +18,16 @@
   box-sizing: border-box;
 }
 
+/* Mobile: header in document flow for iOS safe area extension */
+@media (max-width: 530px) {
+  .header-bar {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+}
+
 /* Logo button - vertically centered in content area (below safe-top) */
 .header-logo-button {
   position: absolute;

@@ -1317,11 +1317,6 @@ body {
    RESPONSIVE
    ============================================================================ */
 
-/* Mobile scroll spacer - hidden on desktop */
-.mobile-scroll-spacer {
-  display: none;
-}
-
 @media (max-width: 530px) {
   :root {
     --footer-h: 0;
@@ -1335,14 +1330,6 @@ body {
   body {
     overflow: visible;
     overflow-y: auto;
-  }
-  
-  /* Mobile scroll spacer creates scroll space for iOS Safari safe area trick */
-  .mobile-scroll-spacer {
-    display: block;
-    height: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 1px);
-    width: 100%;
-    pointer-events: none;
   }
   
   /* Prevent iOS Safari auto-zoom on input focus (requires 16px minimum) */
