@@ -938,11 +938,6 @@ body {
   overscroll-behavior: contain;
 }
 
-@media (max-width: 530px) {
-  body {
-    overflow: auto;
-  }
-}
 
 
 /* ============================================================================
