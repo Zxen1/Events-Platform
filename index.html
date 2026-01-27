@@ -195,17 +195,19 @@
        File: map.js, map.css
        ======================================================================== -->
   <main class="map-area">
-    
-    <!-- Map controls (geocoder, geolocate, compass) -->
-    <div class="map-controls"></div>
-    
-    <!-- Zoom indicator -->
-    <div class="map-zoom-indicator">Zoom -- • Pitch --</div>
-    
-    <!-- Mapbox map renders here -->
-    <div class="map-container"></div>
-    
-    
+    <!-- Wrapper enables map to extend into phone safe areas (notch/status bar) -->
+    <div class="map-phone-extension">
+      
+      <!-- Map controls (geocoder, geolocate, compass) -->
+      <div class="map-controls"></div>
+      
+      <!-- Zoom indicator -->
+      <div class="map-zoom-indicator">Zoom -- • Pitch --</div>
+      
+      <!-- Mapbox map renders here -->
+      <div class="map-container"></div>
+      
+    </div>
   </main>
 
   <!-- ========================================================================

@@ -82,9 +82,25 @@
 }
 
 .map-area {
+  /* iOS Safari workaround: outer container < 50vh allows inner to extend into status bar */
+  /* Works on all browsers - inner overflow is visible and fills viewport */
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  width: 100vw;
+  height: 48px;
+  overflow: visible;
   z-index: 0;
+}
+
+.map-phone-extension {
+  /* Extends map into phone safe areas (notch/status bar) */
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   background: var(--background);
 }
 

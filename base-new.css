@@ -919,8 +919,7 @@ select:-webkit-autofill:active {
 
 html {
   height: 100%;
-  /* DEBUG: Bright red to see where html element reaches */
-  background: red;
+  background: var(--background);
 }
 
 body {
