@@ -201,11 +201,18 @@
   transform: translateX(0);
 }
 
-@media (max-width: 530px) {
+@media (max-width: 768px) {
   .member-panel-contents {
     width: 100%;
     max-width: 100%;
     min-width: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .member-panel-contents {
+    width: 100%;
+    max-width: 100%;
     max-height: none;
     height: auto;
     bottom: var(--footer-h);
@@ -380,7 +387,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 12px calc(10px + env(safe-area-inset-right, 0px)) calc(60px + env(safe-area-inset-bottom, 0px)) 10px;
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;

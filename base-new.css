@@ -917,9 +917,8 @@ select:-webkit-autofill:active {
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
+html, body {
   height: 100%;
-  background: var(--background);
 }
 
 body {
@@ -932,11 +931,10 @@ body {
   caret-color: transparent;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: -webkit-fill-available;
+  min-height: calc(var(--vh, 1vh) * 100);
   -webkit-user-select: text;
   user-select: text;
-  touch-action: pan-x pan-y;
+  touch-action: manipulation;
   overscroll-behavior: contain;
 }
 
@@ -1228,7 +1226,7 @@ body {
   color: #0052a3;
 }
 
-@media (max-width: 530px) {
+@media (max-width: 440px) {
   .terms-modal {
     width: 100%;
     max-width: 100%;
@@ -1317,24 +1315,13 @@ body {
    RESPONSIVE
    ============================================================================ */
 
-@media (max-width: 530px) {
+@media (max-width: 440px) {
   :root {
     --footer-h: 0;
   }
   
   html {
     touch-action: pan-x pan-y;
-  }
-  
-  /* Allow scrolling on mobile - required for iOS Safari to extend content into safe areas */
-  body {
-    overflow: visible;
-    overflow-y: auto;
-  }
-  
-  /* Prevent iOS Safari auto-zoom on input focus (requires 16px minimum) */
-  input, select, textarea {
-    font-size: 16px;
   }
 }
 

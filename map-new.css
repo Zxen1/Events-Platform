@@ -88,16 +88,6 @@
   right: 0;
   bottom: 0;
   z-index: 0;
-  background: var(--background);
-}
-
-.map-phone-extension {
-  /* Fills the map area */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 .map-overlay {
@@ -175,7 +165,7 @@
   min-width: 0 !important;
 }
 
-@media (max-width: 530px) {
+@media (max-width: 600px) {
   .map-controls {
     flex-wrap: nowrap;
     justify-content: center;
