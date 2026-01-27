@@ -8617,7 +8617,11 @@ const LocationWallpaperComponent = (function() {
                 if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
                     var lib = mapCardEl.__mapCardData.library_wallpapers;
                     if (lib[0]) {
-                        display(lib[0]);
+                        // INSTANT RENDER: Don't wait for anything
+                        st.latestCaptureUrl = lib[0];
+                        setImageUrl(lib[0]);
+                        positionStillImage();
+                        showImage();
                         return;
                     }
                 }
@@ -8740,17 +8744,29 @@ const LocationWallpaperComponent = (function() {
                 var loaded = 0;
                 urls.forEach(function(url, idx) {
                     if (!url || !basicImgs[idx]) return;
+                    
+                    // INSTANT RENDER: If it's a library URL, don't wait for onload to show the first one
+                    if (url.indexOf('http') === 0 && idx === 0) {
+                        basicImgs[0].src = url;
+                        positionBasicImages();
+                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                    }
+
                     basicImgs[idx].onload = function() {
                         basicImgs[idx].onload = null;
                         loaded++;
                         if (loaded === 4) {
                             positionBasicImages();
-                            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                            if (!basicImgs[0].classList.contains('component-locationwallpaper-basic-image--active')) {
+                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                            }
                             if (basicTimer) clearInterval(basicTimer);
                             basicTimer = setInterval(advanceBasic, 18500);
                         }
                     };
-                    basicImgs[idx].src = url;
+                    if (idx !== 0 || url.indexOf('http') !== 0) {
+                        basicImgs[idx].src = url;
+                    }
                 });
             }
 
@@ -8762,6 +8778,11 @@ const LocationWallpaperComponent = (function() {
                     libraryWallpapers[180],// South
                     libraryWallpapers[270] // West
                 ];
+                // Force instant display of the first image
+                basicImgs[0].src = urls[0];
+                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                positionBasicImages();
+                
                 display(urls);
                 return;
             }
