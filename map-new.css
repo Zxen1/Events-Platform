@@ -83,14 +83,9 @@
 
 .map-area {
   position: fixed;
-  /* Extend into safe areas on notched devices */
-  top: calc(-1 * env(safe-area-inset-top, 0px));
-  left: calc(-1 * env(safe-area-inset-left, 0px));
-  right: calc(-1 * env(safe-area-inset-right, 0px));
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  inset: 0;
   z-index: 0;
-  /* Visible background while map loads */
-  background: #1a1a2e;
+  background: var(--background);
 }
 
 .map-overlay {
