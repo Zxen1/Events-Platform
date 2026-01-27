@@ -171,13 +171,18 @@ STEP 8: Modify post-new.css mobile query for .recent-panel
 
 
 ====================================================
-STILL NEEDS WORK
+STILL NEEDS WORK - CRITICAL
 ====================================================
-- The red test line is for debugging - remove when done
-- Bottom of screen may still have blocking issues
-- Need to verify map touch interaction still works
-- Panels need to integrate properly with document scroll
-- May need to handle filter/member/admin panels similarly
+- Post and Recent panels WORK PERFECTLY for full-screen scroll
+- Filter, Member, Admin panels BREAK the scroll state
+- After opening filter/member/admin, browser bars reappear
+- Can't scroll up unless scrolling down first to "bounce"
+- Problem persists even after closing panel - requires cache clear
+- These panels likely have JS or overflow that breaks Safari scroll state
+- SOLUTION: May need to keep filter/member/admin as position: fixed
+- Or investigate their JavaScript scroll handlers
+- Red test line has been removed
+- Map interaction needs verification
 
 ====================================================
 IMPORTANT RULES
