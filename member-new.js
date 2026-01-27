@@ -225,12 +225,6 @@ const MemberModule = (function() {
         initHeaderDrag();
         loadStoredSession();
         render();
-
-        // Disable BottomSlack on mobile to prevent scroll interference
-        if (window.innerWidth <= 530) {
-            var body = panel.querySelector('.member-panel-body');
-            if (body) body.setAttribute('data-bottomslack', 'false');
-        }
     }
 
     var categoriesLoadingPromise = null;
@@ -1984,6 +1978,7 @@ const MemberModule = (function() {
         if (!panel || !panelContent) return;
         
         panel.classList.add('member-panel--show');
+        panel.style.display = ''; // Clear any immediate hide
         panel.setAttribute('aria-hidden', 'false');
 
         // Show (force a frame between "off-screen" and "visible" so slide-in

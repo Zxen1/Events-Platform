@@ -286,12 +286,6 @@ const AdminModule = (function() {
         // Initialize Settings tab (default tab)
         initSettingsTab();
 
-        // Disable BottomSlack on mobile to prevent scroll interference
-        if (window.innerWidth <= 530) {
-            var body = panel.querySelector('.admin-panel-body');
-            if (body) body.setAttribute('data-bottomslack', 'false');
-        }
-
         // Admin module initialized
     }
     
@@ -430,6 +424,7 @@ const AdminModule = (function() {
         if (!panel || !panelContent) return;
         
         panel.classList.add('admin-panel--show');
+        panel.style.display = ''; // Clear any immediate hide
         panel.setAttribute('aria-hidden', 'false');
 
         // Show (force a frame between "off-screen" and "visible" so slide-in

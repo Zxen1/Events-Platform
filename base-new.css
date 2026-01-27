@@ -939,11 +939,15 @@ body {
 }
 
 @media (max-width: 530px) {
+  html, body {
+    height: auto;
+    min-height: 0;
+  }
+
   body {
     overflow-y: scroll;
     overflow-x: hidden;
-    height: auto;
-    min-height: 0;
+    overscroll-behavior: auto;
   }
   
   body::before {

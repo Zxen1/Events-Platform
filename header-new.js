@@ -448,17 +448,34 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
-                    // Immediate close to avoid stacking in relative flow
-                    var mPanel = document.querySelector('.member-panel');
-                    if (mPanel) mPanel.classList.remove('member-panel--show');
-                    var aPanel = document.querySelector('.admin-panel');
-                    if (aPanel) aPanel.classList.remove('admin-panel--show');
-                    
+                    // Use module close methods to ensure state is updated
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
+                    }
+                    
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    var mPanel = document.querySelector('.member-panel');
+                    if (mPanel) {
+                        mPanel.classList.remove('member-panel--show');
+                        mPanel.style.display = 'none'; // Force hide
+                    }
+                    var aPanel = document.querySelector('.admin-panel');
+                    if (aPanel) {
+                        aPanel.classList.remove('admin-panel--show');
+                        aPanel.style.display = 'none'; // Force hide
+                    }
+                    var pPanel = document.querySelector('.post-panel');
+                    if (pPanel) {
+                        pPanel.classList.remove('post-panel--show');
+                        pPanel.style.display = 'none'; // Force hide
+                    }
+                    var rPanel = document.querySelector('.recent-panel');
+                    if (rPanel) {
+                        rPanel.classList.remove('recent-panel--show');
+                        rPanel.style.display = 'none'; // Force hide
                     }
                 } catch (e) {}
             }
@@ -488,6 +505,10 @@ const HeaderModule = (function() {
                 });
             }
         });
+
+        // Ensure filter state is reset when other panels open
+        App.on('member:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
+        App.on('admin:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
         
         // Listen for filter panel close events
         App.on('filter:closed', function() {
@@ -522,17 +543,33 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
-                    // Immediate close to avoid stacking in relative flow
-                    var fPanel = document.querySelector('.filter-panel');
-                    if (fPanel) fPanel.classList.remove('show');
-                    var aPanel = document.querySelector('.admin-panel');
-                    if (aPanel) aPanel.classList.remove('admin-panel--show');
-
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
+                    }
+
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    var fPanel = document.querySelector('.filter-panel');
+                    if (fPanel) {
+                        fPanel.classList.remove('show');
+                        fPanel.style.display = 'none'; // Force hide
+                    }
+                    var aPanel = document.querySelector('.admin-panel');
+                    if (aPanel) {
+                        aPanel.classList.remove('admin-panel--show');
+                        aPanel.style.display = 'none'; // Force hide
+                    }
+                    var pPanel = document.querySelector('.post-panel');
+                    if (pPanel) {
+                        pPanel.classList.remove('post-panel--show');
+                        pPanel.style.display = 'none'; // Force hide
+                    }
+                    var rPanel = document.querySelector('.recent-panel');
+                    if (rPanel) {
+                        rPanel.classList.remove('recent-panel--show');
+                        rPanel.style.display = 'none'; // Force hide
                     }
                 } catch (e) {}
             }
@@ -574,17 +611,33 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
-                    // Immediate close to avoid stacking in relative flow
-                    var fPanel = document.querySelector('.filter-panel');
-                    if (fPanel) fPanel.classList.remove('show');
-                    var mPanel = document.querySelector('.member-panel');
-                    if (mPanel) mPanel.classList.remove('member-panel--show');
-
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
+                    }
+
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    var fPanel = document.querySelector('.filter-panel');
+                    if (fPanel) {
+                        fPanel.classList.remove('show');
+                        fPanel.style.display = 'none'; // Force hide
+                    }
+                    var mPanel = document.querySelector('.member-panel');
+                    if (mPanel) {
+                        mPanel.classList.remove('member-panel--show');
+                        mPanel.style.display = 'none'; // Force hide
+                    }
+                    var pPanel = document.querySelector('.post-panel');
+                    if (pPanel) {
+                        pPanel.classList.remove('post-panel--show');
+                        pPanel.style.display = 'none'; // Force hide
+                    }
+                    var rPanel = document.querySelector('.recent-panel');
+                    if (rPanel) {
+                        rPanel.classList.remove('recent-panel--show');
+                        rPanel.style.display = 'none'; // Force hide
                     }
                 } catch (e) {}
             }

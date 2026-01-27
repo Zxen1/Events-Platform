@@ -706,6 +706,7 @@
   .filter-panel {
     position: relative;
     height: auto;
+    background: transparent;
   }
 
   .filter-panel-content {
@@ -721,7 +722,7 @@
   .filter-panel-body {
     height: auto;
     max-height: none;
-    overflow-y: visible;
+    overflow-y: auto;
     overscroll-behavior: auto;
   }
 }

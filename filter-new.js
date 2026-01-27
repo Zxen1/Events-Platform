@@ -365,11 +365,6 @@ const FilterModule = (function() {
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
         
-        // Disable BottomSlack on mobile to prevent scroll interference
-        if (window.innerWidth <= 530 && bodyEl) {
-            bodyEl.setAttribute('data-bottomslack', 'false');
-        }
-        
         initMapControls();
         initResetButtons();
         initFavouritesButton();
@@ -441,6 +436,7 @@ const FilterModule = (function() {
         } catch (_eSummary) {}
         
         panelEl.classList.add('show');
+        panelEl.style.display = ''; // Clear any immediate hide
         panelEl.setAttribute('aria-hidden', 'false');
         panelEl.removeAttribute('inert');
 

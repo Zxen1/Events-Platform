@@ -205,6 +205,7 @@
   .member-panel {
     position: relative;
     height: auto;
+    background: transparent;
   }
 
   .member-panel-contents {
@@ -220,7 +221,7 @@
   .member-panel-body {
     height: auto;
     max-height: none;
-    overflow-y: visible;
+    overflow-y: auto;
     overscroll-behavior: auto;
   }
 }
