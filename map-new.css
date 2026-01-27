@@ -90,6 +90,19 @@
   z-index: 0;
 }
 
+@media (max-width: 530px) {
+  .map-area {
+    bottom: auto;
+    height: 100dvh;
+  }
+  
+  @supports (height: 100lvh) {
+    .map-area {
+      height: 100lvh;
+    }
+  }
+}
+
 .map-overlay {
   position: absolute;
   top: 0;
