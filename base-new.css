@@ -940,16 +940,15 @@ body {
 
 @media (max-width: 530px) {
   body {
-    overflow: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
-    min-height: 100lvh;
-    min-height: 100dvh;
   }
   
-  @supports (height: 100lvh) {
-    body {
-      min-height: calc(100lvh + 1px);
-    }
+  body::after {
+    content: "";
+    display: block;
+    height: 100lvh;
+    pointer-events: none;
   }
 }
 
