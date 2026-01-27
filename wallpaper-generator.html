@@ -18,17 +18,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>Map Wallpaper Generator</h1>
+        <h1>Map Wallpaper Generator (Final 5)</h1>
         <div id="status-box">
             <div>Status: <span id="status-text">Ready</span></div>
             <div class="progress-bar"><div id="progress-fill"></div></div>
-            <div style="margin-top: 5px; font-size: 12px; color: #888;" id="progress-text">0 / 0 locations</div>
-        </div>
-
-        <div style="margin-bottom: 20px; background: #333; padding: 15px; border-radius: 5px;">
-            <label for="resumeIndex">Resume from Location #:</label>
-            <input type="number" id="resumeIndex" value="1" min="1" style="width: 80px; padding: 5px; background: #444; color: white; border: 1px solid #555;">
-            <span style="font-size: 12px; color: #888; margin-left: 10px;">(Check your log: if it stopped at 1381, enter 1381)</span>
+            <div style="margin-top: 5px; font-size: 12px; color: #888;" id="progress-text">0 / 5 locations</div>
         </div>
 
         <button id="btnStart">Initialize Map Engine</button>
@@ -37,7 +31,7 @@
         <div id="log"></div>
 
         <h3>SQL Import Data</h3>
-        <textarea id="sql-output" readonly placeholder="SQL statements will appear here as images are saved..."></textarea>
+        <textarea id="sql-output" readonly placeholder="SQL statements will appear here..."></textarea>
     </div>
 
     <div id="map" style="width: 700px; height: 2500px; position: absolute; left: -9999px;"></div>
@@ -48,12 +42,20 @@
         const PITCH = 75;
         const WIDTH = 700;
         const HEIGHT = 2500;
-        const BEARINGS = [0, 90, 180, 270]; // N, E, S, W
+        const BEARINGS = [0, 90, 180, 270];
         const BEARING_NAMES = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
         const MAP_STYLE = 'mapbox://styles/mapbox/standard';
         const LIGHT_PRESET = 'night';
 
-        let locations = [];
+        // EMBEDDED LOCATIONS TO AVOID FETCH ERRORS
+        const locations = [
+            { "name": "Larnach Castle", "lat": -45.8615691, "lng": 170.6272516 },
+            { "name": "St Paul's Cathedral, Melbourne", "lat": -37.817029, "lng": 144.967687 },
+            { "name": "Royal Botanic Gardens Victoria - Melbourne Gardens", "lat": -37.8302443, "lng": 144.9801496 },
+            { "name": "Melbourne Zoo", "lat": -37.7841346, "lng": 144.9515473 },
+            { "name": "Shrine of Remembrance", "lat": -37.8305164, "lng": 144.9734319 }
+        ];
+
         let map = null;
         let directoryHandle = null;
 
@@ -64,70 +66,44 @@
             const logEl = document.getElementById('log');
             logEl.appendChild(div);
             logEl.scrollTop = logEl.scrollHeight;
-            console.log(msg);
         }
 
         function slugify(text) {
             return text.toString().toLowerCase()
-                .replace(/\s+/g, '-')           // Replace spaces with -
-                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-                .replace(/^-+/, '')             // Trim - from start
-                .replace(/-+$/, '')             // Trim - from end
-                .substring(0, 50);              // Limit to 50 chars
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-]+/g, '')
+                .replace(/\-\-+/g, '-')
+                .replace(/^-+/, '')
+                .replace(/-+$/, '')
+                .substring(0, 50);
         }
 
         async function initMap() {
             mapboxgl.accessToken = ACCESS_TOKEN;
             return new Promise((resolve, reject) => {
-                try {
-                    map = new mapboxgl.Map({
-                        container: 'map',
-                        style: MAP_STYLE,
-                        center: [0, 0],
-                        zoom: ZOOM,
-                        pitch: PITCH,
-                        interactive: false,
-                        preserveDrawingBuffer: true,
-                        attributionControl: false
-                    });
-
-                    const timeout = setTimeout(() => {
-                        reject(new Error("Map load timeout (15s)"));
-                    }, 15000);
-
-                    map.on('style.load', () => {
-                        map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
-                    });
-
-                    map.on('load', () => {
-                        clearTimeout(timeout);
-                        resolve();
-                    });
-
-                    map.on('error', (e) => {
-                        log("Mapbox error: " + (e.error ? e.error.message : "Unknown"), true);
-                    });
-                } catch (e) {
-                    reject(e);
-                }
+                map = new mapboxgl.Map({
+                    container: 'map',
+                    style: MAP_STYLE,
+                    center: [locations[0].lng, locations[0].lat],
+                    zoom: ZOOM,
+                    pitch: PITCH,
+                    interactive: false,
+                    preserveDrawingBuffer: true,
+                    attributionControl: false
+                });
+                map.on('style.load', () => map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET));
+                map.on('load', () => resolve());
+                setTimeout(() => reject(new Error("Map timeout")), 15000);
             });
         }
 
         async function captureImage(lat, lng, bearing, filename) {
-            return new Promise((resolve, reject) => {
-                map.jumpTo({
-                    center: [lng, lat],
-                    zoom: ZOOM,
-                    pitch: PITCH,
-                    bearing: bearing
-                });
-
+            return new Promise((resolve) => {
+                map.jumpTo({ center: [lng, lat], zoom: ZOOM, pitch: PITCH, bearing: bearing });
                 const timeout = setTimeout(() => {
-                    log(`Timeout waiting for map idle at ${lat}, ${lng} (Bearing ${bearing}). Skipping.`, true);
-                    resolve(null); 
+                    log(`Timeout at ${lat}, ${lng}. Skipping.`, true);
+                    resolve(null);
                 }, 15000);
-
                 map.once('idle', () => {
                     clearTimeout(timeout);
                     map.getCanvas().toBlob(async (blob) => {
@@ -137,85 +113,45 @@
                             await writable.write(blob);
                             await writable.close();
                             resolve(true);
-                        } catch (e) {
-                            reject(e);
-                        }
+                        } catch (e) { resolve(null); }
                     }, 'image/webp', 0.85);
                 });
             });
         }
 
         document.getElementById('btnStart').addEventListener('click', async () => {
-            const btn = document.getElementById('btnStart');
-            btn.disabled = true;
-            document.getElementById('status-text').textContent = "Initializing Map Engine...";
-            
+            document.getElementById('btnStart').disabled = true;
+            log("Initializing Map Engine...");
             try {
-                log("Loading location list...");
-                const response = await fetch('full_locations.json');
-                if (!response.ok) throw new Error("Could not find full_locations.json");
-                locations = await response.json();
-                log(`Loaded ${locations.length} locations.`);
-
-                log("Starting Mapbox engine...");
                 await initMap();
                 log("Map engine ready.");
-
-                document.getElementById('status-text').textContent = "Ready to capture";
                 document.getElementById('btnCapture').style.display = 'inline-block';
-                btn.style.display = 'none';
-            } catch (e) {
-                log("FATAL ERROR: " + e.message, true);
-                btn.disabled = false;
-            }
+                document.getElementById('btnStart').style.display = 'none';
+            } catch (e) { log("Error: " + e.message, true); }
         });
 
         document.getElementById('btnCapture').addEventListener('click', async () => {
-            try {
-                directoryHandle = await window.showDirectoryPicker();
-                document.getElementById('btnCapture').disabled = true;
+            directoryHandle = await window.showDirectoryPicker();
+            document.getElementById('btnCapture').disabled = true;
+            const sqlOutput = document.getElementById('sql-output');
+            
+            for (let i = 0; i < locations.length; i++) {
+                const loc = locations[i];
+                document.getElementById('progress-fill').style.width = `${((i+1)/5)*100}%`;
+                document.getElementById('progress-text').textContent = `${i+1} / 5 locations (${loc.name})`;
+                log(`Processing: ${loc.name}...`);
                 
-                const resumeIndex = parseInt(document.getElementById('resumeIndex').value) - 1;
-                const total = locations.length;
-                const sqlOutput = document.getElementById('sql-output');
-                
-                for (let i = resumeIndex; i < total; i++) {
-                    const loc = locations[i];
-                    const progress = Math.round(((i + 1) / total) * 100);
-                    document.getElementById('progress-fill').style.width = `${progress}%`;
-                    document.getElementById('progress-text').textContent = `${i + 1} / ${total} locations (${loc.name})`;
-                    
-                    log(`Processing #${i + 1}: ${loc.name}...`);
-                    
-                    const slug = slugify(loc.name);
-                    const lat = loc.lat;
-                    const lng = loc.lng;
-                    
-                    let sqlBatch = "";
-                    
-                    for (const bearing of BEARINGS) {
-                        const bName = BEARING_NAMES[bearing];
-                        const filename = `${slug}__${lat}_${lng}__Z${ZOOM}-P${PITCH}-${bName}.webp`;
-                        
-                        const success = await captureImage(lat, lng, bearing, filename);
-                        
-                        if (success) {
-                            const url = `https://cdn.funmap.com/map-images/${filename}`;
-                            sqlBatch += `(${lat}, ${lng}, 'venue', ${bearing}, ${PITCH}, ${ZOOM}, '${filename}', '${url}', ${WIDTH}, ${HEIGHT}),\n`;
-                        }
-                    }
-                    
-                    if (sqlBatch) {
-                        sqlOutput.value += sqlBatch;
+                let sqlBatch = "";
+                for (const bearing of BEARINGS) {
+                    const filename = `${slugify(loc.name)}__${loc.lat}_${loc.lng}__Z${ZOOM}-P${PITCH}-${BEARING_NAMES[bearing]}.webp`;
+                    if (await captureImage(loc.lat, loc.lng, bearing, filename)) {
+                        const url = `https://cdn.funmap.com/map-images/${filename}`;
+                        sqlBatch += `INSERT IGNORE INTO \`map_images\` (\`latitude\`, \`longitude\`, \`location_type\`, \`bearing\`, \`pitch\`, \`zoom\`, \`file_name\`, \`file_url\`, \`width\`, \`height\`) VALUES (${loc.lat}, ${loc.lng}, 'venue', ${bearing}, ${PITCH}, ${ZOOM}, '${filename}', '${url}', ${WIDTH}, ${HEIGHT});\n`;
                     }
                 }
-                
-                log("ALL TASKS COMPLETE.");
-                document.getElementById('status-text').textContent = "Finished";
-            } catch (e) {
-                log("ERROR: " + e.message, true);
-                document.getElementById('btnCapture').disabled = false;
+                sqlOutput.value += sqlBatch;
             }
+            log("FINISHED. Copy the SQL below.");
         });
     </script>
 </body>
