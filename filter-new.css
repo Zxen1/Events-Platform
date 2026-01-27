@@ -170,6 +170,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;

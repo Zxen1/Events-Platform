@@ -89,6 +89,16 @@
   transform: translateX(0);
 }
 
+@media (max-width: 440px) {
+  .post-panel-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    height: auto;
+    bottom: var(--footer-h);
+  }
+}
+
 /* ============================================================================
    RECENT PANEL
    ============================================================================ */
@@ -144,6 +154,16 @@
 .recent-panel-content--visible {
   pointer-events: auto;
   transform: translateX(0);
+}
+
+@media (max-width: 440px) {
+  .recent-panel-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    height: auto;
+    bottom: var(--footer-h);
+  }
 }
 
 /* ============================================================================

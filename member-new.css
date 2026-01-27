@@ -214,6 +214,8 @@
     width: 100%;
     max-width: 100%;
     max-height: none;
+    height: auto;
+    bottom: var(--footer-h);
     border-radius: 0;
   }
 }
@@ -384,6 +386,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 12px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   scrollbar-width: thin;
