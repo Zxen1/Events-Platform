@@ -927,8 +927,7 @@ body {
   font-size: 14px;
   background: var(--background);
   color: var(--text);
-  /* overflow:hidden moved - causes safe area clipping issues in iOS Safari */
-  overflow: visible;
+  overflow: hidden;
   cursor: auto;
   caret-color: transparent;
   display: flex;
@@ -937,7 +936,7 @@ body {
   min-height: -webkit-fill-available;
   -webkit-user-select: text;
   user-select: text;
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
   overscroll-behavior: contain;
 }
 
@@ -1318,6 +1317,11 @@ body {
    RESPONSIVE
    ============================================================================ */
 
+/* Mobile scroll spacer - hidden on desktop */
+.mobile-scroll-spacer {
+  display: none;
+}
+
 @media (max-width: 530px) {
   :root {
     --footer-h: 0;
@@ -1325,6 +1329,20 @@ body {
   
   html {
     touch-action: pan-x pan-y;
+  }
+  
+  /* Allow scrolling on mobile - required for iOS Safari to extend content into safe areas */
+  body {
+    overflow: visible;
+    overflow-y: auto;
+  }
+  
+  /* Mobile scroll spacer creates scroll space for iOS Safari safe area trick */
+  .mobile-scroll-spacer {
+    display: block;
+    height: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 1px);
+    width: 100%;
+    pointer-events: none;
   }
   
   /* Prevent iOS Safari auto-zoom on input focus (requires 16px minimum) */

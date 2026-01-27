@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
-  <!-- Status bar color on iOS Safari - approximates map with rgba(0,0,0,0.7) overlay -->
-  <meta name="theme-color" content="rgba(0,0,0,0.7)">
+  <!-- Status bar color on iOS Safari - blends with header -->
+  <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>FunMap - Do Stuff</title>
@@ -1178,6 +1178,8 @@
   <script src="member-new.js?v=20251228w"></script>
   <script src="marquee-new.js?v=20251228w"></script>
 
+  <!-- Mobile scroll spacer - creates scroll space for iOS Safari safe area trick -->
+  <div class="mobile-scroll-spacer" aria-hidden="true"></div>
 </body>
 </html>
 
