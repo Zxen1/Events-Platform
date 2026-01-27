@@ -92,14 +92,11 @@
 
 @media (max-width: 530px) {
   .map-area {
-    bottom: auto;
-    height: 100dvh;
-  }
-  
-  @supports (height: 100lvh) {
-    .map-area {
-      height: 100lvh;
-    }
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
   }
 }
 
