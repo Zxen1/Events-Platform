@@ -201,7 +201,7 @@
   transform: translateX(0);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 530px) {
   .member-panel-contents {
     width: 100%;
     max-width: 100%;
@@ -209,7 +209,7 @@
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 530px) {
   .member-panel-contents {
     width: 100%;
     max-width: 100%;

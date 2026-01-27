@@ -702,7 +702,7 @@
 
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 530px) {
   .filter-panel-content {
     max-width: 100%;
   }
@@ -712,7 +712,7 @@
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 530px) {
   .filter-panel-content {
     top: calc(var(--header-h) + var(--safe-top));
     left: 0;
