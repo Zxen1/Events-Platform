@@ -942,6 +942,8 @@ body {
   body {
     overflow-y: scroll;
     overflow-x: hidden;
+    height: auto;
+    min-height: 0;
   }
   
   body::after {
@@ -953,6 +955,7 @@ body {
     background: red;
     position: relative;
     z-index: 50;
+    flex-shrink: 0;
   }
 }
 
