@@ -448,6 +448,12 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Immediate close to avoid stacking in relative flow
+                    var mPanel = document.querySelector('.member-panel');
+                    if (mPanel) mPanel.classList.remove('member-panel--show');
+                    var aPanel = document.querySelector('.admin-panel');
+                    if (aPanel) aPanel.classList.remove('admin-panel--show');
+                    
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
@@ -516,6 +522,12 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Immediate close to avoid stacking in relative flow
+                    var fPanel = document.querySelector('.filter-panel');
+                    if (fPanel) fPanel.classList.remove('show');
+                    var aPanel = document.querySelector('.admin-panel');
+                    if (aPanel) aPanel.classList.remove('admin-panel--show');
+
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }
@@ -562,6 +574,12 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Immediate close to avoid stacking in relative flow
+                    var fPanel = document.querySelector('.filter-panel');
+                    if (fPanel) fPanel.classList.remove('show');
+                    var mPanel = document.querySelector('.member-panel');
+                    if (mPanel) mPanel.classList.remove('member-panel--show');
+
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }

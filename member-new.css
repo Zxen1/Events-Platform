@@ -221,6 +221,7 @@
     height: auto;
     max-height: none;
     overflow-y: visible;
+    overscroll-behavior: auto;
   }
 }
 
