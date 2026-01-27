@@ -8612,20 +8612,24 @@ const LocationWallpaperComponent = (function() {
             // Save camera for resume
             st.savedCamera = getMapCamera();
 
-            // Capture current view before hiding map
-            var url = captureMapToDataUrl();
-            if (url) {
-                setImageUrl(url);
-                st.latestCaptureUrl = url;
-                // Store to IndexedDB cache
-                if (st.lastLat && st.lastLng) {
-                    WallpaperCache.put(st.lastLat, st.lastLng, 0, url, function() {});
+            // Defer the expensive capture to avoid blocking the click event
+            // Map stays frozen and visible while capture happens in background
+            setTimeout(function() {
+                // Capture current view (expensive toDataURL call)
+                var url = captureMapToDataUrl();
+                if (url) {
+                    setImageUrl(url);
+                    st.latestCaptureUrl = url;
+                    // Store to IndexedDB cache
+                    if (st.lastLat && st.lastLng) {
+                        WallpaperCache.put(st.lastLat, st.lastLng, 0, url, function() {});
+                    }
                 }
-            }
-            showImage();
+                showImage();
 
-            // Schedule lazy cleanup - map stays alive briefly in case user clicks back
-            scheduleLazyCleanup();
+                // Schedule lazy cleanup - map stays alive briefly in case user clicks back
+                scheduleLazyCleanup();
+            }, 0);
         }
 
         // ============================================================
