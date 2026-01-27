@@ -917,7 +917,17 @@ select:-webkit-autofill:active {
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
+  /* Use dvh to include full screen on notched devices */
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   height: 100%;
 }
 
