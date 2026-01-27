@@ -468,6 +468,7 @@ try {
                 'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
+                'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below
                 'pricing_groups' => [], // Will be populated below
@@ -522,6 +523,38 @@ try {
                 ];
             }
             $mediaStmt->close();
+        }
+    }
+
+    // 1.5 Batch lookup library wallpapers
+    $wallpapersByCoords = [];
+    $coordPairs = [];
+    foreach ($postsById as $p) {
+        foreach ($p['map_cards'] as $mc) {
+            if ($mc['latitude'] !== null && $mc['longitude'] !== null) {
+                $coordPairs[] = [
+                    'lat' => (float)$mc['latitude'],
+                    'lng' => (float)$mc['longitude']
+                ];
+            }
+        }
+    }
+
+    if (!empty($coordPairs)) {
+        // Build a query to find all wallpapers for these coordinate pairs
+        // We use a temporary table or a complex OR structure. For simplicity and performance with indexes:
+        $whereClauses = [];
+        foreach ($coordPairs as $pair) {
+            $whereClauses[] = "(latitude = {$pair['lat']} AND longitude = {$pair['lng']})";
+        }
+        $whereSql = implode(' OR ', $whereClauses);
+        $wpRes = $mysqli->query("SELECT latitude, longitude, bearing, file_url FROM map_images WHERE $whereSql");
+        if ($wpRes) {
+            while ($wpRow = $wpRes->fetch_assoc()) {
+                $key = $wpRow['latitude'] . '_' . $wpRow['longitude'];
+                if (!isset($wallpapersByCoords[$key])) $wallpapersByCoords[$key] = [];
+                $wallpapersByCoords[$key][$wpRow['bearing']] = $wpRow['file_url'];
+            }
         }
     }
 
@@ -619,6 +652,14 @@ try {
                 }
                 $mapCard['media_urls'] = $urls;
                 $mapCard['media_meta'] = $meta;
+            }
+
+            // Attach Library Wallpapers
+            if ($mapCard['latitude'] !== null && $mapCard['longitude'] !== null) {
+                $key = $mapCard['latitude'] . '_' . $mapCard['longitude'];
+                if (isset($wallpapersByCoords[$key])) {
+                    $mapCard['library_wallpapers'] = $wallpapersByCoords[$key];
+                }
             }
 
             // Attach Sessions/Pricing/Item details (ONLY if full data requested)

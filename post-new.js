@@ -2422,6 +2422,8 @@ const PostModule = (function() {
     wrap.className = 'post-expanded';
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
+    // Store reference to post data for LocationWallpaperComponent library lookup
+    wrap.__mapCardData = loc0;
 
     // Location wallpaper integration (reuses LocationWallpaperComponent pattern):
     // - Only activates when post is expanded (handled in setupPostDetailEvents)

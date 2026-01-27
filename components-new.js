@@ -8610,6 +8610,19 @@ const LocationWallpaperComponent = (function() {
             stillOriginalHeight = contentEl.offsetHeight || 400;
             img.style.top = '';
             img.style.bottom = '';
+
+            // Check for library wallpapers first (North only for Still mode)
+            try {
+                var mapCardEl = locationContainerEl.closest('.post-map-card');
+                if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
+                    var lib = mapCardEl.__mapCardData.library_wallpapers;
+                    if (lib[0]) {
+                        display(lib[0]);
+                        return;
+                    }
+                }
+            } catch (e) {}
+
             var camera = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearing = camera.bearing || 0;
 
@@ -8689,8 +8702,19 @@ const LocationWallpaperComponent = (function() {
             ensureResizeObserver();
             basicOriginalHeight = contentEl.offsetHeight || 400;
 
+            // Check for library wallpapers first
+            var libraryWallpapers = null;
+            try {
+                // Look for library_wallpapers in the active container's data attributes or parent state
+                // For posts, this is passed in the initial payload.
+                var mapCardEl = locationContainerEl.closest('.post-map-card');
+                if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
+                    libraryWallpapers = mapCardEl.__mapCardData.library_wallpapers;
+                }
+            } catch (e) {}
+
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
-            var bearings = cameras.map(function(c) { return c.bearing; });
+            var bearings = [0, 90, 180, 270]; // N, E, S, W
 
             // Setup container and images
             st.basicCapturedLat = lat; st.basicCapturedLng = lng;
@@ -8730,6 +8754,18 @@ const LocationWallpaperComponent = (function() {
                 });
             }
 
+            // If we have library wallpapers, use them immediately
+            if (libraryWallpapers && Object.keys(libraryWallpapers).length === 4) {
+                var urls = [
+                    libraryWallpapers[0],  // North
+                    libraryWallpapers[90], // East
+                    libraryWallpapers[180],// South
+                    libraryWallpapers[270] // West
+                ];
+                display(urls);
+                return;
+            }
+
             WallpaperCache.getAll(lat, lng, bearings, function(cached) {
                 if (!basicContainer) return;
                 var cacheHits = cached.filter(function(url) { return url; }).length;
@@ -8757,6 +8793,9 @@ const LocationWallpaperComponent = (function() {
         function advanceBasic() {
             if (!basicImgs.length || !basicContainer) return;
             var prev = basicIndex;
+            // Anti-clockwise rotation: 0 (N) -> 90 (E) -> 180 (S) -> 270 (W)
+            // Note: In Mapbox, increasing bearing rotates the camera clockwise, 
+            // which makes the world appear to rotate anti-clockwise.
             basicIndex = (basicIndex + 1) % 4;
             // Old image stays active (100% opacity) while new one fades in on top
             basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
