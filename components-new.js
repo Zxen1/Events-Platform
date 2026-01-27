@@ -8109,6 +8109,89 @@ const LocationWallpaperComponent = (function() {
         return 'venue';
     }
 
+    /**
+     * Get library wallpapers for a location.
+     * Priority: 1) Cached on container, 2) Post map card data, 3) Fetch from API
+     * @param {HTMLElement} containerEl - The location container element
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @param {Function} callback - Called with wallpapers object or null
+     */
+    function getLibraryWallpapers(containerEl, lat, lng, callback) {
+        // 1. Check cached on container (from previous API call)
+        try {
+            if (containerEl.__libraryWallpapers) {
+                var cached = containerEl.__libraryWallpapers;
+                if (cached.lat === lat && cached.lng === lng && cached.wallpapers) {
+                    callback(cached.wallpapers);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        // 2. Check post map card data (for post display contexts)
+        try {
+            var mapCardEl = containerEl.closest('.post-map-card');
+            if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
+                var lib = mapCardEl.__mapCardData.library_wallpapers;
+                if (lib && Object.keys(lib).length > 0) {
+                    callback(lib);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        // 3. Fetch from API (for form/profile contexts)
+        try {
+            var apiBase = '';
+            if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                apiBase = settings.api_base_url || '';
+            }
+            if (!apiBase) {
+                callback(null);
+                return;
+            }
+
+            var url = apiBase + '/get-map-wallpapers.php?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng);
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            
+            // Add API key header
+            var apiKey = '';
+            if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                apiKey = settings.api_key || '';
+            }
+            if (apiKey) {
+                xhr.setRequestHeader('X-API-KEY', apiKey);
+            }
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) return;
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        if (resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length > 0) {
+                            // Cache on container for future use
+                            containerEl.__libraryWallpapers = {
+                                lat: lat,
+                                lng: lng,
+                                wallpapers: resp.wallpapers
+                            };
+                            callback(resp.wallpapers);
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                callback(null);
+            };
+            xhr.send();
+        } catch (e) {
+            callback(null);
+        }
+    }
+
     function getDefaultCameraForType(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
         var zoom = (t === 'city') ? 12 : 18;
@@ -8611,22 +8694,6 @@ const LocationWallpaperComponent = (function() {
             img.style.top = '';
             img.style.bottom = '';
 
-            // Check for library wallpapers first (North only for Still mode)
-            try {
-                var mapCardEl = locationContainerEl.closest('.post-map-card');
-                if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
-                    var lib = mapCardEl.__mapCardData.library_wallpapers;
-                    if (lib[0]) {
-                        // INSTANT RENDER: Don't wait for anything
-                        st.latestCaptureUrl = lib[0];
-                        setImageUrl(lib[0]);
-                        positionStillImage();
-                        showImage();
-                        return;
-                    }
-                }
-            } catch (e) {}
-
             var camera = getDefaultCameraForType(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearing = camera.bearing || 0;
 
@@ -8640,24 +8707,42 @@ const LocationWallpaperComponent = (function() {
                 setImageUrl(url);
             }
 
-            if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
-                display(st.latestCaptureUrl);
-                return;
+            function displayInstant(url) {
+                // INSTANT RENDER: Don't wait for onload
+                st.latestCaptureUrl = url;
+                setImageUrl(url);
+                positionStillImage();
+                showImage();
             }
 
-            WallpaperCache.get(lat, lng, bearing, function(cached) {
-                if (cached) { display(cached); return; }
+            // Check for library wallpapers (container cache, post data, or API)
+            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                if (lib && lib[0]) {
+                    // Library wallpaper found - instant display
+                    displayInstant(lib[0]);
+                    return;
+                }
 
-                SecondaryMap.capture(camera, STILL_WIDTH, STILL_HEIGHT, function(url) {
-                    if (!url) return;
-                    st.latestCaptureUrl = url;
-                    WallpaperCache.put(lat, lng, bearing, url, function() {});
-                    img.onload = function() {
-                        img.onload = null;
-                        positionStillImage();
-                        showImage();
-                    };
-                    setImageUrl(url);
+                // No library wallpapers - use fallback chain
+                if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
+                    display(st.latestCaptureUrl);
+                    return;
+                }
+
+                WallpaperCache.get(lat, lng, bearing, function(cached) {
+                    if (cached) { display(cached); return; }
+
+                    SecondaryMap.capture(camera, STILL_WIDTH, STILL_HEIGHT, function(url) {
+                        if (!url) return;
+                        st.latestCaptureUrl = url;
+                        WallpaperCache.put(lat, lng, bearing, url, function() {});
+                        img.onload = function() {
+                            img.onload = null;
+                            positionStillImage();
+                            showImage();
+                        };
+                        setImageUrl(url);
+                    });
                 });
             });
         }
@@ -8705,17 +8790,6 @@ const LocationWallpaperComponent = (function() {
             st.isActive = true;
             ensureResizeObserver();
             basicOriginalHeight = contentEl.offsetHeight || 400;
-
-            // Check for library wallpapers first
-            var libraryWallpapers = null;
-            try {
-                // Look for library_wallpapers in the active container's data attributes or parent state
-                // For posts, this is passed in the initial payload.
-                var mapCardEl = locationContainerEl.closest('.post-map-card');
-                if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
-                    libraryWallpapers = mapCardEl.__mapCardData.library_wallpapers;
-                }
-            } catch (e) {}
 
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearings = [0, 90, 180, 270]; // N, E, S, W
@@ -8770,8 +8844,8 @@ const LocationWallpaperComponent = (function() {
                 });
             }
 
-            // If we have library wallpapers, use them immediately
-            if (libraryWallpapers && Object.keys(libraryWallpapers).length === 4) {
+            function displayInstant(libraryWallpapers) {
+                // Library wallpapers found - instant display
                 var urls = [
                     libraryWallpapers[0],  // North
                     libraryWallpapers[90], // East
@@ -8782,31 +8856,40 @@ const LocationWallpaperComponent = (function() {
                 basicImgs[0].src = urls[0];
                 basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                 positionBasicImages();
-                
                 display(urls);
-                return;
             }
 
-            WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-                if (!basicContainer) return;
-                var cacheHits = cached.filter(function(url) { return url; }).length;
-                if (cacheHits === 4) {
-                    display(cached);
+            function fallbackToCache() {
+                WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+                    if (!basicContainer) return;
+                    var cacheHits = cached.filter(function(url) { return url; }).length;
+                    if (cacheHits === 4) {
+                        display(cached);
+                    } else {
+                        var capturedUrls = [];
+                        var captureNext = function(idx) {
+                            if (idx >= 4) {
+                                WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                                display(capturedUrls);
+                                return;
+                            }
+                            SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                                if (!basicContainer) return;
+                                capturedUrls[idx] = url;
+                                captureNext(idx + 1);
+                            });
+                        };
+                        captureNext(0);
+                    }
+                });
+            }
+
+            // Check for library wallpapers (container cache, post data, or API)
+            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                if (lib && Object.keys(lib).length === 4) {
+                    displayInstant(lib);
                 } else {
-                    var capturedUrls = [];
-                    var captureNext = function(idx) {
-                        if (idx >= 4) {
-                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
-                            display(capturedUrls);
-                            return;
-                        }
-                        SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
-                            if (!basicContainer) return;
-                            capturedUrls[idx] = url;
-                            captureNext(idx + 1);
-                        });
-                    };
-                    captureNext(0);
+                    fallbackToCache();
                 }
             });
         }
