@@ -457,26 +457,10 @@ const HeaderModule = (function() {
                     }
                     
                     // Force immediate removal of classes to prevent stacking in relative flow
-                    var mPanel = document.querySelector('.member-panel');
-                    if (mPanel) {
-                        mPanel.classList.remove('member-panel--show');
-                        mPanel.style.display = 'none'; // Force hide
-                    }
-                    var aPanel = document.querySelector('.admin-panel');
-                    if (aPanel) {
-                        aPanel.classList.remove('admin-panel--show');
-                        aPanel.style.display = 'none'; // Force hide
-                    }
-                    var pPanel = document.querySelector('.post-panel');
-                    if (pPanel) {
-                        pPanel.classList.remove('post-panel--show');
-                        pPanel.style.display = 'none'; // Force hide
-                    }
-                    var rPanel = document.querySelector('.recent-panel');
-                    if (rPanel) {
-                        rPanel.classList.remove('recent-panel--show');
-                        rPanel.style.display = 'none'; // Force hide
-                    }
+                    document.querySelectorAll('.member-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
                 } catch (e) {}
             }
 
@@ -506,9 +490,15 @@ const HeaderModule = (function() {
             }
         });
 
-        // Ensure filter state is reset when other panels open
+        // Ensure filter state is reset when other panels or modes open
         App.on('member:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
         App.on('admin:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
+        App.on('mode:changed', function(data) { 
+            if (data && data.mode !== 'map') {
+                filterPanelOpen = false; 
+                if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); 
+            }
+        });
         
         // Listen for filter panel close events
         App.on('filter:closed', function() {
@@ -551,26 +541,10 @@ const HeaderModule = (function() {
                     }
 
                     // Force immediate removal of classes to prevent stacking in relative flow
-                    var fPanel = document.querySelector('.filter-panel');
-                    if (fPanel) {
-                        fPanel.classList.remove('show');
-                        fPanel.style.display = 'none'; // Force hide
-                    }
-                    var aPanel = document.querySelector('.admin-panel');
-                    if (aPanel) {
-                        aPanel.classList.remove('admin-panel--show');
-                        aPanel.style.display = 'none'; // Force hide
-                    }
-                    var pPanel = document.querySelector('.post-panel');
-                    if (pPanel) {
-                        pPanel.classList.remove('post-panel--show');
-                        pPanel.style.display = 'none'; // Force hide
-                    }
-                    var rPanel = document.querySelector('.recent-panel');
-                    if (rPanel) {
-                        rPanel.classList.remove('recent-panel--show');
-                        rPanel.style.display = 'none'; // Force hide
-                    }
+                    document.querySelectorAll('.filter-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
                 } catch (e) {}
             }
 
@@ -619,26 +593,10 @@ const HeaderModule = (function() {
                     }
 
                     // Force immediate removal of classes to prevent stacking in relative flow
-                    var fPanel = document.querySelector('.filter-panel');
-                    if (fPanel) {
-                        fPanel.classList.remove('show');
-                        fPanel.style.display = 'none'; // Force hide
-                    }
-                    var mPanel = document.querySelector('.member-panel');
-                    if (mPanel) {
-                        mPanel.classList.remove('member-panel--show');
-                        mPanel.style.display = 'none'; // Force hide
-                    }
-                    var pPanel = document.querySelector('.post-panel');
-                    if (pPanel) {
-                        pPanel.classList.remove('post-panel--show');
-                        pPanel.style.display = 'none'; // Force hide
-                    }
-                    var rPanel = document.querySelector('.recent-panel');
-                    if (rPanel) {
-                        rPanel.classList.remove('recent-panel--show');
-                        rPanel.style.display = 'none'; // Force hide
-                    }
+                    document.querySelectorAll('.filter-panel, .member-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
                 } catch (e) {}
             }
 
