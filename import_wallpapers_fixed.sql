@@ -1,4 +1,4 @@
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (-33.8567844, 151.2152967, 'venue', 0, 75, 18, 'sydney-opera-house__-33.8567844_151.2152967__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/sydney-opera-house__-33.8567844_151.2152967__Z18-P75-N.webp', 700, 2500),
 (-33.8567844, 151.2152967, 'venue', 90, 75, 18, 'sydney-opera-house__-33.8567844_151.2152967__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/sydney-opera-house__-33.8567844_151.2152967__Z18-P75-E.webp', 700, 2500),
 (-33.8567844, 151.2152967, 'venue', 180, 75, 18, 'sydney-opera-house__-33.8567844_151.2152967__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/sydney-opera-house__-33.8567844_151.2152967__Z18-P75-S.webp', 700, 2500),
@@ -500,7 +500,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (51.5075953, -0.0993564, 'venue', 180, 75, 18, 'tate-modern__51.5075953_-0.0993564__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/tate-modern__51.5075953_-0.0993564__Z18-P75-S.webp', 700, 2500),
 (51.5075953, -0.0993564, 'venue', 270, 75, 18, 'tate-modern__51.5075953_-0.0993564__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/tate-modern__51.5075953_-0.0993564__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (51.5138453, -0.0983506, 'venue', 0, 75, 18, 'st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-N.webp', 700, 2500),
 (51.5138453, -0.0983506, 'venue', 90, 75, 18, 'st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-E.webp', 700, 2500),
 (51.5138453, -0.0983506, 'venue', 180, 75, 18, 'st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/st-pauls-cathedral__51.5138453_-0.0983506__Z18-P75-S.webp', 700, 2500),
@@ -1002,7 +1002,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (48.208036, 16.3592045, 'venue', 180, 75, 18, 'austrian-parliament__48.208036_16.3592045__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/austrian-parliament__48.208036_16.3592045__Z18-P75-S.webp', 700, 2500),
 (48.208036, 16.3592045, 'venue', 270, 75, 18, 'austrian-parliament__48.208036_16.3592045__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/austrian-parliament__48.208036_16.3592045__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (48.2102962, 16.36146, 'venue', 0, 75, 18, 'burgtheater__48.2102962_16.36146__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/burgtheater__48.2102962_16.36146__Z18-P75-N.webp', 700, 2500),
 (48.2102962, 16.36146, 'venue', 90, 75, 18, 'burgtheater__48.2102962_16.36146__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/burgtheater__48.2102962_16.36146__Z18-P75-E.webp', 700, 2500),
 (48.2102962, 16.36146, 'venue', 180, 75, 18, 'burgtheater__48.2102962_16.36146__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/burgtheater__48.2102962_16.36146__Z18-P75-S.webp', 700, 2500),
@@ -1504,7 +1504,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (35.0114138, 135.7944841, 'venue', 180, 75, 18, 'nanzen-ji__35.0114138_135.7944841__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/nanzen-ji__35.0114138_135.7944841__Z18-P75-S.webp', 700, 2500),
 (35.0114138, 135.7944841, 'venue', 270, 75, 18, 'nanzen-ji__35.0114138_135.7944841__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/nanzen-ji__35.0114138_135.7944841__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (34.9870986, 135.7422732, 'venue', 0, 75, 18, 'kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-N.webp', 700, 2500),
 (34.9870986, 135.7422732, 'venue', 90, 75, 18, 'kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-E.webp', 700, 2500),
 (34.9870986, 135.7422732, 'venue', 180, 75, 18, 'kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/kyoto-railway-museum__34.9870986_135.7422732__Z18-P75-S.webp', 700, 2500),
@@ -2006,7 +2006,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (19.2956664, -99.2108529, 'venue', 180, 75, 18, 'six-flags-mxico__19.2956664_-99.2108529__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/six-flags-mxico__19.2956664_-99.2108529__Z18-P75-S.webp', 700, 2500),
 (19.2956664, -99.2108529, 'venue', 270, 75, 18, 'six-flags-mxico__19.2956664_-99.2108529__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/six-flags-mxico__19.2956664_-99.2108529__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (19.4269962, -99.1676623, 'venue', 0, 75, 18, 'the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-N.webp', 700, 2500),
 (19.4269962, -99.1676623, 'venue', 90, 75, 18, 'the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-E.webp', 700, 2500),
 (19.4269962, -99.1676623, 'venue', 180, 75, 18, 'the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/the-angel-of-independence__19.4269962_-99.1676623__Z18-P75-S.webp', 700, 2500),
@@ -2508,7 +2508,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (38.7124976, -9.1303235, 'venue', 180, 75, 18, 'alfama__38.7124976_-9.1303235__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/alfama__38.7124976_-9.1303235__Z18-P75-S.webp', 700, 2500),
 (38.7124976, -9.1303235, 'venue', 270, 75, 18, 'alfama__38.7124976_-9.1303235__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/alfama__38.7124976_-9.1303235__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (38.7072828, -9.1363613, 'venue', 0, 75, 18, 'praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-N.webp', 700, 2500),
 (38.7072828, -9.1363613, 'venue', 90, 75, 18, 'praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-E.webp', 700, 2500),
 (38.7072828, -9.1363613, 'venue', 180, 75, 18, 'praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/praa-do-comrcio__38.7072828_-9.1363613__Z18-P75-S.webp', 700, 2500),
@@ -3010,7 +3010,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (-8.3739976, 115.4525567, 'venue', 180, 75, 18, 'besakih-great-temple__-8.3739976_115.4525567__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/besakih-great-temple__-8.3739976_115.4525567__Z18-P75-S.webp', 700, 2500),
 (-8.3739976, 115.4525567, 'venue', 270, 75, 18, 'besakih-great-temple__-8.3739976_115.4525567__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/besakih-great-temple__-8.3739976_115.4525567__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (-8.5822029, 115.3472573, 'venue', 0, 75, 18, 'the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-N.webp', 700, 2500),
 (-8.5822029, 115.3472573, 'venue', 90, 75, 18, 'the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-E.webp', 700, 2500),
 (-8.5822029, 115.3472573, 'venue', 180, 75, 18, 'the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/the-amazing-taman-safari-bali__-8.5822029_115.3472573__Z18-P75-S.webp', 700, 2500),
@@ -3512,7 +3512,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (25.035502, 121.5201832, 'venue', 180, 75, 18, 'chiang-kai-shek-memorial-hall__25.035502_121.5201832__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/chiang-kai-shek-memorial-hall__25.035502_121.5201832__Z18-P75-S.webp', 700, 2500),
 (25.035502, 121.5201832, 'venue', 270, 75, 18, 'chiang-kai-shek-memorial-hall__25.035502_121.5201832__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/chiang-kai-shek-memorial-hall__25.035502_121.5201832__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (25.1942462, 121.5609363, 'venue', 0, 75, 18, 'yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-N.webp', 700, 2500),
 (25.1942462, 121.5609363, 'venue', 90, 75, 18, 'yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-E.webp', 700, 2500),
 (25.1942462, 121.5609363, 'venue', 180, 75, 18, 'yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/yangmingshan-national-park__25.1942462_121.5609363__Z18-P75-S.webp', 700, 2500),
@@ -4014,7 +4014,7 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (-12.4705883, 130.849009, 'venue', 180, 75, 18, 'stokes-hill-wharf__-12.4705883_130.849009__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/stokes-hill-wharf__-12.4705883_130.849009__Z18-P75-S.webp', 700, 2500),
 (-12.4705883, 130.849009, 'venue', 270, 75, 18, 'stokes-hill-wharf__-12.4705883_130.849009__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/stokes-hill-wharf__-12.4705883_130.849009__Z18-P75-W.webp', 700, 2500);
 
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (-45.8615691, 170.6272516, 'venue', 0, 75, 18, 'larnach-castle__-45.8615691_170.6272516__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/larnach-castle__-45.8615691_170.6272516__Z18-P75-N.webp', 700, 2500),
 (-45.8615691, 170.6272516, 'venue', 90, 75, 18, 'larnach-castle__-45.8615691_170.6272516__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/larnach-castle__-45.8615691_170.6272516__Z18-P75-E.webp', 700, 2500),
 (-45.8615691, 170.6272516, 'venue', 180, 75, 18, 'larnach-castle__-45.8615691_170.6272516__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/larnach-castle__-45.8615691_170.6272516__Z18-P75-S.webp', 700, 2500),
@@ -4231,10 +4231,6 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (40.5532009, 14.222154, 'venue', 90, 75, 18, 'capri__40.5532009_14.222154__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/capri__40.5532009_14.222154__Z18-P75-E.webp', 700, 2500),
 (40.5532009, 14.222154, 'venue', 180, 75, 18, 'capri__40.5532009_14.222154__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/capri__40.5532009_14.222154__Z18-P75-S.webp', 700, 2500),
 (40.5532009, 14.222154, 'venue', 270, 75, 18, 'capri__40.5532009_14.222154__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/capri__40.5532009_14.222154__Z18-P75-W.webp', 700, 2500),
-(40.6333389, 14.6028963, 'venue', 0, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-N.webp', 700, 2500),
-(40.6333389, 14.6028963, 'venue', 90, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-E.webp', 700, 2500),
-(40.6333389, 14.6028963, 'venue', 180, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-S.webp', 700, 2500),
-(40.6333389, 14.6028963, 'venue', 270, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-W.webp', 700, 2500),
 (40.6333389, 14.6028963, 'venue', 0, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-N.webp', 700, 2500),
 (40.6333389, 14.6028963, 'venue', 90, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-E.webp', 700, 2500),
 (40.6333389, 14.6028963, 'venue', 180, 75, 18, 'amalfi-coast__40.6333389_14.6028963__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/amalfi-coast__40.6333389_14.6028963__Z18-P75-S.webp', 700, 2500),
@@ -4514,13 +4510,13 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (24.5336954, 54.3981368, 'venue', 0, 75, 18, 'louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-N.webp', 700, 2500),
 (24.5336954, 54.3981368, 'venue', 90, 75, 18, 'louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-E.webp', 700, 2500),
 (24.5336954, 54.3981368, 'venue', 180, 75, 18, 'louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-S.webp', 700, 2500),
-(24.5336954, 54.3981368, 'venue', 270, 75, 18, 'louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-W.webp', 700, 2500);
-
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+(24.5336954, 54.3981368, 'venue', 270, 75, 18, 'louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/louvre-abu-dhabi__24.5336954_54.3981368__Z18-P75-W.webp', 700, 2500),
 (24.4843883, 54.607704, 'venue', 0, 75, 18, 'ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-N.webp', 700, 2500),
 (24.4843883, 54.607704, 'venue', 90, 75, 18, 'ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-E.webp', 700, 2500),
 (24.4843883, 54.607704, 'venue', 180, 75, 18, 'ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-S.webp', 700, 2500),
-(24.4843883, 54.607704, 'venue', 270, 75, 18, 'ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-W.webp', 700, 2500),
+(24.4843883, 54.607704, 'venue', 270, 75, 18, 'ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/ferrari-world-yas-island-abu-dhabi__24.4843883_54.607704__Z18-P75-W.webp', 700, 2500);
+
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (24.4958385, 54.6040121, 'venue', 0, 75, 18, 'yas-island__24.4958385_54.6040121__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/yas-island__24.4958385_54.6040121__Z18-P75-N.webp', 700, 2500),
 (24.4958385, 54.6040121, 'venue', 90, 75, 18, 'yas-island__24.4958385_54.6040121__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/yas-island__24.4958385_54.6040121__Z18-P75-E.webp', 700, 2500),
 (24.4958385, 54.6040121, 'venue', 180, 75, 18, 'yas-island__24.4958385_54.6040121__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/yas-island__24.4958385_54.6040121__Z18-P75-S.webp', 700, 2500),
@@ -5016,13 +5012,13 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (-45.4084942, 167.3591318, 'venue', 0, 75, 18, 'fiordland-national-park__-45.4084942_167.3591318__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/fiordland-national-park__-45.4084942_167.3591318__Z18-P75-N.webp', 700, 2500),
 (-45.4084942, 167.3591318, 'venue', 90, 75, 18, 'fiordland-national-park__-45.4084942_167.3591318__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/fiordland-national-park__-45.4084942_167.3591318__Z18-P75-E.webp', 700, 2500),
 (-45.4084942, 167.3591318, 'venue', 180, 75, 18, 'fiordland-national-park__-45.4084942_167.3591318__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/fiordland-national-park__-45.4084942_167.3591318__Z18-P75-S.webp', 700, 2500),
-(-45.4084942, 167.3591318, 'venue', 270, 75, 18, 'fiordland-national-park__-45.4084942_167.3591318__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/fiordland-national-park__-45.4084942_167.3591318__Z18-P75-W.webp', 700, 2500);
-
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+(-45.4084942, 167.3591318, 'venue', 270, 75, 18, 'fiordland-national-park__-45.4084942_167.3591318__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/fiordland-national-park__-45.4084942_167.3591318__Z18-P75-W.webp', 700, 2500),
 (-46.6614691, 169.1081446, 'venue', 0, 75, 18, 'curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-N.webp', 700, 2500),
 (-46.6614691, 169.1081446, 'venue', 90, 75, 18, 'curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-E.webp', 700, 2500),
 (-46.6614691, 169.1081446, 'venue', 180, 75, 18, 'curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-S.webp', 700, 2500),
-(-46.6614691, 169.1081446, 'venue', 270, 75, 18, 'curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-W.webp', 700, 2500),
+(-46.6614691, 169.1081446, 'venue', 270, 75, 18, 'curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/curio-bay-cliffs__-46.6614691_169.1081446__Z18-P75-W.webp', 700, 2500);
+
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (-46.4077201, 168.3460807, 'venue', 0, 75, 18, 'e-hayes-sons__-46.4077201_168.3460807__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/e-hayes-sons__-46.4077201_168.3460807__Z18-P75-N.webp', 700, 2500),
 (-46.4077201, 168.3460807, 'venue', 90, 75, 18, 'e-hayes-sons__-46.4077201_168.3460807__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/e-hayes-sons__-46.4077201_168.3460807__Z18-P75-E.webp', 700, 2500),
 (-46.4077201, 168.3460807, 'venue', 180, 75, 18, 'e-hayes-sons__-46.4077201_168.3460807__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/e-hayes-sons__-46.4077201_168.3460807__Z18-P75-S.webp', 700, 2500),
@@ -5518,13 +5514,13 @@ INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `
 (43.053134, 141.496665, 'venue', 0, 75, 18, 'hokkaido-museum__43.053134_141.496665__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/hokkaido-museum__43.053134_141.496665__Z18-P75-N.webp', 700, 2500),
 (43.053134, 141.496665, 'venue', 90, 75, 18, 'hokkaido-museum__43.053134_141.496665__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/hokkaido-museum__43.053134_141.496665__Z18-P75-E.webp', 700, 2500),
 (43.053134, 141.496665, 'venue', 180, 75, 18, 'hokkaido-museum__43.053134_141.496665__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/hokkaido-museum__43.053134_141.496665__Z18-P75-S.webp', 700, 2500),
-(43.053134, 141.496665, 'venue', 270, 75, 18, 'hokkaido-museum__43.053134_141.496665__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/hokkaido-museum__43.053134_141.496665__Z18-P75-W.webp', 700, 2500);
-
-INSERT INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
+(43.053134, 141.496665, 'venue', 270, 75, 18, 'hokkaido-museum__43.053134_141.496665__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/hokkaido-museum__43.053134_141.496665__Z18-P75-W.webp', 700, 2500),
 (33.5852452, 130.3832159, 'venue', 0, 75, 18, 'fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-N.webp', 700, 2500),
 (33.5852452, 130.3832159, 'venue', 90, 75, 18, 'fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-E.webp', 700, 2500),
 (33.5852452, 130.3832159, 'venue', 180, 75, 18, 'fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-S.webp', 700, 2500),
-(33.5852452, 130.3832159, 'venue', 270, 75, 18, 'fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-W.webp', 700, 2500),
+(33.5852452, 130.3832159, 'venue', 270, 75, 18, 'fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-W.webp', 'https://cdn.funmap.com/map-images/fukuoka-castle-ruins__33.5852452_130.3832159__Z18-P75-W.webp', 700, 2500);
+
+INSERT IGNORE INTO `map_images` (`latitude`, `longitude`, `location_type`, `bearing`, `pitch`, `zoom`, `file_name`, `file_url`, `width`, `height`) VALUES
 (33.5728036, 130.3910108, 'venue', 0, 75, 18, 'fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-N.webp', 'https://cdn.funmap.com/map-images/fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-N.webp', 700, 2500),
 (33.5728036, 130.3910108, 'venue', 90, 75, 18, 'fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-E.webp', 'https://cdn.funmap.com/map-images/fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-E.webp', 700, 2500),
 (33.5728036, 130.3910108, 'venue', 180, 75, 18, 'fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-S.webp', 'https://cdn.funmap.com/map-images/fukuoka-zoo-and-botanical-garden__33.5728036_130.3910108__Z18-P75-S.webp', 700, 2500),
