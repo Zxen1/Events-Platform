@@ -448,19 +448,12 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
-                    // Use module close methods to ensure state is updated
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
                     }
-                    
-                    // Force immediate removal of classes to prevent stacking in relative flow
-                    document.querySelectorAll('.member-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
-                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
-                        p.style.display = 'none';
-                    });
                 } catch (e) {}
             }
 
@@ -487,16 +480,6 @@ const HeaderModule = (function() {
                     panel: 'filter',
                     show: filterPanelOpen
                 });
-            }
-        });
-
-        // Ensure filter state is reset when other panels or modes open
-        App.on('member:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
-        App.on('admin:opened', function() { filterPanelOpen = false; if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); });
-        App.on('mode:changed', function(data) { 
-            if (data && data.mode !== 'map') {
-                filterPanelOpen = false; 
-                if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false'); 
             }
         });
         
@@ -539,12 +522,6 @@ const HeaderModule = (function() {
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
                     }
-
-                    // Force immediate removal of classes to prevent stacking in relative flow
-                    document.querySelectorAll('.filter-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
-                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
-                        p.style.display = 'none';
-                    });
                 } catch (e) {}
             }
 
@@ -591,12 +568,6 @@ const HeaderModule = (function() {
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
-
-                    // Force immediate removal of classes to prevent stacking in relative flow
-                    document.querySelectorAll('.filter-panel, .member-panel, .post-panel, .recent-panel').forEach(function(p) {
-                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
-                        p.style.display = 'none';
-                    });
                 } catch (e) {}
             }
 

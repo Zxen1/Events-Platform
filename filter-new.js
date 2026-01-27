@@ -436,7 +436,6 @@ const FilterModule = (function() {
         } catch (_eSummary) {}
         
         panelEl.classList.add('show');
-        panelEl.style.display = ''; // Clear any immediate hide
         panelEl.setAttribute('aria-hidden', 'false');
         panelEl.removeAttribute('inert');
 

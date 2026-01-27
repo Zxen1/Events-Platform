@@ -944,7 +944,6 @@ body {
     overflow-x: hidden;
     height: auto;
     min-height: 0;
-    overscroll-behavior: auto;
   }
   
   body::before {

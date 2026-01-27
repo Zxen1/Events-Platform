@@ -1978,7 +1978,6 @@ const MemberModule = (function() {
         if (!panel || !panelContent) return;
         
         panel.classList.add('member-panel--show');
-        panel.style.display = ''; // Clear any immediate hide
         panel.setAttribute('aria-hidden', 'false');
 
         // Show (force a frame between "off-screen" and "visible" so slide-in

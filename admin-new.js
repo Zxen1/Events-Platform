@@ -424,7 +424,6 @@ const AdminModule = (function() {
         if (!panel || !panelContent) return;
         
         panel.classList.add('admin-panel--show');
-        panel.style.display = ''; // Clear any immediate hide
         panel.setAttribute('aria-hidden', 'false');
 
         // Show (force a frame between "off-screen" and "visible" so slide-in
