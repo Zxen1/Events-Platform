@@ -8246,7 +8246,7 @@ const LocationWallpaperComponent = (function() {
         var mapMount = document.createElement('div');
         mapMount.className = 'component-locationwallpaper-mapmount';
         mapMount.style.opacity = '0';
-        mapMount.style.transition = 'opacity 0.8s ease';
+        mapMount.style.transition = 'opacity 1.5s ease';
 
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
@@ -8254,7 +8254,7 @@ const LocationWallpaperComponent = (function() {
         img.decoding = 'sync';
         img.loading = 'eager';
         img.style.opacity = '0';
-        img.style.transition = 'opacity 0.8s ease';
+        img.style.transition = 'opacity 1.5s ease';
 
         root.appendChild(mapMount);
         root.appendChild(img);
@@ -8541,7 +8541,7 @@ const LocationWallpaperComponent = (function() {
         // ORBIT MODE
         // ============================================================
         var orbitOriginalHeight = 0;
-        var ORBIT_WIDTH = 700;
+        var ORBIT_WIDTH = 600;
         var ORBIT_HEIGHT = 2500;
 
         function positionOrbitMap() {
@@ -8632,7 +8632,7 @@ const LocationWallpaperComponent = (function() {
         // STILL MODE - Single static 700x2500 image, displayed once
         // ============================================================
         var stillOriginalHeight = 0;
-        var STILL_WIDTH = 700;
+        var STILL_WIDTH = 600;
         var STILL_HEIGHT = 2500;
 
         function positionStillImage() {
@@ -8732,7 +8732,7 @@ const LocationWallpaperComponent = (function() {
         var basicIndex = 0;
         var basicTimer = null;
         var basicOriginalHeight = 0;
-        var BASIC_WIDTH = 700;
+        var BASIC_WIDTH = 600;
         var BASIC_HEIGHT = 2500;
 
         function positionBasicImages() {

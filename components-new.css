@@ -3019,10 +3019,10 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 700px;
+    width: 600px;
     height: 2500px;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    transition: opacity 1.5s ease;
     will-change: opacity;
     z-index: 1;
 }
@@ -3031,10 +3031,10 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    width: 700px;
+    width: 600px;
     height: 2500px;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    transition: opacity 1.5s ease;
     will-change: opacity;
     z-index: 2;
 }
@@ -3074,7 +3074,7 @@
 .component-locationwallpaper-basic-image {
     position: absolute;
     left: 0;
-    width: 700px;
+    width: 600px;
     height: 2500px;
     object-fit: cover;
     object-position: left top;
