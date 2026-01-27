@@ -8111,11 +8111,11 @@ const LocationWallpaperComponent = (function() {
 
     function getDefaultCameraForType(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
-        var zoom = (t === 'city') ? 12 : 16;
+        var zoom = (t === 'city') ? 12 : 18;
         return {
             center: centerLngLat,
             zoom: zoom,
-            pitch: 70,
+            pitch: 75,
             bearing: 0
         };
     }
@@ -8125,15 +8125,15 @@ const LocationWallpaperComponent = (function() {
         var t = String(locationType || '').toLowerCase();
         var isCity = (t === 'city');
 
-        // Venue/Address: zoom 16, City: zoom 11
+        // Venue/Address: zoom 18, City: zoom 11
         // 4 pan views from N, E, S, W bearings
-        var zoom = isCity ? 11 : 16;
+        var zoom = isCity ? 11 : 18;
 
         return [
-            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 0 },    // North
-            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 90 },   // East
-            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 180 },  // South
-            { center: centerLngLat, zoom: zoom, pitch: 70, bearing: 270 }   // West
+            { center: centerLngLat, zoom: zoom, pitch: 75, bearing: 0 },    // North
+            { center: centerLngLat, zoom: zoom, pitch: 75, bearing: 90 },   // East
+            { center: centerLngLat, zoom: zoom, pitch: 75, bearing: 180 },  // South
+            { center: centerLngLat, zoom: zoom, pitch: 75, bearing: 270 }   // West
         ];
     }
 
