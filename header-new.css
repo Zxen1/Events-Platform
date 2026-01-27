@@ -19,14 +19,6 @@
   box-sizing: border-box;
 }
 
-@media (max-width: 530px) {
-  .header-bar {
-    position: relative;
-    padding-top: env(safe-area-inset-top, 0px);
-    height: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px));
-  }
-}
-
 /* Logo button */
 .header-logo-button {
   position: absolute;

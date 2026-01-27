@@ -938,27 +938,6 @@ body {
   overscroll-behavior: contain;
 }
 
-@media (max-width: 530px) {
-  body {
-    overflow-y: scroll;
-    overflow-x: hidden;
-    height: auto;
-    min-height: 0;
-  }
-  
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 50%;
-    width: 10px;
-    height: 10000px;
-    background: red;
-    z-index: 9999;
-    pointer-events: none;
-  }
-}
-
 
 
 /* ============================================================================

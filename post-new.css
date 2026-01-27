@@ -90,17 +90,12 @@
 }
 
 @media (max-width: 530px) {
-  .post-panel {
-    position: relative;
-    height: auto;
-  }
-  
   .post-panel-content {
-    position: relative;
-    top: auto;
     width: 100%;
     max-width: 100%;
+    max-height: none;
     height: auto;
+    bottom: var(--footer-h);
   }
 }
 
@@ -162,17 +157,12 @@
 }
 
 @media (max-width: 530px) {
-  .recent-panel {
-    position: relative;
-    height: auto;
-  }
-  
   .recent-panel-content {
-    position: relative;
-    top: auto;
     width: 100%;
     max-width: 100%;
+    max-height: none;
     height: auto;
+    bottom: var(--footer-h);
   }
 }
 

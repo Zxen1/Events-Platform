@@ -14,44 +14,175 @@ WHAT WORKS:
 4. The top safe area black bar disappears when scrolling is enabled
 5. Map can extend to all edges with viewport-fit=cover
 
-KEY CSS CHANGES AT MOBILE (530px breakpoint):
+====================================================
+STEP-BY-STEP INSTRUCTIONS TO IMPLEMENT FROM SCRATCH
+====================================================
 
-1. body:
-   - overflow-y: scroll
-   - height: auto
-   - min-height: 0
+STEP 1: Fix viewport meta tag in index.html
+-------------------------------------------
+Change:
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual">
 
-2. header-bar:
-   - position: relative (not fixed)
-   - padding-top: env(safe-area-inset-top)
-   - height: calc(var(--header-h, 56px) + env(safe-area-inset-top))
-
-3. map-area:
-   - position: fixed
-   - top: 0; bottom: 0; left: 0; right: 0
-   - height: auto
-
-4. post-panel and recent-panel:
-   - position: relative
-   - height: auto
-
-5. post-panel-content and recent-panel-content:
-   - position: relative
-   - top: auto
-   - height: auto
-
-STILL NEEDS WORK:
-- Need scrollable content to trigger Safari UI collapse
-- Red test line (body::before, position: fixed, z-index: 9999) used for testing
-- Bottom of screen may still have issues
-- Panels need to work with scrolling properly
-
-VIEWPORT META TAG:
+To:
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-The viewport-fit=cover is essential for extending into safe areas.
 
-IMPORTANT:
-- All changes must be inside @media (max-width: 530px)
-- Desktop must remain unaffected
+STEP 2: Standardize breakpoints to 530px
+----------------------------------------
+Search and replace all mobile breakpoints in *-new.css files:
+- Change 440px to 530px
+- Change 480px to 530px  
+- Change 600px to 530px
+- Change 601px to 531px (for min-width)
+- Change 768px to 530px
+
+KEEP these unchanged:
+- 1900px in marquee-new.css (min-width for marquee)
+- 900px in header-new.css (min-width for map controls in header)
+
+
+STEP 3: Add to base-new.css (inside new mobile media query)
+-----------------------------------------------------------
+@media (max-width: 530px) {
+  body {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 0;
+  }
+  
+  /* TEST LINE - remove after testing works */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 50%;
+    width: 10px;
+    height: 10000px;
+    background: red;
+    z-index: 9999;
+    pointer-events: none;
+  }
+}
+
+
+STEP 4: Add to header-new.css (after .header-bar rule)
+------------------------------------------------------
+@media (max-width: 530px) {
+  .header-bar {
+    position: relative;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px));
+  }
+}
+
+
+STEP 5: Add to header-new.css (for Recent button only becoming icon)
+--------------------------------------------------------------------
+Change the modeswitch text/icon behavior so only Recent becomes icon at mobile.
+Posts and Map always show text.
+
+.header-modeswitch-button-text {
+  display: block;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.header-modeswitch-posts,
+.header-modeswitch-map {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+}
+
+.header-modeswitch-posts .header-modeswitch-button-icon,
+.header-modeswitch-map .header-modeswitch-button-icon {
+  display: none;
+}
+
+.header-modeswitch-recent .header-modeswitch-button-text {
+  display: none;
+}
+
+@media (min-width: 531px) {
+  .header-modeswitch-recent {
+    width: auto;
+    height: 36px;
+    padding: 0 14px;
+  }
+  
+  .header-modeswitch-recent .header-modeswitch-button-icon {
+    display: none;
+  }
+  
+  .header-modeswitch-recent .header-modeswitch-button-text {
+    display: block;
+  }
+}
+
+
+STEP 6: Add to map-new.css (after .map-area rule)
+-------------------------------------------------
+@media (max-width: 530px) {
+  .map-area {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+  }
+}
+
+
+STEP 7: Modify post-new.css mobile query for .post-panel
+--------------------------------------------------------
+@media (max-width: 530px) {
+  .post-panel {
+    position: relative;
+    height: auto;
+  }
+  
+  .post-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+
+STEP 8: Modify post-new.css mobile query for .recent-panel
+----------------------------------------------------------
+@media (max-width: 530px) {
+  .recent-panel {
+    position: relative;
+    height: auto;
+  }
+  
+  .recent-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+
+====================================================
+STILL NEEDS WORK
+====================================================
+- The red test line is for debugging - remove when done
+- Bottom of screen may still have blocking issues
+- Need to verify map touch interaction still works
+- Panels need to integrate properly with document scroll
+- May need to handle filter/member/admin panels similarly
+
+====================================================
+IMPORTANT RULES
+====================================================
+- All changes must be inside @media (max-width: 530px) except where noted
+- Desktop must remain completely unaffected
 - Map must remain interactive (Mapbox handles its own touch events)
+- Read Agent Essentials before making any changes
