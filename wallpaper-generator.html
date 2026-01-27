@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Map Wallpaper Generator</title>
+    <title>Map Wallpaper Generator (Final 5)</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css' rel='stylesheet' />
     <style>
         body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #1a1a1a; color: #eee; }
         .container { max-width: 800px; margin: 0 auto; }
         #status-box { background: #222; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
-        #log { height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 20px; }
-        button { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        #log { height: 350px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 20px; }
+        button { background: #0078d4; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; }
         button:disabled { background: #444; cursor: not-allowed; }
         textarea { width: 100%; height: 200px; background: #222; color: #ccc; border: 1px solid #333; border-radius: 4px; padding: 10px; font-family: monospace; font-size: 12px; }
         .progress-bar { height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden; }
@@ -25,8 +25,8 @@
             <div style="margin-top: 5px; font-size: 12px; color: #888;" id="progress-text">0 / 5 locations</div>
         </div>
 
-        <button id="btnStart">Initialize Map Engine</button>
-        <button id="btnCapture" style="display:none;">Select Folder & Begin Capture</button>
+        <button id="btnStart">1. Initialize Map Engine</button>
+        <button id="btnCapture" style="display:none;">2. Select Folder & Begin Capture</button>
 
         <div id="log"></div>
 
@@ -34,7 +34,7 @@
         <textarea id="sql-output" readonly placeholder="SQL statements will appear here..."></textarea>
     </div>
 
-    <div id="map" style="width: 700px; height: 2500px; position: absolute; left: -9999px;"></div>
+    <div id="map" style="width: 700px; height: 2500px; position: absolute; left: -9999px; top: 0;"></div>
 
     <script>
         const ACCESS_TOKEN = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
@@ -47,7 +47,6 @@
         const MAP_STYLE = 'mapbox://styles/mapbox/standard';
         const LIGHT_PRESET = 'night';
 
-        // EMBEDDED LOCATIONS TO AVOID FETCH ERRORS
         const locations = [
             { "name": "Larnach Castle", "lat": -45.8615691, "lng": 170.6272516 },
             { "name": "St Paul's Cathedral, Melbourne", "lat": -37.817029, "lng": 144.967687 },
@@ -93,28 +92,41 @@
                 });
                 map.on('style.load', () => map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET));
                 map.on('load', () => resolve());
-                setTimeout(() => reject(new Error("Map timeout")), 15000);
+                setTimeout(() => reject(new Error("Map engine failed to load within 15s")), 15000);
             });
         }
 
         async function captureImage(lat, lng, bearing, filename) {
             return new Promise((resolve) => {
                 map.jumpTo({ center: [lng, lat], zoom: ZOOM, pitch: PITCH, bearing: bearing });
+                
                 const timeout = setTimeout(() => {
-                    log(`Timeout at ${lat}, ${lng}. Skipping.`, true);
-                    resolve(null);
-                }, 15000);
+                    log(`TIMEOUT: Map didn't become idle for ${filename}`, true);
+                    resolve(false);
+                }, 20000);
+
                 map.once('idle', () => {
                     clearTimeout(timeout);
-                    map.getCanvas().toBlob(async (blob) => {
-                        try {
-                            const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
-                            const writable = await fileHandle.createWritable();
-                            await writable.write(blob);
-                            await writable.close();
-                            resolve(true);
-                        } catch (e) { resolve(null); }
-                    }, 'image/webp', 0.85);
+                    setTimeout(() => { // Small delay to ensure render is flushed
+                        map.getCanvas().toBlob(async (blob) => {
+                            if (!blob) {
+                                log(`ERROR: Could not generate blob for ${filename}`, true);
+                                resolve(false);
+                                return;
+                            }
+                            try {
+                                const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+                                const writable = await fileHandle.createWritable();
+                                await writable.write(blob);
+                                await writable.close();
+                                log(`SAVED: ${filename}`);
+                                resolve(true);
+                            } catch (e) {
+                                log(`FILE ERROR: ${e.message} while saving ${filename}`, true);
+                                resolve(false);
+                            }
+                        }, 'image/webp', 0.85);
+                    }, 500);
                 });
             });
         }
@@ -127,31 +139,45 @@
                 log("Map engine ready.");
                 document.getElementById('btnCapture').style.display = 'inline-block';
                 document.getElementById('btnStart').style.display = 'none';
-            } catch (e) { log("Error: " + e.message, true); }
+            } catch (e) {
+                log("FATAL ERROR: " + e.message, true);
+                document.getElementById('btnStart').disabled = false;
+            }
         });
 
         document.getElementById('btnCapture').addEventListener('click', async () => {
-            directoryHandle = await window.showDirectoryPicker();
-            document.getElementById('btnCapture').disabled = true;
-            const sqlOutput = document.getElementById('sql-output');
-            
-            for (let i = 0; i < locations.length; i++) {
-                const loc = locations[i];
-                document.getElementById('progress-fill').style.width = `${((i+1)/5)*100}%`;
-                document.getElementById('progress-text').textContent = `${i+1} / 5 locations (${loc.name})`;
-                log(`Processing: ${loc.name}...`);
+            try {
+                directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                document.getElementById('btnCapture').disabled = true;
+                const sqlOutput = document.getElementById('sql-output');
                 
-                let sqlBatch = "";
-                for (const bearing of BEARINGS) {
-                    const filename = `${slugify(loc.name)}__${loc.lat}_${loc.lng}__Z${ZOOM}-P${PITCH}-${BEARING_NAMES[bearing]}.webp`;
-                    if (await captureImage(loc.lat, loc.lng, bearing, filename)) {
-                        const url = `https://cdn.funmap.com/map-images/${filename}`;
-                        sqlBatch += `INSERT IGNORE INTO \`map_images\` (\`latitude\`, \`longitude\`, \`location_type\`, \`bearing\`, \`pitch\`, \`zoom\`, \`file_name\`, \`file_url\`, \`width\`, \`height\`) VALUES (${loc.lat}, ${loc.lng}, 'venue', ${bearing}, ${PITCH}, ${ZOOM}, '${filename}', '${url}', ${WIDTH}, ${HEIGHT});\n`;
+                for (let i = 0; i < locations.length; i++) {
+                    const loc = locations[i];
+                    document.getElementById('progress-fill').style.width = `${((i+1)/5)*100}%`;
+                    document.getElementById('progress-text').textContent = `${i+1} / 5 locations (${loc.name})`;
+                    log(`--- Starting Location: ${loc.name} ---`);
+                    
+                    for (const bearing of BEARINGS) {
+                        const bName = BEARING_NAMES[bearing];
+                        const filename = `${slugify(loc.name)}__${loc.lat}_${loc.lng}__Z${ZOOM}-P${PITCH}-${bName}.webp`;
+                        
+                        const success = await captureImage(loc.lat, loc.lng, bearing, filename);
+                        
+                        if (success) {
+                            const url = `https://cdn.funmap.com/map-images/${filename}`;
+                            const sql = `INSERT IGNORE INTO \`map_images\` (\`latitude\`, \`longitude\`, \`location_type\`, \`bearing\`, \`pitch\`, \`zoom\`, \`file_name\`, \`file_url\`, \`width\`, \`height\`) VALUES (${loc.lat}, ${loc.lng}, 'venue', ${bearing}, ${PITCH}, ${ZOOM}, '${filename}', '${url}', ${WIDTH}, ${HEIGHT});\n`;
+                            sqlOutput.value += sql;
+                        }
+                        // Wait 1 second between captures to avoid file system lock
+                        await new Promise(r => setTimeout(r, 1000));
                     }
                 }
-                sqlOutput.value += sqlBatch;
+                log("ALL DONE. Copy the SQL and check your folder.");
+                document.getElementById('status-text').textContent = "Finished";
+            } catch (e) {
+                log("PERMISSION ERROR: " + e.message, true);
+                document.getElementById('btnCapture').disabled = false;
             }
-            log("FINISHED. Copy the SQL below.");
         });
     </script>
 </body>
