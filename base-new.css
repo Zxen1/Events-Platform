@@ -928,7 +928,8 @@ body {
   font-size: 14px;
   background: var(--background);
   color: var(--text);
-  overflow: hidden;
+  /* overflow:hidden moved - causes safe area clipping issues in iOS Safari */
+  overflow: visible;
   cursor: auto;
   caret-color: transparent;
   display: flex;
