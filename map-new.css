@@ -88,6 +88,8 @@
   right: 0;
   bottom: 0;
   z-index: 0;
+  /* Visible background while map loads - matches typical dark map style */
+  background: #1a1a2e;
 }
 
 .map-overlay {

@@ -2,13 +2,12 @@
    HEADER.CSS - HEADER SECTION STYLES
    ============================================================================ */
 
-/* Header bar */
+/* Header bar - extends into safe area (notch) with padding */
 .header-bar {
-  height: var(--header-h, 56px);
+  height: calc(var(--header-h, 56px) + var(--safe-top, 0px));
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  padding-left: 60px;
+  padding: var(--safe-top, 0px) calc(10px + env(safe-area-inset-right, 0px)) 0 calc(60px + env(safe-area-inset-left, 0px));
   gap: 10px;
   position: fixed;
   top: 0;
@@ -19,12 +18,12 @@
   box-sizing: border-box;
 }
 
-/* Logo button */
+/* Logo button - vertically centered in content area (below safe-top) */
 .header-logo-button {
   position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: calc(10px + env(safe-area-inset-left, 0px));
+  top: var(--safe-top, 0px);
+  height: var(--header-h, 56px);
   display: flex;
   align-items: center;
   gap: 10px;
