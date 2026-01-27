@@ -36,6 +36,17 @@
   transition: none;
 }
 
+/* MOBILE SCROLLING FIX: Disable slack at mobile to prevent Safari scroll state issues.
+   topSlack is dynamically created by JS (components-new.js) with inline styles.
+   Commenting out rather than deleting in case this breaks something. */
+@media (max-width: 530px) {
+  .bottomSlack,
+  .topSlack {
+    /* display: none; */
+    height: 0 !important; /* Override JS-set --bottomSlack/--topSlack vars */
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bottomSlack {
     transition: none;

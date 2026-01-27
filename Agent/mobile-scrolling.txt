@@ -178,11 +178,18 @@ STILL NEEDS WORK - CRITICAL
 - After opening filter/member/admin, browser bars reappear
 - Can't scroll up unless scrolling down first to "bounce"
 - Problem persists even after closing panel - requires cache clear
-- These panels likely have JS or overflow that breaks Safari scroll state
-- SOLUTION: May need to keep filter/member/admin as position: fixed
-- Or investigate their JavaScript scroll handlers
-- Red test line has been removed
-- Map interaction needs verification
+
+INVESTIGATE .bottomSlack SYSTEM:
+- components-new.css defines .bottomSlack element
+- Uses CSS variable: height: var(--bottomSlack, 0px)
+- Filter, member, admin panels have .bottomSlack elements
+- Panel bodies have: flex-shrink: 0 on children to make bottomSlack work
+- This system may conflict with document scroll when panels are relative
+- May need to disable bottomSlack at mobile, or set --bottomSlack: 0px
+- Or the JS that sets --bottomSlack may need mobile handling
+
+Red test line has been removed
+Map interaction needs verification
 
 ====================================================
 IMPORTANT RULES
