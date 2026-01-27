@@ -951,6 +951,8 @@ body {
     height: 10000px;
     margin: 0 auto;
     background: red;
+    position: relative;
+    z-index: 50;
   }
 }
 
