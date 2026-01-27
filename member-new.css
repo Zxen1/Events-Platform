@@ -202,10 +202,18 @@
 }
 
 @media (max-width: 530px) {
+  .member-panel {
+    position: relative;
+    height: auto;
+  }
+  
   .member-panel-contents {
+    position: relative;
+    top: auto;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    height: auto;
   }
 }
 

@@ -703,8 +703,16 @@
 
 /* Responsive */
 @media (max-width: 530px) {
+  .filter-panel {
+    position: relative;
+    height: auto;
+  }
+  
   .filter-panel-content {
+    position: relative;
+    top: auto;
     max-width: 100%;
+    height: auto;
   }
   
   .filter-panel-body {
