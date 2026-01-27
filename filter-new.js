@@ -393,7 +393,7 @@ const FilterModule = (function() {
             if (!panelEl || !contentEl) return;
             if (!panelEl.classList.contains('show')) return;
             if (!e || !e.target) return;
-            if (e.target.closest && e.target.closest('.header-filter')) return;
+            if (e.target.closest && (e.target.closest('.header-filter') || e.target.closest('.header-bar') || e.target.closest('.header-modeswitch') || e.target.closest('.header-access'))) return;
             if (contentEl.contains(e.target)) return;
             
             closePanel();

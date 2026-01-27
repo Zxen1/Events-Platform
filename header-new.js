@@ -454,6 +454,8 @@ const HeaderModule = (function() {
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
                     }
+                    // Close Post/Recent panels by switching mode to map
+                    setMode('map');
                 } catch (e) {}
             }
 
@@ -482,12 +484,45 @@ const HeaderModule = (function() {
                 });
             }
         });
-        
-        // Listen for filter panel close events
+
+        // Ensure state sync when panel is closed via other means (e.g. FilterModule.closePanel)
         App.on('filter:closed', function() {
             filterPanelOpen = false;
             if (filterBtn) {
                 filterBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Exclusivity: reset filter state when other panels or modes open on mobile
+        App.on('member:opened', function() {
+            if (window.innerWidth <= 530) {
+                filterPanelOpen = false;
+                if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        App.on('admin:opened', function() {
+            if (window.innerWidth <= 530) {
+                filterPanelOpen = false;
+                if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        App.on('post:opened', function() {
+            if (window.innerWidth <= 530) {
+                filterPanelOpen = false;
+                if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        App.on('mode:changed', function(data) {
+            if (window.innerWidth <= 530 && data && data.mode !== 'map') {
+                // If switching to Recents or Posts, close filter panel
+                if (filterPanelOpen) {
+                    if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
+                        window.FilterModule.closePanel();
+                    } else {
+                        filterPanelOpen = false;
+                        if (filterBtn) filterBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
             }
         });
         
@@ -522,6 +557,8 @@ const HeaderModule = (function() {
                     if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
                         window.AdminModule.closePanel();
                     }
+                    // Close Post/Recent panels by switching mode to map
+                    setMode('map');
                 } catch (e) {}
             }
 
@@ -568,6 +605,8 @@ const HeaderModule = (function() {
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
+                    // Close Post/Recent panels by switching mode to map
+                    setMode('map');
                 } catch (e) {}
             }
 

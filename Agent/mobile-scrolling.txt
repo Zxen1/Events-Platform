@@ -13,6 +13,9 @@ WHAT WORKS:
 3. Panels pushing header up works
 4. The top safe area black bar disappears when scrolling is enabled
 5. Map can extend to all edges with viewport-fit=cover
+6. Setting html { height: auto } and body { height: auto } on mobile is critical.
+7. Panels must be position: relative and height: auto to join the main scroll flow.
+8. Setting overscroll-behavior: auto on body allows natural scroll hand-off to browser UI.
 
 ====================================================
 STEP-BY-STEP INSTRUCTIONS TO IMPLEMENT FROM SCRATCH
@@ -44,24 +47,16 @@ KEEP these unchanged:
 STEP 3: Add to base-new.css (inside new mobile media query)
 -----------------------------------------------------------
 @media (max-width: 530px) {
+  html {
+    height: auto;
+  }
+
   body {
     overflow-y: scroll;
     overflow-x: hidden;
     height: auto;
     min-height: 0;
-  }
-  
-  /* TEST LINE - remove after testing works */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 50%;
-    width: 10px;
-    height: 10000px;
-    background: red;
-    z-index: 9999;
-    pointer-events: none;
+    overscroll-behavior: auto;
   }
 }
 
@@ -169,28 +164,42 @@ STEP 8: Modify post-new.css mobile query for .recent-panel
   }
 }
 
+STEP 9: Modify filter/member/admin panels for full-screen scroll
+----------------------------------------------------------
+@media (max-width: 530px) {
+  .filter-panel, .member-panel, .admin-panel {
+    position: relative;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .filter-panel-content, .member-panel-contents, .admin-panel-contents {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+    overscroll-behavior: auto;
+  }
+
+  .filter-panel-body, .member-panel-body, .admin-panel-body {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
 
 ====================================================
-STILL NEEDS WORK - CRITICAL
+SUCCESSFUL IMPLEMENTATION - ALL PANELS
 ====================================================
-- Post and Recent panels WORK PERFECTLY for full-screen scroll
-- Filter, Member, Admin panels BREAK the scroll state
-- After opening filter/member/admin, browser bars reappear
-- Can't scroll up unless scrolling down first to "bounce"
-- Problem persists even after closing panel - requires cache clear
-
-SLACK SYSTEM - NOT THE CAUSE:
-- Tested disabling bottomSlack/topSlack - made no difference
-- Leave slack system alone
-
-ACTUAL ISSUE - PANEL BACKGROUNDS IN SAFE AREA:
-- When panels scroll, their rgba(0,0,0,0.7) backgrounds fill safe area
-- Shows as grey (translucent) or black depending on panel
-- Map is behind (z-index: 0) but panel backgrounds cover it
-- SOLUTION: Panels may need padding-top: env(safe-area-inset-top) so content starts below safe area, leaving map visible there
-
-Red test line has been removed
-Map interaction needs verification
+- All 5 panels (Post, Recent, Filter, Member, Admin) now support full-screen scroll.
+- Browser UI (address bar) collapses correctly on scroll.
+- Panels fill the screen to the bottom even with minimal content (min-height).
+- Exclusivity logic in header-new.js ensures only one panel is open at a time.
+- State synchronization ensures header buttons reflect actual panel visibility.
 
 ====================================================
 IMPORTANT RULES
