@@ -946,16 +946,16 @@ body {
     min-height: 0;
   }
   
-  body::after {
+  body::before {
     content: "";
-    display: block;
+    position: fixed;
+    top: 0;
+    left: 50%;
     width: 10px;
     height: 10000px;
-    margin: 0 auto;
     background: red;
-    position: relative;
-    z-index: 50;
-    flex-shrink: 0;
+    z-index: 9999;
+    pointer-events: none;
   }
 }
 

@@ -1,0 +1,57 @@
+MOBILE SCROLLING FINDINGS - CRITICAL FOR NEXT AGENT
+====================================================
+
+PROBLEM:
+- iOS Safari in portrait mode shows browser UI (address bar, toolbar) that takes ~20% of screen
+- The safe area at top shows black bar blocking content
+- Landscape mode works fine - gives 100% screen coverage
+- Safari only hides its UI when the user scrolls
+
+WHAT WORKS:
+1. Making body scrollable triggers Safari to collapse its UI
+2. Header with position: relative scrolls off screen correctly
+3. Panels pushing header up works
+4. The top safe area black bar disappears when scrolling is enabled
+5. Map can extend to all edges with viewport-fit=cover
+
+KEY CSS CHANGES AT MOBILE (530px breakpoint):
+
+1. body:
+   - overflow-y: scroll
+   - height: auto
+   - min-height: 0
+
+2. header-bar:
+   - position: relative (not fixed)
+   - padding-top: env(safe-area-inset-top)
+   - height: calc(var(--header-h, 56px) + env(safe-area-inset-top))
+
+3. map-area:
+   - position: fixed
+   - top: 0; bottom: 0; left: 0; right: 0
+   - height: auto
+
+4. post-panel and recent-panel:
+   - position: relative
+   - height: auto
+
+5. post-panel-content and recent-panel-content:
+   - position: relative
+   - top: auto
+   - height: auto
+
+STILL NEEDS WORK:
+- Need scrollable content to trigger Safari UI collapse
+- Red test line (body::before, position: fixed, z-index: 9999) used for testing
+- Bottom of screen may still have issues
+- Panels need to work with scrolling properly
+
+VIEWPORT META TAG:
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
+The viewport-fit=cover is essential for extending into safe areas.
+
+IMPORTANT:
+- All changes must be inside @media (max-width: 530px)
+- Desktop must remain unaffected
+- Map must remain interactive (Mapbox handles its own touch events)
