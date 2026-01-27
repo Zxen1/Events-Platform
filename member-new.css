@@ -202,21 +202,25 @@
 }
 
 @media (max-width: 530px) {
-  .member-panel-contents {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-}
-
-@media (max-width: 530px) {
-  .member-panel-contents {
-    width: 100%;
-    max-width: 100%;
-    max-height: none;
+  .member-panel {
+    position: relative;
     height: auto;
-    bottom: var(--footer-h);
-    border-radius: 0;
+  }
+
+  .member-panel-contents {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .member-panel-body {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 

@@ -70,12 +70,25 @@
 }
 
 @media (max-width: 530px) {
+  .admin-panel {
+    position: relative;
+    height: auto;
+  }
+
   .admin-panel-contents {
+    position: relative;
+    top: auto;
     width: 100%;
     max-width: 100%;
-    max-height: none;
     height: auto;
-    bottom: var(--footer-h);
+    max-height: none;
+    min-height: 0;
+  }
+
+  .admin-panel-body {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 

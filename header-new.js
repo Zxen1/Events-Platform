@@ -314,20 +314,33 @@ const HeaderModule = (function() {
                 try {
                     var filterPanel = document.querySelector('.filter-panel');
                     if (filterPanel && filterPanel.classList.contains('show')) {
-                        var filterClose = document.querySelector('.filter-panel-actions-icon-btn--close');
-                        if (filterClose) filterClose.click();
+                        // Use module if available, fallback to click
+                        if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
+                            window.FilterModule.closePanel();
+                        } else {
+                            var filterClose = document.querySelector('.filter-panel-actions-icon-btn--close');
+                            if (filterClose) filterClose.click();
+                        }
                     }
                     
                     var memberPanel = document.querySelector('.member-panel');
                     if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
-                        var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
-                        if (memberClose) memberClose.click();
+                        if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
+                            window.MemberModule.closePanel();
+                        } else {
+                            var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
+                            if (memberClose) memberClose.click();
+                        }
                     }
                     
                     var adminPanel = document.querySelector('.admin-panel');
                     if (adminPanel && adminPanel.classList.contains('admin-panel--show')) {
-                        var adminClose = document.querySelector('.admin-panel-actions-icon-btn--close');
-                        if (adminClose) adminClose.click();
+                        if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
+                            window.AdminModule.closePanel();
+                        } else {
+                            var adminClose = document.querySelector('.admin-panel-actions-icon-btn--close');
+                            if (adminClose) adminClose.click();
+                        }
                     }
                 } catch (e) {
                     // ignore
@@ -432,6 +445,18 @@ const HeaderModule = (function() {
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         
         filterBtn.addEventListener('click', function() {
+            // Close other panels if on mobile
+            if (window.innerWidth <= 530) {
+                try {
+                    if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
+                        window.MemberModule.closePanel();
+                    }
+                    if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
+                        window.AdminModule.closePanel();
+                    }
+                } catch (e) {}
+            }
+
             filterPanelOpen = !filterPanelOpen;
             
             // Update aria state
@@ -488,6 +513,18 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         memberBtn.addEventListener('click', function() {
+            // Close other panels if on mobile
+            if (window.innerWidth <= 530) {
+                try {
+                    if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
+                        window.FilterModule.closePanel();
+                    }
+                    if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
+                        window.AdminModule.closePanel();
+                    }
+                } catch (e) {}
+            }
+
             // Always open, never close via header button
             App.emit('panel:toggle', {
                 panel: 'member',
@@ -522,6 +559,18 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         adminBtn.addEventListener('click', function() {
+            // Close other panels if on mobile
+            if (window.innerWidth <= 530) {
+                try {
+                    if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
+                        window.FilterModule.closePanel();
+                    }
+                    if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
+                        window.MemberModule.closePanel();
+                    }
+                } catch (e) {}
+            }
+
             // Always open, never close via header button
             App.emit('panel:toggle', {
                 panel: 'admin',

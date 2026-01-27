@@ -703,25 +703,24 @@
 
 /* Responsive */
 @media (max-width: 530px) {
-  .filter-panel-content {
-    max-width: 100%;
+  .filter-panel {
+    position: relative;
+    height: auto;
   }
-  
-  .filter-panel-body {
-    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
-  }
-}
 
-@media (max-width: 530px) {
   .filter-panel-content {
-    top: calc(var(--header-h) + var(--safe-top));
-    left: 0;
-    right: 0;
-    bottom: var(--footer-h);
+    position: relative;
+    top: auto;
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    height: auto;
     max-height: none;
-    border-radius: 0;
-    padding-bottom: 10px;
+    min-height: 0;
+  }
+
+  .filter-panel-body {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 }
