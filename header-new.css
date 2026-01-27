@@ -19,6 +19,12 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 530px) {
+  .header-bar {
+    position: relative;
+  }
+}
+
 /* Logo button */
 .header-logo-button {
   position: absolute;
