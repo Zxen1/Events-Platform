@@ -702,17 +702,7 @@
 
 
 /* Responsive */
-@media (max-width: 600px) {
-  .filter-panel-content {
-    max-width: 100%;
-  }
-  
-  .filter-panel-body {
-    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-@media (max-width: 440px) {
+@media (max-width: 530px) {
   .filter-panel-content {
     top: calc(var(--header-h) + var(--safe-top));
     left: 0;
@@ -723,5 +713,9 @@
     max-height: none;
     border-radius: 0;
     padding-bottom: 10px;
+  }
+  
+  .filter-panel-body {
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 }

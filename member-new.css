@@ -201,18 +201,11 @@
   transform: translateX(0);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 530px) {
   .member-panel-contents {
     width: 100%;
     max-width: 100%;
     min-width: 0;
-  }
-}
-
-@media (max-width: 440px) {
-  .member-panel-contents {
-    width: 100%;
-    max-width: 100%;
     max-height: none;
     height: auto;
     bottom: var(--footer-h);

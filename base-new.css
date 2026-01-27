@@ -1226,7 +1226,7 @@ body {
   color: #0052a3;
 }
 
-@media (max-width: 440px) {
+@media (max-width: 530px) {
   .terms-modal {
     width: 100%;
     max-width: 100%;
@@ -1315,13 +1315,18 @@ body {
    RESPONSIVE
    ============================================================================ */
 
-@media (max-width: 440px) {
+@media (max-width: 530px) {
   :root {
     --footer-h: 0;
   }
   
   html {
     touch-action: pan-x pan-y;
+  }
+  
+  /* Prevent iOS Safari auto-zoom on input focus (requires 16px minimum) */
+  input, select, textarea {
+    font-size: 16px;
   }
 }
 

@@ -165,7 +165,7 @@
   min-width: 0 !important;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 530px) {
   .map-controls {
     flex-wrap: nowrap;
     justify-content: center;
