@@ -2702,8 +2702,11 @@ const PostModule = (function() {
           }
         }
         
-        // Toggle favorite state
-        toggleFavorite(postId, nowPressed);
+        // Save favorite state to localStorage
+        saveFavorite(postId, nowPressed);
+        if (favToTop) {
+          favSortDirty = true;
+        }
       });
     }
 
