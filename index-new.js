@@ -618,17 +618,27 @@ const App = (function() {
     applySlackConfig();
     
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
+    var isMobile = false;
+    try {
+      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
+    } catch (_eMob) { isMobile = false; }
+
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
         // Safety cleanup: if a top slack element was previously attached in an older session/build,
         // remove its injected element and clear its CSS var so it cannot cause 4000px "jump" effects.
         try {
           el.style.setProperty('--topSlack', '0px');
+          el.style.setProperty('--bottomSlack', '0px');
           var topSlack = el.querySelector('.topSlack');
           if (topSlack && topSlack.parentNode) topSlack.parentNode.removeChild(topSlack);
         } catch (e) {}
 
-        // Attach both slack systems - they check data attributes internally
+        // Mobile: DO NOT attach slack systems.
+        // They can block scroll direction at edges (the exact bug Paul described).
+        if (isMobile) return;
+
+        // Desktop: Attach both slack systems - they check data attributes internally
         BottomSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
         TopSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
