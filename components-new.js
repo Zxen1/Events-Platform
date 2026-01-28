@@ -8076,27 +8076,34 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getWallpaperMode() {
-        // Source of truth: member's animation_preference (logged in) or localStorage (guest)
-        var mode = 'basic'; // default
+        // Priority: 1) Member's database preference, 2) localStorage, 3) Admin default
+        var mode = null;
         try {
-            // Check member preference (logged in user)
+            // 1. Check member preference (logged in user - saved to database)
             if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
                 var user = MemberModule.getCurrentUser();
                 if (user && user.animation_preference) {
                     mode = String(user.animation_preference).trim().toLowerCase();
                 }
             }
-            // Guest: check localStorage
-            if (mode === 'basic') {
+            // 2. Guest or member without preference: check localStorage
+            if (!mode) {
                 var stored = localStorage.getItem('animation_preference');
                 if (stored) {
                     mode = String(stored).trim().toLowerCase();
                 }
             }
+            // 3. New user: use admin default setting
+            if (!mode) {
+                var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+                if (settings && settings.default_wallpaper_mode) {
+                    mode = String(settings.default_wallpaper_mode).trim().toLowerCase();
+                }
+            }
         } catch (e) {}
         // Validate mode
         if (mode === 'orbit' || mode === 'still' || mode === 'basic' || mode === 'off') return mode;
-        return 'basic';
+        throw new Error('[LocationWallpaper] No valid wallpaper mode found. Check admin settings.');
     }
 
     function getLocationTypeFromContainer(containerEl) {

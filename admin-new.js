@@ -2389,9 +2389,47 @@ const AdminModule = (function() {
             });
         }
         
-        // DISABLED: Location Wallpaper controls moved to member profile.
-        // Each user controls their own animation preference.
-        // These controls are greyed out in the UI but kept for potential future use.
+        // Default Wallpaper Mode buttons (default for new users; members override with their own preference)
+        var wallpaperButtons = mapTabContainer.querySelectorAll('.admin-wallpaper-button');
+        if (wallpaperButtons.length) {
+            var initialWallpaperMode = mapTabData.default_wallpaper_mode || 'basic';
+            wallpaperButtons.forEach(function(btn) {
+                var mode = btn.dataset.wallpaper;
+                var isActive = mode === initialWallpaperMode;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                btn.classList.toggle('admin-wallpaper-button--active', isActive);
+                
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+                    
+                    wallpaperButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                        b.classList.remove('admin-wallpaper-button--active');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.classList.add('admin-wallpaper-button--active');
+                    
+                    updateField('map.default_wallpaper_mode', mode);
+                });
+            });
+            registerField('map.default_wallpaper_mode', initialWallpaperMode);
+        }
+        
+        // Wallpaper Dimmer slider (site-wide for everyone)
+        var dimmerSlider = document.getElementById('adminLocationWallpaperDimmer');
+        var dimmerDisplay = document.getElementById('adminLocationWallpaperDimmerDisplay');
+        if (dimmerSlider && dimmerDisplay) {
+            var initialDimmer = mapTabData.location_wallpaper_dimmer !== undefined ? parseFloat(mapTabData.location_wallpaper_dimmer) : 30;
+            dimmerSlider.value = initialDimmer;
+            dimmerDisplay.textContent = Math.round(initialDimmer).toString() + '%';
+            
+            registerField('map.location_wallpaper_dimmer', initialDimmer);
+            
+            dimmerSlider.addEventListener('input', function() {
+                dimmerDisplay.textContent = Math.round(parseFloat(dimmerSlider.value)).toString() + '%';
+                updateField('map.location_wallpaper_dimmer', parseFloat(dimmerSlider.value));
+            });
+        }
         
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();
@@ -2530,8 +2568,8 @@ const AdminModule = (function() {
             { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
             { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
-            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' }
-            // DISABLED: location_wallpaper_dimmer moved to member profile
+            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
+            { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' }
         ];
         
         sliders.forEach(function(s) {
@@ -2587,8 +2625,9 @@ const AdminModule = (function() {
         });
         
         // Reset button groups
-        // DISABLED: wallpaper mode moved to member profile
-        var buttonGroups = [];
+        var buttonGroups = [
+            { selector: '.admin-wallpaper-button', fieldId: 'map.default_wallpaper_mode', dataAttr: 'wallpaper', activeClass: 'admin-wallpaper-button--active' }
+        ];
         
         buttonGroups.forEach(function(bg) {
             var buttons = mapTabContainer.querySelectorAll(bg.selector);
