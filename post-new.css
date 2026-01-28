@@ -176,6 +176,19 @@
   }
 }
 
+/* Mobile exclusivity: hide Post/Recent whenever Filter/Member/Admin is open.
+   This avoids changing "mode" in JS (which caused regressions). */
+@media (max-width: 530px) {
+  body:has(.filter-panel.show) .post-panel,
+  body:has(.filter-panel.show) .recent-panel,
+  body:has(.member-panel.member-panel--show) .post-panel,
+  body:has(.member-panel.member-panel--show) .recent-panel,
+  body:has(.admin-panel.admin-panel--show) .post-panel,
+  body:has(.admin-panel.admin-panel--show) .recent-panel {
+    display: none;
+  }
+}
+
 /* ============================================================================
    POST LIST - Shared by both panels
    ============================================================================ */
