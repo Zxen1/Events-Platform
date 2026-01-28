@@ -208,3 +208,46 @@ IMPORTANT RULES
 - Desktop must remain completely unaffected
 - Map must remain interactive (Mapbox handles its own touch events)
 - Read Agent Essentials before making any changes
+
+
+====================================================
+POST-MORTEM (Jan 2026) - WHAT WENT WRONG (DO NOT REPEAT)
+====================================================
+
+Context:
+- Paul reported that Post/Recent scrolling worked, but Filter/Member/Admin got stuck/bonded on mobile.
+- Paul explicitly stated a known-good shortcut: when panels accidentally "double up" so multiple panels scroll together, iOS Safari behaves and nothing gets stuck.
+- Goal was to make the 3 problem panels behave like the known-good scroll model and stop panel-to-panel transition blending.
+
+What I changed (these changes were later deleted by Paul during restoration):
+- Added touch-device hover suppression rules, so iOS Safari wouldn't "stick" hover after a tap.
+- Added "fixed backdrop" pseudo-elements for Filter/Member/Admin to reduce the visual bonding when panels stack.
+- Added "instant panel-to-panel switching" by temporarily forcing --panel-transition-duration: 0s for panel↔panel switches, while keeping map↔panel transitions.
+- Adjusted close logic to not wait for transitionend when transitions were forced to 0s.
+- Added guards so TopSlack/BottomSlack would only attach to real scroll containers (overflow-y:auto/scroll).
+
+What went wrong (user-visible failures):
+- The website became worse: header went missing, multiple panels stacked incorrectly, and the stuck behavior still occurred.
+- The attempted fixes introduced new failure modes and complexity without delivering the intended outcome.
+
+Root causes / lessons:
+1) Do NOT mix scroll-model changes + slack system changes + transition logic changes in one pass.
+   - Mobile scroll behavior is fragile; changing multiple interacting systems at once makes failures hard to isolate.
+
+2) The known-good "double-up scrolls together" behavior is the strongest clue.
+   - If stacked panels scrolling together is proven stable, the next agent should directly replicate the *same material/structure* used by Post/Recent panels (and/or the exact layering relationship where Post/Recent sit under Filter).
+   - Avoid inventing new backdrop/overlay tricks. Copy the proven pattern exactly.
+
+3) Avoid global CSS behavior changes when debugging layout (even if "touch-only").
+   - Even scoped changes can create unexpected side effects across unrelated UI (e.g., header interactions/visual states).
+
+4) Avoid JS-based transition overrides for core navigation unless absolutely necessary.
+   - Forcing transition durations to 0 can break any code that depends on transitionend timing and can desync UI state.
+
+5) If a change causes the header to disappear, STOP and revert immediately.
+   - A missing header indicates a critical layout/stacking regression (z-index/positioning/flow) and invalidates further testing.
+
+Recommendation for next agent (what to do instead):
+- Implement the "encase panels in the same material as Post/Recent" approach by copying the existing Post/Recent panel structure and layering strategy for Filter/Member/Admin on mobile, rather than trying to patch around it.
+- Keep changes minimal and isolated: fix ONE panel first (e.g., Filter) until it is stable on iPhone Safari, then repeat the same pattern for Member/Admin.
+

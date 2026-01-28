@@ -708,19 +708,6 @@
     height: auto;
   }
 
-  /* Fixed backdrop so stacked panels don't "bond" while body scrolls */
-  .filter-panel::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #222222;
-    z-index: -1;
-    pointer-events: none;
-  }
-
   .filter-panel-content {
     position: relative;
     top: auto;
@@ -735,32 +722,5 @@
     height: auto;
     max-height: none;
     overflow-y: visible;
-  }
-}
-
-/* Touch devices: disable sticky :hover visuals */
-@media (hover: none) and (pointer: coarse) {
-  .filter-panel-actions-icon-btn:hover {
-    background: transparent;
-  }
-
-  .filter-reset-btn:not(:disabled):hover {
-    background: #cc6600;
-    border-color: #cc6600;
-    color: #fff;
-  }
-
-  .filter-favourites-btn:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .filter-keyword-clear:hover,
-  .filter-price-clear:hover,
-  .filter-daterange-clear:hover {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .filter-categoryfilter-accordion-option:hover {
-    background: transparent;
   }
 }
