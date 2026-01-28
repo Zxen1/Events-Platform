@@ -250,6 +250,20 @@
    Class naming: .{section}-{name}-{type}-{part}--{state}
    ============================================================================ */
 
+/* Recent card wrapper - holds timestamp + card */
+.recent-card-wrapper {
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+/* Timestamp above recent card (matches live site) */
+.recent-card-timestamp {
+  font-size: 12px;
+  margin: 0;
+  background: #000;
+  color: #fff;
+  padding: 2px 4px;
+}
+
 .recent-card,
 .post-card {
   display: grid;
@@ -261,9 +275,13 @@
   box-shadow: inset 0 0 0 1px transparent;
   border-radius: 8px;
   padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   cursor: pointer;
   transition: box-shadow 0.2s ease;
+}
+
+/* Post cards have margin-bottom; recent cards get it from wrapper */
+.post-card {
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 .post-card:hover,

@@ -3364,12 +3364,16 @@ const PostModule = (function() {
 
   /**
    * Render a recent card
-   * Structure: .recent-card-image, .recent-card-meta, .recent-card-text-title, .recent-card-container-info
+   * Structure: .recent-card-wrapper > .recent-card-timestamp + .recent-card
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
-   * @returns {HTMLElement|null} Recent card element
+   * @returns {HTMLElement|null} Recent card wrapper element
    */
   function renderRecentCard(entry) {
     if (!entry || !entry.id) return null;
+
+    // Create wrapper to hold timestamp + card
+    var wrapper = document.createElement('div');
+    wrapper.className = 'recent-card-wrapper';
 
     var el = document.createElement('article');
     el.className = 'recent-card';
@@ -3409,7 +3413,7 @@ const PostModule = (function() {
     // Check favorite status
     var isFav = isFavorite(entry.id);
 
-    // Standard Design
+    // Standard Design (no date row - timestamp is above the card)
     el.innerHTML = [
       thumbHtml,
       '<div class="recent-card-meta">',
@@ -3417,7 +3421,6 @@ const PostModule = (function() {
         '<div class="recent-card-container-info">',
           '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
-          lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',
@@ -3426,6 +3429,16 @@ const PostModule = (function() {
       '</button>',
       '</div>'
     ].join('');
+
+    // Add timestamp above card
+    if (lastOpenedText) {
+      var timestamp = document.createElement('div');
+      timestamp.className = 'recent-card-timestamp';
+      timestamp.textContent = lastOpenedText;
+      wrapper.appendChild(timestamp);
+    }
+
+    wrapper.appendChild(el);
 
     // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
     if (rawThumbUrl) {
@@ -3469,7 +3482,7 @@ const PostModule = (function() {
       });
     }
 
-    return el;
+    return wrapper;
   }
 
   /**
@@ -3561,7 +3574,18 @@ const PostModule = (function() {
       ago = days + ' day' + (days === 1 ? '' : 's');
     }
 
-    return 'Last opened ' + ago + ' ago';
+    // Format full date (matches live site)
+    var d = new Date(timestamp);
+    var weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var weekday = weekdays[d.getDay()];
+    var day = d.getDate();
+    var month = months[d.getMonth()];
+    var year = d.getFullYear();
+    var hour = String(d.getHours()).padStart(2, '0');
+    var minute = String(d.getMinutes()).padStart(2, '0');
+
+    return 'Last opened ' + ago + ' ago - ' + weekday + ' ' + day + ' ' + month + ', ' + year + ' ' + hour + ':' + minute;
   }
 
   /**
