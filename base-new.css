@@ -844,6 +844,79 @@
 }
 
 /* ============================================================================
+   TOUCH DEVICES: DISABLE HOVER VISUAL STATES
+   iOS Safari can "stick" :hover after tap. On touch devices we keep styling
+   stable (no hover feedback) and rely on active/selected states instead.
+   ============================================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  .button-class-1:hover {
+    background: transparent;
+    color: var(--website-gray);
+  }
+
+  .button-class-2:hover {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--website-white);
+  }
+
+  .button-class-2b:hover {
+    background: var(--blue-950);
+  }
+
+  .button-class-2c:hover {
+    background: var(--green-950);
+  }
+
+  .button-class-3:hover {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--website-white);
+  }
+
+  .button-class-4:hover {
+    border-color: #333;
+  }
+
+  .button-class-5:hover {
+    border-color: #333;
+  }
+
+  .input-class-1:hover {
+    border-color: #333;
+  }
+
+  .container-class-2 .container-header:hover {
+    background: transparent;
+  }
+
+  .accordion-class-1 .accordion-header:hover {
+    background: transparent;
+  }
+
+  .menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
+    border-color: var(--menu-border);
+  }
+
+  .menu-class-1 .menu-option:hover {
+    background-color: transparent;
+  }
+
+  .menu-class-2 .menu-item:hover {
+    background-color: transparent;
+  }
+
+  .menu-class-3:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
+    border-color: var(--menu-border);
+  }
+
+  .menu-class-3 .menu-option:hover {
+    background: transparent;
+  }
+}
+
+/* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)

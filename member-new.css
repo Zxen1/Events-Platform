@@ -207,6 +207,19 @@
     height: auto;
   }
 
+  /* Fixed backdrop so stacked panels don't "bond" while body scrolls */
+  .member-panel::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #222222;
+    z-index: -1;
+    pointer-events: none;
+  }
+
   .member-panel-contents {
     position: relative;
     top: auto;
@@ -221,6 +234,54 @@
     height: auto;
     max-height: none;
     overflow-y: visible;
+  }
+}
+
+/* Touch devices: disable sticky :hover visuals */
+@media (hover: none) and (pointer: coarse) {
+  .member-panel-actions-icon-btn:hover {
+    background: transparent;
+  }
+
+  .member-lighting-button:hover,
+  .member-style-button:hover,
+  .member-wallpaper-button:hover {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+
+  .member-panel-actions-primary:hover {
+    background: var(--button-selected-bg, var(--btn-selected));
+    border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+    color: var(--button-selected-text, var(--button-active-text));
+  }
+
+  .member-button-auth:hover {
+    background: var(--blue-500);
+    border-color: var(--blue-500);
+    color: #ffffff;
+  }
+
+  .member-terms-link:hover {
+    color: var(--blue-500);
+  }
+
+  .member-admin-skip-payment-btn:hover {
+    background: rgba(100, 150, 200, 0.2);
+    border-color: rgba(100, 150, 200, 0.4);
+  }
+
+  .member-profile-more-btn:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+
+  .member-profile-more-item:hover {
+    background: transparent;
+  }
+
+  .member-profile-more-delete:hover {
+    background: transparent;
   }
 }
 

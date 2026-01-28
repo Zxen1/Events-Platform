@@ -408,6 +408,14 @@ const MemberModule = (function() {
     function forceOffMemberButtonAnchors() {
         try {
             if (!memberPanelBody) return;
+            // Only interact with slack when this element is an actual scroll container.
+            // On mobile we switch to "body scroll" (overflow-y: visible), and attaching slack
+            // here can intercept touch/wheel and cause "stuck" behavior.
+            try {
+                var cs = window.getComputedStyle ? window.getComputedStyle(memberPanelBody) : null;
+                var oy = cs ? String(cs.overflowY || '').toLowerCase() : '';
+                if (oy !== 'auto' && oy !== 'scroll') return;
+            } catch (_eStyle) {}
             if (window.BottomSlack && typeof BottomSlack.attach === 'function') {
                 try { BottomSlack.attach(memberPanelBody, {}).forceOff(); } catch (e0) {}
             }
@@ -2020,19 +2028,44 @@ const MemberModule = (function() {
         panelContent.classList.remove('member-panel-contents--visible');
         panelContent.classList.add('member-panel-contents--hidden');
         
-        // Wait for transition to complete before hiding
-        panelContent.addEventListener('transitionend', function handler() {
-            panelContent.removeEventListener('transitionend', handler);
+        function toMs(s) {
+            var v = parseFloat(s);
+            if (!isFinite(v)) return 0;
+            if (String(s).indexOf('ms') !== -1) return v;
+            return v * 1000;
+        }
+        
+        // If transitions are disabled (panel-to-panel instant switch), clean up immediately.
+        var ms = 0;
+        try {
+            var cs = window.getComputedStyle ? window.getComputedStyle(panelContent) : null;
+            var d = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
+            var l = cs ? String(cs.transitionDelay || '0s').split(',')[0].trim() : '0s';
+            ms = toMs(d) + toMs(l);
+        } catch (_eT) { ms = 0; }
+        
+        if (ms <= 0) {
             panel.classList.remove('member-panel--show');
-            // Move focus out before hiding to avoid aria-hidden violation
             if (document.activeElement && panel.contains(document.activeElement)) {
-                document.activeElement.blur();
+                try { document.activeElement.blur(); } catch (_eBlur0) {}
             }
             panel.setAttribute('aria-hidden', 'true');
-            
-            // Remove from panel stack
-            App.removeFromStack(panel);
-        }, { once: true });
+            try { App.removeFromStack(panel); } catch (_eStack0) {}
+        } else {
+            // Wait for transition to complete before hiding
+            panelContent.addEventListener('transitionend', function handler() {
+                panelContent.removeEventListener('transitionend', handler);
+                panel.classList.remove('member-panel--show');
+                // Move focus out before hiding to avoid aria-hidden violation
+                if (document.activeElement && panel.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+                panel.setAttribute('aria-hidden', 'true');
+                
+                // Remove from panel stack
+                App.removeFromStack(panel);
+            }, { once: true });
+        }
         
         // Update header button
         App.emit('member:closed');

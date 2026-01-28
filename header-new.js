@@ -143,6 +143,73 @@ const HeaderModule = (function() {
         if (avatar) avatar.classList.toggle('header-access-button-avatar--active', !!isActive);
     }
 
+    /* --------------------------------------------------------------------------
+       PANEL SWITCHING HELPERS (Mobile)
+       - Keep map<->panel transitions
+       - Make panel<->panel switches instant to avoid overlap/blending
+       -------------------------------------------------------------------------- */
+    var instantPanelTimer = null;
+    
+    function isMobileWidth() {
+        try { return window.innerWidth <= 530; } catch (e) { return false; }
+    }
+    
+    function isPanelOpen(panelName) {
+        try {
+            if (panelName === 'filter') {
+                var f = document.querySelector('.filter-panel');
+                return !!(f && f.classList.contains('show'));
+            }
+            if (panelName === 'member') {
+                var m = document.querySelector('.member-panel');
+                return !!(m && m.classList.contains('member-panel--show'));
+            }
+            if (panelName === 'admin') {
+                var a = document.querySelector('.admin-panel');
+                return !!(a && a.classList.contains('admin-panel--show'));
+            }
+        } catch (_e) {}
+        return false;
+    }
+    
+    function setPanelTransitionDurationZero() {
+        try {
+            var els = [
+                document.querySelector('.filter-panel-content'),
+                document.querySelector('.member-panel-contents'),
+                document.querySelector('.admin-panel-contents')
+            ];
+            els.forEach(function(el) {
+                if (!el) return;
+                try { el.style.setProperty('--panel-transition-duration', '0s'); } catch (_e0) {}
+            });
+        } catch (_eAll) {}
+    }
+    
+    function clearPanelTransitionDurationOverride() {
+        try {
+            var els = [
+                document.querySelector('.filter-panel-content'),
+                document.querySelector('.member-panel-contents'),
+                document.querySelector('.admin-panel-contents')
+            ];
+            els.forEach(function(el) {
+                if (!el) return;
+                try { el.style.removeProperty('--panel-transition-duration'); } catch (_e0) {}
+            });
+        } catch (_eAll) {}
+    }
+    
+    function enableInstantPanelTransitions(ms) {
+        try {
+            if (instantPanelTimer) clearTimeout(instantPanelTimer);
+            setPanelTransitionDurationZero();
+            instantPanelTimer = setTimeout(function() {
+                clearPanelTransitionDurationOverride();
+            }, (typeof ms === 'number' ? ms : 350));
+        } catch (_e) {}
+    }
+
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -445,6 +512,16 @@ const HeaderModule = (function() {
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         
         filterBtn.addEventListener('click', function() {
+            var doInstant = false;
+            if (isMobileWidth()) {
+                // Only instant when switching BETWEEN panels (panel->panel).
+                doInstant = isPanelOpen('member') || isPanelOpen('admin');
+                if (doInstant) {
+                    // Keep transitions disabled long enough to cover lazy-loading.
+                    enableInstantPanelTransitions(2000);
+                }
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
@@ -465,6 +542,7 @@ const HeaderModule = (function() {
             if (!filterModuleLoaded) {
                 // First click - load the module then toggle
                 loadFilterModule().then(function() {
+                    if (doInstant) enableInstantPanelTransitions(350);
                     App.emit('panel:toggle', {
                         panel: 'filter',
                         show: filterPanelOpen
@@ -513,6 +591,12 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         memberBtn.addEventListener('click', function() {
+            var doInstant = false;
+            if (isMobileWidth()) {
+                doInstant = isPanelOpen('filter') || isPanelOpen('admin');
+                if (doInstant) enableInstantPanelTransitions(350);
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
@@ -559,6 +643,12 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         adminBtn.addEventListener('click', function() {
+            var doInstant = false;
+            if (isMobileWidth()) {
+                doInstant = isPanelOpen('filter') || isPanelOpen('member');
+                if (doInstant) enableInstantPanelTransitions(350);
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {

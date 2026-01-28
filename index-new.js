@@ -620,6 +620,17 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
+        // Only attach slack to real scroll containers.
+        // On mobile we often switch panels to "body scroll" (overflow-y: visible),
+        // and attaching slack there can intercept touch/wheel and cause "stuck" behavior.
+        try {
+          var cs = window.getComputedStyle ? window.getComputedStyle(el) : null;
+          var oy = cs ? String(cs.overflowY || '').toLowerCase() : '';
+          if (oy !== 'auto' && oy !== 'scroll') {
+            return;
+          }
+        } catch (_eStyle) {}
+
         // Safety cleanup: if a top slack element was previously attached in an older session/build,
         // remove its injected element and clear its CSS var so it cannot cause 4000px "jump" effects.
         try {

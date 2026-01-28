@@ -75,6 +75,19 @@
     height: auto;
   }
 
+  /* Fixed backdrop so stacked panels don't "bond" while body scrolls */
+  .admin-panel::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #222222;
+    z-index: -1;
+    pointer-events: none;
+  }
+
   .admin-panel-contents {
     position: relative;
     top: auto;
@@ -89,6 +102,40 @@
     height: auto;
     max-height: none;
     overflow-y: visible;
+  }
+}
+
+/* Touch devices: disable sticky :hover visuals */
+@media (hover: none) and (pointer: coarse) {
+  .admin-panel-actions-icon-btn:hover {
+    background: transparent;
+  }
+
+  .admin-button-tab:hover {
+    background: var(--btn);
+    border-color: var(--btn);
+    color: var(--button-text);
+  }
+
+  .admin-lighting-button:hover,
+  .admin-style-button:hover,
+  .admin-wallpaper-button:hover {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+  }
+
+  .admin-map-controls-starting-address-display:hover {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: var(--border);
+  }
+
+  .admin-refresh-map-cards-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-autosave-toggle:hover {
+    background: transparent;
   }
 }
 

@@ -460,6 +460,29 @@ const FilterModule = (function() {
         panelEl.setAttribute('inert', '');
         contentEl.classList.remove('panel-visible');
         
+        function toMs(s) {
+            var v = parseFloat(s);
+            if (!isFinite(v)) return 0;
+            if (String(s).indexOf('ms') !== -1) return v;
+            return v * 1000;
+        }
+        
+        // If transitions are disabled (panel-to-panel instant switch), clean up immediately.
+        var ms = 0;
+        try {
+            var cs = window.getComputedStyle ? window.getComputedStyle(contentEl) : null;
+            var d = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
+            var l = cs ? String(cs.transitionDelay || '0s').split(',')[0].trim() : '0s';
+            ms = toMs(d) + toMs(l);
+        } catch (_eT) { ms = 0; }
+        
+        if (ms <= 0) {
+            panelEl.classList.remove('show');
+            panelEl.setAttribute('aria-hidden', 'true');
+            try { App.removeFromStack(panelEl); } catch (_eStack0) {}
+            return;
+        }
+        
         contentEl.addEventListener('transitionend', function handler() {
             contentEl.removeEventListener('transitionend', handler);
             panelEl.classList.remove('show');
