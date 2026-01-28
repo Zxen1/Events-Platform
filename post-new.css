@@ -444,7 +444,7 @@
   padding-right: 0;
 }
 
-/* Title */
+/* Title - single line with ellipsis */
 .post-card-text-title,
 .recent-card-text-title {
   margin: 0;
@@ -453,10 +453,8 @@
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 /* Info container */
@@ -471,7 +469,7 @@
   overflow: hidden;
 }
 
-/* Info rows */
+/* Info rows - single line with ellipsis truncation */
 .post-card-row-loc,
 .post-card-row-date,
 .post-card-row-price,
@@ -484,6 +482,25 @@
   align-items: center;
   gap: 0;
   margin-bottom: 6px; /* Vertical spacing: 6px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Text inside info rows truncates */
+.post-card-row-loc > span,
+.post-card-row-date > span,
+.post-card-row-price > span,
+.post-card-row-cat > span:not(.post-card-icon-sub),
+.recent-card-row-loc > span,
+.recent-card-row-date > span,
+.recent-card-row-price > span,
+.recent-card-row-cat > span:not(.recent-card-icon-sub) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* Prevent double-up on last row */

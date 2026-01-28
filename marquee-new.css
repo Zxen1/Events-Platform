@@ -136,40 +136,84 @@
 }
 
 /* Info Lines - Title, Category, Location, Date */
+/* Font sizes match postcards: title 16px bold, info rows 13px */
 .marquee-slide-info-line {
   display: flex;
   align-items: center;
   margin-bottom: 6px; /* 6px Rule: Info rows in postcards/marquee use 6px spacing */
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .marquee-slide-info-title {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .marquee-slide-info-cat {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .marquee-slide-info-loc {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .marquee-slide-info-date {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .marquee-slide-info-price {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Text inside marquee info rows truncates */
+.marquee-slide-info-title > span,
+.marquee-slide-info-cat > span:not(.marquee-slide-icon-sub),
+.marquee-slide-info-loc > span,
+.marquee-slide-info-date > span,
+.marquee-slide-info-price > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* Badge (matching post card style) */
