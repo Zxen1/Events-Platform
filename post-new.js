@@ -2571,7 +2571,7 @@ const PostModule = (function() {
         customRadio ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customRadio) + '</div>' : '',
       '</div>',
       '<div class="post-description-container">',
-        '<div class="post-description-text" tabindex="0" aria-expanded="false">' + escapeHtml(description) + ' <span class="post-description-seemore">See more</span></div>',
+        '<div class="post-description-text" tabindex="0" aria-expanded="false">' + truncateText(description, 120) + ' <span class="post-description-seemore">See more</span></div>',
         '<span class="post-description-seeless">See less</span>',
         '<div class="post-description-member">',
           (avatarSrc ? '<img class="post-description-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),

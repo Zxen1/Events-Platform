@@ -1076,12 +1076,6 @@
 .post:not(.post--expanded) .post-description-text {
   margin-top: 0;
   position: relative;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ============================================================================
@@ -1106,11 +1100,6 @@
 
 /* See more link - appears at end of truncated description */
 .post-description-seemore {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: var(--panel-bg);
-  padding-left: 8px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
 }
