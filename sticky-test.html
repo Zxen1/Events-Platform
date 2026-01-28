@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Sticky Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .panel {
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .panel-header {
+            position: sticky;
+            top: 0;
+            height: 60px;
+            background: #333;
+            border-bottom: 1px solid #555;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .postcard {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            padding: 15px;
+        }
+
+        .postcard-title {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .postcard-info {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* This is the element that will "catch" and stick */
+        .edit-manage-buttons {
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+
+        .edit-manage-buttons.stuck {
+            position: sticky;
+            top: 60px; /* Height of panel header */
+            z-index: 99;
+            background: #555;
+            border-color: #888;
+        }
+
+        .edit-manage-buttons button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-edit {
+            background: #4a9eff;
+            color: #fff;
+        }
+
+        .btn-manage {
+            background: #ff9f4a;
+            color: #fff;
+        }
+
+        .spacer {
+            height: 200px;
+            background: #222;
+            border: 1px dashed #444;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: 1px solid #555;
+        }
+
+        .status.stuck {
+            background: #4a9eff;
+            border-color: #4a9eff;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel" id="panel">
+        <div class="panel-header" id="panelHeader">
+            My Posts (Panel Header - Sticky #1)
+        </div>
+
+        <div class="content">
+            <div class="postcard">
+                <div class="postcard-title">First Post - Short Title</div>
+                <div class="postcard-info">Posted 2 days ago</div>
+            </div>
+
+            <div class="postcard">
+                <div class="postcard-title">Second Post - This One Has A Much Longer Title That Wraps</div>
+                <div class="postcard-info">Posted 5 days ago</div>
+            </div>
+
+            <div class="postcard" id="activePostcard">
+                <div class="postcard-title">Active Post - The One Being Edited</div>
+                <div class="postcard-info">Posted 1 week ago</div>
+            </div>
+
+            <!-- This is the element that locks to the header when it reaches it -->
+            <div class="edit-manage-buttons" id="editManageButtons">
+                <button class="btn-edit">Edit</button>
+                <button class="btn-manage">Manage</button>
+                <span style="margin-left: auto; font-size: 12px; color: #aaa;">← These buttons lock to header</span>
+            </div>
+
+            <div class="spacer">Scroll content below buttons</div>
+            <div class="spacer">More content</div>
+            <div class="spacer">More content</div>
+            <div class="spacer">More content</div>
+            <div class="spacer">More content</div>
+        </div>
+    </div>
+
+    <div class="status" id="status">Status: Scrolling freely</div>
+
+    <script>
+        const panel = document.getElementById('panel');
+        const panelHeader = document.getElementById('panelHeader');
+        const editManageButtons = document.getElementById('editManageButtons');
+        const status = document.getElementById('status');
+
+        // Get the bottom edge of the panel header
+        const headerHeight = panelHeader.offsetHeight;
+
+        panel.addEventListener('scroll', function() {
+            // Get the current position of the edit/manage buttons relative to the panel
+            const buttonsRect = editManageButtons.getBoundingClientRect();
+            const panelRect = panel.getBoundingClientRect();
+            
+            // Calculate where the buttons are relative to the panel's top
+            const buttonsTopRelativeToPanel = buttonsRect.top - panelRect.top;
+            
+            // If the buttons have scrolled up to meet the header, make them sticky
+            if (buttonsTopRelativeToPanel <= headerHeight) {
+                editManageButtons.classList.add('stuck');
+                status.textContent = 'Status: LOCKED TO HEADER';
+                status.classList.add('stuck');
+            } else {
+                editManageButtons.classList.remove('stuck');
+                status.textContent = 'Status: Scrolling freely';
+                status.classList.remove('stuck');
+            }
+        });
+    </script>
+</body>
+</html>
