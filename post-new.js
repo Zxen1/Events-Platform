@@ -3271,23 +3271,24 @@ const PostModule = (function() {
       }
 
       descEl.addEventListener('click', function(e) {
-        e.preventDefault();
+        // Only expand from collapsed state (allows text selection when expanded)
         var isExpanded = wrap.classList.contains('post--expanded');
-        var nextExpanded = !isExpanded;
-        wrap.classList.toggle('post--expanded', nextExpanded);
-        descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
-        syncLocationWallpaper(nextExpanded);
+        if (isExpanded) return;
+        e.preventDefault();
+        wrap.classList.add('post--expanded');
+        descEl.setAttribute('aria-expanded', 'true');
+        syncLocationWallpaper(true);
       });
       
-      // Also handle keyboard for accessibility
+      // Also handle keyboard for accessibility (only expand, not collapse)
       descEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
           var isExpanded = wrap.classList.contains('post--expanded');
-          var nextExpanded = !isExpanded;
-          wrap.classList.toggle('post--expanded', nextExpanded);
-          descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
-          syncLocationWallpaper(nextExpanded);
+          if (isExpanded) return;
+          e.preventDefault();
+          wrap.classList.add('post--expanded');
+          descEl.setAttribute('aria-expanded', 'true');
+          syncLocationWallpaper(true);
         }
       });
 
