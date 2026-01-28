@@ -3918,7 +3918,7 @@ const MemberModule = (function() {
                                     };
                                 });
                                 
-                                console.log('[Member] Converted group ' + groupKey + ':', convertedPricingGroups[groupKey]);
+                                console.log('[Member] Converted group ' + groupKey + ':', JSON.stringify(convertedPricingGroups[groupKey], null, 2));
                             }
                         });
                         val = {
