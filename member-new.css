@@ -1548,19 +1548,32 @@
   border-bottom: none;
 }
 
-/* When editing, make the post card sticky so user knows what they're editing */
-.member-mypost-item--editing .post-card {
+/* When editing or managing, make the post card and buttons sticky */
+.member-mypost-item--editing .post-card,
+.member-mypost-item--managing .post-card {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky, 10);
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 0; /* Remove gap when sticky so buttons attach */
+}
+
+.member-mypost-item--editing .member-mypost-buttons,
+.member-mypost-item--managing .member-mypost-buttons {
+  position: sticky;
+  top: var(--member-mypost-card-height, 120px); /* Below the post card */
+  z-index: var(--layer-sticky, 10);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding-top: 10px; /* Restore spacing above buttons */
 }
 
 /* Post card inside My Posts - identical to post panel */
 .member-mypost-item .post-card {
-  margin: 0;
+  margin: 0 0 10px 0;
   border: none;
   box-shadow: none;
   border-radius: 0;
