@@ -1105,10 +1105,9 @@
 
 /* See more link - appears at end of truncated description */
 .post-description-seemore {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding-left: 10px;
+  position: static;
+  display: inline;
+  margin-left: 10px;
   background: none;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
