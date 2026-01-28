@@ -2833,6 +2833,7 @@ const PostModule = (function() {
         var maxHeight = lineHeight * 2;
         if (descEl.scrollHeight <= maxHeight) {
           needsTruncation = false;
+          descEl.innerHTML = escapeHtml(fullText);
           return;
         }
         needsTruncation = true;
@@ -2840,7 +2841,7 @@ const PostModule = (function() {
         var text = fullText;
         while (text.length > 0 && descEl.scrollHeight > maxHeight) {
           text = text.slice(0, -10);
-          descEl.innerHTML = escapeHtml(text.trim()) + ' <span class="post-description-seemore">' + suffix.replace('... See more', 'See more') + '</span>';
+          descEl.innerHTML = escapeHtml(text.trim()) + suffix.replace('See more', '<span class="post-description-seemore">See more</span>');
         }
       };
       
