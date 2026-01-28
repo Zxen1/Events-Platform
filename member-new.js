@@ -1405,7 +1405,8 @@ const MemberModule = (function() {
     }
 
     function collectAccordionFormData(accordion, originalPost) {
-        // Use the robust validation and collection logic from Create Post flow
+        // Collect fields with same structure as validateAndCollectFormData (Create Post flow)
+        // Server requires: key, type, name, value, location_number
         var fields = [];
         var fieldsetEls = accordion.querySelectorAll('[data-fieldset-key]');
         
@@ -1413,10 +1414,26 @@ const MemberModule = (function() {
             var el = fieldsetEls[i];
             var key = el.dataset.fieldsetKey;
             var type = el.dataset.fieldsetType || '';
+            var name = el.dataset.fieldsetName || key;
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
             
+            // Determine location number from parent container
+            var locationNumber = 1;
+            try {
+                var locWrap = el.closest ? el.closest('.member-location-container[data-location-number]') : null;
+                if (locWrap && locWrap.dataset && locWrap.dataset.locationNumber) {
+                    locationNumber = parseInt(locWrap.dataset.locationNumber, 10) || 1;
+                }
+            } catch (e) {}
+            
             var value = extractFieldValue(el, baseType);
-            fields.push({ key: key, value: value });
+            fields.push({
+                key: key,
+                type: type,
+                name: name,
+                value: value,
+                location_number: locationNumber
+            });
         }
         return fields;
     }
