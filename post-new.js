@@ -2828,8 +2828,8 @@ const PostModule = (function() {
           var textPart = truncatedText.replace(/\.\.\. See more$/, '');
           descEl.innerHTML = escapeHtml(textPart).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
         } else {
-          // Text fits - no truncation needed, no "See more"
-          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+          // Text fits but still show "See more" (expands to show member info)
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seemore">See more</span>';
         }
       }
 
@@ -2857,7 +2857,8 @@ const PostModule = (function() {
           var textPart = truncatedText.replace(/\.\.\. See more$/, '');
           descEl.innerHTML = escapeHtml(textPart).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
         } else {
-          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+          // Text fits but still show "See more" (expands to show member info)
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seemore">See more</span>';
         }
       }
 
