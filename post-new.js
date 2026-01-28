@@ -2571,8 +2571,7 @@ const PostModule = (function() {
         customRadio ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customRadio) + '</div>' : '',
       '</div>',
       '<div class="post-description-container">',
-        '<div class="post-description-text" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-description-seemore">See more</span></div>',
-        '<span class="post-description-seeless">See less</span>',
+        '<div class="post-description-text" tabindex="0" aria-expanded="false" data-full-text="' + escapeHtml(description) + '"></div>',
         '<div class="post-description-member">',
           (avatarSrc ? '<img class="post-description-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
           '<span class="post-description-postedby">' + escapeHtml(postedMeta) + '</span>',
@@ -2808,12 +2807,60 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       DESCRIPTION EXPAND
+       DESCRIPTION EXPAND (Facebook-style inline "See more")
        Click/keyboard to toggle post detail expansion
        ........................................................................ */
 
     var descEl = wrap.querySelector('.post-description-text');
     if (descEl) {
+      var fullText = descEl.getAttribute('data-full-text') || '';
+      var truncatedText = '';
+      var needsTruncation = false;
+
+      // Apply truncation after element is in DOM (needs to measure)
+      function applyTruncation() {
+        var result = truncateTextToLines(descEl, fullText, '... See more', 2);
+        truncatedText = result.truncated;
+        needsTruncation = result.needsTruncation;
+        
+        if (needsTruncation) {
+          // Show truncated text with inline "See more" link
+          var textPart = truncatedText.replace(/\.\.\. See more$/, '');
+          descEl.innerHTML = escapeHtml(textPart).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
+        } else {
+          // Text fits - no truncation needed, no "See more"
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+        }
+      }
+
+      // Show expanded text with inline "See less" link
+      function showExpanded() {
+        descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seeless">See less</span>';
+        
+        // Re-attach See less click handler
+        var seeLessEl = descEl.querySelector('.post-description-seeless');
+        if (seeLessEl) {
+          seeLessEl.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            wrap.classList.remove('post--expanded');
+            descEl.setAttribute('aria-expanded', 'false');
+            showCollapsed();
+            syncLocationWallpaper(false);
+          });
+        }
+      }
+
+      // Show collapsed/truncated text
+      function showCollapsed() {
+        if (needsTruncation) {
+          var textPart = truncatedText.replace(/\.\.\. See more$/, '');
+          descEl.innerHTML = escapeHtml(textPart).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
+        } else {
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+        }
+      }
+
       function syncLocationWallpaper(isExpandedNow) {
         // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
@@ -2843,6 +2890,11 @@ const PostModule = (function() {
         } catch (_eLWPost) {}
       }
 
+      // Apply truncation once element is in DOM and has width
+      requestAnimationFrame(function() {
+        applyTruncation();
+      });
+
       descEl.addEventListener('click', function(e) {
         var isExpanded = wrap.classList.contains('post--expanded');
         if (isExpanded) {
@@ -2853,6 +2905,7 @@ const PostModule = (function() {
         e.preventDefault();
         wrap.classList.add('post--expanded');
         descEl.setAttribute('aria-expanded', 'true');
+        showExpanded();
         syncLocationWallpaper(true);
       });
       
@@ -2864,20 +2917,10 @@ const PostModule = (function() {
           e.preventDefault();
           wrap.classList.add('post--expanded');
           descEl.setAttribute('aria-expanded', 'true');
+          showExpanded();
           syncLocationWallpaper(true);
         }
       });
-
-      // See less click handler (collapses the post)
-      var seeLessEl = wrap.querySelector('.post-description-seeless');
-      if (seeLessEl) {
-        seeLessEl.addEventListener('click', function(e) {
-          e.preventDefault();
-          wrap.classList.remove('post--expanded');
-          descEl.setAttribute('aria-expanded', 'false');
-          syncLocationWallpaper(false);
-        });
-      }
     }
 
     /* ........................................................................
@@ -3151,6 +3194,99 @@ const PostModule = (function() {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Truncate text to fit within a specified number of lines, appending a suffix (e.g. "... See more")
+   * Uses actual text measurement to find the exact cutoff point (Facebook-style).
+   * @param {HTMLElement} container - The container element to measure against
+   * @param {string} fullText - The full text to truncate
+   * @param {string} suffix - The suffix to append (e.g. "... See more")
+   * @param {number} maxLines - Maximum number of lines (default 2)
+   * @returns {Object} { truncated: string, needsTruncation: boolean }
+   */
+  function truncateTextToLines(container, fullText, suffix, maxLines) {
+    if (!container || !fullText) return { truncated: fullText || '', needsTruncation: false };
+    maxLines = maxLines || 2;
+    suffix = suffix || '... See more';
+
+    // Safety check: if container has no width, can't measure
+    var containerWidth = container.offsetWidth;
+    if (!containerWidth || containerWidth < 50) {
+      return { truncated: fullText, needsTruncation: false };
+    }
+
+    // Get computed styles from container
+    var styles = window.getComputedStyle(container);
+    var lineHeight = parseFloat(styles.lineHeight);
+    
+    // If line-height is 'normal', estimate it from font-size
+    if (isNaN(lineHeight)) {
+      lineHeight = parseFloat(styles.fontSize) * 1.4;
+    }
+    
+    var maxHeight = lineHeight * maxLines;
+
+    // Create a hidden measuring element with identical styles
+    var measurer = document.createElement('div');
+    measurer.style.cssText = [
+      'position: absolute',
+      'visibility: hidden',
+      'white-space: pre-line',
+      'word-wrap: break-word',
+      'overflow-wrap: break-word',
+      'width: ' + containerWidth + 'px',
+      'font-family: ' + styles.fontFamily,
+      'font-size: ' + styles.fontSize,
+      'font-weight: ' + styles.fontWeight,
+      'line-height: ' + styles.lineHeight,
+      'letter-spacing: ' + styles.letterSpacing
+    ].join(';');
+    document.body.appendChild(measurer);
+
+    // Check if full text fits
+    measurer.textContent = fullText;
+    if (measurer.offsetHeight <= maxHeight) {
+      document.body.removeChild(measurer);
+      return { truncated: fullText, needsTruncation: false };
+    }
+
+    // Binary search to find the cutoff point
+    var low = 0;
+    var high = fullText.length;
+    var result = '';
+
+    while (low < high) {
+      var mid = Math.floor((low + high + 1) / 2);
+      var testText = fullText.substring(0, mid).trimEnd() + suffix;
+      measurer.textContent = testText;
+      
+      if (measurer.offsetHeight <= maxHeight) {
+        low = mid;
+        result = testText;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    // Clean up - remove partial words if possible
+    if (result) {
+      // Find the text part (without suffix)
+      var textPart = result.substring(0, result.length - suffix.length);
+      
+      // If we cut in the middle of a word, back up to the previous space
+      if (textPart.length < fullText.length && fullText[textPart.length] && !/\s/.test(fullText[textPart.length])) {
+        var lastSpace = textPart.lastIndexOf(' ');
+        if (lastSpace > textPart.length * 0.5) {
+          textPart = textPart.substring(0, lastSpace);
+        }
+      }
+      
+      result = textPart.trimEnd() + suffix;
+    }
+
+    document.body.removeChild(measurer);
+    return { truncated: result || suffix, needsTruncation: true };
   }
 
   /* --------------------------------------------------------------------------
