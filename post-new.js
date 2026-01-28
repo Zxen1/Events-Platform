@@ -417,7 +417,7 @@ const PostModule = (function() {
           
           if (!isAnimating) {
             // 1. Close any open post
-            var allOpenPosts = document.querySelectorAll('.post-expanded[data-id]');
+            var allOpenPosts = document.querySelectorAll('.post[data-id]');
             allOpenPosts.forEach(function(openEl) {
               var pid = openEl.getAttribute('data-id');
               if (pid) closePost(pid);
@@ -527,7 +527,7 @@ const PostModule = (function() {
         if (!t || !container.contains(t)) return;
 
         // 1) Close an open post if present
-        var open = container.querySelector('.post-expanded[data-id]');
+        var open = container.querySelector('.post[data-id]');
         if (open) {
           var pid = open.getAttribute('data-id');
           if (pid) {
@@ -573,14 +573,15 @@ const PostModule = (function() {
 
   function togglePostCardHoverClass(postId, on) {
     if (!postId) return;
-    // Includes post-expanded header card too (it remains .post-card with data-id)
+    // Post cards in lists
     var cards = document.querySelectorAll('.post-card[data-id="' + postId + '"], .recent-card[data-id="' + postId + '"]');
     cards.forEach(function(el) {
       el.classList.toggle('post-card--map-highlight', !!on);
     });
-    var openWrap = document.querySelector('.post-expanded[data-id="' + postId + '"]');
+    // Open post wrapper
+    var openWrap = document.querySelector('.post[data-id="' + postId + '"]');
     if (openWrap) {
-      openWrap.classList.toggle('post-expanded--map-highlight', !!on);
+      openWrap.classList.toggle('post--map-highlight', !!on);
     }
   }
 
@@ -1245,8 +1246,8 @@ const PostModule = (function() {
       // Don't toggle if clicking favorite button
       if (e.target.closest('.post-card-button-fav')) return;
       
-      // If this card is already inside an .post-expanded section, click means "close"
-      if (el.closest('.post-expanded')) {
+      // If this card is already inside a .post section, click means "close"
+      if (el.closest('.post')) {
         closePost(post.id);
       } else {
         openPost(post, { originEl: el });
@@ -1319,7 +1320,7 @@ const PostModule = (function() {
     
     // Preserve an open post across re-renders (map moves trigger filter refreshes).
     // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
-    var preservedOpenPost = postListEl.querySelector('.post-expanded');
+    var preservedOpenPost = postListEl.querySelector('.post');
     var preservedOpenPostId = preservedOpenPost && preservedOpenPost.dataset ? String(preservedOpenPost.dataset.id || '') : '';
     if (preservedOpenPost && preservedOpenPost.parentElement === postListEl) {
       try { postListEl.removeChild(preservedOpenPost); } catch (_eDetach) {}
@@ -1369,7 +1370,7 @@ const PostModule = (function() {
 
     // Render each post card
     posts.forEach(function(post) {
-      // If this post is currently open, reinsert the existing post-expanded wrapper instead of recreating.
+      // If this post is currently open, reinsert the existing .post wrapper instead of recreating.
       if (preservedOpenPost && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         // Ensure it stays visible (if it was previously hidden)
         preservedOpenPost.style.display = '';
@@ -1721,7 +1722,7 @@ const PostModule = (function() {
 
   function getOpenPostIdFromDom() {
     try {
-      var openEl = document.querySelector('.post-expanded[data-id]');
+      var openEl = document.querySelector('.post[data-id]');
       if (!openEl) return null;
       var id = openEl.getAttribute('data-id');
       return id ? id : null;
@@ -2012,21 +2013,21 @@ const PostModule = (function() {
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
 
-    // Preserve summary + post-expanded wrapper positions.
+    // Preserve summary + .post wrapper positions.
     var summaryEl = postListEl.querySelector('.post-panel-summary');
-    var openWrap = postListEl.querySelector('.post-expanded');
+    var openWrap = postListEl.querySelector('.post');
 
     var cards = [];
     try {
-      // Direct children only (avoid grabbing the embedded post-expanded header card).
+      // Direct children only (avoid grabbing the embedded .post header card).
       cards = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-card'));
     } catch (_eScope) {
       cards = Array.prototype.slice.call(postListEl.querySelectorAll('.post-card'));
-      // Filter out cards that live inside an post-expanded wrapper.
+      // Filter out cards that live inside a .post wrapper.
       cards = cards.filter(function(el) {
         var p = el && el.parentElement;
         while (p) {
-          if (p.classList && p.classList.contains('post-expanded')) return false;
+          if (p.classList && p.classList.contains('post')) return false;
           if (p === postListEl) break;
           p = p.parentElement;
         }
@@ -2255,10 +2256,11 @@ const PostModule = (function() {
   }
 
   /* --------------------------------------------------------------------------
-     OPEN POST - Post Detail View
+     POST - Post Detail View
      --------------------------------------------------------------------------
      When a post card is clicked, it expands to show the full post details.
-     Structure: .post-expanded > .post-card + .post-expanded-body
+     Structure: .post > .post-header + .post-body
+     States: --collapsed, --expanded
      
      Contains sub-sections that are COMPONENT PLACEHOLDERS:
      - Venue Menu (map + venue selection)
@@ -2330,7 +2332,7 @@ const PostModule = (function() {
    * @param {HTMLElement} container - Container element
    */
   function closeOpenPost(container) {
-    var openPost = container.querySelector('.post-expanded');
+    var openPost = container.querySelector('.post');
     if (!openPost) return;
 
     var postId = openPost.dataset.id;
@@ -2360,7 +2362,7 @@ const PostModule = (function() {
 
   /**
    * Build the post detail view
-   * Structure: .post-expanded > .post-card + .post-expanded-body
+   * Structure: .post > .post-header + .post-body
    * @param {Object} post - Post data
    * @param {HTMLElement} existingCard - Existing card element (optional)
    * @param {boolean} fromRecent - Whether opened from recent panel
@@ -2404,7 +2406,7 @@ const PostModule = (function() {
     var priceHtml = '';
     if (priceParts.text) {
       var badgeHtml = priceParts.flagUrl 
-        ? '<img class="post-expanded-image-badge post-expanded-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+        ? '<img class="post-image-badge post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
         : '💰 ';
       priceHtml = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
     }
@@ -2417,9 +2419,9 @@ const PostModule = (function() {
     // Check favorite status
     var isFav = isFavorite(post.id);
 
-    // Create wrapper - proper class naming: .post-expanded
+    // Create wrapper - proper class naming: .post
     var wrap = document.createElement('div');
-    wrap.className = 'post-expanded';
+    wrap.className = 'post';
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
     // Store reference to post data for LocationWallpaperComponent library lookup
@@ -2449,129 +2451,129 @@ const PostModule = (function() {
       cardEl.classList.remove('post-card--map-highlight');
     }
 
-    // Build expanded header (separate from post-card, used when expanded)
-    var expandedHeader = document.createElement('div');
-    expandedHeader.className = 'post-expanded-header';
+    // Build post header (unified header for both collapsed and expanded states)
+    var postHeader = document.createElement('div');
+    postHeader.className = 'post-header';
     
-    // Thumbnail for expanded header uses minithumb size
+    // Thumbnail for header uses minithumb size
     var rawThumbUrl = getPostThumbnailUrl(post);
     var miniThumbUrl = rawThumbUrl ? addImageClass(rawThumbUrl, 'minithumb') : '';
     
     var thumbHtml = miniThumbUrl
-      ? '<img class="post-expanded-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
-      : '<div class="post-expanded-header-image-minithumb post-expanded-header-image-minithumb--empty" aria-hidden="true"></div>';
+      ? '<img class="post-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
     
     // Location display
     var locationDisplay = venueName || loc0.city || '';
     
     // Icon HTML for info section (subcategory icon)
     var infoIconHtml = iconUrl
-      ? '<span class="post-expanded-info-icon"><img class="post-expanded-info-image-sub" src="' + iconUrl + '" alt="" /></span>'
+      ? '<span class="post-info-icon"><img class="post-info-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
     
     // Price badge for info section
     var infoPriceBadgeHtml = priceParts.flagUrl 
-      ? '<img class="post-expanded-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+      ? '<img class="post-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
       : '💰';
     
-    // Expanded header: minimal - just thumbnail and title
-    expandedHeader.innerHTML = [
+    // Post header: minimal - just thumbnail and title
+    postHeader.innerHTML = [
       thumbHtml,
-      '<div class="post-expanded-header-meta">',
-        '<div class="post-expanded-header-text-title">' + escapeHtml(title) + '</div>',
+      '<div class="post-header-meta">',
+        '<div class="post-header-text-title">' + escapeHtml(title) + '</div>',
       '</div>',
-      '<div class="post-expanded-header-actions">',
-        '<button class="post-expanded-button-share" aria-label="Share post">',
-          '<div class="post-expanded-icon-share"></div>',
+      '<div class="post-header-actions">',
+        '<button class="post-button-share" aria-label="Share post">',
+          '<div class="post-icon-share"></div>',
         '</button>',
-        '<button class="post-expanded-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
-          '<div class="post-expanded-header-icon-fav"></div>',
+        '<button class="post-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+          '<div class="post-header-icon-fav"></div>',
         '</button>',
       '</div>'
     ].join('');
 
     // Build venue dropdown options
     var venueOptionsHtml = locationList.map(function(loc, i) {
-      return '<button class="post-expanded-button-venueopt" data-index="' + i + '"><span class="post-expanded-text-venuename">' + escapeHtml(loc.venue_name || '') + '</span><span class="post-expanded-text-address">' + escapeHtml(loc.address_line || '') + '</span></button>';
+      return '<button class="post-button-venueopt" data-index="' + i + '"><span class="post-text-venuename">' + escapeHtml(loc.venue_name || '') + '</span><span class="post-text-address">' + escapeHtml(loc.address_line || '') + '</span></button>';
     }).join('');
 
     // Create post body - proper class naming
     var postBody = document.createElement('div');
-    postBody.className = 'post-expanded-body';
+    postBody.className = 'post-body';
     postBody.innerHTML = [
-      '<div class="post-expanded-nav">',
-        '<button class="post-expanded-button-venue" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">',
-          '<div class="post-expanded-image-navpreview post-expanded-image-navpreview--map"></div>',
-          '<span class="post-expanded-text-venuename">' + escapeHtml(venueName) + '</span>',
-          '<span class="post-expanded-text-address">' + escapeHtml(addressLine) + '</span>',
-          locationList.length > 1 ? '<span class="post-expanded-icon-arrow" aria-hidden="true"></span>' : '',
+      '<div class="post-nav">',
+        '<button class="post-button-venue" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">',
+          '<div class="post-image-navpreview post-image-navpreview--map"></div>',
+          '<span class="post-text-venuename">' + escapeHtml(venueName) + '</span>',
+          '<span class="post-text-address">' + escapeHtml(addressLine) + '</span>',
+          locationList.length > 1 ? '<span class="post-icon-arrow" aria-hidden="true"></span>' : '',
         '</button>',
-        '<button class="post-expanded-button-session" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">',
-          '<div class="post-expanded-image-navpreview post-expanded-image-navpreview--calendar"></div>',
+        '<button class="post-button-session" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">',
+          '<div class="post-image-navpreview post-image-navpreview--calendar"></div>',
         '</button>',
       '</div>',
-      '<div id="venue-' + post.id + '" class="post-expanded-dropdown-venue">',
-        '<div class="post-expanded-menu-venue" hidden>',
-          '<div class="post-expanded-container-map"><div id="map-' + post.id + '" class="post-expanded-map"></div></div>',
-          '<div class="post-expanded-container-venueopts">' + venueOptionsHtml + '</div>',
+      '<div id="venue-' + post.id + '" class="post-dropdown-venue">',
+        '<div class="post-menu-venue" hidden>',
+          '<div class="post-container-map"><div id="map-' + post.id + '" class="post-map"></div></div>',
+          '<div class="post-container-venueopts">' + venueOptionsHtml + '</div>',
         '</div>',
       '</div>',
-      '<div id="sess-' + post.id + '" class="post-expanded-dropdown-session">',
-        '<div class="post-expanded-menu-session" hidden>',
-          '<div class="post-expanded-container-calendar"><div class="post-expanded-scroll-calendar"><div id="cal-' + post.id + '" class="post-expanded-calendar"></div></div></div>',
-          '<div class="post-expanded-container-sessionopts"></div>',
+      '<div id="sess-' + post.id + '" class="post-dropdown-session">',
+        '<div class="post-menu-session" hidden>',
+          '<div class="post-container-calendar"><div class="post-scroll-calendar"><div id="cal-' + post.id + '" class="post-calendar"></div></div></div>',
+          '<div class="post-container-sessionopts"></div>',
         '</div>',
       '</div>',
-      '<div class="post-expanded-details">',
-        '<div class="post-expanded-venueselect"></div>',
-        '<div class="post-expanded-sessionselect"></div>',
-        '<div class="post-expanded-info">',
+      '<div class="post-details">',
+        '<div class="post-venueselect"></div>',
+        '<div class="post-sessionselect"></div>',
+        '<div class="post-info">',
           // Subcategory row (static)
-          '<div class="post-expanded-info-row post-expanded-info-row-cat">',
+          '<div class="post-info-row post-info-row-cat">',
             infoIconHtml,
-            '<span class="post-expanded-info-text">' + escapeHtml(displayName) + '</span>',
+            '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
           '</div>',
           // Location row (updates when venue selected)
-          '<div class="post-expanded-info-row post-expanded-info-row-loc">',
-            '<span class="post-expanded-info-badge" title="Venue">📍</span>',
-            '<span id="venue-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(locationDisplay) + '</span>',
+          '<div class="post-info-row post-info-row-loc">',
+            '<span class="post-info-badge" title="Venue">📍</span>',
+            '<span id="venue-info-' + post.id + '" class="post-info-text">' + escapeHtml(locationDisplay) + '</span>',
           '</div>',
           // Date row (updates when session selected)
-          datesText ? '<div class="post-expanded-info-row post-expanded-info-row-date">' +
-            '<span class="post-expanded-info-badge" title="Dates">📅</span>' +
-            '<span id="session-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(datesText) + '</span>' +
+          datesText ? '<div class="post-info-row post-info-row-date">' +
+            '<span class="post-info-badge" title="Dates">📅</span>' +
+            '<span id="session-info-' + post.id + '" class="post-info-text">' + escapeHtml(datesText) + '</span>' +
           '</div>' : '',
           // Price row (updates when item selected)
-          priceParts.text ? '<div class="post-expanded-info-row post-expanded-info-row-price">' +
-            '<span class="post-expanded-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
-            '<span id="price-info-' + post.id + '" class="post-expanded-info-text">' + escapeHtml(priceParts.text) + '</span>' +
+          priceParts.text ? '<div class="post-info-row post-info-row-price">' +
+            '<span class="post-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
+            '<span id="price-info-' + post.id + '" class="post-info-text">' + escapeHtml(priceParts.text) + '</span>' +
           '</div>' : '',
         '</div>',
-        '<div class="post-expanded-container-desc">',
-          '<div class="post-expanded-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
-          '<div class="post-expanded-row-member">',
-            (avatarSrc ? '<img class="post-expanded-image-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
-            '<span class="post-expanded-text-postedby">' + escapeHtml(postedMeta) + '</span>',
+        '<div class="post-container-desc">',
+          '<div class="post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
+          '<div class="post-row-member">',
+            (avatarSrc ? '<img class="post-image-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
+            '<span class="post-text-postedby">' + escapeHtml(postedMeta) + '</span>',
           '</div>',
         '</div>',
       '</div>',
-      '<div class="post-expanded-images">',
-        '<div class="post-expanded-hero">',
-          '<div class="post-expanded-track-hero">',
-            '<img class="post-expanded-image-hero post-expanded-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+      '<div class="post-images">',
+        '<div class="post-hero">',
+          '<div class="post-track-hero">',
+            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
           '</div>',
         '</div>',
-        '<div class="post-expanded-thumbs"></div>',
+        '<div class="post-thumbs"></div>',
       '</div>'
     ].join('');
 
     // Build thumbnails - use 'minithumb' class (50x50) for small previews
     if (mediaUrls.length > 1) {
-      var thumbRow = postBody.querySelector('.post-expanded-thumbs');
+      var thumbRow = postBody.querySelector('.post-thumbs');
       if (thumbRow) {
         mediaUrls.forEach(function(url, i) {
           var img = document.createElement('img');
-          img.className = 'post-expanded-image-thumb' + (i === 0 ? ' post-expanded-image-thumb--active' : '');
+          img.className = 'post-image-thumb' + (i === 0 ? ' post-image-thumb--active' : '');
           img.src = addImageClass(url, 'minithumb');
           img.alt = '';
           img.dataset.index = String(i);
@@ -2602,9 +2604,10 @@ const PostModule = (function() {
       wrap.appendChild(lngEl);
     }
 
-    // Append both headers: card (for collapsed peek-a-boo) and expanded header (for full view)
+    // Append header and body (unified header for both collapsed and expanded states)
+    // Note: cardEl is kept for restoration when closing, but header is used for display
     contentWrap.appendChild(cardEl);
-    contentWrap.appendChild(expandedHeader);
+    contentWrap.appendChild(postHeader);
     contentWrap.appendChild(postBody);
 
     // Event handlers
@@ -2680,18 +2683,18 @@ const PostModule = (function() {
     // The reused `cardEl` already has its own favourite handler from `renderPostCard` / `renderRecentCard`.
     // Double-binding causes a double-toggle (appears "not working") when the post is open.
 
-    // Favorite button on expanded header (separate element, needs its own handler)
-    var expandedHeaderFavBtn = wrap.querySelector('.post-expanded-header-button-fav');
-    if (expandedHeaderFavBtn) {
-      expandedHeaderFavBtn.addEventListener('click', function(e) {
+    // Favorite button on post header (separate element, needs its own handler)
+    var headerFavBtn = wrap.querySelector('.post-header-button-fav');
+    if (headerFavBtn) {
+      headerFavBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var postId = post.id;
-        var wasPressed = expandedHeaderFavBtn.getAttribute('aria-pressed') === 'true';
+        var wasPressed = headerFavBtn.getAttribute('aria-pressed') === 'true';
         var nowPressed = !wasPressed;
         
         // Update this button
-        expandedHeaderFavBtn.setAttribute('aria-pressed', String(nowPressed));
-        expandedHeaderFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+        headerFavBtn.setAttribute('aria-pressed', String(nowPressed));
+        headerFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
         
         // Sync with card's fav button if present
         if (cardEl) {
@@ -2710,8 +2713,8 @@ const PostModule = (function() {
       });
     }
 
-    // Share button (in expanded header)
-    var shareBtn = wrap.querySelector('.post-expanded-button-share');
+    // Share button (in post header)
+    var shareBtn = wrap.querySelector('.post-button-share');
     if (shareBtn) {
       shareBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -2725,9 +2728,9 @@ const PostModule = (function() {
        Future: Will become ImageGalleryComponent with swipe, zoom
        ........................................................................ */
 
-    var thumbnails = wrap.querySelectorAll('.post-expanded-thumbs img');
-    var heroImg = wrap.querySelector('.post-expanded-image-hero');
-    var heroContainer = wrap.querySelector('.post-expanded-hero');
+    var thumbnails = wrap.querySelectorAll('.post-thumbs img');
+    var heroImg = wrap.querySelector('.post-image-hero');
+    var heroContainer = wrap.querySelector('.post-hero');
     
     // Gather all full-size image URLs for the gallery
     var galleryImages = [];
@@ -2753,8 +2756,8 @@ const PostModule = (function() {
         if (fullUrl && heroImg) {
           heroImg.src = addImageClass(fullUrl, 'imagebox');
           // Update active state
-          thumbnails.forEach(function(t) { t.classList.remove('post-expanded-image-thumb--active'); });
-          thumb.classList.add('post-expanded-image-thumb--active');
+          thumbnails.forEach(function(t) { t.classList.remove('post-image-thumb--active'); });
+          thumb.classList.add('post-image-thumb--active');
           currentGalleryIndex = idx;
         }
       });
@@ -2762,7 +2765,7 @@ const PostModule = (function() {
     
     // Hero image click opens lightbox
     if (heroContainer && galleryImages.length > 0) {
-      heroContainer.classList.add('post-expanded-hero--clickable');
+      heroContainer.classList.add('post-hero--clickable');
       heroContainer.addEventListener('click', function() {
         if (window.ImageModalComponent) {
           // Get current full-size URL (without imagebox class)
@@ -2780,9 +2783,9 @@ const PostModule = (function() {
        Map display + venue selection dropdown
        Future: Will become VenueMenuComponent with full map interaction
        ........................................................................ */
-    var venueBtn = wrap.querySelector('.post-expanded-button-venue');
-    var venueDropdown = wrap.querySelector('.post-expanded-dropdown-venue .post-expanded-menu-venue');
-    var venueMapContainer = wrap.querySelector('.post-expanded-map');
+    var venueBtn = wrap.querySelector('.post-button-venue');
+    var venueDropdown = wrap.querySelector('.post-dropdown-venue .post-menu-venue');
+    var venueMapContainer = wrap.querySelector('.post-map');
     var venueMapInitialized = false;
     
     if (venueBtn && venueDropdown) {
@@ -2818,13 +2821,13 @@ const PostModule = (function() {
        SESSION MENU
        ........................................................................ */
 
-    var sessionBtn = wrap.querySelector('.post-expanded-button-session');
-    var sessionDropdown = wrap.querySelector('.post-expanded-dropdown-session');
-    var sessionMenu = sessionDropdown ? sessionDropdown.querySelector('.post-expanded-menu-session') : null;
-    var sessionOptsContainer = wrap.querySelector('.post-expanded-container-sessionopts');
-    var calendarContainer = wrap.querySelector('.post-expanded-calendar');
-    var calendarScroll = wrap.querySelector('.post-expanded-scroll-calendar');
-    var sessionInfo = wrap.querySelector('.post-expanded-text-sessioninfo');
+    var sessionBtn = wrap.querySelector('.post-button-session');
+    var sessionDropdown = wrap.querySelector('.post-dropdown-session');
+    var sessionMenu = sessionDropdown ? sessionDropdown.querySelector('.post-menu-session') : null;
+    var sessionOptsContainer = wrap.querySelector('.post-container-sessionopts');
+    var calendarContainer = wrap.querySelector('.post-calendar');
+    var calendarScroll = wrap.querySelector('.post-scroll-calendar');
+    var sessionInfo = wrap.querySelector('.post-text-sessioninfo');
     var sessionCloseTimer = null;
     var selectedSessionIndex = null;
     var sessionData = [];
@@ -2987,17 +2990,17 @@ const PostModule = (function() {
     function showTimePopup(indices) {
       if (!calendarContainer || !indices || !indices.length) return;
       
-      var calWrapper = wrap.querySelector('.post-expanded-container-calendar');
+      var calWrapper = wrap.querySelector('.post-container-calendar');
       if (!calWrapper) return;
       
-      var existing = calWrapper.querySelector('.post-expanded-popup-time');
+      var existing = calWrapper.querySelector('.post-popup-time');
       if (existing) existing.remove();
       
       var popup = document.createElement('div');
-      popup.className = 'post-expanded-popup-time';
+      popup.className = 'post-popup-time';
       
       var timeList = document.createElement('div');
-      timeList.className = 'post-expanded-list-time';
+      timeList.className = 'post-list-time';
       
       indices.forEach(function(index) {
         var session = sessionData[index];
@@ -3068,9 +3071,9 @@ const PostModule = (function() {
         if (opening) {
           showMenu(sessionMenu);
           
-          var calWrapper = wrap.querySelector('.post-expanded-container-calendar');
+          var calWrapper = wrap.querySelector('.post-container-calendar');
           if (calWrapper) {
-            var existingPopup = calWrapper.querySelector('.post-expanded-popup-time');
+            var existingPopup = calWrapper.querySelector('.post-popup-time');
             if (existingPopup) existingPopup.remove();
           }
           lastClickedCell = null;
@@ -3166,15 +3169,15 @@ const PostModule = (function() {
                 sessionOptsContainer.innerHTML = '';
                 sessionData.forEach(function(session, index) {
                   var btn = document.createElement('button');
-                  btn.className = 'post-expanded-button-sessionopt';
+                  btn.className = 'post-button-sessionopt';
                   btn.setAttribute('data-index', String(index));
                   
                   var dateSpan = document.createElement('span');
-                  dateSpan.className = 'post-expanded-text-sessiondate';
+                  dateSpan.className = 'post-text-sessiondate';
                   dateSpan.textContent = formatDateShort(session.date);
                   
                   var timeSpan = document.createElement('span');
-                  timeSpan.className = 'post-expanded-text-sessiontime';
+                  timeSpan.className = 'post-text-sessiontime';
                   timeSpan.textContent = formatTimeShort(session.time);
                   
                   btn.appendChild(dateSpan);
@@ -3204,15 +3207,15 @@ const PostModule = (function() {
     }
 
     // Venue option clicks
-    var venueOptions = wrap.querySelectorAll('.post-expanded-container-venueopts button');
+    var venueOptions = wrap.querySelectorAll('.post-container-venueopts button');
     venueOptions.forEach(function(optBtn) {
       optBtn.addEventListener('click', function() {
         var index = parseInt(optBtn.dataset.index, 10);
         var loc = post.map_cards && post.map_cards[index];
         if (loc) {
           // Update venue display
-          var venueNameEl = venueBtn.querySelector('.post-expanded-text-venuename');
-          var addressEl = venueBtn.querySelector('.post-expanded-text-address');
+          var venueNameEl = venueBtn.querySelector('.post-text-venuename');
+          var addressEl = venueBtn.querySelector('.post-text-address');
           if (venueNameEl) venueNameEl.textContent = loc.venue_name || '';
           if (addressEl) addressEl.textContent = loc.address_line || '';
           // Close dropdown
@@ -3227,10 +3230,10 @@ const PostModule = (function() {
        Click/keyboard to toggle post detail expansion
        ........................................................................ */
 
-    var descEl = wrap.querySelector('.post-expanded-text-desc');
+    var descEl = wrap.querySelector('.post-text-desc');
     if (descEl) {
       function syncLocationWallpaper(isExpandedNow) {
-        // Only for post-expanded wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
+        // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
         if (!wrap.classList || !wrap.classList.contains('member-location-container')) return;
 
@@ -3260,9 +3263,9 @@ const PostModule = (function() {
 
       descEl.addEventListener('click', function(e) {
         e.preventDefault();
-        var isExpanded = wrap.classList.contains('post-expanded--desc-expanded');
+        var isExpanded = wrap.classList.contains('post--expanded');
         var nextExpanded = !isExpanded;
-        wrap.classList.toggle('post-expanded--desc-expanded', nextExpanded);
+        wrap.classList.toggle('post--expanded', nextExpanded);
         descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
         syncLocationWallpaper(nextExpanded);
       });
@@ -3271,9 +3274,9 @@ const PostModule = (function() {
       descEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          var isExpanded = wrap.classList.contains('post-expanded--desc-expanded');
+          var isExpanded = wrap.classList.contains('post--expanded');
           var nextExpanded = !isExpanded;
-          wrap.classList.toggle('post-expanded--desc-expanded', nextExpanded);
+          wrap.classList.toggle('post--expanded', nextExpanded);
           descEl.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
           syncLocationWallpaper(nextExpanded);
         }
@@ -3286,7 +3289,7 @@ const PostModule = (function() {
        ........................................................................ */
 
     (function() {
-      var img = wrap.querySelector('.post-expanded-image-hero');
+      var img = wrap.querySelector('.post-image-hero');
       if (img) {
         var full = img.getAttribute('data-full');
         if (full) {
@@ -3296,8 +3299,8 @@ const PostModule = (function() {
           hi.onload = function() {
             var swap = function() {
               img.src = full;
-              img.classList.remove('post-expanded-image-hero--loading');
-              img.classList.add('post-expanded-image-hero--ready');
+              img.classList.remove('post-image-hero--loading');
+              img.classList.add('post-image-hero--ready');
             };
             if (hi.decode) {
               hi.decode().then(swap).catch(swap);
@@ -3316,7 +3319,7 @@ const PostModule = (function() {
    * @param {string|number} postId - Post ID
    */
   function closePost(postId) {
-    var openPost = document.querySelector('.post-expanded[data-id="' + postId + '"]');
+    var openPost = document.querySelector('.post[data-id="' + postId + '"]');
     if (!openPost) return;
 
     var container = openPost.parentElement;
@@ -3839,8 +3842,8 @@ const PostModule = (function() {
     el.addEventListener('click', function(e) {
       if (e.target.closest('.recent-card-button-fav')) return;
       
-      // If this card is already inside an .post-expanded section, click means "close"
-      if (el.closest('.post-expanded')) {
+      // If this card is already inside a .post section, click means "close"
+      if (el.closest('.post')) {
         closePost(entry.id);
         return;
       }
