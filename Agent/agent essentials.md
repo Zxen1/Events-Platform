@@ -55,6 +55,14 @@ Reverting is NOT allowed.
 
 If the agent believes reverting is necessary, the agent must ASK the user to revert to a backup themselves.
 
+### Minimize Context Usage
+The agent must minimize context (time/tokens) usage:
+- Keep responses short and high-signal (no long explanations unless asked)
+- Avoid unnecessary file reads, repeated reads, and broad searches
+- Make the smallest possible change set per attempt
+- If the agent believes a backup revert would be faster/safer than iterative changes, the agent must ASK the user to revert to the backup (the agent cannot revert)
+- IMPORTANT: The backup system is on the user's PC (outside this repo). It is NOT the `backups/` folder in the workspace, and the agent has no access to the user's PC backups.
+
 ### Questions ≠ Instructions
 When user asks "how do we do X?" - this is a QUESTION. Answer it and wait for approval before implementing.
 
