@@ -1563,7 +1563,7 @@
 .member-mypost-item--editing .member-mypost-buttons,
 .member-mypost-item--managing .member-mypost-buttons {
   position: sticky;
-  top: var(--member-mypost-sticky-height, 120px); /* Below the sticky element above */
+  top: var(--member-mypost-card-height, 120px); /* Below the post card */
   z-index: var(--layer-sticky, 10);
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
