@@ -3785,15 +3785,13 @@ const MemberModule = (function() {
         }
 
         // 2. Populate location containers (repeating fieldsets)
+        // Fieldsets are added directly to .member-location-container, not a child content element
         post.map_cards.forEach(function(mapCard, idx) {
             var locationNum = idx + 1;
             var locContainer = container.querySelector('.member-location-container[data-location-number="' + locationNum + '"]');
             console.log('[Member] Location container ' + locationNum + ' found:', !!locContainer);
             if (locContainer) {
-                var content = locContainer.querySelector('.member-location-container-content');
-                if (content) {
-                    populateFieldsetsInContainer(content, mapCard);
-                }
+                populateFieldsetsInContainer(locContainer, mapCard);
             }
         });
     }
@@ -3853,10 +3851,14 @@ const MemberModule = (function() {
                         };
                         break;
                     case 'website_url':
+                    case 'website-url':
                     case 'url':
                         val = mapCard.website_url;
                         break;
-                    case 'tickets_url': val = mapCard.tickets_url; break;
+                    case 'tickets_url':
+                    case 'tickets-url':
+                        val = mapCard.tickets_url;
+                        break;
                     case 'coupon': val = mapCard.coupon_code; break;
                     case 'custom_text': val = mapCard.custom_text; break;
                     case 'custom_textarea': val = mapCard.custom_textarea; break;
@@ -3914,16 +3916,25 @@ const MemberModule = (function() {
                     
                     default:
                         // For unknown types, try to find value by key or baseType in mapCard
+                        // Also try with hyphens converted to underscores (fieldset keys use hyphens, DB uses underscores)
+                        var keyUnderscore = key.replace(/-/g, '_');
+                        var baseTypeUnderscore = baseType.replace(/-/g, '_');
+                        
                         if (mapCard.hasOwnProperty(key)) {
                             val = mapCard[key];
+                        } else if (mapCard.hasOwnProperty(keyUnderscore)) {
+                            val = mapCard[keyUnderscore];
                         } else if (mapCard.hasOwnProperty(baseType)) {
                             val = mapCard[baseType];
+                        } else if (mapCard.hasOwnProperty(baseTypeUnderscore)) {
+                            val = mapCard[baseTypeUnderscore];
                         }
                         break;
                 }
                 
                 console.log('[Member] Setting value for ' + baseType + ':', val);
-                if (val !== null && val !== undefined) {
+                if (val !== undefined) {
+                    // Call _setValue even for null - the fieldset's default handler converts null to empty string
                     fs._setValue(val);
                 } else {
                     console.warn('[Member] No value found for fieldset:', baseType);
