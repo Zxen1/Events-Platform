@@ -63,6 +63,10 @@ The agent must minimize context (time/tokens) usage:
 - If the agent believes a backup revert would be faster/safer than iterative changes, the agent must ASK the user to revert to the backup (the agent cannot revert)
 - IMPORTANT: The backup system is on the user's PC (outside this repo). It is NOT the `backups/` folder in the workspace, and the agent has no access to the user's PC backups.
 
+### Essentials Compliance Check (End of Every Task)
+At the end of every task, the agent must explicitly confirm that `Agent/agent essentials.md` was obeyed.
+If any exception is required, the agent must call it out clearly before the task is considered complete.
+
 ### Questions ≠ Instructions
 When user asks "how do we do X?" - this is a QUESTION. Answer it and wait for approval before implementing.
 
