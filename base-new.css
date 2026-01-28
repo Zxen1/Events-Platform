@@ -415,7 +415,7 @@
   }
 
   .button-class-2:hover {
-    background: #1c1c1c;
+    background: var(--blue-600);
     border-color: var(--blue-600);
     color: var(--website-white);
   }
@@ -433,7 +433,7 @@
   }
 
   .button-class-3:hover {
-    background: #1c1c1c;
+    background: var(--blue-600);
     border-color: var(--blue-600);
     color: var(--website-white);
   }

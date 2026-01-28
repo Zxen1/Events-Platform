@@ -1685,6 +1685,21 @@ const MemberModule = (function() {
         // Collect current fields from form
         var fields = collectAccordionFormData(accordion, data.original);
         
+        // Collect image files from the accordion (same pattern as validateAndCollectFormData)
+        var imageFiles = [];
+        var imagesMeta = '[]';
+        var imagesFs = accordion.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]');
+        if (imagesFs) {
+            var fileInput = imagesFs.querySelector('input[type="file"]');
+            var metaInput = imagesFs.querySelector('input.fieldset-images-meta');
+            if (fileInput && Array.isArray(fileInput._imageFiles)) {
+                imageFiles = fileInput._imageFiles.slice();
+            }
+            if (metaInput) {
+                imagesMeta = String(metaInput.value || '[]');
+            }
+        }
+        
         // Resolve category/subcategory names
         var categoryName = '';
         for (var i = 0; i < memberCategories.length; i++) {
@@ -1711,8 +1726,8 @@ const MemberModule = (function() {
             fields: fields
         };
 
-        // Reuse submitPostData but ensure it doesn't switch tabs or clear form
-        return submitPostData(payload, false, [], '[]')
+        // Reuse submitPostData with collected image files
+        return submitPostData(payload, false, imageFiles, imagesMeta)
             .then(function(res) {
                 if (res && res.success) {
                     // Update original data so it's no longer dirty
@@ -3773,12 +3788,33 @@ const MemberModule = (function() {
             // 4. Add Save and Discard buttons at the bottom of the accordion
             var footer = document.createElement('div');
             footer.className = 'member-mypost-edit-footer';
-            footer.style.marginTop = '20px';
-            footer.style.display = 'flex';
-            footer.style.justifyContent = 'flex-end';
-            footer.style.gap = '10px';
             
-            // Discard button (red)
+            // Save button (green) - left
+            var saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', function() {
+                var postContainer = container.closest('.member-mypost-item');
+                saveAccordionPost(post.id).then(function() {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        ToastComponent.showSuccess('Saved');
+                    }
+                    updateHeaderSaveDiscardState();
+                    // Close the accordion after successful save
+                    discardPostAccordionEdits(post.id);
+                    if (postContainer) {
+                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                    }
+                }).catch(function(err) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError('Failed to save: ' + err.message);
+                    }
+                });
+            });
+            
+            // Discard button (red) - right
             var discardBtn = document.createElement('button');
             discardBtn.type = 'button';
             discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
@@ -3814,33 +3850,8 @@ const MemberModule = (function() {
                 });
             });
             
-            // Save button (green)
-            var saveBtn = document.createElement('button');
-            saveBtn.type = 'button';
-            saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
-            saveBtn.textContent = 'Save';
-            saveBtn.addEventListener('click', function() {
-                var postContainer = container.closest('.member-mypost-item');
-                saveAccordionPost(post.id).then(function() {
-                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        ToastComponent.showSuccess('Saved');
-                    }
-                    updateHeaderSaveDiscardState();
-                    // Close the accordion after successful save
-                    discardPostAccordionEdits(post.id);
-                    if (postContainer) {
-                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
-                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                    }
-                }).catch(function(err) {
-                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        ToastComponent.showError('Failed to save: ' + err.message);
-                    }
-                });
-            });
-            
-            footer.appendChild(discardBtn);
             footer.appendChild(saveBtn);
+            footer.appendChild(discardBtn);
             container.appendChild(footer);
         }
     }

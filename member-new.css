@@ -1616,4 +1616,19 @@
   margin-bottom: 0;
 }
 
+/* Hide empty checkout container in edit accordion */
+.member-mypost-edit-accordion .member-checkout-container:empty {
+  display: none;
+}
+
+/* Edit footer with Save/Discard buttons */
+.member-mypost-edit-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+.member-mypost-edit-footer button {
+  flex: 1;
+}
 
