@@ -397,7 +397,6 @@ const FilterModule = (function() {
             if (contentEl.contains(e.target)) return;
             
             closePanel();
-            App.emit('filter:closed');
         }, false);
     }
 
@@ -407,7 +406,6 @@ const FilterModule = (function() {
         
         closeBtn.addEventListener('click', function() {
                 closePanel();
-                App.emit('filter:closed');
             });
     }
 
@@ -464,6 +462,8 @@ const FilterModule = (function() {
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
+            // Always notify header/state sync. This prevents "button stays blue when closed".
+            try { App.emit('filter:closed'); } catch (_eEmit) {}
         }
         
         // With transitions disabled, transitionend will never fire. Close immediately.

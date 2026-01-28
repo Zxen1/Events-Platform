@@ -457,7 +457,16 @@ const HeaderModule = (function() {
                 } catch (e) {}
             }
 
-            filterPanelOpen = !filterPanelOpen;
+            // Never rely on a stale boolean for open/closed state.
+            // If the panel was closed by another module, `filterPanelOpen` can desync and require
+            // a "dead click" to re-sync. Always read from the DOM.
+            try {
+                var filterPanelEl = document.querySelector('.filter-panel');
+                var isOpenNow = !!(filterPanelEl && filterPanelEl.classList.contains('show'));
+                filterPanelOpen = !isOpenNow;
+            } catch (_eState) {
+                filterPanelOpen = !filterPanelOpen;
+            }
             
             // Update aria state
             filterBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
