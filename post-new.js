@@ -2851,8 +2851,10 @@ const PostModule = (function() {
           
           var computedLineHeight = getComputedStyle(descEl).lineHeight;
           var lineHeight = parseFloat(computedLineHeight);
+          // Handle "normal" line-height (browser default, typically 1.2x font-size)
           if (isNaN(lineHeight) || lineHeight <= 0) {
-            throw new Error('[Post] Invalid line-height computed style: ' + computedLineHeight);
+            var fontSize = parseFloat(getComputedStyle(descEl).fontSize);
+            lineHeight = fontSize * 1.2; // Standard browser default for "normal"
           }
           var maxHeight = lineHeight * 2;
           
