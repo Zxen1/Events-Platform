@@ -2527,7 +2527,7 @@ const PostModule = (function() {
       '<div class="post-details">',
         '<div class="post-venueselect"></div>',
         '<div class="post-sessionselect"></div>',
-        '<div class="post-info">',
+        '<div class="post-info-container">',
           // Subcategory row (static)
           '<div class="post-info-row post-info-row-cat">',
             infoIconHtml,

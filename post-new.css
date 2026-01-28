@@ -1030,7 +1030,7 @@
 .post:not(.post--expanded) .post-nav,
 .post:not(.post--expanded) .post-venueselect,
 .post:not(.post--expanded) .post-sessionselect,
-.post:not(.post--expanded) .post-info,
+.post:not(.post--expanded) .post-info-container,
 .post:not(.post--expanded) .post-row-member {
   display: none;
 }
@@ -1288,7 +1288,7 @@
    ============================================================================ */
 
 /* Info container - holds subcategory, location, date, price rows */
-.post-info {
+.post-info-container {
   display: flex;
   flex-direction: column;
   gap: 0;
