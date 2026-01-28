@@ -344,14 +344,34 @@
   z-index: -1;
 }
 
+/* Post panel empty state image */
+.post-panel-empty-image {
+  margin-top: 10px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
 /* Post panel empty state message */
 .post-panel-empty-message {
   padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Recent panel reminder image */
+.recent-panel-reminder-image {
+  margin-top: 10px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
 }
 
 /* Recent panel reminder message */
 .recent-panel-reminder-text {
   padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* ============================================================================
