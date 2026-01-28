@@ -3880,8 +3880,22 @@ const MemberModule = (function() {
                         break;
                     
                     case 'ticket_pricing':
+                        // Convert API format (nested objects) to fieldset format (arrays)
+                        // API: { groupKey: { seatArea: { ticket_area, tiers } } }
+                        // Fieldset: { groupKey: [{ ticket_area, tiers }] }
+                        var apiPricingGroups = mapCard.pricing_groups || {};
+                        var convertedPricingGroups = {};
+                        Object.keys(apiPricingGroups).forEach(function(groupKey) {
+                            var seatAreasObj = apiPricingGroups[groupKey];
+                            if (seatAreasObj && typeof seatAreasObj === 'object') {
+                                // Convert object to array
+                                convertedPricingGroups[groupKey] = Object.keys(seatAreasObj).map(function(seatKey) {
+                                    return seatAreasObj[seatKey];
+                                });
+                            }
+                        });
                         val = {
-                            pricing_groups: mapCard.pricing_groups || {},
+                            pricing_groups: convertedPricingGroups,
                             age_ratings: mapCard.age_ratings || {}
                         };
                         break;
@@ -3908,10 +3922,18 @@ const MemberModule = (function() {
                         break;
                         
                     case 'images':
-                        val = {
-                            media_urls: mapCard.media_urls || [],
-                            media_meta: mapCard.media_meta || []
-                        };
+                        // Convert from API format {media_urls, media_meta} to fieldset format [{url, crop}, ...]
+                        // API meta structure: { media_id, original_filename, cropRect, cropState }
+                        var urls = mapCard.media_urls || [];
+                        var metas = mapCard.media_meta || [];
+                        val = urls.map(function(url, idx) {
+                            var meta = metas[idx];
+                            return { 
+                                url: url, 
+                                crop: meta ? meta.cropRect : null, 
+                                id: meta ? meta.media_id : null 
+                            };
+                        });
                         break;
                     
                     default:
