@@ -1739,11 +1739,16 @@ const MemberModule = (function() {
             if (categoryName) break;
         }
 
+        // Determine location count from the edit form (count location containers)
+        var locationContainers = accordion.querySelectorAll('.member-location-container[data-location-number]');
+        var locQty = locationContainers.length > 0 ? locationContainers.length : 1;
+        
         var payload = {
             post_id: postId,
             category: categoryName,
             subcategory: data.original.subcategory_name || data.original.subcategory_key,
-            fields: fields
+            fields: fields,
+            loc_qty: locQty
         };
 
         // Reuse submitPostData with collected image files
@@ -4926,7 +4931,7 @@ const MemberModule = (function() {
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
-                loc_qty: window._memberLocationQuantity || 1,
+                loc_qty: payload.loc_qty || window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
             

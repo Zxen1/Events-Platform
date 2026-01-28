@@ -304,6 +304,29 @@ $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcateg
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
 
+// Security: Verify post exists and member has permission to edit
+$isAdmin = strtolower($memberType) === 'admin';
+$stmtCheck = $mysqli->prepare("SELECT member_id, subcategory_key FROM posts WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+if (!$stmtCheck) {
+  fail_key(500, 'msg_post_edit_error');
+}
+$stmtCheck->bind_param('i', $postId);
+$stmtCheck->execute();
+$stmtCheck->bind_result($postOwnerId, $existingSubcategoryKey);
+if (!$stmtCheck->fetch()) {
+  $stmtCheck->close();
+  fail_key(404, 'msg_post_edit_not_found');
+}
+$stmtCheck->close();
+
+// Verify ownership: member must own the post, or be admin
+if (!$isAdmin && (int)$postOwnerId !== $memberId) {
+  fail_key(403, 'msg_post_edit_forbidden');
+}
+
+// Use the existing subcategory_key from database (don't allow changing category during edit)
+$subcategoryKey = $existingSubcategoryKey;
+
 $transactionActive = false;
 if (!$mysqli->begin_transaction()) {
   fail_key(500, 'msg_post_edit_error');
@@ -411,22 +434,11 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
 $allMediaIds = array_merge($existingMediaIds, $newMediaIds);
 $mediaString = !empty($allMediaIds) ? implode(',', $allMediaIds) : null;
 
-$checkoutTitle = null;
-foreach ($fieldsArr as $fld) {
-  if (isset($fld['key']) && strtolower(trim($fld['key'])) === 'checkout') {
-    $val = $fld['value'] ?? $fld['option_id'] ?? '';
-    if (is_array($val)) {
-      $checkoutTitle = isset($val['option_id']) ? (string)$val['option_id'] : (isset($val['checkout_title']) ? (string)$val['checkout_title'] : 'Array');
-    } else {
-      $checkoutTitle = (string)$val;
-    }
-    break;
-  }
-}
-
-$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, checkout_title = ?, updated_at = NOW() WHERE id = ?");
+// Note: checkout_key is NOT updated during edits - the post's plan was set at creation.
+// Editing only updates content fields, not the billing/plan information.
+$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, updated_at = NOW() WHERE id = ?");
 if ($stmt) {
-  $stmt->bind_param('isi', $locQty, $checkoutTitle, $postId);
+  $stmt->bind_param('ii', $locQty, $postId);
   $stmt->execute();
   $stmt->close();
 }
