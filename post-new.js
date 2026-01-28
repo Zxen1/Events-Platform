@@ -2823,13 +2823,7 @@ const PostModule = (function() {
       // Copy working pattern from live site (index.js)
       var truncateToTwoLines = function() {
         descEl.textContent = fullText;
-        var computedLineHeight = getComputedStyle(descEl).lineHeight;
-        var lineHeight = parseFloat(computedLineHeight);
-        // Handle "normal" line-height (browser default, typically 1.2x font-size)
-        if (isNaN(lineHeight) || lineHeight <= 0) {
-          var fontSize = parseFloat(getComputedStyle(descEl).fontSize);
-          lineHeight = fontSize * 1.2;
-        }
+        var lineHeight = parseFloat(getComputedStyle(descEl).lineHeight) || 20;
         var maxHeight = lineHeight * 2;
         if (descEl.scrollHeight <= maxHeight) {
           needsTruncation = false;
@@ -2855,6 +2849,11 @@ const PostModule = (function() {
       
       // Initial render (collapsed) - only if there's text
       if (fullText) {
+        // Remove initial "See more" from HTML, we'll add it via truncation
+        var initialSeeMore = descEl.querySelector('.post-description-seemore');
+        if (initialSeeMore) {
+          initialSeeMore.remove();
+        }
         render(false);
         if (needsTruncation) {
           descEl.style.cursor = 'pointer';
@@ -2899,8 +2898,6 @@ const PostModule = (function() {
       descEl.addEventListener('click', function(e) {
         var isExpanded = wrap.classList.contains('post--expanded');
         if (isExpanded) {
-          // Already expanded - just refresh wallpaper in case it was frozen by click-away
-          syncLocationWallpaper(true);
           return;
         }
         if (!needsTruncation) return;
@@ -2930,6 +2927,7 @@ const PostModule = (function() {
       if (seeLessEl) {
         seeLessEl.addEventListener('click', function(e) {
           e.preventDefault();
+          e.stopPropagation();
           wrap.classList.remove('post--expanded');
           render(false);
           descEl.setAttribute('aria-expanded', 'false');
