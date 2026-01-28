@@ -950,18 +950,6 @@ body {
     min-height: 0;
     overscroll-behavior: auto;
   }
-  
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 50%;
-    width: 10px;
-    height: 10000px;
-    background: red;
-    z-index: 9999;
-    pointer-events: none;
-  }
 }
 
 

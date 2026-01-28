@@ -448,6 +448,16 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    document.querySelectorAll('.member-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
+                    document.querySelectorAll('.member-panel-contents, .admin-panel-contents, .post-panel-content, .recent-panel-content').forEach(function(c) {
+                        c.classList.remove('member-panel-contents--visible', 'admin-panel-contents--visible', 'post-panel-content--visible', 'recent-panel-content--visible', 'panel-visible');
+                        c.classList.add('member-panel-contents--hidden', 'admin-panel-contents--hidden', 'post-panel-content--hidden', 'recent-panel-content--hidden');
+                    });
+
                     if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
                         window.MemberModule.closePanel();
                     }
@@ -467,6 +477,8 @@ const HeaderModule = (function() {
             if (!filterModuleLoaded) {
                 // First click - load the module then toggle
                 loadFilterModule().then(function() {
+                    var panel = document.querySelector('.filter-panel');
+                    if (panel) panel.style.display = ''; // Restore display
                     App.emit('panel:toggle', {
                         panel: 'filter',
                         show: filterPanelOpen
@@ -478,6 +490,8 @@ const HeaderModule = (function() {
                 });
             } else {
                 // Module already loaded - just toggle
+                var panel = document.querySelector('.filter-panel');
+                if (panel) panel.style.display = ''; // Restore display
                 App.emit('panel:toggle', {
                     panel: 'filter',
                     show: filterPanelOpen
@@ -551,6 +565,16 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    document.querySelectorAll('.filter-panel, .admin-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
+                    document.querySelectorAll('.filter-panel-content, .admin-panel-contents, .post-panel-content, .recent-panel-content').forEach(function(c) {
+                        c.classList.remove('panel-visible', 'admin-panel-contents--visible', 'post-panel-content--visible', 'recent-panel-content--visible');
+                        c.classList.add('admin-panel-contents--hidden', 'post-panel-content--hidden', 'recent-panel-content--hidden');
+                    });
+
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }
@@ -563,6 +587,8 @@ const HeaderModule = (function() {
             }
 
             // Always open, never close via header button
+            var panel = document.querySelector('.member-panel');
+            if (panel) panel.style.display = ''; // Restore display
             App.emit('panel:toggle', {
                 panel: 'member',
                 show: true
@@ -599,6 +625,16 @@ const HeaderModule = (function() {
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
+                    // Force immediate removal of classes to prevent stacking in relative flow
+                    document.querySelectorAll('.filter-panel, .member-panel, .post-panel, .recent-panel').forEach(function(p) {
+                        p.classList.remove('member-panel--show', 'admin-panel--show', 'post-panel--show', 'recent-panel--show', 'show');
+                        p.style.display = 'none';
+                    });
+                    document.querySelectorAll('.filter-panel-content, .member-panel-contents, .post-panel-content, .recent-panel-content').forEach(function(c) {
+                        c.classList.remove('panel-visible', 'member-panel-contents--visible', 'post-panel-content--visible', 'recent-panel-content--visible');
+                        c.classList.add('member-panel-contents--hidden', 'post-panel-content--hidden', 'recent-panel-content--hidden');
+                    });
+
                     if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
                         window.FilterModule.closePanel();
                     }
@@ -611,6 +647,8 @@ const HeaderModule = (function() {
             }
 
             // Always open, never close via header button
+            var panel = document.querySelector('.admin-panel');
+            if (panel) panel.style.display = ''; // Restore display
             App.emit('panel:toggle', {
                 panel: 'admin',
                 show: true

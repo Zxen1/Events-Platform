@@ -225,6 +225,15 @@ const MemberModule = (function() {
         initHeaderDrag();
         loadStoredSession();
         render();
+
+        // Disable BottomSlack on mobile to prevent scroll interference
+        if (window.innerWidth <= 530) {
+            var body = panel.querySelector('.member-panel-body');
+            if (body) {
+                body.setAttribute('data-bottomslack', 'false');
+                body.setAttribute('data-topslack', 'false');
+            }
+        }
     }
 
     var categoriesLoadingPromise = null;

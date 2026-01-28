@@ -206,6 +206,7 @@
     position: relative;
     height: auto;
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+    transition: none;
   }
 
   .member-panel-contents {
@@ -217,6 +218,7 @@
     max-height: none;
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
     overscroll-behavior: auto;
+    transition: none;
   }
 
   .member-panel-body {

@@ -286,6 +286,15 @@ const AdminModule = (function() {
         // Initialize Settings tab (default tab)
         initSettingsTab();
 
+        // Disable BottomSlack on mobile to prevent scroll interference
+        if (window.innerWidth <= 530) {
+            var body = panel.querySelector('.admin-panel-body');
+            if (body) {
+                body.setAttribute('data-bottomslack', 'false');
+                body.setAttribute('data-topslack', 'false');
+            }
+        }
+
         // Admin module initialized
     }
     
