@@ -3613,7 +3613,7 @@ const PostModule = (function() {
       throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
     }
     App.whenStartupSettingsReady().then(function() {
-      try { applySystemImage(img, 'postSystemImages', 'post_panel_empty_image'); } catch (e) { console.error(e); }
+      try { applySystemImage(img, 'postSystemImages', 'post_panel_empty_image', 'imagebox'); } catch (e) { console.error(e); }
     });
     wrap.appendChild(img);
 
@@ -3658,7 +3658,7 @@ const PostModule = (function() {
       throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
     }
     App.whenStartupSettingsReady().then(function() {
-      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image'); } catch (e) { console.error(e); }
+      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image', 'imagebox'); } catch (e) { console.error(e); }
     });
     reminderWrap.appendChild(reminderImg);
 
@@ -3766,7 +3766,7 @@ const PostModule = (function() {
       throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
     }
     App.whenStartupSettingsReady().then(function() {
-      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image'); } catch (e) { console.error(e); }
+      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image', 'imagebox'); } catch (e) { console.error(e); }
     });
     reminderWrap.appendChild(reminderImg);
 
@@ -4149,7 +4149,7 @@ const PostModule = (function() {
     }
   }
 
-  function applySystemImage(imgEl, folderKey, systemImageKey) {
+  function applySystemImage(imgEl, folderKey, systemImageKey, resizeClass) {
     if (!imgEl) return;
     if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') {
       throw new Error('[Post] App.getState and App.getImageUrl are required to load system images.');
@@ -4169,7 +4169,7 @@ const PostModule = (function() {
       return;
     }
 
-    var url = App.getImageUrl(folderKey, filename);
+    var url = App.getImageUrl(folderKey, filename, resizeClass);
     if (!url) {
       imgEl.dataset.missingSystemImageUrl = systemImageKey;
       console.error('[Post] Empty system image URL for: ' + systemImageKey);

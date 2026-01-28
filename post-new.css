@@ -344,6 +344,16 @@
   z-index: -1;
 }
 
+/* Post panel empty state message */
+.post-panel-empty-message {
+  padding-left: 10px;
+}
+
+/* Recent panel reminder message */
+.recent-panel-reminder-text {
+  padding-left: 10px;
+}
+
 /* ============================================================================
    CARD COMPONENTS - image, meta, text-title, container-info, badge, button-fav
    ============================================================================ */
