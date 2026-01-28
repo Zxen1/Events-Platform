@@ -3517,12 +3517,13 @@ const MemberModule = (function() {
         return container;
     }
 
-    // Set CSS variable for sticky button positioning based on post card height
+    // Set CSS variable for sticky button positioning based on sticky element above (card or header)
     function setStickyButtonTop(container) {
-        var postCard = container.querySelector('.post-card');
-        if (postCard) {
-            var cardHeight = postCard.offsetHeight;
-            container.style.setProperty('--member-mypost-card-height', cardHeight + 'px');
+        var postHeader = container.querySelector('.post-header');
+        var postCard = container.querySelector('.post-card:not([hidden])');
+        var stickyEl = postHeader || postCard;
+        if (stickyEl) {
+            container.style.setProperty('--member-mypost-sticky-height', stickyEl.offsetHeight + 'px');
         }
     }
 
