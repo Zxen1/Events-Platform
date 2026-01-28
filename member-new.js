@@ -3501,6 +3501,10 @@ const MemberModule = (function() {
         editBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            // Collapse post to postcard if expanded
+            if (window.PostModule && typeof PostModule.closePost === 'function') {
+                PostModule.closePost(post.id);
+            }
             togglePostEdit(post.id, container);
         });
 
@@ -3513,6 +3517,10 @@ const MemberModule = (function() {
         manageBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            // Collapse post to postcard if expanded
+            if (window.PostModule && typeof PostModule.closePost === 'function') {
+                PostModule.closePost(post.id);
+            }
             togglePostManage(post.id, container);
         });
 
