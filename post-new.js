@@ -3821,13 +3821,22 @@ const PostModule = (function() {
   }
 
   /**
-   * Get the hero image URL for a post
+   * Get the hero image URL for a post (with imagebox sizing)
    * @param {Object} post - Post object
    * @returns {string} Hero image URL
    */
   function getHeroUrl(post) {
     var rawUrl = getPostThumbnailUrl(post);
     return addImageClass(rawUrl, 'imagebox');
+  }
+
+  /**
+   * Get the raw image URL for a post (full resolution, no Bunny class)
+   * @param {Object} post - Post object
+   * @returns {string} Raw image URL
+   */
+  function getRawImageUrl(post) {
+    return getPostThumbnailUrl(post);
   }
 
   /* --------------------------------------------------------------------------
@@ -3858,6 +3867,7 @@ const PostModule = (function() {
     highlightMapMarker: highlightMapMarker,
     getPostUrl: getPostUrl,
     getHeroUrl: getHeroUrl,
+    getRawImageUrl: getRawImageUrl,
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary

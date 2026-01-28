@@ -476,16 +476,16 @@ const MarqueeModule = (function() {
   }
   
   /**
-   * Get the hero image URL for a post
+   * Get the raw image URL for a post (full resolution for marquee)
    * @param {Object} post - Post object
-   * @returns {string} Hero image URL
+   * @returns {string} Raw image URL
    */
   function getHeroUrl(post) {
     const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
-    if (!postModule || typeof postModule.getHeroUrl !== 'function') {
-      throw new Error('[Marquee] Post module not available for getHeroUrl()');
+    if (!postModule || typeof postModule.getRawImageUrl !== 'function') {
+      throw new Error('[Marquee] Post module not available for getRawImageUrl()');
     }
-    return postModule.getHeroUrl(post);
+    return postModule.getRawImageUrl(post);
   }
   
   /**
