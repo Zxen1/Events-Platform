@@ -1532,11 +1532,10 @@
    MY POSTS EDIT ACCORDION
    ============================================================================ */
 
-/* My Posts tab - remove panel body left/right padding only */
+/* My Posts tab - remove panel body right padding only, keep 10px left padding */
 #member-tab-myposts {
-  margin-left: -10px;
   margin-right: -10px;
-  width: calc(100% + 20px); /* Compensate for negative margins */
+  width: calc(100% + 10px); /* Compensate for right margin only */
 }
 
 /* My Posts item - identical to post panel */
