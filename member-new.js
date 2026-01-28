@@ -3881,22 +3881,49 @@ const MemberModule = (function() {
                     
                     case 'ticket_pricing':
                         // Convert API format (nested objects) to fieldset format (arrays)
-                        // API: { groupKey: { seatArea: { ticket_area, tiers } } }
-                        // Fieldset: { groupKey: [{ ticket_area, tiers }] }
+                        // API: { groupKey: { ticketArea: { ticket_area, tiers: [{ pricing_tier, price, currency }] } } }
+                        // Fieldset expects: { groupKey: [{ ticket_area, tiers, currency, age_rating }] }
+                        // Currency and age_rating are per-group (same for all ticket areas in group)
                         var apiPricingGroups = mapCard.pricing_groups || {};
+                        var apiAgeRatings = mapCard.age_ratings || {};
                         var convertedPricingGroups = {};
+                        
+                        console.log('[Member] ticket_pricing API data:', { pricing_groups: apiPricingGroups, age_ratings: apiAgeRatings });
+                        
                         Object.keys(apiPricingGroups).forEach(function(groupKey) {
-                            var seatAreasObj = apiPricingGroups[groupKey];
-                            if (seatAreasObj && typeof seatAreasObj === 'object') {
-                                // Convert object to array
-                                convertedPricingGroups[groupKey] = Object.keys(seatAreasObj).map(function(seatKey) {
-                                    return seatAreasObj[seatKey];
+                            var ticketAreasObj = apiPricingGroups[groupKey];
+                            if (ticketAreasObj && typeof ticketAreasObj === 'object') {
+                                // Get currency from first tier of first ticket area (all use same currency per group)
+                                var groupCurrency = '';
+                                var firstTicketAreaKey = Object.keys(ticketAreasObj)[0];
+                                if (firstTicketAreaKey) {
+                                    var firstArea = ticketAreasObj[firstTicketAreaKey];
+                                    if (firstArea && firstArea.tiers && firstArea.tiers[0]) {
+                                        groupCurrency = firstArea.tiers[0].currency || '';
+                                    }
+                                }
+                                
+                                // Get age rating for this group
+                                var groupAgeRating = apiAgeRatings[groupKey] || '';
+                                
+                                // Convert ticket areas object to array
+                                convertedPricingGroups[groupKey] = Object.keys(ticketAreasObj).map(function(ticketAreaKey, idx) {
+                                    var ticketArea = ticketAreasObj[ticketAreaKey];
+                                    return {
+                                        ticket_area: ticketArea.ticket_area,
+                                        tiers: ticketArea.tiers || [],
+                                        // Add currency and age_rating to first element (fieldset reads from [0])
+                                        currency: idx === 0 ? groupCurrency : '',
+                                        age_rating: idx === 0 ? groupAgeRating : ''
+                                    };
                                 });
+                                
+                                console.log('[Member] Converted group ' + groupKey + ':', convertedPricingGroups[groupKey]);
                             }
                         });
                         val = {
                             pricing_groups: convertedPricingGroups,
-                            age_ratings: mapCard.age_ratings || {}
+                            age_ratings: apiAgeRatings
                         };
                         break;
                     
