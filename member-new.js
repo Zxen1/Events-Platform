@@ -3448,7 +3448,7 @@ const MemberModule = (function() {
     }
 
     function renderMyPostCard(post) {
-        // Reuse PostModule's rendering logic but wrap it with an Edit button
+        // Reuse PostModule's rendering logic with buttons underneath
         var container = document.createElement('div');
         container.className = 'member-mypost-item';
         container.dataset.postId = post.id;
@@ -3464,38 +3464,38 @@ const MemberModule = (function() {
             if (fallbackTitle === 'Array') fallbackTitle = 'Post #' + post.id;
             cardEl.textContent = fallbackTitle;
         }
-        
-        // Add Edit and Manage buttons to the card actions container
-        var actionsContainer = cardEl.querySelector('.post-card-container-actions');
-        if (actionsContainer) {
-            // Edit Button
-            var editBtn = document.createElement('button');
-            editBtn.className = 'post-card-button-edit button-class-1';
-            editBtn.title = 'Edit Post Content';
-            editBtn.innerHTML = 'Edit';
-            editBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                togglePostEdit(post.id, container);
-            });
-            
-            // Manage Button (New placeholder)
-            var manageBtn = document.createElement('button');
-            manageBtn.className = 'post-card-button-manage button-class-1';
-            manageBtn.title = 'Manage Plan & Time';
-            manageBtn.innerHTML = 'Manage';
-            manageBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                togglePostManage(post.id, container);
-            });
-
-            // Insert buttons
-            actionsContainer.insertBefore(manageBtn, actionsContainer.firstChild);
-            actionsContainer.insertBefore(editBtn, actionsContainer.firstChild);
-        }
 
         container.appendChild(cardEl);
+
+        // Create button row underneath the card
+        var buttonRow = document.createElement('div');
+        buttonRow.className = 'member-mypost-buttons';
+
+        // Edit Button
+        var editBtn = document.createElement('button');
+        editBtn.className = 'member-mypost-button-edit button-class-1';
+        editBtn.title = 'Edit Post Content';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePostEdit(post.id, container);
+        });
+
+        // Manage Button
+        var manageBtn = document.createElement('button');
+        manageBtn.className = 'member-mypost-button-manage button-class-1';
+        manageBtn.title = 'Manage Plan & Time';
+        manageBtn.textContent = 'Manage';
+        manageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePostManage(post.id, container);
+        });
+
+        buttonRow.appendChild(editBtn);
+        buttonRow.appendChild(manageBtn);
+        container.appendChild(buttonRow);
 
         // Add accordion container for editing content
         var editAccordion = document.createElement('div');
