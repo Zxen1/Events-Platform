@@ -23,15 +23,13 @@
             position: relative;
         }
 
+        /* STICKY #1 - The panel header */
         .panel-header {
             position: sticky;
             top: 0;
-            height: 60px;
             background: #333;
             border-bottom: 1px solid #555;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
+            padding: 20px;
             font-weight: bold;
             z-index: 100;
         }
@@ -58,7 +56,7 @@
             color: #888;
         }
 
-        /* This is the element that will "catch" and stick */
+        /* STICKY #2 - The edit/manage buttons - NO hardcoded top value */
         .edit-manage-buttons {
             background: #444;
             border: 1px solid #666;
@@ -67,12 +65,11 @@
             display: flex;
             gap: 10px;
             margin-bottom: 12px;
-            transition: background 0.2s;
+            /* top value will be set dynamically by JavaScript */
         }
 
         .edit-manage-buttons.stuck {
             position: sticky;
-            top: 60px; /* Height of panel header */
             z-index: 99;
             background: #555;
             border-color: #888;
@@ -96,6 +93,11 @@
             color: #fff;
         }
 
+        .btn-resize {
+            background: #9f4aff;
+            color: #fff;
+        }
+
         .spacer {
             height: 200px;
             background: #222;
@@ -116,6 +118,7 @@
             border-radius: 5px;
             font-size: 12px;
             border: 1px solid #555;
+            max-width: 300px;
         }
 
         .status.stuck {
@@ -127,7 +130,10 @@
 <body>
     <div class="panel" id="panel">
         <div class="panel-header" id="panelHeader">
-            My Posts (Panel Header - Sticky #1)
+            <div>My Posts (Panel Header - STICKY #1)</div>
+            <div style="font-size: 12px; font-weight: normal; margin-top: 8px; color: #aaa;">
+                Click "Resize Header" to change my height - the buttons will still lock correctly
+            </div>
         </div>
 
         <div class="content">
@@ -137,7 +143,7 @@
             </div>
 
             <div class="postcard">
-                <div class="postcard-title">Second Post - This One Has A Much Longer Title That Wraps</div>
+                <div class="postcard-title">Second Post - This One Has A Much Longer Title That Wraps To Show Variable Height</div>
                 <div class="postcard-info">Posted 5 days ago</div>
             </div>
 
@@ -146,11 +152,11 @@
                 <div class="postcard-info">Posted 1 week ago</div>
             </div>
 
-            <!-- This is the element that locks to the header when it reaches it -->
+            <!-- STICKY #2 - This locks to the bottom of STICKY #1 -->
             <div class="edit-manage-buttons" id="editManageButtons">
                 <button class="btn-edit">Edit</button>
                 <button class="btn-manage">Manage</button>
-                <span style="margin-left: auto; font-size: 12px; color: #aaa;">← These buttons lock to header</span>
+                <button class="btn-resize" id="resizeBtn">Resize Header</button>
             </div>
 
             <div class="spacer">Scroll content below buttons</div>
@@ -161,36 +167,60 @@
         </div>
     </div>
 
-    <div class="status" id="status">Status: Scrolling freely</div>
+    <div class="status" id="status">Status: Scrolling freely<br>Header height: --</div>
 
     <script>
         const panel = document.getElementById('panel');
         const panelHeader = document.getElementById('panelHeader');
         const editManageButtons = document.getElementById('editManageButtons');
         const status = document.getElementById('status');
+        const resizeBtn = document.getElementById('resizeBtn');
 
-        // Get the bottom edge of the panel header
-        const headerHeight = panelHeader.offsetHeight;
+        // Toggle header size to prove dynamic detection works
+        resizeBtn.addEventListener('click', function() {
+            if (panelHeader.style.padding === '40px 20px') {
+                panelHeader.style.padding = '20px';
+            } else {
+                panelHeader.style.padding = '40px 20px';
+            }
+            // Trigger recalculation
+            updateStickyState();
+        });
 
-        panel.addEventListener('scroll', function() {
-            // Get the current position of the edit/manage buttons relative to the panel
-            const buttonsRect = editManageButtons.getBoundingClientRect();
+        function updateStickyState() {
+            // DYNAMICALLY get the header's current bottom position
+            const headerRect = panelHeader.getBoundingClientRect();
             const panelRect = panel.getBoundingClientRect();
             
-            // Calculate where the buttons are relative to the panel's top
-            const buttonsTopRelativeToPanel = buttonsRect.top - panelRect.top;
+            // The header's bottom edge relative to the panel
+            const headerBottom = headerRect.bottom - panelRect.top;
             
-            // If the buttons have scrolled up to meet the header, make them sticky
-            if (buttonsTopRelativeToPanel <= headerHeight) {
+            // The buttons' top edge relative to the panel
+            const buttonsRect = editManageButtons.getBoundingClientRect();
+            const buttonsTop = buttonsRect.top - panelRect.top;
+            
+            // Update status display
+            const headerHeight = headerRect.height;
+            
+            // If buttons have reached or passed the header's bottom, lock them
+            if (buttonsTop <= headerBottom) {
                 editManageButtons.classList.add('stuck');
-                status.textContent = 'Status: LOCKED TO HEADER';
+                // Set top dynamically based on actual header height RIGHT NOW
+                editManageButtons.style.top = headerHeight + 'px';
+                status.innerHTML = 'Status: LOCKED TO HEADER<br>Header height: ' + Math.round(headerHeight) + 'px<br>Buttons top set to: ' + Math.round(headerHeight) + 'px';
                 status.classList.add('stuck');
             } else {
                 editManageButtons.classList.remove('stuck');
-                status.textContent = 'Status: Scrolling freely';
+                editManageButtons.style.top = '';
+                status.innerHTML = 'Status: Scrolling freely<br>Header height: ' + Math.round(headerHeight) + 'px';
                 status.classList.remove('stuck');
             }
-        });
+        }
+
+        panel.addEventListener('scroll', updateStickyState);
+        
+        // Initial state
+        updateStickyState();
     </script>
 </body>
 </html>
