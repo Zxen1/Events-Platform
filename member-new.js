@@ -1750,11 +1750,7 @@ const MemberModule = (function() {
             // Close accordion and reset to original
             accordion.hidden = true;
             accordion.classList.add('member-mypost-edit-accordion--hidden');
-            if (container) {
-                container.classList.remove('member-mypost-item--editing');
-                var editBtn = container.querySelector('.member-mypost-edit');
-                if (editBtn) editBtn.classList.remove('button--selected');
-            }
+            if (container) container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
             
             // Clear data so it's re-loaded if opened again
@@ -3478,7 +3474,7 @@ const MemberModule = (function() {
 
         // Edit Button
         var editBtn = document.createElement('button');
-        editBtn.className = 'member-mypost-edit button-class-2';
+        editBtn.className = 'member-mypost-button-edit button-class-1';
         editBtn.title = 'Edit Post Content';
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', function(e) {
@@ -3489,7 +3485,7 @@ const MemberModule = (function() {
 
         // Manage Button
         var manageBtn = document.createElement('button');
-        manageBtn.className = 'member-mypost-manage button-class-2';
+        manageBtn.className = 'member-mypost-button-manage button-class-1';
         manageBtn.title = 'Manage Plan & Time';
         manageBtn.textContent = 'Manage';
         manageBtn.addEventListener('click', function(e) {
@@ -3517,44 +3513,26 @@ const MemberModule = (function() {
         return container;
     }
 
-    // Set CSS variable for sticky button positioning based on post card height
-    function setStickyButtonTop(container) {
-        var postCard = container.querySelector('.post-card');
-        if (postCard) {
-            var cardHeight = postCard.offsetHeight;
-            container.style.setProperty('--member-mypost-card-height', cardHeight + 'px');
-        }
-    }
-
     function togglePostManage(postId, container) {
         if (!postId || !container) return;
         
         var accordion = container.querySelector('.member-mypost-manage-accordion');
         if (!accordion) return;
-        
-        var editBtn = container.querySelector('.member-mypost-edit');
-        var manageBtn = container.querySelector('.member-mypost-manage');
 
         // Close all other posts' accordions first
         document.querySelectorAll('.member-mypost-item').forEach(function(item) {
             if (item === container) return;
             var otherEdit = item.querySelector('.member-mypost-edit-accordion');
             var otherManage = item.querySelector('.member-mypost-manage-accordion');
-            var otherEditBtn = item.querySelector('.member-mypost-edit');
-            var otherManageBtn = item.querySelector('.member-mypost-manage');
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
-                item.classList.remove('member-mypost-item--editing');
-                if (otherEditBtn) otherEditBtn.classList.remove('button--selected');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
             }
             if (otherManage && !otherManage.hidden) {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
-                item.classList.remove('member-mypost-item--managing');
-                if (otherManageBtn) otherManageBtn.classList.remove('button--selected');
                 otherManage.dataset.expanded = 'false';
             }
         });
@@ -3564,8 +3542,6 @@ const MemberModule = (function() {
         if (editAcc && !editAcc.hidden) {
             editAcc.hidden = true;
             editAcc.classList.add('member-mypost-edit-accordion--hidden');
-            container.classList.remove('member-mypost-item--editing');
-            if (editBtn) editBtn.classList.remove('button--selected');
             expandedPostAccordions[postId] = false;
         }
 
@@ -3575,8 +3551,6 @@ const MemberModule = (function() {
             accordion.hidden = true;
             accordion.classList.add('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'false';
-            container.classList.remove('member-mypost-item--managing');
-            if (manageBtn) manageBtn.classList.remove('button--selected');
         } else {
             // Render placeholder management UI if empty
             if (accordion.innerHTML === '') {
@@ -3585,9 +3559,6 @@ const MemberModule = (function() {
             accordion.hidden = false;
             accordion.classList.remove('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'true';
-            container.classList.add('member-mypost-item--managing');
-            setStickyButtonTop(container);
-            if (manageBtn) manageBtn.classList.add('button--selected');
         }
     }
 
@@ -3617,30 +3588,22 @@ const MemberModule = (function() {
         
         var accordion = container.querySelector('.member-mypost-edit-accordion');
         if (!accordion) return;
-        
-        var editBtn = container.querySelector('.member-mypost-edit');
-        var manageBtn = container.querySelector('.member-mypost-manage');
 
         // Close all other posts' accordions first
         document.querySelectorAll('.member-mypost-item').forEach(function(item) {
             if (item === container) return;
             var otherEdit = item.querySelector('.member-mypost-edit-accordion');
             var otherManage = item.querySelector('.member-mypost-manage-accordion');
-            var otherEditBtn = item.querySelector('.member-mypost-edit');
-            var otherManageBtn = item.querySelector('.member-mypost-manage');
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
                 item.classList.remove('member-mypost-item--editing');
-                if (otherEditBtn) otherEditBtn.classList.remove('button--selected');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
             }
             if (otherManage && !otherManage.hidden) {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
-                item.classList.remove('member-mypost-item--managing');
-                if (otherManageBtn) otherManageBtn.classList.remove('button--selected');
                 otherManage.dataset.expanded = 'false';
             }
         });
@@ -3651,8 +3614,6 @@ const MemberModule = (function() {
             manageAcc.hidden = true;
             manageAcc.classList.add('member-mypost-manage-accordion--hidden');
             manageAcc.dataset.expanded = 'false';
-            container.classList.remove('member-mypost-item--managing');
-            if (manageBtn) manageBtn.classList.remove('button--selected');
         }
 
         var isExpanded = expandedPostAccordions[postId];
@@ -3663,7 +3624,6 @@ const MemberModule = (function() {
             accordion.classList.add('member-mypost-edit-accordion--hidden');
             container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
-            if (editBtn) editBtn.classList.remove('button--selected');
         } else {
             // Expand
             // Check if we need to load data first
@@ -3671,9 +3631,7 @@ const MemberModule = (function() {
                 accordion.hidden = false;
                 accordion.classList.remove('member-mypost-edit-accordion--hidden');
                 container.classList.add('member-mypost-item--editing');
-                setStickyButtonTop(container);
                 expandedPostAccordions[postId] = true;
-                if (editBtn) editBtn.classList.add('button--selected');
             } else {
                 showStatus('Loading post data...', { success: true });
                 
@@ -3690,9 +3648,7 @@ const MemberModule = (function() {
                         accordion.hidden = false;
                         accordion.classList.remove('member-mypost-edit-accordion--hidden');
                         container.classList.add('member-mypost-item--editing');
-                        setStickyButtonTop(container);
                         expandedPostAccordions[postId] = true;
-                        if (editBtn) editBtn.classList.add('button--selected');
                         showStatus('Post data loaded.', { success: true });
                     } else {
                         showStatus('Failed to load post data.', { error: true });
