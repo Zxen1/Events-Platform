@@ -223,6 +223,13 @@ The user prefers to run shell operations themselves. Do not use terminal access.
 
 ---
 
+## FILE PLACEMENT RULES
+
+### Test Files Go in Agent Folder
+Never place test files, examples, or non-website files in the root directory. All such files must go in the `Agent/` folder.
+
+---
+
 ## PERFORMANCE RULES
 
 ### Lazy Loading Only
