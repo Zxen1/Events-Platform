@@ -460,13 +460,28 @@ const FilterModule = (function() {
         panelEl.setAttribute('inert', '');
         contentEl.classList.remove('panel-visible');
         
-        contentEl.addEventListener('transitionend', function handler() {
-            contentEl.removeEventListener('transitionend', handler);
+        function finalizeClose() {
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
-            
-            // Remove from panel stack
-            App.removeFromStack(panelEl);
+            try { App.removeFromStack(panelEl); } catch (_eStack) {}
+        }
+        
+        // With transitions disabled, transitionend will never fire. Close immediately.
+        try {
+            var cs = window.getComputedStyle ? window.getComputedStyle(contentEl) : null;
+            var dur = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
+            if (dur === '0s' || dur === '0ms') {
+                finalizeClose();
+                return;
+            }
+        } catch (_eDur) {
+            finalizeClose();
+            return;
+        }
+        
+        contentEl.addEventListener('transitionend', function handler() {
+            contentEl.removeEventListener('transitionend', handler);
+            finalizeClose();
         }, { once: true });
     }
     

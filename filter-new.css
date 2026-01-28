@@ -45,6 +45,14 @@
   /* Scroll happens in .filter-panel-body (not the panel container) */
 }
 
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .filter-panel-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
 .filter-panel-content[data-side="left"] {
   transform: translateX(-100%);
 }

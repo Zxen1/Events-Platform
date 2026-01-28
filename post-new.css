@@ -76,6 +76,14 @@
   color: #fff;
 }
 
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .post-panel-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
 .post-panel-content--side-left {
   transform: translateX(-100%);
 }
@@ -146,6 +154,14 @@
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.7);
   color: #fff;
+}
+
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .recent-panel-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
 }
 
 .recent-panel-content--side-left {

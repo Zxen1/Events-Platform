@@ -32,6 +32,14 @@
   .header-bar .button-class-1:hover {
     background: transparent;
   }
+
+  .header-bar .button-class-1:active {
+    background: transparent;
+  }
+
+  .header-modeswitch > .button-class-1 {
+    transition: none;
+  }
 }
 
 /* Logo button */

@@ -184,6 +184,14 @@
   overscroll-behavior: contain;
 }
 
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .member-panel-contents {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
 .member-panel-contents--side-left {
   transform: translateX(-100%);
 }

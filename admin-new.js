@@ -548,19 +548,31 @@ const AdminModule = (function() {
         panelContent.classList.remove('admin-panel-contents--visible');
         panelContent.classList.add('admin-panel-contents--hidden');
         
-        // Wait for transition then hide panel
-        panelContent.addEventListener('transitionend', function handler() {
-            panelContent.removeEventListener('transitionend', handler);
+        function finalizeClose() {
             panel.classList.remove('admin-panel--show');
-            // Move focus out before hiding to avoid aria-hidden violation
             if (document.activeElement && panel.contains(document.activeElement)) {
-                document.activeElement.blur();
+                try { document.activeElement.blur(); } catch (_eBlur) {}
             }
             panel.setAttribute('aria-hidden', 'true');
-            
-            // Remove from panel stack
-            App.removeFromStack(panel);
-        }, { once: true });
+            try { App.removeFromStack(panel); } catch (_eStack) {}
+        }
+        
+        // With transitions disabled, transitionend will never fire. Close immediately.
+        try {
+            var cs = window.getComputedStyle ? window.getComputedStyle(panelContent) : null;
+            var dur = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
+            if (dur === '0s' || dur === '0ms') {
+                finalizeClose();
+            } else {
+                // Wait for transition then hide panel
+                panelContent.addEventListener('transitionend', function handler() {
+                    panelContent.removeEventListener('transitionend', handler);
+                    finalizeClose();
+                }, { once: true });
+            }
+        } catch (_eDur) {
+            finalizeClose();
+        }
         
         // Update header button
         App.emit('admin:closed');
