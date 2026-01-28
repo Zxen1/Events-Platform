@@ -73,8 +73,6 @@
   .admin-panel {
     position: relative;
     height: auto;
-    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
-    transition: none;
   }
 
   .admin-panel-contents {
@@ -84,9 +82,7 @@
     max-width: 100%;
     height: auto;
     max-height: none;
-    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
-    overscroll-behavior: auto;
-    transition: none;
+    min-height: 0;
   }
 
   .admin-panel-body {
