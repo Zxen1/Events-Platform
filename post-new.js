@@ -3196,9 +3196,29 @@ const PostModule = (function() {
       .replace(/'/g, '&#39;');
   }
 
+  /* --------------------------------------------------------------------------
+     FACEBOOK-STYLE TEXT TRUNCATION
+     --------------------------------------------------------------------------
+     
+     WHAT: Truncates text to exactly N lines with "... See more" inline at the end.
+     
+     WHY: CSS line-clamp truncates with "..." but can't append custom text like
+          "See more" inline. The old approach used an absolutely-positioned
+          "See more" with a gradient fade - it looked bad because the gradient
+          color often didn't match the background.
+     
+     HOW: 
+     1. Create a hidden div with identical styles to measure text height
+     2. Binary search to find the exact character where line N ends
+     3. Append "... See more" and verify it still fits on line N
+     4. Clean up partial words (back up to previous space)
+     
+     RESULT: "This is the description text that gets cut off... See more"
+             appears exactly at the end of line 2, just like Facebook.
+     
+     -------------------------------------------------------------------------- */
+
   /**
-   * Truncate text to fit within a specified number of lines, appending a suffix (e.g. "... See more")
-   * Uses actual text measurement to find the exact cutoff point (Facebook-style).
    * @param {HTMLElement} container - The container element to measure against
    * @param {string} fullText - The full text to truncate
    * @param {string} suffix - The suffix to append (e.g. "... See more")
