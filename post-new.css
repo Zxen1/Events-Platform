@@ -980,7 +980,7 @@
    ============================================================================ */
 
 .post-body {
-  padding: 0 0 10px;
+  padding: 12px 0 0;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1039,6 +1039,7 @@
   max-width: calc(100% - 20px);
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 /* Description text */
@@ -1118,11 +1119,13 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  width: 100%;
-  max-width: 100%;
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
   flex: 1 1 auto;
   box-sizing: border-box;
-  margin: 0;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   align-self: stretch;
 }
 
@@ -1211,10 +1214,9 @@
   max-width: calc(100% - 20px);
   height: 120px;
   overflow: visible;
-  margin-top: 0;
-  margin-bottom: 0;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   box-sizing: border-box;
 }
 
@@ -1288,8 +1290,11 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 100%;
-  margin-bottom: 10px; /* 10-12-6 Rule */
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 /* Info row - each line of info */
