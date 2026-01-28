@@ -2417,6 +2417,23 @@ const PostModule = (function() {
       ? ('📅 ' + datesText + (priceHtml ? (' | ' + priceHtml) : ''))
       : (priceHtml ? priceHtml : '');
 
+    // Additional info fields from map card
+    var city = loc0.city || '';
+    var websiteUrl = loc0.website_url || '';
+    var ticketsUrl = loc0.tickets_url || '';
+    var publicEmail = loc0.public_email || '';
+    var phonePrefix = loc0.phone_prefix || '';
+    var publicPhone = loc0.public_phone || '';
+    var ageRating = loc0.age_rating || '';
+    var couponCode = loc0.coupon_code || '';
+    var customText = loc0.custom_text || '';
+    var customTextarea = loc0.custom_textarea || '';
+    var customDropdown = loc0.custom_dropdown || '';
+    var customChecklist = loc0.custom_checklist || '';
+    var customRadio = loc0.custom_radio || '';
+    var amenitySummary = loc0.amenity_summary || '';
+    var hasMultipleLocations = locationList.length > 1;
+
     // Check favorite status
     var isFav = isFavorite(post.id);
 
@@ -2533,14 +2550,61 @@ const PostModule = (function() {
           infoIconHtml,
           '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
-        // Venue info row (updates when venue selected)
+        // Venue info (venue_name, address_line, city)
         '<div id="venue-info-' + post.id + '" class="post-info-venue">',
-          '<strong>' + escapeHtml(venueName) + '</strong><br>' + escapeHtml(addressLine),
+          '<strong>' + escapeHtml(venueName) + '</strong>' +
+          (addressLine ? '<br>' + escapeHtml(addressLine) : '') +
+          (city ? '<br>' + escapeHtml(city) : ''),
         '</div>',
-        // Session info row (updates when session selected)
-        '<div id="session-info-' + post.id + '" class="post-info-session">',
-          '<div>' + escapeHtml(defaultInfo) + '</div>',
-        '</div>',
+        // Location button (if multiple locations)
+        hasMultipleLocations ? '<button class="post-info-button post-info-button-location" type="button" aria-haspopup="true" aria-expanded="false">' +
+          '<span class="post-info-button-text">📍 ' + locationList.length + ' locations</span>' +
+          '<span class="post-info-button-arrow">▼</span>' +
+        '</button>' : '',
+        // Session summary button (if sessions exist)
+        datesText ? '<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + post.id + '">' +
+          '<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>' +
+          '<span class="post-info-button-arrow">▼</span>' +
+        '</button>' : '',
+        // Price summary button (if price exists)
+        priceParts.text ? '<button class="post-info-button post-info-button-price" type="button" aria-haspopup="true" aria-expanded="false" id="price-btn-' + post.id + '">' +
+          '<span class="post-info-button-text">' + priceHtml + '</span>' +
+          '<span class="post-info-button-arrow">▼</span>' +
+        '</button>' : '',
+        // Website URL
+        websiteUrl ? '<div class="post-info-row post-info-row-website">' +
+          '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
+        '</div>' : '',
+        // Tickets URL
+        ticketsUrl ? '<div class="post-info-row post-info-row-tickets">' +
+          '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer">🎟️ ' + escapeHtml(ticketsUrl) + '</a>' +
+        '</div>' : '',
+        // Public email
+        publicEmail ? '<div class="post-info-row post-info-row-email">' +
+          '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
+        '</div>' : '',
+        // Phone
+        (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
+          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+        '</div>' : '',
+        // Amenities
+        amenitySummary ? '<div class="post-info-row post-info-row-amenities">' +
+          escapeHtml(amenitySummary) +
+        '</div>' : '',
+        // Coupon code
+        couponCode ? '<div class="post-info-row post-info-row-coupon">' +
+          '🏷️ ' + escapeHtml(couponCode) +
+        '</div>' : '',
+        // Age rating
+        ageRating ? '<div class="post-info-row post-info-row-age">' +
+          '🔞 ' + escapeHtml(ageRating) +
+        '</div>' : '',
+        // Custom fields
+        customText ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customText) + '</div>' : '',
+        customTextarea ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customTextarea) + '</div>' : '',
+        customDropdown ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customDropdown) + '</div>' : '',
+        customChecklist ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customChecklist) + '</div>' : '',
+        customRadio ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customRadio) + '</div>' : '',
       '</div>',
       '<div class="post-description-container">',
         '<div class="post-description-text" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-description-seemore">See more</span></div>',
