@@ -434,8 +434,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
   padding-right: 5px;
+  box-sizing: border-box;
 }
 
 .post-card-row-cat .post-card-icon-sub:empty,
@@ -444,10 +446,10 @@
   padding-right: 0;
 }
 
-/* Title - single line with ellipsis */
+/* Title - single line with ellipsis, 12px margin below */
 .post-card-text-title,
 .recent-card-text-title {
-  margin: 0;
+  margin: 0 0 12px 0; /* 12px margin below title before info rows */
   font-weight: bold;
   font-size: 16px;
   line-height: 1.2;
@@ -509,20 +511,21 @@
   margin-bottom: 0;
 }
 
-/* Badge - 18px to match subcategory icon height */
+/* Badge - fixed width column for icon alignment, 18px icon centered */
 .post-card-badge,
 .recent-card-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
+  height: 18px;
   padding-right: 5px;
   border: 0;
   border-radius: 0;
-  width: 18px;
-  height: 18px;
   line-height: 1;
-  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 /* Badge image sizing (No Hardcode Rule) */

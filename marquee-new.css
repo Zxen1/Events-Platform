@@ -152,7 +152,7 @@
 .marquee-slide-info-title {
   display: flex;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 12px; /* 12px margin below title before info rows */
   font-size: 16px;
   font-weight: bold;
   white-space: nowrap;
@@ -217,19 +217,20 @@
   min-width: 0;
 }
 
-/* Badge (matching post card style) - 18px to match subcategory icon height */
+/* Badge - fixed width column for icon alignment, 18px icon centered (matches postcards) */
 .marquee-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
+  height: 18px;
   padding-right: 5px;
   border: 0;
   border-radius: 0;
-  width: 18px;
-  height: 18px;
   line-height: 1;
-  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .marquee-image-badge {
@@ -247,8 +248,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
+  flex: 0 0 24px; /* Fixed width column for icon alignment (matches postcards) */
+  width: 24px;
   padding-right: 5px;
+  box-sizing: border-box;
 }
 
 .marquee-image-sub {
