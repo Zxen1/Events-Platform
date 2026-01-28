@@ -1444,6 +1444,7 @@ const PostModule = (function() {
       map_card_index: mapCardIndex,
       title: title,
       venue: venueName,
+      city: mapCard.city || '',
       sub: subcategoryKey,
       iconUrl: iconUrl,
       thumbnailUrl: thumbnailUrl,

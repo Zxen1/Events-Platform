@@ -461,21 +461,30 @@ const MapModule = (function() {
   
   /**
    * Get marker label lines for a post
+   * Big card: Title (1 line if venue, 2 lines if no venue) + Venue + City
+   * Small card: Title (2 lines)
    */
   function getMarkerLabelLines(post, isActive = false) {
     const title = post && post.title ? post.title : '';
     const maxWidth = isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL;
-    const titleLines = splitTextLines(title, maxWidth, 2);
+    
+    const venueName = post.venue || '';
+    const cityName = post.city || '';
+    
+    // For big cards: if venue exists, title gets 1 line; if no venue, title gets 2 lines
+    const titleMaxLines = (isActive && venueName) ? 1 : 2;
+    const titleLines = splitTextLines(title, maxWidth, titleMaxLines);
     
     while (titleLines.length < 2) titleLines.push('');
     
-    const venueName = post.venue || '';
     const venueLine = venueName ? shortenText(venueName, maxWidth) : '';
+    const cityLine = cityName ? shortenText(cityName, maxWidth) : '';
     
     return {
       line1: titleLines[0] || '',
       line2: titleLines[1] || '',
-      venueLine
+      venueLine,
+      cityLine
     };
   }
 
@@ -714,6 +723,20 @@ const MapModule = (function() {
       /* Venue Text (big cards only) */
       .map-card-venue {
         color: rgba(255,255,255,0.7);
+        font-family: inherit;
+        font-size: ${MARKER_LABEL_TEXT_SIZE - 1}px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      
+      /* City Text (big cards only) */
+      .map-card-city {
+        color: rgba(255,255,255,0.5);
         font-family: inherit;
         font-size: ${MARKER_LABEL_TEXT_SIZE - 1}px;
         line-height: 1.2;
@@ -2248,16 +2271,26 @@ const MapModule = (function() {
         ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
       `;
     } else {
-      // Single post: show title and venue
+      // Single post: show title, venue, and city
       const labels = getMarkerLabelLines(post, isActive);
       
       if (isActive) {
-        // Big card: show title (2 lines) + venue
-        labelHTML = `
-          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-          ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
-        `;
+        // Big card: Title (1 line if venue, 2 lines if no venue) + Venue + City
+        if (labels.venueLine) {
+          // With venue: Title (1 line) + Venue + City
+          labelHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            <div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>
+            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+          `;
+        } else {
+          // Without venue: Title (2 lines) + City
+          labelHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+          `;
+        }
       } else {
         // Small/hover card: show title only (2 lines)
         labelHTML = `
@@ -2679,14 +2712,25 @@ const MapModule = (function() {
           ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
         `;
       } else {
-        // Single post: show title and venue
+        // Single post: show title, venue, and city
         const labels = getMarkerLabelLines(post, isActive);
         if (isActive) {
-          labelsEl.innerHTML = `
-            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-            ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
-          `;
+          // Big card: Title (1 line if venue, 2 lines if no venue) + Venue + City
+          if (labels.venueLine) {
+            // With venue: Title (1 line) + Venue + City
+            labelsEl.innerHTML = `
+              <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+              <div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>
+              ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+            `;
+          } else {
+            // Without venue: Title (2 lines) + City
+            labelsEl.innerHTML = `
+              <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+              ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+              ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+            `;
+          }
         } else {
           labelsEl.innerHTML = `
             <div class="map-card-title">${escapeHtml(labels.line1)}</div>
