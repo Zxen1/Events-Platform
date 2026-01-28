@@ -50,6 +50,11 @@ Do NOT look at code or touch code without the user's explicit consent.
 ### No Coding Mid-Conversation
 When discussing something, do NOT start editing files. Wait for explicit instruction to implement.
 
+### No Reverting
+Reverting is NOT allowed.
+
+If the agent believes reverting is necessary, the agent must ASK the user to revert to a backup themselves.
+
 ### Questions ≠ Instructions
 When user asks "how do we do X?" - this is a QUESTION. Answer it and wait for approval before implementing.
 
