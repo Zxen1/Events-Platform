@@ -3486,6 +3486,18 @@ const MemberModule = (function() {
             cardEl.textContent = fallbackTitle;
         }
 
+        // Prevent postcard from opening into a post when edit/manage accordion is active
+        cardEl.addEventListener('click', function(e) {
+            var editAcc = container.querySelector('.member-mypost-edit-accordion');
+            var manageAcc = container.querySelector('.member-mypost-manage-accordion');
+            var editActive = editAcc && !editAcc.hidden;
+            var manageActive = manageAcc && manageAcc.dataset.expanded === 'true';
+            if (editActive || manageActive) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        }, true); // Use capture phase to intercept before PostModule's handler
+
         container.appendChild(cardEl);
 
         // Create button row underneath the card
