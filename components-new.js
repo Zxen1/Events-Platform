@@ -8901,6 +8901,7 @@ const LocationWallpaperComponent = (function() {
 
         function resumeBasicMode() {
             if (!basicImgs.length || !basicContainer) return;
+            st.isActive = true;
             basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
             var prev = basicIndex;
             basicIndex = 0;
@@ -8978,7 +8979,12 @@ const LocationWallpaperComponent = (function() {
             } else if (mode === 'still') {
                 startStillMode(lat, lng);
             } else if (mode === 'basic') {
-                startBasicMode(lat, lng);
+                // Resume if same location and already have images
+                if (!changed && basicContainer && basicImgs.length === 4 && st.basicCapturedLat === lat && st.basicCapturedLng === lng) {
+                    resumeBasicMode();
+                } else {
+                    startBasicMode(lat, lng);
+                }
             }
         }
 
