@@ -3776,14 +3776,10 @@ const MemberModule = (function() {
             return;
         }
         
-        console.log('[Member] Populating post edit form with data:', post.map_cards[0]);
-        
         // 1. Populate non-repeating fieldsets (title, description, etc.)
         // These are in .form-primary-container
         var primaryMapCard = post.map_cards[0];
         var primaryContainer = container.querySelector('.form-primary-container');
-        
-        console.log('[Member] Primary container found:', !!primaryContainer);
         
         if (primaryContainer) {
             populateFieldsetsInContainer(primaryContainer, primaryMapCard);
@@ -3794,7 +3790,6 @@ const MemberModule = (function() {
         post.map_cards.forEach(function(mapCard, idx) {
             var locationNum = idx + 1;
             var locContainer = container.querySelector('.member-location-container[data-location-number="' + locationNum + '"]');
-            console.log('[Member] Location container ' + locationNum + ' found:', !!locContainer);
             if (locContainer) {
                 populateFieldsetsInContainer(locContainer, mapCard);
             }
@@ -3807,8 +3802,6 @@ const MemberModule = (function() {
         // Find all fieldsets IN THIS CONTAINER only (not nested)
         var fieldsetEls = container.querySelectorAll('.fieldset[data-fieldset-key]');
         
-        console.log('[Member] Found ' + fieldsetEls.length + ' fieldsets in container');
-        
         fieldsetEls.forEach(function(fs) {
             // Ensure this fieldset belongs directly to this container (not a nested one)
             // But since our containers are usually shallow, querySelectorAll is mostly fine.
@@ -3818,8 +3811,6 @@ const MemberModule = (function() {
             var key = fs.dataset.fieldsetKey;
             var type = fs.dataset.fieldsetType || key;
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
-            
-            console.log('[Member] Processing fieldset:', { key: key, type: type, baseType: baseType, hasSetValue: typeof fs._setValue === 'function' });
             
             // If the fieldset has a custom _setValue, use it
             if (typeof fs._setValue === 'function') {
@@ -3893,9 +3884,6 @@ const MemberModule = (function() {
                         var apiAgeRatings = mapCard.age_ratings || {};
                         var convertedPricingGroups = {};
                         
-                        console.log('[Member] ticket_pricing API data - pricing_groups:', JSON.stringify(Object.keys(apiPricingGroups)));
-                        console.log('[Member] ticket_pricing API data - age_ratings:', JSON.stringify(apiAgeRatings));
-                        
                         Object.keys(apiPricingGroups).forEach(function(groupKey) {
                             var ticketAreasObj = apiPricingGroups[groupKey];
                             if (ticketAreasObj && typeof ticketAreasObj === 'object') {
@@ -3923,8 +3911,6 @@ const MemberModule = (function() {
                                         age_rating: idx === 0 ? groupAgeRating : ''
                                     };
                                 });
-                                
-                                console.log('[Member] Converted group ' + groupKey + ':', JSON.stringify(convertedPricingGroups[groupKey], null, 2));
                             }
                         });
                         val = {
@@ -3987,7 +3973,6 @@ const MemberModule = (function() {
                         break;
                 }
                 
-                console.log('[Member] Setting value for ' + baseType + ':', val);
                 if (val !== undefined) {
                     // Call _setValue even for null - the fieldset's default handler converts null to empty string
                     fs._setValue(val);
