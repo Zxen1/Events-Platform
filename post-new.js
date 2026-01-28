@@ -2814,10 +2814,21 @@ const PostModule = (function() {
 
     var descEl = wrap.querySelector('.post-description-text');
     if (descEl) {
+      // Get full description text from post object
+      var locationList = post.map_cards || [];
+      var loc0 = locationList[0] || {};
+      var fullText = loc0.description || '';
+      if (!fullText) {
+        // If no description, remove "See more" span if it exists
+        var seeMoreSpan = descEl.querySelector('.post-description-seemore');
+        if (seeMoreSpan) {
+          seeMoreSpan.remove();
+        }
+        return;
+      }
+      
       // Truncate text to 2 lines and insert "See more" inline (only when collapsed)
       (function() {
-        var fullText = description;
-        if (!fullText) return;
         
         // Wait for layout to calculate width properly
         setTimeout(function() {
@@ -2937,7 +2948,11 @@ const PostModule = (function() {
         }
         e.preventDefault();
         wrap.classList.add('post--expanded');
-        descEl.innerHTML = escapeHtml(description);
+        // Get full description from post object
+        var locationList = post.map_cards || [];
+        var loc0 = locationList[0] || {};
+        var fullDescription = loc0.description || '';
+        descEl.innerHTML = escapeHtml(fullDescription);
         descEl.setAttribute('aria-expanded', 'true');
         syncLocationWallpaper(true);
       });
