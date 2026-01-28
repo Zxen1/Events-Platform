@@ -1007,12 +1007,12 @@
 
 .post:not(.post--expanded) .post-text-desc {
   margin-top: 0;
+  position: relative;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Description */
@@ -1021,6 +1021,44 @@
   cursor: pointer;
   font-size: 14px;
   white-space: pre-line;
+}
+
+/* See more link - appears at end of truncated description */
+.post-text-seemore {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-left: 40px;
+  background: linear-gradient(to right, transparent, var(--panel-bg) 20px);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.post-text-seemore:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Hide See more when expanded */
+.post.post--expanded .post-text-seemore {
+  display: none;
+}
+
+/* See less link - appears at bottom of expanded description */
+.post-text-seeless {
+  display: none;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.post-text-seeless:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Show See less when expanded */
+.post.post--expanded .post-text-seeless {
+  display: block;
 }
 
 /* Member row */

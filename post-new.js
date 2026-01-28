@@ -2550,7 +2550,8 @@ const PostModule = (function() {
           '</div>' : '',
         '</div>',
         '<div class="post-container-desc">',
-          '<div class="post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
+          '<div class="post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-text-seemore">See more</span></div>',
+          '<span class="post-text-seeless">See less</span>',
           '<div class="post-row-member">',
             (avatarSrc ? '<img class="post-image-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
             '<span class="post-text-postedby">' + escapeHtml(postedMeta) + '</span>',
@@ -2676,7 +2677,15 @@ const PostModule = (function() {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
-    // Card click does not close post (removed per user request)
+    // Post header click closes the post (returns to post-card)
+    var postHeader = wrap.querySelector('.post-header');
+    if (postHeader) {
+      postHeader.addEventListener('click', function(e) {
+        // Don't close if clicking buttons inside the header
+        if (e.target.closest('button')) return;
+        closePost(post.id);
+      });
+    }
 
     // Favorite button on card:
     // IMPORTANT: do not bind a second handler to the card's fav button.
@@ -3281,6 +3290,17 @@ const PostModule = (function() {
           syncLocationWallpaper(nextExpanded);
         }
       });
+
+      // See less click handler (collapses the post)
+      var seeLessEl = wrap.querySelector('.post-text-seeless');
+      if (seeLessEl) {
+        seeLessEl.addEventListener('click', function(e) {
+          e.preventDefault();
+          wrap.classList.remove('post--expanded');
+          descEl.setAttribute('aria-expanded', 'false');
+          syncLocationWallpaper(false);
+        });
+      }
     }
 
     /* ........................................................................
