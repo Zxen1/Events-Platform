@@ -1745,17 +1745,19 @@ const MemberModule = (function() {
         var data = editingPostsData[postId];
         var container = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"]');
         var accordion = container ? container.querySelector('.member-mypost-edit-accordion') : null;
+        var editBtn = container ? container.querySelector('.member-mypost-button-edit') : null;
         
-        if (data && accordion) {
+        if (accordion) {
             // Close accordion and reset to original
             accordion.hidden = true;
             accordion.classList.add('member-mypost-edit-accordion--hidden');
             if (container) container.classList.remove('member-mypost-item--editing');
+            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
             expandedPostAccordions[postId] = false;
             
             // Clear data so it's re-loaded if opened again
             accordion.innerHTML = '';
-            delete editingPostsData[postId];
+            if (data) delete editingPostsData[postId];
         }
     }
 
@@ -3474,9 +3476,10 @@ const MemberModule = (function() {
 
         // Edit Button
         var editBtn = document.createElement('button');
-        editBtn.className = 'member-mypost-button-edit button-class-1';
+        editBtn.className = 'member-mypost-button-edit button-class-2';
         editBtn.title = 'Edit Post Content';
         editBtn.textContent = 'Edit';
+        editBtn.setAttribute('aria-selected', 'false');
         editBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -3485,9 +3488,10 @@ const MemberModule = (function() {
 
         // Manage Button
         var manageBtn = document.createElement('button');
-        manageBtn.className = 'member-mypost-button-manage button-class-1';
+        manageBtn.className = 'member-mypost-button-manage button-class-2';
         manageBtn.title = 'Manage Plan & Time';
         manageBtn.textContent = 'Manage';
+        manageBtn.setAttribute('aria-selected', 'false');
         manageBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -3519,14 +3523,20 @@ const MemberModule = (function() {
         var accordion = container.querySelector('.member-mypost-manage-accordion');
         if (!accordion) return;
 
-        // Close all other posts' accordions first
+        var editBtn = container.querySelector('.member-mypost-button-edit');
+        var manageBtn = container.querySelector('.member-mypost-button-manage');
+
+        // Close all other posts' accordions first and reset their button states
         document.querySelectorAll('.member-mypost-item').forEach(function(item) {
             if (item === container) return;
             var otherEdit = item.querySelector('.member-mypost-edit-accordion');
             var otherManage = item.querySelector('.member-mypost-manage-accordion');
+            var otherEditBtn = item.querySelector('.member-mypost-button-edit');
+            var otherManageBtn = item.querySelector('.member-mypost-button-manage');
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
+                if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
             }
@@ -3534,15 +3544,17 @@ const MemberModule = (function() {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
                 otherManage.dataset.expanded = 'false';
+                if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
             }
         });
 
-        // If edit accordion is open, close it
+        // If edit accordion is open, close it and reset edit button
         var editAcc = container.querySelector('.member-mypost-edit-accordion');
         if (editAcc && !editAcc.hidden) {
             editAcc.hidden = true;
             editAcc.classList.add('member-mypost-edit-accordion--hidden');
             expandedPostAccordions[postId] = false;
+            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
         }
 
         var isExpanded = accordion.dataset.expanded === 'true';
@@ -3551,6 +3563,7 @@ const MemberModule = (function() {
             accordion.hidden = true;
             accordion.classList.add('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'false';
+            if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
         } else {
             // Render placeholder management UI if empty
             if (accordion.innerHTML === '') {
@@ -3559,6 +3572,7 @@ const MemberModule = (function() {
             accordion.hidden = false;
             accordion.classList.remove('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'true';
+            if (manageBtn) manageBtn.setAttribute('aria-selected', 'true');
         }
     }
 
@@ -3589,15 +3603,21 @@ const MemberModule = (function() {
         var accordion = container.querySelector('.member-mypost-edit-accordion');
         if (!accordion) return;
 
-        // Close all other posts' accordions first
+        var editBtn = container.querySelector('.member-mypost-button-edit');
+        var manageBtn = container.querySelector('.member-mypost-button-manage');
+
+        // Close all other posts' accordions first and reset their button states
         document.querySelectorAll('.member-mypost-item').forEach(function(item) {
             if (item === container) return;
             var otherEdit = item.querySelector('.member-mypost-edit-accordion');
             var otherManage = item.querySelector('.member-mypost-manage-accordion');
+            var otherEditBtn = item.querySelector('.member-mypost-button-edit');
+            var otherManageBtn = item.querySelector('.member-mypost-button-manage');
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
                 item.classList.remove('member-mypost-item--editing');
+                if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
             }
@@ -3605,15 +3625,17 @@ const MemberModule = (function() {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
                 otherManage.dataset.expanded = 'false';
+                if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
             }
         });
 
-        // If manage accordion is open, close it
+        // If manage accordion is open, close it and reset manage button
         var manageAcc = container.querySelector('.member-mypost-manage-accordion');
         if (manageAcc && !manageAcc.hidden) {
             manageAcc.hidden = true;
             manageAcc.classList.add('member-mypost-manage-accordion--hidden');
             manageAcc.dataset.expanded = 'false';
+            if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
         }
 
         var isExpanded = expandedPostAccordions[postId];
@@ -3624,6 +3646,7 @@ const MemberModule = (function() {
             accordion.classList.add('member-mypost-edit-accordion--hidden');
             container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
+            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
         } else {
             // Expand
             // Check if we need to load data first
@@ -3632,6 +3655,7 @@ const MemberModule = (function() {
                 accordion.classList.remove('member-mypost-edit-accordion--hidden');
                 container.classList.add('member-mypost-item--editing');
                 expandedPostAccordions[postId] = true;
+                if (editBtn) editBtn.setAttribute('aria-selected', 'true');
             } else {
                 showStatus('Loading post data...', { success: true });
                 
@@ -3649,6 +3673,7 @@ const MemberModule = (function() {
                         accordion.classList.remove('member-mypost-edit-accordion--hidden');
                         container.classList.add('member-mypost-item--editing');
                         expandedPostAccordions[postId] = true;
+                        if (editBtn) editBtn.setAttribute('aria-selected', 'true');
                         showStatus('Post data loaded.', { success: true });
                     } else {
                         showStatus('Failed to load post data.', { error: true });
@@ -3745,26 +3770,76 @@ const MemberModule = (function() {
                 updateHeaderSaveDiscardState();
             });
 
-            // 4. Add "Save Changes" button at the bottom of the accordion
+            // 4. Add Save and Discard buttons at the bottom of the accordion
             var footer = document.createElement('div');
             footer.className = 'member-mypost-edit-footer';
             footer.style.marginTop = '20px';
             footer.style.display = 'flex';
             footer.style.justifyContent = 'flex-end';
+            footer.style.gap = '10px';
             
-            var saveBtn = document.createElement('button');
-            saveBtn.type = 'button';
-            saveBtn.className = 'member-mypost-edit-button-save button-class-1';
-            saveBtn.textContent = 'Save Changes';
-            saveBtn.addEventListener('click', function() {
-                saveAccordionPost(post.id).then(function() {
-                    showStatus('Changes saved successfully.', { success: true });
-                    updateHeaderSaveDiscardState();
-                }).catch(function(err) {
-                    showStatus('Failed to save changes: ' + err.message, { error: true });
+            // Discard button (red)
+            var discardBtn = document.createElement('button');
+            discardBtn.type = 'button';
+            discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
+            discardBtn.textContent = 'Discard';
+            discardBtn.addEventListener('click', function() {
+                var postContainer = container.closest('.member-mypost-item');
+                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                    // Fallback if ConfirmDialogComponent not available
+                    discardPostAccordionEdits(post.id);
+                    if (postContainer) {
+                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                    }
+                    return;
+                }
+                ConfirmDialogComponent.show({
+                    titleText: 'Discard Changes',
+                    messageText: 'Are you sure you want to discard your changes?',
+                    confirmLabel: 'Discard',
+                    cancelLabel: 'Cancel',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        discardPostAccordionEdits(post.id);
+                        if (postContainer) {
+                            var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                        }
+                        if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+                            ToastComponent.show('Changes discarded');
+                        }
+                    }
                 });
             });
             
+            // Save button (green)
+            var saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', function() {
+                var postContainer = container.closest('.member-mypost-item');
+                saveAccordionPost(post.id).then(function() {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        ToastComponent.showSuccess('Saved');
+                    }
+                    updateHeaderSaveDiscardState();
+                    // Close the accordion after successful save
+                    discardPostAccordionEdits(post.id);
+                    if (postContainer) {
+                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                    }
+                }).catch(function(err) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError('Failed to save: ' + err.message);
+                    }
+                });
+            });
+            
+            footer.appendChild(discardBtn);
             footer.appendChild(saveBtn);
             container.appendChild(footer);
         }

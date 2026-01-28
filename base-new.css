@@ -95,6 +95,19 @@
   --green-800: #166534;
   --green-900: #14532d;
   --green-950: #052e16;
+
+  /* Colors - Red (Tailwind scale) */
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+  --red-900: #7f1d1d;
+  --red-950: #450a0a;
   
   /* Colors - Neutrals */
   --website-gray: #888;
@@ -312,6 +325,24 @@
   cursor: not-allowed;
 }
 
+/* Button Class 2D: Always-active red variant of Button Class 2 */
+.button-class-2d {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: var(--red-950);
+  border: 1px solid var(--red-600);
+  color: var(--website-white);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.button-class-2d:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Button Class 3: (copy of Button Class 2) */
 .button-class-3 {
   height: 36px;
@@ -395,6 +426,10 @@
 
   .button-class-2c:hover {
     background: var(--green-600);
+  }
+
+  .button-class-2d:hover {
+    background: var(--red-600);
   }
 
   .button-class-3:hover {
