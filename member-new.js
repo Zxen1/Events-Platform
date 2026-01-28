@@ -3888,7 +3888,8 @@ const MemberModule = (function() {
                         var apiAgeRatings = mapCard.age_ratings || {};
                         var convertedPricingGroups = {};
                         
-                        console.log('[Member] ticket_pricing API data:', { pricing_groups: apiPricingGroups, age_ratings: apiAgeRatings });
+                        console.log('[Member] ticket_pricing API data - pricing_groups:', JSON.stringify(Object.keys(apiPricingGroups)));
+                        console.log('[Member] ticket_pricing API data - age_ratings:', JSON.stringify(apiAgeRatings));
                         
                         Object.keys(apiPricingGroups).forEach(function(groupKey) {
                             var ticketAreasObj = apiPricingGroups[groupKey];
