@@ -1625,6 +1625,7 @@
   display: flex;
   gap: 10px;
   margin-top: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 .member-mypost-edit-footer button {

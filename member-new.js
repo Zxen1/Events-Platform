@@ -1392,6 +1392,9 @@ const MemberModule = (function() {
         var data = editingPostsData[postId];
         if (!data) return false;
         
+        // Guard: if original_extracted_fields not set yet, can't be dirty
+        if (!data.original_extracted_fields) return false;
+        
         var accordion = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"] .member-mypost-edit-accordion');
         if (!accordion) return false;
 
@@ -3773,28 +3776,18 @@ const MemberModule = (function() {
                 editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
             });
 
-            // Attach change listener to mark global save state as dirty
-            container.addEventListener('input', function() {
-                updateHeaderSaveDiscardState();
-            });
-            container.addEventListener('change', function() {
-                updateHeaderSaveDiscardState();
-            });
-            // Also custom events from fieldsets
-            container.addEventListener('fieldset:sessions-change', function() {
-                updateHeaderSaveDiscardState();
-            });
-
             // 4. Add Save and Discard buttons at the bottom of the accordion
             var footer = document.createElement('div');
             footer.className = 'member-mypost-edit-footer';
             
-            // Save button (green) - left
+            // Save button (green) - left - starts disabled
             var saveBtn = document.createElement('button');
             saveBtn.type = 'button';
             saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
             saveBtn.textContent = 'Save';
+            saveBtn.disabled = true;
             saveBtn.addEventListener('click', function() {
+                if (saveBtn.disabled) return;
                 var postContainer = container.closest('.member-mypost-item');
                 saveAccordionPost(post.id).then(function() {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
@@ -3814,11 +3807,34 @@ const MemberModule = (function() {
                 });
             });
             
-            // Discard button (red) - right
+            // Discard button (red) - right - starts disabled
             var discardBtn = document.createElement('button');
             discardBtn.type = 'button';
             discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
             discardBtn.textContent = 'Discard';
+            discardBtn.disabled = true;
+            
+            // Function to update footer button states based on dirty check
+            function updateFooterButtonState() {
+                var isDirty = isPostDirty(post.id);
+                saveBtn.disabled = !isDirty;
+                discardBtn.disabled = !isDirty;
+            }
+
+            // Attach change listener to mark global save state as dirty and update footer buttons
+            container.addEventListener('input', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            container.addEventListener('change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            // Also custom events from fieldsets
+            container.addEventListener('fieldset:sessions-change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
             discardBtn.addEventListener('click', function() {
                 var postContainer = container.closest('.member-mypost-item');
                 if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
