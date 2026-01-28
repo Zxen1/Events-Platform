@@ -1579,8 +1579,8 @@
   padding: 0 10px 10px 10px;
 }
 
-.member-mypost-button-edit,
-.member-mypost-button-manage {
+.member-mypost-edit,
+.member-mypost-manage {
   flex: 1;
 }
 

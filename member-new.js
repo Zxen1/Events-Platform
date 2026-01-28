@@ -3474,7 +3474,7 @@ const MemberModule = (function() {
 
         // Edit Button
         var editBtn = document.createElement('button');
-        editBtn.className = 'member-mypost-button-edit button-class-1';
+        editBtn.className = 'member-mypost-edit button-class-2';
         editBtn.title = 'Edit Post Content';
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', function(e) {
@@ -3485,7 +3485,7 @@ const MemberModule = (function() {
 
         // Manage Button
         var manageBtn = document.createElement('button');
-        manageBtn.className = 'member-mypost-button-manage button-class-1';
+        manageBtn.className = 'member-mypost-manage button-class-2';
         manageBtn.title = 'Manage Plan & Time';
         manageBtn.textContent = 'Manage';
         manageBtn.addEventListener('click', function(e) {
