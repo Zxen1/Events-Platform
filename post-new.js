@@ -2814,58 +2814,6 @@ const PostModule = (function() {
 
     var descEl = wrap.querySelector('.post-description-text');
     if (descEl) {
-      // Get full description text from post object
-      var locationList = post.map_cards || [];
-      var loc0 = locationList[0] || {};
-      var fullText = loc0.description || '';
-      var needsTruncation = false;
-      
-      // Copy working pattern from live site (index.js)
-      var truncateToTwoLines = function() {
-        descEl.textContent = fullText;
-        var lineHeight = parseFloat(getComputedStyle(descEl).lineHeight) || 20;
-        var maxHeight = lineHeight * 2;
-        if (descEl.scrollHeight <= maxHeight) {
-          needsTruncation = false;
-          descEl.innerHTML = escapeHtml(fullText);
-          return;
-        }
-        needsTruncation = true;
-        var suffix = '... See more';
-        var text = fullText;
-        while (text.length > 0 && descEl.scrollHeight > maxHeight) {
-          text = text.slice(0, -10);
-          descEl.innerHTML = escapeHtml(text.trim()) + suffix.replace('See more', '<span class="post-description-seemore">See more</span>');
-        }
-      };
-      
-      var render = function(expanded) {
-        if (expanded) {
-          descEl.innerHTML = escapeHtml(fullText);
-        } else {
-          truncateToTwoLines();
-        }
-      };
-      
-      // Initial render (collapsed) - only if there's text
-      if (fullText) {
-        // Remove initial "See more" from HTML, we'll add it via truncation
-        var initialSeeMore = descEl.querySelector('.post-description-seemore');
-        if (initialSeeMore) {
-          initialSeeMore.remove();
-        }
-        render(false);
-        if (needsTruncation) {
-          descEl.style.cursor = 'pointer';
-        }
-      } else {
-        // No description - remove "See more" if it exists
-        var seeMoreSpan = descEl.querySelector('.post-description-seemore');
-        if (seeMoreSpan) {
-          seeMoreSpan.remove();
-        }
-      }
-      
       function syncLocationWallpaper(isExpandedNow) {
         // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
@@ -2898,12 +2846,12 @@ const PostModule = (function() {
       descEl.addEventListener('click', function(e) {
         var isExpanded = wrap.classList.contains('post--expanded');
         if (isExpanded) {
+          // Already expanded - just refresh wallpaper in case it was frozen by click-away
+          syncLocationWallpaper(true);
           return;
         }
-        if (!needsTruncation) return;
         e.preventDefault();
         wrap.classList.add('post--expanded');
-        render(true);
         descEl.setAttribute('aria-expanded', 'true');
         syncLocationWallpaper(true);
       });
@@ -2913,10 +2861,8 @@ const PostModule = (function() {
         if (e.key === 'Enter' || e.key === ' ') {
           var isExpanded = wrap.classList.contains('post--expanded');
           if (isExpanded) return;
-          if (!needsTruncation) return;
           e.preventDefault();
           wrap.classList.add('post--expanded');
-          render(true);
           descEl.setAttribute('aria-expanded', 'true');
           syncLocationWallpaper(true);
         }
@@ -2927,9 +2873,7 @@ const PostModule = (function() {
       if (seeLessEl) {
         seeLessEl.addEventListener('click', function(e) {
           e.preventDefault();
-          e.stopPropagation();
           wrap.classList.remove('post--expanded');
-          render(false);
           descEl.setAttribute('aria-expanded', 'false');
           syncLocationWallpaper(false);
         });
