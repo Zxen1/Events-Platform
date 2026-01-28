@@ -1105,14 +1105,17 @@
 
 /* See more link - appears at end of truncated description */
 .post-description-seemore {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-left: 40px;
+  background: linear-gradient(to right, transparent, var(--panel-bg) 20px);
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  transition: color 0.2s ease;
 }
 
 .post-description-seemore:hover {
   color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
 /* Hide See more when expanded */
