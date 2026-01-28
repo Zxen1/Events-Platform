@@ -3016,7 +3016,7 @@
 
 .component-locationwallpaper-mapmount {
     position: absolute;
-    top: -1050px;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 600px;
@@ -3029,7 +3029,7 @@
 
 .component-locationwallpaper-image {
     position: absolute;
-    top: -1050px;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 600px;
@@ -3074,7 +3074,7 @@
 
 .component-locationwallpaper-basic-image {
     position: absolute;
-    top: -1050px;
+    top: 0;
     left: 0;
     width: 600px;
     height: 2500px;
