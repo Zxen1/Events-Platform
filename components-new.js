@@ -8548,7 +8548,7 @@ const LocationWallpaperComponent = (function() {
             if (!mapMount || !st.map) return;
             if (!orbitOriginalHeight) orbitOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var mapCenter = 300; // 300px below header
+            var mapCenter = 400; // 400px below header
             var threshold = mapCenter + (ORBIT_HEIGHT / 2);
 
             if (containerHeight > ORBIT_HEIGHT) {
@@ -8642,7 +8642,7 @@ const LocationWallpaperComponent = (function() {
         function positionStillImage() {
             if (!stillOriginalHeight) stillOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var imageCenter = 300; // 300px below header
+            var imageCenter = 400; // 400px below header
             var threshold = imageCenter + (STILL_HEIGHT / 2);
 
             if (containerHeight > STILL_HEIGHT) {
@@ -8743,7 +8743,7 @@ const LocationWallpaperComponent = (function() {
             if (!basicContainer || !basicImgs.length) return;
             if (!basicOriginalHeight) basicOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var imageCenter = 300; // 300px below header
+            var imageCenter = 400; // 400px below header
             var threshold = imageCenter + (BASIC_HEIGHT / 2);
 
             var top, bottom, height;
