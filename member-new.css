@@ -1548,6 +1548,16 @@
   border-bottom: none;
 }
 
+/* When editing, make the post card sticky so user knows what they're editing */
+.member-mypost-item--editing .post-card {
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky, 10);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 /* Post card inside My Posts - identical to post panel */
 .member-mypost-item .post-card {
   margin: 0;
@@ -1578,10 +1588,10 @@
 .member-mypost-edit-accordion,
 .member-mypost-manage-accordion {
   margin-top: 0;
-  padding: 10px 10px 0; /* Visible containers use padding: 10px 10px 0 */
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  padding: 0; /* No container padding - fields laid out like Create Post page */
+  background: transparent; /* No container background */
+  border: none; /* No border - matches Create Post layout */
+  border-radius: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
@@ -1591,7 +1601,6 @@
   max-height: 0;
   opacity: 0;
   padding: 0;
-  border: 0;
   margin: 0;
 }
 

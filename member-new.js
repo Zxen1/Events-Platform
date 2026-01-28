@@ -1750,6 +1750,7 @@ const MemberModule = (function() {
             // Close accordion and reset to original
             accordion.hidden = true;
             accordion.classList.add('member-mypost-edit-accordion--hidden');
+            if (container) container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
             
             // Clear data so it's re-loaded if opened again
@@ -3596,6 +3597,7 @@ const MemberModule = (function() {
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
+                item.classList.remove('member-mypost-item--editing');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
             }
@@ -3620,6 +3622,7 @@ const MemberModule = (function() {
             // Collapse
             accordion.hidden = true;
             accordion.classList.add('member-mypost-edit-accordion--hidden');
+            container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
         } else {
             // Expand
@@ -3627,6 +3630,7 @@ const MemberModule = (function() {
             if (editingPostsData[postId]) {
                 accordion.hidden = false;
                 accordion.classList.remove('member-mypost-edit-accordion--hidden');
+                container.classList.add('member-mypost-item--editing');
                 expandedPostAccordions[postId] = true;
             } else {
                 showStatus('Loading post data...', { success: true });
@@ -3643,6 +3647,7 @@ const MemberModule = (function() {
                         renderPostEditForm(post, accordion);
                         accordion.hidden = false;
                         accordion.classList.remove('member-mypost-edit-accordion--hidden');
+                        container.classList.add('member-mypost-item--editing');
                         expandedPostAccordions[postId] = true;
                         showStatus('Post data loaded.', { success: true });
                     } else {
@@ -3761,12 +3766,20 @@ const MemberModule = (function() {
     }
 
     function populateAccordionWithPostData(post, container) {
-        if (!post || !post.map_cards || post.map_cards.length === 0 || !container) return;
+        if (!post || !post.map_cards || post.map_cards.length === 0 || !container) {
+            console.warn('[Member] populateAccordion: Missing data', { post: !!post, map_cards: post && post.map_cards, container: !!container });
+            return;
+        }
+        
+        console.log('[Member] Populating post edit form with data:', post.map_cards[0]);
         
         // 1. Populate non-repeating fieldsets (title, description, etc.)
         // These are in .form-primary-container
         var primaryMapCard = post.map_cards[0];
         var primaryContainer = container.querySelector('.form-primary-container');
+        
+        console.log('[Member] Primary container found:', !!primaryContainer);
+        
         if (primaryContainer) {
             populateFieldsetsInContainer(primaryContainer, primaryMapCard);
         }
@@ -3775,6 +3788,7 @@ const MemberModule = (function() {
         post.map_cards.forEach(function(mapCard, idx) {
             var locationNum = idx + 1;
             var locContainer = container.querySelector('.member-location-container[data-location-number="' + locationNum + '"]');
+            console.log('[Member] Location container ' + locationNum + ' found:', !!locContainer);
             if (locContainer) {
                 var content = locContainer.querySelector('.member-location-container-content');
                 if (content) {
@@ -3790,6 +3804,8 @@ const MemberModule = (function() {
         // Find all fieldsets IN THIS CONTAINER only (not nested)
         var fieldsetEls = container.querySelectorAll('.fieldset[data-fieldset-key]');
         
+        console.log('[Member] Found ' + fieldsetEls.length + ' fieldsets in container');
+        
         fieldsetEls.forEach(function(fs) {
             // Ensure this fieldset belongs directly to this container (not a nested one)
             // But since our containers are usually shallow, querySelectorAll is mostly fine.
@@ -3799,6 +3815,8 @@ const MemberModule = (function() {
             var key = fs.dataset.fieldsetKey;
             var type = fs.dataset.fieldsetType || key;
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
+            
+            console.log('[Member] Processing fieldset:', { key: key, type: type, baseType: baseType, hasSetValue: typeof fs._setValue === 'function' });
             
             // If the fieldset has a custom _setValue, use it
             if (typeof fs._setValue === 'function') {
@@ -3842,6 +3860,13 @@ const MemberModule = (function() {
                     case 'coupon': val = mapCard.coupon_code; break;
                     case 'custom_text': val = mapCard.custom_text; break;
                     case 'custom_textarea': val = mapCard.custom_textarea; break;
+                    case 'custom_dropdown': val = mapCard.custom_dropdown; break;
+                    case 'custom_checklist': 
+                        try {
+                            val = JSON.parse(mapCard.custom_checklist || '[]');
+                        } catch (e) { val = []; }
+                        break;
+                    case 'custom_radio': val = mapCard.custom_radio; break;
                     case 'age_rating': val = mapCard.age_rating; break;
                     
                     case 'session_pricing':
@@ -3886,10 +3911,22 @@ const MemberModule = (function() {
                             media_meta: mapCard.media_meta || []
                         };
                         break;
+                    
+                    default:
+                        // For unknown types, try to find value by key or baseType in mapCard
+                        if (mapCard.hasOwnProperty(key)) {
+                            val = mapCard[key];
+                        } else if (mapCard.hasOwnProperty(baseType)) {
+                            val = mapCard[baseType];
+                        }
+                        break;
                 }
                 
+                console.log('[Member] Setting value for ' + baseType + ':', val);
                 if (val !== null && val !== undefined) {
                     fs._setValue(val);
+                } else {
+                    console.warn('[Member] No value found for fieldset:', baseType);
                 }
             } else {
                 // Fallback for simple inputs if _setValue not present
