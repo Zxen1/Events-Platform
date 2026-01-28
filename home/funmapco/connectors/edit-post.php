@@ -445,12 +445,25 @@ if ($stmt) {
 
 // 2. Clear old sub-data for this post
 // IMPORTANT: We clear sub-data because we'll re-insert it from the updated payload.
-$mysqli->query("DELETE FROM post_ticket_pricing WHERE map_card_id IN (SELECT id FROM post_map_cards WHERE post_id = $postId)");
-$mysqli->query("DELETE FROM post_item_pricing WHERE map_card_id IN (SELECT id FROM post_map_cards WHERE post_id = $postId)");
-$mysqli->query("DELETE FROM post_sessions WHERE map_card_id IN (SELECT id FROM post_map_cards WHERE post_id = $postId)");
-$mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN (SELECT id FROM post_map_cards WHERE post_id = $postId)");
-// We DON'T delete map cards yet, we'll replace them or update them.
-// For simplicity and matching add-post.php, we delete and re-insert.
+// Fetch map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
+$oldMapCardIds = [];
+$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId");
+if ($mcResult) {
+  while ($mcRow = $mcResult->fetch_assoc()) {
+    $oldMapCardIds[] = (int)$mcRow['id'];
+  }
+  $mcResult->free();
+}
+
+if (!empty($oldMapCardIds)) {
+  $mcIdList = implode(',', $oldMapCardIds);
+  $mysqli->query("DELETE FROM post_ticket_pricing WHERE map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_item_pricing WHERE map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_sessions WHERE map_card_id IN ($mcIdList)");
+  // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
+  $mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN ($mcIdList)");
+}
+// Now delete the map cards themselves
 $mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
 
 // 3. Insert new data (logic identical to add-post.php)
