@@ -1532,19 +1532,33 @@
    MY POSTS EDIT ACCORDION
    ============================================================================ */
 
-/* My Posts item - matches post panel layout */
+/* My Posts tab - remove panel body padding */
+#member-tab-myposts {
+  margin: -12px -10px 0 -10px; /* Remove panel body's 12px top, 10px left/right padding */
+  width: calc(100% + 20px); /* Compensate for negative margins */
+}
+
+/* My Posts item - identical to post panel */
 .member-mypost-item {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Post card inside My Posts - same layout as post panel */
+.member-mypost-item:last-child {
+  border-bottom: none;
+}
+
+/* Post card inside My Posts - identical to post panel */
 .member-mypost-item .post-card {
   margin: 0;
   border: none;
   box-shadow: none;
   border-radius: 0;
   background-color: transparent;
-  padding: 10px; /* 10px on each side */
+}
+
+/* Hover state - identical to post panel */
+.member-mypost-item .post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 /* Button row underneath the card */
