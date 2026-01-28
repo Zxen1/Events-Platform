@@ -1310,6 +1310,25 @@
   margin-bottom: 0;
 }
 
+/* Venue info - venue name (bold) + address */
+.post-info-venue {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+/* Session info - dates, price, features */
+.post-info-session {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+.post-info-session:last-child,
+.post-info-venue:last-child {
+  margin-bottom: 0;
+}
+
 /* Subcategory icon wrapper */
 .post-info-icon {
   display: inline-flex;

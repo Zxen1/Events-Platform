@@ -2532,21 +2532,14 @@ const PostModule = (function() {
           infoIconHtml,
           '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
-        // Location row (updates when venue selected)
-        '<div class="post-info-row post-info-row-loc">',
-          '<span class="post-info-badge" title="Venue">📍</span>',
-          '<span id="venue-info-' + post.id + '" class="post-info-text">' + escapeHtml(locationDisplay) + '</span>',
+        // Venue info row (updates when venue selected)
+        '<div id="venue-info-' + post.id + '" class="post-info-venue">',
+          '<strong>' + escapeHtml(venueName) + '</strong><br>' + escapeHtml(addressLine),
         '</div>',
-        // Date row (updates when session selected)
-        datesText ? '<div class="post-info-row post-info-row-date">' +
-          '<span class="post-info-badge" title="Dates">📅</span>' +
-          '<span id="session-info-' + post.id + '" class="post-info-text">' + escapeHtml(datesText) + '</span>' +
-        '</div>' : '',
-        // Price row (updates when item selected)
-        priceParts.text ? '<div class="post-info-row post-info-row-price">' +
-          '<span class="post-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
-          '<span id="price-info-' + post.id + '" class="post-info-text">' + escapeHtml(priceParts.text) + '</span>' +
-        '</div>' : '',
+        // Session info row (updates when session selected)
+        '<div id="session-info-' + post.id + '" class="post-info-session">',
+          '<div>' + escapeHtml(defaultInfo) + '</div>',
+        '</div>',
       '</div>',
       '<div class="post-description-container">',
         '<div class="post-description-text" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-description-seemore">See more</span></div>',
@@ -2834,7 +2827,7 @@ const PostModule = (function() {
     var sessionOptsContainer = wrap.querySelector('.post-container-sessionopts');
     var calendarContainer = wrap.querySelector('.post-calendar');
     var calendarScroll = wrap.querySelector('.post-scroll-calendar');
-    var sessionInfo = wrap.querySelector('.post-text-sessioninfo');
+    var sessionInfo = wrap.querySelector('#session-info-' + post.id);
     var sessionCloseTimer = null;
     var selectedSessionIndex = null;
     var sessionData = [];
@@ -3215,16 +3208,21 @@ const PostModule = (function() {
 
     // Venue option clicks
     var venueOptions = wrap.querySelectorAll('.post-container-venueopts button');
+    var venueInfoEl = wrap.querySelector('#venue-info-' + post.id);
     venueOptions.forEach(function(optBtn) {
       optBtn.addEventListener('click', function() {
         var index = parseInt(optBtn.dataset.index, 10);
         var loc = post.map_cards && post.map_cards[index];
         if (loc) {
-          // Update venue display
+          // Update venue nav button display
           var venueNameEl = venueBtn.querySelector('.post-text-venuename');
           var addressEl = venueBtn.querySelector('.post-text-address');
           if (venueNameEl) venueNameEl.textContent = loc.venue_name || '';
           if (addressEl) addressEl.textContent = loc.address_line || '';
+          // Update venue info in info container (like live site)
+          if (venueInfoEl) {
+            venueInfoEl.innerHTML = '<strong>' + escapeHtml(loc.venue_name || '') + '</strong><br>' + escapeHtml(loc.address_line || '');
+          }
           // Close dropdown
           venueBtn.setAttribute('aria-expanded', 'false');
           venueDropdown.hidden = true;
