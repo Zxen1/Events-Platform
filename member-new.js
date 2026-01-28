@@ -3517,6 +3517,15 @@ const MemberModule = (function() {
         return container;
     }
 
+    // Set CSS variable for sticky button positioning based on post card height
+    function setStickyButtonTop(container) {
+        var postCard = container.querySelector('.post-card');
+        if (postCard) {
+            var cardHeight = postCard.offsetHeight;
+            container.style.setProperty('--member-mypost-card-height', cardHeight + 'px');
+        }
+    }
+
     function togglePostManage(postId, container) {
         if (!postId || !container) return;
         
@@ -3577,6 +3586,7 @@ const MemberModule = (function() {
             accordion.classList.remove('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'true';
             container.classList.add('member-mypost-item--managing');
+            setStickyButtonTop(container);
             if (manageBtn) manageBtn.classList.add('button--selected');
         }
     }
@@ -3661,6 +3671,7 @@ const MemberModule = (function() {
                 accordion.hidden = false;
                 accordion.classList.remove('member-mypost-edit-accordion--hidden');
                 container.classList.add('member-mypost-item--editing');
+                setStickyButtonTop(container);
                 expandedPostAccordions[postId] = true;
                 if (editBtn) editBtn.classList.add('button--selected');
             } else {
@@ -3679,6 +3690,7 @@ const MemberModule = (function() {
                         accordion.hidden = false;
                         accordion.classList.remove('member-mypost-edit-accordion--hidden');
                         container.classList.add('member-mypost-item--editing');
+                        setStickyButtonTop(container);
                         expandedPostAccordions[postId] = true;
                         if (editBtn) editBtn.classList.add('button--selected');
                         showStatus('Post data loaded.', { success: true });
