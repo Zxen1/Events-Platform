@@ -3518,6 +3518,24 @@ const MemberModule = (function() {
         var accordion = container.querySelector('.member-mypost-manage-accordion');
         if (!accordion) return;
 
+        // Close all other posts' accordions first
+        document.querySelectorAll('.member-mypost-item').forEach(function(item) {
+            if (item === container) return;
+            var otherEdit = item.querySelector('.member-mypost-edit-accordion');
+            var otherManage = item.querySelector('.member-mypost-manage-accordion');
+            if (otherEdit && !otherEdit.hidden) {
+                otherEdit.hidden = true;
+                otherEdit.classList.add('member-mypost-edit-accordion--hidden');
+                var otherId = item.dataset.postId;
+                if (otherId) expandedPostAccordions[otherId] = false;
+            }
+            if (otherManage && !otherManage.hidden) {
+                otherManage.hidden = true;
+                otherManage.classList.add('member-mypost-manage-accordion--hidden');
+                otherManage.dataset.expanded = 'false';
+            }
+        });
+
         // If edit accordion is open, close it
         var editAcc = container.querySelector('.member-mypost-edit-accordion');
         if (editAcc && !editAcc.hidden) {
@@ -3569,6 +3587,24 @@ const MemberModule = (function() {
         
         var accordion = container.querySelector('.member-mypost-edit-accordion');
         if (!accordion) return;
+
+        // Close all other posts' accordions first
+        document.querySelectorAll('.member-mypost-item').forEach(function(item) {
+            if (item === container) return;
+            var otherEdit = item.querySelector('.member-mypost-edit-accordion');
+            var otherManage = item.querySelector('.member-mypost-manage-accordion');
+            if (otherEdit && !otherEdit.hidden) {
+                otherEdit.hidden = true;
+                otherEdit.classList.add('member-mypost-edit-accordion--hidden');
+                var otherId = item.dataset.postId;
+                if (otherId) expandedPostAccordions[otherId] = false;
+            }
+            if (otherManage && !otherManage.hidden) {
+                otherManage.hidden = true;
+                otherManage.classList.add('member-mypost-manage-accordion--hidden');
+                otherManage.dataset.expanded = 'false';
+            }
+        });
 
         // If manage accordion is open, close it
         var manageAcc = container.querySelector('.member-mypost-manage-accordion');
