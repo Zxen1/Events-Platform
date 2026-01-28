@@ -2524,41 +2524,39 @@ const PostModule = (function() {
           '<div class="post-container-sessionopts"></div>',
         '</div>',
       '</div>',
-      '<div class="post-details">',
-        '<div class="post-venueselect"></div>',
-        '<div class="post-sessionselect"></div>',
-        '<div class="post-info-container">',
-          // Subcategory row (static)
-          '<div class="post-info-row post-info-row-cat">',
-            infoIconHtml,
-            '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
-          '</div>',
-          // Location row (updates when venue selected)
-          '<div class="post-info-row post-info-row-loc">',
-            '<span class="post-info-badge" title="Venue">📍</span>',
-            '<span id="venue-info-' + post.id + '" class="post-info-text">' + escapeHtml(locationDisplay) + '</span>',
-          '</div>',
-          // Date row (updates when session selected)
-          datesText ? '<div class="post-info-row post-info-row-date">' +
-            '<span class="post-info-badge" title="Dates">📅</span>' +
-            '<span id="session-info-' + post.id + '" class="post-info-text">' + escapeHtml(datesText) + '</span>' +
-          '</div>' : '',
-          // Price row (updates when item selected)
-          priceParts.text ? '<div class="post-info-row post-info-row-price">' +
-            '<span class="post-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
-            '<span id="price-info-' + post.id + '" class="post-info-text">' + escapeHtml(priceParts.text) + '</span>' +
-          '</div>' : '',
+      '<div class="post-venueselect"></div>',
+      '<div class="post-sessionselect"></div>',
+      '<div class="post-info-container">',
+        // Subcategory row (static)
+        '<div class="post-info-row post-info-row-cat">',
+          infoIconHtml,
+          '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
-        '<div class="post-container-desc">',
-          '<div class="post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-text-seemore">See more</span></div>',
-          '<span class="post-text-seeless">See less</span>',
-          '<div class="post-row-member">',
-            (avatarSrc ? '<img class="post-image-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
-            '<span class="post-text-postedby">' + escapeHtml(postedMeta) + '</span>',
-          '</div>',
+        // Location row (updates when venue selected)
+        '<div class="post-info-row post-info-row-loc">',
+          '<span class="post-info-badge" title="Venue">📍</span>',
+          '<span id="venue-info-' + post.id + '" class="post-info-text">' + escapeHtml(locationDisplay) + '</span>',
+        '</div>',
+        // Date row (updates when session selected)
+        datesText ? '<div class="post-info-row post-info-row-date">' +
+          '<span class="post-info-badge" title="Dates">📅</span>' +
+          '<span id="session-info-' + post.id + '" class="post-info-text">' + escapeHtml(datesText) + '</span>' +
+        '</div>' : '',
+        // Price row (updates when item selected)
+        priceParts.text ? '<div class="post-info-row post-info-row-price">' +
+          '<span class="post-info-badge" title="Price">' + infoPriceBadgeHtml + '</span>' +
+          '<span id="price-info-' + post.id + '" class="post-info-text">' + escapeHtml(priceParts.text) + '</span>' +
+        '</div>' : '',
+      '</div>',
+      '<div class="post-description-container">',
+        '<div class="post-description-text" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '<span class="post-description-seemore">See more</span></div>',
+        '<span class="post-description-seeless">See less</span>',
+        '<div class="post-description-member">',
+          (avatarSrc ? '<img class="post-description-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
+          '<span class="post-description-postedby">' + escapeHtml(postedMeta) + '</span>',
         '</div>',
       '</div>',
-      '<div class="post-images">',
+      '<div class="post-images-container">',
         '<div class="post-hero">',
           '<div class="post-track-hero">',
             '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
@@ -3239,7 +3237,7 @@ const PostModule = (function() {
        Click/keyboard to toggle post detail expansion
        ........................................................................ */
 
-    var descEl = wrap.querySelector('.post-text-desc');
+    var descEl = wrap.querySelector('.post-description-text');
     if (descEl) {
       function syncLocationWallpaper(isExpandedNow) {
         // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
@@ -3293,7 +3291,7 @@ const PostModule = (function() {
       });
 
       // See less click handler (collapses the post)
-      var seeLessEl = wrap.querySelector('.post-text-seeless');
+      var seeLessEl = wrap.querySelector('.post-description-seeless');
       if (seeLessEl) {
         seeLessEl.addEventListener('click', function(e) {
           e.preventDefault();
