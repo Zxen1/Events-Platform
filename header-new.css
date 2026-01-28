@@ -27,6 +27,13 @@
   }
 }
 
+/* Touch devices: prevent iOS Safari "stuck hover" highlights on header buttons */
+@media (hover: none) and (pointer: coarse) {
+  .header-bar .button-class-1:hover {
+    background: transparent;
+  }
+}
+
 /* Logo button */
 .header-logo-button {
   position: absolute;

@@ -445,6 +445,13 @@ const HeaderModule = (function() {
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         
         filterBtn.addEventListener('click', function() {
+            // Mobile exclusivity: opening a panel must close Post/Recent (mode) panels too.
+            if (window.innerWidth <= 530) {
+                try {
+                    if (currentMode && currentMode !== 'map') setMode('map');
+                } catch (_eMode) {}
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
@@ -513,6 +520,13 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         memberBtn.addEventListener('click', function() {
+            // Mobile exclusivity: opening a panel must close Post/Recent (mode) panels too.
+            if (window.innerWidth <= 530) {
+                try {
+                    if (currentMode && currentMode !== 'map') setMode('map');
+                } catch (_eMode) {}
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
@@ -559,6 +573,13 @@ const HeaderModule = (function() {
         
         // Click only opens panel (like live site) - close via panel's close button
         adminBtn.addEventListener('click', function() {
+            // Mobile exclusivity: opening a panel must close Post/Recent (mode) panels too.
+            if (window.innerWidth <= 530) {
+                try {
+                    if (currentMode && currentMode !== 'map') setMode('map');
+                } catch (_eMode) {}
+            }
+
             // Close other panels if on mobile
             if (window.innerWidth <= 530) {
                 try {
