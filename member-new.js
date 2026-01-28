@@ -3722,11 +3722,16 @@ const MemberModule = (function() {
                 setupHeaderRenaming: true
             });
             
-            // Populate data
-            populateAccordionWithPostData(post, container);
-            
-            // Store initial extracted fields for dirty checking
-            editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
+            // Populate data (ensure age rating data is loaded first for dropdowns to work)
+            var populatePromise = Promise.resolve();
+            if (window.AgeRatingComponent && typeof AgeRatingComponent.loadFromDatabase === 'function' && !AgeRatingComponent.isLoaded()) {
+                populatePromise = AgeRatingComponent.loadFromDatabase();
+            }
+            populatePromise.then(function() {
+                populateAccordionWithPostData(post, container);
+                // Store initial extracted fields for dirty checking (must happen after populate)
+                editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
+            });
 
             // Attach change listener to mark global save state as dirty
             container.addEventListener('input', function() {
