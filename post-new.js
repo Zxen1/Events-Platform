@@ -2814,6 +2814,84 @@ const PostModule = (function() {
 
     var descEl = wrap.querySelector('.post-description-text');
     if (descEl) {
+      // Truncate text to 2 lines and insert "See more" inline (only when collapsed)
+      (function() {
+        var fullText = description;
+        if (!fullText) return;
+        
+        // Wait for layout to calculate width properly
+        setTimeout(function() {
+          if (wrap.classList.contains('post--expanded')) return;
+          
+          // Create a temporary element to measure text height
+          var tempEl = document.createElement('div');
+          tempEl.style.visibility = 'hidden';
+          tempEl.style.position = 'absolute';
+          tempEl.style.width = descEl.offsetWidth + 'px';
+          tempEl.style.height = 'auto';
+          tempEl.style.whiteSpace = 'pre-line';
+          tempEl.style.fontSize = getComputedStyle(descEl).fontSize;
+          tempEl.style.lineHeight = getComputedStyle(descEl).lineHeight;
+          tempEl.style.fontFamily = getComputedStyle(descEl).fontFamily;
+          tempEl.style.padding = getComputedStyle(descEl).padding;
+          tempEl.style.margin = getComputedStyle(descEl).margin;
+          tempEl.innerHTML = escapeHtml(fullText);
+          descEl.parentNode.appendChild(tempEl);
+          
+          var computedLineHeight = getComputedStyle(descEl).lineHeight;
+          var lineHeight = parseFloat(computedLineHeight);
+          if (isNaN(lineHeight) || lineHeight <= 0) {
+            throw new Error('[Post] Invalid line-height computed style: ' + computedLineHeight);
+          }
+          var maxHeight = lineHeight * 2;
+          
+          // If text fits in 2 lines, remove "See more"
+          if (tempEl.scrollHeight <= maxHeight) {
+            descEl.innerHTML = escapeHtml(fullText);
+            tempEl.remove();
+            return;
+          }
+          
+          // Truncate text to fit 2 lines
+          var seeMoreText = ' <span class="post-description-seemore">See more</span>';
+          
+          // Binary search for the right truncation point
+          var low = 0;
+          var high = fullText.length;
+          var bestFit = '';
+          
+          while (low <= high) {
+            var mid = Math.floor((low + high) / 2);
+            var testText = fullText.substring(0, mid);
+            tempEl.innerHTML = escapeHtml(testText) + seeMoreText;
+            
+            if (tempEl.scrollHeight <= maxHeight) {
+              bestFit = testText;
+              low = mid + 1;
+            } else {
+              high = mid - 1;
+            }
+          }
+          
+          // Find a good break point (space or newline)
+          var truncated = bestFit;
+          if (bestFit.length < fullText.length) {
+            var breakPoint = bestFit.length;
+            // Look for a space or newline near the end
+            for (var i = breakPoint - 1; i >= Math.max(0, breakPoint - 20); i--) {
+              if (fullText[i] === ' ' || fullText[i] === '\n') {
+                breakPoint = i;
+                break;
+              }
+            }
+            truncated = fullText.substring(0, breakPoint);
+          }
+          
+          descEl.innerHTML = escapeHtml(truncated) + seeMoreText;
+          tempEl.remove();
+        }, 0);
+      })();
+      
       function syncLocationWallpaper(isExpandedNow) {
         // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
@@ -2844,6 +2922,13 @@ const PostModule = (function() {
       }
 
       descEl.addEventListener('click', function(e) {
+        // Check if "See more" was clicked
+        var seeMoreEl = descEl.querySelector('.post-description-seemore');
+        if (seeMoreEl && e.target === seeMoreEl) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
         var isExpanded = wrap.classList.contains('post--expanded');
         if (isExpanded) {
           // Already expanded - just refresh wallpaper in case it was frozen by click-away
@@ -2852,6 +2937,7 @@ const PostModule = (function() {
         }
         e.preventDefault();
         wrap.classList.add('post--expanded');
+        descEl.innerHTML = escapeHtml(description);
         descEl.setAttribute('aria-expanded', 'true');
         syncLocationWallpaper(true);
       });
