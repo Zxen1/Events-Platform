@@ -1754,10 +1754,6 @@ const MemberModule = (function() {
                 container.classList.remove('member-mypost-item--editing');
                 var editBtn = container.querySelector('.member-mypost-edit');
                 if (editBtn) editBtn.classList.remove('button--selected');
-                // Detach scroll listener if neither editing nor managing
-                if (!container.classList.contains('member-mypost-item--managing')) {
-                    detachStickyScrollListener(container);
-                }
             }
             expandedPostAccordions[postId] = false;
             
@@ -3475,18 +3471,6 @@ const MemberModule = (function() {
         }
 
         container.appendChild(cardEl);
-        
-        // Override card click to open post inline (not in Post Panel)
-        // This allows Edit/Manage buttons to remain visible below the open post
-        cardEl.addEventListener('click', function(e) {
-            // Don't intercept favorite button clicks
-            if (e.target.closest('.post-card-button-fav')) return;
-            
-            e.preventDefault();
-            e.stopPropagation();
-            
-            toggleMyPostOpen(post, container);
-        });
 
         // Create button row underneath the card
         var buttonRow = document.createElement('div');
@@ -3533,163 +3517,12 @@ const MemberModule = (function() {
         return container;
     }
 
-    // Set CSS variable for sticky button positioning based on sticky element above
-    // Works with either post-card (when card is showing) or post-header (when post is open)
-    // If the sticky element has scrolled off, buttons stick to top: 0 (no gap)
+    // Set CSS variable for sticky button positioning based on post card height
     function setStickyButtonTop(container) {
-        // Check for open post header first, then fall back to post card
-        var postHeader = container.querySelector('.post-header');
-        var postCard = container.querySelector('.post-card:not([hidden])');
-        var stickyEl = postHeader || postCard;
-        
-        if (stickyEl) {
-            var stickyHeight = stickyEl.offsetHeight;
-            container.style.setProperty('--member-mypost-sticky-height', stickyHeight + 'px');
-        } else {
-            // No sticky element visible, buttons stick to top
-            container.style.setProperty('--member-mypost-sticky-height', '0px');
-        }
-    }
-    
-    // Update button sticky position on scroll - if card/header scrolled off, buttons go to top: 0
-    function updateStickyButtonOnScroll(container) {
-        var postHeader = container.querySelector('.post-header');
-        var postCard = container.querySelector('.post-card:not([hidden])');
-        var stickyEl = postHeader || postCard;
-        
-        if (!stickyEl) {
-            container.style.setProperty('--member-mypost-sticky-height', '0px');
-            return;
-        }
-        
-        // Get the scroll container (member panel body)
-        var scrollContainer = container.closest('.member-panel-body') || container.closest('.member-tab-contents');
-        if (!scrollContainer) return;
-        
-        var stickyRect = stickyEl.getBoundingClientRect();
-        var containerRect = scrollContainer.getBoundingClientRect();
-        
-        // Check if sticky element is still at the top (visible in sticky position)
-        // If the bottom of the sticky element is above or at the scroll container top, it's scrolled off
-        if (stickyRect.bottom <= containerRect.top) {
-            // Sticky element has scrolled off - buttons stick to top
-            container.style.setProperty('--member-mypost-sticky-height', '0px');
-        } else {
-            // Sticky element is visible - buttons stick below it
-            container.style.setProperty('--member-mypost-sticky-height', stickyEl.offsetHeight + 'px');
-        }
-    }
-    
-    // Attach scroll listener for a container when Edit/Manage is active
-    function attachStickyScrollListener(container) {
-        if (container._stickyScrollListener) return; // Already attached
-        
-        var scrollContainer = container.closest('.member-panel-body') || container.closest('.member-tab-contents');
-        if (!scrollContainer) return;
-        
-        container._stickyScrollListener = function() {
-            if (container.classList.contains('member-mypost-item--editing') ||
-                container.classList.contains('member-mypost-item--managing')) {
-                updateStickyButtonOnScroll(container);
-            }
-        };
-        
-        scrollContainer.addEventListener('scroll', container._stickyScrollListener, { passive: true });
-    }
-    
-    // Detach scroll listener when no longer needed
-    function detachStickyScrollListener(container) {
-        if (!container._stickyScrollListener) return;
-        
-        var scrollContainer = container.closest('.member-panel-body') || container.closest('.member-tab-contents');
-        if (scrollContainer) {
-            scrollContainer.removeEventListener('scroll', container._stickyScrollListener);
-        }
-        delete container._stickyScrollListener;
-    }
-    
-    // Toggle post open/closed inline within My Posts
-    // When open, shows the post detail view with sticky header
-    // When closed, shows just the post card
-    function toggleMyPostOpen(post, container) {
-        if (!post || !container) return;
-        
-        var isOpen = container.classList.contains('member-mypost-item--post-open');
-        var cardEl = container.querySelector('.post-card');
-        var postEl = container.querySelector('.post');
-        var buttonRow = container.querySelector('.member-mypost-buttons');
-        
-        if (isOpen) {
-            // Close: remove post detail, show card
-            if (postEl) postEl.remove();
-            if (cardEl) cardEl.hidden = false;
-            container.classList.remove('member-mypost-item--post-open');
-        } else {
-            // Open: build post detail and insert before button row
-            if (window.PostModule && typeof PostModule.openPost === 'function') {
-                // Hide card
-                if (cardEl) cardEl.hidden = true;
-                
-                // Build a simplified post detail inline
-                // Use the existing buildPostDetail pattern but insert into this container
-                var postWrap = document.createElement('article');
-                postWrap.className = 'post';
-                postWrap.dataset.id = post.id;
-                
-                // Get post data
-                var loc0 = (post.map_cards && post.map_cards[0]) || {};
-                var title = loc0.title || post.checkout_title || 'Post';
-                var thumbUrl = (loc0.media_urls && loc0.media_urls[0]) || '';
-                if (thumbUrl && window.PostModule && typeof PostModule.addImageClass === 'function') {
-                    thumbUrl = PostModule.addImageClass(thumbUrl, 'minithumb');
-                }
-                
-                // Build header
-                var postHeader = document.createElement('div');
-                postHeader.className = 'post-header';
-                var thumbHtml = thumbUrl
-                    ? '<img class="post-header-image-minithumb" loading="lazy" src="' + thumbUrl + '" alt="" />'
-                    : '<div class="post-header-image-minithumb post-header-image-minithumb--empty"></div>';
-                postHeader.innerHTML = [
-                    thumbHtml,
-                    '<div class="post-header-meta">',
-                        '<div class="post-header-text-title">' + escapeHtml(title) + '</div>',
-                    '</div>',
-                    '<div class="post-header-actions"></div>'
-                ].join('');
-                
-                // Click header to close
-                postHeader.addEventListener('click', function() {
-                    toggleMyPostOpen(post, container);
-                });
-                
-                // Build body (simplified - just description for now)
-                var postBody = document.createElement('div');
-                postBody.className = 'post-body';
-                var description = loc0.description || '';
-                postBody.innerHTML = '<div class="post-description"><div class="post-description-text">' + escapeHtml(description) + '</div></div>';
-                
-                postWrap.appendChild(postHeader);
-                postWrap.appendChild(postBody);
-                
-                // Insert before button row
-                if (buttonRow) {
-                    container.insertBefore(postWrap, buttonRow);
-                } else {
-                    container.appendChild(postWrap);
-                }
-                
-                container.classList.add('member-mypost-item--post-open');
-            }
-        }
-        
-        // Update sticky positioning if Edit/Manage is active
-        if (container.classList.contains('member-mypost-item--editing') || 
-            container.classList.contains('member-mypost-item--managing')) {
-            // Small delay to let DOM update
-            setTimeout(function() {
-                setStickyButtonTop(container);
-            }, 10);
+        var postCard = container.querySelector('.post-card');
+        if (postCard) {
+            var cardHeight = postCard.offsetHeight;
+            container.style.setProperty('--member-mypost-card-height', cardHeight + 'px');
         }
     }
 
@@ -3734,7 +3567,6 @@ const MemberModule = (function() {
             container.classList.remove('member-mypost-item--editing');
             if (editBtn) editBtn.classList.remove('button--selected');
             expandedPostAccordions[postId] = false;
-            // Note: Don't detach here as we're about to open manage
         }
 
         var isExpanded = accordion.dataset.expanded === 'true';
@@ -3745,10 +3577,6 @@ const MemberModule = (function() {
             accordion.dataset.expanded = 'false';
             container.classList.remove('member-mypost-item--managing');
             if (manageBtn) manageBtn.classList.remove('button--selected');
-            // Detach scroll listener if neither editing nor managing
-            if (!container.classList.contains('member-mypost-item--editing')) {
-                detachStickyScrollListener(container);
-            }
         } else {
             // Render placeholder management UI if empty
             if (accordion.innerHTML === '') {
@@ -3759,7 +3587,6 @@ const MemberModule = (function() {
             accordion.dataset.expanded = 'true';
             container.classList.add('member-mypost-item--managing');
             setStickyButtonTop(container);
-            attachStickyScrollListener(container);
             if (manageBtn) manageBtn.classList.add('button--selected');
         }
     }
@@ -3826,7 +3653,6 @@ const MemberModule = (function() {
             manageAcc.dataset.expanded = 'false';
             container.classList.remove('member-mypost-item--managing');
             if (manageBtn) manageBtn.classList.remove('button--selected');
-            // Note: Don't detach here as we're about to open edit
         }
 
         var isExpanded = expandedPostAccordions[postId];
@@ -3838,10 +3664,6 @@ const MemberModule = (function() {
             container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
             if (editBtn) editBtn.classList.remove('button--selected');
-            // Detach scroll listener if neither editing nor managing
-            if (!container.classList.contains('member-mypost-item--managing')) {
-                detachStickyScrollListener(container);
-            }
         } else {
             // Expand
             // Check if we need to load data first
@@ -3850,7 +3672,6 @@ const MemberModule = (function() {
                 accordion.classList.remove('member-mypost-edit-accordion--hidden');
                 container.classList.add('member-mypost-item--editing');
                 setStickyButtonTop(container);
-                attachStickyScrollListener(container);
                 expandedPostAccordions[postId] = true;
                 if (editBtn) editBtn.classList.add('button--selected');
             } else {
@@ -3870,7 +3691,6 @@ const MemberModule = (function() {
                         accordion.classList.remove('member-mypost-edit-accordion--hidden');
                         container.classList.add('member-mypost-item--editing');
                         setStickyButtonTop(container);
-                        attachStickyScrollListener(container);
                         expandedPostAccordions[postId] = true;
                         if (editBtn) editBtn.classList.add('button--selected');
                         showStatus('Post data loaded.', { success: true });
