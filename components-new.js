@@ -8979,8 +8979,8 @@ const LocationWallpaperComponent = (function() {
             } else if (mode === 'still') {
                 startStillMode(lat, lng);
             } else if (mode === 'basic') {
-                // Resume if same location and already have images
-                if (!changed && basicContainer && basicImgs.length === 4 && st.basicCapturedLat === lat && st.basicCapturedLng === lng) {
+                // Resume if same location and already have container
+                if (!changed && basicContainer) {
                     resumeBasicMode();
                 } else {
                     startBasicMode(lat, lng);

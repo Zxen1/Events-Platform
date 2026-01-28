@@ -2844,9 +2844,12 @@ const PostModule = (function() {
       }
 
       descEl.addEventListener('click', function(e) {
-        // Only expand from collapsed state (allows text selection when expanded)
         var isExpanded = wrap.classList.contains('post--expanded');
-        if (isExpanded) return;
+        if (isExpanded) {
+          // Already expanded - just refresh wallpaper in case it was frozen by click-away
+          syncLocationWallpaper(true);
+          return;
+        }
         e.preventDefault();
         wrap.classList.add('post--expanded');
         descEl.setAttribute('aria-expanded', 'true');
