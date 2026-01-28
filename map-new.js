@@ -334,6 +334,7 @@ const MapModule = (function() {
   let pointerDownVenueKey = '';
   let pointerDownClientX = 0;
   let pointerDownClientY = 0;
+  let lastMapCardPointerType = '';
   // Keep hover clear effectively instant; avoids "sticky" hover feeling.
   const HOVER_CLEAR_DELAY_MS = 0;
   const CLICK_MOVE_THRESHOLD_PX = 6;
@@ -592,19 +593,31 @@ const MapModule = (function() {
         cursor: pointer;
         z-index: 1;
       }
-      .map-card-container:hover { z-index: 5; }
+      /* IMPORTANT: On touch devices, :hover causes "two tap" behavior.
+         Only include hover selectors on hover-capable devices. */
+      @media (hover: hover) and (pointer: fine) {
+        .map-card-container:hover { z-index: 5; }
+      }
       .map-card-container.is-active { z-index: 6; }
       
       /* Blue border for hover/active states */
-      .map-card-container:hover .map-card-pill,
       .map-card-container.is-active .map-card-pill {
         outline: 2px solid var(--blue-500);
         outline-offset: -2px;
         border-radius: 30px;
       }
+      @media (hover: hover) and (pointer: fine) {
+        .map-card-container:hover .map-card-pill {
+          outline: 2px solid var(--blue-500);
+          outline-offset: -2px;
+          border-radius: 30px;
+        }
+      }
       
-      .map-card-container:not(.is-active):hover .map-card-pill {
-        border-radius: 20px;
+      @media (hover: hover) and (pointer: fine) {
+        .map-card-container:not(.is-active):hover .map-card-pill {
+          border-radius: 20px;
+        }
       }
       
       /* Icon - center at lat/lng (0,0) */
@@ -674,10 +687,14 @@ const MapModule = (function() {
       body[data-map-card-display="hover_only"] .map-card-pill {
         display: none;
       }
-      body[data-map-card-display="hover_only"] .map-card-container:hover .map-card-pill,
       body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card-pill,
       body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card-pill {
         display: flex;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        body[data-map-card-display="hover_only"] .map-card-container:hover .map-card-pill {
+          display: flex;
+        }
       }
       
       /* Text styling - inherits global font from base-new.css */
@@ -2420,20 +2437,41 @@ const MapModule = (function() {
     const entry = findMarkerByVenueKey(venueKey);
     if (!entry) return;
     
-    // If map card is already active, close the post (toggle behavior)
+    // Touch devices: first tap activates (brings to surface), second tap opens the post.
+    // Desktop: single click opens (existing behavior), active click toggles close.
+    let isTouch = false;
+    try {
+      isTouch = (lastMapCardPointerType === 'touch') ||
+        (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+    } catch (_eTouch) { isTouch = false; }
+
+    if (isTouch) {
+      // First tap: activate only.
+      if (entry.state !== 'big') {
+        setActiveMapCard(entry.post && entry.post.id ? String(entry.post.id) : '', { venueKey: entry.venueKey });
+        stopSpin();
+        return;
+      }
+      // Second tap (already active): open.
+      stopSpin();
+      App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
+      return;
+    }
+
+    // Desktop behavior: If map card is already active, close the post (toggle behavior)
     if (entry.state === 'big') {
       if (window.PostModule && typeof PostModule.closePost === 'function') {
         PostModule.closePost(entry.post && entry.post.id ? entry.post.id : '');
       }
       return;
     }
-    
+
     // Set this specific marker to active (do not guess by postId)
     setActiveMapCard(entry.post && entry.post.id ? String(entry.post.id) : '', { venueKey: entry.venueKey });
-    
+
     // Stop spin
     stopSpin();
-    
+
     // Emit event for post module to open the post
     App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
   }
@@ -2523,6 +2561,7 @@ const MapModule = (function() {
     document.addEventListener('pointerdown', (e) => {
       const key = getVenueKeyFromTarget(e && e.target);
       if (!key) return;
+      try { lastMapCardPointerType = e && e.pointerType ? String(e.pointerType) : ''; } catch (_ePT) { lastMapCardPointerType = ''; }
       pointerDownActive = true;
       pointerDownVenueKey = key;
       pointerDownClientX = e.clientX || 0;

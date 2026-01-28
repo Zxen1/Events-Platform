@@ -174,8 +174,10 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-.header-modeswitch > .button-class-1[aria-disabled="true"]:hover {
-  background: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .header-modeswitch > .button-class-1[aria-disabled="true"]:hover {
+    background: transparent;
+  }
 }
 .header-modeswitch-button-icon {
   opacity: 0; /* Hidden until mask-image loaded via JS */
@@ -280,8 +282,10 @@
 .header-access-button-avatar--active {
   border-color: var(--blue-500);
 }
-.header-access-button-avatar--active:hover {
-  border-color: var(--blue-500);
+@media (hover: hover) and (pointer: fine) {
+  .header-access-button-avatar--active:hover {
+    border-color: var(--blue-500);
+  }
 }
 
 .header-access-button-avatar--hidden {

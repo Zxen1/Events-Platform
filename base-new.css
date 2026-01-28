@@ -238,10 +238,6 @@
   justify-content: center;
   box-sizing: border-box;
 }
-.button-class-1:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--website-white);
-}
 .button-class-1[aria-pressed="true"],
 .button-class-1[aria-expanded="true"],
 .button-class-1.button--active {
@@ -273,11 +269,6 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
-.button-class-2:hover {
-  background: #1c1c1c;
-  border-color: var(--blue-600);
-  color: var(--website-white);
-}
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
   background: var(--blue-950);
@@ -298,9 +289,6 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
-.button-class-2b:hover {
-  background: var(--blue-600);
-}
 .button-class-2b:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -318,9 +306,6 @@
   cursor: pointer;
   white-space: nowrap;
   box-sizing: border-box;
-}
-.button-class-2c:hover {
-  background: var(--green-600);
 }
 .button-class-2c:disabled {
   opacity: 0.5;
@@ -340,11 +325,6 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
-.button-class-3:hover {
-  background: #1c1c1c;
-  border-color: var(--blue-600);
-  color: var(--website-white);
-}
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
   background: var(--blue-950);
@@ -361,9 +341,6 @@
   cursor: pointer;
   outline: none;
 }
-.button-class-4:hover {
-  border-color: #555;
-}
 .button-class-4:focus {
   background: rgba(0, 0, 0, 0.45);
   border-color: var(--blue-500);
@@ -375,9 +352,6 @@
   border: 1px solid #333;
   border-radius: 5px;
   cursor: pointer;
-}
-.button-class-5:hover {
-  border-color: var(--blue-500);
 }
 .button-class-5.button--open {
   border-color: var(--blue-500);
@@ -401,8 +375,45 @@
   outline: none;
 }
 
-.input-class-1:hover {
-  border-color: #555;
+/* Hover styles MUST only exist on hover-capable devices.
+   On iOS Safari, the presence of :hover rules can trigger "two taps" behavior. */
+@media (hover: hover) and (pointer: fine) {
+  .button-class-1:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--website-white);
+  }
+
+  .button-class-2:hover {
+    background: #1c1c1c;
+    border-color: var(--blue-600);
+    color: var(--website-white);
+  }
+
+  .button-class-2b:hover {
+    background: var(--blue-600);
+  }
+
+  .button-class-2c:hover {
+    background: var(--green-600);
+  }
+
+  .button-class-3:hover {
+    background: #1c1c1c;
+    border-color: var(--blue-600);
+    color: var(--website-white);
+  }
+
+  .button-class-4:hover {
+    border-color: #555;
+  }
+
+  .button-class-5:hover {
+    border-color: var(--blue-500);
+  }
+
+  .input-class-1:hover {
+    border-color: #555;
+  }
 }
 
 .input-class-1:focus {
@@ -583,8 +594,10 @@
 }
 
 /* Hover border should match form inputs, but must NOT override open/focus/active blue border */
-.menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
-  border-color: var(--menu-border-hover);
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
+    border-color: var(--menu-border-hover);
+  }
 }
 
 .menu-class-1:focus-within .menu-button {
@@ -658,9 +671,13 @@
   box-shadow: var(--menu-shadow);
 }
 
-.menu-class-1 .menu-option:hover,
 .menu-class-1 .menu-option.menu-option--highlighted {
   background-color: var(--menu-hover);
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-1 .menu-option:hover {
+    background-color: var(--menu-hover);
+  }
 }
 
 /* ============================================================================
@@ -712,9 +729,13 @@
   color: var(--menu-text);
 }
 
-.menu-class-2 .menu-item:hover,
 .menu-class-2 .menu-item.menu-item--active {
   background-color: var(--menu-hover);
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-2 .menu-item:hover {
+    background-color: var(--menu-hover);
+  }
 }
 
 .menu-class-2 .menu-item-main {
@@ -776,8 +797,10 @@
 }
 
 /* Hover border should NOT override open/focus/active blue border */
-.menu-class-3:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
-  border-color: var(--menu-border-hover);
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-3:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
+    border-color: var(--menu-border-hover);
+  }
 }
 
 .menu-class-3 .menu-button--open {
@@ -833,9 +856,13 @@
   outline: none;
 }
 
-.menu-class-3 .menu-option:hover,
 .menu-class-3 .menu-option.menu-option--highlighted {
   background: var(--menu-hover);
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-3 .menu-option:hover {
+    background: var(--menu-hover);
+  }
 }
 
 .menu-class-3 .menu-option-text {
@@ -870,8 +897,10 @@ html, body, button, input, select, textarea {
   border-radius: 5px;
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.6);
+@media (hover: hover) and (pointer: fine) {
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.6);
+  }
 }
 
 *::-webkit-scrollbar-track {
