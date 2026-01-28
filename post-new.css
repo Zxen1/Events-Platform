@@ -720,6 +720,12 @@
    Same design, collapsed just shows less information
    ============================================================================ */
 
+/* Hide post-card/recent-card when inside .post (kept for restoration on close) */
+.post .post-card,
+.post .recent-card {
+  display: none;
+}
+
 /* Post header - always visible, 70px total height */
 .post-header {
   display: grid;
