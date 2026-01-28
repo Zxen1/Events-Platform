@@ -1575,7 +1575,8 @@
 .member-mypost-buttons {
   display: flex;
   gap: 10px;
-  padding: 0 10px 10px 10px;
+  padding: 0 10px;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 .member-mypost-button-edit,
@@ -1586,7 +1587,6 @@
 /* Accordions for Edit and Manage */
 .member-mypost-edit-accordion,
 .member-mypost-manage-accordion {
-  margin-top: 0;
   padding: 0; /* No container padding - fields laid out like Create Post page */
   background: transparent; /* No container background */
   border: none; /* No border - matches Create Post layout */
@@ -1624,7 +1624,7 @@
 .member-mypost-edit-footer {
   display: flex;
   gap: 10px;
-  margin-top: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  padding: 0 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
