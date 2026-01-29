@@ -7,6 +7,22 @@ set_exception_handler(function($e) {
   exit;
 });
 
+// Catch fatal errors so the response isn't blank
+register_shutdown_function(function() {
+  $err = error_get_last();
+  if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(500);
+    echo json_encode([
+      'success' => false,
+      'error' => $err['message'],
+      'file' => basename($err['file']),
+      'line' => $err['line']
+    ]);
+    exit;
+  }
+});
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(403);
