@@ -3126,6 +3126,38 @@ const MemberModule = (function() {
         return uniq;
     }
 
+    function getEditPostMissingList(accordion) {
+        var out = [];
+        if (!accordion) return out;
+
+        var fieldsets = accordion.querySelectorAll('.fieldset[data-complete="false"]');
+        for (var i = 0; i < fieldsets.length; i++) {
+            var fs = fieldsets[i];
+            if (!fs || !fs.dataset) continue;
+            var name = '';
+            var labelTextEl = fs.querySelector('.fieldset-label-text');
+            if (labelTextEl && labelTextEl.textContent) {
+                name = labelTextEl.textContent.trim();
+            } else if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
+                name = fs.dataset.fieldsetName.trim();
+            } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                name = fs.dataset.fieldsetKey.trim();
+            }
+            if (name) out.push(name);
+        }
+
+        var seen = {};
+        var uniq = [];
+        out.forEach(function(v) {
+            var k = String(v || '').trim();
+            if (!k) return;
+            if (seen[k]) return;
+            seen[k] = true;
+            uniq.push(k);
+        });
+        return uniq;
+    }
+
     function attachMissingPopoverToButton(btnEl, getItemsFn) {
         if (!btnEl) return;
         if (btnEl._missingPopoverAttached) return;
@@ -3209,6 +3241,19 @@ const MemberModule = (function() {
 
         // Component-owned validity: do not submit if ANY fieldset is incomplete (required or optional-but-invalid).
         var fieldsetEls = formFields.querySelectorAll('.fieldset[data-complete]');
+        for (var i = 0; i < fieldsetEls.length; i++) {
+            var fs = fieldsetEls[i];
+            if (!fs || !fs.dataset) continue;
+            if (String(fs.dataset.complete || '') !== 'true') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function isEditPostFormComplete(accordion) {
+        if (!accordion) return false;
+        var fieldsetEls = accordion.querySelectorAll('.fieldset[data-complete]');
         for (var i = 0; i < fieldsetEls.length; i++) {
             var fs = fieldsetEls[i];
             if (!fs || !fs.dataset) continue;
@@ -4066,10 +4111,14 @@ const MemberModule = (function() {
             discardBtn.textContent = 'Discard';
             discardBtn.disabled = true;
             
+            // Hover popover listing all missing items (no toasts; button stays truly disabled)
+            attachMissingPopoverToButton(saveBtn, function() { return getEditPostMissingList(container); });
+            
             // Function to update footer button states based on dirty check
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
-                saveBtn.disabled = !isDirty;
+                var isComplete = isEditPostFormComplete(container);
+                saveBtn.disabled = (!isDirty || !isComplete);
                 discardBtn.disabled = !isDirty;
             }
 
@@ -4121,6 +4170,8 @@ const MemberModule = (function() {
             footer.appendChild(saveBtn);
             footer.appendChild(discardBtn);
             container.appendChild(footer);
+            
+            updateFooterButtonState();
         }
     }
 
