@@ -2501,7 +2501,15 @@ const AdminModule = (function() {
             updateField('map.starting_lat', startingLat);
             updateField('map.starting_lng', startingLng);
             
-            showAddressDisplay();
+            // Update the display element
+            if (startingAddressDisplay) {
+                if (startingAddress) {
+                    startingAddressDisplay.textContent = startingAddress;
+                    startingAddressDisplay.hidden = false;
+                } else {
+                    startingAddressDisplay.hidden = true;
+                }
+            }
         };
         
         // Mapbox geocoder is created by `map-new.js` and emits `map:startingLocationChanged`.
@@ -2516,15 +2524,15 @@ const AdminModule = (function() {
             }
         }
         
-        // Set initial value in geocoder input from saved settings
-        if (startingAddress) {
-            var geocoderInput = startingGeocoderContainer.querySelector('input');
-            if (geocoderInput) {
-                geocoderInput.value = startingAddress;
+        // Show saved starting location in the display element (below label, above geocoder)
+        if (startingAddressDisplay) {
+            if (startingAddress) {
+                startingAddressDisplay.textContent = startingAddress;
+                startingAddressDisplay.hidden = false;
+            } else {
+                startingAddressDisplay.hidden = true;
             }
         }
-
-        showAddressDisplay();
     }
     
     function initMapImagePicker(containerId, settingKey) {

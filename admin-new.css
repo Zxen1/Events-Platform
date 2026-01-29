@@ -1025,23 +1025,12 @@
   display: none;
 }
 
-.admin-map-controls-starting-address-display {
-  width: 100%;
-  min-height: 36px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: #fff;
-  font-size: 14px;
-  line-height: 1.4;
-  cursor: pointer;
-  word-break: break-word;
-}
-
-.admin-map-controls-starting-address-display:hover {
-  background: rgba(0, 0, 0, 0.5);
-  border-color: rgba(255, 255, 255, 0.3);
+/* Starting location value display (below label, above geocoder) */
+.admin-starting-address-value {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .admin-map-controls-starting-geocoder--hidden {
