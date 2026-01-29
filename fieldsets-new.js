@@ -1667,7 +1667,7 @@ const FieldsetBuilder = (function(){
                             }
                         })
                         .catch(function(err) {
-                            // Silent fail - basket just won't show
+                            console.warn('[Fieldset] Failed to load basket media:', err);
                         });
                 }
                 
@@ -1713,6 +1713,14 @@ const FieldsetBuilder = (function(){
                         basketContainer = document.createElement('div');
                         basketContainer.className = 'fieldset-images-basket';
                         fieldset.appendChild(basketContainer);
+                        
+                        // Enable horizontal mousewheel scrolling
+                        basketContainer.addEventListener('wheel', function(e) {
+                            if (e.deltaY !== 0 && basketContainer.scrollWidth > basketContainer.clientWidth) {
+                                e.preventDefault();
+                                basketContainer.scrollLeft += e.deltaY;
+                            }
+                        }, { passive: false });
                     }
                     basketContainer.style.display = '';
                     basketContainer.innerHTML = '';

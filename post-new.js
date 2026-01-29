@@ -2791,6 +2791,17 @@ const PostModule = (function() {
       });
     });
     
+    // Enable horizontal mousewheel scrolling on thumbnail row
+    var thumbRow = wrap.querySelector('.post-thumbs');
+    if (thumbRow) {
+      thumbRow.addEventListener('wheel', function(e) {
+        if (e.deltaY !== 0 && thumbRow.scrollWidth > thumbRow.clientWidth) {
+          e.preventDefault();
+          thumbRow.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
+    
     // Hero image click opens lightbox
     if (heroContainer && galleryImages.length > 0) {
       heroContainer.classList.add('post-hero--clickable');

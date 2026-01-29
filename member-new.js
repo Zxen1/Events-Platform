@@ -3549,7 +3549,7 @@ const MemberModule = (function() {
                 }
             })
             .catch(function(err) {
-                // Silent fail - card just won't update
+                console.warn('[Member] Failed to refresh post card:', err);
             });
     }
 
