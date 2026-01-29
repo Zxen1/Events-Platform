@@ -1597,7 +1597,27 @@
 
 .member-mypost-item--editing,
 .member-mypost-item--managing {
-  box-shadow: inset 0 0 0 1px var(--blue-500);
+  position: relative;
+}
+
+.member-mypost-item--editing::after,
+.member-mypost-item--managing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* 3-sided frame: lid is owned by the sticky header so it doesn't scroll away */
+  border-left: 1px solid var(--blue-500);
+  border-right: 1px solid var(--blue-500);
+  border-bottom: 1px solid var(--blue-500);
+  border-top: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
+}
+
+.member-mypost-item--editing .post-card,
+.member-mypost-item--managing .post-card {
+  border-top: 1px solid var(--blue-500);
 }
 
 .member-mypost-edit-accordion--hidden,
