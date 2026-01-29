@@ -621,7 +621,14 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
-      $card['amenity_summary'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      // Save detailed amenities for the summary column
+      $summaryArr = [];
+      foreach ($val as $am) {
+        if (is_array($am) && isset($am['amenity']) && (string)($am['value'] ?? '') === '1') {
+          $summaryArr[] = $am['amenity'];
+        }
+      }
+      $card['amenity_summary'] = json_encode($summaryArr, JSON_UNESCAPED_UNICODE);
       $card['amenities_data'] = $val;
       continue;
     }

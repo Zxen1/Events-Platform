@@ -4205,9 +4205,26 @@ const MemberModule = (function() {
                         break;
                         
                     case 'amenities':
-                        try {
-                            val = JSON.parse(mapCard.amenity_summary || '[]');
-                        } catch (e) { val = []; }
+                        // Prefer detailed amenities array if available (from get-posts.php?full=1)
+                        if (Array.isArray(mapCard.amenities_detailed)) {
+                            val = mapCard.amenities_detailed;
+                        } else {
+                            // Fallback to amenity_summary (string or array of strings)
+                            try {
+                                var raw = mapCard.amenity_summary;
+                                if (typeof raw === 'string' && raw.trim() !== '') {
+                                    raw = JSON.parse(raw);
+                                }
+                                if (Array.isArray(raw)) {
+                                    // Convert ["Parking", "Wifi"] to [{amenity:"Parking", value:"1"}, ...]
+                                    val = raw.map(function(name) {
+                                        return { amenity: name, value: '1' };
+                                    });
+                                } else {
+                                    val = [];
+                                }
+                            } catch (e) { val = []; }
+                        }
                         break;
                         
                     case 'images':

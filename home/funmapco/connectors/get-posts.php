@@ -564,6 +564,7 @@ try {
     $pricingByCard = [];
     $ageRatingsByCard = [];
     $itemsByCard = [];
+    $amenitiesByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -576,6 +577,24 @@ try {
     if (!empty($allMapCardIds) && $full) {
         $cardIdsCsv = implode(',', $allMapCardIds);
         
+        // Amenities
+        $amRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv)");
+        if ($amRes) {
+            while ($amRow = $amRes->fetch_assoc()) {
+                $cid = (int)$amRow['map_card_id'];
+                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
+                
+                // Fetch the actual display name from the amenities table if possible, 
+                // but for now we use the key and the value. 
+                // The fieldset expects { amenity: "Display Name", value: "1" }
+                // We'll need to map the key back to the display name or ensure the frontend handles keys.
+                $amenitiesByCard[$cid][] = [
+                    'amenity' => $amRow['amenity_key'],
+                    'value' => (string)$amRow['value']
+                ];
+            }
+        }
+
         // Sessions
         $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
         if ($sessRes) {
@@ -684,6 +703,11 @@ try {
                     $mapCard['item_price'] = $item['item_price'];
                     $mapCard['currency'] = $item['currency'];
                     $mapCard['item_variants'] = $item['item_variants'];
+                }
+
+                // Attach Detailed Amenities
+                if (isset($amenitiesByCard[$cid])) {
+                    $mapCard['amenities_detailed'] = $amenitiesByCard[$cid];
                 }
             }
         }
