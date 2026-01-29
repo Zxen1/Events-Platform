@@ -3700,24 +3700,7 @@ const MemberModule = (function() {
     }
 
     function renderPostManagePlaceholder(postId, container) {
-        container.innerHTML = [
-            '<div class="member-mypost-manage-content">',
-                '<div class="member-mypost-manage-section">',
-                    '<div class="member-panel-label">Extend Listing Time</div>',
-                    '<div class="member-mypost-manage-row">',
-                        '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
-                        '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
-                    '</div>',
-                '</div>',
-                '<div class="member-mypost-manage-section" style="margin-top:15px">',
-                    '<div class="member-panel-label">Change Plan</div>',
-                    '<div class="member-mypost-manage-row">',
-                        '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
-                        '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
-                    '</div>',
-                '</div>',
-            '</div>'
-        ].join('');
+        container.innerHTML = '<div class="member-mypost-manage-container"></div>';
     }
 
     function togglePostEdit(postId, container) {
