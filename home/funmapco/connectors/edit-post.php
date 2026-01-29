@@ -53,7 +53,6 @@ foreach ($configCandidates as $candidate) {
     $configPath = $candidate;
     break;
   }
-}
 
 if ($configPath === null) {
   throw new RuntimeException('Database configuration file is missing.');
