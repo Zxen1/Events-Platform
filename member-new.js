@@ -4067,6 +4067,8 @@ const MemberModule = (function() {
 
         // 3. Build form structure using shared FormBuilder
         if (window.FormbuilderModule && typeof FormbuilderModule.organizeFieldsIntoLocationContainers === 'function') {
+            var editLocationTypeName = 'Venue';
+            var editVenue1Name = 'Venue 1';
             var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
                 fields: fields,
                 container: container,
@@ -4081,11 +4083,54 @@ const MemberModule = (function() {
                     });
                 },
                 initialQuantity: (post.map_cards && post.map_cards.length) || 1,
+                onQuantityChange: function(quantity) {
+                    var qtyDisplay = container.querySelector('.member-postform-location-quantity-display');
+                    if (qtyDisplay) qtyDisplay.textContent = quantity;
+                },
                 getMessage: function(key, params, fallback) {
                     return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
                 },
-                setupHeaderRenaming: true
+                setupHeaderRenaming: true,
+                onDelete: function(containerEl, locationNumber) {
+                    var headerTextEl = containerEl.querySelector('.member-postform-location-header-text');
+                    var venueName = headerTextEl && headerTextEl.textContent ? headerTextEl.textContent.trim() : '';
+                    if (!venueName) venueName = editVenue1Name;
+                    var deletedNum = parseInt(containerEl.dataset.locationNumber || '0', 10);
+                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete ' + venueName,
+                            messageText: 'This cannot be undone.',
+                            confirmLabel: 'Delete',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                containerEl.remove();
+                                if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
+                                    FormbuilderModule.updateVenueDeleteButtons();
+                                }
+                                if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
+                                    FormbuilderModule.renumberLocationContainers();
+                                }
+                                var qtyDisplay = container.querySelector('.member-postform-location-quantity-display');
+                                if (qtyDisplay) {
+                                    var count = container.querySelectorAll('.member-location-container[data-location-number]').length;
+                                    qtyDisplay.textContent = count;
+                                }
+                                if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
+                                    FormbuilderModule.focusLocationContainerAfterDelete(deletedNum);
+                                }
+                            }
+                        });
+                    }
+                }
             });
+            
+            if (locationData && locationData.locationFieldsetType) {
+                editLocationTypeName = locationData.locationFieldsetType.charAt(0).toUpperCase() + locationData.locationFieldsetType.slice(1);
+                editVenue1Name = editLocationTypeName + ' 1';
+            }
             
             // Populate data (ensure age rating data is loaded first for dropdowns to work)
             var populatePromise = Promise.resolve();
