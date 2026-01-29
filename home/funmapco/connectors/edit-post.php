@@ -1,6 +1,8 @@
 <?php
 // Debug: show actual PHP errors in response
 set_exception_handler(function($e) {
+  $logPath = __DIR__ . '/edit-post-debug.log';
+  @file_put_contents($logPath, '[' . date('c') . '] exception: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(500);
   echo json_encode(['success' => false, 'error' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
@@ -11,6 +13,9 @@ set_exception_handler(function($e) {
 register_shutdown_function(function() {
   $err = error_get_last();
   if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+    $logPath = __DIR__ . '/edit-post-debug.log';
+    $msg = '[' . date('c') . '] fatal: ' . ($err['message'] ?? '') . ' in ' . basename($err['file'] ?? '') . ':' . ($err['line'] ?? 0);
+    @file_put_contents($logPath, $msg . PHP_EOL, FILE_APPEND);
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(500);
     echo json_encode([
@@ -128,6 +133,12 @@ function fail_key(int $code, string $messageKey, array $placeholders = null, arr
   exit;
 }
 
+function debug_log(string $message): void
+{
+  $logPath = __DIR__ . '/edit-post-debug.log';
+  @file_put_contents($logPath, '[' . date('c') . '] ' . $message . PHP_EOL, FILE_APPEND);
+}
+
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   fail_key(500, 'msg_post_edit_error');
 }
@@ -138,6 +149,7 @@ function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$tra
     $mysqli->rollback();
     $transactionActive = false;
   }
+  debug_log('abort: ' . $message . ' | errno=' . ($mysqli->errno ?? 0) . ' | error=' . ($mysqli->error ?? ''));
   $dbg = [
     'stage' => $message,
     'db_error' => $mysqli->error ?? '',
@@ -319,6 +331,7 @@ $memberType = isset($data['member_type']) ? trim((string)$data['member_type']) :
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
+debug_log('start: post_id=' . $postId . ' member_id=' . $memberId . ' loc_qty=' . $locQty);
 
 // Security: Verify post exists and member has permission to edit
 $isAdmin = strtolower($memberType) === 'admin';
@@ -348,6 +361,7 @@ if (!$mysqli->begin_transaction()) {
   fail_key(500, 'msg_post_edit_error');
 }
 $transactionActive = true;
+debug_log('transaction started');
 
 // 1. Update primary post entry
 $fieldsArr = $data['fields'] ?? [];
@@ -479,6 +493,9 @@ if (!empty($oldMapCardIds)) {
   // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
   $mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN ($mcIdList)");
 }
+// Now delete the map cards themselves
+$mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
+debug_log('old data cleared');
 
 // 3. Insert new data (logic identical to add-post.php)
 $byLoc = [];
@@ -562,6 +579,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 $primaryTitle = '';
 $detectedCurrency = null; // Track first currency used for member's preferred_currency
 foreach ($byLoc as $locNum => $entries) {
+  debug_log('location ' . $locNum . ' start');
   $card = [
     'title' => '', 'description' => null, 'custom_text' => null, 'custom_textarea' => null,
     'custom_dropdown' => null, 'custom_checklist' => null, 'custom_radio' => null,
@@ -717,6 +735,7 @@ foreach ($byLoc as $locNum => $entries) {
   if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
   $mapCardId = $stmtCard->insert_id;
   $stmtCard->close();
+  debug_log('location ' . $locNum . ' map_card_id=' . $mapCardId);
 
   if ($primaryTitle === '') $primaryTitle = $card['title'];
 
@@ -861,6 +880,7 @@ if ($detectedCurrency !== null && $memberId > 0) {
 }
 
 $mysqli->commit();
+debug_log('commit ok');
 echo json_encode(['success'=>true, 'message_key'=>'msg_post_edit_success']);
 exit;
 ?>
