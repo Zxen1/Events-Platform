@@ -1608,7 +1608,7 @@
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
-  margin: 0 10px 12px 10px; /* Side margins to align with panel padding (My Posts tab extends to edge) */
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
 }
