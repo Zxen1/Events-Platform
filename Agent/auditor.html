@@ -186,13 +186,15 @@
         resultsContainer.innerHTML = '<em>Processing...</em>';
 
         for (let file of files) {
-            // Skip common noise folders if a directory was selected
-            if (file.webkitRelativePath && (
+            // Skip common noise folders and HIDDEN files/folders (starting with a dot)
+            const pathParts = (file.webkitRelativePath || file.name).split('/');
+            const isHidden = pathParts.some(part => part.startsWith('.'));
+
+            if (isHidden || (file.webkitRelativePath && (
                 file.webkitRelativePath.includes('/node_modules/') || 
-                file.webkitRelativePath.includes('/.git/') ||
                 file.webkitRelativePath.includes('/backups/') ||
                 file.webkitRelativePath.includes('/Agent/')
-            )) continue;
+            ))) continue;
 
             const content = await file.text();
             const lines = content.split('\n');
