@@ -3797,7 +3797,8 @@ const MemberModule = (function() {
                         idPrefix: 'editPost' + post.id,
                         fieldIndex: options.fieldIndex || 0,
                         container: options.container,
-                        defaultCurrency: getDefaultCurrencyForForms()
+                        defaultCurrency: getDefaultCurrencyForForms(),
+                        postId: post.id  // For images basket (edit mode)
                     });
                 },
                 initialQuantity: (post.map_cards && post.map_cards.length) || 1,

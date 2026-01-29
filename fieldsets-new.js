@@ -1590,6 +1590,169 @@ const FieldsetBuilder = (function(){
                 var imageEntries = [];
                 var nextImageEntryId = 1;
                 var maxImages = 10;
+                
+                // Basket: shows all post_media images as mini-thumbs (50x50)
+                // Items in imageEntries get blue border + full opacity
+                // Items not in imageEntries get lower opacity, click to add
+                var postId = options.postId || null;
+                var basketMedia = []; // All media from post_media for this post
+                var basketLoaded = false;
+                var basketContainer = null;
+                var localBasketEntries = []; // Local images removed from slots (kept for re-adding)
+                
+                function isMediaInSlots(mediaId) {
+                    if (!mediaId) return false;
+                    for (var i = 0; i < imageEntries.length; i++) {
+                        if (imageEntries[i] && imageEntries[i].id === mediaId) return true;
+                    }
+                    return false;
+                }
+                
+                function isLocalEntryInSlots(entryId) {
+                    if (!entryId) return false;
+                    for (var i = 0; i < imageEntries.length; i++) {
+                        if (imageEntries[i] && imageEntries[i]._imageEntryId === entryId) return true;
+                    }
+                    return false;
+                }
+                
+                function addImageClassToUrl(url, className) {
+                    if (!url || !className) return url;
+                    var separator = url.indexOf('?') === -1 ? '?' : '&';
+                    return url + separator + 'class=' + className;
+                }
+                
+                function addMediaToSlot(mediaItem) {
+                    if (!mediaItem || imageEntries.length >= maxImages) return;
+                    if (isMediaInSlots(mediaItem.id)) return; // Already in slot
+                    
+                    imageEntries.push({
+                        _imageEntryId: String(nextImageEntryId++),
+                        id: mediaItem.id,
+                        file: null,
+                        fileUrl: mediaItem.file_url,
+                        previewUrl: mediaItem.file_url,
+                        cropState: null,
+                        cropRect: mediaItem.settings_json && mediaItem.settings_json.crop ? mediaItem.settings_json.crop : null
+                    });
+                    updateImagesMeta();
+                    renderImages();
+                    renderBasket();
+                }
+                
+                function addLocalEntryToSlot(localEntry) {
+                    if (!localEntry || imageEntries.length >= maxImages) return;
+                    if (isLocalEntryInSlots(localEntry._imageEntryId)) return;
+                    
+                    imageEntries.push(localEntry);
+                    // Remove from localBasketEntries
+                    var idx = localBasketEntries.indexOf(localEntry);
+                    if (idx !== -1) localBasketEntries.splice(idx, 1);
+                    
+                    updateImagesMeta();
+                    renderImages();
+                    renderBasket();
+                }
+                
+                function fetchBasketMedia() {
+                    if (!postId || basketLoaded) return;
+                    basketLoaded = true;
+                    
+                    fetch('/gateway.php?action=get-post-media&post_id=' + postId)
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            if (data && data.success && Array.isArray(data.media)) {
+                                basketMedia = data.media;
+                                renderBasket();
+                            }
+                        })
+                        .catch(function(err) {
+                            console.warn('[Fieldset] Failed to load basket media:', err);
+                        });
+                }
+                
+                function renderBasket() {
+                    // Combine basketMedia (from server) + localBasketEntries (local removals)
+                    var allBasketItems = [];
+                    
+                    // Add local entries first (newest, on the left)
+                    localBasketEntries.forEach(function(entry) {
+                        allBasketItems.push({
+                            type: 'local',
+                            entry: entry,
+                            id: entry._imageEntryId,
+                            inSlot: isLocalEntryInSlots(entry._imageEntryId)
+                        });
+                    });
+                    
+                    // Add server media (sorted by created_at DESC from server)
+                    basketMedia.forEach(function(media) {
+                        allBasketItems.push({
+                            type: 'server',
+                            media: media,
+                            id: media.id,
+                            inSlot: isMediaInSlots(media.id)
+                        });
+                    });
+                    
+                    // Don't render if nothing to show
+                    if (allBasketItems.length === 0) {
+                        if (basketContainer) {
+                            basketContainer.style.display = 'none';
+                        }
+                        return;
+                    }
+                    
+                    // Create container if needed
+                    if (!basketContainer) {
+                        basketContainer = document.createElement('div');
+                        basketContainer.className = 'fieldset-images-basket';
+                        fieldset.appendChild(basketContainer);
+                    }
+                    basketContainer.style.display = '';
+                    basketContainer.innerHTML = '';
+                    
+                    allBasketItems.forEach(function(item) {
+                        var thumb = document.createElement('div');
+                        thumb.className = 'fieldset-images-basket-item';
+                        if (item.inSlot) {
+                            thumb.classList.add('fieldset-images-basket-item--active');
+                        }
+                        
+                        var img = document.createElement('img');
+                        img.className = 'fieldset-images-basket-item-image';
+                        
+                        if (item.type === 'local') {
+                            // Local entry - use blob URL or preview
+                            img.src = item.entry.previewUrl || item.entry.fileUrl || '';
+                        } else {
+                            // Server media - use minithumb class
+                            img.src = addImageClassToUrl(item.media.file_url, 'minithumb');
+                        }
+                        
+                        thumb.appendChild(img);
+                        
+                        // Click to add to slot (if not already there and under max)
+                        if (!item.inSlot) {
+                            thumb.style.cursor = 'pointer';
+                            thumb.addEventListener('click', function() {
+                                if (imageEntries.length >= maxImages) {
+                                    if (window.ToastComponent && ToastComponent.showError) {
+                                        ToastComponent.showError('Maximum ' + maxImages + ' images allowed');
+                                    }
+                                    return;
+                                }
+                                if (item.type === 'local') {
+                                    addLocalEntryToSlot(item.entry);
+                                } else {
+                                    addMediaToSlot(item.media);
+                                }
+                            });
+                        }
+                        
+                        basketContainer.appendChild(thumb);
+                    });
+                }
 
                 // Hidden JSON payload so the outside form serializer can pick up crop info later.
                 // NOTE: This fieldset currently manages files in-memory; upload/saving is implemented elsewhere.
@@ -1662,6 +1825,12 @@ const FieldsetBuilder = (function(){
                     
                     updateImagesMeta();
                     renderImages();
+                    // Fetch basket media if postId is set (edit mode)
+                    if (postId && !basketLoaded) {
+                        fetchBasketMedia();
+                    } else {
+                        renderBasket();
+                    }
                 };
 
                 // ------------------------------------------------------------------
@@ -1793,12 +1962,19 @@ const FieldsetBuilder = (function(){
                             removeBtn.addEventListener('click', function(e) {
                                 // Prevent thumb click from opening cropper
                                 if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                                if (imageEntries[idx]) {
-                                    revokeEntryUrls(imageEntries[idx]);
+                                var removed = imageEntries[idx];
+                                if (removed) {
+                                    // If it's a local file (no server id), keep in basket for re-adding
+                                    if (removed.file && !removed.id) {
+                                        localBasketEntries.unshift(removed); // Add to front (newest)
+                                    }
+                                    // Don't revoke URLs for items going to basket
+                                    // revokeEntryUrls(removed);
                                 }
                                 imageEntries.splice(idx, 1);
                                 updateImagesMeta();
                                 renderImages();
+                                renderBasket();
                             });
                         })(idx);
                         thumb.appendChild(removeBtn);
@@ -2091,6 +2267,11 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(imagesContainer);
                 
                 renderImages();
+                
+                // Fetch basket media if postId is set (edit mode)
+                if (postId) {
+                    fetchBasketMedia();
+                }
                 break;
             
             case 'amenities':
