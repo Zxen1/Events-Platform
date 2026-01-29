@@ -3659,6 +3659,7 @@ const MemberModule = (function() {
             if (otherEdit && !otherEdit.hidden) {
                 otherEdit.hidden = true;
                 otherEdit.classList.add('member-mypost-edit-accordion--hidden');
+                item.classList.remove('member-mypost-item--editing');
                 if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
                 var otherId = item.dataset.postId;
                 if (otherId) expandedPostAccordions[otherId] = false;
@@ -3667,6 +3668,7 @@ const MemberModule = (function() {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
                 otherManage.dataset.expanded = 'false';
+                item.classList.remove('member-mypost-item--managing');
                 if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
             }
         });
@@ -3676,6 +3678,7 @@ const MemberModule = (function() {
         if (editAcc && !editAcc.hidden) {
             editAcc.hidden = true;
             editAcc.classList.add('member-mypost-edit-accordion--hidden');
+            container.classList.remove('member-mypost-item--editing');
             expandedPostAccordions[postId] = false;
             if (editBtn) editBtn.setAttribute('aria-selected', 'false');
         }
@@ -3686,6 +3689,7 @@ const MemberModule = (function() {
             accordion.hidden = true;
             accordion.classList.add('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'false';
+            container.classList.remove('member-mypost-item--managing');
             if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
         } else {
             // Render placeholder management UI if empty
@@ -3695,6 +3699,7 @@ const MemberModule = (function() {
             accordion.hidden = false;
             accordion.classList.remove('member-mypost-manage-accordion--hidden');
             accordion.dataset.expanded = 'true';
+            container.classList.add('member-mypost-item--managing');
             if (manageBtn) manageBtn.setAttribute('aria-selected', 'true');
         }
     }
@@ -3748,6 +3753,7 @@ const MemberModule = (function() {
                 otherManage.hidden = true;
                 otherManage.classList.add('member-mypost-manage-accordion--hidden');
                 otherManage.dataset.expanded = 'false';
+                item.classList.remove('member-mypost-item--managing');
                 if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
             }
         });
@@ -3758,6 +3764,7 @@ const MemberModule = (function() {
             manageAcc.hidden = true;
             manageAcc.classList.add('member-mypost-manage-accordion--hidden');
             manageAcc.dataset.expanded = 'false';
+            container.classList.remove('member-mypost-item--managing');
             if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
         }
 
