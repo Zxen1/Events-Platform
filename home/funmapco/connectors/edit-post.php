@@ -479,6 +479,8 @@ if (!empty($oldMapCardIds)) {
   // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
   $mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN ($mcIdList)");
 }
+// Now delete the map cards themselves (we'll reinsert, reusing IDs where possible)
+$mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
 
 // 3. Insert new data (logic identical to add-post.php)
 $byLoc = [];
@@ -491,21 +493,14 @@ foreach ($fieldsArr as $entry) {
 }
 if (!$byLoc) $byLoc = [1 => []];
 
-// Preserve map_card IDs by location order (do not delete/recreate unless needed)
+// Preserve map_card IDs by location order (we'll reinsert using these IDs)
 $locNums = array_keys($byLoc);
 sort($locNums, SORT_NUMERIC);
 $mapCardIdByLoc = [];
-$obsoleteMapCardIds = [];
 foreach ($oldMapCardIds as $idx => $mcId) {
   if (isset($locNums[$idx])) {
     $mapCardIdByLoc[$locNums[$idx]] = $mcId;
-  } else {
-    $obsoleteMapCardIds[] = $mcId;
   }
-}
-if (!empty($obsoleteMapCardIds)) {
-  $obsoleteList = implode(',', $obsoleteMapCardIds);
-  $mysqli->query("DELETE FROM post_map_cards WHERE id IN ($obsoleteList)");
 }
 
 // Copy shared/primary fields to all locations
@@ -699,24 +694,24 @@ foreach ($byLoc as $locNum => $entries) {
   $mapCardId = isset($mapCardIdByLoc[$locNum]) ? (int)$mapCardIdByLoc[$locNum] : 0;
 
   if ($mapCardId > 0) {
-    // Update map card in place (preserve ID)
-    $stmtCard = $mysqli->prepare("UPDATE post_map_cards SET subcategory_key = ?, title = ?, description = ?, media_ids = ?, custom_text = ?, custom_textarea = ?, custom_dropdown = ?, custom_checklist = ?, custom_radio = ?, public_email = ?, phone_prefix = ?, public_phone = ?, venue_name = ?, address_line = ?, city = ?, latitude = ?, longitude = ?, country_code = ?, timezone = ?, age_rating = ?, website_url = ?, tickets_url = ?, coupon_code = ?, session_summary = ?, price_summary = ?, amenity_summary = ?, updated_at = NOW() WHERE id = ? AND post_id = ?");
+    // Insert map card with preserved ID
+    $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (id, post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
     if (!$stmtCard) {
-      abort_with_error($mysqli, 500, 'Prepare update map card', $transactionActive);
+      abort_with_error($mysqli, 500, 'Prepare insert map card (preserve)', $transactionActive);
     }
     $bindOk = $stmtCard->bind_param(
-      'sssssssssssssssddsssssssssii',
-      $subcategoryKey, $card['title'], $card['description'], $mediaString,
+      'iissssssssssssssddssssssssss',
+      $mapCardId, $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
       $card['public_email'], $card['phone_prefix'], $card['public_phone'],
       $card['venue_name'], $card['address_line'], $card['city'],
       $lat, $lng, $card['country_code'], $timezone,
       $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
-      $card['session_summary'], $card['price_summary'], $card['amenity_summary'],
-      $mapCardId, $postId
+      $card['session_summary'], $card['price_summary'], $card['amenity_summary']
     );
-    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind update map card', $transactionActive); }
-    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Update map card', $transactionActive); }
+    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card (preserve)', $transactionActive); }
+    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card (preserve)', $transactionActive); }
     $stmtCard->close();
   } else {
     // Insert map card (new location)
