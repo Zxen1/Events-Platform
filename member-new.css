@@ -1561,6 +1561,15 @@
   z-index: var(--layer-card);
 }
 
+/* Post card inside My Posts - identical to post panel */
+.member-mypost-item .post-card {
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
 /* When editing, make the post card sticky so user knows what they're editing */
 .member-mypost-item--editing .post-card {
   position: sticky;
@@ -1570,15 +1579,6 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--blue-500);
-}
-
-/* Post card inside My Posts - identical to post panel */
-.member-mypost-item .post-card {
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  background-color: transparent;
 }
 
 /* Hover state - identical to post panel */
