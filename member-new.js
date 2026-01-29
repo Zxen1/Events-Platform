@@ -3778,6 +3778,90 @@ const MemberModule = (function() {
                 '</div>',
             '</div>'
         ].join('');
+
+        if (container.querySelector('.member-mypost-edit-footer')) return;
+
+        var footer = document.createElement('div');
+        footer.className = 'member-mypost-edit-footer';
+
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = true;
+        saveBtn.addEventListener('click', function() {
+            if (saveBtn.disabled) return;
+            var postContainer = container.closest('.member-mypost-item');
+            saveAccordionPost(postId).then(function() {
+                if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                    ToastComponent.showSuccess('Saved');
+                }
+                discardPostAccordionEdits(postId);
+                if (postContainer) {
+                    var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                    if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                }
+            }).catch(function(err) {
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError('Failed to save: ' + err.message);
+                }
+            });
+        });
+
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
+        discardBtn.textContent = 'Discard';
+        discardBtn.disabled = true;
+
+        function updateFooterButtonState() {
+            var isDirty = isPostDirty(postId);
+            saveBtn.disabled = !isDirty;
+            discardBtn.disabled = !isDirty;
+        }
+
+        container.addEventListener('input', function() {
+            updateFooterButtonState();
+        });
+        container.addEventListener('change', function() {
+            updateFooterButtonState();
+        });
+        container.addEventListener('fieldset:sessions-change', function() {
+            updateFooterButtonState();
+        });
+        discardBtn.addEventListener('click', function() {
+            var postContainer = container.closest('.member-mypost-item');
+            if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                discardPostAccordionEdits(postId);
+                if (postContainer) {
+                    var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                    if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                }
+                return;
+            }
+            ConfirmDialogComponent.show({
+                titleText: 'Discard Changes',
+                messageText: 'Are you sure you want to discard your changes?',
+                confirmLabel: 'Discard',
+                cancelLabel: 'Cancel',
+                focusCancel: true
+            }).then(function(confirmed) {
+                if (confirmed) {
+                    discardPostAccordionEdits(postId);
+                    if (postContainer) {
+                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
+                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+                    }
+                    if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+                        ToastComponent.show('Changes discarded');
+                    }
+                }
+            });
+        });
+
+        footer.appendChild(saveBtn);
+        footer.appendChild(discardBtn);
+        container.appendChild(footer);
     }
 
     function togglePostEdit(postId, container) {
