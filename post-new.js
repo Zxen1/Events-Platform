@@ -378,7 +378,8 @@ const PostModule = (function() {
     App.on('map:boundsChanged', function(data) {
       if (!data) return;
       
-      // Mobile: ignore boundsChanged while posts panel is open (prevents flicker from toolbar resize)
+      // Mobile workaround: ignore boundsChanged while posts panel is open (prevents flicker from toolbar resize)
+      // Root cause unsolved: can't stop map resizing without losing edge-to-edge display (causes iOS black bars)
       var isMobile = window.matchMedia && window.matchMedia('(max-width: 530px)').matches;
       if (isMobile && currentMode === 'posts') {
         if (typeof data.zoom === 'number') {

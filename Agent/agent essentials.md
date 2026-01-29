@@ -321,8 +321,8 @@ See `Agent/venue-seeding-plan.md` for full instructions, pre-flight checklist, a
 
 ## MOBILE (530px breakpoint)
 
-- **Body must scroll** (`overflow-y: scroll`) or iOS shows black bars
-- **Post panel ignores `boundsChanged` on mobile** — prevents flicker from toolbar resize
+- **Body must scroll** (`overflow-y: scroll`) or iOS shows black bars (edge-to-edge unsolved)
+- **Post panel ignores `boundsChanged` on mobile** — workaround for flicker (root cause unsolved)
 - Desktop unaffected — map visible beside panel, posts update on pan
 
 ---

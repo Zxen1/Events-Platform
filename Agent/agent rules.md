@@ -489,7 +489,11 @@ item.setAttribute('role', 'button');  // ← This fixes jumping
 - This prevents edge-to-edge map display
 - Many attempts were made to remove these black bars — body scroll is the only working solution
 
-**The Solution (January 2026):**
+**The Workaround (January 2026):**
+
+We could not find a way to stop the map from resizing when the browser toolbar shows/hides. The root cause remains unsolved — achieving edge-to-edge map display on a one-page mobile website requires `body { overflow-y: scroll }`, which triggers the toolbar behavior, which causes viewport resize, which causes map movement.
+
+The workaround:
 - On mobile (≤530px), the post panel ignores `boundsChanged` events while visible
 - Posts are already loaded for the current area when the panel opens
 - The panel covers the entire screen on mobile — user cannot interact with the map anyway
