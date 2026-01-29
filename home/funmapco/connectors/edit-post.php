@@ -1,34 +1,10 @@
 <?php
 // Debug: show actual PHP errors in response
 set_exception_handler(function($e) {
-  $logPath = __DIR__ . '/edit-post-debug.log';
-  $logLine = '[edit-post] exception: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
-  @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
-  error_log($logLine);
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(500);
   echo json_encode(['success' => false, 'error' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
   exit;
-});
-
-// Catch fatal errors so the response isn't blank
-register_shutdown_function(function() {
-  $err = error_get_last();
-  if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-    $logPath = __DIR__ . '/edit-post-debug.log';
-    $logLine = '[edit-post] fatal: ' . ($err['message'] ?? '') . ' in ' . basename($err['file'] ?? '') . ':' . ($err['line'] ?? 0);
-    @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
-    error_log($logLine);
-    header('Content-Type: application/json; charset=utf-8');
-    http_response_code(500);
-    echo json_encode([
-      'success' => false,
-      'error' => $err['message'],
-      'file' => basename($err['file']),
-      'line' => $err['line']
-    ]);
-    exit;
-  }
 });
 
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
@@ -42,12 +18,10 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 set_time_limit(300);
 
 $configCandidates = [
-  '/home/funmapco/config/config-db.php',
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',
   dirname(__DIR__, 2) . '/config/config-db.php',
   dirname(__DIR__, 3) . '/../config/config-db.php',
-  dirname(__DIR__, 4) . '/config/config-db.php',
   dirname(__DIR__) . '/../config/config-db.php',
   __DIR__ . '/config-db.php',
 ];
@@ -67,12 +41,10 @@ if ($configPath === null) {
 require_once $configPath;
 
 $authCandidates = [
-  '/home/funmapco/config/config-auth.php',
   __DIR__ . '/../config/config-auth.php',
   dirname(__DIR__) . '/config/config-auth.php',
   dirname(__DIR__, 2) . '/config/config-auth.php',
   dirname(__DIR__, 3) . '/../config/config-auth.php',
-  dirname(__DIR__, 4) . '/config/config-auth.php',
   dirname(__DIR__) . '/../config/config-auth.php',
   __DIR__ . '/config-auth.php',
 ];
@@ -140,14 +112,6 @@ function fail_key(int $code, string $messageKey, array $placeholders = null, arr
   exit;
 }
 
-function debug_log(string $message): void
-{
-  $logPath = __DIR__ . '/edit-post-debug.log';
-  $logLine = '[edit-post] ' . $message;
-  @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
-  error_log($logLine);
-}
-
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   fail_key(500, 'msg_post_edit_error');
 }
@@ -158,7 +122,6 @@ function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$tra
     $mysqli->rollback();
     $transactionActive = false;
   }
-  debug_log('abort: ' . $message . ' | errno=' . ($mysqli->errno ?? 0) . ' | error=' . ($mysqli->error ?? ''));
   $dbg = [
     'stage' => $message,
     'db_error' => $mysqli->error ?? '',
@@ -340,7 +303,6 @@ $memberType = isset($data['member_type']) ? trim((string)$data['member_type']) :
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
-debug_log('start: post_id=' . $postId . ' member_id=' . $memberId . ' loc_qty=' . $locQty);
 
 // Security: Verify post exists and member has permission to edit
 $isAdmin = strtolower($memberType) === 'admin';
@@ -370,7 +332,6 @@ if (!$mysqli->begin_transaction()) {
   fail_key(500, 'msg_post_edit_error');
 }
 $transactionActive = true;
-debug_log('transaction started');
 
 // 1. Update primary post entry
 $fieldsArr = $data['fields'] ?? [];
@@ -486,7 +447,7 @@ if ($stmt) {
 // IMPORTANT: We clear sub-data because we'll re-insert it from the updated payload.
 // Fetch map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
 $oldMapCardIds = [];
-$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId ORDER BY id ASC");
+$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId");
 if ($mcResult) {
   while ($mcRow = $mcResult->fetch_assoc()) {
     $oldMapCardIds[] = (int)$mcRow['id'];
@@ -504,7 +465,6 @@ if (!empty($oldMapCardIds)) {
 }
 // Now delete the map cards themselves
 $mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
-debug_log('old data cleared');
 
 // 3. Insert new data (logic identical to add-post.php)
 $byLoc = [];
@@ -516,23 +476,6 @@ foreach ($fieldsArr as $entry) {
   $byLoc[$loc][] = $entry;
 }
 if (!$byLoc) $byLoc = [1 => []];
-
-// Preserve map_card IDs by location order (do not delete/recreate unless needed)
-$locNums = array_keys($byLoc);
-sort($locNums, SORT_NUMERIC);
-$mapCardIdByLoc = [];
-$obsoleteMapCardIds = [];
-foreach ($oldMapCardIds as $idx => $mcId) {
-  if (isset($locNums[$idx])) {
-    $mapCardIdByLoc[$locNums[$idx]] = $mcId;
-  } else {
-    $obsoleteMapCardIds[] = $mcId;
-  }
-}
-if (!empty($obsoleteMapCardIds)) {
-  $obsoleteList = implode(',', $obsoleteMapCardIds);
-  $mysqli->query("DELETE FROM post_map_cards WHERE id IN ($obsoleteList)");
-}
 
 // Copy shared/primary fields to all locations
 if (count($byLoc) > 1 && isset($byLoc[1])) {
@@ -588,7 +531,6 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 $primaryTitle = '';
 $detectedCurrency = null; // Track first currency used for member's preferred_currency
 foreach ($byLoc as $locNum => $entries) {
-  debug_log('location ' . $locNum . ' start');
   $card = [
     'title' => '', 'description' => null, 'custom_text' => null, 'custom_textarea' => null,
     'custom_dropdown' => null, 'custom_checklist' => null, 'custom_radio' => null,
@@ -720,33 +662,30 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
 
-  $lat = (float)($card['latitude'] ?? 0);
-  $lng = (float)($card['longitude'] ?? 0);
-  $timezone = null;
-  // Insert map card (standard insert, identical to backup)
+  // Insert map card
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   
-  if (!$stmtCard) {
-    abort_with_error($mysqli, 500, 'Prepare insert map card', $transactionActive);
-  }
-  $bindOk = $stmtCard->bind_param(
-    'issssssssssssssddssssssssss',
-    $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
-    $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
-    $card['public_email'], $card['phone_prefix'], $card['public_phone'],
-    $card['venue_name'], $card['address_line'], $card['city'],
-    $lat, $lng, $card['country_code'], $timezone,
-    $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
-    $card['session_summary'], $card['price_summary'], $card['amenity_summary']
-  );
-  if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card', $transactionActive); }
-  if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
-  $mapCardId = $stmtCard->insert_id;
-  $stmtCard->close();
-  debug_log('location ' . $locNum . ' map_card_id=' . $mapCardId);
-
-  if ($primaryTitle === '') $primaryTitle = $card['title'];
+  if ($stmtCard) {
+    $lat = (float)($card['latitude'] ?? 0);
+    $lng = (float)($card['longitude'] ?? 0);
+    $timezone = null;
+    
+    $stmtCard->bind_param(
+      'issssssssssssssddssssssssss',
+      $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
+      $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
+      $card['public_email'], $card['phone_prefix'], $card['public_phone'],
+      $card['venue_name'], $card['address_line'], $card['city'],
+      $lat, $lng, $card['country_code'], $timezone,
+      $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
+      $card['session_summary'], $card['price_summary'], $card['amenity_summary']
+    );
+    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
+    $mapCardId = $stmtCard->insert_id;
+    $stmtCard->close();
+    
+    if ($primaryTitle === '') $primaryTitle = $card['title'];
 
     // Amenities
     if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
@@ -889,7 +828,6 @@ if ($detectedCurrency !== null && $memberId > 0) {
 }
 
 $mysqli->commit();
-debug_log('commit ok');
 echo json_encode(['success'=>true, 'message_key'=>'msg_post_edit_success']);
 exit;
 ?>

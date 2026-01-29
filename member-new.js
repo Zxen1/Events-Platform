@@ -2668,10 +2668,10 @@ const MemberModule = (function() {
                                         var qtyDisplay = document.querySelector('.member-postform-location-quantity-display');
                                         if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                         if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
-                                            FormbuilderModule.updateVenueDeleteButtons(container.parentNode);
+                                            FormbuilderModule.updateVenueDeleteButtons();
                                         }
                                         if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                                            FormbuilderModule.renumberLocationContainers(container.parentNode);
+                                            FormbuilderModule.renumberLocationContainers();
                                         }
                                         // Focus the container that took the deleted one's place
                                         if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
@@ -3126,37 +3126,6 @@ const MemberModule = (function() {
         return uniq;
     }
 
-    function getEditPostMissingList(accordion) {
-        var out = [];
-        if (!accordion) return out;
-        var fieldsets = accordion.querySelectorAll('.fieldset[data-complete="false"]');
-        for (var i = 0; i < fieldsets.length; i++) {
-            var fs = fieldsets[i];
-            if (!fs || !fs.dataset) continue;
-            var name = '';
-            var labelTextEl = fs.querySelector('.fieldset-label-text');
-            if (labelTextEl && labelTextEl.textContent) {
-                name = labelTextEl.textContent.trim();
-            } else if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
-                name = fs.dataset.fieldsetName.trim();
-            } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
-                name = fs.dataset.fieldsetKey.trim();
-            }
-            if (name) out.push(name);
-        }
-
-        var seen = {};
-        var uniq = [];
-        out.forEach(function(v) {
-            var k = String(v || '').trim();
-            if (!k) return;
-            if (seen[k]) return;
-            seen[k] = true;
-            uniq.push(k);
-        });
-        return uniq;
-    }
-
     function attachMissingPopoverToButton(btnEl, getItemsFn) {
         if (!btnEl) return;
         if (btnEl._missingPopoverAttached) return;
@@ -3240,19 +3209,6 @@ const MemberModule = (function() {
 
         // Component-owned validity: do not submit if ANY fieldset is incomplete (required or optional-but-invalid).
         var fieldsetEls = formFields.querySelectorAll('.fieldset[data-complete]');
-        for (var i = 0; i < fieldsetEls.length; i++) {
-            var fs = fieldsetEls[i];
-            if (!fs || !fs.dataset) continue;
-            if (String(fs.dataset.complete || '') !== 'true') {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function isEditPostFormComplete(accordion) {
-        if (!accordion) return false;
-        var fieldsetEls = accordion.querySelectorAll('.fieldset[data-complete]');
         for (var i = 0; i < fieldsetEls.length; i++) {
             var fs = fieldsetEls[i];
             if (!fs || !fs.dataset) continue;
@@ -3822,90 +3778,6 @@ const MemberModule = (function() {
                 '</div>',
             '</div>'
         ].join('');
-
-        if (container.querySelector('.member-mypost-edit-footer')) return;
-
-        var footer = document.createElement('div');
-        footer.className = 'member-mypost-edit-footer';
-
-        var saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
-        saveBtn.textContent = 'Save';
-        saveBtn.disabled = true;
-        saveBtn.addEventListener('click', function() {
-            if (saveBtn.disabled) return;
-            var postContainer = container.closest('.member-mypost-item');
-            saveAccordionPost(postId).then(function() {
-                if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                    ToastComponent.showSuccess('Saved');
-                }
-                discardPostAccordionEdits(postId);
-                if (postContainer) {
-                    var editBtn = postContainer.querySelector('.member-mypost-button-edit');
-                    if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                }
-            }).catch(function(err) {
-                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError('Failed to save: ' + err.message);
-                }
-            });
-        });
-
-        var discardBtn = document.createElement('button');
-        discardBtn.type = 'button';
-        discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
-        discardBtn.textContent = 'Discard';
-        discardBtn.disabled = true;
-
-        function updateFooterButtonState() {
-            var isDirty = isPostDirty(postId);
-            saveBtn.disabled = !isDirty;
-            discardBtn.disabled = !isDirty;
-        }
-
-        container.addEventListener('input', function() {
-            updateFooterButtonState();
-        });
-        container.addEventListener('change', function() {
-            updateFooterButtonState();
-        });
-        container.addEventListener('fieldset:sessions-change', function() {
-            updateFooterButtonState();
-        });
-        discardBtn.addEventListener('click', function() {
-            var postContainer = container.closest('.member-mypost-item');
-            if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
-                discardPostAccordionEdits(postId);
-                if (postContainer) {
-                    var editBtn = postContainer.querySelector('.member-mypost-button-edit');
-                    if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                }
-                return;
-            }
-            ConfirmDialogComponent.show({
-                titleText: 'Discard Changes',
-                messageText: 'Are you sure you want to discard your changes?',
-                confirmLabel: 'Discard',
-                cancelLabel: 'Cancel',
-                focusCancel: true
-            }).then(function(confirmed) {
-                if (confirmed) {
-                    discardPostAccordionEdits(postId);
-                    if (postContainer) {
-                        var editBtn = postContainer.querySelector('.member-mypost-button-edit');
-                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                    }
-                    if (window.ToastComponent && typeof ToastComponent.show === 'function') {
-                        ToastComponent.show('Changes discarded');
-                    }
-                }
-            });
-        });
-
-        footer.appendChild(saveBtn);
-        footer.appendChild(discardBtn);
-        container.appendChild(footer);
     }
 
     function togglePostEdit(postId, container) {
@@ -4002,24 +3874,7 @@ const MemberModule = (function() {
 
     function renderPostEditForm(post, container) {
         if (!post || !container) return;
-
-        // Ensure FieldsetBuilder has picklists (amenities, etc.) before building edit fieldsets.
-        if (window.FieldsetBuilder && typeof FieldsetBuilder.loadFromDatabase === 'function') {
-            if (!renderPostEditForm._fieldsetLoadPromise) {
-                renderPostEditForm._fieldsetLoadPromise = FieldsetBuilder.loadFromDatabase();
-            }
-            renderPostEditForm._fieldsetLoadPromise.then(function() {
-                renderPostEditForm._renderBody(post, container);
-            });
-            return;
-        }
-
-        renderPostEditForm._renderBody(post, container);
-    }
-
-    renderPostEditForm._renderBody = function(post, container) {
-        if (!post || !container) return;
-
+        
         // 1. Resolve category and subcategory
         var categoryName = '';
         var subcategoryName = '';
@@ -4058,8 +3913,6 @@ const MemberModule = (function() {
 
         // 3. Build form structure using shared FormBuilder
         if (window.FormbuilderModule && typeof FormbuilderModule.organizeFieldsIntoLocationContainers === 'function') {
-            var editLocationTypeName = 'Venue';
-            var editVenue1Name = 'Venue 1';
             var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
                 fields: fields,
                 container: container,
@@ -4074,55 +3927,11 @@ const MemberModule = (function() {
                     });
                 },
                 initialQuantity: (post.map_cards && post.map_cards.length) || 1,
-                onQuantityChange: function(quantity) {
-                    var qtyDisplay = container.querySelector('.member-postform-location-quantity-display');
-                    if (qtyDisplay) qtyDisplay.textContent = quantity;
-                },
                 getMessage: function(key, params, fallback) {
                     return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
                 },
-                setupHeaderRenaming: true,
-                onDelete: function(containerEl, locationNumber) {
-                    var headerTextEl = containerEl.querySelector('.member-postform-location-header-text');
-                    var venueName = headerTextEl && headerTextEl.textContent ? headerTextEl.textContent.trim() : '';
-                    if (!venueName) venueName = editVenue1Name;
-                    var deletedNum = parseInt(containerEl.dataset.locationNumber || '0', 10);
-                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                        ConfirmDialogComponent.show({
-                            titleText: 'Delete ' + venueName,
-                            messageText: 'This cannot be undone.',
-                            confirmLabel: 'Delete',
-                            cancelLabel: 'Cancel',
-                            confirmClass: 'danger',
-                            focusCancel: true
-                        }).then(function(confirmed) {
-                            if (confirmed) {
-                                containerEl.remove();
-                                if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
-                                    FormbuilderModule.updateVenueDeleteButtons(container.parentNode);
-                                }
-                                if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                                    FormbuilderModule.renumberLocationContainers(container.parentNode);
-                                }
-                                var qtyDisplay = container.querySelector('.member-postform-location-quantity-display');
-                                if (qtyDisplay) {
-                                    var count = container.querySelectorAll('.member-location-container[data-location-number]').length;
-                                    qtyDisplay.textContent = count;
-                                }
-                                if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
-                                    FormbuilderModule.focusLocationContainerAfterDelete(deletedNum);
-                                }
-                                try { container.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
-                            }
-                        });
-                    }
-                }
+                setupHeaderRenaming: true
             });
-            
-            if (locationData && locationData.locationFieldsetType) {
-                editLocationTypeName = locationData.locationFieldsetType.charAt(0).toUpperCase() + locationData.locationFieldsetType.slice(1);
-                editVenue1Name = editLocationTypeName + ' 1';
-            }
             
             // Populate data (ensure age rating data is loaded first for dropdowns to work)
             var populatePromise = Promise.resolve();
@@ -4131,16 +3940,6 @@ const MemberModule = (function() {
             }
             populatePromise.then(function() {
                 populateAccordionWithPostData(post, container);
-                if (locationData && Array.isArray(locationData.locationContainers)) {
-                    locationData.locationContainers.forEach(function(loc) {
-                        if (loc && typeof loc.updateHeaderFromInput === 'function') {
-                            loc.updateHeaderFromInput();
-                        }
-                    });
-                }
-                if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                    FormbuilderModule.renumberLocationContainers(container);
-                }
                 // Store initial extracted fields for dirty checking (must happen after populate)
                 editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
             });
@@ -4183,14 +3982,10 @@ const MemberModule = (function() {
             discardBtn.textContent = 'Discard';
             discardBtn.disabled = true;
             
-            // Hover popover listing all missing items (no toasts; button stays truly disabled)
-            attachMissingPopoverToButton(saveBtn, function() { return getEditPostMissingList(container); });
-            
             // Function to update footer button states based on dirty check
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
-                var isComplete = isEditPostFormComplete(container);
-                saveBtn.disabled = (!isDirty || !isComplete);
+                saveBtn.disabled = !isDirty;
                 discardBtn.disabled = !isDirty;
             }
 
@@ -4205,14 +4000,6 @@ const MemberModule = (function() {
             });
             // Also custom events from fieldsets
             container.addEventListener('fieldset:sessions-change', function() {
-                updateHeaderSaveDiscardState();
-                updateFooterButtonState();
-            });
-            container.addEventListener('fieldset:validity-change', function() {
-                updateHeaderSaveDiscardState();
-                updateFooterButtonState();
-            });
-            container.addEventListener('fieldset:change', function() {
                 updateHeaderSaveDiscardState();
                 updateFooterButtonState();
             });
@@ -4250,8 +4037,6 @@ const MemberModule = (function() {
             footer.appendChild(saveBtn);
             footer.appendChild(discardBtn);
             container.appendChild(footer);
-            
-            updateFooterButtonState();
         }
     }
 
@@ -4420,11 +4205,9 @@ const MemberModule = (function() {
                         break;
                         
                     case 'amenities':
-                        if (Array.isArray(mapCard.amenities)) {
-                            val = mapCard.amenities;
-                        } else {
-                            val = [];
-                        }
+                        try {
+                            val = JSON.parse(mapCard.amenity_summary || '[]');
+                        } catch (e) { val = []; }
                         break;
                         
                     case 'images':
@@ -5206,7 +4989,7 @@ const MemberModule = (function() {
                         if (!row) return [];
                         var amenityName = row.dataset.amenity || '';
                         var val = row.dataset.value;
-                        if (val !== '1' && val !== '0') val = ''; // allow partial for dirty tracking
+                        if (val !== '1' && val !== '0') return []; // incomplete
                         out.push({
                             amenity: amenityName,
                             value: val
