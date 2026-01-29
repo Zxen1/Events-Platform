@@ -1603,6 +1603,7 @@ const FieldsetBuilder = (function(){
                     try {
                         var payload = imageEntries.map(function(entry) {
                             return {
+                                id: entry.id || null,
                                 file_name: entry && entry.file ? (entry.file.name || '') : '',
                                 file_type: entry && entry.file ? (entry.file.type || '') : '',
                                 file_size: entry && entry.file ? (entry.file.size || 0) : 0,
