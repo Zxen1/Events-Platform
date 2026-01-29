@@ -3129,6 +3129,7 @@ const MemberModule = (function() {
     function getEditPostMissingList(accordion) {
         var out = [];
         if (!accordion) return out;
+        var locationCount = accordion.querySelectorAll('.member-location-container[data-location-number]').length;
 
         var fieldsets = accordion.querySelectorAll('.fieldset[data-complete="false"]');
         for (var i = 0; i < fieldsets.length; i++) {
@@ -3143,7 +3144,14 @@ const MemberModule = (function() {
             } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
                 name = fs.dataset.fieldsetKey.trim();
             }
-            if (name) out.push(name);
+            if (name) {
+                var locWrap = fs.closest ? fs.closest('.member-location-container[data-location-number]') : null;
+                var locNum = locWrap && locWrap.dataset ? parseInt(locWrap.dataset.locationNumber || '0', 10) : 0;
+                if (locationCount > 1 && locNum > 0) {
+                    name = name + ' ' + locNum;
+                }
+                out.push(name);
+            }
         }
 
         var seen = {};
@@ -4086,6 +4094,13 @@ const MemberModule = (function() {
             }
             populatePromise.then(function() {
                 populateAccordionWithPostData(post, container);
+                if (locationData && Array.isArray(locationData.locationContainers)) {
+                    locationData.locationContainers.forEach(function(loc) {
+                        if (loc && typeof loc.updateHeaderFromInput === 'function') {
+                            loc.updateHeaderFromInput();
+                        }
+                    });
+                }
                 // Store initial extracted fields for dirty checking (must happen after populate)
                 editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
             });

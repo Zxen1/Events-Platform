@@ -688,7 +688,7 @@ foreach ($byLoc as $locNum => $entries) {
     if (!$stmtCard) {
       abort_with_error($mysqli, 500, 'Prepare update map card', $transactionActive);
     }
-    $stmtCard->bind_param(
+    $bindOk = $stmtCard->bind_param(
       'sssssssssssssssddsssssssssii',
       $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
@@ -699,6 +699,7 @@ foreach ($byLoc as $locNum => $entries) {
       $card['session_summary'], $card['price_summary'], $card['amenity_summary'],
       $mapCardId, $postId
     );
+    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind update map card', $transactionActive); }
     if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Update map card', $transactionActive); }
     $stmtCard->close();
   } else {
@@ -709,7 +710,7 @@ foreach ($byLoc as $locNum => $entries) {
     if (!$stmtCard) {
       abort_with_error($mysqli, 500, 'Prepare insert map card', $transactionActive);
     }
-    $stmtCard->bind_param(
+    $bindOk = $stmtCard->bind_param(
       'issssssssssssssddssssssssss',
       $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
@@ -719,6 +720,7 @@ foreach ($byLoc as $locNum => $entries) {
       $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
       $card['session_summary'], $card['price_summary'], $card['amenity_summary']
     );
+    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card', $transactionActive); }
     if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
     $mapCardId = $stmtCard->insert_id;
     $stmtCard->close();
