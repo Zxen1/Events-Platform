@@ -462,8 +462,7 @@ try {
                 'latitude' => $row['latitude'] !== null ? (float)$row['latitude'] : null,
                 'longitude' => $row['longitude'] !== null ? (float)$row['longitude'] : null,
                 'country_code' => $row['country_code'],
-                'amenity_summary' => $row['amenity_summary'],
-                'amenities' => [],
+                'amenities' => $row['amenity_summary'],
                 'website_url' => $row['website_url'],
                 'tickets_url' => $row['tickets_url'],
                 'coupon_code' => $row['coupon_code'],
@@ -565,7 +564,6 @@ try {
     $pricingByCard = [];
     $ageRatingsByCard = [];
     $itemsByCard = [];
-    $amenitiesByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -592,19 +590,6 @@ try {
                 $sessionsByCard[$cid][$date]['times'][] = [
                     'time' => $sRow['session_time'],
                     'ticket_group_key' => $sRow['ticket_group_key']
-                ];
-            }
-        }
-
-        // Amenities
-        $amenRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv) ORDER BY map_card_id ASC, amenity_key ASC");
-        if ($amenRes) {
-            while ($aRow = $amenRes->fetch_assoc()) {
-                $cid = (int)$aRow['map_card_id'];
-                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
-                $amenitiesByCard[$cid][] = [
-                    'amenity' => $aRow['amenity_key'],
-                    'value' => $aRow['value']
                 ];
             }
         }
@@ -682,11 +667,6 @@ try {
                 // Attach Sessions (as array, not grouped by date for frontend compat)
                 if (isset($sessionsByCard[$cid])) {
                     $mapCard['sessions'] = array_values($sessionsByCard[$cid]);
-                }
-
-                // Attach Amenities
-                if (isset($amenitiesByCard[$cid])) {
-                    $mapCard['amenities'] = $amenitiesByCard[$cid];
                 }
 
                 // Attach Ticket Pricing

@@ -7,22 +7,6 @@ set_exception_handler(function($e) {
   exit;
 });
 
-// Catch fatal errors so the response isn't blank
-register_shutdown_function(function() {
-  $err = error_get_last();
-  if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-    header('Content-Type: application/json; charset=utf-8');
-    http_response_code(500);
-    echo json_encode([
-      'success' => false,
-      'error' => $err['message'],
-      'file' => basename($err['file']),
-      'line' => $err['line']
-    ]);
-    exit;
-  }
-});
-
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(403);
@@ -463,7 +447,7 @@ if ($stmt) {
 // IMPORTANT: We clear sub-data because we'll re-insert it from the updated payload.
 // Fetch map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
 $oldMapCardIds = [];
-$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId ORDER BY id ASC");
+$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId");
 if ($mcResult) {
   while ($mcRow = $mcResult->fetch_assoc()) {
     $oldMapCardIds[] = (int)$mcRow['id'];
@@ -479,6 +463,8 @@ if (!empty($oldMapCardIds)) {
   // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
   $mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN ($mcIdList)");
 }
+// Now delete the map cards themselves
+$mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
 
 // 3. Insert new data (logic identical to add-post.php)
 $byLoc = [];
@@ -490,23 +476,6 @@ foreach ($fieldsArr as $entry) {
   $byLoc[$loc][] = $entry;
 }
 if (!$byLoc) $byLoc = [1 => []];
-
-// Preserve map_card IDs by location order (do not delete/recreate unless needed)
-$locNums = array_keys($byLoc);
-sort($locNums, SORT_NUMERIC);
-$mapCardIdByLoc = [];
-$obsoleteMapCardIds = [];
-foreach ($oldMapCardIds as $idx => $mcId) {
-  if (isset($locNums[$idx])) {
-    $mapCardIdByLoc[$locNums[$idx]] = $mcId;
-  } else {
-    $obsoleteMapCardIds[] = $mcId;
-  }
-}
-if (!empty($obsoleteMapCardIds)) {
-  $obsoleteList = implode(',', $obsoleteMapCardIds);
-  $mysqli->query("DELETE FROM post_map_cards WHERE id IN ($obsoleteList)");
-}
 
 // Copy shared/primary fields to all locations
 if (count($byLoc) > 1 && isset($byLoc[1])) {
@@ -693,40 +662,16 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
 
-  $lat = (float)($card['latitude'] ?? 0);
-  $lng = (float)($card['longitude'] ?? 0);
-  $timezone = null;
-  $mapCardId = isset($mapCardIdByLoc[$locNum]) ? (int)$mapCardIdByLoc[$locNum] : 0;
-
-  if ($mapCardId > 0) {
-    // Update map card in place (preserve ID)
-    $stmtCard = $mysqli->prepare("UPDATE post_map_cards SET subcategory_key = ?, title = ?, description = ?, media_ids = ?, custom_text = ?, custom_textarea = ?, custom_dropdown = ?, custom_checklist = ?, custom_radio = ?, public_email = ?, phone_prefix = ?, public_phone = ?, venue_name = ?, address_line = ?, city = ?, latitude = ?, longitude = ?, country_code = ?, timezone = ?, age_rating = ?, website_url = ?, tickets_url = ?, coupon_code = ?, session_summary = ?, price_summary = ?, amenity_summary = ?, updated_at = NOW() WHERE id = ? AND post_id = ?");
-    if (!$stmtCard) {
-      abort_with_error($mysqli, 500, 'Prepare update map card', $transactionActive);
-    }
-    $bindOk = $stmtCard->bind_param(
-      'sssssssssssssssddsssssssssii',
-      $subcategoryKey, $card['title'], $card['description'], $mediaString,
-      $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
-      $card['public_email'], $card['phone_prefix'], $card['public_phone'],
-      $card['venue_name'], $card['address_line'], $card['city'],
-      $lat, $lng, $card['country_code'], $timezone,
-      $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
-      $card['session_summary'], $card['price_summary'], $card['amenity_summary'],
-      $mapCardId, $postId
-    );
-    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind update map card', $transactionActive); }
-    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Update map card', $transactionActive); }
-    $stmtCard->close();
-  } else {
-    // Insert map card (new location)
-    $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  // Insert map card
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  
+  if ($stmtCard) {
+    $lat = (float)($card['latitude'] ?? 0);
+    $lng = (float)($card['longitude'] ?? 0);
+    $timezone = null;
     
-    if (!$stmtCard) {
-      abort_with_error($mysqli, 500, 'Prepare insert map card', $transactionActive);
-    }
-    $bindOk = $stmtCard->bind_param(
+    $stmtCard->bind_param(
       'issssssssssssssddssssssssss',
       $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
@@ -736,13 +681,11 @@ foreach ($byLoc as $locNum => $entries) {
       $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
       $card['session_summary'], $card['price_summary'], $card['amenity_summary']
     );
-    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card', $transactionActive); }
     if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
     $mapCardId = $stmtCard->insert_id;
     $stmtCard->close();
-  }
-
-  if ($primaryTitle === '') $primaryTitle = $card['title'];
+    
+    if ($primaryTitle === '') $primaryTitle = $card['title'];
 
     // Amenities
     if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
