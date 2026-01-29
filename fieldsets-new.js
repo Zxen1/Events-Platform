@@ -1537,6 +1537,9 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'images':
+                // DEBUG: Log postId from options
+                console.log('[Fieldset] IMAGES CASE - options.postId:', options ? options.postId : 'options is falsy');
+                
                 // IMAGE STORAGE FLOW:
                 // 1. User crops here → cropRect {x1,y1,x2,y2} stored in hidden input (images_meta)
                 // 2. On submit: ORIGINAL image uploaded, crop coords saved to post_media.settings_json
@@ -1595,6 +1598,7 @@ const FieldsetBuilder = (function(){
                 // Items in imageEntries get blue border + full opacity
                 // Items not in imageEntries get lower opacity, click to add
                 var postId = options.postId || null;
+                console.log('[Fieldset Images] Building images fieldset, options.postId =', options.postId, ', postId =', postId);
                 var basketMedia = []; // All media from post_media for this post
                 var basketLoaded = false;
                 var basketContainer = null;
@@ -1678,6 +1682,8 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function renderBasket() {
+                    console.log('[Fieldset] renderBasket called, basketMedia.length:', basketMedia.length, 'localBasketEntries.length:', localBasketEntries.length, 'postId:', postId);
+                    
                     // Combine basketMedia (from server) + localBasketEntries (local removals)
                     var allBasketItems = [];
                     
@@ -1703,9 +1709,14 @@ const FieldsetBuilder = (function(){
                     
                     // Don't render if nothing to show
                     if (allBasketItems.length === 0) {
-                        if (basketContainer) {
-                            basketContainer.style.display = 'none';
+                        // DEBUG: Show why basket is empty
+                        if (!basketContainer) {
+                            basketContainer = document.createElement('div');
+                            basketContainer.className = 'fieldset-images-basket';
+                            fieldset.appendChild(basketContainer);
                         }
+                        basketContainer.style.display = '';
+                        basketContainer.innerHTML = '<span style="color:#888;font-size:12px;">Basket: postId=' + postId + ', media=' + basketMedia.length + '</span>';
                         return;
                     }
                     

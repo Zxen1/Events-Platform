@@ -4,6 +4,8 @@
  * Used by the images fieldset basket to show available images
  */
 
+error_log('[get-post-media] Endpoint called');
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(403);
@@ -15,6 +17,9 @@ $configCandidates = [
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',
   dirname(__DIR__, 2) . '/config/config-db.php',
+  dirname(__DIR__, 3) . '/../config/config-db.php',
+  dirname(__DIR__) . '/../config/config-db.php',
+  __DIR__ . '/config-db.php',
 ];
 
 $configPath = null;
