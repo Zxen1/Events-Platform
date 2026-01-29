@@ -1655,14 +1655,20 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function fetchBasketMedia() {
+                    console.log('[Fieldset] fetchBasketMedia called, postId:', postId, 'basketLoaded:', basketLoaded);
                     if (!postId || basketLoaded) return;
                     basketLoaded = true;
                     
-                    fetch('/gateway.php?action=get-post-media&post_id=' + postId)
+                    var url = '/gateway.php?action=get-post-media&post_id=' + postId;
+                    console.log('[Fieldset] Fetching basket from:', url);
+                    
+                    fetch(url)
                         .then(function(res) { return res.json(); })
                         .then(function(data) {
+                            console.log('[Fieldset] Basket response:', data);
                             if (data && data.success && Array.isArray(data.media)) {
                                 basketMedia = data.media;
+                                console.log('[Fieldset] Loaded', basketMedia.length, 'media items');
                                 renderBasket();
                             }
                         })
