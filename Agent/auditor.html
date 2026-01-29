@@ -183,33 +183,34 @@
         }
 
         let totalMatches = 0;
+        let filesProcessed = 0;
         resultsContainer.innerHTML = '<em>Processing...</em>';
 
         for (let file of files) {
-            // Normalize path for matching
+            // Normalize path for matching - handle both file picker and folder picker
             const relPath = file.webkitRelativePath || file.name;
-            const pathParts = relPath.split('/');
+            
+            // Normalize separators to forward slashes for consistent matching
+            const normalizedPath = relPath.replace(/\\/g, '/');
+            const pathParts = normalizedPath.split('/');
             
             // 1. Skip HIDDEN files/folders (starting with a dot)
-            if (pathParts.some(part => part.startsWith('.'))) continue;
+            if (pathParts.some(part => part.startsWith('.') && part !== '.' && part !== '..')) continue;
 
-            // 2. Skip NOISE folders (case-insensitive check)
-            const lowerPath = relPath.toLowerCase();
-            if (
-                lowerPath.includes('/node_modules/') || 
-                lowerPath.includes('/backups/') ||
-                lowerPath.includes('/agent/') ||
-                lowerPath.includes('/.git/')
-            ) continue;
+            // 2. Skip NOISE folders (check if any part of the path matches exactly)
+            // Note: 'home' is EXPLICITLY ALLOWED as it contains connectors
+            const noiseFolders = ['node_modules', 'backups', 'agent', 'bin', 'obj', 'dist'];
+            const hasNoise = pathParts.some(part => noiseFolders.includes(part.toLowerCase()));
+            if (hasNoise) continue;
 
             // 3. Skip images, fonts, and other binary blobs (only scan text)
-            const ext = relPath.split('.').pop().toLowerCase();
+            const ext = normalizedPath.split('.').pop().toLowerCase();
             const textExtensions = ['js', 'php', 'css', 'html', 'sql', 'txt', 'md', 'json'];
             if (!textExtensions.includes(ext)) continue;
 
+            filesProcessed++;
             const content = await file.text();
-            const lines = content.split('\n');
-            const isSql = file.name.endsWith('.sql');
+            const lines = content.split(/\r?\n/);
             
             lines.forEach((line, index) => {
                 keys.forEach(key => {
@@ -218,12 +219,13 @@
                         const item = document.createElement('div');
                         item.className = 'result-item';
                         
+                        const isSql = normalizedPath.endsWith('.sql');
                         const typeTag = isSql ? '<span class="tag tag-db">DB</span>' : '<span class="tag tag-code">CODE</span>';
                         const lineNum = index + 1;
                         
                         item.innerHTML = `
                             ${typeTag} 
-                            <span class="file-path">${file.name}</span> 
+                            <span class="file-path">${normalizedPath}</span> 
                             <span class="line-num">Line ${lineNum}</span>
                             <span class="key-match">Key: <strong>${key}</strong></span>
                             <div class="match-text">${escapeHtml(line.trim())}</div>
@@ -236,7 +238,7 @@
 
         resultsContainer.querySelector('em')?.remove();
         summaryContainer.style.display = 'block';
-        summaryContainer.textContent = `Found ${totalMatches} total occurrences across ${files.length} files.`;
+        summaryContainer.textContent = `Scanned ${filesProcessed} relevant files. Found ${totalMatches} total occurrences.`;
 
         generateReport(keys, files, totalMatches);
     }
