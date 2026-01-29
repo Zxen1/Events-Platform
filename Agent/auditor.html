@@ -87,6 +87,10 @@
         .file-input-wrapper {
             flex-grow: 1;
         }
+        .file-input-wrapper input {
+            display: block;
+            margin-top: 5px;
+        }
         #results {
             margin-top: 20px;
         }
@@ -133,8 +137,9 @@
         
         <div class="controls">
             <div class="file-input-wrapper">
-                <strong>Upload File to Scan:</strong>
-                <input type="file" id="filePicker" multiple>
+                <strong>Select Files or Folder:</strong>
+                <input type="file" id="filePicker" multiple webkitdirectory directory>
+                <small>Note: Most browsers allow selecting a folder via this button.</small>
             </div>
             <button onclick="processFiles()">Scan Files</button>
             <button style="background: #6c757d;" onclick="clearResults()">Clear</button>
@@ -174,6 +179,14 @@
         resultsContainer.innerHTML = '<em>Processing...</em>';
 
         for (let file of files) {
+            // Skip common noise folders if a directory was selected
+            if (file.webkitRelativePath && (
+                file.webkitRelativePath.includes('/node_modules/') || 
+                file.webkitRelativePath.includes('/.git/') ||
+                file.webkitRelativePath.includes('/backups/') ||
+                file.webkitRelativePath.includes('/Agent/')
+            )) continue;
+
             const content = await file.text();
             const lines = content.split('\n');
             const isSql = file.name.endsWith('.sql');
