@@ -1537,9 +1537,6 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'images':
-                // DEBUG: Log postId from options
-                console.log('[Fieldset] IMAGES CASE - options.postId:', options ? options.postId : 'options is falsy');
-                
                 // IMAGE STORAGE FLOW:
                 // 1. User crops here → cropRect {x1,y1,x2,y2} stored in hidden input (images_meta)
                 // 2. On submit: ORIGINAL image uploaded, crop coords saved to post_media.settings_json
@@ -1598,7 +1595,6 @@ const FieldsetBuilder = (function(){
                 // Items in imageEntries get blue border + full opacity
                 // Items not in imageEntries get lower opacity, click to add
                 var postId = options.postId || null;
-                console.log('[Fieldset Images] Building images fieldset, options.postId =', options.postId, ', postId =', postId);
                 var basketMedia = []; // All media from post_media for this post
                 var basketLoaded = false;
                 var basketContainer = null;
@@ -1659,31 +1655,23 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function fetchBasketMedia() {
-                    console.log('[Fieldset] fetchBasketMedia called, postId:', postId, 'basketLoaded:', basketLoaded);
                     if (!postId || basketLoaded) return;
                     basketLoaded = true;
                     
-                    var url = '/gateway.php?action=get-post-media&post_id=' + postId;
-                    console.log('[Fieldset] Fetching basket from:', url);
-                    
-                    fetch(url)
+                    fetch('/gateway.php?action=get-post-media&post_id=' + postId)
                         .then(function(res) { return res.json(); })
                         .then(function(data) {
-                            console.log('[Fieldset] Basket response:', data);
                             if (data && data.success && Array.isArray(data.media)) {
                                 basketMedia = data.media;
-                                console.log('[Fieldset] Loaded', basketMedia.length, 'media items');
                                 renderBasket();
                             }
                         })
                         .catch(function(err) {
-                            console.warn('[Fieldset] Failed to load basket media:', err);
+                            // Silent fail - basket just won't show
                         });
                 }
                 
                 function renderBasket() {
-                    console.log('[Fieldset] renderBasket called, basketMedia.length:', basketMedia.length, 'localBasketEntries.length:', localBasketEntries.length, 'postId:', postId);
-                    
                     // Combine basketMedia (from server) + localBasketEntries (local removals)
                     var allBasketItems = [];
                     
@@ -1709,19 +1697,19 @@ const FieldsetBuilder = (function(){
                     
                     // Don't render if nothing to show
                     if (allBasketItems.length === 0) {
-                        // DEBUG: Show why basket is empty
-                        if (!basketContainer) {
-                            basketContainer = document.createElement('div');
-                            basketContainer.className = 'fieldset-images-basket';
-                            fieldset.appendChild(basketContainer);
+                        if (basketContainer) {
+                            basketContainer.style.display = 'none';
                         }
-                        basketContainer.style.display = '';
-                        basketContainer.innerHTML = '<span style="color:#888;font-size:12px;">Basket: postId=' + postId + ', media=' + basketMedia.length + '</span>';
                         return;
                     }
                     
                     // Create container if needed
                     if (!basketContainer) {
+                        var basketLabel = document.createElement('div');
+                        basketLabel.className = 'fieldset-images-basket-label';
+                        basketLabel.textContent = 'Image History';
+                        fieldset.appendChild(basketLabel);
+                        
                         basketContainer = document.createElement('div');
                         basketContainer.className = 'fieldset-images-basket';
                         fieldset.appendChild(basketContainer);
@@ -1889,37 +1877,45 @@ const FieldsetBuilder = (function(){
                     // Create a small local preview so users see exactly what the square crop will look like.
                     var url = entry.fileUrl;
                     var img = new Image();
+                    // Enable CORS for CDN images so canvas can export them
+                    img.crossOrigin = 'anonymous';
                     img.onload = function() {
-                        var iw = img.naturalWidth || img.width;
-                        var ih = img.naturalHeight || img.height;
-                        if (!iw || !ih) return;
+                        try {
+                            var iw = img.naturalWidth || img.width;
+                            var ih = img.naturalHeight || img.height;
+                            if (!iw || !ih) return;
 
-                        var rect = entry.cropRect;
-                        var sx = Math.max(0, Math.min(iw, rect.x1));
-                        var sy = Math.max(0, Math.min(ih, rect.y1));
-                        var sw = Math.max(1, Math.min(iw - sx, rect.x2 - rect.x1));
-                        var sh = Math.max(1, Math.min(ih - sy, rect.y2 - rect.y1));
+                            var rect = entry.cropRect;
+                            var sx = Math.max(0, Math.min(iw, rect.x1));
+                            var sy = Math.max(0, Math.min(ih, rect.y1));
+                            var sw = Math.max(1, Math.min(iw - sx, rect.x2 - rect.x1));
+                            var sh = Math.max(1, Math.min(ih - sy, rect.y2 - rect.y1));
 
-                        var canvas = document.createElement('canvas');
-                        canvas.width = 200;
-                        canvas.height = 200;
-                        var ctx = canvas.getContext('2d');
-                        if (!ctx) throw new Error('Images fieldset crop preview: canvas 2D context unavailable.');
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                            var canvas = document.createElement('canvas');
+                            canvas.width = 200;
+                            canvas.height = 200;
+                            var ctx = canvas.getContext('2d');
+                            if (!ctx) return; // Can't get context, skip preview
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-                        canvas.toBlob(function(blob) {
-                            if (!blob) throw new Error('Images fieldset crop preview: failed to generate preview blob.');
+                            canvas.toBlob(function(blob) {
+                                if (!blob) return; // Failed to generate blob, skip preview
 
-                            if (entry.previewUrl && entry.previewUrl.indexOf('blob:') === 0) {
-                                try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
-                            }
-                            entry.previewUrl = URL.createObjectURL(blob);
+                                if (entry.previewUrl && entry.previewUrl.indexOf('blob:') === 0) {
+                                    try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
+                                }
+                                entry.previewUrl = URL.createObjectURL(blob);
+                                renderImages();
+                            }, 'image/jpeg', 0.92);
+                        } catch (e) {
+                            // CORS or other error - skip preview generation, crop is still saved
                             renderImages();
-                        }, 'image/jpeg', 0.92);
+                        }
                     };
                     img.onerror = function() {
-                        throw new Error('Images fieldset crop preview: failed to load image for preview.');
+                        // Failed to load image for preview - crop is still saved, just no preview
+                        renderImages();
                     };
                     img.src = url;
                 }

@@ -754,8 +754,15 @@
 }
 
 /* Images Basket - shows all post_media as mini-thumbs */
-.fieldset-images-basket {
+.fieldset-images-basket-label {
     margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.fieldset-images-basket {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;

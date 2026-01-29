@@ -225,6 +225,15 @@ const MemberModule = (function() {
         initHeaderDrag();
         loadStoredSession();
         render();
+        
+        // Listen for post updates to refresh My Posts cards
+        if (window.App && typeof App.on === 'function') {
+            App.on('post:updated', function(data) {
+                if (data && data.post_id) {
+                    refreshMyPostCard(data.post_id);
+                }
+            });
+        }
     }
 
     var categoriesLoadingPromise = null;
@@ -3488,6 +3497,60 @@ const MemberModule = (function() {
             var card = renderMyPostCard(post);
             myPostsPanel.appendChild(card);
         });
+    }
+
+    function refreshMyPostCard(postId) {
+        // Find the existing post container
+        var container = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"]');
+        if (!container) return;
+        
+        // Fetch fresh post data
+        fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId)
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success && res.posts && res.posts.length > 0) {
+                    var post = res.posts[0];
+                    
+                    // Find the old card element (first child that's a post-card)
+                    var oldCard = container.querySelector('.post-card');
+                    if (!oldCard) return;
+                    
+                    // Create new card using PostModule
+                    var newCard = null;
+                    if (window.PostModule && typeof PostModule.renderPostCard === 'function') {
+                        newCard = PostModule.renderPostCard(post);
+                    } else {
+                        newCard = document.createElement('div');
+                        newCard.className = 'post-card';
+                        var fallbackTitle = post.checkout_title || 'Post #' + post.id;
+                        if (fallbackTitle === 'Array') fallbackTitle = 'Post #' + post.id;
+                        newCard.textContent = fallbackTitle;
+                    }
+                    
+                    // Prevent postcard from opening when edit/manage accordion is active
+                    newCard.addEventListener('click', function(e) {
+                        var editAcc = container.querySelector('.member-mypost-edit-accordion');
+                        var manageAcc = container.querySelector('.member-mypost-manage-accordion');
+                        var editActive = editAcc && !editAcc.hidden;
+                        var manageActive = manageAcc && manageAcc.dataset.expanded === 'true';
+                        if (editActive || manageActive) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
+                    }, true);
+                    
+                    // Replace old card with new one
+                    oldCard.parentNode.replaceChild(newCard, oldCard);
+                    
+                    // Update cached data
+                    if (editingPostsData[postId]) {
+                        editingPostsData[postId].original = post;
+                    }
+                }
+            })
+            .catch(function(err) {
+                // Silent fail - card just won't update
+            });
     }
 
     function renderMyPostCard(post) {
