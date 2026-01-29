@@ -593,9 +593,9 @@ foreach ($byLoc as $locNum => $entries) {
     if (($key === 'description' || $baseType === 'description') && is_string($val)) $card['description'] = trim($val);
     
     $fieldLabel = isset($e['name']) ? trim((string)$e['name']) : '';
-    if ($baseType === 'custom_text' && is_string($val)) $card['custom_text'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
-    if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
-    if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom_text' && is_string($val)) $card['custom_text'] = trim($val);
+    if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = trim($val);
+    if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = trim($val);
     if ($baseType === 'custom_checklist' && is_array($val)) {
       $items = [];
       foreach ($val as $v0) {
@@ -604,9 +604,9 @@ foreach ($byLoc as $locNum => $entries) {
       }
       $items = array_values(array_unique($items));
       $joined = implode(', ', $items);
-      $card['custom_checklist'] = $fieldLabel !== '' ? $fieldLabel . ': ' . $joined : $joined;
+      $card['custom_checklist'] = $joined;
     }
-    if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = trim($val);
     
     if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
     if ($baseType === 'public_phone' && is_array($val)) {
@@ -621,7 +621,14 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
-      $card['amenity_summary'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      // Save detailed amenities for the summary column (clean names for fast rendering)
+      $summaryArr = [];
+      foreach ($val as $am) {
+        if (is_array($am) && isset($am['amenity']) && (string)($am['value'] ?? '') === '1') {
+          $summaryArr[] = $am['amenity'];
+        }
+      }
+      $card['amenity_summary'] = json_encode($summaryArr, JSON_UNESCAPED_UNICODE);
       $card['amenities_data'] = $val;
       continue;
     }
