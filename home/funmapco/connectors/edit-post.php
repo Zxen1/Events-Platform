@@ -696,50 +696,41 @@ foreach ($byLoc as $locNum => $entries) {
   $lat = (float)($card['latitude'] ?? 0);
   $lng = (float)($card['longitude'] ?? 0);
   $timezone = null;
-  $mapCardId = isset($mapCardIdByLoc[$locNum]) ? (int)$mapCardIdByLoc[$locNum] : 0;
+  $oldMapCardId = isset($mapCardIdByLoc[$locNum]) ? (int)$mapCardIdByLoc[$locNum] : 0;
 
-  if ($mapCardId > 0) {
-    // Update map card in place (preserve ID)
-    $stmtCard = $mysqli->prepare("UPDATE post_map_cards SET subcategory_key = ?, title = ?, description = ?, media_ids = ?, custom_text = ?, custom_textarea = ?, custom_dropdown = ?, custom_checklist = ?, custom_radio = ?, public_email = ?, phone_prefix = ?, public_phone = ?, venue_name = ?, address_line = ?, city = ?, latitude = ?, longitude = ?, country_code = ?, timezone = ?, age_rating = ?, website_url = ?, tickets_url = ?, coupon_code = ?, session_summary = ?, price_summary = ?, amenity_summary = ?, updated_at = NOW() WHERE id = ? AND post_id = ?");
-    if (!$stmtCard) {
-      abort_with_error($mysqli, 500, 'Prepare update map card', $transactionActive);
+  // Insert map card (standard insert, identical to backup)
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  
+  if (!$stmtCard) {
+    abort_with_error($mysqli, 500, 'Prepare insert map card', $transactionActive);
+  }
+  $bindOk = $stmtCard->bind_param(
+    'issssssssssssssddssssssssss',
+    $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
+    $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
+    $card['public_email'], $card['phone_prefix'], $card['public_phone'],
+    $card['venue_name'], $card['address_line'], $card['city'],
+    $lat, $lng, $card['country_code'], $timezone,
+    $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
+    $card['session_summary'], $card['price_summary'], $card['amenity_summary']
+  );
+  if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card', $transactionActive); }
+  if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
+  $mapCardId = $stmtCard->insert_id;
+  $stmtCard->close();
+
+  // Preserve original map_card_id if it existed for this location
+  if ($oldMapCardId > 0 && $mapCardId > 0 && $oldMapCardId !== $mapCardId) {
+    $stmtId = $mysqli->prepare("UPDATE post_map_cards SET id = ? WHERE id = ? AND post_id = ?");
+    if (!$stmtId) {
+      abort_with_error($mysqli, 500, 'Prepare preserve map card id', $transactionActive);
     }
-    $bindOk = $stmtCard->bind_param(
-      'sssssssssssssssddsssssssssii',
-      $subcategoryKey, $card['title'], $card['description'], $mediaString,
-      $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
-      $card['public_email'], $card['phone_prefix'], $card['public_phone'],
-      $card['venue_name'], $card['address_line'], $card['city'],
-      $lat, $lng, $card['country_code'], $timezone,
-      $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
-      $card['session_summary'], $card['price_summary'], $card['amenity_summary'],
-      $mapCardId, $postId
-    );
-    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind update map card', $transactionActive); }
-    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Update map card', $transactionActive); }
-    $stmtCard->close();
-  } else {
-    // Insert map card (new location)
-    $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-    
-    if (!$stmtCard) {
-      abort_with_error($mysqli, 500, 'Prepare insert map card', $transactionActive);
-    }
-    $bindOk = $stmtCard->bind_param(
-      'issssssssssssssddssssssssss',
-      $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
-      $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
-      $card['public_email'], $card['phone_prefix'], $card['public_phone'],
-      $card['venue_name'], $card['address_line'], $card['city'],
-      $lat, $lng, $card['country_code'], $timezone,
-      $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
-      $card['session_summary'], $card['price_summary'], $card['amenity_summary']
-    );
-    if ($bindOk === false) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Bind insert map card', $transactionActive); }
-    if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
-    $mapCardId = $stmtCard->insert_id;
-    $stmtCard->close();
+    $bindOk = $stmtId->bind_param('iii', $oldMapCardId, $mapCardId, $postId);
+    if ($bindOk === false) { $stmtId->close(); abort_with_error($mysqli, 500, 'Bind preserve map card id', $transactionActive); }
+    if (!$stmtId->execute()) { $stmtId->close(); abort_with_error($mysqli, 500, 'Preserve map card id', $transactionActive); }
+    $stmtId->close();
+    $mapCardId = $oldMapCardId;
   }
 
   if ($primaryTitle === '') $primaryTitle = $card['title'];
