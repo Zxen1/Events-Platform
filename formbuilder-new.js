@@ -4561,8 +4561,9 @@
     /**
      * Update delete button visibility based on venue count
      */
-    function updateVenueDeleteButtons() {
-        var allVenueContainers = document.querySelectorAll('.member-location-container');
+    function updateVenueDeleteButtons(rootEl) {
+        var scope = rootEl && rootEl.querySelectorAll ? rootEl : document;
+        var allVenueContainers = scope.querySelectorAll('.member-location-container');
         var venueCount = allVenueContainers.length;
         var showDelete = venueCount > 1;
         
@@ -4584,8 +4585,9 @@
      * Renumber all location containers sequentially after a delete
      * Updates container data attributes, header text, and fieldset labels
      */
-    function renumberLocationContainers() {
-        var allContainers = document.querySelectorAll('.member-location-container');
+    function renumberLocationContainers(rootEl) {
+        var scope = rootEl && rootEl.querySelectorAll ? rootEl : document;
+        var allContainers = scope.querySelectorAll('.member-location-container');
         var count = allContainers.length;
         
         // Determine location type from first container's location fieldset

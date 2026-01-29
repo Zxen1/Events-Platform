@@ -2668,10 +2668,10 @@ const MemberModule = (function() {
                                         var qtyDisplay = document.querySelector('.member-postform-location-quantity-display');
                                         if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                         if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
-                                            FormbuilderModule.updateVenueDeleteButtons();
+                                            FormbuilderModule.updateVenueDeleteButtons(container.parentNode);
                                         }
                                         if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                                            FormbuilderModule.renumberLocationContainers();
+                                            FormbuilderModule.renumberLocationContainers(container.parentNode);
                                         }
                                         // Focus the container that took the deleted one's place
                                         if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
@@ -4099,10 +4099,10 @@ const MemberModule = (function() {
                             if (confirmed) {
                                 containerEl.remove();
                                 if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
-                                    FormbuilderModule.updateVenueDeleteButtons();
+                                    FormbuilderModule.updateVenueDeleteButtons(container.parentNode);
                                 }
                                 if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                                    FormbuilderModule.renumberLocationContainers();
+                                    FormbuilderModule.renumberLocationContainers(container.parentNode);
                                 }
                                 var qtyDisplay = container.querySelector('.member-postform-location-quantity-display');
                                 if (qtyDisplay) {
@@ -4112,6 +4112,7 @@ const MemberModule = (function() {
                                 if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
                                     FormbuilderModule.focusLocationContainerAfterDelete(deletedNum);
                                 }
+                                try { container.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                             }
                         });
                     }
@@ -4138,7 +4139,7 @@ const MemberModule = (function() {
                     });
                 }
                 if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
-                    FormbuilderModule.renumberLocationContainers();
+                    FormbuilderModule.renumberLocationContainers(container);
                 }
                 // Store initial extracted fields for dirty checking (must happen after populate)
                 editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
@@ -4204,6 +4205,14 @@ const MemberModule = (function() {
             });
             // Also custom events from fieldsets
             container.addEventListener('fieldset:sessions-change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            container.addEventListener('fieldset:validity-change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            container.addEventListener('fieldset:change', function() {
                 updateHeaderSaveDiscardState();
                 updateFooterButtonState();
             });
@@ -5197,7 +5206,7 @@ const MemberModule = (function() {
                         if (!row) return [];
                         var amenityName = row.dataset.amenity || '';
                         var val = row.dataset.value;
-                        if (val !== '1' && val !== '0') return []; // incomplete
+                        if (val !== '1' && val !== '0') val = ''; // allow partial for dirty tracking
                         out.push({
                             amenity: amenityName,
                             value: val
