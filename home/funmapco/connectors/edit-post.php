@@ -42,6 +42,7 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 set_time_limit(300);
 
 $configCandidates = [
+  '/home/funmapco/config/config-db.php',
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',
   dirname(__DIR__, 2) . '/config/config-db.php',
@@ -65,6 +66,7 @@ if ($configPath === null) {
 require_once $configPath;
 
 $authCandidates = [
+  '/home/funmapco/config/config-auth.php',
   __DIR__ . '/../config/config-auth.php',
   dirname(__DIR__) . '/config/config-auth.php',
   dirname(__DIR__, 2) . '/config/config-auth.php',
