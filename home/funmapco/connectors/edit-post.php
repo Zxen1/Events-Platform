@@ -696,8 +696,6 @@ foreach ($byLoc as $locNum => $entries) {
   $lat = (float)($card['latitude'] ?? 0);
   $lng = (float)($card['longitude'] ?? 0);
   $timezone = null;
-  $oldMapCardId = isset($mapCardIdByLoc[$locNum]) ? (int)$mapCardIdByLoc[$locNum] : 0;
-
   // Insert map card (standard insert, identical to backup)
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
@@ -719,19 +717,6 @@ foreach ($byLoc as $locNum => $entries) {
   if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
   $mapCardId = $stmtCard->insert_id;
   $stmtCard->close();
-
-  // Preserve original map_card_id if it existed for this location
-  if ($oldMapCardId > 0 && $mapCardId > 0 && $oldMapCardId !== $mapCardId) {
-    $stmtId = $mysqli->prepare("UPDATE post_map_cards SET id = ? WHERE id = ? AND post_id = ?");
-    if (!$stmtId) {
-      abort_with_error($mysqli, 500, 'Prepare preserve map card id', $transactionActive);
-    }
-    $bindOk = $stmtId->bind_param('iii', $oldMapCardId, $mapCardId, $postId);
-    if ($bindOk === false) { $stmtId->close(); abort_with_error($mysqli, 500, 'Bind preserve map card id', $transactionActive); }
-    if (!$stmtId->execute()) { $stmtId->close(); abort_with_error($mysqli, 500, 'Preserve map card id', $transactionActive); }
-    $stmtId->close();
-    $mapCardId = $oldMapCardId;
-  }
 
   if ($primaryTitle === '') $primaryTitle = $card['title'];
 
