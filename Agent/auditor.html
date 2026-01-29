@@ -189,24 +189,13 @@
         for (let file of files) {
             // Normalize path for matching - handle both file picker and folder picker
             const relPath = file.webkitRelativePath || file.name;
-            
-            // Normalize separators to forward slashes for consistent matching
             const normalizedPath = relPath.replace(/\\/g, '/');
-            const pathParts = normalizedPath.split('/');
             
-            // 1. Skip HIDDEN files/folders (starting with a dot)
-            if (pathParts.some(part => part.startsWith('.') && part !== '.' && part !== '..')) continue;
-
-            // 2. Skip NOISE folders (check if any part of the path matches exactly)
-            // Note: 'home' is EXPLICITLY ALLOWED as it contains connectors
-            const noiseFolders = ['node_modules', 'backups', 'agent', 'bin', 'obj', 'dist'];
-            const hasNoise = pathParts.some(part => noiseFolders.includes(part.toLowerCase()));
-            if (hasNoise) continue;
-
-            // 3. Skip images, fonts, and other binary blobs (only scan text)
+            // NO RESTRICTIONS: Search any file and any folder.
+            // We only skip actual binary files to prevent the browser from crashing/hanging on images/zips.
             const ext = normalizedPath.split('.').pop().toLowerCase();
-            const textExtensions = ['js', 'php', 'css', 'html', 'sql', 'txt', 'md', 'json'];
-            if (!textExtensions.includes(ext)) continue;
+            const binaryExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'zip', 'pdf', 'exe', 'dll', 'ttf', 'woff', 'woff2'];
+            if (binaryExtensions.includes(ext)) continue;
 
             filesProcessed++;
             const content = await file.text();
