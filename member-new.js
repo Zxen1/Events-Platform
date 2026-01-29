@@ -3129,8 +3129,6 @@ const MemberModule = (function() {
     function getEditPostMissingList(accordion) {
         var out = [];
         if (!accordion) return out;
-        var locationCount = accordion.querySelectorAll('.member-location-container[data-location-number]').length;
-
         var fieldsets = accordion.querySelectorAll('.fieldset[data-complete="false"]');
         for (var i = 0; i < fieldsets.length; i++) {
             var fs = fieldsets[i];
@@ -3144,14 +3142,7 @@ const MemberModule = (function() {
             } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
                 name = fs.dataset.fieldsetKey.trim();
             }
-            if (name) {
-                var locWrap = fs.closest ? fs.closest('.member-location-container[data-location-number]') : null;
-                var locNum = locWrap && locWrap.dataset ? parseInt(locWrap.dataset.locationNumber || '0', 10) : 0;
-                if (locationCount > 1 && locNum > 0) {
-                    name = name + ' ' + locNum;
-                }
-                out.push(name);
-            }
+            if (name) out.push(name);
         }
 
         var seen = {};
