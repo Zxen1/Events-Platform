@@ -2,7 +2,9 @@
 // Debug: show actual PHP errors in response
 set_exception_handler(function($e) {
   $logPath = __DIR__ . '/edit-post-debug.log';
-  @file_put_contents($logPath, '[' . date('c') . '] exception: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
+  $logLine = '[edit-post] exception: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
+  @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
+  error_log($logLine);
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(500);
   echo json_encode(['success' => false, 'error' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
@@ -14,8 +16,9 @@ register_shutdown_function(function() {
   $err = error_get_last();
   if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
     $logPath = __DIR__ . '/edit-post-debug.log';
-    $msg = '[' . date('c') . '] fatal: ' . ($err['message'] ?? '') . ' in ' . basename($err['file'] ?? '') . ':' . ($err['line'] ?? 0);
-    @file_put_contents($logPath, $msg . PHP_EOL, FILE_APPEND);
+    $logLine = '[edit-post] fatal: ' . ($err['message'] ?? '') . ' in ' . basename($err['file'] ?? '') . ':' . ($err['line'] ?? 0);
+    @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
+    error_log($logLine);
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(500);
     echo json_encode([
@@ -135,7 +138,9 @@ function fail_key(int $code, string $messageKey, array $placeholders = null, arr
 function debug_log(string $message): void
 {
   $logPath = __DIR__ . '/edit-post-debug.log';
-  @file_put_contents($logPath, '[' . date('c') . '] ' . $message . PHP_EOL, FILE_APPEND);
+  $logLine = '[edit-post] ' . $message;
+  @file_put_contents($logPath, '[' . date('c') . '] ' . $logLine . PHP_EOL, FILE_APPEND);
+  error_log($logLine);
 }
 
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
