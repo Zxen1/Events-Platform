@@ -3954,27 +3954,6 @@ const MemberModule = (function() {
             saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
             saveBtn.textContent = 'Save';
             saveBtn.disabled = true;
-            
-            // Attach completeness check (popover) to Edit Save button
-            attachMissingPopoverToButton(saveBtn, function() {
-                var missing = [];
-                // Check all fieldsets inside the accordion for completeness
-                var fieldsets = container.querySelectorAll('.fieldset[data-complete="false"]');
-                fieldsets.forEach(function(fs) {
-                    var name = '';
-                    var labelTextEl = fs.querySelector('.fieldset-label-text');
-                    if (labelTextEl && labelTextEl.textContent) {
-                        name = labelTextEl.textContent.trim();
-                    } else if (fs.dataset && fs.dataset.fieldsetName) {
-                        name = fs.dataset.fieldsetName.trim();
-                    } else if (fs.dataset && fs.dataset.fieldsetKey) {
-                        name = fs.dataset.fieldsetKey.trim();
-                    }
-                    if (name) missing.push(name);
-                });
-                return missing;
-            });
-
             saveBtn.addEventListener('click', function() {
                 if (saveBtn.disabled) return;
                 var postContainer = container.closest('.member-mypost-item');
@@ -4003,12 +3982,10 @@ const MemberModule = (function() {
             discardBtn.textContent = 'Discard';
             discardBtn.disabled = true;
             
-            // Function to update footer button states based on dirty AND complete check
+            // Function to update footer button states based on dirty check
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
-                var isComplete = container.querySelectorAll('.fieldset[data-complete="false"]').length === 0;
-                
-                saveBtn.disabled = !isDirty || !isComplete;
+                saveBtn.disabled = !isDirty;
                 discardBtn.disabled = !isDirty;
             }
 
@@ -4096,23 +4073,23 @@ const MemberModule = (function() {
         var fieldsetEls = container.querySelectorAll('.fieldset[data-fieldset-key]');
         
         fieldsetEls.forEach(function(fs) {
+            // Ensure this fieldset belongs directly to this container (not a nested one)
+            // But since our containers are usually shallow, querySelectorAll is mostly fine.
+            // However, to be safe, we check if it's a descendant of another .fieldset
             if (fs.parentElement.closest('.fieldset')) return;
 
             var key = fs.dataset.fieldsetKey;
             var type = fs.dataset.fieldsetType || key;
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
             
-            // CANONICAL KEY MAPPING (Hyphen to Underscore)
-            // Fieldsets use hyphens, Database uses underscores.
-            var dbKey = key.replace(/-/g, '_');
-            var dbType = baseType.replace(/-/g, '_');
-
             // If the fieldset has a custom _setValue, use it
             if (typeof fs._setValue === 'function') {
-                var val = undefined;
+                var val = null;
                 
-                // 1. Direct mapping for known complex types
+                // Map common fields from mapCard
                 switch (baseType) {
+                    case 'title': val = mapCard.title; break;
+                    case 'description': val = mapCard.description; break;
                     case 'venue':
                         val = {
                             venue_name: mapCard.venue_name,
@@ -4132,39 +4109,93 @@ const MemberModule = (function() {
                             country_code: mapCard.country_code
                         };
                         break;
-                    case 'public-phone':
+                    case 'public_email': val = mapCard.public_email; break;
                     case 'public_phone':
                         val = {
                             phone_prefix: mapCard.phone_prefix || null,
                             public_phone: mapCard.public_phone || ''
                         };
                         break;
-                    case 'amenities':
-                        // Prefer detailed amenities array if available (from get-posts.php?full=1)
-                        if (Array.isArray(mapCard.amenities_detailed)) {
-                            val = mapCard.amenities_detailed;
-                        } else {
-                            // Fallback to amenity_summary (string or array of strings)
-                            try {
-                                var rawAm = mapCard.amenity_summary;
-                                if (typeof rawAm === 'string' && rawAm.trim() !== '') {
-                                    rawAm = JSON.parse(rawAm);
-                                }
-                                if (Array.isArray(rawAm)) {
-                                    // Convert ["Parking", "Wifi"] to [{amenity:"Parking", value:"1"}, ...]
-                                    // AND handle [{amenity:"Parking", value:"1"}] (if it was already an object array)
-                                    val = rawAm.map(function(item) {
-                                        if (typeof item === 'string') return { amenity: item, value: '1' };
-                                        return item;
-                                    });
-                                } else {
-                                    val = [];
-                                }
-                            } catch (e) { val = []; }
-                        }
+                    case 'website_url':
+                    case 'website-url':
+                    case 'url':
+                        val = mapCard.website_url;
                         break;
+                    case 'tickets_url':
+                    case 'tickets-url':
+                        val = mapCard.tickets_url;
+                        break;
+                    case 'coupon': val = mapCard.coupon_code; break;
+                    case 'custom_text': val = mapCard.custom_text; break;
+                    case 'custom_textarea': val = mapCard.custom_textarea; break;
+                    case 'custom_dropdown': val = mapCard.custom_dropdown; break;
+                    case 'custom_checklist': 
+                        try {
+                            val = JSON.parse(mapCard.custom_checklist || '[]');
+                        } catch (e) { val = []; }
+                        break;
+                    case 'custom_radio': val = mapCard.custom_radio; break;
+                    case 'age_rating': val = mapCard.age_rating; break;
+                    
+                    case 'session_pricing':
+                        val = {
+                            sessions: mapCard.sessions || [],
+                            pricing_groups: mapCard.pricing_groups || {},
+                            age_ratings: mapCard.age_ratings || {}
+                        };
+                        break;
+                    
+                    case 'ticket_pricing':
+                        // Convert API format (nested objects) to fieldset format (arrays)
+                        // API: { groupKey: { ticketArea: { ticket_area, tiers: [{ pricing_tier, price, currency }] } } }
+                        // Fieldset expects: { groupKey: [{ ticket_area, tiers, currency, age_rating }] }
+                        // Currency and age_rating are per-group (same for all ticket areas in group)
+                        var apiPricingGroups = mapCard.pricing_groups || {};
+                        var apiAgeRatings = mapCard.age_ratings || {};
+                        var convertedPricingGroups = {};
+                        
+                        Object.keys(apiPricingGroups).forEach(function(groupKey) {
+                            var ticketAreasObj = apiPricingGroups[groupKey];
+                            if (ticketAreasObj && typeof ticketAreasObj === 'object') {
+                                // Get currency from first tier of first ticket area (all use same currency per group)
+                                var groupCurrency = '';
+                                var firstTicketAreaKey = Object.keys(ticketAreasObj)[0];
+                                if (firstTicketAreaKey) {
+                                    var firstArea = ticketAreasObj[firstTicketAreaKey];
+                                    if (firstArea && firstArea.tiers && firstArea.tiers[0]) {
+                                        groupCurrency = firstArea.tiers[0].currency || '';
+                                    }
+                                }
+                                
+                                // Get age rating for this group
+                                var groupAgeRating = apiAgeRatings[groupKey] || '';
+                                
+                                // Convert ticket areas object to array
+                                convertedPricingGroups[groupKey] = Object.keys(ticketAreasObj).map(function(ticketAreaKey, idx) {
+                                    var ticketArea = ticketAreasObj[ticketAreaKey];
+                                    return {
+                                        ticket_area: ticketArea.ticket_area,
+                                        tiers: ticketArea.tiers || [],
+                                        // Add currency and age_rating to first element (fieldset reads from [0])
+                                        currency: idx === 0 ? groupCurrency : '',
+                                        age_rating: idx === 0 ? groupAgeRating : ''
+                                    };
+                                });
+                            }
+                        });
+                        val = {
+                            pricing_groups: convertedPricingGroups,
+                            age_ratings: apiAgeRatings
+                        };
+                        break;
+                    
+                    case 'sessions':
+                        val = {
+                            sessions: mapCard.sessions || []
+                        };
+                        break;
+                        
                     case 'item-pricing':
-                    case 'item_pricing':
                         val = {
                             item_name: mapCard.item_name,
                             item_price: mapCard.item_price,
@@ -4172,7 +4203,16 @@ const MemberModule = (function() {
                             item_variants: mapCard.item_variants || []
                         };
                         break;
+                        
+                    case 'amenities':
+                        try {
+                            val = JSON.parse(mapCard.amenity_summary || '[]');
+                        } catch (e) { val = []; }
+                        break;
+                        
                     case 'images':
+                        // Convert from API format {media_urls, media_meta} to fieldset format [{url, crop}, ...]
+                        // API meta structure: { media_id, original_filename, cropRect, cropState }
                         var urls = mapCard.media_urls || [];
                         var metas = mapCard.media_meta || [];
                         val = urls.map(function(url, idx) {
@@ -4184,38 +4224,37 @@ const MemberModule = (function() {
                             };
                         });
                         break;
+                    
                     default:
-                        // 2. Generic data lookup using canonical keys
-                        if (mapCard.hasOwnProperty(dbKey)) {
-                            val = mapCard[dbKey];
-                        } else if (mapCard.hasOwnProperty(dbType)) {
-                            val = mapCard[dbType];
-                        } else if (mapCard.hasOwnProperty(key)) {
+                        // For unknown types, try to find value by key or baseType in mapCard
+                        // Also try with hyphens converted to underscores (fieldset keys use hyphens, DB uses underscores)
+                        var keyUnderscore = key.replace(/-/g, '_');
+                        var baseTypeUnderscore = baseType.replace(/-/g, '_');
+                        
+                        if (mapCard.hasOwnProperty(key)) {
                             val = mapCard[key];
+                        } else if (mapCard.hasOwnProperty(keyUnderscore)) {
+                            val = mapCard[keyUnderscore];
                         } else if (mapCard.hasOwnProperty(baseType)) {
                             val = mapCard[baseType];
+                        } else if (mapCard.hasOwnProperty(baseTypeUnderscore)) {
+                            val = mapCard[baseTypeUnderscore];
                         }
                         break;
                 }
                 
                 if (val !== undefined) {
-                    // PREFIX CLEANING (Strip "Label: " from values saved by old buggy script)
-                    if (typeof val === 'string' && val.indexOf(': ') !== -1) {
-                        // Only strip if it looks like a prefix (e.g. "Custom Text: Value")
-                        val = val.replace(/^[^:]+:\s*/, '');
-                    }
+                    // Call _setValue even for null - the fieldset's default handler converts null to empty string
                     fs._setValue(val);
+                } else {
+                    console.warn('[Member] No value found for fieldset:', baseType);
                 }
             } else {
-                // Fallback for simple inputs
+                // Fallback for simple inputs if _setValue not present
                 var input = fs.querySelector('input:not([type="hidden"]), textarea, select');
                 if (input) {
-                    var val = mapCard[dbKey] || mapCard[key] || '';
+                    var val = mapCard[key] || '';
                     if (val !== null && val !== undefined) {
-                        // Prefix cleaning for simple inputs too
-                        if (typeof val === 'string' && val.indexOf(': ') !== -1) {
-                            val = val.replace(/^[^:]+:\s*/, '');
-                        }
                         input.value = val;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
