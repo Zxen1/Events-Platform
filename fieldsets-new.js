@@ -4667,6 +4667,14 @@ const FieldsetBuilder = (function(){
                     
                     sessSessionData = {};
                     
+                    function normalizeSessionTime(raw) {
+                        var t = String(raw || '').trim();
+                        if (!t) return '';
+                        var m = t.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+                        if (!m) return t;
+                        return m[1] + ':' + m[2];
+                    }
+                    
                     if (Array.isArray(val.sessions)) {
                         val.sessions.forEach(function(s) {
                             var date = s.date;
@@ -4675,7 +4683,7 @@ const FieldsetBuilder = (function(){
                             var groups = [];
                             if (Array.isArray(s.times)) {
                                 s.times.forEach(function(t) {
-                                    times.push(t.time || '');
+                                    times.push(normalizeSessionTime(t.time));
                                     groups.push(t.ticket_group_key || 'A');
                                 });
                             }

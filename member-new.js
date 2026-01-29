@@ -4003,7 +4003,24 @@ const MemberModule = (function() {
 
     function renderPostEditForm(post, container) {
         if (!post || !container) return;
-        
+
+        // Ensure FieldsetBuilder has picklists (amenities, etc.) before building edit fieldsets.
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.loadFromDatabase === 'function') {
+            if (!renderPostEditForm._fieldsetLoadPromise) {
+                renderPostEditForm._fieldsetLoadPromise = FieldsetBuilder.loadFromDatabase();
+            }
+            renderPostEditForm._fieldsetLoadPromise.then(function() {
+                renderPostEditForm._renderBody(post, container);
+            });
+            return;
+        }
+
+        renderPostEditForm._renderBody(post, container);
+    }
+
+    renderPostEditForm._renderBody = function(post, container) {
+        if (!post || !container) return;
+
         // 1. Resolve category and subcategory
         var categoryName = '';
         var subcategoryName = '';
