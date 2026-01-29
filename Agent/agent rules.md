@@ -1,4 +1,4 @@
-﻿# AI AGENT CONFESSIONS AND PROJECT RULES
+# AI AGENT CONFESSIONS AND PROJECT RULES
 
 ## ⚠️ CRITICAL RULE - READ FIRST ⚠️
 
@@ -476,6 +476,33 @@ item.setAttribute('role', 'button');  // ← This fixes jumping
 ```
 
 **Rule:** Any clickable element that toggles visibility (text↔input, collapsed↔expanded) should have `role="button"` on a stable parent container, not on the element that disappears.
+
+---
+
+### ✅ MOBILE VIEWPORT & MAP BEHAVIOR (530px breakpoint)
+
+**The Problem:** On mobile (iOS Safari, Chrome), scrolling content causes the browser toolbar to show/hide. This resizes the viewport, which causes Mapbox to emit `boundsChanged` events even though the user didn't interact with the map. This triggered post panel reloads and visible thumbnail flickering.
+
+**Why Body Must Scroll on Mobile:**
+- `body { overflow-y: scroll }` is **required** on mobile
+- Without it, iOS Safari detects a "fixed-height" page and shows permanent black bars at top and bottom
+- This prevents edge-to-edge map display
+- Many attempts were made to remove these black bars — body scroll is the only working solution
+
+**The Solution (January 2026):**
+- On mobile (≤530px), the post panel ignores `boundsChanged` events while visible
+- Posts are already loaded for the current area when the panel opens
+- The panel covers the entire screen on mobile — user cannot interact with the map anyway
+- If user wants posts from a different area, they close the panel, pan the map, then reopen
+- This matches recent panel behavior (which never responds to `boundsChanged`)
+- Desktop is unaffected — map is visible beside the panel, posts update when users pan
+
+**Implementation:** `post-new.js` checks `window.matchMedia('(max-width: 530px)')` and `currentMode === 'posts'` at the start of the `map:boundsChanged` handler.
+
+**NEVER:**
+- Remove `overflow-y: scroll` from body on mobile (causes iOS black bars)
+- Make post panel respond to `boundsChanged` on mobile (causes flicker)
+- Apply this fix to desktop (breaks expected pan-to-update behavior)
 
 ---
 

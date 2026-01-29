@@ -318,3 +318,11 @@ See `Agent/venue-seeding-plan.md` for full instructions, pre-flight checklist, a
 **Storage:** `avatars/` folder on Bunny CDN
 
 ---
+
+## MOBILE (530px breakpoint)
+
+- **Body must scroll** (`overflow-y: scroll`) or iOS shows black bars
+- **Post panel ignores `boundsChanged` on mobile** — prevents flicker from toolbar resize
+- Desktop unaffected — map visible beside panel, posts update on pan
+
+---
