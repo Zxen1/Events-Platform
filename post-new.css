@@ -1225,13 +1225,37 @@
 .post-thumbs {
   position: relative;
   display: flex;
+  flex-wrap: nowrap;
   gap: 5px;
-  padding: 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Webkit scrollbar styling for thumbnails */
+.post-thumbs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.post-thumbs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.post-thumbs::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+}
+
+.post-thumbs::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
 }
 
 .post-image-thumb {
   width: 50px;
   height: 50px;
+  min-width: 50px;
   object-fit: cover;
   object-position: center;
   aspect-ratio: 1/1;
@@ -1240,6 +1264,7 @@
   cursor: pointer;
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .post-image-thumb--active {
