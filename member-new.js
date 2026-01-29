@@ -4357,9 +4357,11 @@ const MemberModule = (function() {
                         break;
                         
                     case 'amenities':
-                        try {
-                            val = JSON.parse(mapCard.amenity_summary || '[]');
-                        } catch (e) { val = []; }
+                        if (Array.isArray(mapCard.amenities)) {
+                            val = mapCard.amenities;
+                        } else {
+                            val = [];
+                        }
                         break;
                         
                     case 'images':
