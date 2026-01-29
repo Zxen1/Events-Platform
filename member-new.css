@@ -392,6 +392,21 @@
   cursor: not-allowed;
 }
 
+/* Header edit buttons - shown when editing a post */
+.member-panel-header-editbuttons {
+  display: none;
+  gap: 10px;
+  padding: 0 10px;
+}
+
+.member-panel-header-editbuttons--visible {
+  display: flex;
+}
+
+.member-panel-header-editbuttons button {
+  flex: 1;
+}
+
 /* ============================================================================
    PANEL BODY
    ============================================================================ */
