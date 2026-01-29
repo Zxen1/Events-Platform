@@ -3912,6 +3912,33 @@ const FieldsetBuilder = (function(){
                     
                     tpTicketGroups = {};
                     tpTicketGroupList.innerHTML = '';
+
+                    // Derive initial currency from incoming pricing data
+                    var initialCurrencyFromData = null;
+                    if (val.pricing_groups && typeof val.pricing_groups === 'object') {
+                        Object.keys(val.pricing_groups).some(function(gk) {
+                            var pricing = val.pricing_groups[gk];
+                            if (!Array.isArray(pricing)) return false;
+                            for (var i = 0; i < pricing.length; i++) {
+                                var tiers = pricing[i] && Array.isArray(pricing[i].tiers) ? pricing[i].tiers : [];
+                                for (var j = 0; j < tiers.length; j++) {
+                                    var curr = tiers[j] && tiers[j].currency ? String(tiers[j].currency || '').trim() : '';
+                                    if (curr) {
+                                        initialCurrencyFromData = curr;
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        });
+                    }
+                    if (initialCurrencyFromData) {
+                        tpTicketCurrencyState.code = initialCurrencyFromData;
+                        if (CurrencyComponent && CurrencyComponent.isLoaded && CurrencyComponent.isLoaded()) {
+                            var found = CurrencyComponent.getData().find(function(item) { return item.value === initialCurrencyFromData; });
+                            tpTicketCurrencyState.flag = found && found.filename ? found.filename.replace('.svg', '') : null;
+                        }
+                    }
                     
                     if (val.pricing_groups && typeof val.pricing_groups === 'object') {
                         Object.keys(val.pricing_groups).forEach(function(gk) {
@@ -3933,6 +3960,10 @@ const FieldsetBuilder = (function(){
                     }
                     
                     tpEnsureDefaultGroup();
+                    if (tpTicketCurrencyState.code) {
+                        tpSyncAllTicketCurrencies();
+                        tpReformatAllPriceValues(null, tpTicketCurrencyState.code);
+                    }
                     updateCompleteFromDom();
                 };
 
@@ -4667,6 +4698,14 @@ const FieldsetBuilder = (function(){
                     
                     sessSessionData = {};
                     
+                    function normalizeSessionTime(raw) {
+                        var t = String(raw || '').trim();
+                        if (!t) return '';
+                        var m = t.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+                        if (!m) return t;
+                        return m[1] + ':' + m[2];
+                    }
+                    
                     if (Array.isArray(val.sessions)) {
                         val.sessions.forEach(function(s) {
                             var date = s.date;
@@ -4675,7 +4714,7 @@ const FieldsetBuilder = (function(){
                             var groups = [];
                             if (Array.isArray(s.times)) {
                                 s.times.forEach(function(t) {
-                                    times.push(t.time || '');
+                                    times.push(normalizeSessionTime(t.time));
                                     groups.push(t.ticket_group_key || 'A');
                                 });
                             }
