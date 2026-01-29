@@ -137,11 +137,14 @@
         
         <div class="controls">
             <div class="file-input-wrapper">
-                <strong>Select Files or Folder:</strong>
-                <input type="file" id="filePicker" multiple webkitdirectory directory>
-                <small>Note: Most browsers allow selecting a folder via this button.</small>
+                <strong>Select Files:</strong>
+                <input type="file" id="filePicker" multiple>
             </div>
-            <button onclick="processFiles()">Scan Files</button>
+            <div class="file-input-wrapper">
+                <strong>OR Select Folder:</strong>
+                <input type="file" id="folderPicker" webkitdirectory directory>
+            </div>
+            <button onclick="processFiles()">Scan Everything</button>
             <button style="background: #6c757d;" onclick="clearResults()">Clear</button>
         </div>
     </div>
@@ -162,16 +165,20 @@
         document.getElementById('results').innerHTML = '';
         document.getElementById('summary').style.display = 'none';
         document.getElementById('filePicker').value = '';
+        document.getElementById('folderPicker').value = '';
     }
 
     async function processFiles() {
         const keys = document.getElementById('keysInput').value.split(',').map(k => k.trim()).filter(k => k);
-        const files = document.getElementById('filePicker').files;
+        const filePicker = document.getElementById('filePicker');
+        const folderPicker = document.getElementById('folderPicker');
         const resultsContainer = document.getElementById('results');
         const summaryContainer = document.getElementById('summary');
 
+        const files = [...filePicker.files, ...folderPicker.files];
+
         if (files.length === 0) {
-            alert('Please select at least one file.');
+            alert('Please select files or a folder.');
             return;
         }
 
