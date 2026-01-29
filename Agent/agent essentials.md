@@ -228,6 +228,9 @@ The user prefers to run shell operations themselves. Do not use terminal access.
 ### Test Files Go in Agent Folder
 Never place test files, examples, or non-website files in the root directory. All such files must go in the `Agent/` folder.
 
+### Connector Location (Development vs Live)
+Connector files are temporarily placed in the website root for development access. Before going live, they are moved back to their secure location one tier above `public_html`. Any future connector edits require extracting the file from that secure tier, updating it, and returning it.
+
 ---
 
 ## PERFORMANCE RULES
