@@ -4146,6 +4146,9 @@ const MemberModule = (function() {
                         }
                     });
                 }
+                if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
+                    FormbuilderModule.renumberLocationContainers();
+                }
                 // Store initial extracted fields for dirty checking (must happen after populate)
                 editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
             });
