@@ -2242,35 +2242,67 @@ const AdminModule = (function() {
             });
         }
         
-        // Starting Zoom slider
-        var startingZoomSlider = document.getElementById('adminStartingZoom');
-        var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');
-        if (startingZoomSlider && startingZoomDisplay) {
-            var initialZoom = mapTabData.starting_zoom !== undefined ? parseFloat(mapTabData.starting_zoom) : 10;
-            startingZoomSlider.value = initialZoom;
-            startingZoomDisplay.textContent = Math.round(initialZoom).toString();
+        // Starting Zoom Desktop slider
+        var startingZoomDesktopSlider = document.getElementById('adminStartingZoomDesktop');
+        var startingZoomDesktopDisplay = document.getElementById('adminStartingZoomDesktopDisplay');
+        if (startingZoomDesktopSlider && startingZoomDesktopDisplay) {
+            var initialZoomDesktop = mapTabData.starting_zoom_desktop !== undefined ? parseFloat(mapTabData.starting_zoom_desktop) : 10;
+            startingZoomDesktopSlider.value = initialZoomDesktop;
+            startingZoomDesktopDisplay.textContent = Math.round(initialZoomDesktop).toString();
             
-            registerField('map.starting_zoom', initialZoom);
+            registerField('map.starting_zoom_desktop', initialZoomDesktop);
             
-            startingZoomSlider.addEventListener('input', function() {
-                startingZoomDisplay.textContent = Math.round(parseFloat(startingZoomSlider.value)).toString();
-                updateField('map.starting_zoom', parseFloat(startingZoomSlider.value));
+            startingZoomDesktopSlider.addEventListener('input', function() {
+                startingZoomDesktopDisplay.textContent = Math.round(parseFloat(startingZoomDesktopSlider.value)).toString();
+                updateField('map.starting_zoom_desktop', parseFloat(startingZoomDesktopSlider.value));
             });
         }
         
-        // Starting Pitch slider
-        var startingPitchSlider = document.getElementById('adminStartingPitch');
-        var startingPitchDisplay = document.getElementById('adminStartingPitchDisplay');
-        if (startingPitchSlider && startingPitchDisplay) {
-            var initialPitch = mapTabData.starting_pitch !== undefined ? parseFloat(mapTabData.starting_pitch) : 0;
-            startingPitchSlider.value = initialPitch;
-            startingPitchDisplay.textContent = Math.round(initialPitch).toString() + '°';
+        // Starting Zoom Mobile slider
+        var startingZoomMobileSlider = document.getElementById('adminStartingZoomMobile');
+        var startingZoomMobileDisplay = document.getElementById('adminStartingZoomMobileDisplay');
+        if (startingZoomMobileSlider && startingZoomMobileDisplay) {
+            var initialZoomMobile = mapTabData.starting_zoom_mobile !== undefined ? parseFloat(mapTabData.starting_zoom_mobile) : 10;
+            startingZoomMobileSlider.value = initialZoomMobile;
+            startingZoomMobileDisplay.textContent = Math.round(initialZoomMobile).toString();
             
-            registerField('map.starting_pitch', initialPitch);
+            registerField('map.starting_zoom_mobile', initialZoomMobile);
             
-            startingPitchSlider.addEventListener('input', function() {
-                startingPitchDisplay.textContent = Math.round(parseFloat(startingPitchSlider.value)).toString() + '°';
-                updateField('map.starting_pitch', parseFloat(startingPitchSlider.value));
+            startingZoomMobileSlider.addEventListener('input', function() {
+                startingZoomMobileDisplay.textContent = Math.round(parseFloat(startingZoomMobileSlider.value)).toString();
+                updateField('map.starting_zoom_mobile', parseFloat(startingZoomMobileSlider.value));
+            });
+        }
+        
+        // Starting Pitch Desktop slider
+        var startingPitchDesktopSlider = document.getElementById('adminStartingPitchDesktop');
+        var startingPitchDesktopDisplay = document.getElementById('adminStartingPitchDesktopDisplay');
+        if (startingPitchDesktopSlider && startingPitchDesktopDisplay) {
+            var initialPitchDesktop = mapTabData.starting_pitch_desktop !== undefined ? parseFloat(mapTabData.starting_pitch_desktop) : 0;
+            startingPitchDesktopSlider.value = initialPitchDesktop;
+            startingPitchDesktopDisplay.textContent = Math.round(initialPitchDesktop).toString() + '°';
+            
+            registerField('map.starting_pitch_desktop', initialPitchDesktop);
+            
+            startingPitchDesktopSlider.addEventListener('input', function() {
+                startingPitchDesktopDisplay.textContent = Math.round(parseFloat(startingPitchDesktopSlider.value)).toString() + '°';
+                updateField('map.starting_pitch_desktop', parseFloat(startingPitchDesktopSlider.value));
+            });
+        }
+        
+        // Starting Pitch Mobile slider
+        var startingPitchMobileSlider = document.getElementById('adminStartingPitchMobile');
+        var startingPitchMobileDisplay = document.getElementById('adminStartingPitchMobileDisplay');
+        if (startingPitchMobileSlider && startingPitchMobileDisplay) {
+            var initialPitchMobile = mapTabData.starting_pitch_mobile !== undefined ? parseFloat(mapTabData.starting_pitch_mobile) : 0;
+            startingPitchMobileSlider.value = initialPitchMobile;
+            startingPitchMobileDisplay.textContent = Math.round(initialPitchMobile).toString() + '°';
+            
+            registerField('map.starting_pitch_mobile', initialPitchMobile);
+            
+            startingPitchMobileSlider.addEventListener('input', function() {
+                startingPitchMobileDisplay.textContent = Math.round(parseFloat(startingPitchMobileSlider.value)).toString() + '°';
+                updateField('map.starting_pitch_mobile', parseFloat(startingPitchMobileSlider.value));
             });
         }
         
@@ -2573,8 +2605,10 @@ const AdminModule = (function() {
         // Reset sliders
         var sliders = [
             { id: 'adminMapCardBreakpoint', displayId: 'adminMapCardBreakpointDisplay', fieldId: 'map.map_card_breakpoint', format: 'int' },
-            { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
-            { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
+            { id: 'adminStartingZoomDesktop', displayId: 'adminStartingZoomDesktopDisplay', fieldId: 'map.starting_zoom_desktop', format: 'int' },
+            { id: 'adminStartingZoomMobile', displayId: 'adminStartingZoomMobileDisplay', fieldId: 'map.starting_zoom_mobile', format: 'int' },
+            { id: 'adminStartingPitchDesktop', displayId: 'adminStartingPitchDesktopDisplay', fieldId: 'map.starting_pitch_desktop', format: 'degree' },
+            { id: 'adminStartingPitchMobile', displayId: 'adminStartingPitchMobileDisplay', fieldId: 'map.starting_pitch_mobile', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
             { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
             { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' }

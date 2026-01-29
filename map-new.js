@@ -1172,19 +1172,23 @@ const MapModule = (function() {
         }
       }
       
-      if (settings.starting_zoom) {
-        const zoom = parseFloat(settings.starting_zoom);
+      var isMobile = window.innerWidth <= 530;
+      
+      var zoomKey = isMobile ? 'starting_zoom_mobile' : 'starting_zoom_desktop';
+      if (settings[zoomKey] !== undefined) {
+        const zoom = parseFloat(settings[zoomKey]);
         if (Number.isFinite(zoom)) {
           startZoom = zoom;
-          logDebug('[Map] applySettings: startZoom =', startZoom);
+          logDebug('[Map] applySettings: startZoom =', startZoom, '(' + (isMobile ? 'mobile' : 'desktop') + ')');
         }
       }
       
-      if (settings.starting_pitch !== undefined) {
-        const pitch = parseFloat(settings.starting_pitch);
+      var pitchKey = isMobile ? 'starting_pitch_mobile' : 'starting_pitch_desktop';
+      if (settings[pitchKey] !== undefined) {
+        const pitch = parseFloat(settings[pitchKey]);
         if (Number.isFinite(pitch)) {
           startPitch = pitch;
-          logDebug('[Map] applySettings: startPitch =', startPitch);
+          logDebug('[Map] applySettings: startPitch =', startPitch, '(' + (isMobile ? 'mobile' : 'desktop') + ')');
         }
       }
     }
