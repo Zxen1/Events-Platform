@@ -992,7 +992,7 @@ body {
   color: var(--text);
   overflow: hidden;
   cursor: auto;
-  caret-color: transparent;
+  caret-color: #fff;
   display: flex;
   flex-direction: column;
   min-height: calc(var(--vh, 1vh) * 100);
