@@ -108,6 +108,9 @@ const MemberModule = (function() {
     var profileEmail = null;
     var logoutBtn = null;
     var profileTabBtn = null;
+    var profileFooterContainer = null;
+    var profileFooterSaveBtn = null;
+    var profileFooterDiscardBtn = null;
     var headerSaveBtn = null;
     var headerDiscardBtn = null;
 
@@ -1359,6 +1362,57 @@ const MemberModule = (function() {
         updateHeaderSaveDiscardState();
     }
 
+    function ensureProfileFooterButtons() {
+        if (!profileFormContainer) return;
+        if (profileFooterContainer && profileFooterContainer.parentNode) return;
+
+        var existingFooter = profileFormContainer.querySelector('.member-mypost-edit-footer');
+        if (existingFooter) {
+            profileFooterContainer = existingFooter;
+            profileFooterSaveBtn = existingFooter.querySelector('.member-mypost-edit-button-save');
+            profileFooterDiscardBtn = existingFooter.querySelector('.member-mypost-edit-button-discard');
+            return;
+        }
+
+        var footer = document.createElement('div');
+        footer.className = 'member-mypost-edit-footer';
+
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'member-mypost-edit-button-save button-class-2c';
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = true;
+        saveBtn.addEventListener('click', function() {
+            if (saveBtn.disabled) return;
+            handleHeaderSave();
+        });
+
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'member-mypost-edit-button-discard button-class-2d';
+        discardBtn.textContent = 'Discard';
+        discardBtn.disabled = true;
+        discardBtn.addEventListener('click', function() {
+            if (discardBtn.disabled) return;
+            handleHeaderDiscard();
+        });
+
+        footer.appendChild(saveBtn);
+        footer.appendChild(discardBtn);
+        profileFormContainer.appendChild(footer);
+
+        profileFooterContainer = footer;
+        profileFooterSaveBtn = saveBtn;
+        profileFooterDiscardBtn = discardBtn;
+    }
+
+    function updateProfileFooterButtonState() {
+        if (!profileFooterSaveBtn || !profileFooterDiscardBtn) return;
+        var canSave = isProfileDirty();
+        profileFooterSaveBtn.disabled = !canSave;
+        profileFooterDiscardBtn.disabled = !canSave;
+    }
+
     function setHeaderButtonsEnabled(enabled) {
         if (!headerSaveBtn || !headerDiscardBtn) return;
 
@@ -1383,6 +1437,7 @@ const MemberModule = (function() {
     function updateHeaderSaveDiscardState() {
         var enabled = isProfileDirty() || isAnyPostDirty();
         setHeaderButtonsEnabled(enabled);
+        updateProfileFooterButtonState();
     }
 
     function isAnyPostDirty() {
@@ -5576,6 +5631,7 @@ const MemberModule = (function() {
             } catch (e) {}
 
             try {
+                ensureProfileFooterButtons();
                 updateProfileSaveState();
                 updateHeaderSaveDiscardState();
             } catch (e) {}
