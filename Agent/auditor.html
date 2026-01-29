@@ -213,20 +213,31 @@
         const reportText = document.getElementById('report-text');
         const resultsContainer = document.getElementById('results');
         
-        let report = `AUDIT REPORT: ${new Date().toLocaleString()}\n`;
-        report += `Keys Searched: ${keys.join(', ')}\n`;
-        report += `Total Occurrences: ${totalMatches}\n`;
-        report += `Files Scanned: ${Array.from(files).map(f => f.name).join(', ')}\n\n`;
-        report += `--- DETAILED LOCATIONS ---\n`;
-
+        // Group matches by file to keep the report concise
+        const fileGroups = {};
         const items = resultsContainer.querySelectorAll('.result-item');
+        
         items.forEach(item => {
             const path = item.querySelector('.file-path').textContent;
-            const line = item.querySelector('.line-num').textContent;
+            const line = item.querySelector('.line-num').textContent.replace('Line ', '');
             const key = item.querySelector('strong').textContent;
-            const code = item.querySelector('.match-text').textContent;
-            report += `[${path}] ${line} | Key: ${key} | Code: ${code}\n`;
+            
+            if (!fileGroups[path]) fileGroups[path] = {};
+            if (!fileGroups[path][key]) fileGroups[path][key] = [];
+            fileGroups[path][key].push(line);
         });
+
+        let report = `AUDIT SUMMARY: ${new Date().toLocaleString()}\n`;
+        report += `Total Occurrences: ${totalMatches}\n\n`;
+
+        for (const [path, keysFound] of Object.entries(fileGroups)) {
+            report += `[${path}]\n`;
+            for (const [key, lines] of Object.entries(keysFound)) {
+                // Collapse line numbers to save space
+                report += `  - ${key}: Lines ${lines.join(', ')}\n`;
+            }
+            report += `\n`;
+        }
 
         reportText.value = report;
         reportContainer.style.display = 'block';
