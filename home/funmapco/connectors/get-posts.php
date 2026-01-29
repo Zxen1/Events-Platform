@@ -86,18 +86,6 @@ try {
     // Check if user is logged in (for contact detail protection)
     // Contact details (email/phone) are hidden from non-members to prevent bot scraping
     $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
-    
-    // Determine the current user ID from the token if possible (for owner-view permission)
-    $currentUserId = 0;
-    $currentUserType = 'member';
-    if (!empty($_COOKIE['FUNMAP_TOKEN'])) {
-        // Simple extraction for now - if this were more complex we'd use a shared helper
-        // But we just need to know if the requester is the owner.
-        // We'll trust the memberId passed in for now if it's a 'full' request which is only done from member panel.
-        $currentUserId = $memberId; 
-    } elseif (!empty($_SERVER['HTTP_X_API_KEY'])) {
-        $currentUserType = 'admin';
-    }
 
     // Load database config
     $configCandidates = [
@@ -465,9 +453,9 @@ try {
                 'custom_dropdown' => $row['custom_dropdown'],
                 'custom_checklist' => $row['custom_checklist'],
                 'custom_radio' => $row['custom_radio'],
-                'public_email' => ($isLoggedIn && ($postId > 0 || $memberId > 0)) ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
-                'phone_prefix' => ($isLoggedIn && ($postId > 0 || $memberId > 0)) ? $row['phone_prefix'] : null,
-                'public_phone' => ($isLoggedIn && ($postId > 0 || $memberId > 0)) ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
+                'public_email' => $isLoggedIn ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
+                'phone_prefix' => $isLoggedIn ? $row['phone_prefix'] : null,
+                'public_phone' => $isLoggedIn ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
                 'venue_name' => $row['venue_name'],
                 'address_line' => $row['address_line'],
                 'city' => $row['city'],
@@ -576,7 +564,6 @@ try {
     $pricingByCard = [];
     $ageRatingsByCard = [];
     $itemsByCard = [];
-    $amenitiesByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -589,24 +576,6 @@ try {
     if (!empty($allMapCardIds) && $full) {
         $cardIdsCsv = implode(',', $allMapCardIds);
         
-        // Amenities
-        $amRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv)");
-        if ($amRes) {
-            while ($amRow = $amRes->fetch_assoc()) {
-                $cid = (int)$amRow['map_card_id'];
-                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
-                
-                // Fetch the actual display name from the amenities table if possible, 
-                // but for now we use the key and the value. 
-                // The fieldset expects { amenity: "Display Name", value: "1" }
-                // We'll need to map the key back to the display name or ensure the frontend handles keys.
-                $amenitiesByCard[$cid][] = [
-                    'amenity' => $amRow['amenity_key'],
-                    'value' => (string)$amRow['value']
-                ];
-            }
-        }
-
         // Sessions
         $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
         if ($sessRes) {
@@ -715,11 +684,6 @@ try {
                     $mapCard['item_price'] = $item['item_price'];
                     $mapCard['currency'] = $item['currency'];
                     $mapCard['item_variants'] = $item['item_variants'];
-                }
-
-                // Attach Detailed Amenities
-                if (isset($amenitiesByCard[$cid])) {
-                    $mapCard['amenities_detailed'] = $amenitiesByCard[$cid];
                 }
             }
         }

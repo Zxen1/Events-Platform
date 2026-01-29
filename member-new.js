@@ -3982,20 +3982,27 @@ const MemberModule = (function() {
             discardBtn.textContent = 'Discard';
             discardBtn.disabled = true;
             
-            // Attach change listener to mark global save state as dirty and update footer buttons
-            container.addEventListener('input', updateFooterButtonState);
-            container.addEventListener('change', updateFooterButtonState);
-            // Also custom events from fieldsets
-            container.addEventListener('fieldset:sessions-change', updateFooterButtonState);
-            container.addEventListener('fieldset:images-change', updateFooterButtonState);
-            container.addEventListener('fieldset:amenities-change', updateFooterButtonState);
-            
+            // Function to update footer button states based on dirty check
             function updateFooterButtonState() {
-                updateHeaderSaveDiscardState();
                 var isDirty = isPostDirty(post.id);
                 saveBtn.disabled = !isDirty;
                 discardBtn.disabled = !isDirty;
             }
+
+            // Attach change listener to mark global save state as dirty and update footer buttons
+            container.addEventListener('input', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            container.addEventListener('change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            // Also custom events from fieldsets
+            container.addEventListener('fieldset:sessions-change', function() {
+                updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
             discardBtn.addEventListener('click', function() {
                 var postContainer = container.closest('.member-mypost-item');
                 if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
@@ -4119,61 +4126,88 @@ const MemberModule = (function() {
                         val = mapCard.tickets_url;
                         break;
                     case 'coupon': val = mapCard.coupon_code; break;
-                    case 'custom_text': 
-                        val = mapCard.custom_text;
-                        if (typeof val === 'string') val = val.replace(/^[^:]+:\s*/, '');
-                        break;
-                    case 'custom_textarea': 
-                        val = mapCard.custom_textarea;
-                        if (typeof val === 'string') val = val.replace(/^[^:]+:\s*/, '');
-                        break;
-                    case 'custom_dropdown': 
-                        val = mapCard.custom_dropdown;
-                        if (typeof val === 'string') val = val.replace(/^[^:]+:\s*/, '');
-                        break;
+                    case 'custom_text': val = mapCard.custom_text; break;
+                    case 'custom_textarea': val = mapCard.custom_textarea; break;
+                    case 'custom_dropdown': val = mapCard.custom_dropdown; break;
                     case 'custom_checklist': 
                         try {
-                            var rawCheck = mapCard.custom_checklist;
-                            if (typeof rawCheck === 'string' && rawCheck.indexOf(':') !== -1) {
-                                rawCheck = rawCheck.replace(/^[^:]+:\s*/, '');
-                            }
-                            val = JSON.parse(rawCheck || '[]');
+                            val = JSON.parse(mapCard.custom_checklist || '[]');
                         } catch (e) { val = []; }
                         break;
-                    case 'custom_radio': 
-                        val = mapCard.custom_radio;
-                        if (typeof val === 'string') val = val.replace(/^[^:]+:\s*/, '');
-                        break;
+                    case 'custom_radio': val = mapCard.custom_radio; break;
                     case 'age_rating': val = mapCard.age_rating; break;
                     
-                    case 'amenities':
-                        // Prefer detailed amenities array if available (from get-posts.php?full=1)
-                        if (Array.isArray(mapCard.amenities_detailed)) {
-                            val = mapCard.amenities_detailed;
-                        } else {
-                            // Fallback to amenity_summary
-                            try {
-                                var rawAm = mapCard.amenity_summary;
-                                if (typeof rawAm === 'string' && rawAm.trim() !== '') {
-                                    // If it's a JSON array of strings ["Parking", "Wifi"]
-                                    var parsed = JSON.parse(rawAm);
-                                    if (Array.isArray(parsed)) {
-                                        // Check if it's already objects or just names
-                                        if (parsed.length > 0 && typeof parsed[0] === 'object') {
-                                            val = parsed;
-                                        } else {
-                                            val = parsed.map(function(name) {
-                                                return { amenity: name, value: '1' };
-                                            });
-                                        }
-                                    } else {
-                                        val = [];
+                    case 'session_pricing':
+                        val = {
+                            sessions: mapCard.sessions || [],
+                            pricing_groups: mapCard.pricing_groups || {},
+                            age_ratings: mapCard.age_ratings || {}
+                        };
+                        break;
+                    
+                    case 'ticket_pricing':
+                        // Convert API format (nested objects) to fieldset format (arrays)
+                        // API: { groupKey: { ticketArea: { ticket_area, tiers: [{ pricing_tier, price, currency }] } } }
+                        // Fieldset expects: { groupKey: [{ ticket_area, tiers, currency, age_rating }] }
+                        // Currency and age_rating are per-group (same for all ticket areas in group)
+                        var apiPricingGroups = mapCard.pricing_groups || {};
+                        var apiAgeRatings = mapCard.age_ratings || {};
+                        var convertedPricingGroups = {};
+                        
+                        Object.keys(apiPricingGroups).forEach(function(groupKey) {
+                            var ticketAreasObj = apiPricingGroups[groupKey];
+                            if (ticketAreasObj && typeof ticketAreasObj === 'object') {
+                                // Get currency from first tier of first ticket area (all use same currency per group)
+                                var groupCurrency = '';
+                                var firstTicketAreaKey = Object.keys(ticketAreasObj)[0];
+                                if (firstTicketAreaKey) {
+                                    var firstArea = ticketAreasObj[firstTicketAreaKey];
+                                    if (firstArea && firstArea.tiers && firstArea.tiers[0]) {
+                                        groupCurrency = firstArea.tiers[0].currency || '';
                                     }
-                                } else {
-                                    val = [];
                                 }
-                            } catch (e) { val = []; }
-                        }
+                                
+                                // Get age rating for this group
+                                var groupAgeRating = apiAgeRatings[groupKey] || '';
+                                
+                                // Convert ticket areas object to array
+                                convertedPricingGroups[groupKey] = Object.keys(ticketAreasObj).map(function(ticketAreaKey, idx) {
+                                    var ticketArea = ticketAreasObj[ticketAreaKey];
+                                    return {
+                                        ticket_area: ticketArea.ticket_area,
+                                        tiers: ticketArea.tiers || [],
+                                        // Add currency and age_rating to first element (fieldset reads from [0])
+                                        currency: idx === 0 ? groupCurrency : '',
+                                        age_rating: idx === 0 ? groupAgeRating : ''
+                                    };
+                                });
+                            }
+                        });
+                        val = {
+                            pricing_groups: convertedPricingGroups,
+                            age_ratings: apiAgeRatings
+                        };
+                        break;
+                    
+                    case 'sessions':
+                        val = {
+                            sessions: mapCard.sessions || []
+                        };
+                        break;
+                        
+                    case 'item-pricing':
+                        val = {
+                            item_name: mapCard.item_name,
+                            item_price: mapCard.item_price,
+                            currency: mapCard.currency,
+                            item_variants: mapCard.item_variants || []
+                        };
+                        break;
+                        
+                    case 'amenities':
+                        try {
+                            val = JSON.parse(mapCard.amenity_summary || '[]');
+                        } catch (e) { val = []; }
                         break;
                         
                     case 'images':
