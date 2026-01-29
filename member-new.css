@@ -1542,6 +1542,25 @@
   border-bottom: none;
 }
 
+/* Blue border frame when editing - matches post panel pattern */
+.member-mypost-item--editing {
+  position: relative;
+}
+
+.member-mypost-item--editing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* 3-sided frame: lid is owned by the sticky post-card so it doesn't scroll away */
+  border-left: 1px solid var(--blue-500);
+  border-right: 1px solid var(--blue-500);
+  border-bottom: 1px solid var(--blue-500);
+  border-top: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: var(--layer-card);
+}
+
 /* When editing, make the post card sticky so user knows what they're editing */
 .member-mypost-item--editing .post-card {
   position: sticky;
@@ -1550,6 +1569,7 @@
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--blue-500);
 }
 
 /* Post card inside My Posts - identical to post panel */
