@@ -392,21 +392,6 @@
   cursor: not-allowed;
 }
 
-/* Header edit buttons - shown when editing a post */
-.member-panel-header-editbuttons {
-  display: none;
-  gap: 10px;
-  padding: 0 10px;
-}
-
-.member-panel-header-editbuttons--visible {
-  display: flex;
-}
-
-.member-panel-header-editbuttons button {
-  flex: 1;
-}
-
 /* ============================================================================
    PANEL BODY
    ============================================================================ */
@@ -1547,6 +1532,11 @@
    MY POSTS EDIT ACCORDION
    ============================================================================ */
 
+/* My Posts tab - remove panel body right padding only, keep 10px left padding */
+#member-tab-myposts {
+  margin-right: -10px;
+  width: calc(100% + 10px); /* Compensate for right margin only */
+}
 
 /* My Posts item - identical to post panel */
 .member-mypost-item {
@@ -1557,25 +1547,6 @@
   border-bottom: none;
 }
 
-/* Blue border frame when editing - matches post panel pattern */
-.member-mypost-item--editing {
-  position: relative;
-}
-
-.member-mypost-item--editing::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* 3-sided frame: lid is owned by the sticky post-card so it doesn't scroll away */
-  border-left: 1px solid var(--blue-500);
-  border-right: 1px solid var(--blue-500);
-  border-bottom: 1px solid var(--blue-500);
-  border-top: 0;
-  box-sizing: border-box;
-  pointer-events: none;
-  z-index: var(--layer-card);
-}
-
 /* When editing, make the post card sticky so user knows what they're editing */
 .member-mypost-item--editing .post-card {
   position: sticky;
@@ -1584,15 +1555,12 @@
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid var(--blue-500);
 }
 
 /* Post card inside My Posts - identical to post panel */
 .member-mypost-item .post-card {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  border: none;
   box-shadow: none;
   border-radius: 0;
   background-color: transparent;
@@ -1635,18 +1603,16 @@
   margin: 0;
 }
 
-.member-mypost-manage-container {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
+.member-mypost-manage-content {
+  padding: 0;
 }
 
-.member-mypost-manage-container > * {
-  margin-bottom: 10px;
+.member-mypost-manage-section {
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+}
+
+.member-mypost-manage-section:last-child {
+  margin-bottom: 0;
 }
 
 /* Hide empty checkout container in edit accordion */

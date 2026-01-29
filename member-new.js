@@ -110,7 +110,6 @@ const MemberModule = (function() {
     var profileTabBtn = null;
     var headerSaveBtn = null;
     var headerDiscardBtn = null;
-    var headerEditButtonsContainer = null;
 
     // Cache auth forms to hide them when logged in (removes large gap)
     var loginFormEl = null;
@@ -372,37 +371,6 @@ const MemberModule = (function() {
 
         headerSaveBtn = panel.querySelector('#member-panel-save-btn');
         headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
-        
-        // Create header edit buttons container
-        var headerEl = panel.querySelector('.member-panel-header');
-        if (headerEl) {
-            headerEditButtonsContainer = document.createElement('div');
-            headerEditButtonsContainer.className = 'member-panel-header-editbuttons';
-            
-            var headerSave = document.createElement('button');
-            headerSave.type = 'button';
-            headerSave.className = 'member-panel-header-save button-class-2c';
-            headerSave.textContent = 'Save';
-            headerSave.disabled = true;
-            headerSave.addEventListener('click', function() {
-                if (headerSave.disabled) return;
-                saveAllDirtyPosts();
-            });
-            
-            var headerDiscard = document.createElement('button');
-            headerDiscard.type = 'button';
-            headerDiscard.className = 'member-panel-header-discard button-class-2d';
-            headerDiscard.textContent = 'Discard';
-            headerDiscard.disabled = true;
-            headerDiscard.addEventListener('click', function() {
-                if (headerDiscard.disabled) return;
-                discardAllDirtyPosts();
-            });
-            
-            headerEditButtonsContainer.appendChild(headerSave);
-            headerEditButtonsContainer.appendChild(headerDiscard);
-            headerEl.appendChild(headerEditButtonsContainer);
-        }
         
         profileFieldsetsContainer = document.getElementById('member-profileform-fieldsets');
         profileEditNameInput = null;
@@ -1415,27 +1383,6 @@ const MemberModule = (function() {
     function updateHeaderSaveDiscardState() {
         var enabled = isProfileDirty() || isAnyPostDirty();
         setHeaderButtonsEnabled(enabled);
-        updateHeaderEditButtons(enabled);
-    }
-    
-    function updateHeaderEditButtons(enabled) {
-        if (!headerEditButtonsContainer) return;
-        var saveBtn = headerEditButtonsContainer.querySelector('.member-panel-header-save');
-        var discardBtn = headerEditButtonsContainer.querySelector('.member-panel-header-discard');
-        if (saveBtn) saveBtn.disabled = !enabled;
-        if (discardBtn) discardBtn.disabled = !enabled;
-    }
-    
-    function showHeaderEditButtons() {
-        if (headerEditButtonsContainer) {
-            headerEditButtonsContainer.classList.add('member-panel-header-editbuttons--visible');
-        }
-    }
-    
-    function hideHeaderEditButtons() {
-        if (headerEditButtonsContainer) {
-            headerEditButtonsContainer.classList.remove('member-panel-header-editbuttons--visible');
-        }
     }
 
     function isAnyPostDirty() {
@@ -1861,36 +1808,6 @@ const MemberModule = (function() {
             accordion.innerHTML = '';
             if (data) delete editingPostsData[postId];
         }
-        updateHeaderEditButtonsVisibility();
-    }
-    
-    function saveAllDirtyPosts() {
-        var promises = [];
-        Object.keys(expandedPostAccordions).forEach(function(postId) {
-            if (expandedPostAccordions[postId] && isPostDirty(postId)) {
-                promises.push(saveAccordionPost(postId));
-            }
-        });
-        Promise.all(promises).then(function() {
-            if (window.ToastComponent) ToastComponent.showSuccess('Saved');
-            updateHeaderSaveDiscardState();
-        });
-    }
-    
-    function discardAllDirtyPosts() {
-        Object.keys(expandedPostAccordions).forEach(function(postId) {
-            if (expandedPostAccordions[postId]) {
-                discardPostAccordionEdits(postId);
-            }
-        });
-    }
-    
-    function updateHeaderEditButtonsVisibility() {
-        var anyOpen = Object.keys(expandedPostAccordions).some(function(id) {
-            return expandedPostAccordions[id];
-        });
-        if (anyOpen) showHeaderEditButtons();
-        else hideHeaderEditButtons();
     }
 
     function isProfileDirty() {
@@ -3783,7 +3700,24 @@ const MemberModule = (function() {
     }
 
     function renderPostManagePlaceholder(postId, container) {
-        container.innerHTML = '<div class="member-mypost-manage-container"></div>';
+        container.innerHTML = [
+            '<div class="member-mypost-manage-content">',
+                '<div class="member-mypost-manage-section">',
+                    '<div class="member-panel-label">Extend Listing Time</div>',
+                    '<div class="member-mypost-manage-row">',
+                        '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
+                        '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
+                    '</div>',
+                '</div>',
+                '<div class="member-mypost-manage-section" style="margin-top:15px">',
+                    '<div class="member-panel-label">Change Plan</div>',
+                    '<div class="member-mypost-manage-row">',
+                        '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
+                        '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
+                    '</div>',
+                '</div>',
+            '</div>'
+        ].join('');
     }
 
     function togglePostEdit(postId, container) {
@@ -3845,7 +3779,6 @@ const MemberModule = (function() {
                 container.classList.add('member-mypost-item--editing');
                 expandedPostAccordions[postId] = true;
                 if (editBtn) editBtn.setAttribute('aria-selected', 'true');
-                showHeaderEditButtons();
             } else {
                 showStatus('Loading post data...', { success: true });
                 
@@ -3864,7 +3797,6 @@ const MemberModule = (function() {
                         container.classList.add('member-mypost-item--editing');
                         expandedPostAccordions[postId] = true;
                         if (editBtn) editBtn.setAttribute('aria-selected', 'true');
-                        showHeaderEditButtons();
                         showStatus('Post data loaded.', { success: true });
                     } else {
                         showStatus('Failed to load post data.', { error: true });
