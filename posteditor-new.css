@@ -241,16 +241,23 @@
 /* Popover for disabled buttons (completeness/no changes) */
 .posteditor-popover {
   position: absolute;
-  right: 0;
-  bottom: 42px;
+  bottom: calc(100% + 10px);
   min-width: 220px;
   max-width: 320px;
   background: rgba(20, 20, 20, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 6px;
-  padding: 10px 10px 8px;
+  padding: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   z-index: var(--layer-popover);
+}
+
+.posteditor-popover--left {
+  left: 0;
+}
+
+.posteditor-popover--right {
+  right: 0;
 }
 
 .posteditor-popover-title {

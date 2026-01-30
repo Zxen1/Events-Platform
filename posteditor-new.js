@@ -865,13 +865,15 @@
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
-            function attachPopoverToButton(btnEl, getContentFn) {
+            function attachPopoverToButton(btnEl, getContentFn, alignment) {
                 if (!btnEl) return;
                 if (btnEl._popoverAttached) return;
                 btnEl._popoverAttached = true;
                 
+                btnEl.style.position = 'relative';
+                
                 var pop = document.createElement('div');
-                pop.className = 'posteditor-popover';
+                pop.className = 'posteditor-popover posteditor-popover--' + alignment;
                 pop.hidden = true;
                 
                 var titleEl = document.createElement('div');
@@ -882,7 +884,7 @@
                 list.className = 'posteditor-popover-list';
                 pop.appendChild(list);
                 
-                footer.appendChild(pop);
+                btnEl.appendChild(pop);
                 
                 function show() {
                     if (btnEl.hidden || btnEl.offsetParent === null) return;
@@ -913,9 +915,9 @@
                 pop.addEventListener('mouseleave', hide);
             }
             
-            // Attach popovers to Save and Discard buttons
-            attachPopoverToButton(saveBtn, getSavePopoverContent);
-            attachPopoverToButton(discardBtn, getDiscardPopoverContent);
+            // Attach popovers to Save (left-aligned) and Discard (right-aligned) buttons
+            attachPopoverToButton(saveBtn, getSavePopoverContent, 'left');
+            attachPopoverToButton(discardBtn, getDiscardPopoverContent, 'right');
 
             // Attach change listener to mark global save state as dirty and update footer buttons
             accordionContainer.addEventListener('input', function() {
