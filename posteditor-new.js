@@ -1628,7 +1628,7 @@
         container = containerEl;
         isLoaded = true;
         
-        // Listen for favorite clicks (event delegation)
+        // Listen for favorite clicks (capture phase to fire before PostModule's stopPropagation)
         container.addEventListener('click', function(e) {
             var favBtn = e.target.closest('.post-card-button-fav');
             if (!favBtn) return;
@@ -1643,7 +1643,7 @@
             setTimeout(function() {
                 reorderPostsAfterFavorite(postId);
             }, 50);
-        });
+        }, true); // Use capture phase
         
         // Load posts
         loadPosts();
