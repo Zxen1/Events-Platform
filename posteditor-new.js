@@ -46,6 +46,32 @@
             .replace(/'/g, '&#039;');
     }
 
+    /**
+     * Strip label prefix from custom field values.
+     * Database stores "Label: value" for display, but editor needs just "value".
+     * Returns the portion after the first ": " or the original string if no prefix.
+     */
+    function stripLabelPrefix(str) {
+        if (!str || typeof str !== 'string') return str;
+        var colonIdx = str.indexOf(': ');
+        if (colonIdx > 0 && colonIdx < 50) { // Reasonable label length limit
+            return str.substring(colonIdx + 2);
+        }
+        return str;
+    }
+
+    /**
+     * Strip label prefix from comma-separated custom field values (checklist).
+     * Database stores "Label: item1, item2, item3" for display.
+     * Returns array of items.
+     */
+    function parseChecklistValue(str) {
+        if (!str || typeof str !== 'string') return [];
+        var stripped = stripLabelPrefix(str);
+        if (!stripped) return [];
+        return stripped.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s !== ''; });
+    }
+
     function getMember() {
         return window.MemberModule || null;
     }
@@ -827,15 +853,14 @@
                         val = mapCard.tickets_url;
                         break;
                     case 'coupon': val = mapCard.coupon_code; break;
-                    case 'custom-text': val = mapCard.custom_text; break;
-                    case 'custom-textarea': val = mapCard.custom_textarea; break;
-                    case 'custom-dropdown': val = mapCard.custom_dropdown; break;
+                    case 'custom-text': val = stripLabelPrefix(mapCard.custom_text); break;
+                    case 'custom-textarea': val = stripLabelPrefix(mapCard.custom_textarea); break;
+                    case 'custom-dropdown': val = stripLabelPrefix(mapCard.custom_dropdown); break;
                     case 'custom-checklist': 
-                        try {
-                            val = JSON.parse(mapCard.custom_checklist || '[]');
-                        } catch (e) { val = []; }
+                        // Stored as "Label: item1, item2, item3" - parse to array
+                        val = parseChecklistValue(mapCard.custom_checklist);
                         break;
-                    case 'custom-radio': val = mapCard.custom_radio; break;
+                    case 'custom-radio': val = stripLabelPrefix(mapCard.custom_radio); break;
                     case 'age-rating': val = mapCard.age_rating; break;
                     
                     case 'session-pricing':
@@ -899,7 +924,7 @@
                         
                     case 'amenities':
                         try {
-                            val = JSON.parse(mapCard.amenity_summary || '[]');
+                            val = JSON.parse(mapCard.amenities || '[]');
                         } catch (e) { val = []; }
                         break;
                         

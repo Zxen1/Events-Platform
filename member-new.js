@@ -5212,6 +5212,10 @@ const MemberModule = (function() {
             currentUser = buildUserObject(payload, username);
             syncLocalProfilePrefsFromUser(currentUser);
             storeCurrent(currentUser);
+            
+            // Issue auth token cookie for API authentication (used by get-posts privacy)
+            fetch('/gateway.php?action=issue-token').catch(function() {});
+            
             render();
 
             var shouldSubmit = createAuthPendingSubmit;
@@ -5443,6 +5447,10 @@ const MemberModule = (function() {
             syncLocalProfilePrefsFromUser(currentUser);
             
             storeCurrent(currentUser);
+            
+            // Issue auth token cookie for API authentication (used by get-posts privacy)
+            fetch('/gateway.php?action=issue-token').catch(function() {});
+            
             render();
             
             // Apply member map settings
@@ -5911,6 +5919,10 @@ const MemberModule = (function() {
                 }
                 parsed.id = idNum;
                 currentUser = parsed;
+                
+                // Issue auth token cookie for API authentication (used by get-posts privacy)
+                // This renews the cookie on each session load to keep it valid
+                fetch('/gateway.php?action=issue-token').catch(function() {});
                 
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {

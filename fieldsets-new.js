@@ -1402,6 +1402,12 @@ const FieldsetBuilder = (function(){
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
                 fieldset.appendChild(emailValidation.charCount);
+                fieldset._setValue = function(val) {
+                    if (emailInput && val !== null && val !== undefined) {
+                        emailInput.value = val || '';
+                        emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                };
                 break;
                 
             case 'public-phone':
@@ -2631,9 +2637,21 @@ const FieldsetBuilder = (function(){
                     if (!val || typeof val !== 'object') return;
                     
                     if (itemNameInput) itemNameInput.value = val.item_name || '';
-                    if (itemPriceInput) itemPriceInput.value = val.item_price || '';
+                    
+                    // Set currency first so we can format the price with it
                     if (ipCurrencyMenu && typeof ipCurrencyMenu.setValue === 'function') {
                         ipCurrencyMenu.setValue(val.currency || null);
+                        ipSelectedCurrency = val.currency || null;
+                    }
+                    
+                    // Format price with currency symbol
+                    if (itemPriceInput) {
+                        var priceVal = val.item_price || '';
+                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            itemPriceInput.value = CurrencyComponent.formatWithSymbol(priceVal, val.currency);
+                        } else {
+                            itemPriceInput.value = priceVal;
+                        }
                     }
                     
                     // Variants
@@ -4675,7 +4693,12 @@ const FieldsetBuilder = (function(){
                             var groups = [];
                             if (Array.isArray(s.times)) {
                                 s.times.forEach(function(t) {
-                                    times.push(t.time || '');
+                                    // Strip seconds from time if present (HH:MM:SS -> HH:MM)
+                                    var timeStr = t.time || '';
+                                    if (timeStr && timeStr.length > 5) {
+                                        timeStr = timeStr.substring(0, 5);
+                                    }
+                                    times.push(timeStr);
                                     groups.push(t.ticket_group_key || 'A');
                                 });
                             }
