@@ -237,9 +237,3 @@
 .posteditor-edit-footer button {
   flex: 1;
 }
-
-/* Incomplete-list popover in edit footer uses same styling as create form */
-.posteditor-edit-footer .member-missing-popover {
-  left: 10px;
-  right: 10px;
-}

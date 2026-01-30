@@ -516,86 +516,160 @@
 
         var editBtn = postContainer.querySelector('.posteditor-button-edit');
         var manageBtn = postContainer.querySelector('.posteditor-button-manage');
-
-        // Close all other posts' accordions first and reset their button states
-        document.querySelectorAll('.posteditor-item').forEach(function(item) {
-            if (item === postContainer) return;
-            var otherEdit = item.querySelector('.posteditor-edit-accordion');
-            var otherManage = item.querySelector('.posteditor-manage-accordion');
-            var otherEditBtn = item.querySelector('.posteditor-button-edit');
-            var otherManageBtn = item.querySelector('.posteditor-button-manage');
-            if (otherEdit && !otherEdit.hidden) {
-                otherEdit.hidden = true;
-                otherEdit.classList.add('posteditor-edit-accordion--hidden');
-                item.classList.remove('posteditor-item--editing');
-                if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
-                var otherId = item.dataset.postId;
-                if (otherId) expandedPostAccordions[otherId] = false;
-            }
-            if (otherManage && !otherManage.hidden) {
-                otherManage.hidden = true;
-                otherManage.classList.add('posteditor-manage-accordion--hidden');
-                otherManage.dataset.expanded = 'false';
-                item.classList.remove('posteditor-item--managing');
-                if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
-            }
-        });
-
-        // If manage accordion is open, close it and reset manage button
-        var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
-        if (manageAcc && !manageAcc.hidden) {
-            manageAcc.hidden = true;
-            manageAcc.classList.add('posteditor-manage-accordion--hidden');
-            manageAcc.dataset.expanded = 'false';
-            postContainer.classList.remove('posteditor-item--managing');
-            if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
-        }
-
+        
         var isExpanded = expandedPostAccordions[postId];
         
-        if (isExpanded) {
-            // Collapse
+        // Helper to perform the collapse
+        function doCollapse() {
             accordion.hidden = true;
             accordion.classList.add('posteditor-edit-accordion--hidden');
             postContainer.classList.remove('posteditor-item--editing');
             expandedPostAccordions[postId] = false;
             if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-        } else {
-            // Expand
-            // Check if we need to load data first
-            if (editingPostsData[postId]) {
-                accordion.hidden = false;
-                accordion.classList.remove('posteditor-edit-accordion--hidden');
-                postContainer.classList.add('posteditor-item--editing');
-                expandedPostAccordions[postId] = true;
-                if (editBtn) editBtn.setAttribute('aria-selected', 'true');
-            } else {
-                showStatus('Loading post data...', { success: true });
-                
-                // Ensure categories are loaded before fetching post data
-                ensureCategoriesLoaded().then(function() {
-                    return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId);
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res && res.success && res.posts && res.posts.length > 0) {
-                        var post = res.posts[0];
-                        editingPostsData[postId] = { original: post, current: {} };
-                        renderEditForm(post, accordion);
-                        accordion.hidden = false;
-                        accordion.classList.remove('posteditor-edit-accordion--hidden');
-                        postContainer.classList.add('posteditor-item--editing');
-                        expandedPostAccordions[postId] = true;
-                        if (editBtn) editBtn.setAttribute('aria-selected', 'true');
-                        showStatus('Post data loaded.', { success: true });
-                    } else {
-                        showStatus('Failed to load post data.', { error: true });
+            discardEdits(postId);
+        }
+        
+        // Helper to close other posts' accordions
+        function closeOtherAccordions() {
+            document.querySelectorAll('.posteditor-item').forEach(function(item) {
+                if (item === postContainer) return;
+                var otherEdit = item.querySelector('.posteditor-edit-accordion');
+                var otherManage = item.querySelector('.posteditor-manage-accordion');
+                var otherEditBtn = item.querySelector('.posteditor-button-edit');
+                var otherManageBtn = item.querySelector('.posteditor-button-manage');
+                if (otherEdit && !otherEdit.hidden) {
+                    otherEdit.hidden = true;
+                    otherEdit.classList.add('posteditor-edit-accordion--hidden');
+                    item.classList.remove('posteditor-item--editing');
+                    if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
+                    var otherId = item.dataset.postId;
+                    if (otherId) {
+                        expandedPostAccordions[otherId] = false;
+                        discardEdits(otherId);
                     }
-                })
-                .catch(function(err) {
-                    console.error('[PostEditor] Failed to fetch post for edit:', err);
-                    showStatus('Failed to load post data.', { error: true });
+                }
+                if (otherManage && !otherManage.hidden) {
+                    otherManage.hidden = true;
+                    otherManage.classList.add('posteditor-manage-accordion--hidden');
+                    otherManage.dataset.expanded = 'false';
+                    item.classList.remove('posteditor-item--managing');
+                    if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
+                }
+            });
+        }
+        
+        // Helper to close manage accordion
+        function closeManageAccordion() {
+            var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
+            if (manageAcc && !manageAcc.hidden) {
+                manageAcc.hidden = true;
+                manageAcc.classList.add('posteditor-manage-accordion--hidden');
+                manageAcc.dataset.expanded = 'false';
+                postContainer.classList.remove('posteditor-item--managing');
+                if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
+            }
+        }
+        
+        // Check if any other post has unsaved changes before closing them
+        function checkOtherDirtyPosts() {
+            var dirtyOtherPost = null;
+            document.querySelectorAll('.posteditor-item').forEach(function(item) {
+                if (item === postContainer) return;
+                var otherId = item.dataset.postId;
+                if (otherId && isPostDirty(otherId)) {
+                    dirtyOtherPost = otherId;
+                }
+            });
+            return dirtyOtherPost;
+        }
+        
+        if (isExpanded) {
+            // Collapsing - check for unsaved changes
+            if (isPostDirty(postId)) {
+                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                    doCollapse();
+                    return;
+                }
+                ConfirmDialogComponent.show({
+                    titleText: 'Discard Changes',
+                    messageText: 'Are you sure you want to discard your changes?',
+                    confirmLabel: 'Discard',
+                    cancelLabel: 'Cancel',
+                    focusCancel: true,
+                    confirmClass: 'danger'
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        doCollapse();
+                    }
                 });
+                return;
+            }
+            doCollapse();
+        } else {
+            // Expanding - check if any other post has unsaved changes first
+            var dirtyOther = checkOtherDirtyPosts();
+            
+            function proceedWithExpand() {
+                closeOtherAccordions();
+                closeManageAccordion();
+                
+                // Check if we need to load data first
+                if (editingPostsData[postId]) {
+                    accordion.hidden = false;
+                    accordion.classList.remove('posteditor-edit-accordion--hidden');
+                    postContainer.classList.add('posteditor-item--editing');
+                    expandedPostAccordions[postId] = true;
+                    if (editBtn) editBtn.setAttribute('aria-selected', 'true');
+                } else {
+                    showStatus('Loading post data...', { success: true });
+                    
+                    // Ensure categories are loaded before fetching post data
+                    ensureCategoriesLoaded().then(function() {
+                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId);
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res && res.success && res.posts && res.posts.length > 0) {
+                            var post = res.posts[0];
+                            editingPostsData[postId] = { original: post, current: {} };
+                            renderEditForm(post, accordion);
+                            accordion.hidden = false;
+                            accordion.classList.remove('posteditor-edit-accordion--hidden');
+                            postContainer.classList.add('posteditor-item--editing');
+                            expandedPostAccordions[postId] = true;
+                            if (editBtn) editBtn.setAttribute('aria-selected', 'true');
+                            showStatus('Post data loaded.', { success: true });
+                        } else {
+                            showStatus('Failed to load post data.', { error: true });
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('[PostEditor] Failed to fetch post for edit:', err);
+                        showStatus('Failed to load post data.', { error: true });
+                    });
+                }
+            }
+            
+            if (dirtyOther) {
+                // Another post has unsaved changes - ask before closing it
+                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                    proceedWithExpand();
+                    return;
+                }
+                ConfirmDialogComponent.show({
+                    titleText: 'Discard Changes',
+                    messageText: 'Another post has unsaved changes. Discard those changes?',
+                    confirmLabel: 'Discard',
+                    cancelLabel: 'Cancel',
+                    focusCancel: true,
+                    confirmClass: 'danger'
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        proceedWithExpand();
+                    }
+                });
+            } else {
+                proceedWithExpand();
             }
         }
     }
@@ -739,8 +813,8 @@
                 return true;
             }
             
-            // Function to get list of incomplete fieldset names (for popover)
-            function getIncompleteFieldsetNames() {
+            // Function to get incomplete fieldset names
+            function getIncompleteFieldsetNamesList() {
                 var out = [];
                 var fieldsetEls = accordionContainer.querySelectorAll('.fieldset[data-complete="false"]');
                 for (var i = 0; i < fieldsetEls.length; i++) {
@@ -760,6 +834,28 @@
                 return out;
             }
             
+            // Popover content for Save button - shows "No changes" or incomplete fields
+            function getSavePopoverContent() {
+                var isDirty = isPostDirty(post.id);
+                if (!isDirty) {
+                    return { title: 'No Changes', items: ['Make changes to enable saving'] };
+                }
+                var incomplete = getIncompleteFieldsetNamesList();
+                if (incomplete.length > 0) {
+                    return { title: 'Incomplete', items: incomplete };
+                }
+                return { title: '', items: [] };
+            }
+            
+            // Popover content for Discard button - shows "No changes" when not dirty
+            function getDiscardPopoverContent() {
+                var isDirty = isPostDirty(post.id);
+                if (!isDirty) {
+                    return { title: 'No Changes', items: ['Nothing to discard'] };
+                }
+                return { title: '', items: [] };
+            }
+            
             // Function to update footer button states based on dirty check AND completeness
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
@@ -768,9 +864,10 @@
                 discardBtn.disabled = !isDirty;
             }
             
-            // Attach missing popover to Save button (same as Create Post form)
+            // Attach popovers to Save and Discard buttons
             if (MemberModule.attachMissingPopoverToButton) {
-                MemberModule.attachMissingPopoverToButton(saveBtn, getIncompleteFieldsetNames);
+                MemberModule.attachMissingPopoverToButton(saveBtn, getSavePopoverContent);
+                MemberModule.attachMissingPopoverToButton(discardBtn, getDiscardPopoverContent);
             }
 
             // Attach change listener to mark global save state as dirty and update footer buttons
@@ -807,7 +904,8 @@
                     messageText: 'Are you sure you want to discard your changes?',
                     confirmLabel: 'Discard',
                     cancelLabel: 'Cancel',
-                    focusCancel: true
+                    focusCancel: true,
+                    confirmClass: 'danger'
                 }).then(function(confirmed) {
                     if (confirmed) {
                         discardEdits(post.id);

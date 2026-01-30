@@ -2994,10 +2994,10 @@ const MemberModule = (function() {
         pop.className = 'member-missing-popover';
         pop.hidden = true;
 
-        var title = document.createElement('div');
-        title.className = 'member-missing-popover-title';
-        title.textContent = 'Incomplete';
-        pop.appendChild(title);
+        var titleEl = document.createElement('div');
+        titleEl.className = 'member-missing-popover-title';
+        titleEl.textContent = 'Incomplete';
+        pop.appendChild(titleEl);
 
         var list = document.createElement('div');
         list.className = 'member-missing-popover-list';
@@ -3023,9 +3023,27 @@ const MemberModule = (function() {
                 if (btnEl.offsetParent === null) return; // display:none or detached
             } catch (e0) {}
             if (!btnEl.disabled) return;
+            
+            // getItemsFn can return:
+            // - An array of strings (backward compatible, title defaults to "Incomplete")
+            // - An object { title: string, items: string[] } for custom title
+            var result = null;
+            try { result = (typeof getItemsFn === 'function') ? getItemsFn() : null; } catch (e0) { result = null; }
+            
             var items = [];
-            try { items = (typeof getItemsFn === 'function') ? (getItemsFn() || []) : []; } catch (e0) { items = []; }
+            var popTitle = 'Incomplete';
+            
+            if (Array.isArray(result)) {
+                items = result;
+            } else if (result && typeof result === 'object') {
+                items = Array.isArray(result.items) ? result.items : [];
+                if (result.title && typeof result.title === 'string') {
+                    popTitle = result.title;
+                }
+            }
+            
             if (!items || items.length === 0) return;
+            titleEl.textContent = popTitle;
             renderItems(items);
             pop.hidden = false;
         }
