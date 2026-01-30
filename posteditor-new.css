@@ -231,8 +231,15 @@
   gap: 10px;
   padding: 0 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  position: relative; /* For popover positioning */
 }
 
 .posteditor-edit-footer button {
   flex: 1;
+}
+
+/* Incomplete-list popover in edit footer uses same styling as create form */
+.posteditor-edit-footer .member-missing-popover {
+  left: 10px;
+  right: 10px;
 }

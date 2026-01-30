@@ -726,11 +726,51 @@
             discardBtn.textContent = 'Discard';
             discardBtn.disabled = true;
             
-            // Function to update footer button states based on dirty check
+            // Function to check if all fieldsets are complete
+            function isFormComplete() {
+                var fieldsetEls = accordionContainer.querySelectorAll('.fieldset[data-complete]');
+                for (var i = 0; i < fieldsetEls.length; i++) {
+                    var fs = fieldsetEls[i];
+                    if (!fs || !fs.dataset) continue;
+                    if (String(fs.dataset.complete || '') !== 'true') {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            // Function to get list of incomplete fieldset names (for popover)
+            function getIncompleteFieldsetNames() {
+                var out = [];
+                var fieldsetEls = accordionContainer.querySelectorAll('.fieldset[data-complete="false"]');
+                for (var i = 0; i < fieldsetEls.length; i++) {
+                    var fs = fieldsetEls[i];
+                    if (!fs || !fs.dataset) continue;
+                    var name = '';
+                    var labelTextEl = fs.querySelector('.fieldset-label-text');
+                    if (labelTextEl && labelTextEl.textContent) {
+                        name = labelTextEl.textContent.trim();
+                    } else if (fs.dataset.fieldsetName) {
+                        name = fs.dataset.fieldsetName.trim();
+                    } else if (fs.dataset.fieldsetKey) {
+                        name = fs.dataset.fieldsetKey.trim();
+                    }
+                    if (name) out.push(name);
+                }
+                return out;
+            }
+            
+            // Function to update footer button states based on dirty check AND completeness
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
-                saveBtn.disabled = !isDirty;
+                var isComplete = isFormComplete();
+                saveBtn.disabled = !isDirty || !isComplete;
                 discardBtn.disabled = !isDirty;
+            }
+            
+            // Attach missing popover to Save button (same as Create Post form)
+            if (MemberModule.attachMissingPopoverToButton) {
+                MemberModule.attachMissingPopoverToButton(saveBtn, getIncompleteFieldsetNames);
             }
 
             // Attach change listener to mark global save state as dirty and update footer buttons
@@ -745,6 +785,10 @@
             // Also custom events from fieldsets
             accordionContainer.addEventListener('fieldset:sessions-change', function() {
                 updateHeaderSaveDiscardState();
+                updateFooterButtonState();
+            });
+            // Fieldset validity changes (completeness)
+            accordionContainer.addEventListener('fieldset:validity-change', function() {
                 updateFooterButtonState();
             });
             discardBtn.addEventListener('click', function() {
