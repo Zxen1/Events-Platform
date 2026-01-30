@@ -116,6 +116,9 @@ Visible containers (with background/border) use: `padding: 10px 10px 0`
 ### Nested Containers
 Nested containers (rare) get `margin-bottom: 10px` like other elements.
 
+### Z-Index Registry
+All z-index values MUST use `--layer-*` variables from `base-new.css`. Never hardcode z-index numbers.
+
 ---
 
 ## CSS: CLASS NAMING PATTERN

@@ -864,11 +864,58 @@
                 discardBtn.disabled = !isDirty;
             }
             
-            // Attach popovers to Save and Discard buttons
-            if (MemberModule.attachMissingPopoverToButton) {
-                MemberModule.attachMissingPopoverToButton(saveBtn, getSavePopoverContent);
-                MemberModule.attachMissingPopoverToButton(discardBtn, getDiscardPopoverContent);
+            // Attach popover to a button (posteditor-specific, not shared)
+            function attachPopoverToButton(btnEl, getContentFn) {
+                if (!btnEl) return;
+                if (btnEl._popoverAttached) return;
+                btnEl._popoverAttached = true;
+                
+                var pop = document.createElement('div');
+                pop.className = 'posteditor-popover';
+                pop.hidden = true;
+                
+                var titleEl = document.createElement('div');
+                titleEl.className = 'posteditor-popover-title';
+                pop.appendChild(titleEl);
+                
+                var list = document.createElement('div');
+                list.className = 'posteditor-popover-list';
+                pop.appendChild(list);
+                
+                footer.appendChild(pop);
+                
+                function show() {
+                    if (btnEl.hidden || btnEl.offsetParent === null) return;
+                    if (!btnEl.disabled) return;
+                    var content = null;
+                    try { content = getContentFn(); } catch (e) { content = null; }
+                    if (!content || !content.items || content.items.length === 0) return;
+                    titleEl.textContent = content.title || 'Incomplete';
+                    list.innerHTML = '';
+                    content.items.forEach(function(item) {
+                        var row = document.createElement('div');
+                        row.className = 'posteditor-popover-item';
+                        row.textContent = String(item);
+                        list.appendChild(row);
+                    });
+                    pop.hidden = false;
+                }
+                
+                function hide() {
+                    pop.hidden = true;
+                }
+                
+                btnEl.addEventListener('mouseenter', show);
+                btnEl.addEventListener('mouseleave', function(e) {
+                    if (e.relatedTarget && pop.contains(e.relatedTarget)) return;
+                    hide();
+                });
+                pop.addEventListener('mouseleave', hide);
             }
+            
+            // Attach popovers to Save and Discard buttons
+            attachPopoverToButton(saveBtn, getSavePopoverContent);
+            attachPopoverToButton(discardBtn, getDiscardPopoverContent);
 
             // Attach change listener to mark global save state as dirty and update footer buttons
             accordionContainer.addEventListener('input', function() {
