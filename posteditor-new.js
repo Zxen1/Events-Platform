@@ -641,8 +641,21 @@
             return;
         }
 
-        // 3. Build form structure using shared FormBuilder
-        if (window.FormbuilderModule && typeof FormbuilderModule.organizeFieldsIntoLocationContainers === 'function') {
+        // 3. Load component data FIRST, then build form structure
+        // This ensures currency/age-rating menus have data when built
+        var loadPromises = [];
+        if (window.AgeRatingComponent && typeof AgeRatingComponent.loadFromDatabase === 'function' && !AgeRatingComponent.isLoaded()) {
+            loadPromises.push(AgeRatingComponent.loadFromDatabase());
+        }
+        if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function' && !CurrencyComponent.isLoaded()) {
+            loadPromises.push(CurrencyComponent.loadFromDatabase());
+        }
+        
+        Promise.all(loadPromises).then(function() {
+            if (!window.FormbuilderModule || typeof FormbuilderModule.organizeFieldsIntoLocationContainers !== 'function') {
+                return;
+            }
+            
             var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
                 fields: fields,
                 container: accordionContainer,
@@ -663,19 +676,10 @@
                 setupHeaderRenaming: true
             });
             
-            // Populate data (ensure components are loaded first for dropdowns/formatting to work)
-            var loadPromises = [];
-            if (window.AgeRatingComponent && typeof AgeRatingComponent.loadFromDatabase === 'function' && !AgeRatingComponent.isLoaded()) {
-                loadPromises.push(AgeRatingComponent.loadFromDatabase());
-            }
-            if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function' && !CurrencyComponent.isLoaded()) {
-                loadPromises.push(CurrencyComponent.loadFromDatabase());
-            }
-            Promise.all(loadPromises).then(function() {
-                populateWithPostData(post, accordionContainer);
-                // Store initial extracted fields for dirty checking (must happen after populate)
-                editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
-            });
+            // Populate with post data
+            populateWithPostData(post, accordionContainer);
+            // Store initial extracted fields for dirty checking (must happen after populate)
+            editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
 
             // 4. Add Save and Discard buttons at the bottom of the accordion
             var footer = document.createElement('div');

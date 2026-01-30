@@ -5214,7 +5214,7 @@ const MemberModule = (function() {
             storeCurrent(currentUser);
             
             // Issue auth token cookie for API authentication (used by get-posts privacy)
-            fetch('/gateway.php?action=issue-token').catch(function() {});
+            fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
             
             render();
 
@@ -5449,7 +5449,7 @@ const MemberModule = (function() {
             storeCurrent(currentUser);
             
             // Issue auth token cookie for API authentication (used by get-posts privacy)
-            fetch('/gateway.php?action=issue-token').catch(function() {});
+            fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
             
             render();
             
@@ -5922,7 +5922,7 @@ const MemberModule = (function() {
                 
                 // Issue auth token cookie for API authentication (used by get-posts privacy)
                 // This renews the cookie on each session load to keep it valid
-                fetch('/gateway.php?action=issue-token').catch(function() {});
+                fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
                 
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {
