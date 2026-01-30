@@ -62,6 +62,7 @@ The agent must minimize context (time/tokens) usage:
 - Make the smallest possible change set per attempt
 - If the agent believes a backup revert would be faster/safer than iterative changes, the agent must ASK the user to revert to the backup (the agent cannot revert)
 - IMPORTANT: The backup system is on the user's PC (outside this repo). It is NOT the `backups/` folder in the workspace, and the agent has no access to the user's PC backups.
+- **THE AUDITOR TOOL**: The user has a permanent tool at `Agent/auditor.html`. The user can use this tool to search the entire codebase and database dump for any keywords in seconds. The agent must NEVER perform broad searches or waste context/tokens searching for keywords throughout the site. Instead, the agent must ASK the user to run the Auditor and provide the report summary.
 
 ### Essentials Compliance Check (End of Every Task)
 At the end of every task, the agent must explicitly confirm that `Agent/agent essentials.md` was obeyed.
