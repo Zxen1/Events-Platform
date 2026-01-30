@@ -400,6 +400,26 @@
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
 
+        // Add edit header buttons (Save/Close) - shown when editing, sticky with postcard
+        var editHeaderButtons = document.createElement('div');
+        editHeaderButtons.className = 'posteditor-edit-header-buttons';
+        editHeaderButtons.hidden = true;
+        
+        var headerSaveBtn = document.createElement('button');
+        headerSaveBtn.type = 'button';
+        headerSaveBtn.className = 'posteditor-edit-button-save button-class-2c';
+        headerSaveBtn.textContent = 'Save';
+        headerSaveBtn.disabled = true;
+        
+        var headerCloseBtn = document.createElement('button');
+        headerCloseBtn.type = 'button';
+        headerCloseBtn.className = 'posteditor-edit-button-close button-class-2b';
+        headerCloseBtn.textContent = 'Close';
+        
+        editHeaderButtons.appendChild(headerSaveBtn);
+        editHeaderButtons.appendChild(headerCloseBtn);
+        postContainer.appendChild(editHeaderButtons);
+
         // Add accordion container for editing content
         var editAccordion = document.createElement('div');
         editAccordion.className = 'posteditor-edit-accordion posteditor-edit-accordion--hidden';
@@ -508,46 +528,71 @@
        EDIT ACCORDION
        -------------------------------------------------------------------------- */
     
+    // Collapse edit accordion and restore UI state
+    function collapseEditAccordion(postId, postContainer) {
+        if (!postId || !postContainer) return;
+        
+        var accordion = postContainer.querySelector('.posteditor-edit-accordion');
+        var buttonRow = postContainer.querySelector('.posteditor-buttons');
+        var headerButtons = postContainer.querySelector('.posteditor-edit-header-buttons');
+        var editBtn = postContainer.querySelector('.posteditor-button-edit');
+        
+        if (accordion) {
+            accordion.hidden = true;
+            accordion.classList.add('posteditor-edit-accordion--hidden');
+        }
+        postContainer.classList.remove('posteditor-item--editing');
+        expandedPostAccordions[postId] = false;
+        
+        // Show Edit/Manage buttons, hide header Save/Close buttons
+        if (buttonRow) buttonRow.hidden = false;
+        if (headerButtons) headerButtons.hidden = true;
+        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
+    }
+    
+    // Expand edit accordion and update UI state
+    function expandEditAccordion(postId, postContainer) {
+        if (!postId || !postContainer) return;
+        
+        var accordion = postContainer.querySelector('.posteditor-edit-accordion');
+        var buttonRow = postContainer.querySelector('.posteditor-buttons');
+        var headerButtons = postContainer.querySelector('.posteditor-edit-header-buttons');
+        var editBtn = postContainer.querySelector('.posteditor-button-edit');
+        
+        if (accordion) {
+            accordion.hidden = false;
+            accordion.classList.remove('posteditor-edit-accordion--hidden');
+        }
+        postContainer.classList.add('posteditor-item--editing');
+        expandedPostAccordions[postId] = true;
+        
+        // Hide Edit/Manage buttons, show header Save/Close buttons
+        if (buttonRow) buttonRow.hidden = true;
+        if (headerButtons) headerButtons.hidden = false;
+        if (editBtn) editBtn.setAttribute('aria-selected', 'true');
+    }
+    
     function togglePostEdit(postId, postContainer) {
         if (!postId || !postContainer) return;
         
         var accordion = postContainer.querySelector('.posteditor-edit-accordion');
         if (!accordion) return;
 
-        var editBtn = postContainer.querySelector('.posteditor-button-edit');
         var manageBtn = postContainer.querySelector('.posteditor-button-manage');
         
         var isExpanded = expandedPostAccordions[postId];
-        
-        // Helper to perform the collapse
-        function doCollapse() {
-            accordion.hidden = true;
-            accordion.classList.add('posteditor-edit-accordion--hidden');
-            postContainer.classList.remove('posteditor-item--editing');
-            expandedPostAccordions[postId] = false;
-            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-            discardEdits(postId);
-        }
         
         // Helper to close other posts' accordions
         function closeOtherAccordions() {
             document.querySelectorAll('.posteditor-item').forEach(function(item) {
                 if (item === postContainer) return;
-                var otherEdit = item.querySelector('.posteditor-edit-accordion');
-                var otherManage = item.querySelector('.posteditor-manage-accordion');
-                var otherEditBtn = item.querySelector('.posteditor-button-edit');
-                var otherManageBtn = item.querySelector('.posteditor-button-manage');
-                if (otherEdit && !otherEdit.hidden) {
-                    otherEdit.hidden = true;
-                    otherEdit.classList.add('posteditor-edit-accordion--hidden');
-                    item.classList.remove('posteditor-item--editing');
-                    if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
-                    var otherId = item.dataset.postId;
-                    if (otherId) {
-                        expandedPostAccordions[otherId] = false;
-                        discardEdits(otherId);
-                    }
+                var otherId = item.dataset.postId;
+                if (otherId && expandedPostAccordions[otherId]) {
+                    discardEdits(otherId);
+                    collapseEditAccordion(otherId, item);
                 }
+                var otherManage = item.querySelector('.posteditor-manage-accordion');
+                var otherManageBtn = item.querySelector('.posteditor-button-manage');
                 if (otherManage && !otherManage.hidden) {
                     otherManage.hidden = true;
                     otherManage.classList.add('posteditor-manage-accordion--hidden');
@@ -583,28 +628,55 @@
             return dirtyOtherPost;
         }
         
-        if (isExpanded) {
-            // Collapsing - check for unsaved changes
-            if (isPostDirty(postId)) {
-                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
-                    doCollapse();
-                    return;
-                }
-                ConfirmDialogComponent.show({
-                    titleText: 'Discard Changes',
-                    messageText: 'Are you sure you want to discard your changes?',
-                    confirmLabel: 'Discard',
-                    cancelLabel: 'Cancel',
-                    focusCancel: true,
-                    confirmClass: 'danger'
-                }).then(function(confirmed) {
-                    if (confirmed) {
-                        doCollapse();
-                    }
-                });
+        // Handle close with ThreeButtonDialog if dirty
+        function handleCloseWithDialog(onComplete) {
+            if (!isPostDirty(postId)) {
+                discardEdits(postId);
+                collapseEditAccordion(postId, postContainer);
+                if (onComplete) onComplete();
                 return;
             }
-            doCollapse();
+            if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
+                discardEdits(postId);
+                collapseEditAccordion(postId, postContainer);
+                if (onComplete) onComplete();
+                return;
+            }
+            ThreeButtonDialogComponent.show({
+                titleText: 'Unsaved Changes',
+                messageText: 'You have unsaved changes. What would you like to do?',
+                cancelLabel: 'Cancel',
+                saveLabel: 'Save',
+                discardLabel: 'Discard',
+                focusCancel: true
+            }).then(function(choice) {
+                if (choice === 'save') {
+                    savePost(postId).then(function() {
+                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                            ToastComponent.showSuccess('Saved');
+                        }
+                        discardEdits(postId);
+                        collapseEditAccordion(postId, postContainer);
+                        if (onComplete) onComplete();
+                    }).catch(function(err) {
+                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                            ToastComponent.showError('Failed to save: ' + err.message);
+                        }
+                    });
+                } else if (choice === 'discard') {
+                    discardEdits(postId);
+                    collapseEditAccordion(postId, postContainer);
+                    if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+                        ToastComponent.show('Changes discarded');
+                    }
+                    if (onComplete) onComplete();
+                }
+            });
+        }
+        
+        if (isExpanded) {
+            // Collapsing via Edit button click - use dialog if dirty
+            handleCloseWithDialog();
         } else {
             // Expanding - check if any other post has unsaved changes first
             var dirtyOther = checkOtherDirtyPosts();
@@ -615,11 +687,7 @@
                 
                 // Check if we need to load data first
                 if (editingPostsData[postId]) {
-                    accordion.hidden = false;
-                    accordion.classList.remove('posteditor-edit-accordion--hidden');
-                    postContainer.classList.add('posteditor-item--editing');
-                    expandedPostAccordions[postId] = true;
-                    if (editBtn) editBtn.setAttribute('aria-selected', 'true');
+                    expandEditAccordion(postId, postContainer);
                 } else {
                     showStatus('Loading post data...', { success: true });
                     
@@ -633,11 +701,7 @@
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             renderEditForm(post, accordion);
-                            accordion.hidden = false;
-                            accordion.classList.remove('posteditor-edit-accordion--hidden');
-                            postContainer.classList.add('posteditor-item--editing');
-                            expandedPostAccordions[postId] = true;
-                            if (editBtn) editBtn.setAttribute('aria-selected', 'true');
+                            expandEditAccordion(postId, postContainer);
                             showStatus('Post data loaded.', { success: true });
                         } else {
                             showStatus('Failed to load post data.', { error: true });
@@ -651,20 +715,31 @@
             }
             
             if (dirtyOther) {
-                // Another post has unsaved changes - ask before closing it
-                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                // Another post has unsaved changes - use ThreeButtonDialog
+                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
                     proceedWithExpand();
                     return;
                 }
-                ConfirmDialogComponent.show({
-                    titleText: 'Discard Changes',
-                    messageText: 'Another post has unsaved changes. Discard those changes?',
-                    confirmLabel: 'Discard',
+                ThreeButtonDialogComponent.show({
+                    titleText: 'Unsaved Changes',
+                    messageText: 'Another post has unsaved changes. What would you like to do?',
                     cancelLabel: 'Cancel',
-                    focusCancel: true,
-                    confirmClass: 'danger'
-                }).then(function(confirmed) {
-                    if (confirmed) {
+                    saveLabel: 'Save',
+                    discardLabel: 'Discard',
+                    focusCancel: true
+                }).then(function(choice) {
+                    if (choice === 'save') {
+                        savePost(dirtyOther).then(function() {
+                            if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                                ToastComponent.showSuccess('Saved');
+                            }
+                            proceedWithExpand();
+                        }).catch(function(err) {
+                            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                ToastComponent.showError('Failed to save: ' + err.message);
+                            }
+                        });
+                    } else if (choice === 'discard') {
                         proceedWithExpand();
                     }
                 });
@@ -762,9 +837,66 @@
             // Store initial extracted fields for dirty checking (must happen after populate)
             editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
 
-            // 4. Add Save and Discard buttons at the bottom of the accordion
+            // 4. Add Save and Close buttons at the bottom of the accordion
             var footer = document.createElement('div');
             footer.className = 'posteditor-edit-footer';
+            
+            var postContainer = accordionContainer.closest('.posteditor-item');
+            var headerSaveBtn = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons .posteditor-edit-button-save') : null;
+            var headerCloseBtn = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons .posteditor-edit-button-close') : null;
+            
+            // Close editor function (used by Close button and forced close)
+            function closeEditor() {
+                discardEdits(post.id);
+                collapseEditAccordion(post.id, postContainer);
+            }
+            
+            // Handle close with unsaved changes check
+            function handleClose() {
+                if (!isPostDirty(post.id)) {
+                    closeEditor();
+                    return;
+                }
+                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
+                    closeEditor();
+                    return;
+                }
+                ThreeButtonDialogComponent.show({
+                    titleText: 'Unsaved Changes',
+                    messageText: 'You have unsaved changes. What would you like to do?',
+                    cancelLabel: 'Cancel',
+                    saveLabel: 'Save',
+                    discardLabel: 'Discard',
+                    focusCancel: true
+                }).then(function(choice) {
+                    if (choice === 'save') {
+                        handleSave().then(function() {
+                            closeEditor();
+                        });
+                    } else if (choice === 'discard') {
+                        closeEditor();
+                        if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+                            ToastComponent.show('Changes discarded');
+                        }
+                    }
+                });
+            }
+            
+            // Handle save (returns promise)
+            function handleSave() {
+                return savePost(post.id).then(function() {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        ToastComponent.showSuccess('Saved');
+                    }
+                    updateHeaderSaveDiscardState();
+                    updateFooterButtonState();
+                }).catch(function(err) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError('Failed to save: ' + err.message);
+                    }
+                    throw err;
+                });
+            }
             
             // Save button (green) - left - starts disabled
             var saveBtn = document.createElement('button');
@@ -774,31 +906,26 @@
             saveBtn.disabled = true;
             saveBtn.addEventListener('click', function() {
                 if (saveBtn.disabled) return;
-                var postContainer = accordionContainer.closest('.posteditor-item');
-                savePost(post.id).then(function() {
-                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        ToastComponent.showSuccess('Saved');
-                    }
-                    updateHeaderSaveDiscardState();
-                    // Close the accordion after successful save
-                    discardEdits(post.id);
-                    if (postContainer) {
-                        var editBtn = postContainer.querySelector('.posteditor-button-edit');
-                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                    }
-                }).catch(function(err) {
-                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        ToastComponent.showError('Failed to save: ' + err.message);
-                    }
-                });
+                handleSave();
             });
             
-            // Discard button (red) - right - starts disabled
-            var discardBtn = document.createElement('button');
-            discardBtn.type = 'button';
-            discardBtn.className = 'posteditor-edit-button-discard button-class-2d';
-            discardBtn.textContent = 'Discard';
-            discardBtn.disabled = true;
+            // Close button (blue) - right - always enabled
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'posteditor-edit-button-close button-class-2b';
+            closeBtn.textContent = 'Close';
+            closeBtn.addEventListener('click', handleClose);
+            
+            // Wire up header buttons to same handlers
+            if (headerSaveBtn) {
+                headerSaveBtn.addEventListener('click', function() {
+                    if (headerSaveBtn.disabled) return;
+                    handleSave();
+                });
+            }
+            if (headerCloseBtn) {
+                headerCloseBtn.addEventListener('click', handleClose);
+            }
             
             // Function to check if all fieldsets are complete
             function isFormComplete() {
@@ -847,21 +974,13 @@
                 return { title: '', items: [] };
             }
             
-            // Popover content for Discard button - shows "No changes" when not dirty
-            function getDiscardPopoverContent() {
-                var isDirty = isPostDirty(post.id);
-                if (!isDirty) {
-                    return { title: 'No Changes', items: ['Nothing to discard'] };
-                }
-                return { title: '', items: [] };
-            }
-            
             // Function to update footer button states based on dirty check AND completeness
             function updateFooterButtonState() {
                 var isDirty = isPostDirty(post.id);
                 var isComplete = isFormComplete();
-                saveBtn.disabled = !isDirty || !isComplete;
-                discardBtn.disabled = !isDirty;
+                var canSave = isDirty && isComplete;
+                saveBtn.disabled = !canSave;
+                if (headerSaveBtn) headerSaveBtn.disabled = !canSave;
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
@@ -913,9 +1032,8 @@
                 pop.addEventListener('mouseleave', hide);
             }
             
-            // Attach popovers to Save (left-aligned) and Discard (right-aligned) buttons
+            // Attach popover to Save button only (Close is always enabled)
             attachPopoverToButton(saveBtn, getSavePopoverContent, 'left');
-            attachPopoverToButton(discardBtn, getDiscardPopoverContent, 'right');
 
             // Attach change listener to mark global save state as dirty and update footer buttons
             accordionContainer.addEventListener('input', function() {
@@ -935,40 +1053,9 @@
             accordionContainer.addEventListener('fieldset:validity-change', function() {
                 updateFooterButtonState();
             });
-            discardBtn.addEventListener('click', function() {
-                var postContainer = accordionContainer.closest('.posteditor-item');
-                if (!window.ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
-                    // Fallback if ConfirmDialogComponent not available
-                    discardEdits(post.id);
-                    if (postContainer) {
-                        var editBtn = postContainer.querySelector('.posteditor-button-edit');
-                        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                    }
-                    return;
-                }
-                ConfirmDialogComponent.show({
-                    titleText: 'Discard Changes',
-                    messageText: 'Are you sure you want to discard your changes?',
-                    confirmLabel: 'Discard',
-                    cancelLabel: 'Cancel',
-                    focusCancel: true,
-                    confirmClass: 'danger'
-                }).then(function(confirmed) {
-                    if (confirmed) {
-                        discardEdits(post.id);
-                        if (postContainer) {
-                            var editBtn = postContainer.querySelector('.posteditor-button-edit');
-                            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-                        }
-                        if (window.ToastComponent && typeof ToastComponent.show === 'function') {
-                            ToastComponent.show('Changes discarded');
-                        }
-                    }
-                });
-            });
             
             footer.appendChild(saveBtn);
-            footer.appendChild(discardBtn);
+            footer.appendChild(closeBtn);
             accordionContainer.appendChild(footer);
         });
     }

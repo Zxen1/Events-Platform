@@ -117,10 +117,27 @@
 .posteditor-item--editing .post-card {
   position: sticky;
   top: 0;
-  z-index: var(--layer-sticky, 10);
+  z-index: var(--layer-sticky);
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+/* Edit header buttons (Save/Close) - sticky under postcard when editing */
+.posteditor-edit-header-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.posteditor-edit-header-buttons button {
+  flex: 1;
 }
 
 /* Post card inside My Posts - identical to post panel */
