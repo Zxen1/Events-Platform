@@ -351,8 +351,10 @@
         var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
         if (!postContainer) return;
         
-        // Fetch fresh post data
-        fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId)
+        // Fetch fresh post data (include member_id to bypass contact security filtering)
+        var user = getCurrentUser();
+        var memberId = user ? parseInt(user.id, 10) : 0;
+        fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId)
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res && res.success && res.posts && res.posts.length > 0) {
@@ -769,9 +771,13 @@
                 } else {
                     showStatus('Loading post data...', { success: true });
                     
+                    // Get member_id to bypass contact security filtering
+                    var user = getCurrentUser();
+                    var memberId = user ? parseInt(user.id, 10) : 0;
+                    
                     // Ensure categories are loaded before fetching post data
                     ensureCategoriesLoaded().then(function() {
-                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId);
+                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
                     })
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
