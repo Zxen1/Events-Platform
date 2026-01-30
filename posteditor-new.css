@@ -253,11 +253,11 @@
 }
 
 .posteditor-popover--left {
-  left: 0;
+  left: 10px;
 }
 
 .posteditor-popover--right {
-  right: 0;
+  right: 10px;
 }
 
 .posteditor-popover-title {
