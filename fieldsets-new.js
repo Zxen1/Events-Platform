@@ -2699,7 +2699,7 @@ const FieldsetBuilder = (function(){
                     }
                     
                     if (itemNameInput) itemNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    if (itemPriceInput) itemPriceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    // Note: Don't dispatch input on itemPriceInput - it would strip the currency symbol
                     updateCompleteFromDom();
                 };
                 
