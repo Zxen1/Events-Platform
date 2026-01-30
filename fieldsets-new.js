@@ -2658,19 +2658,26 @@ const FieldsetBuilder = (function(){
                     
                     if (itemNameInput) itemNameInput.value = val.item_name || '';
                     
-                    // Set currency first so we can format the price with it
+                    // Set raw price first (same as Create Post form)
+                    if (itemPriceInput) {
+                        itemPriceInput.value = val.item_price || '';
+                    }
+                    
+                    // Set currency and format price (same logic as onSelect callback)
                     if (ipCurrencyMenu && typeof ipCurrencyMenu.setValue === 'function') {
                         ipCurrencyMenu.setValue(val.currency || null);
                         ipSelectedCurrency = val.currency || null;
-                    }
-                    
-                    // Format price with currency symbol
-                    if (itemPriceInput) {
-                        var priceVal = val.item_price || '';
-                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                            itemPriceInput.value = CurrencyComponent.formatWithSymbol(priceVal, val.currency);
-                        } else {
-                            itemPriceInput.value = priceVal;
+                        
+                        // Format price with currency symbol (same as onSelect does)
+                        if (itemPriceInput && val.currency) {
+                            updatePricePlaceholder(itemPriceInput, val.currency);
+                            var priceStr = String(itemPriceInput.value || '').trim();
+                            if (priceStr) {
+                                var numericValue = parseFloat(priceStr.replace(/[^0-9.-]/g, ''));
+                                if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
+                                    itemPriceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), val.currency);
+                                }
+                            }
                         }
                     }
                     

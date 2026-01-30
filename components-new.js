@@ -879,9 +879,8 @@ const CurrencyComponent = (function(){
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
-            var codeLower = String(code).toLowerCase();
             var found = currencyData.find(function(item) {
-                return String(item.value || '').toLowerCase() === codeLower;
+                return item.value === code;
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
@@ -1099,9 +1098,8 @@ const CurrencyComponent = (function(){
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
-            var codeLower = String(code).toLowerCase();
             var found = currencyData.find(function(item) {
-                return String(item.value || '').toLowerCase() === codeLower;
+                return item.value === code;
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
@@ -1259,9 +1257,8 @@ const CurrencyComponent = (function(){
     // Get full currency data by code (includes formatting properties)
     function getCurrencyByCode(code) {
         if (!code) return null;
-        var codeLower = String(code).toLowerCase();
         return currencyData.find(function(item) {
-            return String(item.value || '').toLowerCase() === codeLower;
+            return item.value === code;
         }) || null;
     }
     
