@@ -1259,8 +1259,9 @@ const CurrencyComponent = (function(){
     // Get full currency data by code (includes formatting properties)
     function getCurrencyByCode(code) {
         if (!code) return null;
+        var codeLower = String(code).toLowerCase();
         return currencyData.find(function(item) {
-            return item.value === code;
+            return String(item.value || '').toLowerCase() === codeLower;
         }) || null;
     }
     
