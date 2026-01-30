@@ -253,13 +253,48 @@
             });
     }
 
+    // Check if a post is favorited (same logic as PostModule)
+    function isFavorite(postId) {
+        try {
+            var favs = JSON.parse(localStorage.getItem('postFavorites') || '{}');
+            return !!favs[postId];
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    // Sort posts: favorites first (by post date), then non-favorites (by post date)
+    function sortPostsWithFavorites(posts) {
+        return posts.slice().sort(function(a, b) {
+            var aFav = isFavorite(a.id);
+            var bFav = isFavorite(b.id);
+            
+            // Favorites come first
+            if (aFav && !bFav) return -1;
+            if (!aFav && bFav) return 1;
+            
+            // Within same group, sort by created_at descending (newest first)
+            var aDate = new Date(a.created_at || 0).getTime();
+            var bDate = new Date(b.created_at || 0).getTime();
+            return bDate - aDate;
+        });
+    }
+    
+    // Store posts for reordering
+    var currentPosts = [];
+
     function renderPosts(posts) {
         if (!container) return;
         
         if (!posts || posts.length === 0) {
             container.innerHTML = '<p class="posteditor-status">You haven\'t created any posts yet.</p>';
+            currentPosts = [];
             return;
         }
+        
+        // Store and sort posts
+        currentPosts = posts;
+        var sortedPosts = sortPostsWithFavorites(posts);
 
         // Keep the uploading placeholder if it exists
         var placeholder = document.getElementById('posteditor-uploading');
@@ -268,10 +303,47 @@
             container.appendChild(placeholder);
         }
 
-        posts.forEach(function(post) {
+        sortedPosts.forEach(function(post) {
             var card = renderPostCard(post);
             container.appendChild(card);
         });
+    }
+    
+    // Reorder posts after favorite toggle (with animation)
+    function reorderPostsAfterFavorite(postId) {
+        if (!container || currentPosts.length === 0) return;
+        
+        // Find the post container that was just favorited
+        var postContainer = container.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+        var favBtn = postContainer ? postContainer.querySelector('.post-card-button-fav') : null;
+        
+        // Brief highlight on star
+        if (favBtn) {
+            favBtn.classList.add('posteditor-fav-highlight');
+            setTimeout(function() {
+                favBtn.classList.remove('posteditor-fav-highlight');
+            }, 300);
+        }
+        
+        // Re-sort and reorder DOM
+        var sortedPosts = sortPostsWithFavorites(currentPosts);
+        var placeholder = document.getElementById('posteditor-uploading');
+        
+        // Reorder DOM elements
+        sortedPosts.forEach(function(post) {
+            var el = container.querySelector('.posteditor-item[data-post-id="' + post.id + '"]');
+            if (el) {
+                container.appendChild(el);
+            }
+        });
+        
+        // Keep placeholder at top if exists
+        if (placeholder && placeholder.parentNode === container) {
+            container.insertBefore(placeholder, container.firstChild);
+        }
+        
+        // Smooth scroll to top
+        container.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function refreshPostCard(postId) {
@@ -1555,6 +1627,23 @@
         
         container = containerEl;
         isLoaded = true;
+        
+        // Listen for favorite clicks (event delegation)
+        container.addEventListener('click', function(e) {
+            var favBtn = e.target.closest('.post-card-button-fav');
+            if (!favBtn) return;
+            
+            var postItem = favBtn.closest('.posteditor-item');
+            if (!postItem) return;
+            
+            var postId = postItem.dataset.postId;
+            if (!postId) return;
+            
+            // Small delay to let PostModule's handler update localStorage first
+            setTimeout(function() {
+                reorderPostsAfterFavorite(postId);
+            }, 50);
+        });
         
         // Load posts
         loadPosts();
