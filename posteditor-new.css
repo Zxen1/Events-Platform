@@ -125,6 +125,7 @@
 
 /* Edit header buttons (Save/Close) - shown only when editing */
 .posteditor-edit-header-buttons {
+  position: relative;
   display: flex;
   gap: 10px;
   padding: 0 10px 10px;
@@ -260,7 +261,6 @@
 /* Popover for disabled buttons (completeness/no changes) */
 .posteditor-popover {
   position: absolute;
-  bottom: 42px;
   min-width: 220px;
   max-width: 320px;
   background: rgba(20, 20, 20, 0.98);
@@ -271,6 +271,16 @@
   z-index: var(--layer-popover);
 }
 
+/* Vertical positioning */
+.posteditor-popover--above {
+  bottom: 42px;
+}
+
+.posteditor-popover--below {
+  top: 100%;
+}
+
+/* Horizontal alignment */
 .posteditor-popover--left {
   left: 10px;
 }

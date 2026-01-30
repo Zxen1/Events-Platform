@@ -2604,9 +2604,9 @@
 }
 
 .component-three-button-dialog-button--save {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--green-950);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--green-600);
     border-radius: 999px;
     padding: 10px 18px;
     font: inherit;
@@ -2616,9 +2616,9 @@
 }
 
 .component-three-button-dialog-button--discard {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--red-950);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--red-600);
     border-radius: 999px;
     padding: 10px 18px;
     font: inherit;
@@ -2635,12 +2635,12 @@
 
 .component-three-button-dialog-button--save:focus-visible,
 .component-three-button-dialog-button--save:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--green-600);
 }
 
 .component-three-button-dialog-button--discard:focus-visible,
 .component-three-button-dialog-button--discard:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--red-600);
 }
 
 /* ============================================================================

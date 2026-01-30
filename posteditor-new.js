@@ -1062,13 +1062,19 @@
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
-            function attachPopoverToButton(btnEl, getContentFn, alignment) {
-                if (!btnEl) return;
+            // parentEl: element to append popover to
+            // position: 'above' or 'below'
+            // alignment: 'left' or 'right'
+            function attachPopoverToButton(btnEl, getContentFn, parentEl, position, alignment) {
+                if (!btnEl || !parentEl) return;
                 if (btnEl._popoverAttached) return;
                 btnEl._popoverAttached = true;
                 
+                var posClass = position === 'below' ? 'posteditor-popover--below' : 'posteditor-popover--above';
+                var alignClass = 'posteditor-popover--' + alignment;
+                
                 var pop = document.createElement('div');
-                pop.className = 'posteditor-popover posteditor-popover--' + alignment;
+                pop.className = 'posteditor-popover ' + posClass + ' ' + alignClass;
                 pop.hidden = true;
                 
                 var titleEl = document.createElement('div');
@@ -1079,7 +1085,7 @@
                 list.className = 'posteditor-popover-list';
                 pop.appendChild(list);
                 
-                footer.appendChild(pop);
+                parentEl.appendChild(pop);
                 
                 function show() {
                     if (btnEl.hidden || btnEl.offsetParent === null) return;
@@ -1110,8 +1116,14 @@
                 pop.addEventListener('mouseleave', hide);
             }
             
-            // Attach popover to Save button only (Close is always enabled)
-            attachPopoverToButton(saveBtn, getSavePopoverContent, 'left');
+            // Attach popover to footer Save button (above, left-aligned)
+            attachPopoverToButton(saveBtn, getSavePopoverContent, footer, 'above', 'left');
+            
+            // Attach popover to header Save button (below, left-aligned)
+            var headerButtonsContainer = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons') : null;
+            if (headerSaveBtn && headerButtonsContainer) {
+                attachPopoverToButton(headerSaveBtn, getSavePopoverContent, headerButtonsContainer, 'below', 'left');
+            }
 
             // Attach change listener to mark global save state as dirty and update footer buttons
             accordionContainer.addEventListener('input', function() {
