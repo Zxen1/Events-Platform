@@ -1496,12 +1496,11 @@ const FieldsetBuilder = (function(){
                         if (val.latitude && val.longitude) {
                             addrInputEl.dataset.placesConfirmed = 'true';
                         }
-                        // Dispatch input event to trigger location header update
-                        try { addrInputEl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
                     }
                     if (addrLatInput) addrLatInput.value = val.latitude || '';
                     if (addrLngInput) addrLngInput.value = val.longitude || '';
                     if (addrCountryInput) addrCountryInput.value = val.country_code || '';
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
                 break;
                 
@@ -1542,12 +1541,11 @@ const FieldsetBuilder = (function(){
                         if (val.latitude && val.longitude) {
                             cityInputEl.dataset.placesConfirmed = 'true';
                         }
-                        // Dispatch input event to trigger location header update
-                        try { cityInputEl.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
                     }
                     if (cityLatInput) cityLatInput.value = val.latitude || '';
                     if (cityLngInput) cityLngInput.value = val.longitude || '';
                     if (cityCountryInput) cityCountryInput.value = val.country_code || '';
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
                 break;
                 
@@ -4839,8 +4837,9 @@ const FieldsetBuilder = (function(){
                     }
                     
                     syncSmartAddrDisplay();
-                    // Dispatch input event on venue input to trigger location header update
-                    try { smartVenueInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+                    // Don't trigger input event to avoid opening the dropdown during population
+                    // but we do need to notify the fieldset of the change for validation
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
 
                 smartAddrDisplay.addEventListener('click', function() {

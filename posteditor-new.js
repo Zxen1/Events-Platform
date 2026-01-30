@@ -681,15 +681,6 @@
             
             // Populate with post data
             populateWithPostData(post, accordionContainer);
-            
-            // Update location headers with venue/city names
-            var locationContainers = accordionContainer.querySelectorAll('.member-location-container');
-            locationContainers.forEach(function(container) {
-                if (FormbuilderModule.updateLocationHeaderFromInput) {
-                    FormbuilderModule.updateLocationHeaderFromInput(container);
-                }
-            });
-            
             // Store initial extracted fields for dirty checking (must happen after populate)
             editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
 
