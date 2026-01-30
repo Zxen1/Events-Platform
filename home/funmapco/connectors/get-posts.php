@@ -85,6 +85,7 @@ try {
 
     // Check if user is logged in (for contact detail protection)
     // Contact details (email/phone) are hidden from non-members to prevent bot scraping
+    // Note: $showContactDetails is set after parsing $memberId below
     $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
 
     // Load database config
@@ -146,6 +147,12 @@ try {
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
+    
+    // Show contact details if:
+    // 1. User is logged in (cookie/header present), OR
+    // 2. Filtering by member_id (Post Editor fetching own posts for editing)
+    // This ensures the post owner can always see their own contact details in the editor
+    $showContactDetails = $isLoggedIn || ($memberId > 0);
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -454,9 +461,9 @@ try {
                 'custom_dropdown' => $row['custom_dropdown'],
                 'custom_checklist' => $row['custom_checklist'],
                 'custom_radio' => $row['custom_radio'],
-                'public_email' => $isLoggedIn ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
-                'phone_prefix' => $isLoggedIn ? $row['phone_prefix'] : null,
-                'public_phone' => $isLoggedIn ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
+                'public_email' => $showContactDetails ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
+                'phone_prefix' => $showContactDetails ? $row['phone_prefix'] : null,
+                'public_phone' => $showContactDetails ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
                 'venue_name' => $row['venue_name'],
                 'address_line' => $row['address_line'],
                 'city' => $row['city'],
