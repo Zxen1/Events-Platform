@@ -3640,6 +3640,20 @@ const FieldsetBuilder = (function(){
                     
                     tpUpdateTicketAreaButtons(ticketAreasContainer, isAllocated);
                     updateAllVisibility();
+                    
+                    // Format price values with currency symbol (same as when user selects currency)
+                    if (initialCurrValue) {
+                        var priceInputs = editorEl.querySelectorAll('.fieldset-ticketpricing-input-price');
+                        priceInputs.forEach(function(inp) {
+                            var val = String(inp.value || '').trim();
+                            if (val === '') return;
+                            var numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                            if (!Number.isFinite(numericValue)) return;
+                            if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                                inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), initialCurrValue);
+                            }
+                        });
+                    }
                 }
 
                 var tpMaxTicketGroups = 10;
