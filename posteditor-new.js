@@ -774,7 +774,7 @@
             footer.appendChild(saveBtn);
             footer.appendChild(discardBtn);
             accordionContainer.appendChild(footer);
-        }
+        });
     }
 
     function populateWithPostData(post, accordionContainer) {
