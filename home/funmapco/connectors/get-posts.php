@@ -590,7 +590,7 @@ try {
                     $sessionsByCard[$cid][$date] = ['date' => $date, 'times' => []];
                 }
                 $sessionsByCard[$cid][$date]['times'][] = [
-                    'time' => $sRow['session_time'],
+                    'time' => substr($sRow['session_time'], 0, 5), // HH:MM only, strip seconds
                     'ticket_group_key' => $sRow['ticket_group_key']
                 ];
             }
