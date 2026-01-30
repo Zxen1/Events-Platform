@@ -113,8 +113,8 @@
   border-bottom: none;
 }
 
-/* When editing, make the post card sticky so user knows what they're editing */
-.posteditor-item--editing .post-card {
+/* Edit header (contains postcard + Save/Close buttons) - sticky when editing */
+.posteditor-item--editing .posteditor-edit-header {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
@@ -123,17 +123,15 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Edit header buttons (Save/Close) - sticky under postcard when editing */
+/* Edit header buttons (Save/Close) - shown only when editing */
 .posteditor-edit-header-buttons {
   display: flex;
   gap: 10px;
-  padding: 10px;
-  position: sticky;
-  top: 0;
-  z-index: var(--layer-sticky);
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 0 10px 10px;
+}
+
+.posteditor-edit-header-buttons[hidden] {
+  display: none;
 }
 
 .posteditor-edit-header-buttons button {
@@ -163,6 +161,10 @@
   gap: 10px;
   padding: 0 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+.posteditor-buttons[hidden] {
+  display: none;
 }
 
 .posteditor-button-edit,

@@ -334,6 +334,10 @@
         postContainer.className = 'posteditor-item';
         postContainer.dataset.postId = post.id;
         
+        // Create edit header (sticky container for postcard + Save/Close buttons when editing)
+        var editHeader = document.createElement('div');
+        editHeader.className = 'posteditor-edit-header';
+        
         // Use PostModule if available, otherwise fallback to simple display
         var cardEl = null;
         if (window.PostModule && typeof PostModule.renderPostCard === 'function') {
@@ -358,9 +362,31 @@
             }
         }, true); // Use capture phase to intercept before PostModule's handler
 
-        postContainer.appendChild(cardEl);
+        editHeader.appendChild(cardEl);
+        
+        // Add edit header buttons (Save/Close) - hidden by default, shown when editing
+        var editHeaderButtons = document.createElement('div');
+        editHeaderButtons.className = 'posteditor-edit-header-buttons';
+        editHeaderButtons.hidden = true;
+        
+        var headerSaveBtn = document.createElement('button');
+        headerSaveBtn.type = 'button';
+        headerSaveBtn.className = 'posteditor-edit-button-save button-class-2c';
+        headerSaveBtn.textContent = 'Save';
+        headerSaveBtn.disabled = true;
+        
+        var headerCloseBtn = document.createElement('button');
+        headerCloseBtn.type = 'button';
+        headerCloseBtn.className = 'posteditor-edit-button-close button-class-2b';
+        headerCloseBtn.textContent = 'Close';
+        
+        editHeaderButtons.appendChild(headerSaveBtn);
+        editHeaderButtons.appendChild(headerCloseBtn);
+        editHeader.appendChild(editHeaderButtons);
+        
+        postContainer.appendChild(editHeader);
 
-        // Create button row underneath the card
+        // Create button row underneath the header (Edit/Manage buttons)
         var buttonRow = document.createElement('div');
         buttonRow.className = 'posteditor-buttons';
 
@@ -399,26 +425,6 @@
         buttonRow.appendChild(editBtn);
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
-
-        // Add edit header buttons (Save/Close) - shown when editing, sticky with postcard
-        var editHeaderButtons = document.createElement('div');
-        editHeaderButtons.className = 'posteditor-edit-header-buttons';
-        editHeaderButtons.hidden = true;
-        
-        var headerSaveBtn = document.createElement('button');
-        headerSaveBtn.type = 'button';
-        headerSaveBtn.className = 'posteditor-edit-button-save button-class-2c';
-        headerSaveBtn.textContent = 'Save';
-        headerSaveBtn.disabled = true;
-        
-        var headerCloseBtn = document.createElement('button');
-        headerCloseBtn.type = 'button';
-        headerCloseBtn.className = 'posteditor-edit-button-close button-class-2b';
-        headerCloseBtn.textContent = 'Close';
-        
-        editHeaderButtons.appendChild(headerSaveBtn);
-        editHeaderButtons.appendChild(headerCloseBtn);
-        postContainer.appendChild(editHeaderButtons);
 
         // Add accordion container for editing content
         var editAccordion = document.createElement('div');
