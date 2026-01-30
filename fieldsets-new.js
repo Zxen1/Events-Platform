@@ -2664,10 +2664,10 @@ const FieldsetBuilder = (function(){
                         ipSelectedCurrency = val.currency || null;
                     }
                     
-                    // Format price with currency symbol (CurrencyComponent must be loaded before _setValue is called)
+                    // Format price with currency symbol
                     if (itemPriceInput) {
                         var priceVal = val.item_price || '';
-                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.isLoaded && CurrencyComponent.isLoaded() && CurrencyComponent.formatWithSymbol) {
+                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
                             itemPriceInput.value = CurrencyComponent.formatWithSymbol(priceVal, val.currency);
                         } else {
                             itemPriceInput.value = priceVal;
