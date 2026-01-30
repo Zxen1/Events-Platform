@@ -2494,16 +2494,7 @@ const FieldsetBuilder = (function(){
                     // val: array of { amenity, value }
                     if (!Array.isArray(val)) return;
                     val.forEach(function(item) {
-                        // Find row by amenity name (case-insensitive match)
-                        var itemAmenityLower = String(item.amenity || '').toLowerCase();
-                        var row = null;
-                        var rows = fieldset.querySelectorAll('.fieldset-amenities-row');
-                        for (var i = 0; i < rows.length; i++) {
-                            if (String(rows[i].dataset.amenity || '').toLowerCase() === itemAmenityLower) {
-                                row = rows[i];
-                                break;
-                            }
-                        }
+                        var row = fieldset.querySelector('.fieldset-amenities-row[data-amenity="' + item.amenity + '"]');
                         if (row) {
                             var valStr = String(item.value);
                             row.dataset.value = valStr;

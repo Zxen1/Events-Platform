@@ -560,12 +560,13 @@ try {
         }
     }
 
-    // 2. Batch lookup sessions, pricing, and item pricing (ONLY if full data requested)
+    // 2. Batch lookup sessions, pricing, item pricing, and amenities (ONLY if full data requested)
     $allMapCardIds = [];
     $sessionsByCard = [];
     $pricingByCard = [];
     $ageRatingsByCard = [];
     $itemsByCard = [];
+    $amenitiesByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -634,6 +635,32 @@ try {
             }
         }
 
+        // Amenities: build key-to-name mapping from list_amenities, then fetch from post_amenities
+        $amenityKeyToName = [];
+        $listRes = $mysqli->query("SELECT option_value FROM list_amenities WHERE is_active = 1");
+        if ($listRes) {
+            while ($lRow = $listRes->fetch_assoc()) {
+                $name = $lRow['option_value'];
+                $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
+                $key = trim($key, '_');
+                $amenityKeyToName[$key] = $name;
+            }
+        }
+        
+        $amenityRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv)");
+        if ($amenityRes) {
+            while ($aRow = $amenityRes->fetch_assoc()) {
+                $cid = (int)$aRow['map_card_id'];
+                $key = $aRow['amenity_key'];
+                $name = isset($amenityKeyToName[$key]) ? $amenityKeyToName[$key] : $key;
+                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
+                $amenitiesByCard[$cid][] = [
+                    'amenity' => $name,
+                    'value' => $aRow['value']
+                ];
+            }
+        }
+
     }
 
     // Attach to map cards
@@ -686,6 +713,11 @@ try {
                     $mapCard['item_price'] = $item['item_price'];
                     $mapCard['currency'] = $item['currency'];
                     $mapCard['item_variants'] = $item['item_variants'];
+                }
+
+                // Attach Amenities (from subtable, overrides amenity_summary)
+                if (isset($amenitiesByCard[$cid])) {
+                    $mapCard['amenities'] = json_encode($amenitiesByCard[$cid]);
                 }
             }
         }
