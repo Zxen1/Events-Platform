@@ -1185,6 +1185,12 @@ const FieldsetBuilder = (function(){
                 });
                 
                 fieldset.appendChild(cdMenu);
+                
+                fieldset._setValue = function(val) {
+                    if (val && typeof val === 'string') {
+                        cdPick(val);
+                    }
+                };
                 break;
                 
             case 'custom-radio': // post_map_cards.custom_radio
@@ -1267,6 +1273,13 @@ const FieldsetBuilder = (function(){
                     });
                 }
                 fieldset.appendChild(radioGroup);
+                
+                fieldset._setValue = function(val) {
+                    if (val && typeof val === 'string') {
+                        radioGroup.dataset.value = val;
+                        crSyncUi();
+                    }
+                };
                 break;
                 
             case 'custom-checklist': // post_map_cards.custom_checklist
@@ -1388,6 +1401,13 @@ const FieldsetBuilder = (function(){
                 }
                 
                 fieldset.appendChild(checklist);
+                
+                fieldset._setValue = function(val) {
+                    if (Array.isArray(val)) {
+                        ccSetSelected(val);
+                        ccSyncUi();
+                    }
+                };
                 break;
                 
             case 'email':
@@ -2644,10 +2664,10 @@ const FieldsetBuilder = (function(){
                         ipSelectedCurrency = val.currency || null;
                     }
                     
-                    // Format price with currency symbol
+                    // Format price with currency symbol (CurrencyComponent must be loaded before _setValue is called)
                     if (itemPriceInput) {
                         var priceVal = val.item_price || '';
-                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                        if (priceVal && val.currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.isLoaded && CurrencyComponent.isLoaded() && CurrencyComponent.formatWithSymbol) {
                             itemPriceInput.value = CurrencyComponent.formatWithSymbol(priceVal, val.currency);
                         } else {
                             itemPriceInput.value = priceVal;

@@ -663,12 +663,15 @@
                 setupHeaderRenaming: true
             });
             
-            // Populate data (ensure age rating data is loaded first for dropdowns to work)
-            var populatePromise = Promise.resolve();
+            // Populate data (ensure components are loaded first for dropdowns/formatting to work)
+            var loadPromises = [];
             if (window.AgeRatingComponent && typeof AgeRatingComponent.loadFromDatabase === 'function' && !AgeRatingComponent.isLoaded()) {
-                populatePromise = AgeRatingComponent.loadFromDatabase();
+                loadPromises.push(AgeRatingComponent.loadFromDatabase());
             }
-            populatePromise.then(function() {
+            if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function' && !CurrencyComponent.isLoaded()) {
+                loadPromises.push(CurrencyComponent.loadFromDatabase());
+            }
+            Promise.all(loadPromises).then(function() {
                 populateWithPostData(post, accordionContainer);
                 // Store initial extracted fields for dirty checking (must happen after populate)
                 editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
