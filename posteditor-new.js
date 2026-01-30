@@ -681,6 +681,10 @@
             
             // Populate with post data
             populateWithPostData(post, accordionContainer);
+            
+            // Renumber location containers and update headers (scoped to this post's accordion)
+            renumberLocationContainersInAccordion(accordionContainer);
+            
             // Store initial extracted fields for dirty checking (must happen after populate)
             editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
 
@@ -777,6 +781,91 @@
             footer.appendChild(saveBtn);
             footer.appendChild(discardBtn);
             accordionContainer.appendChild(footer);
+        });
+    }
+
+    // Renumber location containers within a specific accordion (same logic as FormbuilderModule but scoped)
+    function renumberLocationContainersInAccordion(accordionContainer) {
+        if (!accordionContainer) return;
+        
+        var allContainers = accordionContainer.querySelectorAll('.member-location-container');
+        var count = allContainers.length;
+        
+        // Determine location type from first container's location fieldset
+        var locationType = 'Venue';
+        if (allContainers.length > 0) {
+            var firstContainer = allContainers[0];
+            var locationFieldset = firstContainer.querySelector('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"]');
+            if (locationFieldset) {
+                var key = locationFieldset.dataset.fieldsetKey || '';
+                if (key) {
+                    locationType = key.charAt(0).toUpperCase() + key.slice(1);
+                }
+            }
+        }
+        
+        allContainers.forEach(function(container, index) {
+            var newNumber = index + 1;
+            
+            // Update container data attributes
+            container.dataset.venue = String(newNumber);
+            container.dataset.locationNumber = String(newNumber);
+            container.dataset.locationType = locationType;
+            
+            // Update header text with venue/city name or default
+            var headerText = container.querySelector('.member-postform-location-header-text');
+            if (headerText) {
+                var venueFieldset = container.querySelector('.fieldset[data-fieldset-key="venue"]');
+                var cityFieldset = container.querySelector('.fieldset[data-fieldset-key="city"]');
+                var addressFieldset = container.querySelector('.fieldset[data-fieldset-key="address"]');
+                
+                var displayName = '';
+                if (venueFieldset) {
+                    var inputs = venueFieldset.querySelectorAll('input.fieldset-input');
+                    var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
+                    displayName = venueName;
+                } else if (cityFieldset) {
+                    var cityInput = cityFieldset.querySelector('input.fieldset-input');
+                    displayName = cityInput ? String(cityInput.value || '').trim() : '';
+                } else if (addressFieldset) {
+                    var addrInput = addressFieldset.querySelector('input.fieldset-input');
+                    displayName = addrInput ? String(addrInput.value || '').trim() : '';
+                }
+                
+                if (displayName) {
+                    headerText.textContent = displayName;
+                    headerText.title = displayName;
+                } else {
+                    headerText.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
+                    headerText.title = '';
+                }
+            }
+            
+            // Update fieldset labels with location number
+            var fieldsets = container.querySelectorAll('.fieldset');
+            fieldsets.forEach(function(fieldset) {
+                var fieldsetKey = (fieldset.dataset.fieldsetKey || '').toLowerCase();
+                
+                // Skip location fieldsets - handled above
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
+                    var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                    if (labelTextEl) {
+                        labelTextEl.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
+                    }
+                    return;
+                }
+                
+                var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                if (labelTextEl) {
+                    if (!fieldset.dataset.baseLabel) {
+                        fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
+                    }
+                    var base = fieldset.dataset.baseLabel || '';
+                    if (base) {
+                        labelTextEl.textContent = count > 1 ? (base + ' ' + newNumber) : base;
+                    }
+                }
+            });
         });
     }
 
