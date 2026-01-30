@@ -642,8 +642,11 @@
         }
 
         // 3. Load component data FIRST, then build form structure
-        // This ensures currency/age-rating menus have data when built
+        // This ensures currency/age-rating/amenities menus have data when built
         var loadPromises = [];
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.loadFromDatabase === 'function' && !FieldsetBuilder.isLoaded()) {
+            loadPromises.push(FieldsetBuilder.loadFromDatabase());
+        }
         if (window.AgeRatingComponent && typeof AgeRatingComponent.loadFromDatabase === 'function' && !AgeRatingComponent.isLoaded()) {
             loadPromises.push(AgeRatingComponent.loadFromDatabase());
         }
