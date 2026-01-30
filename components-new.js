@@ -879,8 +879,9 @@ const CurrencyComponent = (function(){
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
+            var codeLower = String(code).toLowerCase();
             var found = currencyData.find(function(item) {
-                return item.value === code;
+                return String(item.value || '').toLowerCase() === codeLower;
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
@@ -1098,8 +1099,9 @@ const CurrencyComponent = (function(){
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
+            var codeLower = String(code).toLowerCase();
             var found = currencyData.find(function(item) {
-                return item.value === code;
+                return String(item.value || '').toLowerCase() === codeLower;
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
