@@ -242,7 +242,7 @@
   display: none;
 }
 
-/* Edit footer with Save/Discard buttons */
+/* Edit footer with Save/Close buttons */
 .posteditor-edit-footer {
   display: flex;
   gap: 10px;
