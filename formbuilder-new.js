@@ -1673,7 +1673,7 @@
                 if (!fsId) return;
                 var fsIdLower = String(fsId).toLowerCase();
                 // Handle session_pricing (legacy), ticket_pricing, and sessions
-                if (fsIdLower === 'session_pricing' || fsIdLower === 'ticket_pricing' || fsIdLower === 'sessions') {
+                if (fsIdLower === 'session-pricing' || fsIdLower === 'ticket-pricing' || fsIdLower === 'sessions') {
                     if (subcategoryType === 'Events') {
                         opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
                     } else {
@@ -1687,7 +1687,7 @@
         function autoAddEventFieldsets() {
             if (!fieldsContainer || !fieldsetOpts) return;
             
-            var eventFieldsetKeys = ['ticket_pricing', 'sessions'];
+            var eventFieldsetKeys = ['ticket-pricing', 'sessions'];
             
             eventFieldsetKeys.forEach(function(keyToAdd) {
                 // Check if already added
@@ -1706,7 +1706,7 @@
                 
                 // ticket_pricing goes above the divider line (primary container)
                 // sessions goes below the divider line (location-specific)
-                if (keyToAdd === 'ticket_pricing') {
+                if (keyToAdd === 'ticket-pricing') {
                     // Find the divider and insert before it
                     var divider = fieldsContainer.querySelector('.formbuilder-location-divider');
                     if (divider) {
@@ -2359,7 +2359,7 @@
             var isEventSubcategory = (currentType === 'Events') || (subFeeData && subFeeData.subcategory_type === 'Events');
             if (isEventSubcategory && fieldsetDef && fieldsetDef.fieldset_key) {
                 var eventFieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
-                isEventFieldsetTicketPricing = (eventFieldsetKeyLower === 'ticket_pricing');
+                isEventFieldsetTicketPricing = (eventFieldsetKeyLower === 'ticket-pricing');
                 isEventFieldsetSessions = (eventFieldsetKeyLower === 'sessions');
                 isLockedEventFieldset = isEventFieldsetTicketPricing || isEventFieldsetSessions;
             }
@@ -2542,9 +2542,9 @@
             // recognize option-based fieldsets so the editor UI is available.
             // Canonical keys are now custom_dropdown/custom_radio.
             var needsOptions = (
-                fieldType === 'custom_dropdown' ||
-                fieldType === 'custom_radio' ||
-                fieldType === 'custom_checklist' ||
+                fieldType === 'custom-dropdown' ||
+                fieldType === 'custom-radio' ||
+                fieldType === 'custom-checklist' ||
                 fieldType === 'dropdown' ||
                 fieldType === 'radio' ||
                 fieldType === 'select'
@@ -2999,8 +2999,8 @@
             }
             
             // Check if this is an event-only fieldset (only available for Events, not General)
-            var isEventOnlyFieldset = fieldsetKeyLower === 'session_pricing' || 
-                                      fieldsetKeyLower === 'ticket_pricing' || 
+            var isEventOnlyFieldset = fieldsetKeyLower === 'session-pricing' || 
+                                      fieldsetKeyLower === 'ticket-pricing' || 
                                       fieldsetKeyLower === 'sessions';
             
             var opt = document.createElement('div');

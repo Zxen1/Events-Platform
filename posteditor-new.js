@@ -810,8 +810,8 @@
                             country_code: mapCard.country_code
                         };
                         break;
-                    case 'public_email': val = mapCard.public_email; break;
-                    case 'public_phone':
+                    case 'public-email': val = mapCard.public_email; break;
+                    case 'public-phone':
                         val = {
                             phone_prefix: mapCard.phone_prefix || null,
                             public_phone: mapCard.public_phone || ''
@@ -827,18 +827,18 @@
                         val = mapCard.tickets_url;
                         break;
                     case 'coupon': val = mapCard.coupon_code; break;
-                    case 'custom_text': val = mapCard.custom_text; break;
-                    case 'custom_textarea': val = mapCard.custom_textarea; break;
-                    case 'custom_dropdown': val = mapCard.custom_dropdown; break;
-                    case 'custom_checklist': 
+                    case 'custom-text': val = mapCard.custom_text; break;
+                    case 'custom-textarea': val = mapCard.custom_textarea; break;
+                    case 'custom-dropdown': val = mapCard.custom_dropdown; break;
+                    case 'custom-checklist': 
                         try {
                             val = JSON.parse(mapCard.custom_checklist || '[]');
                         } catch (e) { val = []; }
                         break;
-                    case 'custom_radio': val = mapCard.custom_radio; break;
-                    case 'age_rating': val = mapCard.age_rating; break;
+                    case 'custom-radio': val = mapCard.custom_radio; break;
+                    case 'age-rating': val = mapCard.age_rating; break;
                     
-                    case 'session_pricing':
+                    case 'session-pricing':
                         val = {
                             sessions: mapCard.sessions || [],
                             pricing_groups: mapCard.pricing_groups || {},
@@ -846,7 +846,7 @@
                         };
                         break;
                     
-                    case 'ticket_pricing':
+                    case 'ticket-pricing':
                         var apiPricingGroups = mapCard.pricing_groups || {};
                         var apiAgeRatings = mapCard.age_ratings || {};
                         var convertedPricingGroups = {};

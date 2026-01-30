@@ -889,7 +889,7 @@ const MemberModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                account_email: currentUser.account_email,
+                'account-email': currentUser.account_email,
                 [key]: value
             })
         }).then(function(response) {
@@ -954,7 +954,7 @@ const MemberModule = (function() {
             var f = payload.fields[i];
             if (!f || !f.value) continue;
             var t = f.type || f.key || '';
-            if ((t === 'session_pricing' || t === 'ticket_pricing') && f.value.pricing_groups) {
+            if ((t === 'session-pricing' || t === 'ticket-pricing') && f.value.pricing_groups) {
                 var groups = f.value.pricing_groups;
                 for (var gk in groups) {
                     if (!groups.hasOwnProperty(gk)) continue;
@@ -1500,7 +1500,7 @@ const MemberModule = (function() {
             return;
         }
         
-        var payload = { id: currentUser.id, account_email: currentUser.account_email };
+        var payload = { id: currentUser.id, 'account-email': currentUser.account_email };
         if (name && name !== profileOriginalName) payload.username = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
         // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
@@ -1799,7 +1799,7 @@ const MemberModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                account_email: currentUser.account_email,
+                'account-email': currentUser.account_email,
                 hidden: hidden ? 1 : 0
             })
         })
@@ -1878,7 +1878,7 @@ const MemberModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                account_email: currentUser.account_email
+                'account-email': currentUser.account_email
             })
         })
         .then(function(res) { return res.json(); })
@@ -2882,11 +2882,11 @@ const MemberModule = (function() {
 
             // Choose the most appropriate existing message key.
             var msgKey = 'msg_post_validation_required';
-            if (baseType === 'custom_dropdown') msgKey = 'msg_post_validation_select';
-            if (baseType === 'custom_checklist') msgKey = 'msg_post_validation_choose';
-            if (baseType === 'custom_radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
+            if (baseType === 'custom-dropdown') msgKey = 'msg_post_validation_select';
+            if (baseType === 'custom-checklist') msgKey = 'msg_post_validation_choose';
+            if (baseType === 'custom-radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
             if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
-            if (baseType === 'item-pricing' || baseType === 'session_pricing' || baseType === 'ticket_pricing' || baseType === 'sessions') msgKey = 'msg_post_validation_pricing';
+            if (baseType === 'item-pricing' || baseType === 'session-pricing' || baseType === 'ticket-pricing' || baseType === 'sessions') msgKey = 'msg_post_validation_pricing';
             if (baseType === 'address' || baseType === 'city' || baseType === 'venue') msgKey = 'msg_post_validation_location';
 
             return { key: msgKey, placeholders: { field: name } };
@@ -3349,13 +3349,13 @@ const MemberModule = (function() {
             { key: 'venue_name', value: mapCard.venue_name },
             { key: 'address_line', value: mapCard.address_line },
             { key: 'city', value: mapCard.city },
-            { key: 'public_email', value: mapCard.public_email },
-            { key: 'public_phone', value: mapCard.public_phone },
+            { key: 'public-email', value: mapCard.public_email },
+            { key: 'public-phone', value: mapCard.public_phone },
             { key: 'website_url', value: mapCard.website_url },
             { key: 'tickets_url', value: mapCard.tickets_url },
             { key: 'coupon_code', value: mapCard.coupon_code },
-            { key: 'custom_text', value: mapCard.custom_text },
-            { key: 'custom_textarea', value: mapCard.custom_textarea }
+            { key: 'custom-text', value: mapCard.custom_text },
+            { key: 'custom-textarea', value: mapCard.custom_textarea }
         ];
 
         fields.forEach(function(f) {
@@ -3469,13 +3469,13 @@ const MemberModule = (function() {
             case 'text-medium':
             case 'text-long':
             case 'email':
-            case 'account_email':
-            case 'public_email':
+            case 'account-email':
+            case 'public-email':
             case 'url':
                 var input = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
                 return input ? input.value.trim() : '';
                 
-            case 'custom_textarea':
+            case 'custom-textarea':
             case 'description':
                 var textarea = el.querySelector('textarea');
                 return textarea ? textarea.value.trim() : '';
@@ -3484,14 +3484,14 @@ const MemberModule = (function() {
                 var numInput = el.querySelector('input[type="number"], input[type="text"]');
                 return numInput ? numInput.value.trim() : '';
                 
-            case 'custom_dropdown':
+            case 'custom-dropdown':
                 var menuBtn = el.querySelector('button.form-preview-select');
                 var select = el.querySelector('select');
                 if (menuBtn) return menuBtn.dataset.value || '';
                 if (select) return select.value || '';
                 return '';
                 
-            case 'custom_checklist': {
+            case 'custom-checklist': {
                 var list = el.querySelector('.fieldset-customchecklist');
                 if (!list) return [];
                 try {
@@ -3502,15 +3502,15 @@ const MemberModule = (function() {
                 }
             }
                 
-            case 'custom_radio':
+            case 'custom-radio':
                 var radioGroup = el.querySelector('.fieldset-radio-group');
                 return radioGroup ? String(radioGroup.dataset.value || '').trim() : '';
 
-            case 'age_rating':
+            case 'age-rating':
                 var ageRatingMenu = el.querySelector('.component-ageratingpicker-menu');
                 return ageRatingMenu ? String(ageRatingMenu.dataset.value || '').trim() : '';
 
-            case 'public_phone':
+            case 'public-phone':
                 // Store atomically (DB has phone_prefix + public_phone).
                 // No fallbacks: if either part is missing, return empty so required validation blocks submit.
                 try {
@@ -3524,7 +3524,7 @@ const MemberModule = (function() {
                     return '';
                 }
 
-            case 'custom_text':
+            case 'custom-text':
                 var txt = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
                 return txt ? txt.value.trim() : '';
                 
@@ -3778,7 +3778,7 @@ const MemberModule = (function() {
                     throw e33; // Do not swallow errors
                 }
 
-            case 'ticket_pricing':
+            case 'ticket-pricing':
                 try {
                     // Ticket pricing groups: { [ticket_group_key]: [ { allocated_areas, ticket_area, tiers:[...] } ] }
                     // Age ratings per group: { [ticket_group_key]: 'rating_value' }
@@ -5280,7 +5280,7 @@ const MemberModule = (function() {
             prepareAvatarBlob().then(function(avatarBlob) {
                 var formData = new FormData();
                 formData.set('username', name);
-                formData.set('account_email', email);
+                formData.set('account-email', email);
                 formData.set('password', password);
                 formData.set('confirm', confirm);
                 formData.set('country', countryCode);
@@ -5632,7 +5632,7 @@ const MemberModule = (function() {
             // Send registration request
             var formData = new FormData();
             formData.set('username', name);
-            formData.set('account_email', email);
+            formData.set('account-email', email);
             formData.set('password', password);
             formData.set('confirm', confirm);
             if (supporterCountryHiddenInput && String(supporterCountryHiddenInput.value || '').trim() !== '') {

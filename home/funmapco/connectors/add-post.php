@@ -619,7 +619,7 @@ foreach ($byLoc as $locNum => $entries) {
       $checkout = $val;
       continue;
     }
-    if ($baseType === 'session_pricing') {
+    if ($baseType === 'session-pricing') {
       $sessionPricing = is_array($val) ? $val : null;
       if ($sessionPricing && isset($sessionPricing['price_summary']) && is_string($sessionPricing['price_summary']) && trim($sessionPricing['price_summary']) !== '') {
         $card['price_summary'] = trim($sessionPricing['price_summary']);
@@ -638,7 +638,7 @@ foreach ($byLoc as $locNum => $entries) {
       }
       continue;
     }
-    if ($baseType === 'ticket_pricing' || $baseType === 'ticket-pricing') {
+    if ($baseType === 'ticket-pricing') {
       $ticketPricing = is_array($val) ? $val : [];
       // Extract price_summary early so it's available for map card INSERT
       if (is_array($ticketPricing) && isset($ticketPricing['price_summary']) && is_string($ticketPricing['price_summary']) && trim($ticketPricing['price_summary']) !== '') {
@@ -661,16 +661,16 @@ foreach ($byLoc as $locNum => $entries) {
     
     // Custom fieldsets: prepend label for database readability (e.g., "Favorite Pet: cat")
     $fieldLabel = isset($e['name']) ? trim((string)$e['name']) : '';
-    if ($baseType === 'custom_text' && is_string($val)) {
+    if ($baseType === 'custom-text' && is_string($val)) {
       $card['custom_text'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
     }
-    if ($baseType === 'custom_textarea' && is_string($val)) {
+    if ($baseType === 'custom-textarea' && is_string($val)) {
       $card['custom_textarea'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
     }
-    if ($baseType === 'custom_dropdown' && is_string($val)) {
+    if ($baseType === 'custom-dropdown' && is_string($val)) {
       $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
     }
-    if ($baseType === 'custom_checklist' && is_array($val)) {
+    if ($baseType === 'custom-checklist' && is_array($val)) {
       // Store as label-prefixed string for map card readability (same as other custom_* columns).
       // Value is a list of selected options.
       $items = [];
@@ -682,11 +682,11 @@ foreach ($byLoc as $locNum => $entries) {
       $joined = implode(', ', $items);
       $card['custom_checklist'] = $fieldLabel !== '' ? $fieldLabel . ': ' . $joined : $joined;
     }
-    if ($baseType === 'custom_radio' && is_string($val)) {
+    if ($baseType === 'custom-radio' && is_string($val)) {
       $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
     }
-    if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
-    if ($baseType === 'public_phone' && is_array($val)) {
+    if ($baseType === 'public-email' && is_string($val)) $card['public_email'] = trim($val);
+    if ($baseType === 'public-phone' && is_array($val)) {
       $pfx = isset($val['phone_prefix']) ? trim((string)$val['phone_prefix']) : '';
       $num = isset($val['public_phone']) ? trim((string)$val['public_phone']) : '';
       if ($pfx !== '' && $num !== '') {
@@ -703,7 +703,7 @@ foreach ($byLoc as $locNum => $entries) {
       $card['amenities_data'] = $val; // Keep raw array for subtable insertion
       continue;
     }
-    if ($baseType === 'age_rating' && is_string($val)) {
+    if ($baseType === 'age-rating' && is_string($val)) {
       $card['age_rating'] = trim($val);
       continue;
     }
@@ -835,7 +835,7 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Insert sessions + ticket pricing
   // Supports both:
-  // 1. Legacy merged `session_pricing` fieldset (sessions + pricing in one)
+  // 1. Legacy merged `session-pricing` fieldset (sessions + pricing in one)
   // 2. New split fieldsets: `sessions` (dates/times) + `ticket_pricing` (pricing groups)
 
   $sessionsToWrite = [];
@@ -843,7 +843,7 @@ foreach ($byLoc as $locNum => $entries) {
   $ageRatingsToWrite = [];
   $writeSessionPricingToNewTables = false;
 
-  // Check for legacy session_pricing fieldset
+  // Check for legacy session-pricing fieldset
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsToWrite = $sessionPricing['sessions'];
     $pricingGroupsToWrite = (isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) ? $sessionPricing['pricing_groups'] : [];

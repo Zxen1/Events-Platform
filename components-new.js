@@ -2426,7 +2426,7 @@ const MemberAuthFieldsetsComponent = (function(){
 
             if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost, { required: true }));
 
-            var email = addFieldset('account_email', function(el) {
+            var email = addFieldset('account-email', function(el) {
                 if (!el) return;
                 el.id = 'member-register-email';
                 el.name = 'registerEmail';

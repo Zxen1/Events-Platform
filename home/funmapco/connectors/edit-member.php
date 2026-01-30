@@ -40,8 +40,8 @@ $input = json_decode($raw, true);
 if (!is_array($input)) fail(400,'Invalid JSON');
 
 $id = isset($input['id']) ? (int)$input['id'] : 0;
-$accountEmail = isset($input['account_email']) ? trim((string)$input['account_email']) : '';
-if ($id <= 0 || $accountEmail === '') fail(400,'Missing id/account_email');
+$accountEmail = isset($input['account-email']) ? trim((string)$input['account-email']) : '';
+if ($id <= 0 || $accountEmail === '') fail(400,'Missing id/account-email');
 
 // Load member by id+email (basic guard)
 $stmt = $mysqli->prepare('SELECT id, account_email, username, password_hash FROM members WHERE id=? AND account_email=? LIMIT 1');

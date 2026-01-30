@@ -1073,7 +1073,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(descValidation.charCount);
                 break;
                 
-            case 'custom_text': // post_map_cards.custom_text
+            case 'custom-text': // post_map_cards.custom_text
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
@@ -1084,7 +1084,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(textBoxValidation.charCount);
                 break;
                 
-            case 'custom_textarea': // post_map_cards.custom_textarea
+            case 'custom-textarea': // post_map_cards.custom_textarea
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var editableTextarea = document.createElement('textarea');
                 editableTextarea.className = 'fieldset-textarea input-class-1';
@@ -1094,7 +1094,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(textareaValidation.charCount);
                 break;
                 
-            case 'custom_dropdown': // post_map_cards.custom_dropdown
+            case 'custom-dropdown': // post_map_cards.custom_dropdown
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Custom dropdown menu (no native <select> arrow). Uses MenuManager + animated ▼ arrow like Formbuilder menus.
@@ -1187,7 +1187,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(cdMenu);
                 break;
                 
-            case 'custom_radio': // post_map_cards.custom_radio
+            case 'custom-radio': // post_map_cards.custom_radio
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Radio icons from Admin Settings (system_images)
@@ -1269,7 +1269,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(radioGroup);
                 break;
                 
-            case 'custom_checklist': // post_map_cards.custom_checklist
+            case 'custom-checklist': // post_map_cards.custom_checklist
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 
                 // Checkbox/checkmark icons from Admin Settings (system_images)
@@ -1391,20 +1391,20 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'email':
-            case 'account_email':
-            case 'public_email':
+            case 'account-email':
+            case 'public-email':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input input-class-1';
-                if (key === 'public_email') emailInput.autocomplete = 'off';
+                if (key === 'public-email') emailInput.autocomplete = 'off';
                 applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
                 fieldset.appendChild(emailValidation.charCount);
                 break;
                 
-            case 'public_phone':
+            case 'public-phone':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
@@ -1423,7 +1423,7 @@ const FieldsetBuilder = (function(){
 
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
-                    if (phoneInput) phoneInput.value = val.public_phone || '';
+                    if (phoneInput) phoneInput.value = val.public_phone || ''; // DB column stays underscore
                     if (prefixMenu && typeof prefixMenu._phonePrefixSetValue === 'function') {
                         prefixMenu._phonePrefixSetValue(val.phone_prefix || null);
                     }
@@ -2486,7 +2486,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(amenitiesGrid);
                 break;
             
-            case 'age_rating':
+            case 'age-rating':
                 fieldset.appendChild(buildLabel(name, tooltip, null, null, instruction));
                 var ageMenu = buildAgeRatingMenu(container);
                 fieldset.appendChild(ageMenu);
@@ -2763,7 +2763,7 @@ const FieldsetBuilder = (function(){
                 updateItemVariantButtons();
                 break;
                               
-            case 'ticket_pricing':
+            case 'ticket-pricing':
                 // TICKET PRICING FIELDSET
                 // Ticket groups (A, B, C...) with age rating, currency, ticket areas, and pricing tiers.
                 // This fieldset exists ONCE in the primary container (above the line).
@@ -4011,7 +4011,7 @@ const FieldsetBuilder = (function(){
                 function sessGetTicketGroupKeys() {
                     try {
                         var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
-                        var tpFieldset = form.querySelector('.fieldset[data-fieldset-key="ticket_pricing"]');
+                        var tpFieldset = form.querySelector('.fieldset[data-fieldset-key="ticket-pricing"]');
                         if (tpFieldset && typeof tpFieldset._getTicketGroupKeys === 'function') {
                             return tpFieldset._getTicketGroupKeys();
                         }
@@ -5079,15 +5079,15 @@ const FieldsetBuilder = (function(){
             function fieldHasAnyUserValue() {
                 try {
                     switch (key) {
-                        case 'custom_radio': {
+                        case 'custom-radio': {
                             var radioGrp = fieldset.querySelector('.fieldset-radio-group');
                             return !!(radioGrp && String(radioGrp.dataset.value || '').trim());
                         }
-                        case 'custom_dropdown': {
+                        case 'custom-dropdown': {
                             var menu = fieldset.querySelector('.fieldset-customdropdown');
                             return !!(menu && String(menu.dataset.value || '').trim());
                         }
-                        case 'custom_checklist': {
+                        case 'custom-checklist': {
                             var list = fieldset.querySelector('.fieldset-customchecklist');
                             if (!list) return false;
                             try {
@@ -5111,11 +5111,11 @@ const FieldsetBuilder = (function(){
                         case 'amenities':
                             // Check if any amenity row has a value set (button-based, uses data-value)
                             return !!fieldset.querySelector('.fieldset-amenities-row[data-value="1"], .fieldset-amenities-row[data-value="0"]');
-                        case 'age_rating': {
+                        case 'age-rating': {
                             var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                             return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                         }
-                        case 'public_phone': {
+                        case 'public-phone': {
                             // Only check the phone number input, NOT the prefix selector
                             // Selecting a prefix alone should not trigger incomplete state
                             var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
@@ -5194,7 +5194,7 @@ const FieldsetBuilder = (function(){
             switch (key) {
                 case 'title':
                 case 'coupon':
-                case 'custom_text':
+                case 'custom-text':
                 case 'username':
                 case 'password':
                 case 'new-password': {
@@ -5254,14 +5254,14 @@ const FieldsetBuilder = (function(){
                     return confirmVal === String(pwInput.value || '');
                 }
                 case 'description':
-                case 'custom_textarea':
+                case 'custom-textarea':
                 {
                     var ta = fieldset.querySelector('textarea');
                     return ta ? strLenOk(ta.value, minLength, maxLength) : false;
                 }
                 case 'email':
-                case 'account_email':
-                case 'public_email': {
+                case 'account-email':
+                case 'public-email': {
                     var e = fieldset.querySelector('input.fieldset-input');
                     if (!e) return false;
                     if (!strLenOk(e.value, minLength, maxLength)) return false;
@@ -5274,12 +5274,12 @@ const FieldsetBuilder = (function(){
                     if (!strLenOk(u.value, minLength, maxLength)) return false;
                     return isValidUrl(u.value);
                 }
-                case 'custom_dropdown': {
+                case 'custom-dropdown': {
                     var menu = fieldset.querySelector('.fieldset-customdropdown');
                     var v = menu ? String(menu.dataset.value || '').trim() : '';
                     return !!v;
                 }
-                case 'custom_checklist': {
+                case 'custom-checklist': {
                     var list = fieldset.querySelector('.fieldset-customchecklist');
                     if (!list) return false;
                     try {
@@ -5289,11 +5289,11 @@ const FieldsetBuilder = (function(){
                         return false;
                     }
                 }
-                case 'custom_radio': {
+                case 'custom-radio': {
                     var radioGrp2 = fieldset.querySelector('.fieldset-radio-group');
                     return !!(radioGrp2 && String(radioGrp2.dataset.value || '').trim());
                 }
-                case 'public_phone': {
+                case 'public-phone': {
                     var prefixInput = fieldset.querySelector('.component-phoneprefixcompact-menu-button-input');
                     var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
                     if (!prefixInput || !phoneInput) return false;
@@ -5349,7 +5349,7 @@ const FieldsetBuilder = (function(){
                     }
                     return true;
                 }
-                case 'age_rating': {
+                case 'age-rating': {
                     // Required age rating: must have a value selected (not "Select rating")
                     var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                     return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());

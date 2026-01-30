@@ -554,7 +554,7 @@ foreach ($byLoc as $locNum => $entries) {
     $val = $e['value'] ?? null;
     $baseType = preg_replace('/(-locked|-hidden)$/', '', $type);
 
-    if ($baseType === 'session_pricing') {
+    if ($baseType === 'session-pricing') {
       $sessionPricing = is_array($val) ? $val : null;
       if ($sessionPricing && !empty($sessionPricing['price_summary'])) {
         $card['price_summary'] = trim($sessionPricing['price_summary']);
@@ -573,7 +573,7 @@ foreach ($byLoc as $locNum => $entries) {
       }
       continue;
     }
-    if ($baseType === 'ticket_pricing' || $baseType === 'ticket-pricing') {
+    if ($baseType === 'ticket-pricing') {
       $ticketPricing = is_array($val) ? $val : [];
       // Extract price_summary early so it's available for map card UPDATE
       if (is_array($ticketPricing) && isset($ticketPricing['price_summary']) && is_string($ticketPricing['price_summary']) && trim($ticketPricing['price_summary']) !== '') {
@@ -593,10 +593,10 @@ foreach ($byLoc as $locNum => $entries) {
     if (($key === 'description' || $baseType === 'description') && is_string($val)) $card['description'] = trim($val);
     
     $fieldLabel = isset($e['name']) ? trim((string)$e['name']) : '';
-    if ($baseType === 'custom_text' && is_string($val)) $card['custom_text'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
-    if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
-    if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
-    if ($baseType === 'custom_checklist' && is_array($val)) {
+    if ($baseType === 'custom-text' && is_string($val)) $card['custom_text'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom-textarea' && is_string($val)) $card['custom_textarea'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom-dropdown' && is_string($val)) $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom-checklist' && is_array($val)) {
       $items = [];
       foreach ($val as $v0) {
         $s0 = trim((string)$v0);
@@ -606,10 +606,10 @@ foreach ($byLoc as $locNum => $entries) {
       $joined = implode(', ', $items);
       $card['custom_checklist'] = $fieldLabel !== '' ? $fieldLabel . ': ' . $joined : $joined;
     }
-    if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    if ($baseType === 'custom-radio' && is_string($val)) $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
     
-    if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
-    if ($baseType === 'public_phone' && is_array($val)) {
+    if ($baseType === 'public-email' && is_string($val)) $card['public_email'] = trim($val);
+    if ($baseType === 'public-phone' && is_array($val)) {
       $pfx = isset($val['phone_prefix']) ? trim((string)$val['phone_prefix']) : '';
       $num = isset($val['public_phone']) ? trim((string)$val['public_phone']) : '';
       if ($pfx !== '' && $num !== '') {
@@ -625,7 +625,7 @@ foreach ($byLoc as $locNum => $entries) {
       $card['amenities_data'] = $val;
       continue;
     }
-    if ($baseType === 'age_rating' && is_string($val)) {
+    if ($baseType === 'age-rating' && is_string($val)) {
       $card['age_rating'] = trim($val);
       continue;
     }

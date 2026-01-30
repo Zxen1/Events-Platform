@@ -53,7 +53,7 @@ function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exi
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
 $username = trim($_POST['username'] ?? '');
-$email = trim($_POST['account_email'] ?? '');
+$email = trim($_POST['account-email'] ?? '');
 $pass = $_POST['password'] ?? '';
 $conf = $_POST['confirm'] ?? '';
 $avatar = trim($_POST['avatar_file'] ?? '');

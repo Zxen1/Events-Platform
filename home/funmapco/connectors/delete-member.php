@@ -35,10 +35,10 @@ function fail($code, $msg) {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $id = isset($input['id']) ? intval($input['id']) : 0;
-$accountEmail = isset($input['account_email']) ? trim($input['account_email']) : '';
+$accountEmail = isset($input['account-email']) ? trim($input['account-email']) : '';
 
 if ($id <= 0 || $accountEmail === '') {
-  fail(400, 'Missing id/account_email');
+  fail(400, 'Missing id/account-email');
 }
 
 // Verify email matches id before proceeding
