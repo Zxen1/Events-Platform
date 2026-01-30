@@ -870,8 +870,6 @@
                 if (btnEl._popoverAttached) return;
                 btnEl._popoverAttached = true;
                 
-                btnEl.style.position = 'relative';
-                
                 var pop = document.createElement('div');
                 pop.className = 'posteditor-popover posteditor-popover--' + alignment;
                 pop.hidden = true;
@@ -884,7 +882,7 @@
                 list.className = 'posteditor-popover-list';
                 pop.appendChild(list);
                 
-                btnEl.appendChild(pop);
+                footer.appendChild(pop);
                 
                 function show() {
                     if (btnEl.hidden || btnEl.offsetParent === null) return;
