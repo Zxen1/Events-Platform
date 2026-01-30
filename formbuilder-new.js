@@ -4713,7 +4713,8 @@
         renumberLocationContainers: renumberLocationContainers,
         focusLocationContainerAfterDelete: focusLocationContainerAfterDelete,
         getFieldsetKey: getFieldsetKey,
-        setupFormContainerClickTracking: setupFormContainerClickTracking
+        setupFormContainerClickTracking: setupFormContainerClickTracking,
+        updateLocationHeaderFromInput: updateLocationHeaderFromInput
     };
     
     // Register module with App
