@@ -5487,14 +5487,38 @@ const ImageModalComponent = (function() {
             
             if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe) {
                 if (state && state.images && state.images.length > 1) {
-                    // Swipe left = next, swipe right = prev
+                    // Two-stage animation: slide out, swap, slide in
+                    var direction = deltaX < 0 ? -1 : 1;
                     var step = deltaX < 0 ? 1 : -1;
-                    advance(step);
-                }
-                // Reset position after advancing
-                if (contentEl) {
-                    contentEl.style.transition = 'none';
-                    contentEl.style.transform = 'translateX(0)';
+                    
+                    // Stage 1: Slide current image out
+                    if (contentEl) {
+                        contentEl.style.transition = 'transform 0.15s ease-in';
+                        contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
+                    }
+                    
+                    setTimeout(function() {
+                        // Swap image while off-screen (instant, no animation)
+                        advance(step, false);
+                        
+                        // Position new image on opposite side (instant)
+                        if (contentEl) {
+                            contentEl.style.transition = 'none';
+                            contentEl.style.transform = 'translateX(' + (-direction * window.innerWidth) + 'px)';
+                            // Force reflow
+                            contentEl.offsetHeight;
+                            
+                            // Stage 2: Slide new image in
+                            contentEl.style.transition = 'transform 0.15s ease-out';
+                            contentEl.style.transform = 'translateX(0)';
+                        }
+                    }, 150);
+                } else {
+                    // Reset position (single image)
+                    if (contentEl) {
+                        contentEl.style.transition = 'transform 0.2s ease-out';
+                        contentEl.style.transform = 'translateX(0)';
+                    }
                 }
             } else if (!isHorizontalSwipe && Math.abs(currentTranslate) < 10) {
                 // Tap (not swipe) - close if not on image
@@ -5572,15 +5596,56 @@ const ImageModalComponent = (function() {
         isOpen = false;
     }
     
+    var isAnimating = false;
+    
     /**
      * Advance to next/previous image in gallery
      * @param {number} step - 1 for next, -1 for previous
+     * @param {boolean} animate - whether to animate (default true)
      */
-    function advance(step) {
+    function advance(step, animate) {
         if (!state || !state.images || state.images.length <= 1) return;
+        if (isAnimating) return;
+        
         var len = state.images.length;
-        state.index = ((state.index + step) % len + len) % len;
-        renderImage();
+        var newIndex = ((state.index + step) % len + len) % len;
+        
+        if (animate === false) {
+            // Instant swap (used during swipe animation)
+            state.index = newIndex;
+            renderImage();
+            return;
+        }
+        
+        // Animated transition (used for clicks)
+        isAnimating = true;
+        var direction = step > 0 ? -1 : 1;
+        
+        // Stage 1: Slide out
+        if (contentEl) {
+            contentEl.style.transition = 'transform 0.15s ease-in';
+            contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
+        }
+        
+        setTimeout(function() {
+            state.index = newIndex;
+            renderImage();
+            
+            // Position on opposite side
+            if (contentEl) {
+                contentEl.style.transition = 'none';
+                contentEl.style.transform = 'translateX(' + (-direction * window.innerWidth) + 'px)';
+                contentEl.offsetHeight;
+                
+                // Stage 2: Slide in
+                contentEl.style.transition = 'transform 0.15s ease-out';
+                contentEl.style.transform = 'translateX(0)';
+            }
+            
+            setTimeout(function() {
+                isAnimating = false;
+            }, 150);
+        }, 150);
     }
     
     /**

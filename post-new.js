@@ -2857,14 +2857,14 @@ const PostModule = (function() {
       var instant = options && options.instant;
       if (instant) {
         trackEl.style.transition = 'none';
-      } else {
-        trackEl.style.transition = 'transform 0.3s ease-out';
-      }
-      trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
-      if (instant) {
-        // Force reflow then restore transition
+        trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
+        // Force reflow then restore CSS transition
         trackEl.offsetHeight;
-        requestAnimationFrame(function() { trackEl.style.transition = ''; });
+        trackEl.style.transition = '';
+      } else {
+        // Let CSS handle the transition (0.3s cubic-bezier)
+        trackEl.style.transition = '';
+        trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
       }
     }
     
@@ -2952,9 +2952,6 @@ const PostModule = (function() {
       dragStartX = null;
       dragStartY = null;
       dragActive = false;
-      if (trackEl) {
-        trackEl.style.transition = '';
-      }
     }
     
     if (heroContainer && galleryImages.length > 1) {
@@ -3006,9 +3003,6 @@ const PostModule = (function() {
           return;
         }
         var deltaX = e.changedTouches[0].clientX - dragStartX;
-        if (trackEl) {
-          trackEl.style.transition = '';
-        }
         if (dragActive) {
           var prevIdx = currentGalleryIndex;
           var targetIdx = prevIdx;
@@ -3020,16 +3014,18 @@ const PostModule = (function() {
             targetIdx = prevIdx - 1;
           }
           
+          // Ensure target slide exists before animating to it
+          ensureSlide(targetIdx);
+          
           lastDragTime = Date.now();
-          requestAnimationFrame(function() { show(targetIdx); });
+          show(targetIdx);
         }
         resetDragState();
       }, { passive: true });
       
       heroContainer.addEventListener('touchcancel', function() {
-        if (dragActive && trackEl) {
-          trackEl.style.transition = '';
-          requestAnimationFrame(function() { show(currentGalleryIndex); });
+        if (dragActive) {
+          show(currentGalleryIndex);
         }
         resetDragState();
       }, { passive: true });
