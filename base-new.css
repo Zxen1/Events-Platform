@@ -1112,11 +1112,7 @@ body {
 
 .welcome-modal-controls {
   pointer-events: auto;
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  margin-top: -14px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   opacity: 0;
@@ -1125,6 +1121,31 @@ body {
 
 .welcome-modal-controls--visible {
   opacity: 1;
+}
+
+.welcome-modal-message {
+  margin-top: 20px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.welcome-modal-message--visible {
+  opacity: 1;
+}
+
+.welcome-modal-message-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.welcome-modal-message-content {
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .welcome-modal-control-row {

@@ -5181,6 +5181,9 @@ const WelcomeModalComponent = (function() {
     var modal = null;
     var logoElement = null;
     var controlsElement = null;
+    var messageElement = null;
+    var titleElement = null;
+    var contentElement = null;
     var isOpen = false;
     
     /**
@@ -5202,6 +5205,10 @@ const WelcomeModalComponent = (function() {
                 '<div class="welcome-modal-body" id="welcomeBody">' +
                 '<img class="welcome-modal-logo" src="" alt="FunMap logo" loading="eager">' +
                 '<div class="welcome-modal-controls"></div>' +
+                '<div class="welcome-modal-message">' +
+                '<div class="welcome-modal-message-title"></div>' +
+                '<div class="welcome-modal-message-content"></div>' +
+                '</div>' +
                 '</div>' +
                 '</div>';
             
@@ -5210,6 +5217,9 @@ const WelcomeModalComponent = (function() {
         
         logoElement = modal.querySelector('.welcome-modal-logo');
         controlsElement = modal.querySelector('.welcome-modal-controls');
+        messageElement = modal.querySelector('.welcome-modal-message');
+        titleElement = modal.querySelector('.welcome-modal-message-title');
+        contentElement = modal.querySelector('.welcome-modal-message-content');
         
         // Create map controls using MapControlRowComponent if available
         if (controlsElement && window.MapControlRowComponent) {
@@ -5304,12 +5314,38 @@ const WelcomeModalComponent = (function() {
             logoElement.onload = function() {
                 logoElement.classList.add('welcome-modal-logo--loaded');
                 if (controlsElement) controlsElement.classList.add('welcome-modal-controls--visible');
+                if (messageElement) messageElement.classList.add('welcome-modal-message--visible');
             };
             logoElement.src = imagePath;
             if (logoElement.complete) {
                 logoElement.classList.add('welcome-modal-logo--loaded');
                 if (controlsElement) controlsElement.classList.add('welcome-modal-controls--visible');
+                if (messageElement) messageElement.classList.add('welcome-modal-message--visible');
             }
+        }
+    }
+    
+    /**
+     * Set the welcome title and message
+     * @param {string} title - Welcome title text
+     * @param {string} message - Welcome message HTML
+     */
+    function setWelcome(title, message) {
+        if (!modal) init();
+        if (titleElement && title) {
+            titleElement.textContent = title;
+        }
+        if (contentElement && message) {
+            // Message may contain HTML, parse JSON string if needed
+            var htmlContent = message;
+            if (typeof message === 'string' && message.startsWith('"')) {
+                try {
+                    htmlContent = JSON.parse(message);
+                } catch (e) {
+                    htmlContent = message;
+                }
+            }
+            contentElement.innerHTML = htmlContent;
         }
     }
     
@@ -5336,6 +5372,7 @@ const WelcomeModalComponent = (function() {
         close: close,
         toggle: toggle,
         setLogo: setLogo,
+        setWelcome: setWelcome,
         isVisible: isVisible,
         getElement: getElement
     };

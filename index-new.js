@@ -553,6 +553,11 @@ const App = (function() {
           WelcomeModalComponent.setLogo(bigLogoUrl);
         }
         
+        // Apply welcome title and message
+        if (window.WelcomeModalComponent && WelcomeModalComponent.setWelcome) {
+          WelcomeModalComponent.setWelcome(settings.welcome_title, settings.welcome_message);
+        }
+        
         // Show welcome modal if enabled
         if (settings.welcome_enabled && window.WelcomeModalComponent) {
           WelcomeModalComponent.open();
