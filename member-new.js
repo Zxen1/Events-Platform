@@ -82,6 +82,7 @@ const MemberModule = (function() {
     var profilePanel = null;
     var registerTabBtn = null;
     var registerTabPanel = null;
+    var mypostsTabBtn = null;
     var loginInputs = [];
     var registerInputs = [];
     var supporterMessageEl = null;
@@ -347,6 +348,7 @@ const MemberModule = (function() {
         profilePanel = document.getElementById('member-profile-container');
         registerTabBtn = document.getElementById('member-tab-register-btn');
         registerTabPanel = document.getElementById('member-tab-register');
+        mypostsTabBtn = document.getElementById('member-tab-myposts-btn');
         if (registerTabPanel) {
             registerInputs = Array.from(registerTabPanel.querySelectorAll('input'));
         }
@@ -6022,6 +6024,9 @@ const MemberModule = (function() {
             // Hide the Register tab button when logged in
             if (registerTabBtn) registerTabBtn.hidden = true;
             
+            // Show the My Posts tab button when logged in
+            if (mypostsTabBtn) mypostsTabBtn.hidden = false;
+            
             // Show profile content
             if (profilePanel) {
                 profilePanel.hidden = false;
@@ -6112,6 +6117,9 @@ const MemberModule = (function() {
             
             // Show the Register tab button (only visible when logged out)
             if (registerTabBtn) registerTabBtn.hidden = false;
+            
+            // Hide the My Posts tab button when logged out
+            if (mypostsTabBtn) mypostsTabBtn.hidden = true;
 
             // Mount login form in profile tab (dynamically created)
             mountProfileLoginForm();
