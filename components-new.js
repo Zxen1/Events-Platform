@@ -5425,14 +5425,22 @@ const ImageModalComponent = (function() {
         
         document.body.appendChild(modal);
         
-        // Close when clicking modal background or track (outside images)
+        // Close when clicking anywhere except on an image
         // Prevent click-through by stopping event and using microtask delay
         modal.addEventListener('click', function(e) {
-            if (e.target === modal || e.target === trackEl || e.target.classList.contains('image-modal-slot')) {
+            // Only keep open if clicking directly on an img element
+            if (e.target.tagName === 'IMG') return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            setTimeout(close, 0);
+        });
+        
+        // Escape key closes modal (desktop)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isOpen) {
                 e.preventDefault();
-                e.stopPropagation();
-                // Close after microtask so click event fully completes before modal disappears
-                setTimeout(close, 0);
+                close();
             }
         });
         
