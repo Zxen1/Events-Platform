@@ -20,6 +20,9 @@ $ogDescription = '';
 $ogImage = '';
 $ogUrl = 'https://funmap.com';
 
+// Debug mode - add ?debug=1 to URL to see diagnostic info
+$debugMode = isset($_GET['debug']) && $_GET['debug'] === '1';
+
 // Check if this is a post link
 // Supports both ?post=123 and /post/123-slug URL formats
 $postId = 0;
@@ -39,11 +42,12 @@ if ($postId === 0 && isset($_SERVER['REQUEST_URI'])) {
 }
 
 try {
-    // Find database config
+    // Find database config (matches connector paths)
     $configCandidates = [
-        __DIR__ . '/home/funmapco/config/config-db.php',
-        __DIR__ . '/../config/config-db.php',
-        dirname(__DIR__) . '/config/config-db.php',
+        '/home/funmapco/config/config-db.php',              // Production absolute path
+        __DIR__ . '/home/funmapco/config/config-db.php',    // Development
+        __DIR__ . '/../config/config-db.php',               // Production: public_html/../config/
+        dirname(__DIR__) . '/config/config-db.php',         // Same as above
     ];
     
     $configPath = null;
@@ -179,6 +183,30 @@ try {
 // Final fallback if nothing was set
 if (empty($ogTitle)) {
     $ogTitle = 'FunMap';
+}
+
+// Debug output
+if ($debugMode) {
+    header('Content-Type: text/plain');
+    echo "=== OG Debug Info ===\n\n";
+    echo "Post ID: $postId\n";
+    echo "Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A') . "\n";
+    echo "Config Path Found: " . ($configPath ?? 'NONE') . "\n";
+    echo "PDO Connected: " . (isset($pdo) && $pdo ? 'YES' : 'NO') . "\n\n";
+    echo "Site Name: $siteName\n";
+    echo "Site Tagline: $siteTagline\n";
+    echo "Site Description: " . substr($siteDescription, 0, 50) . "...\n";
+    echo "Site Default Image: $siteDefaultImage\n";
+    echo "Folder Site Images: $folderSiteImages\n\n";
+    echo "OG Title: $ogTitle\n";
+    echo "OG Description: " . substr($ogDescription, 0, 50) . "...\n";
+    echo "OG Image: $ogImage\n";
+    echo "OG URL: $ogUrl\n\n";
+    echo "Config Candidates Checked:\n";
+    foreach ($configCandidates as $c) {
+        echo "  - $c: " . (is_file($c) ? 'EXISTS' : 'not found') . "\n";
+    }
+    exit;
 }
 ?>
 <!DOCTYPE html>
