@@ -5437,6 +5437,58 @@ const ImageModalComponent = (function() {
                 close();
             }
         });
+        
+        // Touch swipe support for gallery navigation
+        var touchStartX = 0;
+        var touchStartY = 0;
+        var touchEndX = 0;
+        var isSwiping = false;
+        var swipeThreshold = 50;
+        
+        modal.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+        }, { passive: true });
+        
+        modal.addEventListener('touchmove', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            var touchEndY = e.changedTouches[0].screenY;
+            
+            var deltaX = Math.abs(touchEndX - touchStartX);
+            var deltaY = Math.abs(touchEndY - touchStartY);
+            
+            // If horizontal movement is greater, likely a swipe
+            if (deltaX > deltaY && deltaX > 10) {
+                isSwiping = true;
+            }
+        }, { passive: true });
+        
+        modal.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            var touchEndY = e.changedTouches[0].screenY;
+            
+            var deltaX = touchEndX - touchStartX;
+            var deltaY = Math.abs(touchEndY - touchStartY);
+            
+            // Only process if horizontal swipe exceeds threshold
+            if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > deltaY) {
+                if (state && state.images && state.images.length > 1) {
+                    if (deltaX < 0) {
+                        // Swipe left - next image
+                        advance(1);
+                    } else {
+                        // Swipe right - previous image
+                        advance(-1);
+                    }
+                }
+            } else if (!isSwiping && Math.abs(deltaX) < 10 && deltaY < 10) {
+                // Tap (not swipe) - close if not on image
+                if (!e.target.closest('img')) {
+                    close();
+                }
+            }
+        }, { passive: true });
     }
     
     /**

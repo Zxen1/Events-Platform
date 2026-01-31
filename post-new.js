@@ -2856,6 +2856,75 @@ const PostModule = (function() {
         }
       });
     }
+    
+    // Touch swipe support for hero image gallery
+    if (heroContainer && galleryImages.length > 1) {
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchEndX = 0;
+      var touchEndY = 0;
+      var isSwiping = false;
+      var swipeThreshold = 50; // minimum pixels to register as swipe
+      
+      // Helper to navigate to a specific image index
+      function navigateToImage(index) {
+        if (index < 0) index = galleryImages.length - 1;
+        if (index >= galleryImages.length) index = 0;
+        
+        currentGalleryIndex = index;
+        var fullUrl = galleryImages[index];
+        if (fullUrl && heroImg) {
+          heroImg.src = addImageClass(fullUrl, 'imagebox');
+          // Update thumbnail active state
+          thumbnails.forEach(function(t, i) {
+            if (i === index) {
+              t.classList.add('post-image-thumb--active');
+            } else {
+              t.classList.remove('post-image-thumb--active');
+            }
+          });
+        }
+      }
+      
+      heroContainer.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        isSwiping = false;
+      }, { passive: true });
+      
+      heroContainer.addEventListener('touchmove', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        
+        var deltaX = Math.abs(touchEndX - touchStartX);
+        var deltaY = Math.abs(touchEndY - touchStartY);
+        
+        // If horizontal movement is greater than vertical, it's likely a swipe
+        if (deltaX > deltaY && deltaX > 10) {
+          isSwiping = true;
+        }
+      }, { passive: true });
+      
+      heroContainer.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        
+        var deltaX = touchEndX - touchStartX;
+        var deltaY = Math.abs(touchEndY - touchStartY);
+        
+        // Only process if horizontal swipe is dominant and exceeds threshold
+        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > deltaY) {
+          e.preventDefault();
+          if (deltaX < 0) {
+            // Swipe left - next image
+            navigateToImage(currentGalleryIndex + 1);
+          } else {
+            // Swipe right - previous image
+            navigateToImage(currentGalleryIndex - 1);
+          }
+        }
+      }, { passive: false });
+    }
 
     /* ........................................................................
        DESCRIPTION EXPAND (Facebook-style inline "See more")
