@@ -190,6 +190,9 @@ if (empty($ogTitle)) {
   
   <title><?php echo $ogTitle ?: htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8'); ?></title>
   
+  <!-- Meta description (for Google search results) -->
+  <meta name="description" content="<?php echo $ogDescription; ?>">
+  
   <!-- Open Graph Meta Tags (for social sharing) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="<?php echo $ogTitle; ?>">
