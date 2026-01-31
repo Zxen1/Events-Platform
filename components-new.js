@@ -5425,12 +5425,14 @@ const ImageModalComponent = (function() {
         
         document.body.appendChild(modal);
         
-        // Block all clicks from passing through to elements behind
+        // Close when clicking modal background or track (outside images)
+        // Prevent click-through by stopping event and using microtask delay
         modal.addEventListener('click', function(e) {
-            e.stopPropagation();
-            // Close when clicking modal background or track (outside images)
             if (e.target === modal || e.target === trackEl || e.target.classList.contains('image-modal-slot')) {
-                close();
+                e.preventDefault();
+                e.stopPropagation();
+                // Close after microtask so click event fully completes before modal disappears
+                setTimeout(close, 0);
             }
         });
         
@@ -5558,10 +5560,11 @@ const ImageModalComponent = (function() {
                 }
             } else {
                 // Tap - close if not on image
+                // Delay close so modal blocks the synthetic click event that follows touchend
                 var touch = e.changedTouches[0];
                 var target = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (!target || !target.closest('img')) {
-                    close();
+                    setTimeout(close, 50);
                 }
                 if (wrapClone && wrapClone.parentNode) {
                     wrapClone.parentNode.removeChild(wrapClone);

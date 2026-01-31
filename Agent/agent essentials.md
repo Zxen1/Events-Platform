@@ -333,3 +333,15 @@ See `Agent/venue-seeding-plan.md` for full instructions, pre-flight checklist, a
 - Desktop unaffected — map visible beside panel, posts update on pan
 
 ---
+
+## EVENT HANDLING
+
+### Avoid stopPropagation
+Be very careful with `stopPropagation()` as it can interfere with the **Top Slack** and **Bottom Slack** system. This destroys the entire layout of the panel.
+
+### Modal Click-Through Prevention
+When closing modals, prevent the click/tap from activating elements behind:
+- Use `setTimeout(close, 50)` for touch events (delays close until after synthetic click fires)
+- Use `e.preventDefault()` + `e.stopPropagation()` + `setTimeout(close, 0)` for click events (only on the modal's own click handler)
+
+---
