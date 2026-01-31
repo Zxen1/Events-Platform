@@ -5242,23 +5242,28 @@ const WelcomeModalComponent = (function() {
             });
         }
         
-        // Close when clicking outside content
+        // Close when clicking outside content or on the logo
         modal.addEventListener('click', function(e) {
             var content = modal.querySelector('.welcome-modal-content');
+            // Don't close if clicking on controls
             if (controlsElement && controlsElement.contains(e.target)) return;
+            // Don't close if clicking on message (allow scrolling/text selection)
+            if (messageElement && messageElement.contains(e.target)) return;
+            // Close if clicking outside content (modal background)
             if (content && !content.contains(e.target)) {
+                close();
+                return;
+            }
+            // Close if clicking on logo
+            if (logoElement && logoElement.contains(e.target)) {
+                close();
+                return;
+            }
+            // Close if clicking on content but not on controls or message (e.g., empty space)
+            if (content && content.contains(e.target)) {
                 close();
             }
         });
-        
-        // Close on content click (but not controls)
-        var content = modal.querySelector('.welcome-modal-content');
-        if (content) {
-            content.addEventListener('click', function(e) {
-                if (controlsElement && controlsElement.contains(e.target)) return;
-                close();
-            });
-        }
     }
     
     /**
@@ -5273,6 +5278,9 @@ const WelcomeModalComponent = (function() {
         // Hide map controls while welcome is open
         var mapControls = document.querySelector('.map-controls');
         if (mapControls) mapControls.style.display = 'none';
+        
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
     }
     
     /**
@@ -5291,6 +5299,9 @@ const WelcomeModalComponent = (function() {
         // Show map controls again
         var mapControls = document.querySelector('.map-controls');
         if (mapControls) mapControls.style.display = '';
+        
+        // Restore background scrolling
+        document.body.style.overflow = '';
     }
     
     /**

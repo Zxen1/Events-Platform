@@ -1052,6 +1052,8 @@ body {
   display: none;
   z-index: var(--layer-modal, 100);
   pointer-events: none;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .welcome-modal.show {
@@ -1066,11 +1068,12 @@ body {
   position: relative;
   width: min(600px, 90vw);
   max-width: 90vw;
+  max-height: calc(100vh - var(--header-h, 50px) - var(--safe-top, 0px) - var(--safe-bottom, 0px) - 20px);
   background: none;
   border-radius: 0;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
   pointer-events: auto;
 }
 
@@ -1081,8 +1084,10 @@ body {
   text-align: center;
   padding: 0;
   gap: 0;
-  overflow: visible;
+  overflow: hidden;
   position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 .welcome-modal-logo {
@@ -1093,6 +1098,7 @@ body {
   object-fit: contain;
   opacity: 0;
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
 .welcome-modal-logo--loaded {
@@ -1117,6 +1123,7 @@ body {
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
+  flex-shrink: 0;
 }
 
 .welcome-modal-controls--visible {
@@ -1131,6 +1138,12 @@ body {
   color: #fff;
   opacity: 0;
   transition: opacity 0.3s ease;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .welcome-modal-message--visible {
