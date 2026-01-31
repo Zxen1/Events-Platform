@@ -378,10 +378,38 @@ const PostModule = (function() {
     App.on('map:boundsChanged', function(data) {
       if (!data) return;
       
-      // Mobile workaround: ignore boundsChanged while posts panel is open (prevents flicker from toolbar resize)
-      // Root cause unsolved: can't stop map resizing without losing edge-to-edge display (causes iOS black bars)
+      // ========================================================================
+      // MOBILE VIEWPORT WORKAROUND (530px breakpoint)
+      // ========================================================================
+      // PROBLEM: On iOS Safari and Android Chrome, the browser toolbar (address bar,
+      // navigation buttons) shows/hides dynamically as the user scrolls content.
+      // This changes the viewport height, which causes the map to resize, which
+      // triggers Mapbox to emit boundsChanged events - even though the user hasn't
+      // actually moved the map.
+      //
+      // SYMPTOM: When scrolling the posts panel on mobile, the post list would
+      // constantly reload and flicker because each toolbar show/hide triggered
+      // a "new viewport" detection.
+      //
+      // ROOT CAUSE (UNSOLVED): We cannot prevent the map from resizing without
+      // losing edge-to-edge display, which causes black bars on iOS. The map
+      // MUST resize with the viewport to look correct.
+      //
+      // WORKAROUND: On mobile (<=530px), when the posts panel is open, we ignore
+      // boundsChanged events entirely. Posts are loaded once when the panel opens
+      // and don't update until the user closes and reopens the panel.
+      //
+      // TRADE-OFF: Mobile users cannot see real-time post updates while panning
+      // the map with the posts panel open. They must close the panel, pan to a
+      // new area, then reopen it. Desktop/tablet users (>530px) are unaffected
+      // and get real-time updates.
+      //
+      // RISK: If a device incorrectly matches/doesn't match the 530px breakpoint,
+      // it may get the wrong behavior. Test on actual devices, not just DevTools.
+      // ========================================================================
       var isMobile = window.matchMedia && window.matchMedia('(max-width: 530px)').matches;
       if (isMobile && currentMode === 'posts') {
+        // Still track zoom so threshold detection works (panel closes when zooming out)
         if (typeof data.zoom === 'number') {
           lastZoom = data.zoom;
           updatePostsButtonState();
@@ -396,17 +424,6 @@ const PostModule = (function() {
         
         var threshold = getPostsMinZoom();
         var crossedUp = prevZoom < threshold && lastZoom >= threshold;
-        
-        // MOBILE FLICKER FIX: When post panel is visible, ignore bounds-based reloads.
-        // On mobile, scrolling the post panel causes iOS/Chrome to show/hide the bottom toolbar,
-        // which resizes the viewport, which causes Mapbox to emit boundsChanged events.
-        // This was causing the post list to reload and flicker every time the user scrolled.
-        // The posts are already loaded for the current area — no need to reload while viewing.
-        // User must close the panel and interact with the map to see posts from a different area.
-        // (This matches the recent panel behavior, which also ignores boundsChanged.)
-        if (currentMode === 'posts') {
-          return;
-        }
         
         // At zoom >= threshold, posts are server-filtered within the current bounds.
         // Reload when crossing threshold, or when viewport changes enough to matter.
