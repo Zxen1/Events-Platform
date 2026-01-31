@@ -2797,8 +2797,9 @@ const PostModule = (function() {
        ........................................................................ */
 
     var thumbnails = wrap.querySelectorAll('.post-thumbs img');
-    var heroImg = wrap.querySelector('.post-image-hero');
     var heroContainer = wrap.querySelector('.post-hero');
+    var trackEl = wrap.querySelector('.post-track-hero');
+    var baseImg = trackEl ? trackEl.querySelector('img') : null;
     
     // Gather all full-size image URLs for the gallery
     var galleryImages = [];
@@ -2810,104 +2811,104 @@ const PostModule = (function() {
     });
     
     // If no thumbnails but hero has an image, use that
-    if (galleryImages.length === 0 && heroImg && heroImg.dataset.full) {
-      galleryImages.push(heroImg.dataset.full);
+    if (galleryImages.length === 0 && baseImg && baseImg.dataset.full) {
+      galleryImages.push(baseImg.dataset.full);
+    }
+    
+    // Slides array - sparse, populated on-demand when user swipes
+    var slides = [];
+    if (baseImg && trackEl) {
+      baseImg.dataset.index = '0';
+      baseImg.dataset.full = galleryImages[0] || '';
+      baseImg.style.left = '0';
+      slides[0] = baseImg;
+      trackEl.style.transform = 'translateX(0)';
+    }
+    
+    // Create slide on-demand (only when user swipes)
+    function ensureSlide(idx) {
+      if (!trackEl || idx < 0 || idx >= galleryImages.length) return null;
+      if (slides[idx]) return slides[idx];
+      
+      var slide = document.createElement('img');
+      slide.className = 'post-image-hero';
+      slide.dataset.index = String(idx);
+      slide.dataset.full = galleryImages[idx];
+      slide.style.left = (idx * 100) + '%';
+      slide.alt = '';
+      slide.decoding = 'async';
+      slide.src = addImageClass(galleryImages[idx], 'imagebox');
+      trackEl.appendChild(slide);
+      slides[idx] = slide;
+      return slide;
     }
     
     // Track current gallery index
     var currentGalleryIndex = 0;
     
-    // Helper to navigate to a specific image index with animation
-    var trackEl = wrap.querySelector('.post-track-hero');
-    var isAnimating = false;
-    
-    function navigateToImageAnimated(index, fromIndex) {
-      if (index === fromIndex || isAnimating) return;
-      if (index < 0) index = galleryImages.length - 1;
-      if (index >= galleryImages.length) index = 0;
-      
-      var fullUrl = galleryImages[index];
-      if (!fullUrl || !heroImg || !trackEl) {
-        // Fallback: just swap image
-        if (fullUrl && heroImg) {
-          heroImg.src = addImageClass(fullUrl, 'imagebox');
-          currentGalleryIndex = index;
-          thumbnails.forEach(function(t, i) {
-            t.classList.toggle('post-image-thumb--active', i === index);
-          });
-        }
-        return;
-      }
-      
-      isAnimating = true;
-      
-      // Determine direction based on index comparison
-      var direction = index > fromIndex ? 'left' : 'right';
-      
-      // Create temporary image for the incoming slide
-      var nextImg = document.createElement('img');
-      nextImg.className = 'post-image-hero post-image-hero--sliding';
-      nextImg.style.position = 'absolute';
-      nextImg.style.top = '0';
-      nextImg.style.left = direction === 'left' ? '100%' : '-100%';
-      nextImg.style.width = '100%';
-      nextImg.style.height = '100%';
-      nextImg.style.objectFit = 'cover';
-      nextImg.alt = '';
-      
-      // Preload the image
-      var preloader = new Image();
-      preloader.onload = function() {
-        nextImg.src = preloader.src;
-        trackEl.appendChild(nextImg);
-        
-        // Force reflow
-        trackEl.offsetHeight;
-        
-        // Animate both images together
-        trackEl.style.transition = 'transform 0.3s ease-out';
-        trackEl.style.transform = 'translateX(' + (direction === 'left' ? '-100%' : '100%') + ')';
-        
-        setTimeout(function() {
-          // Update main image and clean up
-          heroImg.src = nextImg.src;
-          currentGalleryIndex = index;
-          
-          // Remove temp image and reset transform
-          trackEl.style.transition = 'none';
-          trackEl.style.transform = 'translateX(0)';
-          if (nextImg.parentNode) {
-            nextImg.parentNode.removeChild(nextImg);
-          }
-          
-          // Update thumbnail active state
-          thumbnails.forEach(function(t, i) {
-            t.classList.toggle('post-image-thumb--active', i === index);
-          });
-          
-          isAnimating = false;
-        }, 300);
-      };
-      
-      preloader.onerror = function() {
-        // If preload fails, just swap without animation
-        heroImg.src = addImageClass(fullUrl, 'imagebox');
-        currentGalleryIndex = index;
-        thumbnails.forEach(function(t, i) {
-          t.classList.toggle('post-image-thumb--active', i === index);
-        });
-        isAnimating = false;
-      };
-      
-      preloader.src = addImageClass(fullUrl, 'imagebox');
+    // Clamp index to valid range
+    function clampIdx(idx) {
+      return Math.min(Math.max(idx, 0), galleryImages.length - 1);
     }
     
+    // Move track to show specific image index
+    function moveTo(idx, options) {
+      if (!trackEl) return;
+      var instant = options && options.instant;
+      if (instant) {
+        trackEl.style.transition = 'none';
+      } else {
+        trackEl.style.transition = 'transform 0.3s ease-out';
+      }
+      trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      if (instant) {
+        // Force reflow then restore transition
+        trackEl.offsetHeight;
+        requestAnimationFrame(function() { trackEl.style.transition = ''; });
+      }
+    }
+    
+    // Show image at index
+    function show(idx, options) {
+      idx = clampIdx(idx);
+      var instant = options && options.instant;
+      var prevIdx = currentGalleryIndex;
+      currentGalleryIndex = idx;
+      
+      if (prevIdx !== idx || instant) {
+        moveTo(idx, { instant: instant });
+      }
+      
+      // Update active states
+      slides.forEach(function(img, i) {
+        if (img) img.classList.toggle('active', i === idx);
+      });
+      thumbnails.forEach(function(t, i) {
+        t.classList.toggle('post-image-thumb--active', i === idx);
+      });
+      
+      // Scroll thumbnail into view
+      var thumbRow = wrap.querySelector('.post-thumbs');
+      var activeThumb = thumbRow ? thumbRow.querySelector('img[data-index="' + idx + '"]') : null;
+      if (thumbRow && activeThumb) {
+        var rowRect = thumbRow.getBoundingClientRect();
+        var tRect = activeThumb.getBoundingClientRect();
+        if (tRect.left < rowRect.left) {
+          thumbRow.scrollBy({ left: tRect.left - rowRect.left - 8, behavior: 'smooth' });
+        } else if (tRect.right > rowRect.right) {
+          thumbRow.scrollBy({ left: tRect.right - rowRect.right + 8, behavior: 'smooth' });
+        }
+      }
+    }
+    
+    // Initialize first slide
+    show(0, { instant: true });
+    
+    // Thumbnail clicks
     thumbnails.forEach(function(thumb, idx) {
       thumb.addEventListener('click', function() {
-        var fullUrl = thumb.dataset.fullUrl || '';
-        if (fullUrl && heroImg) {
-          navigateToImageAnimated(idx, currentGalleryIndex);
-        }
+        ensureSlide(idx);
+        show(idx);
       });
     });
     
@@ -2925,9 +2926,13 @@ const PostModule = (function() {
     // Hero image click opens lightbox
     if (heroContainer && galleryImages.length > 0) {
       heroContainer.classList.add('post-hero--clickable');
-      heroContainer.addEventListener('click', function() {
+      heroContainer.addEventListener('click', function(e) {
+        // Prevent click right after drag
+        if (e.target.closest('.post-track-hero') && lastDragTime && Date.now() - lastDragTime < 400) {
+          e.preventDefault();
+          return;
+        }
         if (window.ImageModalComponent) {
-          // Get current full-size URL (without imagebox class)
           var currentSrc = galleryImages[currentGalleryIndex] || galleryImages[0];
           ImageModalComponent.open(currentSrc, {
             images: galleryImages,
@@ -2937,135 +2942,96 @@ const PostModule = (function() {
       });
     }
     
-    // Touch swipe support for hero image gallery with visual sliding
-    if (heroContainer && galleryImages.length > 1) {
-      var touchStartX = 0;
-      var touchStartY = 0;
-      var currentTranslate = 0;
-      var isDragging = false;
-      var isHorizontalSwipe = false;
-      var swipeThreshold = 50;
-      
-      // Reset position without animation
-      function resetPosition() {
-        if (!trackEl) return;
-        trackEl.style.transition = 'transform 0.2s ease-out';
-        trackEl.style.transform = 'translateX(0)';
+    // Touch swipe support - drag the entire track (like old site)
+    var dragStartX = null;
+    var dragStartY = null;
+    var dragActive = false;
+    var lastDragTime = 0;
+    
+    function resetDragState() {
+      dragStartX = null;
+      dragStartY = null;
+      dragActive = false;
+      if (trackEl) {
+        trackEl.style.transition = '';
       }
-      
+    }
+    
+    if (heroContainer && galleryImages.length > 1) {
       heroContainer.addEventListener('touchstart', function(e) {
-        if (!trackEl) return;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        currentTranslate = 0;
-        isDragging = true;
-        isHorizontalSwipe = false;
-        trackEl.style.transition = 'none';
+        if (e.touches.length !== 1) return;
+        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
+        dragActive = false;
+        
+        // Create adjacent slides on-demand when user starts touching
+        ensureSlide(currentGalleryIndex - 1);
+        ensureSlide(currentGalleryIndex + 1);
       }, { passive: true });
       
       heroContainer.addEventListener('touchmove', function(e) {
-        if (!isDragging || !trackEl) return;
+        if (dragStartX === null || !trackEl) return;
+        var touch = e.touches[0];
+        var deltaX = touch.clientX - dragStartX;
+        var deltaY = touch.clientY - dragStartY;
         
-        var touchX = e.touches[0].clientX;
-        var touchY = e.touches[0].clientY;
-        var deltaX = touchX - touchStartX;
-        var deltaY = touchY - touchStartY;
-        
-        // Determine if this is a horizontal swipe (only check once)
-        if (!isHorizontalSwipe && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-          isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-          if (!isHorizontalSwipe) {
-            isDragging = false;
+        if (!dragActive) {
+          if (Math.abs(deltaX) < 5) return;
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            resetDragState();
             return;
           }
+          dragActive = true;
+          trackEl.style.transition = 'none';
         }
         
-        if (isHorizontalSwipe) {
-          e.preventDefault();
-          // Add resistance at edges
-          var resistance = 0.3;
-          var isAtStart = currentGalleryIndex === 0 && deltaX > 0;
-          var isAtEnd = currentGalleryIndex === galleryImages.length - 1 && deltaX < 0;
-          
-          if (isAtStart || isAtEnd) {
-            currentTranslate = deltaX * resistance;
-          } else {
-            currentTranslate = deltaX;
-          }
-          
-          trackEl.style.transform = 'translateX(' + currentTranslate + 'px)';
+        var width = heroContainer.clientWidth || 1;
+        var adjustedDelta = deltaX;
+        
+        // No drag past edges
+        if ((currentGalleryIndex === 0 && adjustedDelta > 0) || 
+            (currentGalleryIndex === galleryImages.length - 1 && adjustedDelta < 0)) {
+          adjustedDelta = 0;
         }
+        
+        var deltaPercent = (adjustedDelta / width) * 100;
+        var basePercent = -currentGalleryIndex * 100;
+        trackEl.style.transform = 'translateX(' + (basePercent + deltaPercent) + '%)';
+        e.preventDefault();
       }, { passive: false });
       
       heroContainer.addEventListener('touchend', function(e) {
-        if (!isDragging || !trackEl) return;
-        isDragging = false;
-        
-        var deltaX = currentTranslate;
-        
-        if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe && !isAnimating) {
-          isAnimating = true;
-          var direction = deltaX < 0 ? 'left' : 'right';
-          var nextIndex = deltaX < 0 
-            ? (currentGalleryIndex + 1) % galleryImages.length
-            : (currentGalleryIndex - 1 + galleryImages.length) % galleryImages.length;
-          var fullUrl = galleryImages[nextIndex];
-          
-          // Create incoming image positioned at edge
-          var nextImg = document.createElement('img');
-          nextImg.className = 'post-image-hero post-image-hero--sliding';
-          nextImg.style.position = 'absolute';
-          nextImg.style.top = '0';
-          nextImg.style.left = direction === 'left' ? '100%' : '-100%';
-          nextImg.style.width = '100%';
-          nextImg.style.height = '100%';
-          nextImg.style.objectFit = 'cover';
-          nextImg.alt = '';
-          
-          // Preload and animate
-          var preloader = new Image();
-          preloader.onload = function() {
-            nextImg.src = preloader.src;
-            trackEl.appendChild(nextImg);
-            
-            // Continue animation from current position to full slide
-            trackEl.style.transition = 'transform 0.2s ease-out';
-            trackEl.style.transform = 'translateX(' + (direction === 'left' ? '-100%' : '100%') + ')';
-            
-            setTimeout(function() {
-              heroImg.src = nextImg.src;
-              currentGalleryIndex = nextIndex;
-              
-              trackEl.style.transition = 'none';
-              trackEl.style.transform = 'translateX(0)';
-              if (nextImg.parentNode) nextImg.parentNode.removeChild(nextImg);
-              
-              thumbnails.forEach(function(t, i) {
-                t.classList.toggle('post-image-thumb--active', i === nextIndex);
-              });
-              isAnimating = false;
-            }, 200);
-          };
-          
-          preloader.onerror = function() {
-            resetPosition();
-            isAnimating = false;
-          };
-          
-          preloader.src = addImageClass(fullUrl, 'imagebox');
-        } else {
-          // Snap back
-          resetPosition();
+        if (dragStartX === null) {
+          resetDragState();
+          return;
         }
-        
-        currentTranslate = 0;
-        isHorizontalSwipe = false;
+        var deltaX = e.changedTouches[0].clientX - dragStartX;
+        if (trackEl) {
+          trackEl.style.transition = '';
+        }
+        if (dragActive) {
+          var prevIdx = currentGalleryIndex;
+          var targetIdx = prevIdx;
+          var threshold = (heroContainer.clientWidth || 1) * 0.15;
+          
+          if (deltaX <= -threshold && prevIdx < galleryImages.length - 1) {
+            targetIdx = prevIdx + 1;
+          } else if (deltaX >= threshold && prevIdx > 0) {
+            targetIdx = prevIdx - 1;
+          }
+          
+          lastDragTime = Date.now();
+          requestAnimationFrame(function() { show(targetIdx); });
+        }
+        resetDragState();
       }, { passive: true });
       
       heroContainer.addEventListener('touchcancel', function() {
-        isDragging = false;
-        isHorizontalSwipe = false;
-        resetPosition();
+        if (dragActive && trackEl) {
+          trackEl.style.transition = '';
+          requestAnimationFrame(function() { show(currentGalleryIndex); });
+        }
+        resetDragState();
       }, { passive: true });
     }
 

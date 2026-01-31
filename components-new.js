@@ -5486,63 +5486,15 @@ const ImageModalComponent = (function() {
             var deltaX = currentTranslate;
             
             if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe) {
-                if (state && state.images && state.images.length > 1 && !isAnimating) {
-                    isAnimating = true;
-                    var direction = deltaX < 0 ? 1 : -1; // 1 = next (swipe left), -1 = prev (swipe right)
-                    var len = state.images.length;
-                    var newIndex = ((state.index + direction) % len + len) % len;
-                    var newSrc = state.images[newIndex];
-                    
-                    // Create incoming image
-                    var nextImg = document.createElement('img');
-                    nextImg.className = 'image-modal-image image-modal-image--sliding';
-                    nextImg.style.position = 'absolute';
-                    nextImg.style.left = (direction * 100) + '%';
-                    nextImg.style.maxWidth = '95vw';
-                    nextImg.style.maxHeight = '95vh';
-                    nextImg.style.objectFit = 'contain';
-                    nextImg.alt = '';
-                    
-                    var preloader = new Image();
-                    preloader.onload = function() {
-                        nextImg.src = preloader.src;
-                        if (contentEl) {
-                            contentEl.style.position = 'relative';
-                            contentEl.appendChild(nextImg);
-                            
-                            // Continue animation from current position
-                            contentEl.style.transition = 'transform 0.2s ease-out';
-                            contentEl.style.transform = 'translateX(' + (-direction * 100) + '%)';
-                        }
-                        
-                        setTimeout(function() {
-                            state.index = newIndex;
-                            renderImage();
-                            
-                            if (contentEl) {
-                                contentEl.style.transition = 'none';
-                                contentEl.style.transform = 'translateX(0)';
-                                if (nextImg.parentNode) nextImg.parentNode.removeChild(nextImg);
-                            }
-                            isAnimating = false;
-                        }, 200);
-                    };
-                    
-                    preloader.onerror = function() {
-                        if (contentEl) {
-                            contentEl.style.transition = 'transform 0.2s ease-out';
-                            contentEl.style.transform = 'translateX(0)';
-                        }
-                        isAnimating = false;
-                    };
-                    
-                    preloader.src = newSrc;
-                } else {
-                    // Reset position
-                    if (contentEl) {
-                        contentEl.style.transition = 'transform 0.2s ease-out';
-                        contentEl.style.transform = 'translateX(0)';
-                    }
+                if (state && state.images && state.images.length > 1) {
+                    // Swipe left = next, swipe right = prev
+                    var step = deltaX < 0 ? 1 : -1;
+                    advance(step);
+                }
+                // Reset position after advancing
+                if (contentEl) {
+                    contentEl.style.transition = 'none';
+                    contentEl.style.transform = 'translateX(0)';
                 }
             } else if (!isHorizontalSwipe && Math.abs(currentTranslate) < 10) {
                 // Tap (not swipe) - close if not on image
@@ -5620,72 +5572,15 @@ const ImageModalComponent = (function() {
         isOpen = false;
     }
     
-    var isAnimating = false;
-    
     /**
-     * Advance to next/previous image in gallery with optional animation
+     * Advance to next/previous image in gallery
      * @param {number} step - 1 for next, -1 for previous
-     * @param {boolean} animate - whether to animate the transition
      */
-    function advance(step, animate) {
-        if (!state || !state.images || state.images.length <= 1 || isAnimating) return;
+    function advance(step) {
+        if (!state || !state.images || state.images.length <= 1) return;
         var len = state.images.length;
-        var newIndex = ((state.index + step) % len + len) % len;
-        
-        if (animate !== false && contentEl) {
-            isAnimating = true;
-            var direction = step > 0 ? 1 : -1; // 1 = slide left (next), -1 = slide right (prev)
-            var newSrc = state.images[newIndex];
-            
-            // Create temp image for incoming slide
-            var nextImg = document.createElement('img');
-            nextImg.className = 'image-modal-image image-modal-image--sliding';
-            nextImg.style.position = 'absolute';
-            nextImg.style.left = (direction * 100) + '%';
-            nextImg.style.maxWidth = '95vw';
-            nextImg.style.maxHeight = '95vh';
-            nextImg.style.objectFit = 'contain';
-            nextImg.alt = '';
-            
-            // Preload image
-            var preloader = new Image();
-            preloader.onload = function() {
-                nextImg.src = preloader.src;
-                contentEl.style.position = 'relative';
-                contentEl.appendChild(nextImg);
-                
-                // Force reflow
-                contentEl.offsetHeight;
-                
-                // Animate both together
-                contentEl.style.transition = 'transform 0.3s ease-out';
-                contentEl.style.transform = 'translateX(' + (-direction * 100) + '%)';
-                
-                setTimeout(function() {
-                    state.index = newIndex;
-                    renderImage();
-                    
-                    // Clean up
-                    contentEl.style.transition = 'none';
-                    contentEl.style.transform = 'translateX(0)';
-                    if (nextImg.parentNode) {
-                        nextImg.parentNode.removeChild(nextImg);
-                    }
-                    isAnimating = false;
-                }, 300);
-            };
-            
-            preloader.onerror = function() {
-                state.index = newIndex;
-                renderImage();
-                isAnimating = false;
-            };
-            
-            preloader.src = newSrc;
-        } else {
-            state.index = newIndex;
-            renderImage();
-        }
+        state.index = ((state.index + step) % len + len) % len;
+        renderImage();
     }
     
     /**
