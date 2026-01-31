@@ -5399,10 +5399,11 @@ const WelcomeModalComponent = (function() {
 const ImageModalComponent = (function() {
     
     var modal = null;
-    var contentEl = null;
-    var imgEl = null;
+    var trackEl = null;
+    var slides = [];
     var state = null; // { images: [], index: 0 }
     var isOpen = false;
+    var wrapClone = null;
     
     /**
      * Initialize the image modal
@@ -5418,137 +5419,209 @@ const ImageModalComponent = (function() {
         modal.setAttribute('aria-label', 'Image lightbox');
         modal.setAttribute('aria-hidden', 'true');
         
-        contentEl = document.createElement('div');
-        contentEl.className = 'image-modal-content';
-        modal.appendChild(contentEl);
+        trackEl = document.createElement('div');
+        trackEl.className = 'image-modal-track';
+        modal.appendChild(trackEl);
         
         document.body.appendChild(modal);
         
-        // Close when clicking modal background (outside content)
+        // Block all clicks from passing through to elements behind
         modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
+            e.stopPropagation();
+            // Close when clicking modal background or track (outside images)
+            if (e.target === modal || e.target === trackEl || e.target.classList.contains('image-modal-slot')) {
                 close();
             }
         });
         
-        // Close when clicking content area (but not image)
-        contentEl.addEventListener('click', function(e) {
-            if (!e.target.closest('img')) {
-                close();
-            }
+        // Block all events from passing through to elements behind
+        ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend'].forEach(function(evtName) {
+            modal.addEventListener(evtName, function(e) { e.stopPropagation(); });
         });
         
-        // Touch swipe support for gallery navigation with visual sliding
-        var touchStartX = 0;
-        var touchStartY = 0;
-        var currentTranslate = 0;
-        var isDragging = false;
-        var isHorizontalSwipe = false;
+        // Touch swipe support - track-based like ImageBox
+        var dragStartX = null;
+        var dragStartY = null;
+        var dragActive = false;
         var swipeThreshold = 50;
         
+        function resetDragState() {
+            dragStartX = null;
+            dragStartY = null;
+            dragActive = false;
+        }
+        
         modal.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            currentTranslate = 0;
-            isDragging = true;
-            isHorizontalSwipe = false;
-            if (contentEl) contentEl.style.transition = 'none';
+            if (e.touches.length !== 1 || !state || state.images.length <= 1) return;
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            dragActive = false;
+            
+            // Pre-create wrap clones so they're ready when dragging
+            if (wrapClone && wrapClone.parentNode) {
+                wrapClone.parentNode.removeChild(wrapClone);
+                wrapClone = null;
+            }
+            
+            var len = state.images.length;
+            if (len > 1 && trackEl) {
+                var idx = state.index;
+                if (idx === len - 1) {
+                    // At last - clone first at position len*100%
+                    wrapClone = createSlideElement(0);
+                    wrapClone.style.left = (len * 100) + '%';
+                    wrapClone.dataset.index = 'wrap';
+                    trackEl.appendChild(wrapClone);
+                } else if (idx === 0) {
+                    // At first - clone last at position -100%
+                    wrapClone = createSlideElement(len - 1);
+                    wrapClone.style.left = '-100%';
+                    wrapClone.dataset.index = 'wrap';
+                    trackEl.appendChild(wrapClone);
+                }
+            }
         }, { passive: true });
         
         modal.addEventListener('touchmove', function(e) {
-            if (!isDragging) return;
+            if (dragStartX === null || !trackEl || !state) return;
+            var touch = e.touches[0];
+            var deltaX = touch.clientX - dragStartX;
+            var deltaY = touch.clientY - dragStartY;
             
-            var touchX = e.touches[0].clientX;
-            var touchY = e.touches[0].clientY;
-            var deltaX = touchX - touchStartX;
-            var deltaY = touchY - touchStartY;
-            
-            // Determine if horizontal swipe (only check once)
-            if (!isHorizontalSwipe && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-                isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-                if (!isHorizontalSwipe) {
-                    isDragging = false;
+            if (!dragActive) {
+                if (Math.abs(deltaX) < 5) return;
+                if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                    resetDragState();
                     return;
                 }
+                dragActive = true;
+                trackEl.style.transition = 'none';
             }
             
-            if (isHorizontalSwipe && contentEl) {
-                e.preventDefault();
-                currentTranslate = deltaX;
-                contentEl.style.transform = 'translateX(' + currentTranslate + 'px)';
-            }
+            var width = modal.clientWidth || 1;
+            var deltaPercent = (deltaX / width) * 100;
+            var basePercent = -state.index * 100;
+            trackEl.style.transform = 'translateX(' + (basePercent + deltaPercent) + '%)';
+            e.preventDefault();
         }, { passive: false });
         
         modal.addEventListener('touchend', function(e) {
-            if (!isDragging) return;
-            isDragging = false;
+            if (dragStartX === null) {
+                resetDragState();
+                return;
+            }
+            var deltaX = e.changedTouches[0].clientX - dragStartX;
             
-            var deltaX = currentTranslate;
-            
-            if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe) {
-                if (state && state.images && state.images.length > 1) {
-                    // Two-stage animation: slide out, swap, slide in
-                    var direction = deltaX < 0 ? -1 : 1;
-                    var step = deltaX < 0 ? 1 : -1;
-                    
-                    var slideDistance = Math.round(window.innerWidth * 0.52);
-                    
-                    // Stage 1: Slide current image out
-                    if (contentEl) {
-                        contentEl.style.transition = 'transform 0.15s ease-out';
-                        contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
+            if (dragActive && state) {
+                var prevIdx = state.index;
+                var targetIdx = prevIdx;
+                var threshold = (modal.clientWidth || 1) * 0.15;
+                var len = state.images.length;
+                var isWrap = false;
+                var wrapPos = 0;
+                
+                if (deltaX <= -threshold) {
+                    if (prevIdx === len - 1) {
+                        targetIdx = 0;
+                        isWrap = true;
+                        wrapPos = len * 100;
+                    } else {
+                        targetIdx = prevIdx + 1;
                     }
-                    
-                    setTimeout(function() {
-                        // Swap image while off-screen (instant, no animation)
-                        advance(step, false);
-                        
-                        // Position new image on opposite side (nearly touching)
-                        if (contentEl) {
-                            contentEl.style.transition = 'none';
-                            contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
-                            // Force reflow
-                            contentEl.offsetHeight;
-                            
-                            // Stage 2: Slide new image in
-                            contentEl.style.transition = 'transform 0.15s ease-out';
-                            contentEl.style.transform = 'translateX(0)';
-                        }
-                    }, 150);
-                } else {
-                    // Reset position (single image)
-                    if (contentEl) {
-                        contentEl.style.transition = 'transform 0.2s ease-out';
-                        contentEl.style.transform = 'translateX(0)';
+                } else if (deltaX >= threshold) {
+                    if (prevIdx === 0) {
+                        targetIdx = len - 1;
+                        isWrap = true;
+                        wrapPos = -100;
+                    } else {
+                        targetIdx = prevIdx - 1;
                     }
                 }
-            } else if (!isHorizontalSwipe && Math.abs(currentTranslate) < 10) {
-                // Tap (not swipe) - close if not on image
+                
+                if (isWrap && trackEl && wrapClone) {
+                    trackEl.style.transition = '';
+                    trackEl.style.transform = 'translateX(' + (-wrapPos) + '%)';
+                    
+                    setTimeout(function() {
+                        trackEl.style.transition = 'none';
+                        trackEl.style.transform = 'translateX(-' + (targetIdx * 100) + '%)';
+                        if (wrapClone && wrapClone.parentNode) {
+                            wrapClone.parentNode.removeChild(wrapClone);
+                            wrapClone = null;
+                        }
+                        trackEl.offsetHeight;
+                        trackEl.style.transition = '';
+                        state.index = targetIdx;
+                    }, 300);
+                } else {
+                    if (wrapClone && wrapClone.parentNode) {
+                        wrapClone.parentNode.removeChild(wrapClone);
+                        wrapClone = null;
+                    }
+                    show(targetIdx);
+                }
+            } else {
+                // Tap - close if not on image
                 var touch = e.changedTouches[0];
                 var target = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (!target || !target.closest('img')) {
                     close();
                 }
-            } else {
-                // Snap back
-                if (contentEl) {
-                    contentEl.style.transition = 'transform 0.2s ease-out';
-                    contentEl.style.transform = 'translateX(0)';
+                if (wrapClone && wrapClone.parentNode) {
+                    wrapClone.parentNode.removeChild(wrapClone);
+                    wrapClone = null;
                 }
             }
-            
-            currentTranslate = 0;
-            isHorizontalSwipe = false;
+            resetDragState();
         }, { passive: true });
         
         modal.addEventListener('touchcancel', function() {
-            isDragging = false;
-            isHorizontalSwipe = false;
-            if (contentEl) {
-                contentEl.style.transition = 'transform 0.2s ease-out';
-                contentEl.style.transform = 'translateX(0)';
+            if (wrapClone && wrapClone.parentNode) {
+                wrapClone.parentNode.removeChild(wrapClone);
+                wrapClone = null;
             }
+            if (dragActive && state) {
+                show(state.index);
+            }
+            resetDragState();
         }, { passive: true });
+    }
+    
+    function createSlideElement(idx) {
+        if (!state) return null;
+        var slot = document.createElement('div');
+        slot.className = 'image-modal-slot';
+        slot.style.left = (idx * 100) + '%';
+        slot.dataset.index = String(idx);
+        
+        var img = document.createElement('img');
+        img.className = 'image-modal-image';
+        img.alt = '';
+        img.src = state.images[idx];
+        slot.appendChild(img);
+        
+        return slot;
+    }
+    
+    function moveTo(idx, options) {
+        if (!trackEl) return;
+        var instant = options && options.instant;
+        if (instant) {
+            trackEl.style.transition = 'none';
+            trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
+            trackEl.offsetHeight;
+            trackEl.style.transition = '';
+        } else {
+            trackEl.style.transition = '';
+            trackEl.style.transform = 'translateX(-' + (idx * 100) + '%)';
+        }
+    }
+    
+    function show(idx) {
+        if (!state) return;
+        idx = Math.max(0, Math.min(idx, state.images.length - 1));
+        state.index = idx;
+        moveTo(idx);
     }
     
     /**
@@ -5563,7 +5636,6 @@ const ImageModalComponent = (function() {
         var images = Array.isArray(options.images) && options.images.length ? options.images : [src];
         var startIndex = typeof options.startIndex === 'number' ? options.startIndex : 0;
         
-        // Find index if not provided but src exists in array
         if (startIndex === 0 && src && images.indexOf(src) !== -1) {
             startIndex = images.indexOf(src);
         }
@@ -5575,7 +5647,24 @@ const ImageModalComponent = (function() {
             index: startIndex
         };
         
-        renderImage();
+        // Build track with all images
+        slides = [];
+        trackEl.innerHTML = '';
+        for (var i = 0; i < images.length; i++) {
+            var slide = createSlideElement(i);
+            slide.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Click to advance
+                if (state && state.images.length > 1) {
+                    var nextIdx = (state.index + 1) % state.images.length;
+                    show(nextIdx);
+                }
+            });
+            trackEl.appendChild(slide);
+            slides[i] = slide;
+        }
+        
+        moveTo(startIndex, { instant: true });
         modal.classList.add('show');
         modal.removeAttribute('aria-hidden');
         isOpen = true;
@@ -5586,108 +5675,18 @@ const ImageModalComponent = (function() {
      */
     function close() {
         if (!modal) return;
-        // Move focus out before hiding to avoid aria-hidden violation
         if (document.activeElement && modal.contains(document.activeElement)) {
             document.activeElement.blur();
         }
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
-        if (contentEl) contentEl.innerHTML = '';
-        imgEl = null;
+        if (trackEl) trackEl.innerHTML = '';
+        slides = [];
         state = null;
         isOpen = false;
-    }
-    
-    var isAnimating = false;
-    
-    /**
-     * Advance to next/previous image in gallery
-     * @param {number} step - 1 for next, -1 for previous
-     * @param {boolean} animate - whether to animate (default true)
-     */
-    function advance(step, animate) {
-        if (!state || !state.images || state.images.length <= 1) return;
-        if (isAnimating) return;
-        
-        var len = state.images.length;
-        var newIndex = ((state.index + step) % len + len) % len;
-        
-        if (animate === false) {
-            // Instant swap (used during swipe animation)
-            state.index = newIndex;
-            renderImage();
-            return;
-        }
-        
-        // Animated transition (used for clicks)
-        isAnimating = true;
-        var direction = step > 0 ? -1 : 1;
-        // Slide just enough to clear image + small gap (~52% keeps images nearly touching)
-        var slideDistance = Math.round(window.innerWidth * 0.52);
-        
-        // Stage 1: Slide out
-        if (contentEl) {
-            contentEl.style.transition = 'transform 0.15s ease-out';
-            contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
-        }
-        
-        setTimeout(function() {
-            state.index = newIndex;
-            renderImage();
-            
-            // Position on opposite side (nearly touching)
-            if (contentEl) {
-                contentEl.style.transition = 'none';
-                contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
-                contentEl.offsetHeight;
-                
-                // Stage 2: Slide in
-                contentEl.style.transition = 'transform 0.15s ease-out';
-                contentEl.style.transform = 'translateX(0)';
-            }
-            
-            setTimeout(function() {
-                isAnimating = false;
-            }, 150);
-        }, 150);
-    }
-    
-    /**
-     * Render the current image
-     */
-    function renderImage() {
-        if (!state || !contentEl) return;
-        
-        if (!imgEl) {
-            imgEl = document.createElement('img');
-            imgEl.className = 'image-modal-image';
-            imgEl.alt = '';
-            
-            // Click image to advance to next
-            imgEl.addEventListener('click', function(e) {
-                e.stopPropagation();
-                advance(1);
-            });
-            
-            contentEl.innerHTML = '';
-            contentEl.appendChild(imgEl);
-        }
-        
-        var src = state.images[state.index];
-        if (imgEl.src !== src) {
-            // Clear image first (show blank, not old image)
-            imgEl.style.opacity = '0';
-            imgEl.src = '';
-            
-            // Preload then show
-            var preloader = new Image();
-            preloader.onload = function() {
-                if (state && state.images[state.index] === src) {
-                    imgEl.src = src;
-                    imgEl.style.opacity = '1';
-                }
-            };
-            preloader.src = src;
+        if (wrapClone && wrapClone.parentNode) {
+            wrapClone.parentNode.removeChild(wrapClone);
+            wrapClone = null;
         }
     }
     
