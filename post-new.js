@@ -2983,15 +2983,7 @@ const PostModule = (function() {
         }
         
         var width = heroContainer.clientWidth || 1;
-        var adjustedDelta = deltaX;
-        
-        // No drag past edges
-        if ((currentGalleryIndex === 0 && adjustedDelta > 0) || 
-            (currentGalleryIndex === galleryImages.length - 1 && adjustedDelta < 0)) {
-          adjustedDelta = 0;
-        }
-        
-        var deltaPercent = (adjustedDelta / width) * 100;
+        var deltaPercent = (deltaX / width) * 100;
         var basePercent = -currentGalleryIndex * 100;
         trackEl.style.transform = 'translateX(' + (basePercent + deltaPercent) + '%)';
         e.preventDefault();
@@ -3007,11 +2999,14 @@ const PostModule = (function() {
           var prevIdx = currentGalleryIndex;
           var targetIdx = prevIdx;
           var threshold = (heroContainer.clientWidth || 1) * 0.15;
+          var len = galleryImages.length;
           
-          if (deltaX <= -threshold && prevIdx < galleryImages.length - 1) {
-            targetIdx = prevIdx + 1;
-          } else if (deltaX >= threshold && prevIdx > 0) {
-            targetIdx = prevIdx - 1;
+          if (deltaX <= -threshold) {
+            // Swipe left - next (with loop)
+            targetIdx = (prevIdx + 1) % len;
+          } else if (deltaX >= threshold) {
+            // Swipe right - prev (with loop)
+            targetIdx = (prevIdx - 1 + len) % len;
           }
           
           // Ensure target slide exists before animating to it

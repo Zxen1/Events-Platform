@@ -5493,7 +5493,7 @@ const ImageModalComponent = (function() {
                     
                     // Stage 1: Slide current image out
                     if (contentEl) {
-                        contentEl.style.transition = 'transform 0.15s ease-in';
+                        contentEl.style.transition = 'transform 0.3s ease-in';
                         contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
                     }
                     
@@ -5509,10 +5509,10 @@ const ImageModalComponent = (function() {
                             contentEl.offsetHeight;
                             
                             // Stage 2: Slide new image in
-                            contentEl.style.transition = 'transform 0.15s ease-out';
+                            contentEl.style.transition = 'transform 0.3s ease-out';
                             contentEl.style.transform = 'translateX(0)';
                         }
-                    }, 150);
+                    }, 300);
                 } else {
                     // Reset position (single image)
                     if (contentEl) {
@@ -5623,7 +5623,7 @@ const ImageModalComponent = (function() {
         
         // Stage 1: Slide out
         if (contentEl) {
-            contentEl.style.transition = 'transform 0.15s ease-in';
+            contentEl.style.transition = 'transform 0.3s ease-in';
             contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
         }
         
@@ -5638,14 +5638,14 @@ const ImageModalComponent = (function() {
                 contentEl.offsetHeight;
                 
                 // Stage 2: Slide in
-                contentEl.style.transition = 'transform 0.15s ease-out';
+                contentEl.style.transition = 'transform 0.3s ease-out';
                 contentEl.style.transform = 'translateX(0)';
             }
             
             setTimeout(function() {
                 isAnimating = false;
-            }, 150);
-        }, 150);
+            }, 300);
+        }, 300);
     }
     
     /**
@@ -5671,7 +5671,19 @@ const ImageModalComponent = (function() {
         
         var src = state.images[state.index];
         if (imgEl.src !== src) {
-            imgEl.src = src;
+            // Clear image first (show blank, not old image)
+            imgEl.style.opacity = '0';
+            imgEl.src = '';
+            
+            // Preload then show
+            var preloader = new Image();
+            preloader.onload = function() {
+                if (state && state.images[state.index] === src) {
+                    imgEl.src = src;
+                    imgEl.style.opacity = '1';
+                }
+            };
+            preloader.src = src;
         }
     }
     
