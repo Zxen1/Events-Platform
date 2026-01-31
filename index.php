@@ -11,7 +11,9 @@
 // Default fallbacks (will be overwritten by admin settings)
 $siteName = 'FunMap';
 $siteTagline = '';
+$siteDescription = '';
 $siteDefaultImage = '';
+$folderSiteImages = '';
 
 $ogTitle = '';
 $ogDescription = '';
@@ -56,8 +58,9 @@ try {
             $settingsStmt = $pdo->query("
                 SELECT setting_key, setting_value 
                 FROM admin_settings 
-                WHERE setting_key IN ('website_name', 'website_tagline', 'big_logo', 'og_default_image')
+                WHERE setting_key IN ('website_name', 'website_tagline', 'website_description', 'big_logo', 'og_default_image', 'folder_site_images')
             ");
+            $bigLogoFilename = '';
             while ($row = $settingsStmt->fetch()) {
                 switch ($row['setting_key']) {
                     case 'website_name':
@@ -66,18 +69,32 @@ try {
                     case 'website_tagline':
                         $siteTagline = $row['setting_value'];
                         break;
+                    case 'website_description':
+                        $siteDescription = $row['setting_value'];
+                        break;
+                    case 'folder_site_images':
+                        $folderSiteImages = rtrim($row['setting_value'], '/');
+                        break;
                     case 'og_default_image':
-                        // Dedicated OG image takes priority
+                        // Dedicated OG image takes priority (should be full URL)
                         if (!empty($row['setting_value'])) {
                             $siteDefaultImage = $row['setting_value'];
                         }
                         break;
                     case 'big_logo':
-                        // Use big_logo as fallback if no dedicated OG image
-                        if (empty($siteDefaultImage) && !empty($row['setting_value'])) {
-                            $siteDefaultImage = $row['setting_value'];
-                        }
+                        // Store for later - need folder path to construct full URL
+                        $bigLogoFilename = $row['setting_value'];
                         break;
+                }
+            }
+            
+            // Construct full URL for big_logo if no dedicated OG image
+            if (empty($siteDefaultImage) && !empty($bigLogoFilename)) {
+                // Check if it's already a full URL
+                if (preg_match('/^https?:\/\//i', $bigLogoFilename)) {
+                    $siteDefaultImage = $bigLogoFilename;
+                } elseif (!empty($folderSiteImages)) {
+                    $siteDefaultImage = $folderSiteImages . '/' . $bigLogoFilename;
                 }
             }
             
@@ -85,6 +102,11 @@ try {
             $ogTitle = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
             if (!empty($siteTagline)) {
                 $ogTitle .= ' - ' . htmlspecialchars($siteTagline, ENT_QUOTES, 'UTF-8');
+            }
+            // Use website_description for OG description, fall back to tagline
+            if (!empty($siteDescription)) {
+                $ogDescription = htmlspecialchars($siteDescription, ENT_QUOTES, 'UTF-8');
+            } elseif (!empty($siteTagline)) {
                 $ogDescription = htmlspecialchars($siteTagline, ENT_QUOTES, 'UTF-8');
             }
             $ogImage = $siteDefaultImage;
@@ -431,6 +453,10 @@ if (empty($ogTitle)) {
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteTagline">Website Tagline</label>
               <input type="text" class="admin-settings-field-input" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteDescription">Website Description</label>
+              <textarea class="admin-settings-field-textarea" id="adminWebsiteDescription" data-setting-key="website_description" rows="4" placeholder="Enter website description for social sharing"></textarea>
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminContactEmail">Contact Email</label>
