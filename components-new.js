@@ -5491,10 +5491,12 @@ const ImageModalComponent = (function() {
                     var direction = deltaX < 0 ? -1 : 1;
                     var step = deltaX < 0 ? 1 : -1;
                     
+                    var slideDistance = Math.round(window.innerWidth * 0.55);
+                    
                     // Stage 1: Slide current image out
                     if (contentEl) {
                         contentEl.style.transition = 'transform 0.3s ease-in';
-                        contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
+                        contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
                     }
                     
                     setTimeout(function() {
@@ -5504,7 +5506,7 @@ const ImageModalComponent = (function() {
                         // Position new image on opposite side (instant)
                         if (contentEl) {
                             contentEl.style.transition = 'none';
-                            contentEl.style.transform = 'translateX(' + (-direction * window.innerWidth) + 'px)';
+                            contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
                             // Force reflow
                             contentEl.offsetHeight;
                             
@@ -5620,11 +5622,12 @@ const ImageModalComponent = (function() {
         // Animated transition (used for clicks)
         isAnimating = true;
         var direction = step > 0 ? -1 : 1;
+        var slideDistance = Math.round(window.innerWidth * 0.55); // ~55% for tight gap
         
         // Stage 1: Slide out
         if (contentEl) {
             contentEl.style.transition = 'transform 0.3s ease-in';
-            contentEl.style.transform = 'translateX(' + (direction * window.innerWidth) + 'px)';
+            contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
         }
         
         setTimeout(function() {
@@ -5634,7 +5637,7 @@ const ImageModalComponent = (function() {
             // Position on opposite side
             if (contentEl) {
                 contentEl.style.transition = 'none';
-                contentEl.style.transform = 'translateX(' + (-direction * window.innerWidth) + 'px)';
+                contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
                 contentEl.offsetHeight;
                 
                 // Stage 2: Slide in

@@ -3000,20 +3000,70 @@ const PostModule = (function() {
           var targetIdx = prevIdx;
           var threshold = (heroContainer.clientWidth || 1) * 0.15;
           var len = galleryImages.length;
+          var isWrap = false;
+          var wrapDirection = 0; // -1 = left, 1 = right
           
           if (deltaX <= -threshold) {
-            // Swipe left - next (with loop)
-            targetIdx = (prevIdx + 1) % len;
+            // Swipe left - next
+            if (prevIdx === len - 1) {
+              // Wrap from last to first
+              targetIdx = 0;
+              isWrap = true;
+              wrapDirection = -1;
+            } else {
+              targetIdx = prevIdx + 1;
+            }
           } else if (deltaX >= threshold) {
-            // Swipe right - prev (with loop)
-            targetIdx = (prevIdx - 1 + len) % len;
+            // Swipe right - prev
+            if (prevIdx === 0) {
+              // Wrap from first to last
+              targetIdx = len - 1;
+              isWrap = true;
+              wrapDirection = 1;
+            } else {
+              targetIdx = prevIdx - 1;
+            }
           }
           
-          // Ensure target slide exists before animating to it
-          ensureSlide(targetIdx);
-          
           lastDragTime = Date.now();
-          show(targetIdx);
+          
+          if (isWrap && trackEl) {
+            // Handle wrap-around with clone for smooth directional animation
+            ensureSlide(targetIdx);
+            var clonePos = wrapDirection === -1 ? (len * 100) : -100;
+            
+            // Create temporary clone at wrap position
+            var clone = document.createElement('img');
+            clone.className = 'post-image-hero';
+            clone.src = slides[targetIdx] ? slides[targetIdx].src : addImageClass(galleryImages[targetIdx], 'imagebox');
+            clone.style.left = clonePos + '%';
+            clone.alt = '';
+            trackEl.appendChild(clone);
+            
+            // Animate to clone position
+            trackEl.style.transition = '';
+            trackEl.style.transform = 'translateX(' + (-clonePos) + '%)';
+            
+            setTimeout(function() {
+              // Reset to actual position and remove clone
+              trackEl.style.transition = 'none';
+              trackEl.style.transform = 'translateX(-' + (targetIdx * 100) + '%)';
+              if (clone.parentNode) clone.parentNode.removeChild(clone);
+              trackEl.offsetHeight;
+              trackEl.style.transition = '';
+              
+              currentGalleryIndex = targetIdx;
+              slides.forEach(function(img, i) {
+                if (img) img.classList.toggle('active', i === targetIdx);
+              });
+              thumbnails.forEach(function(t, i) {
+                t.classList.toggle('post-image-thumb--active', i === targetIdx);
+              });
+            }, 300);
+          } else {
+            ensureSlide(targetIdx);
+            show(targetIdx);
+          }
         }
         resetDragState();
       }, { passive: true });
