@@ -5491,11 +5491,11 @@ const ImageModalComponent = (function() {
                     var direction = deltaX < 0 ? -1 : 1;
                     var step = deltaX < 0 ? 1 : -1;
                     
-                    var slideDistance = Math.round(window.innerWidth * 0.55);
+                    var slideDistance = Math.round(window.innerWidth * 0.52);
                     
                     // Stage 1: Slide current image out
                     if (contentEl) {
-                        contentEl.style.transition = 'transform 0.3s ease-in';
+                        contentEl.style.transition = 'transform 0.15s ease-out';
                         contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
                     }
                     
@@ -5503,7 +5503,7 @@ const ImageModalComponent = (function() {
                         // Swap image while off-screen (instant, no animation)
                         advance(step, false);
                         
-                        // Position new image on opposite side (instant)
+                        // Position new image on opposite side (nearly touching)
                         if (contentEl) {
                             contentEl.style.transition = 'none';
                             contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
@@ -5511,10 +5511,10 @@ const ImageModalComponent = (function() {
                             contentEl.offsetHeight;
                             
                             // Stage 2: Slide new image in
-                            contentEl.style.transition = 'transform 0.3s ease-out';
+                            contentEl.style.transition = 'transform 0.15s ease-out';
                             contentEl.style.transform = 'translateX(0)';
                         }
-                    }, 300);
+                    }, 150);
                 } else {
                     // Reset position (single image)
                     if (contentEl) {
@@ -5622,11 +5622,12 @@ const ImageModalComponent = (function() {
         // Animated transition (used for clicks)
         isAnimating = true;
         var direction = step > 0 ? -1 : 1;
-        var slideDistance = Math.round(window.innerWidth * 0.55); // ~55% for tight gap
+        // Slide just enough to clear image + small gap (~52% keeps images nearly touching)
+        var slideDistance = Math.round(window.innerWidth * 0.52);
         
         // Stage 1: Slide out
         if (contentEl) {
-            contentEl.style.transition = 'transform 0.3s ease-in';
+            contentEl.style.transition = 'transform 0.15s ease-out';
             contentEl.style.transform = 'translateX(' + (direction * slideDistance) + 'px)';
         }
         
@@ -5634,21 +5635,21 @@ const ImageModalComponent = (function() {
             state.index = newIndex;
             renderImage();
             
-            // Position on opposite side
+            // Position on opposite side (nearly touching)
             if (contentEl) {
                 contentEl.style.transition = 'none';
                 contentEl.style.transform = 'translateX(' + (-direction * slideDistance) + 'px)';
                 contentEl.offsetHeight;
                 
                 // Stage 2: Slide in
-                contentEl.style.transition = 'transform 0.3s ease-out';
+                contentEl.style.transition = 'transform 0.15s ease-out';
                 contentEl.style.transform = 'translateX(0)';
             }
             
             setTimeout(function() {
                 isAnimating = false;
-            }, 300);
-        }, 300);
+            }, 150);
+        }, 150);
     }
     
     /**

@@ -2955,6 +2955,8 @@ const PostModule = (function() {
     }
     
     if (heroContainer && galleryImages.length > 1) {
+      var wrapClone = null;
+      
       heroContainer.addEventListener('touchstart', function(e) {
         if (e.touches.length !== 1) return;
         dragStartX = e.touches[0].clientX;
@@ -2964,6 +2966,35 @@ const PostModule = (function() {
         // Create adjacent slides on-demand when user starts touching
         ensureSlide(currentGalleryIndex - 1);
         ensureSlide(currentGalleryIndex + 1);
+        
+        // Pre-create wrap clones so they're ready when dragging
+        if (wrapClone && wrapClone.parentNode) {
+          wrapClone.parentNode.removeChild(wrapClone);
+          wrapClone = null;
+        }
+        
+        var len = galleryImages.length;
+        if (len > 1 && trackEl) {
+          // At last image - create clone of first at position len*100%
+          // At first image - create clone of last at position -100%
+          if (currentGalleryIndex === len - 1) {
+            ensureSlide(0);
+            wrapClone = document.createElement('img');
+            wrapClone.className = 'post-image-hero';
+            wrapClone.src = slides[0] ? slides[0].src : addImageClass(galleryImages[0], 'imagebox');
+            wrapClone.style.left = (len * 100) + '%';
+            wrapClone.alt = '';
+            trackEl.appendChild(wrapClone);
+          } else if (currentGalleryIndex === 0) {
+            ensureSlide(len - 1);
+            wrapClone = document.createElement('img');
+            wrapClone.className = 'post-image-hero';
+            wrapClone.src = slides[len - 1] ? slides[len - 1].src : addImageClass(galleryImages[len - 1], 'imagebox');
+            wrapClone.style.left = '-100%';
+            wrapClone.alt = '';
+            trackEl.appendChild(wrapClone);
+          }
+        }
       }, { passive: true });
       
       heroContainer.addEventListener('touchmove', function(e) {
@@ -3001,25 +3032,23 @@ const PostModule = (function() {
           var threshold = (heroContainer.clientWidth || 1) * 0.15;
           var len = galleryImages.length;
           var isWrap = false;
-          var wrapDirection = 0; // -1 = left, 1 = right
+          var wrapPos = 0;
           
           if (deltaX <= -threshold) {
             // Swipe left - next
             if (prevIdx === len - 1) {
-              // Wrap from last to first
               targetIdx = 0;
               isWrap = true;
-              wrapDirection = -1;
+              wrapPos = len * 100; // Clone is at this position
             } else {
               targetIdx = prevIdx + 1;
             }
           } else if (deltaX >= threshold) {
             // Swipe right - prev
             if (prevIdx === 0) {
-              // Wrap from first to last
               targetIdx = len - 1;
               isWrap = true;
-              wrapDirection = 1;
+              wrapPos = -100; // Clone is at this position
             } else {
               targetIdx = prevIdx - 1;
             }
@@ -3027,28 +3056,19 @@ const PostModule = (function() {
           
           lastDragTime = Date.now();
           
-          if (isWrap && trackEl) {
-            // Handle wrap-around with clone for smooth directional animation
-            ensureSlide(targetIdx);
-            var clonePos = wrapDirection === -1 ? (len * 100) : -100;
-            
-            // Create temporary clone at wrap position
-            var clone = document.createElement('img');
-            clone.className = 'post-image-hero';
-            clone.src = slides[targetIdx] ? slides[targetIdx].src : addImageClass(galleryImages[targetIdx], 'imagebox');
-            clone.style.left = clonePos + '%';
-            clone.alt = '';
-            trackEl.appendChild(clone);
-            
-            // Animate to clone position
+          if (isWrap && trackEl && wrapClone) {
+            // Animate to the pre-created clone position
             trackEl.style.transition = '';
-            trackEl.style.transform = 'translateX(' + (-clonePos) + '%)';
+            trackEl.style.transform = 'translateX(' + (-wrapPos) + '%)';
             
             setTimeout(function() {
               // Reset to actual position and remove clone
               trackEl.style.transition = 'none';
               trackEl.style.transform = 'translateX(-' + (targetIdx * 100) + '%)';
-              if (clone.parentNode) clone.parentNode.removeChild(clone);
+              if (wrapClone && wrapClone.parentNode) {
+                wrapClone.parentNode.removeChild(wrapClone);
+                wrapClone = null;
+              }
               trackEl.offsetHeight;
               trackEl.style.transition = '';
               
@@ -3061,14 +3081,29 @@ const PostModule = (function() {
               });
             }, 300);
           } else {
+            // Clean up clone if not wrapping
+            if (wrapClone && wrapClone.parentNode) {
+              wrapClone.parentNode.removeChild(wrapClone);
+              wrapClone = null;
+            }
             ensureSlide(targetIdx);
             show(targetIdx);
+          }
+        } else {
+          // No drag happened - clean up clone
+          if (wrapClone && wrapClone.parentNode) {
+            wrapClone.parentNode.removeChild(wrapClone);
+            wrapClone = null;
           }
         }
         resetDragState();
       }, { passive: true });
       
       heroContainer.addEventListener('touchcancel', function() {
+        if (wrapClone && wrapClone.parentNode) {
+          wrapClone.parentNode.removeChild(wrapClone);
+          wrapClone = null;
+        }
         if (dragActive) {
           show(currentGalleryIndex);
         }
