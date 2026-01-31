@@ -1127,7 +1127,7 @@ body {
   margin-top: 20px;
   max-width: 600px;
   width: 100%;
-  text-align: center;
+  text-align: left;
   color: #fff;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -1141,11 +1141,13 @@ body {
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 10px;
+  text-align: left;
 }
 
 .welcome-modal-message-content {
   font-size: 16px;
   line-height: 1.5;
+  text-align: left;
 }
 
 .welcome-modal-control-row {

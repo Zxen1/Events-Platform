@@ -282,6 +282,31 @@
               <label class="admin-settings-field-label" for="adminSupportEmail">Support Email</label>
               <input type="email" class="admin-settings-field-input" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="support@example.com" />
             </div>
+            <div class="admin-settings-field admin-settings-field--toggle row-class-1">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
+              <label class="component-big-switch">
+                <input type="checkbox" class="component-big-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
+                <span class="component-big-switch-slider"></span>
+              </label>
+            </div>
+            <div id="adminWelcomeLoadType" class="admin-settings-welcome-type-toggles row-class-1">
+              <label class="admin-settings-welcome-type-option">
+                <input type="radio" name="adminWelcomeLoadType" value="everyone" class="admin-settings-welcome-type-option-input" />
+                <span class="admin-settings-welcome-type-option-label">Everyone</span>
+              </label>
+              <label class="admin-settings-welcome-type-option">
+                <input type="radio" name="adminWelcomeLoadType" value="new_users" class="admin-settings-welcome-type-option-input" />
+                <span class="admin-settings-welcome-type-option-label">New Users</span>
+              </label>
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWelcomeTitle">Welcome Title</label>
+              <input type="text" class="admin-settings-field-input" id="adminWelcomeTitle" data-setting-key="welcome_title" autocomplete="off" placeholder="Enter welcome title" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWelcomeMessage">Welcome Message</label>
+              <textarea class="admin-settings-field-textarea" id="adminWelcomeMessage" data-setting-key="welcome_message" rows="4" placeholder="Enter welcome message (HTML supported)"></textarea>
+            </div>
             <div class="admin-settings-field admin-settings-field--imagepicker">
               <label class="admin-settings-field-label">Big Logo</label>
               <div id="adminBigLogoPicker" data-setting-key="big_logo"></div>
@@ -302,13 +327,6 @@
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
               <label class="component-big-switch">
                 <input type="checkbox" class="component-big-switch-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
-                <span class="component-big-switch-slider"></span>
-              </label>
-            </div>
-            <div class="admin-settings-field admin-settings-field--toggle row-class-1">
-              <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
                 <span class="component-big-switch-slider"></span>
               </label>
             </div>

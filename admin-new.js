@@ -3182,6 +3182,25 @@ const AdminModule = (function() {
             });
         });
         
+        // Attach to textareas
+        settingsContainer.querySelectorAll('.admin-settings-field-textarea[data-setting-key]').forEach(function(textarea) {
+            var key = textarea.dataset.settingKey;
+            var initialValue = settingsData[key] || '';
+            // Parse JSON string if needed (welcome_message is stored as JSON)
+            if (typeof initialValue === 'string' && initialValue.startsWith('"')) {
+                try {
+                    initialValue = JSON.parse(initialValue);
+                } catch (e) {}
+            }
+            textarea.value = initialValue;
+            
+            registerField('settings.' + key, initialValue);
+            
+            textarea.addEventListener('input', function() {
+                updateField('settings.' + key, textarea.value);
+            });
+        });
+        
         // Attach to toggle checkboxes
         settingsContainer.querySelectorAll('.component-big-switch-input[data-setting-key]').forEach(function(checkbox) {
             var key = checkbox.dataset.settingKey;
@@ -3222,6 +3241,25 @@ const AdminModule = (function() {
                 radio.addEventListener('change', function() {
                     if (radio.checked) {
                         updateField('settings.countdown_postcards_mode', radio.value);
+                    }
+                });
+            });
+        }
+        
+        // Welcome load type radio buttons
+        var welcomeLoadTypeRadios = settingsContainer.querySelectorAll('input[name="adminWelcomeLoadType"]');
+        if (welcomeLoadTypeRadios.length) {
+            var initialWelcomeLoadType = settingsData.welcome_load_type || 'everyone';
+            welcomeLoadTypeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialWelcomeLoadType);
+            });
+            
+            registerField('settings.welcome_load_type', initialWelcomeLoadType);
+            
+            welcomeLoadTypeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('settings.welcome_load_type', radio.value);
                     }
                 });
             });
@@ -4041,6 +4079,15 @@ const AdminModule = (function() {
             }
         });
         
+        // Reset textareas
+        settingsContainer.querySelectorAll('.admin-settings-field-textarea[data-setting-key]').forEach(function(textarea) {
+            var key = textarea.dataset.settingKey;
+            var entry = fieldRegistry['settings.' + key];
+            if (entry && entry.type === 'simple') {
+                textarea.value = entry.original || '';
+            }
+        });
+        
         // Reset toggles
         settingsContainer.querySelectorAll('.component-big-switch-input[data-setting-key]').forEach(function(checkbox) {
             var key = checkbox.dataset.settingKey;
@@ -4057,6 +4104,15 @@ const AdminModule = (function() {
             var countdownModeRadios = settingsContainer.querySelectorAll('input[name="adminCountdownPostcardsMode"]');
             countdownModeRadios.forEach(function(radio) {
                 radio.checked = (radio.value === countdownModeEntry.original);
+            });
+        }
+        
+        // Reset welcome load type radio buttons
+        var welcomeLoadTypeEntry = fieldRegistry['settings.welcome_load_type'];
+        if (welcomeLoadTypeEntry && welcomeLoadTypeEntry.type === 'simple') {
+            var welcomeLoadTypeRadios = settingsContainer.querySelectorAll('input[name="adminWelcomeLoadType"]');
+            welcomeLoadTypeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === welcomeLoadTypeEntry.original);
             });
         }
         

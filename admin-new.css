@@ -1195,6 +1195,29 @@
   white-space: nowrap;
 }
 
+/* Welcome Type Toggles */
+.admin-settings-welcome-type-toggles {
+  display: flex;
+  gap: 20px;
+}
+
+.admin-settings-welcome-type-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-settings-welcome-type-option-input {
+  cursor: pointer;
+}
+
+.admin-settings-welcome-type-option-label {
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .admin-spin-control-row {
   display: flex;
   align-items: center;
@@ -2470,6 +2493,29 @@
 
 .admin-settings-field-input--secret {
   -webkit-text-security: disc;
+}
+
+.admin-settings-field-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  caret-color: #fff;
+}
+
+.admin-settings-field-textarea:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.admin-settings-field-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Toggle Fields */
