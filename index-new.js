@@ -560,7 +560,26 @@ const App = (function() {
         
         // Show welcome modal if enabled
         if (settings.welcome_enabled && window.WelcomeModalComponent) {
-          WelcomeModalComponent.open();
+          // Check welcome_load_type: 'everyone' or 'new_users'
+          var showWelcome = true;
+          if (settings.welcome_load_type === 'new_users') {
+            // Only show to brand new visitors (never seen the site before)
+            try {
+              var hasVisited = localStorage.getItem('funmap-visited');
+              if (hasVisited) {
+                showWelcome = false;
+              }
+            } catch (e) {
+              // localStorage error - show welcome anyway
+            }
+          }
+          if (showWelcome) {
+            WelcomeModalComponent.open();
+            // Mark that they've visited (for new_users mode)
+            try {
+              localStorage.setItem('funmap-visited', '1');
+            } catch (e) {}
+          }
         }
       })
       .catch(function(err) {
