@@ -239,6 +239,15 @@ if ($debugMode) {
   <meta name="apple-mobile-web-app-title" content="FunMap" />
   <link rel="manifest" href="/site.webmanifest" />
   
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-K1FG6B44LF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-K1FG6B44LF');
+  </script>
+  
   <!-- Preload critical resources (browser starts downloading immediately) -->
   <link rel="preload" href="/gateway.php?action=get-admin-settings&lite=1" as="fetch" crossorigin>
   <link rel="preload" href="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.js" as="script">
