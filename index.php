@@ -61,26 +61,16 @@ try {
     if ($configPath) {
         require_once $configPath;
         
-        $pdo = null;
-        if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
-            $pdo = $GLOBALS['pdo'];
-        } elseif (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
-            $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', DB_HOST, DB_NAME);
-            $pdo = new PDO($dsn, DB_USER, defined('DB_PASS') ? DB_PASS : null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
-        }
-        
-        if ($pdo) {
+        // Config creates $mysqli connection
+        if (isset($mysqli) && $mysqli instanceof mysqli) {
             // First, get site-wide settings for fallbacks
-            $settingsStmt = $pdo->query("
+            $settingsResult = $mysqli->query("
                 SELECT setting_key, setting_value 
                 FROM admin_settings 
                 WHERE setting_key IN ('website_name', 'website_tagline', 'website_description', 'big_logo', 'og_default_image', 'folder_site_images')
             ");
             $bigLogoFilename = '';
-            while ($row = $settingsStmt->fetch()) {
+            while ($settingsResult && $row = $settingsResult->fetch_assoc()) {
                 switch ($row['setting_key']) {
                     case 'website_name':
                         $siteName = $row['setting_value'];
@@ -132,15 +122,17 @@ try {
             
             // If this is a post link, get post-specific data
             if ($postId > 0) {
-                $stmt = $pdo->prepare('
+                $stmt = $mysqli->prepare('
                     SELECT p.post_key, pmc.title, pmc.description, pmc.media_ids
                     FROM post_map_cards pmc
                     JOIN posts p ON p.id = pmc.post_id
                     WHERE p.id = ? AND p.deleted_at IS NULL AND p.visibility = "active"
                     LIMIT 1
                 ');
-                $stmt->execute([$postId]);
-                $post = $stmt->fetch();
+                $stmt->bind_param('i', $postId);
+                $stmt->execute();
+                $postResult = $stmt->get_result();
+                $post = $postResult ? $postResult->fetch_assoc() : null;
                 
                 if ($post) {
                     // Set title and description from post
@@ -159,13 +151,15 @@ try {
                         $firstMediaId = (int)trim($mediaIds[0]);
                         
                         if ($firstMediaId > 0) {
-                            $mediaStmt = $pdo->prepare('
+                            $mediaStmt = $mysqli->prepare('
                                 SELECT file_url FROM post_media 
                                 WHERE id = ? AND deleted_at IS NULL 
                                 LIMIT 1
                             ');
-                            $mediaStmt->execute([$firstMediaId]);
-                            $media = $mediaStmt->fetch();
+                            $mediaStmt->bind_param('i', $firstMediaId);
+                            $mediaStmt->execute();
+                            $mediaResult = $mediaStmt->get_result();
+                            $media = $mediaResult ? $mediaResult->fetch_assoc() : null;
                             
                             if ($media && !empty($media['file_url'])) {
                                 $ogImage = $media['file_url'];
@@ -192,7 +186,7 @@ if ($debugMode) {
     echo "Post ID: $postId\n";
     echo "Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A') . "\n";
     echo "Config Path Found: " . ($configPath ?? 'NONE') . "\n";
-    echo "PDO Connected: " . (isset($pdo) && $pdo ? 'YES' : 'NO') . "\n\n";
+    echo "MySQLi Connected: " . (isset($mysqli) && $mysqli instanceof mysqli ? 'YES' : 'NO') . "\n\n";
     echo "Site Name: $siteName\n";
     echo "Site Tagline: $siteTagline\n";
     echo "Site Description: " . substr($siteDescription, 0, 50) . "...\n";
