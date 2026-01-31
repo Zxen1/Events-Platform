@@ -5659,44 +5659,48 @@ const ImageModalComponent = (function() {
         trackEl.innerHTML = '';
         for (var i = 0; i < images.length; i++) {
             var slide = createSlideElement(i);
-            slide.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // Single image - close modal
-                if (!state || state.images.length <= 1) {
-                    setTimeout(close, 0);
-                    return;
-                }
-                
-                // Click to advance (always forward, with loop)
-                if (trackEl) {
-                    var len = state.images.length;
-                    var currentIdx = state.index;
-                    var nextIdx = (currentIdx + 1) % len;
+            // Click handler on the img element inside the slot (not the slot itself)
+            var imgEl = slide.querySelector('img');
+            if (imgEl) {
+                imgEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     
-                    if (currentIdx === len - 1) {
-                        // At last image - loop forward to first with wrap clone
-                        var clone = createSlideElement(0);
-                        clone.style.left = (len * 100) + '%';
-                        clone.dataset.index = 'wrap';
-                        trackEl.appendChild(clone);
-                        
-                        trackEl.style.transition = '';
-                        trackEl.style.transform = 'translateX(-' + (len * 100) + '%)';
-                        
-                        setTimeout(function() {
-                            trackEl.style.transition = 'none';
-                            trackEl.style.transform = 'translateX(0)';
-                            if (clone.parentNode) clone.parentNode.removeChild(clone);
-                            trackEl.offsetHeight;
-                            trackEl.style.transition = '';
-                            state.index = 0;
-                        }, 300);
-                    } else {
-                        show(nextIdx);
+                    // Single image - close modal
+                    if (!state || state.images.length <= 1) {
+                        setTimeout(close, 0);
+                        return;
                     }
-                }
-            });
+                    
+                    // Click to advance (always forward, with loop)
+                    if (trackEl) {
+                        var len = state.images.length;
+                        var currentIdx = state.index;
+                        var nextIdx = (currentIdx + 1) % len;
+                        
+                        if (currentIdx === len - 1) {
+                            // At last image - loop forward to first with wrap clone
+                            var clone = createSlideElement(0);
+                            clone.style.left = (len * 100) + '%';
+                            clone.dataset.index = 'wrap';
+                            trackEl.appendChild(clone);
+                            
+                            trackEl.style.transition = '';
+                            trackEl.style.transform = 'translateX(-' + (len * 100) + '%)';
+                            
+                            setTimeout(function() {
+                                trackEl.style.transition = 'none';
+                                trackEl.style.transform = 'translateX(0)';
+                                if (clone.parentNode) clone.parentNode.removeChild(clone);
+                                trackEl.offsetHeight;
+                                trackEl.style.transition = '';
+                                state.index = 0;
+                            }, 300);
+                        } else {
+                            show(nextIdx);
+                        }
+                    }
+                });
+            }
             trackEl.appendChild(slide);
             slides[i] = slide;
         }
