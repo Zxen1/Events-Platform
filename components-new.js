@@ -5434,10 +5434,6 @@ const ImageModalComponent = (function() {
             }
         });
         
-        // Block all events from passing through to elements behind
-        ['mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend'].forEach(function(evtName) {
-            modal.addEventListener(evtName, function(e) { e.stopPropagation(); });
-        });
         
         // Touch swipe support - track-based like ImageBox
         var dragStartX = null;
@@ -5654,10 +5650,33 @@ const ImageModalComponent = (function() {
             var slide = createSlideElement(i);
             slide.addEventListener('click', function(e) {
                 e.stopPropagation();
-                // Click to advance
-                if (state && state.images.length > 1) {
-                    var nextIdx = (state.index + 1) % state.images.length;
-                    show(nextIdx);
+                // Click to advance (always forward, with loop)
+                if (state && state.images.length > 1 && trackEl) {
+                    var len = state.images.length;
+                    var currentIdx = state.index;
+                    var nextIdx = (currentIdx + 1) % len;
+                    
+                    if (currentIdx === len - 1) {
+                        // At last image - loop forward to first with wrap clone
+                        var clone = createSlideElement(0);
+                        clone.style.left = (len * 100) + '%';
+                        clone.dataset.index = 'wrap';
+                        trackEl.appendChild(clone);
+                        
+                        trackEl.style.transition = '';
+                        trackEl.style.transform = 'translateX(-' + (len * 100) + '%)';
+                        
+                        setTimeout(function() {
+                            trackEl.style.transition = 'none';
+                            trackEl.style.transform = 'translateX(0)';
+                            if (clone.parentNode) clone.parentNode.removeChild(clone);
+                            trackEl.offsetHeight;
+                            trackEl.style.transition = '';
+                            state.index = 0;
+                        }, 300);
+                    } else {
+                        show(nextIdx);
+                    }
                 }
             });
             trackEl.appendChild(slide);
@@ -5667,6 +5686,7 @@ const ImageModalComponent = (function() {
         moveTo(startIndex, { instant: true });
         modal.classList.add('show');
         modal.removeAttribute('aria-hidden');
+        document.body.classList.add('image-modal-open');
         isOpen = true;
     }
     
@@ -5680,6 +5700,7 @@ const ImageModalComponent = (function() {
         }
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('image-modal-open');
         if (trackEl) trackEl.innerHTML = '';
         slides = [];
         state = null;

@@ -3123,6 +3123,11 @@
    Full-screen overlay for viewing images
    ============================================================================ */
 
+/* Disable all interaction behind modal when open */
+body.image-modal-open > *:not(.image-modal) {
+  pointer-events: none;
+}
+
 .image-modal {
   position: fixed;
   top: 0;
@@ -3130,13 +3135,16 @@
   right: 0;
   bottom: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   background: var(--image-panel-bg, rgba(0, 0, 0, 0.85));
   z-index: var(--layer-image-modal, 88);
   display: none;
   overflow: hidden;
   cursor: pointer;
   pointer-events: none;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .image-modal.show {
@@ -3145,11 +3153,15 @@
 }
 
 .image-modal-track {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   will-change: transform;
+  pointer-events: auto;
+  touch-action: pan-x;
 }
 
 .image-modal-slot {
@@ -3160,6 +3172,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  pointer-events: auto;
 }
 
 .image-modal-image {
