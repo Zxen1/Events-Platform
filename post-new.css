@@ -1163,13 +1163,11 @@
 .post-images-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  width: calc(100% - 20px);
-  max-width: calc(100% - 20px);
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
   flex: 1 1 auto;
   box-sizing: border-box;
-  margin-left: auto;
-  margin-right: auto;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   align-self: stretch;
 }
@@ -1191,6 +1189,7 @@
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0);
   position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
 }
 
 .post-hero--clickable {
@@ -1270,7 +1269,7 @@
 }
 
 .post-image-thumb--active {
-  border-color: var(--gold);
+  border-color: var(--blue-500);
 }
 
 /* ============================================================================
