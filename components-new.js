@@ -5709,7 +5709,6 @@ const ImageModalComponent = (function() {
     return {
         open: open,
         close: close,
-        advance: advance,
         isVisible: isVisible,
         getElement: getElement
     };
