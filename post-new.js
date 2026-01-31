@@ -2817,16 +2817,63 @@ const PostModule = (function() {
     // Track current gallery index
     var currentGalleryIndex = 0;
     
-    thumbnails.forEach(function(thumb, idx) {
-      thumb.addEventListener('click', function() {
-        // Use stored full URL from data attribute, apply imagebox class for hero display
-        var fullUrl = thumb.dataset.fullUrl || '';
+    // Helper to navigate to a specific image index with animation
+    var trackEl = wrap.querySelector('.post-track-hero');
+    function navigateToImageAnimated(index, fromIndex) {
+      if (index === fromIndex) return;
+      if (index < 0) index = galleryImages.length - 1;
+      if (index >= galleryImages.length) index = 0;
+      
+      var fullUrl = galleryImages[index];
+      if (!fullUrl || !heroImg || !trackEl) {
+        // Fallback: just swap image
         if (fullUrl && heroImg) {
           heroImg.src = addImageClass(fullUrl, 'imagebox');
-          // Update active state
-          thumbnails.forEach(function(t) { t.classList.remove('post-image-thumb--active'); });
-          thumb.classList.add('post-image-thumb--active');
-          currentGalleryIndex = idx;
+          currentGalleryIndex = index;
+          thumbnails.forEach(function(t, i) {
+            t.classList.toggle('post-image-thumb--active', i === index);
+          });
+        }
+        return;
+      }
+      
+      // Determine direction based on index comparison
+      var direction = index > fromIndex ? 'left' : 'right';
+      
+      // Animate slide out
+      var slideOutX = direction === 'left' ? '-100%' : '100%';
+      trackEl.style.transition = 'transform 0.25s ease-out';
+      trackEl.style.transform = 'translateX(' + slideOutX + ')';
+      
+      setTimeout(function() {
+        // Change image while off-screen
+        heroImg.src = addImageClass(fullUrl, 'imagebox');
+        currentGalleryIndex = index;
+        
+        // Position on opposite side
+        var slideInX = direction === 'left' ? '100%' : '-100%';
+        trackEl.style.transition = 'none';
+        trackEl.style.transform = 'translateX(' + slideInX + ')';
+        
+        // Force reflow
+        trackEl.offsetHeight;
+        
+        // Animate slide in
+        trackEl.style.transition = 'transform 0.25s ease-out';
+        trackEl.style.transform = 'translateX(0)';
+        
+        // Update thumbnail active state
+        thumbnails.forEach(function(t, i) {
+          t.classList.toggle('post-image-thumb--active', i === index);
+        });
+      }, 250);
+    }
+    
+    thumbnails.forEach(function(thumb, idx) {
+      thumb.addEventListener('click', function() {
+        var fullUrl = thumb.dataset.fullUrl || '';
+        if (fullUrl && heroImg) {
+          navigateToImageAnimated(idx, currentGalleryIndex);
         }
       });
     });
@@ -2857,73 +2904,99 @@ const PostModule = (function() {
       });
     }
     
-    // Touch swipe support for hero image gallery
+    // Touch swipe support for hero image gallery with visual sliding
     if (heroContainer && galleryImages.length > 1) {
       var touchStartX = 0;
       var touchStartY = 0;
-      var touchEndX = 0;
-      var touchEndY = 0;
-      var isSwiping = false;
-      var swipeThreshold = 50; // minimum pixels to register as swipe
+      var currentTranslate = 0;
+      var isDragging = false;
+      var isHorizontalSwipe = false;
+      var swipeThreshold = 50;
       
-      // Helper to navigate to a specific image index
-      function navigateToImage(index) {
-        if (index < 0) index = galleryImages.length - 1;
-        if (index >= galleryImages.length) index = 0;
-        
-        currentGalleryIndex = index;
-        var fullUrl = galleryImages[index];
-        if (fullUrl && heroImg) {
-          heroImg.src = addImageClass(fullUrl, 'imagebox');
-          // Update thumbnail active state
-          thumbnails.forEach(function(t, i) {
-            if (i === index) {
-              t.classList.add('post-image-thumb--active');
-            } else {
-              t.classList.remove('post-image-thumb--active');
-            }
-          });
-        }
+      // Reset position without animation
+      function resetPosition() {
+        if (!trackEl) return;
+        trackEl.style.transition = 'transform 0.2s ease-out';
+        trackEl.style.transform = 'translateX(0)';
       }
       
       heroContainer.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-        isSwiping = false;
+        if (!trackEl) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        currentTranslate = 0;
+        isDragging = true;
+        isHorizontalSwipe = false;
+        trackEl.style.transition = 'none';
       }, { passive: true });
       
       heroContainer.addEventListener('touchmove', function(e) {
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;
+        if (!isDragging || !trackEl) return;
         
-        var deltaX = Math.abs(touchEndX - touchStartX);
-        var deltaY = Math.abs(touchEndY - touchStartY);
+        var touchX = e.touches[0].clientX;
+        var touchY = e.touches[0].clientY;
+        var deltaX = touchX - touchStartX;
+        var deltaY = touchY - touchStartY;
         
-        // If horizontal movement is greater than vertical, it's likely a swipe
-        if (deltaX > deltaY && deltaX > 10) {
-          isSwiping = true;
-        }
-      }, { passive: true });
-      
-      heroContainer.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;
-        
-        var deltaX = touchEndX - touchStartX;
-        var deltaY = Math.abs(touchEndY - touchStartY);
-        
-        // Only process if horizontal swipe is dominant and exceeds threshold
-        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > deltaY) {
-          e.preventDefault();
-          if (deltaX < 0) {
-            // Swipe left - next image
-            navigateToImage(currentGalleryIndex + 1);
-          } else {
-            // Swipe right - previous image
-            navigateToImage(currentGalleryIndex - 1);
+        // Determine if this is a horizontal swipe (only check once)
+        if (!isHorizontalSwipe && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+          isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+          if (!isHorizontalSwipe) {
+            isDragging = false;
+            return;
           }
         }
+        
+        if (isHorizontalSwipe) {
+          e.preventDefault();
+          // Add resistance at edges
+          var resistance = 0.3;
+          var isAtStart = currentGalleryIndex === 0 && deltaX > 0;
+          var isAtEnd = currentGalleryIndex === galleryImages.length - 1 && deltaX < 0;
+          
+          if (isAtStart || isAtEnd) {
+            currentTranslate = deltaX * resistance;
+          } else {
+            currentTranslate = deltaX;
+          }
+          
+          trackEl.style.transform = 'translateX(' + currentTranslate + 'px)';
+        }
       }, { passive: false });
+      
+      heroContainer.addEventListener('touchend', function(e) {
+        if (!isDragging || !trackEl) return;
+        isDragging = false;
+        
+        var deltaX = currentTranslate;
+        
+        if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe) {
+          var fromIndex = currentGalleryIndex;
+          if (deltaX < 0) {
+            // Swipe left - next image
+            var nextIndex = currentGalleryIndex + 1;
+            if (nextIndex >= galleryImages.length) nextIndex = 0;
+            navigateToImageAnimated(nextIndex, fromIndex);
+          } else {
+            // Swipe right - previous image
+            var prevIndex = currentGalleryIndex - 1;
+            if (prevIndex < 0) prevIndex = galleryImages.length - 1;
+            navigateToImageAnimated(prevIndex, fromIndex);
+          }
+        } else {
+          // Snap back
+          resetPosition();
+        }
+        
+        currentTranslate = 0;
+        isHorizontalSwipe = false;
+      }, { passive: true });
+      
+      heroContainer.addEventListener('touchcancel', function() {
+        isDragging = false;
+        isHorizontalSwipe = false;
+        resetPosition();
+      }, { passive: true });
     }
 
     /* ........................................................................

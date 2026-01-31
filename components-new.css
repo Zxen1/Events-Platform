@@ -3152,6 +3152,7 @@
   max-width: 95vw;
   max-height: 95vh;
   cursor: default;
+  will-change: transform;
 }
 
 .image-modal-image {
