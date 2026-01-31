@@ -5653,8 +5653,15 @@ const ImageModalComponent = (function() {
             var slide = createSlideElement(i);
             slide.addEventListener('click', function(e) {
                 e.stopPropagation();
+                
+                // Single image - close modal
+                if (!state || state.images.length <= 1) {
+                    setTimeout(close, 0);
+                    return;
+                }
+                
                 // Click to advance (always forward, with loop)
-                if (state && state.images.length > 1 && trackEl) {
+                if (trackEl) {
                     var len = state.images.length;
                     var currentIdx = state.index;
                     var nextIdx = (currentIdx + 1) % len;
