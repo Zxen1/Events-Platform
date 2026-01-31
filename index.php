@@ -21,7 +21,22 @@ $ogImage = '';
 $ogUrl = 'https://funmap.com';
 
 // Check if this is a post link
-$postId = isset($_GET['post']) ? (int)$_GET['post'] : 0;
+// Supports both ?post=123 and /post/123-slug URL formats
+$postId = 0;
+
+// First check query string: ?post=123 or ?post=123-slug
+if (isset($_GET['post'])) {
+    $postId = (int)$_GET['post'];
+}
+
+// Also check URL path: /post/123-slug
+if ($postId === 0 && isset($_SERVER['REQUEST_URI'])) {
+    $uri = $_SERVER['REQUEST_URI'];
+    // Match /post/123 or /post/123-anything
+    if (preg_match('#/post/(\d+)#', $uri, $matches)) {
+        $postId = (int)$matches[1];
+    }
+}
 
 try {
     // Find database config
@@ -114,7 +129,7 @@ try {
             // If this is a post link, get post-specific data
             if ($postId > 0) {
                 $stmt = $pdo->prepare('
-                    SELECT pmc.title, pmc.description, pmc.media_ids
+                    SELECT p.post_key, pmc.title, pmc.description, pmc.media_ids
                     FROM post_map_cards pmc
                     JOIN posts p ON p.id = pmc.post_id
                     WHERE p.id = ? AND p.deleted_at IS NULL AND p.visibility = "active"
@@ -130,7 +145,9 @@ try {
                         $desc = strip_tags($post['description']);
                         $ogDescription = htmlspecialchars(mb_substr($desc, 0, 200), ENT_QUOTES, 'UTF-8');
                     }
-                    $ogUrl = 'https://funmap.com/?post=' . $postId;
+                    // Use pretty URL format with post_key
+                    $postKey = !empty($post['post_key']) ? $post['post_key'] : $postId;
+                    $ogUrl = 'https://funmap.com/post/' . $postKey;
                     
                     // Get first image from media_ids
                     if (!empty($post['media_ids'])) {
