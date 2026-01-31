@@ -2819,8 +2819,10 @@ const PostModule = (function() {
     
     // Helper to navigate to a specific image index with animation
     var trackEl = wrap.querySelector('.post-track-hero');
+    var isAnimating = false;
+    
     function navigateToImageAnimated(index, fromIndex) {
-      if (index === fromIndex) return;
+      if (index === fromIndex || isAnimating) return;
       if (index < 0) index = galleryImages.length - 1;
       if (index >= galleryImages.length) index = 0;
       
@@ -2837,36 +2839,67 @@ const PostModule = (function() {
         return;
       }
       
+      isAnimating = true;
+      
       // Determine direction based on index comparison
       var direction = index > fromIndex ? 'left' : 'right';
       
-      // Animate slide out
-      var slideOutX = direction === 'left' ? '-100%' : '100%';
-      trackEl.style.transition = 'transform 0.25s ease-out';
-      trackEl.style.transform = 'translateX(' + slideOutX + ')';
+      // Create temporary image for the incoming slide
+      var nextImg = document.createElement('img');
+      nextImg.className = 'post-image-hero post-image-hero--sliding';
+      nextImg.style.position = 'absolute';
+      nextImg.style.top = '0';
+      nextImg.style.left = direction === 'left' ? '100%' : '-100%';
+      nextImg.style.width = '100%';
+      nextImg.style.height = '100%';
+      nextImg.style.objectFit = 'cover';
+      nextImg.alt = '';
       
-      setTimeout(function() {
-        // Change image while off-screen
-        heroImg.src = addImageClass(fullUrl, 'imagebox');
-        currentGalleryIndex = index;
-        
-        // Position on opposite side
-        var slideInX = direction === 'left' ? '100%' : '-100%';
-        trackEl.style.transition = 'none';
-        trackEl.style.transform = 'translateX(' + slideInX + ')';
+      // Preload the image
+      var preloader = new Image();
+      preloader.onload = function() {
+        nextImg.src = preloader.src;
+        trackEl.appendChild(nextImg);
         
         // Force reflow
         trackEl.offsetHeight;
         
-        // Animate slide in
-        trackEl.style.transition = 'transform 0.25s ease-out';
-        trackEl.style.transform = 'translateX(0)';
+        // Animate both images together
+        trackEl.style.transition = 'transform 0.3s ease-out';
+        trackEl.style.transform = 'translateX(' + (direction === 'left' ? '-100%' : '100%') + ')';
         
-        // Update thumbnail active state
+        setTimeout(function() {
+          // Update main image and clean up
+          heroImg.src = nextImg.src;
+          currentGalleryIndex = index;
+          
+          // Remove temp image and reset transform
+          trackEl.style.transition = 'none';
+          trackEl.style.transform = 'translateX(0)';
+          if (nextImg.parentNode) {
+            nextImg.parentNode.removeChild(nextImg);
+          }
+          
+          // Update thumbnail active state
+          thumbnails.forEach(function(t, i) {
+            t.classList.toggle('post-image-thumb--active', i === index);
+          });
+          
+          isAnimating = false;
+        }, 300);
+      };
+      
+      preloader.onerror = function() {
+        // If preload fails, just swap without animation
+        heroImg.src = addImageClass(fullUrl, 'imagebox');
+        currentGalleryIndex = index;
         thumbnails.forEach(function(t, i) {
           t.classList.toggle('post-image-thumb--active', i === index);
         });
-      }, 250);
+        isAnimating = false;
+      };
+      
+      preloader.src = addImageClass(fullUrl, 'imagebox');
     }
     
     thumbnails.forEach(function(thumb, idx) {
@@ -2970,19 +3003,56 @@ const PostModule = (function() {
         
         var deltaX = currentTranslate;
         
-        if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe) {
-          var fromIndex = currentGalleryIndex;
-          if (deltaX < 0) {
-            // Swipe left - next image
-            var nextIndex = currentGalleryIndex + 1;
-            if (nextIndex >= galleryImages.length) nextIndex = 0;
-            navigateToImageAnimated(nextIndex, fromIndex);
-          } else {
-            // Swipe right - previous image
-            var prevIndex = currentGalleryIndex - 1;
-            if (prevIndex < 0) prevIndex = galleryImages.length - 1;
-            navigateToImageAnimated(prevIndex, fromIndex);
-          }
+        if (Math.abs(deltaX) > swipeThreshold && isHorizontalSwipe && !isAnimating) {
+          isAnimating = true;
+          var direction = deltaX < 0 ? 'left' : 'right';
+          var nextIndex = deltaX < 0 
+            ? (currentGalleryIndex + 1) % galleryImages.length
+            : (currentGalleryIndex - 1 + galleryImages.length) % galleryImages.length;
+          var fullUrl = galleryImages[nextIndex];
+          
+          // Create incoming image positioned at edge
+          var nextImg = document.createElement('img');
+          nextImg.className = 'post-image-hero post-image-hero--sliding';
+          nextImg.style.position = 'absolute';
+          nextImg.style.top = '0';
+          nextImg.style.left = direction === 'left' ? '100%' : '-100%';
+          nextImg.style.width = '100%';
+          nextImg.style.height = '100%';
+          nextImg.style.objectFit = 'cover';
+          nextImg.alt = '';
+          
+          // Preload and animate
+          var preloader = new Image();
+          preloader.onload = function() {
+            nextImg.src = preloader.src;
+            trackEl.appendChild(nextImg);
+            
+            // Continue animation from current position to full slide
+            trackEl.style.transition = 'transform 0.2s ease-out';
+            trackEl.style.transform = 'translateX(' + (direction === 'left' ? '-100%' : '100%') + ')';
+            
+            setTimeout(function() {
+              heroImg.src = nextImg.src;
+              currentGalleryIndex = nextIndex;
+              
+              trackEl.style.transition = 'none';
+              trackEl.style.transform = 'translateX(0)';
+              if (nextImg.parentNode) nextImg.parentNode.removeChild(nextImg);
+              
+              thumbnails.forEach(function(t, i) {
+                t.classList.toggle('post-image-thumb--active', i === nextIndex);
+              });
+              isAnimating = false;
+            }, 200);
+          };
+          
+          preloader.onerror = function() {
+            resetPosition();
+            isAnimating = false;
+          };
+          
+          preloader.src = addImageClass(fullUrl, 'imagebox');
         } else {
           // Snap back
           resetPosition();
