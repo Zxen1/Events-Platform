@@ -169,7 +169,7 @@
   max-width: 420px;
   margin: 0;
   padding: 2px 4px;
-  background: var(--blue-500);
+  background: var(--blue-900);
   color: #fff;
 }
 .filter-panel-summary--active {

@@ -548,9 +548,14 @@ const PostModule = (function() {
 
     // Update post panel summary background when filters are active
     App.on('filter:activeState', function(data) {
+      var isActive = !!(data && data.active);
       var summaryEl = postListEl ? postListEl.querySelector('.post-panel-summary') : null;
       if (summaryEl) {
-        summaryEl.classList.toggle('post-panel-summary--active', !!(data && data.active));
+        summaryEl.classList.toggle('post-panel-summary--active', isActive);
+      }
+      var emptySummaryEl = postListEl ? postListEl.querySelector('.post-panel-empty-summary') : null;
+      if (emptySummaryEl) {
+        emptySummaryEl.classList.toggle('post-panel-empty-summary--active', isActive);
       }
     });
 
@@ -3672,6 +3677,36 @@ const PostModule = (function() {
 
     var summaryCopy = document.createElement('div');
     summaryCopy.className = 'msg--summary post-panel-empty-summary';
+    // Check if filters are active (read from localStorage)
+    try {
+      var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
+      var hasActiveFilter = !!(
+        (savedFilters.keyword && savedFilters.keyword.trim()) ||
+        (savedFilters.minPrice && savedFilters.minPrice.trim()) ||
+        (savedFilters.maxPrice && savedFilters.maxPrice.trim()) ||
+        savedFilters.dateStart || savedFilters.dateEnd ||
+        savedFilters.expired
+      );
+      // Check categories
+      if (!hasActiveFilter && savedFilters.categories) {
+        var cats = savedFilters.categories;
+        var catKeys = Object.keys(cats);
+        for (var ci = 0; ci < catKeys.length; ci++) {
+          var cat = cats[catKeys[ci]];
+          if (cat && cat.enabled === false) { hasActiveFilter = true; break; }
+          if (cat && cat.subs) {
+            var subKeys = Object.keys(cat.subs);
+            for (var si = 0; si < subKeys.length; si++) {
+              if (cat.subs[subKeys[si]] === false) { hasActiveFilter = true; break; }
+            }
+          }
+          if (hasActiveFilter) break;
+        }
+      }
+      if (hasActiveFilter) {
+        summaryCopy.classList.add('post-panel-empty-summary--active');
+      }
+    } catch (_e) {}
     summaryCopy.textContent = getFilterSummaryText();
     wrap.appendChild(summaryCopy);
 

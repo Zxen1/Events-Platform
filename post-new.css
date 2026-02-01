@@ -381,15 +381,17 @@
 }
 
 /* Post panel summary (count at top) - matches filter-panel-summary */
-.post-panel-summary {
+.post-panel-summary,
+.post-panel-empty-summary {
   font-size: 12px;
   width: 100%;
   margin: 0;
   padding: 2px 4px;
-  background: var(--blue-500);
+  background: var(--blue-900);
   color: #fff;
 }
-.post-panel-summary--active {
+.post-panel-summary--active,
+.post-panel-empty-summary--active {
   background: var(--filter-active-color);
 }
 
