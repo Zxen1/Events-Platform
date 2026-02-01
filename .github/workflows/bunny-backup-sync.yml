@@ -55,6 +55,7 @@ jobs:
               --transfers 8 \
               --verbose \
               --ignore-errors \
+              --inplace \
               --dry-run \
               2>&1 | tee -a "$LOG_FILE" || true
           else
@@ -62,6 +63,7 @@ jobs:
               --transfers 8 \
               --verbose \
               --ignore-errors \
+              --inplace \
               2>&1 | tee -a "$LOG_FILE" || true
           fi
           
