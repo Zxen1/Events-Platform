@@ -1003,6 +1003,7 @@ const FilterModule = (function() {
         // Also check if any category or subcategory is toggled OFF
         var hasCategoryOff = false;
         var catState = getCategoryState();
+        console.log('[Filter] updateResetBtn catState:', catState);
         if (catState && typeof catState === 'object') {
             var catKeys = Object.keys(catState);
             for (var i = 0; i < catKeys.length; i++) {
@@ -1019,6 +1020,7 @@ const FilterModule = (function() {
         }
         
         var active = hasKeyword || hasPrice || hasDate || hasExpired || hasCategoryOff;
+        console.log('[Filter] updateResetBtn hasCategoryOff:', hasCategoryOff, 'active:', active);
         setResetFiltersActive(active);
     }
     
@@ -1445,7 +1447,7 @@ const FilterModule = (function() {
                                 } catch (_eSubOff) {}
                                 applyFilters();
                                 updateResetCategoriesButton();
-                                updateClearButtons();
+                                updateResetBtn(); // Emit filter:activeState for header icon
                             }
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1500,7 +1502,7 @@ const FilterModule = (function() {
                         }
                         applyFilters();
                         updateResetCategoriesButton();
-                        updateClearButtons();
+                        updateResetBtn(); // Emit filter:activeState for header icon
                     });
                     
                     // Click anywhere except toggle area expands/collapses
