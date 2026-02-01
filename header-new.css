@@ -174,7 +174,7 @@
 .header-bar .header-modeswitch-recent[aria-pressed="true"],
 .header-bar .header-modeswitch-recent.button--active,
 .header-bar .header-modeswitch-recent.header-modeswitch-button--active {
-  color: #7c3aed;
+  color: #a78bfa;
 }
 .header-modeswitch > .button-class-1[aria-disabled="true"] {
   opacity: 0.4;
