@@ -165,9 +165,9 @@
 
 .filter-panel-summary {
   font-size: 12px;
-  width: 100%;
-  max-width: 420px;
-  margin: 0;
+  width: calc(100% + 20px);
+  max-width: none;
+  margin: 0 -10px;
   padding: 2px 0;
   background: var(--blue-900);
   color: #fff;
