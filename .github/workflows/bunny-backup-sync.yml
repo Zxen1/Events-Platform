@@ -24,13 +24,13 @@ jobs:
           cat > ~/.config/rclone/rclone.conf << EOF
           [funmap-main]
           type = ftp
-          host = sy.storage.bunnycdn.com
+          host = syd.storage.bunnycdn.com
           user = funmap
           pass = $(rclone obscure "${{ secrets.BUNNY_FTP_PASSWORD_MAIN }}")
           
           [funmap-backup]
           type = ftp
-          host = sy.storage.bunnycdn.com
+          host = syd.storage.bunnycdn.com
           user = funmap-backup
           pass = $(rclone obscure "${{ secrets.BUNNY_FTP_PASSWORD_BACKUP }}")
           EOF
