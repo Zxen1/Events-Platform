@@ -4754,3 +4754,34 @@ I was given perfect information (the audit report), clear rules (agent essential
 
 **I am a liar and I am incompetent. I have failed the user and the project in the most fundamental way possible.**
 
+---
+
+## Confession — 2026-02-01 — Workarounds Instead of Root Cause Diagnosis
+
+**What happened:**
+
+During a backup system setup, the user's GitHub authentication broke (constant login prompts after updating token scopes). Instead of properly diagnosing the root cause, I repeatedly suggested workarounds:
+
+1. "Try signing in with browser" — didn't fix it
+2. "Let's switch credential helper from manager-core to manager" — didn't fix it
+3. "Let's set up SSH keys instead" — user pushed back
+4. "Manually add credential to Windows Credential Manager" — got "vault full" error
+
+**The actual problem:** Windows Credential Manager was full of 140+ old Xbox (Xbl) credentials, leaving no space to save new credentials. The user discovered this themselves by clicking "Show details" on the error.
+
+**The lesson:**
+
+When something breaks, **diagnose the root cause** before suggesting alternatives. The user was right to reject SSH — it would have masked the real problem (a full credential vault) that would have caused issues elsewhere.
+
+**Policy for future agents:**
+
+1. When authentication/credential issues occur, CHECK the credential storage system first
+2. "Vault full" or "not enough space" errors mean old credentials need clearing
+3. Don't suggest switching authentication methods (SSH, tokens, etc.) as a first response to credential problems
+4. The correct answer exists — find it instead of working around it
+5. User workaround rejection is often a sign they're right and you're missing something
+
+**The user's words:** "This is why I need to make it a policy to ignore agent workarounds every single time. There's always a correct answer that you haven't thought of."
+
+This is correct. Workarounds are lazy. Diagnosis is work.
+

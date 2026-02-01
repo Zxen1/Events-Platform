@@ -27,6 +27,7 @@ Never use `!important` in CSS.
 
 ### No Workarounds
 Never create workarounds or hacks. Find the proper solution or ask the user.
+When something breaks, diagnose the root cause first. Don't suggest alternative methods until the actual problem is identified.
 
 ### No Guessing
 Never guess how something works. Search existing code first. If unsure, ask.
