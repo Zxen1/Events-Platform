@@ -361,6 +361,10 @@
   background-color: transparent;
   border-bottom: 1px solid #7c3aed;
 }
+/* Remove bottom gap inside recent cards (margin-bottom on children creates gap above border) */
+.recent-panel-content .recent-card > * {
+  margin-bottom: 0;
+}
 
 .recent-panel-content .recent-card:last-child {
   border-bottom: none;
