@@ -16,6 +16,7 @@
    - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - IMAGE MODAL         - Full-screen lightbox for images
+   - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    
    ============================================================================ */
 
@@ -2979,17 +2980,23 @@
 
 
 /* ============================================================================
-   LOCATION WALLPAPER (Member location containers)
+   LOCATION WALLPAPER
+   
+   Animated map wallpaper background for location displays.
+   Used in: Post panel, Recent panel, My Posts panel, Member forms.
+   
+   Decoupled from form-specific classes - uses generic component classes.
+   Width is dynamic via --locationwallpaper-width CSS variable (set by JS).
    ============================================================================ */
 
-.member-postform-location-content--locationwallpaper {
+.component-locationwallpaper-content--active {
     position: relative;
     /* When wallpaper is used, ensure short containers still have enough vertical area. */
     min-height: var(--locationwallpaper-minh, 0px);
 }
 
 /* Lift normal content above wallpaper without impacting menu z-index logic */
-.member-postform-location-content--locationwallpaper > :not(.component-locationwallpaper) {
+.component-locationwallpaper-content--active > :not(.component-locationwallpaper) {
     position: relative;
 }
 
@@ -3019,7 +3026,7 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
+    width: var(--locationwallpaper-width, 600px);
     height: 2500px;
     opacity: 0;
     transition: opacity 1.5s ease;
@@ -3032,7 +3039,7 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
+    width: var(--locationwallpaper-width, 600px);
     height: 2500px;
     opacity: 0;
     transition: opacity 1.5s ease;
@@ -3062,6 +3069,9 @@
 /* ----------------------------------------------------------------------------
    BASIC MODE - 4 pan images (N/E/S/W) with class-toggled crossfade
    Lightweight alternative to orbit mode for slower PCs
+   
+   Images are centered and pan 50px in each direction (100px total).
+   This ensures coverage regardless of container width.
    ---------------------------------------------------------------------------- */
 
 .component-locationwallpaper-basic-container {
@@ -3075,11 +3085,12 @@
 .component-locationwallpaper-basic-image {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--locationwallpaper-width, 600px);
     height: 2500px;
     object-fit: cover;
-    object-position: left top;
+    object-position: center top;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
     z-index: 1;
@@ -3097,20 +3108,20 @@
     animation-play-state: paused;
 }
 
-/* Pan: left edge starts at container left, moves 100px leftward */
+/* Pan: centered image moves 50px right to 50px left (100px total travel) */
 @keyframes locationwallpaper-basic-pan {
     0% {
-        transform: translateX(0);
+        transform: translateX(calc(-50% + 50px));
     }
     100% {
-        transform: translateX(-100px);
+        transform: translateX(calc(-50% - 50px));
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .component-locationwallpaper-basic-image {
         transition: none;
-        transform: translateX(-50px);
+        transform: translateX(-50%);
     }
     .component-locationwallpaper-basic-image--active {
         animation: none;

@@ -18,6 +18,7 @@
    - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - AVATAR CROPPER      - Standalone reusable avatar cropper (destructive, outputs blob)
+   - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    
    ============================================================================ */
 
@@ -8459,8 +8460,11 @@ const LocationWallpaperComponent = (function() {
     function readLatLng(containerEl) {
         if (!containerEl) return null;
         try {
-            var latEl = containerEl.querySelector('.fieldset-lat');
-            var lngEl = containerEl.querySelector('.fieldset-lng');
+            // Use generic component classes (also checks legacy fieldset classes for backwards compat)
+            var latEl = containerEl.querySelector('.component-locationwallpaper-lat') ||
+                        containerEl.querySelector('.fieldset-lat');
+            var lngEl = containerEl.querySelector('.component-locationwallpaper-lng') ||
+                        containerEl.querySelector('.fieldset-lng');
             var lat = latEl ? safeNum(latEl.value) : null;
             var lng = lngEl ? safeNum(lngEl.value) : null;
             if (lat === null || lng === null) return null;
@@ -8498,8 +8502,10 @@ const LocationWallpaperComponent = (function() {
     function attachToLocationContainer(locationContainerEl) {
         if (!locationContainerEl) throw new Error('[LocationWallpaperComponent] locationContainerEl is required.');
 
-        var contentEl = locationContainerEl.querySelector('.member-postform-location-content');
-        if (!contentEl) throw new Error('[LocationWallpaperComponent] .member-postform-location-content not found.');
+        // Use generic component class (also checks legacy member form class for backwards compat)
+        var contentEl = locationContainerEl.querySelector('.component-locationwallpaper-content') ||
+                        locationContainerEl.querySelector('.member-postform-location-content');
+        if (!contentEl) throw new Error('[LocationWallpaperComponent] .component-locationwallpaper-content not found.');
 
         // Root sits behind content; pointer-events none (wallpaper only).
         var root = document.createElement('div');
@@ -8534,7 +8540,7 @@ const LocationWallpaperComponent = (function() {
 
         // Insert as first child so z-index rules can lift everything else above it.
         contentEl.insertBefore(root, contentEl.firstChild || null);
-        contentEl.classList.add('member-postform-location-content--locationwallpaper');
+        contentEl.classList.add('component-locationwallpaper-content--active');
 
         var st = {
             map: null,
@@ -8704,6 +8710,7 @@ const LocationWallpaperComponent = (function() {
                 if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
                 st.resizeRaf = requestAnimationFrame(function() {
                     st.resizeRaf = 0;
+                    updateDynamicWidth();
                     if (st.map) try { st.map.resize(); } catch (e) {}
                     if (st.mode === 'still' && st.isActive) positionStillImage();
                     if (st.mode === 'basic' && st.isActive) positionBasicImages();
@@ -8733,6 +8740,21 @@ const LocationWallpaperComponent = (function() {
             }
             try { contentEl.style.setProperty('--locationwallpaper-minh', w + 'px'); } catch (e4) {}
             st.minHeightLocked = true;
+        }
+
+        // Dynamic width calculation - ensures wallpaper covers container at all sizes
+        // Width must be: container width + 100px buffer for basic mode pan animation
+        // Minimum 600px for map quality, but expand if container is wider
+        function getRequiredWidth() {
+            var containerWidth = 0;
+            try { containerWidth = contentEl.offsetWidth || 0; } catch (e) { containerWidth = 0; }
+            // Basic mode pans 100px (50px each direction from center), so need buffer
+            return Math.max(600, containerWidth + 100);
+        }
+
+        function updateDynamicWidth() {
+            var w = getRequiredWidth();
+            try { root.style.setProperty('--locationwallpaper-width', w + 'px'); } catch (e) {}
         }
 
         function createMap(camera) {
@@ -9207,6 +9229,7 @@ const LocationWallpaperComponent = (function() {
 
             try { root.style.display = ''; } catch (e) {}
             ensureMinHeightLocked();
+            updateDynamicWidth();
 
             var ll = readLatLng(locationContainerEl);
             if (!ll) {
@@ -9274,7 +9297,7 @@ const LocationWallpaperComponent = (function() {
             st.latestCaptureUrl = '';
             st.basicCapturedLat = null;
             st.basicCapturedLng = null;
-            try { contentEl.classList.remove('member-postform-location-content--locationwallpaper'); } catch (e) {}
+            try { contentEl.classList.remove('component-locationwallpaper-content--active'); } catch (e) {}
             try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e) {}
         }
 

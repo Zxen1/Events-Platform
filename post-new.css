@@ -783,14 +783,9 @@
   position: relative;
 }
 
-/* Location wallpaper integration (reuses LocationWallpaperComponent styles) */
-.post .member-postform-location-content {
-  /* Neutralize form padding: open post layout owns spacing */
-  padding: 0;
-}
-
+/* Location wallpaper integration (uses generic LocationWallpaperComponent classes) */
 /* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
-.post .member-postform-location-content--locationwallpaper > .post-header {
+.post .component-locationwallpaper-content--active > .post-header {
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);

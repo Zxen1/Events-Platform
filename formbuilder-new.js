@@ -3930,9 +3930,9 @@
         header.appendChild(deleteBtn);
         container.appendChild(header);
         
-        // Create content wrapper
+        // Create content wrapper (includes generic wallpaper class for LocationWallpaperComponent)
         var content = document.createElement('div');
-        content.className = 'member-postform-location-content container-content';
+        content.className = 'member-postform-location-content component-locationwallpaper-content container-content';
         container.appendChild(content);
         
         // Store location type for header updates (extract type from locationName like "Venue 1" -> "Venue")

@@ -2687,21 +2687,21 @@ const PostModule = (function() {
     }
 
     // Assemble structure
-    // Wrap content in a container compatible with LocationWallpaperComponent, but neutralize form padding in CSS.
+    // Wrap content in a container compatible with LocationWallpaperComponent (uses generic component classes).
     var contentWrap = document.createElement('div');
-    contentWrap.className = 'member-postform-location-content';
+    contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
-      wrap.classList.add('member-location-container');
+      wrap.classList.add('component-locationwallpaper-container');
       var latEl = document.createElement('input');
       latEl.type = 'hidden';
-      latEl.className = 'fieldset-lat';
+      latEl.className = 'component-locationwallpaper-lat';
       latEl.value = String(lat);
       var lngEl = document.createElement('input');
       lngEl.type = 'hidden';
-      lngEl.className = 'fieldset-lng';
+      lngEl.className = 'component-locationwallpaper-lng';
       lngEl.value = String(lng);
       wrap.appendChild(latEl);
       wrap.appendChild(lngEl);
@@ -3211,9 +3211,9 @@ const PostModule = (function() {
       }
 
       function syncLocationWallpaper(isExpandedNow) {
-        // Only for .post wrappers that were wired with lat/lng (member-location-container class added in buildPostDetail).
+        // Only for .post wrappers that were wired with lat/lng (component-locationwallpaper-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
-        if (!wrap.classList || !wrap.classList.contains('member-location-container')) return;
+        if (!wrap.classList || !wrap.classList.contains('component-locationwallpaper-container')) return;
 
         try {
           if (isExpandedNow) {
