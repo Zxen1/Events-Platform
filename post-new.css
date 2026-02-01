@@ -389,6 +389,7 @@
   padding: 2px 4px;
   background: var(--blue-900);
   color: #fff;
+  text-align: left;
 }
 .post-panel-summary--active,
 .post-panel-empty-summary--active {

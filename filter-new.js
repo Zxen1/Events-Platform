@@ -527,7 +527,7 @@ const FilterModule = (function() {
             summaryEl.textContent =
                 String(filtered) + ' result' + (filtered !== 1 ? 's' : '') +
                 ' showing out of ' + String(total) +
-                ' ' + scopeText + '.';
+                ' ' + scopeText;
         }
         
         // Update header filter button badge
@@ -1616,7 +1616,7 @@ const FilterModule = (function() {
                                 if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) scopeText = 'in this area';
                             }
                         } catch (_eScope) {}
-                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText + '.';
+                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText;
                     }
                 }
             }
