@@ -704,6 +704,10 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.disabled = !active;
         }
+        // Update summary background color
+        if (summaryEl) {
+            summaryEl.classList.toggle('filter-panel-summary--active', !!active);
+        }
         // Notify header to update filter icon color
         App.emit('filter:activeState', { active: active });
     }

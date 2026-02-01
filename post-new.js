@@ -546,6 +546,14 @@ const PostModule = (function() {
       sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'recommended') : 'recommended');
     });
 
+    // Update post panel summary background when filters are active
+    App.on('filter:activeState', function(data) {
+      var summaryEl = postListEl ? postListEl.querySelector('.post-panel-summary') : null;
+      if (summaryEl) {
+        summaryEl.classList.toggle('post-panel-summary--active', !!(data && data.active));
+      }
+    });
+
     // Panel-level keyboard behavior (Post/Recent):
     // - Escape closes open post first, then returns to map mode
     // Note: index-new.js global Escape handler does not manage Post/Recent panels.
