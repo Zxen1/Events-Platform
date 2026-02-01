@@ -731,17 +731,6 @@ const FilterModule = (function() {
         });
         
         setResetCategoriesActive(anyOff);
-        // Also update header icon - orange when any category is off
-        App.emit('filter:activeState', { active: anyOff || hasAnyOtherFilterActive() });
-    }
-    
-    function hasAnyOtherFilterActive() {
-        var hasKeyword = keywordInput && keywordInput.value.trim() !== '';
-        var hasPrice = (priceMinInput && priceMinInput.value.trim() !== '') || 
-                       (priceMaxInput && priceMaxInput.value.trim() !== '');
-        var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
-        var hasExpired = expiredInput && expiredInput.checked;
-        return hasKeyword || hasPrice || hasDate || hasExpired;
     }
 
 
@@ -1455,7 +1444,7 @@ const FilterModule = (function() {
                                     option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
                                 } catch (_eSubOff) {}
                                 applyFilters();
-                                updateResetCategoriesButton(); // Also emits filter:activeState for header icon
+                                updateResetCategoriesButton();
                             }
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1509,7 +1498,7 @@ const FilterModule = (function() {
                             setAccordionOpen(false);
                         }
                         applyFilters();
-                        updateResetCategoriesButton(); // Also emits filter:activeState for header icon
+                        updateResetCategoriesButton();
                     });
                     
                     // Click anywhere except toggle area expands/collapses
