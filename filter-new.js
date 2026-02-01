@@ -1431,6 +1431,7 @@ const FilterModule = (function() {
                                 } catch (_eSubOff) {}
                                 applyFilters();
                                 updateResetCategoriesButton();
+                                updateClearButtons();
                             }
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1485,6 +1486,7 @@ const FilterModule = (function() {
                         }
                         applyFilters();
                         updateResetCategoriesButton();
+                        updateClearButtons();
                     });
                     
                     // Click anywhere except toggle area expands/collapses

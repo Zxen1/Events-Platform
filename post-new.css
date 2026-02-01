@@ -382,14 +382,12 @@
 
 /* Post panel summary (count at top) - matches filter-panel-summary */
 .post-panel-summary {
-  font-size: 14px;
+  font-size: 12px;
   width: 100%;
   margin: 0;
-  padding: 10px 15px;
-  text-align: center;
-  background: var(--accent);
+  padding: 2px 4px;
+  background: var(--blue-500);
   color: #fff;
-  border-radius: 5px;
 }
 .post-panel-summary--active {
   background: var(--filter-active-color);
