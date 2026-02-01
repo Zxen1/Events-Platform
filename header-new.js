@@ -440,7 +440,17 @@ const HeaderModule = (function() {
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.
-        App.on('filter:changed', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('filter:changed', function(state) {
+            // Direct check: if categories have any OFF, icon is orange
+            if (state && state.categories) {
+                var catOff = hasAnyCategoryOrSubcategoryTogglesOff(state.categories);
+                if (catOff) {
+                    setHeaderFilterIconActive(true);
+                    return;
+                }
+            }
+            refreshHeaderFilterActiveVisual();
+        });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         

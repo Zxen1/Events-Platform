@@ -4,7 +4,6 @@
 
 const FilterModule = (function() {
     'use strict';
-    console.log('[Filter] FilterModule loaded - v2026-02-01');
 
     /* ==========================================================================
        IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
@@ -716,7 +715,6 @@ const FilterModule = (function() {
     }
     
     function updateResetCategoriesButton() {
-        console.log('[Filter] updateResetCategoriesButton called');
         // Check if any category or subcategory toggle is OFF
         var container = panelEl.querySelector('.filter-categoryfilter-container');
         if (!container) return;
@@ -734,9 +732,7 @@ const FilterModule = (function() {
         
         setResetCategoriesActive(anyOff);
         // Also update header icon - orange when any category is off
-        var shouldBeActive = anyOff || hasAnyOtherFilterActive();
-        console.log('[Filter] Emitting filter:activeState, active:', shouldBeActive, 'anyOff:', anyOff);
-        App.emit('filter:activeState', { active: shouldBeActive });
+        App.emit('filter:activeState', { active: anyOff || hasAnyOtherFilterActive() });
     }
     
     function hasAnyOtherFilterActive() {
