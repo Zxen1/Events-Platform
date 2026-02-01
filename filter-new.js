@@ -731,6 +731,17 @@ const FilterModule = (function() {
         });
         
         setResetCategoriesActive(anyOff);
+        // Also update header icon - orange when any category is off
+        App.emit('filter:activeState', { active: anyOff || hasAnyOtherFilterActive() });
+    }
+    
+    function hasAnyOtherFilterActive() {
+        var hasKeyword = keywordInput && keywordInput.value.trim() !== '';
+        var hasPrice = (priceMinInput && priceMinInput.value.trim() !== '') || 
+                       (priceMaxInput && priceMaxInput.value.trim() !== '');
+        var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
+        var hasExpired = expiredInput && expiredInput.checked;
+        return hasKeyword || hasPrice || hasDate || hasExpired;
     }
 
 
@@ -1003,7 +1014,6 @@ const FilterModule = (function() {
         // Also check if any category or subcategory is toggled OFF
         var hasCategoryOff = false;
         var catState = getCategoryState();
-        console.log('[Filter] updateResetBtn catState:', catState);
         if (catState && typeof catState === 'object') {
             var catKeys = Object.keys(catState);
             for (var i = 0; i < catKeys.length; i++) {
@@ -1020,7 +1030,6 @@ const FilterModule = (function() {
         }
         
         var active = hasKeyword || hasPrice || hasDate || hasExpired || hasCategoryOff;
-        console.log('[Filter] updateResetBtn hasCategoryOff:', hasCategoryOff, 'active:', active);
         setResetFiltersActive(active);
     }
     
@@ -1441,14 +1450,12 @@ const FilterModule = (function() {
                             size: 'big',
                             checked: true,
                             onChange: function() {
-                                console.log('[Filter] Subcategory toggled');
                                 // Grey out when subcategory is off (but still allow toggling back on)
                                 try {
                                     option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
                                 } catch (_eSubOff) {}
                                 applyFilters();
-                                updateResetCategoriesButton();
-                                updateResetBtn(); // Emit filter:activeState for header icon
+                                updateResetCategoriesButton(); // Also emits filter:activeState for header icon
                             }
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1487,7 +1494,6 @@ const FilterModule = (function() {
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
-                        console.log('[Filter] Category header toggled');
                         // IMPORTANT:
                         // SwitchComponent renders a <label><input type="checkbox">...</label>.
                         // Clicking it will toggle the checkbox by default. We also toggle manually below.
@@ -1503,8 +1509,7 @@ const FilterModule = (function() {
                             setAccordionOpen(false);
                         }
                         applyFilters();
-                        updateResetCategoriesButton();
-                        updateResetBtn(); // Emit filter:activeState for header icon
+                        updateResetCategoriesButton(); // Also emits filter:activeState for header icon
                     });
                     
                     // Click anywhere except toggle area expands/collapses
