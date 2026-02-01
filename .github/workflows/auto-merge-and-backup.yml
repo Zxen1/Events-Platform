@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
@@ -39,8 +39,16 @@ jobs:
           date_part=$(date +"%Y-%m-%d")
           time_part=$(date +"%H%M%S")
 
-          echo "🔍 Comparing HEAD~1 to HEAD for changes..."
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD --diff-filter=AM)
+          BEFORE_SHA="${{ github.event.before }}"
+          
+          # Handle first push (before SHA is all zeros)
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "🔍 First push detected, backing up all tracked files..."
+            CHANGED_FILES=$(git ls-files)
+          else
+            echo "🔍 Comparing $BEFORE_SHA to ${{ github.sha }} for changes..."
+            CHANGED_FILES=$(git diff --name-only $BEFORE_SHA ${{ github.sha }} --diff-filter=AM)
+          fi
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new or modified files in this push."
