@@ -1006,11 +1006,11 @@ const FilterModule = (function() {
     
     function applyFilters() {
         var state = getFilterState();
-        App.emit('filter:changed', state);
-        // Write localStorage immediately so map clusters/counts are always based on the latest filters.
+        // Write localStorage BEFORE emitting event so listeners read the updated state.
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (_e) {}
+        App.emit('filter:changed', state);
         // Debounced DB save
         saveFilters();
     }
