@@ -1000,35 +1000,17 @@ const FilterModule = (function() {
         var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
         var hasExpired = expiredInput && expiredInput.checked;
         
-        // Also check if any category or subcategory is toggled OFF
-        var hasCategoryOff = false;
-        var catState = getCategoryState();
-        if (catState && typeof catState === 'object') {
-            var catKeys = Object.keys(catState);
-            for (var i = 0; i < catKeys.length; i++) {
-                var cat = catState[catKeys[i]];
-                if (cat && cat.enabled === false) { hasCategoryOff = true; break; }
-                if (cat && cat.subs && typeof cat.subs === 'object') {
-                    var subKeys = Object.keys(cat.subs);
-                    for (var j = 0; j < subKeys.length; j++) {
-                        if (cat.subs[subKeys[j]] === false) { hasCategoryOff = true; break; }
-                    }
-                }
-                if (hasCategoryOff) break;
-            }
-        }
-        
-        var active = hasKeyword || hasPrice || hasDate || hasExpired || hasCategoryOff;
+        var active = hasKeyword || hasPrice || hasDate || hasExpired;
         setResetFiltersActive(active);
     }
     
     function applyFilters() {
         var state = getFilterState();
-        // Write localStorage BEFORE emitting event so listeners read the updated state.
+        App.emit('filter:changed', state);
+        // Write localStorage immediately so map clusters/counts are always based on the latest filters.
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (_e) {}
-        App.emit('filter:changed', state);
         // Debounced DB save
         saveFilters();
     }
@@ -1515,9 +1497,6 @@ const FilterModule = (function() {
                 if (saved && saved.categories) {
                     applyCategoryState(saved.categories);
                 }
-                // Update buttons and header icon after categories are restored
-                updateResetCategoriesButton();
-                updateClearButtons();
 
                 // The category DOM is built async (get-form). The initial requestCounts() can complete
                 // before the accordions exist, so facet counters have nowhere to render.

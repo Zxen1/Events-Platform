@@ -110,10 +110,10 @@ const HeaderModule = (function() {
         var exp = st.expired;
         var hasExpired = (exp === true || exp === 1 || exp === '1' || String(exp).toLowerCase() === 'true');
 
-        // Category/subcategory toggles also affect orange icon state (any toggle OFF = orange).
-        var hasCategoryOff = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
-
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryOff;
+        // IMPORTANT:
+        // Category/subcategory toggles must NOT affect the orange icon state.
+        // The orange icon indicates only "active filters" (keyword/price/date/expired).
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired;
     }
     
     function setHeaderFilterIconActive(active) {
@@ -440,17 +440,7 @@ const HeaderModule = (function() {
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.
-        App.on('filter:changed', function(state) {
-            // Direct check: if categories have any OFF, icon is orange
-            if (state && state.categories) {
-                var catOff = hasAnyCategoryOrSubcategoryTogglesOff(state.categories);
-                if (catOff) {
-                    setHeaderFilterIconActive(true);
-                    return;
-                }
-            }
-            refreshHeaderFilterActiveVisual();
-        });
+        App.on('filter:changed', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         
