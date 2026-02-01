@@ -440,7 +440,13 @@ const HeaderModule = (function() {
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.
-        App.on('filter:changed', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('filter:changed', function(state) {
+            if (state && state.categories && hasAnyCategoryOrSubcategoryTogglesOff(state.categories)) {
+                setHeaderFilterIconActive(true);
+                return;
+            }
+            refreshHeaderFilterActiveVisual();
+        });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         
