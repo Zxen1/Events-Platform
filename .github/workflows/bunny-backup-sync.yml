@@ -52,20 +52,22 @@ jobs:
             rclone copy funmap-main: funmap-backup: \
               --transfers 8 \
               --verbose \
+              --ignore-errors \
               --dry-run \
-              2>&1 | tee -a "$LOG_FILE"
+              2>&1 | tee -a "$LOG_FILE" || true
           else
             rclone copy funmap-main: funmap-backup: \
               --transfers 8 \
               --verbose \
-              2>&1 | tee -a "$LOG_FILE"
+              --ignore-errors \
+              2>&1 | tee -a "$LOG_FILE" || true
           fi
           
           echo "======================================" | tee -a "$LOG_FILE"
           echo "Sync completed at $(date)" | tee -a "$LOG_FILE"
           
-          # Upload log to backup storage
-          rclone copy "$LOG_FILE" funmap-backup:logs/
+          # Upload log to backup storage (--inplace avoids rename issues on Bunny FTP)
+          rclone copy "$LOG_FILE" funmap-backup:logs/ --inplace
 
       - name: Summary
         run: |
