@@ -1,0 +1,73 @@
+name: Bunny Backup Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual changes)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  sync-bunny-storage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone remotes
+        run: |
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf << EOF
+          [funmap-main]
+          type = ftp
+          host = sy.storage.bunnycdn.com
+          user = funmap
+          pass = $(rclone obscure "${{ secrets.BUNNY_FTP_PASSWORD_MAIN }}")
+          
+          [funmap-backup]
+          type = ftp
+          host = sy.storage.bunnycdn.com
+          user = funmap-backup
+          pass = $(rclone obscure "${{ secrets.BUNNY_FTP_PASSWORD_BACKUP }}")
+          EOF
+
+      - name: Create logs directory on backup
+        run: |
+          rclone mkdir funmap-backup:logs
+
+      - name: Sync Bunny Main to Bunny Backup
+        run: |
+          export TZ="Australia/Sydney"
+          LOG_FILE="sync-$(date +%Y-%m-%d-%H%M%S).log"
+          
+          echo "Starting Bunny sync at $(date)" | tee "$LOG_FILE"
+          echo "======================================" | tee -a "$LOG_FILE"
+          
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "DRY RUN MODE - No changes will be made" | tee -a "$LOG_FILE"
+            rclone copy funmap-main: funmap-backup: \
+              --transfers 8 \
+              --verbose \
+              --dry-run \
+              2>&1 | tee -a "$LOG_FILE"
+          else
+            rclone copy funmap-main: funmap-backup: \
+              --transfers 8 \
+              --verbose \
+              2>&1 | tee -a "$LOG_FILE"
+          fi
+          
+          echo "======================================" | tee -a "$LOG_FILE"
+          echo "Sync completed at $(date)" | tee -a "$LOG_FILE"
+          
+          # Upload log to backup storage
+          rclone copy "$LOG_FILE" funmap-backup:logs/
+
+      - name: Summary
+        run: |
+          echo "✅ Bunny backup sync complete"
+          echo "📋 Log uploaded to funmap-backup:logs/"
