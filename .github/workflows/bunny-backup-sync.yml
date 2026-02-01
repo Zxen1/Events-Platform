@@ -1,6 +1,8 @@
 name: Bunny Backup Sync
 
 on:
+  schedule:
+    - cron: '30 10 * * *'  # 21:30 AEDT (10:30 UTC) - temporary test, change to 4am later
   workflow_dispatch:
     inputs:
       dry_run:
