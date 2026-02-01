@@ -380,6 +380,15 @@
   z-index: -1;
 }
 
+/* Post panel summary (count at top) - matches filter-panel-summary */
+.post-panel-summary {
+  font-size: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 15px;
+  text-align: center;
+}
+
 /* Post panel empty state image */
 .post-panel-empty-image {
   margin-top: 10px;
