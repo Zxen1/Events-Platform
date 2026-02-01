@@ -510,8 +510,9 @@ const HeaderModule = (function() {
         App.on('filter:activeState', function(data) {
             // Keep this hook for the FilterModule (when loaded), but also allow HeaderModule
             // to compute active state without lazy-loading the filter panel.
-            if (data && typeof data.active === 'boolean') {
-                setHeaderFilterIconActive(!!data.active);
+            // Always check localStorage for categories too (they load async after panel opens).
+            if (data && data.active === true) {
+                setHeaderFilterIconActive(true);
             } else {
                 refreshHeaderFilterActiveVisual();
             }
