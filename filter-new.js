@@ -1000,7 +1000,25 @@ const FilterModule = (function() {
         var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
         var hasExpired = expiredInput && expiredInput.checked;
         
-        var active = hasKeyword || hasPrice || hasDate || hasExpired;
+        // Also check if any category or subcategory is toggled OFF
+        var hasCategoryOff = false;
+        var catState = getCategoryState();
+        if (catState && typeof catState === 'object') {
+            var catKeys = Object.keys(catState);
+            for (var i = 0; i < catKeys.length; i++) {
+                var cat = catState[catKeys[i]];
+                if (cat && cat.enabled === false) { hasCategoryOff = true; break; }
+                if (cat && cat.subs && typeof cat.subs === 'object') {
+                    var subKeys = Object.keys(cat.subs);
+                    for (var j = 0; j < subKeys.length; j++) {
+                        if (cat.subs[subKeys[j]] === false) { hasCategoryOff = true; break; }
+                    }
+                }
+                if (hasCategoryOff) break;
+            }
+        }
+        
+        var active = hasKeyword || hasPrice || hasDate || hasExpired || hasCategoryOff;
         setResetFiltersActive(active);
     }
     
@@ -1427,6 +1445,7 @@ const FilterModule = (function() {
                                 } catch (_eSubOff) {}
                                 applyFilters();
                                 updateResetCategoriesButton();
+                                updateClearButtons();
                             }
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1481,6 +1500,7 @@ const FilterModule = (function() {
                         }
                         applyFilters();
                         updateResetCategoriesButton();
+                        updateClearButtons();
                     });
                     
                     // Click anywhere except toggle area expands/collapses
