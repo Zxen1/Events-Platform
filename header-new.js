@@ -1,5 +1,5 @@
 /* ============================================================================
-   HEADER.JS - HEADER SECTION
+   HEADER.JS - HEADER SECTION 
    ============================================================================
    
    Controls the header bar at the top of the page.
