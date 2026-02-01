@@ -270,7 +270,7 @@
 
 /* Recent card wrapper - holds timestamp + card */
 .recent-card-wrapper {
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  margin-bottom: 0;
 }
 
 /* Timestamp above recent card - purple for Recent panel distinction */
@@ -302,9 +302,11 @@
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
-.post-card:hover,
-.recent-card:hover {
+.post-card:hover {
   box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+.recent-card:hover {
+  box-shadow: inset 0 0 0 1px #7c3aed;
 }
 
 /* Card in post-panel */
