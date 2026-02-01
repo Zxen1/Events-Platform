@@ -1515,6 +1515,9 @@ const FilterModule = (function() {
                 if (saved && saved.categories) {
                     applyCategoryState(saved.categories);
                 }
+                // Update buttons and header icon after categories are restored
+                updateResetCategoriesButton();
+                updateClearButtons();
 
                 // The category DOM is built async (get-form). The initial requestCounts() can complete
                 // before the accordions exist, so facet counters have nowhere to render.
