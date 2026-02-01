@@ -151,6 +151,7 @@
   border-radius: 0;
   display: flex;
   flex-direction: column;
+  gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -270,7 +271,9 @@
 
 /* Recent card wrapper - holds timestamp + card */
 .recent-card-wrapper {
-  margin-bottom: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
 }
 
 /* Timestamp above recent card - purple for Recent panel distinction */
@@ -360,10 +363,46 @@
   border-radius: 0;
   background-color: transparent;
   border-bottom: 1px solid #7c3aed;
+  row-gap: 0;
 }
-/* Remove bottom gap inside recent cards (margin-bottom on children creates gap above border) */
-.recent-panel-content .recent-card > * {
-  margin-bottom: 0;
+/* DEBUG: Remove this block after fixing - shows element boundaries */
+/*
+.recent-panel-content .recent-card-wrapper { outline: 2px solid red; }
+.recent-panel-content .recent-card { outline: 2px solid blue; }
+.recent-panel-content .post { outline: 2px solid green; }
+.recent-panel-content .post-body { outline: 2px solid orange; }
+.recent-panel-content .post-images-container { outline: 2px solid cyan; }
+.recent-panel-content .post-thumbs { outline: 2px solid magenta; }
+.recent-panel-content .member-postform-location-content { outline: 2px solid yellow; }
+*/
+
+/* Remove bottom gaps in recent panel - cards and their children */
+.recent-panel-content .recent-card > *,
+.recent-panel-content .recent-card-image,
+.recent-panel-content .recent-card-image--empty,
+.recent-panel-content .recent-card-meta,
+.recent-panel-content .recent-card-container-actions {
+  margin-bottom: 0 !important;
+}
+/* Remove bottom gaps in recent panel - expanded posts and all descendants */
+.recent-panel-content .post {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.recent-panel-content .member-postform-location-content {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.recent-panel-content .post-body,
+.recent-panel-content .post-body > *:last-child,
+.recent-panel-content .post-images-container,
+.recent-panel-content .post-description-container,
+.recent-panel-content .post-hero {
+  margin-bottom: 0 !important;
+}
+.recent-panel-content .post-thumbs {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .recent-panel-content .recent-card:last-child {
@@ -785,7 +824,7 @@
 /* Location wallpaper integration (reuses LocationWallpaperComponent styles) */
 .post .member-postform-location-content {
   /* Neutralize form padding: open post layout owns spacing */
-  padding: 0;
+  padding: 0 !important;
 }
 
 /* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
