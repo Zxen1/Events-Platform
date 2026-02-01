@@ -355,7 +355,8 @@
   max-width: 100%;
 }
 
-.recent-panel-content .recent-card {
+.recent-panel-content .recent-card,
+.recent-panel-content .post {
   margin: 0;
   border-radius: 0;
   background-color: transparent;
