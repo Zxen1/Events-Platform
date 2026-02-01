@@ -1441,6 +1441,7 @@ const FilterModule = (function() {
                             size: 'big',
                             checked: true,
                             onChange: function() {
+                                console.log('[Filter] Subcategory toggled');
                                 // Grey out when subcategory is off (but still allow toggling back on)
                                 try {
                                     option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
@@ -1486,6 +1487,7 @@ const FilterModule = (function() {
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
+                        console.log('[Filter] Category header toggled');
                         // IMPORTANT:
                         // SwitchComponent renders a <label><input type="checkbox">...</label>.
                         // Clicking it will toggle the checkbox by default. We also toggle manually below.
