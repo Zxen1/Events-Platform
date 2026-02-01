@@ -1004,7 +1004,25 @@ const FilterModule = (function() {
         var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
         var hasExpired = expiredInput && expiredInput.checked;
         
-        var active = hasKeyword || hasPrice || hasDate || hasExpired;
+        // Check if any category or subcategory is toggled OFF
+        var hasCategoryOff = false;
+        var catState = getCategoryState();
+        if (catState && typeof catState === 'object') {
+            var catKeys = Object.keys(catState);
+            for (var i = 0; i < catKeys.length; i++) {
+                var cat = catState[catKeys[i]];
+                if (cat && cat.enabled === false) { hasCategoryOff = true; break; }
+                if (cat && cat.subs && typeof cat.subs === 'object') {
+                    var subKeys = Object.keys(cat.subs);
+                    for (var j = 0; j < subKeys.length; j++) {
+                        if (cat.subs[subKeys[j]] === false) { hasCategoryOff = true; break; }
+                    }
+                }
+                if (hasCategoryOff) break;
+            }
+        }
+        
+        var active = hasKeyword || hasPrice || hasDate || hasExpired || hasCategoryOff;
         setResetFiltersActive(active);
     }
     

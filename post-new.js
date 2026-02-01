@@ -1408,6 +1408,36 @@ const PostModule = (function() {
     if (summaryText) {
       var summaryEl = document.createElement('div');
       summaryEl.className = 'msg--summary post-panel-summary';
+      // Check if filters are active (read from localStorage)
+      try {
+        var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
+        var hasActiveFilter = !!(
+          (savedFilters.keyword && savedFilters.keyword.trim()) ||
+          (savedFilters.minPrice && savedFilters.minPrice.trim()) ||
+          (savedFilters.maxPrice && savedFilters.maxPrice.trim()) ||
+          savedFilters.dateStart || savedFilters.dateEnd ||
+          savedFilters.expired
+        );
+        // Check categories
+        if (!hasActiveFilter && savedFilters.categories) {
+          var cats = savedFilters.categories;
+          var catKeys = Object.keys(cats);
+          for (var ci = 0; ci < catKeys.length; ci++) {
+            var cat = cats[catKeys[ci]];
+            if (cat && cat.enabled === false) { hasActiveFilter = true; break; }
+            if (cat && cat.subs) {
+              var subKeys = Object.keys(cat.subs);
+              for (var si = 0; si < subKeys.length; si++) {
+                if (cat.subs[subKeys[si]] === false) { hasActiveFilter = true; break; }
+              }
+            }
+            if (hasActiveFilter) break;
+          }
+        }
+        if (hasActiveFilter) {
+          summaryEl.classList.add('post-panel-summary--active');
+        }
+      } catch (_e) {}
       summaryEl.textContent = summaryText;
       postListEl.appendChild(summaryEl);
     }
