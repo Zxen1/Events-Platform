@@ -1470,6 +1470,7 @@
 .post-location-text {
   flex: 1 1 auto;
   min-width: 0;
+  text-align: left;
 }
 
 .post-location-text-main {
@@ -1502,12 +1503,14 @@
 /* Option text */
 .post-location-option-main {
   font-weight: 600;
+  text-align: left;
 }
 
 .post-location-option-secondary {
   font-size: 12px;
   color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
   margin-top: 2px;
+  text-align: left;
 }
 
 /* Mini-map container - full width, no padding, 2:1 ratio */

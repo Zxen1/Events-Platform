@@ -8654,27 +8654,38 @@ var MiniMap = (function() {
                 return;
             }
 
-            var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-            for (var i = 0; i < locations.length; i++) {
-                var loc = locations[i];
-                if (loc.lat < minLat) minLat = loc.lat;
-                if (loc.lat > maxLat) maxLat = loc.lat;
-                if (loc.lng < minLng) minLng = loc.lng;
-                if (loc.lng > maxLng) maxLng = loc.lng;
-            }
+            // Single location: use fixed zoom 7 for geographic context
+            if (locations.length === 1) {
+                try {
+                    m.jumpTo({
+                        center: [locations[0].lng, locations[0].lat],
+                        zoom: 7,
+                        animate: false
+                    });
+                } catch (e) {}
+            } else {
+                // Multiple locations: fit bounds
+                var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                for (var i = 0; i < locations.length; i++) {
+                    var loc = locations[i];
+                    if (loc.lat < minLat) minLat = loc.lat;
+                    if (loc.lat > maxLat) maxLat = loc.lat;
+                    if (loc.lng < minLng) minLng = loc.lng;
+                    if (loc.lng > maxLng) maxLng = loc.lng;
+                }
 
-            // Fit bounds (while still off-screen)
-            try {
-                var lngLatBounds = new mapboxgl.LngLatBounds(
-                    [minLng, minLat],
-                    [maxLng, maxLat]
-                );
-                m.fitBounds(lngLatBounds, {
-                    padding: 40,
-                    maxZoom: 15,
-                    animate: false
-                });
-            } catch (e) {}
+                try {
+                    var lngLatBounds = new mapboxgl.LngLatBounds(
+                        [minLng, minLat],
+                        [maxLng, maxLat]
+                    );
+                    m.fitBounds(lngLatBounds, {
+                        padding: 40,
+                        maxZoom: 12,
+                        animate: false
+                    });
+                } catch (e) {}
+            }
 
             // Wait for bounds to settle (off-screen), then move and add markers
             m.once('idle', function() {

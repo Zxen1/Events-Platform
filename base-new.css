@@ -988,6 +988,8 @@
   top: 100%;
   z-index: var(--layer-menu);
   background: var(--menu-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
