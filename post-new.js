@@ -2835,6 +2835,46 @@ const PostModule = (function() {
       });
     }
 
+    // Location dropdown toggle
+    var locationBtn = wrap.querySelector('.post-location-button');
+    if (locationBtn) {
+      locationBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isExpanded = locationBtn.getAttribute('aria-expanded') === 'true';
+        locationBtn.setAttribute('aria-expanded', String(!isExpanded));
+      });
+    }
+
+    // Location option selection
+    var locationOptions = wrap.querySelectorAll('.post-location-option');
+    locationOptions.forEach(function(opt) {
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var index = parseInt(opt.dataset.index, 10);
+        var locationList = post.map_cards || [];
+        var loc = locationList[index];
+        if (!loc) return;
+
+        // Update button content with selected location
+        var btnContent = wrap.querySelector('.post-location-button-content');
+        if (btnContent) {
+          var html = '<strong>' + escapeHtml(loc.venue_name || '') + '</strong>';
+          if (loc.address_line) html += '<br>' + escapeHtml(loc.address_line);
+          if (loc.city) html += '<br>' + escapeHtml(loc.city);
+          btnContent.innerHTML = html;
+        }
+
+        // Update selected state
+        locationOptions.forEach(function(o) {
+          o.classList.remove('post-location-option--selected');
+        });
+        opt.classList.add('post-location-option--selected');
+
+        // Close dropdown
+        locationBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
     /* ........................................................................
        IMAGE GALLERY [COMPONENT PLACEHOLDER: ImageGalleryComponent]
        Hero image + thumbnail row with click-to-swap + lightbox
