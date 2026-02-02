@@ -9031,6 +9031,7 @@ const LocationWallpaperComponent = (function() {
         var basicIndex = 0;
         var basicTimer = null;
         var basicOriginalHeight = 0;
+        var basicReady = false;  // True only after all 4 images are loaded and animation can start
         var BASIC_WIDTH = 600;
         var BASIC_HEIGHT = 2500;
 
@@ -9074,6 +9075,7 @@ const LocationWallpaperComponent = (function() {
             basicContainer = document.createElement('div');
             basicContainer.className = 'component-locationwallpaper-basic-container';
             basicImgs = []; basicIndex = 0;
+            basicReady = false;
             for (var i = 0; i < 4; i++) {
                 var el = document.createElement('img');
                 el.className = 'component-locationwallpaper-basic-image';
@@ -9094,12 +9096,10 @@ const LocationWallpaperComponent = (function() {
                     basicImgs[idx].onload = function() {
                         basicImgs[idx].onload = null;
                         loaded++;
-                        // Wait for ALL 4 to load before showing anything
                         if (loaded === 4) {
+                            basicReady = true;
                             positionBasicImages();
-                            // Start animation first (while still invisible)
                             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
-                            // Double rAF ensures browser paints opacity:0 before we trigger transition
                             requestAnimationFrame(function() {
                                 requestAnimationFrame(function() {
                                     basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
@@ -9114,24 +9114,21 @@ const LocationWallpaperComponent = (function() {
             }
 
             function displayInstant(libraryWallpapers) {
-                // Library wallpapers found - wait for first image to load, then fade in
                 var urls = [
-                    libraryWallpapers[0],  // North
-                    libraryWallpapers[90], // East
-                    libraryWallpapers[180],// South
-                    libraryWallpapers[270] // West
+                    libraryWallpapers[0],
+                    libraryWallpapers[90],
+                    libraryWallpapers[180],
+                    libraryWallpapers[270]
                 ];
                 display(urls);
             }
 
             function fallbackToCache() {
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-                    if (!basicContainer) return;
                     var cacheHits = cached.filter(function(url) { return url; }).length;
                     if (cacheHits === 4) {
                         display(cached);
                     } else {
-                        // Flag missing map images for posts (not forms)
                         var postId = locationContainerEl.dataset ? locationContainerEl.dataset.postId : null;
                         if (postId) {
                             flagMissingMapImages(postId, lat, lng);
@@ -9140,11 +9137,12 @@ const LocationWallpaperComponent = (function() {
                         var captureNext = function(idx) {
                             if (idx >= 4) {
                                 WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
-                                display(capturedUrls);
+                                if (st.isActive && st.basicCapturedLat === lat && st.basicCapturedLng === lng) {
+                                    display(capturedUrls);
+                                }
                                 return;
                             }
                             SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
-                                if (!basicContainer) return;
                                 capturedUrls[idx] = url;
                                 captureNext(idx + 1);
                             });
@@ -9154,7 +9152,6 @@ const LocationWallpaperComponent = (function() {
                 });
             }
 
-            // Check for library wallpapers (container cache, post data, or API)
             getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
                 if (lib && Object.keys(lib).length === 4) {
                     displayInstant(lib);
@@ -9197,9 +9194,7 @@ const LocationWallpaperComponent = (function() {
             basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
             var prev = basicIndex;
             basicIndex = 0;
-            // Start animation first
             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
-            // Double rAF ensures browser paints before we trigger transition
             requestAnimationFrame(function() {
                 requestAnimationFrame(function() {
                     basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
@@ -9222,6 +9217,7 @@ const LocationWallpaperComponent = (function() {
             stopBasicMode();
             if (basicContainer) { basicContainer.remove(); basicContainer = null; }
             basicImgs = []; basicIndex = 0;
+            basicReady = false;
         }
 
         function deactivateBasicMode() {
@@ -9282,8 +9278,8 @@ const LocationWallpaperComponent = (function() {
             } else if (mode === 'still') {
                 startStillMode(lat, lng);
             } else if (mode === 'basic') {
-                // Resume if same location and already have container
-                if (!changed && basicContainer) {
+                // Resume if same location, container exists, and images are ready
+                if (!changed && basicContainer && basicReady) {
                     resumeBasicMode();
                 } else {
                     startBasicMode(lat, lng);
