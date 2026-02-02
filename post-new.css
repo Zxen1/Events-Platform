@@ -1541,19 +1541,25 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.3);
-  object-fit: cover;
+  border: 2px solid transparent;
   box-sizing: border-box;
 }
 
+/* Hover/active: blue ring 2px outside the icon */
 .post-location-map-marker--hover,
 .post-location-map-marker--active {
-  border-color: var(--blue-500);
+  box-shadow: 0 0 0 2px var(--blue-500);
 }
 
-/* Current location always has solid white border */
+/* Current location: solid white border (always visible) */
 .post-location-map-marker--current {
   border-color: #fff;
+}
+
+/* Current + hover: white border stays, blue ring outside */
+.post-location-map-marker--current.post-location-map-marker--hover,
+.post-location-map-marker--current.post-location-map-marker--active {
+  box-shadow: 0 0 0 2px var(--blue-500);
 }
 
 /* ============================================================================

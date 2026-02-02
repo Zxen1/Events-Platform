@@ -85,12 +85,13 @@ PURPOSE:
 - Auto-fit bounds to show all points with padding
 - Subcategory icons as interactive markers at each location
 
-STRICT 2-MAP RULE:
-1. Main map (always present)
-2. SecondaryMap (shared between orbit wallpaper and location mini-map)
+3-MAP RULE:
+1. Main map - interactive map panel (globe projection)
+2. Secondary map - wallpaper only: orbit animation, still capture (globe projection)
+3. Mini map - location dropdown menus only (mercator/flat projection)
 
-NEVER 3 MAPS. SecondaryMap does one job at a time.
-MOST RECENT WINS: SecondaryMap always serves the most recent caller.
+NEVER 4 MAPS. Each map has one dedicated purpose.
+MOST RECENT WINS: Only one location dropdown can use Mini Map at a time.
 
 MINI-MAP TYPE: Live SecondaryMap with interactive markers
 - Reference tool - shows all locations at a glance
@@ -126,20 +127,20 @@ BUTTON TEXT BEHAVIOR:
 - Not always showing first location
 
 FLOW WHEN LOCATION DROPDOWN OPENS:
-1. Freeze wallpaper (if Orbit mode) - frees SecondaryMap
-2. Claim SecondaryMap for live display
-3. Move SecondaryMap element into dropdown container
-4. Set flat mercator projection, fit bounds
-5. Add interactive Mapbox markers with CSS states
+1. Claim MiniMap for live display
+2. Move MiniMap element into dropdown container
+3. Fit bounds to locations
+4. Add interactive Mapbox markers with CSS states
+(No wallpaper coordination needed - MiniMap is independent)
 
 FLOW WHEN LOCATION DROPDOWN CLOSES (any reason):
-1. Release SecondaryMap (moves back off-screen)
-2. Resume wallpaper orbit if it was frozen
+1. Release MiniMap (moves back off-screen)
+(Wallpaper unaffected - uses separate SecondaryMap)
 
 MOST RECENT WINS RULE:
-- SecondaryMap tracks currentOwner
+- MiniMap tracks currentOwner
 - New claim() kicks off previous owner (calls onDisconnect callback)
-- Dropdown closes if kicked off by another component
+- Previous dropdown closes if kicked off
 - No queue, no reservation - always serves newest caller
 
 =====================================
@@ -157,13 +158,13 @@ COMPLETED CHANGES:
 
 [2026-02-03] Created four post info components in components-new.js:
 
-1. PostLocationMapComponent (REFACTORED to live map)
+1. PostLocationMapComponent (uses MiniMap - dedicated 3rd map)
    - render() - returns .post-location-map container
-   - init() - claims SecondaryMap for live display, returns ownerId
-   - release() - releases SecondaryMap, moves back off-screen
+   - init() - claims MiniMap for live display, returns ownerId
+   - release() - releases MiniMap, moves back off-screen
    - setActiveMarker(index) - update current marker highlight
    - highlightMarker(index) - coordinate hover with list items
-   - No longer uses static image capture or caching
+   - No wallpaper coordination needed (MiniMap is independent)
 
 2. PostLocationComponent
    - Container: .post-location-container.menu-class-4
@@ -187,7 +188,8 @@ COMPLETED CHANGES:
    - Arrow: .post-price-arrow.menu-arrow
    - Badge: .post-price-badge (currency flag)
 
-[2026-02-03] Added SecondaryMap live display methods:
+[2026-02-03] Created MiniMap (dedicated 3rd map for location dropdowns):
+- Always mercator (flat) projection - no switching needed
 - claim(ownerId, container, options, callback) - claim for live display
   - Tracks currentOwner (most recent wins)
   - Kicks off previous owner with onDisconnect callback
@@ -197,6 +199,12 @@ COMPLETED CHANGES:
 - setActiveMarker(index) - update active marker styling
 - highlightMarker(index) - update hover marker styling
 - getOwner() - check current owner
+- destroy() - completely remove the map
+
+[2026-02-03] SecondaryMap restored to wallpaper-only:
+- Removed claim/release methods (moved to MiniMap)
+- Only used for orbit animation and still capture
+- No longer shared with location dropdowns
 
 [2026-02-03] Updated post-new.css:
 - .post-location-container, .post-session-container, .post-price-container
@@ -235,7 +243,12 @@ CLEANUP COMPLETED:
 
 FILES MODIFIED THIS SESSION:
 - base-new.css: Added menu-class-4, added menu-option--hover state
-- components-new.js: PostLocationMapComponent (refactored to live), SecondaryMap (added claim/release/setActiveMarker/highlightMarker/getOwner), LocationWallpaperComponent click handler fix
-- post-new.css: Component styles, marker state styles
-- post-new.js: Location dropdown open/close with wallpaper coordination, bidirectional hover, click-outside handler
+- components-new.js: 
+  - Created MiniMap (dedicated 3rd map for location dropdowns, always mercator)
+  - Restored SecondaryMap to wallpaper-only (removed claim/release)
+  - Updated PostLocationMapComponent to use MiniMap instead of SecondaryMap
+  - LocationWallpaperComponent click handler fix
+- post-new.css: Component styles, marker state styles (matches header avatar pattern)
+- post-new.js: Location dropdown open/close (no wallpaper coordination needed), bidirectional hover, click-outside handler
 - map-new.js: Removed unused post mini-map code
+- Agent/agent essentials.md: Added MAP RULES (3-MAP MAXIMUM) section

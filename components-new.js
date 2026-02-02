@@ -8172,6 +8172,11 @@ var WallpaperCache = (function() {
    Eliminates WebGL context creation stutter on repeated captures.
    Rule: Never more than 2 maps (main + secondary).
    ============================================================================ */
+/* ============================================================================
+   SECONDARY MAP
+   Dedicated to wallpaper only (orbit animation, still capture).
+   Part of the 3-map system: Main Map, Secondary Map (wallpaper), Mini Map (dropdowns).
+   ============================================================================ */
 var SecondaryMap = (function() {
     'use strict';
     var map = null;
@@ -8180,12 +8185,6 @@ var SecondaryMap = (function() {
     var currentHeight = 0;
     var isCapturing = false;
     var queue = [];
-    
-    // Live display state (most recent wins)
-    var currentOwner = null;
-    var currentMarkers = [];
-    var onDisconnectCallback = null;
-    var originalParent = null;
 
     // Wallpaper always uses standard style with night lighting for consistent dark aesthetic
     var STYLE_URL = 'mapbox://styles/mapbox/standard';
@@ -8424,6 +8423,90 @@ var SecondaryMap = (function() {
         currentHeight = 0;
     }
 
+    return {
+        capture: capture,
+        captureWithBounds: captureWithBounds,
+        destroy: destroy
+    };
+})();
+
+/* ============================================================================
+   MINI MAP
+   Dedicated to location dropdown menus only. Always mercator (flat) projection.
+   Part of the 3-map system: Main Map, Secondary Map (wallpaper), Mini Map (dropdowns).
+   Only one location dropdown can use it at a time (most recent wins).
+   ============================================================================ */
+var MiniMap = (function() {
+    'use strict';
+    var map = null;
+    var mount = null;
+    var currentWidth = 0;
+    var currentHeight = 0;
+    
+    // Live display state (most recent wins)
+    var currentOwner = null;
+    var currentMarkers = [];
+    var onDisconnectCallback = null;
+
+    // Mini map uses standard style with night lighting
+    var STYLE_URL = 'mapbox://styles/mapbox/standard';
+    var LIGHT_PRESET = 'night';
+
+    function ensureMap(w, h, cb) {
+        if (!window.mapboxgl || !mapboxgl.accessToken) { cb(null); return; }
+        
+        // Resize if needed
+        if (map && mount && (w !== currentWidth || h !== currentHeight)) {
+            mount.style.width = w + 'px';
+            mount.style.height = h + 'px';
+            currentWidth = w;
+            currentHeight = h;
+            try { map.resize(); } catch (e) {}
+        }
+        
+        if (map) { cb(map); return; }
+        
+        // Create mount (off-screen)
+        mount = document.createElement('div');
+        mount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + w + 'px;height:' + h + 'px;';
+        document.body.appendChild(mount);
+        currentWidth = w;
+        currentHeight = h;
+        
+        // Create map - always mercator (flat) projection
+        try {
+            map = new mapboxgl.Map({
+                container: mount,
+                style: STYLE_URL,
+                projection: 'mercator',
+                center: [0, 0],
+                zoom: 1,
+                interactive: false,
+                attributionControl: false,
+                preserveDrawingBuffer: true
+            });
+        } catch (e) {
+            try { document.body.removeChild(mount); } catch (e2) {}
+            mount = null;
+            cb(null);
+            return;
+        }
+        
+        map.once('style.load', function() {
+            try {
+                map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
+                map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                map.setConfigProperty('basemap', 'showPlaceLabels', false);
+                map.setConfigProperty('basemap', 'showRoadLabels', false);
+                map.setConfigProperty('basemap', 'showTransitLabels', false);
+            } catch (e) {}
+        });
+        
+        map.once('load', function() {
+            cb(map);
+        });
+    }
+
     /**
      * Clear all markers from the map
      */
@@ -8439,7 +8522,6 @@ var SecondaryMap = (function() {
      */
     function moveOffScreen() {
         if (!mount) return;
-        originalParent = null;
         mount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + currentWidth + 'px;height:' + currentHeight + 'px;';
         if (mount.parentNode !== document.body) {
             try { document.body.appendChild(mount); } catch (e) {}
@@ -8472,6 +8554,7 @@ var SecondaryMap = (function() {
                 try { onDisconnectCallback(); } catch (e) {}
             }
             clearMarkers();
+            moveOffScreen();
         }
 
         currentOwner = ownerId;
@@ -8495,17 +8578,12 @@ var SecondaryMap = (function() {
                 return;
             }
 
-            // Move mount into container
-            originalParent = mount.parentNode;
-            mount.style.cssText = 'width:100%;height:100%;position:relative;';
-            try { container.appendChild(mount); } catch (e) {}
-            try { m.resize(); } catch (e) {}
-
-            // Switch to flat projection for mini-map
-            try { m.setProjection('mercator'); } catch (e) {}
-
             // Calculate bounds from locations
             if (locations.length === 0) {
+                // No locations - just move map into container
+                mount.style.cssText = 'width:100%;height:100%;position:relative;';
+                try { container.appendChild(mount); } catch (e) {}
+                try { m.resize(); } catch (e) {}
                 if (callback) callback(true);
                 return;
             }
@@ -8519,7 +8597,7 @@ var SecondaryMap = (function() {
                 if (loc.lng > maxLng) maxLng = loc.lng;
             }
 
-            // Fit bounds
+            // Fit bounds (while still off-screen)
             try {
                 var lngLatBounds = new mapboxgl.LngLatBounds(
                     [minLng, minLat],
@@ -8532,8 +8610,14 @@ var SecondaryMap = (function() {
                 });
             } catch (e) {}
 
-            // Add markers after map settles
+            // Wait for bounds to settle (off-screen), then move and add markers
             m.once('idle', function() {
+                // NOW move mount into container (bounds already set)
+                mount.style.cssText = 'width:100%;height:100%;position:relative;';
+                try { container.appendChild(mount); } catch (e) {}
+                try { m.resize(); } catch (e) {}
+
+                // Add markers immediately (map is already positioned correctly)
                 clearMarkers();
 
                 for (var i = 0; i < locations.length; i++) {
@@ -8625,11 +8709,6 @@ var SecondaryMap = (function() {
         onDisconnectCallback = null;
         clearMarkers();
         moveOffScreen();
-        
-        // Restore globe projection for wallpaper use
-        if (map) {
-            try { map.setProjection('globe'); } catch (e) {}
-        }
     }
 
     /**
@@ -8640,15 +8719,28 @@ var SecondaryMap = (function() {
         return currentOwner;
     }
 
+    /**
+     * Destroy the map completely
+     */
+    function destroy() {
+        clearMarkers();
+        currentOwner = null;
+        onDisconnectCallback = null;
+        try { if (map) map.remove(); } catch (e) {}
+        try { if (mount && mount.parentNode) mount.parentNode.removeChild(mount); } catch (e) {}
+        map = null;
+        mount = null;
+        currentWidth = 0;
+        currentHeight = 0;
+    }
+
     return {
-        capture: capture,
-        captureWithBounds: captureWithBounds,
-        destroy: destroy,
         claim: claim,
         release: release,
         setActiveMarker: setActiveMarker,
         highlightMarker: highlightMarker,
-        getOwner: getOwner
+        getOwner: getOwner,
+        destroy: destroy
     };
 })();
 
@@ -9887,7 +9979,8 @@ const LocationWallpaperComponent = (function() {
 /* ============================================================================
    POST LOCATION MAP COMPONENT
    Renders a live mini-map showing all locations with interactive markers.
-   Uses SecondaryMap for live display. Most recent wins.
+   Uses MiniMap (dedicated 3rd map) for live display. Most recent wins.
+   Part of the 3-map system: Main Map, Secondary Map (wallpaper), Mini Map (dropdowns).
    ============================================================================ */
 
 const PostLocationMapComponent = (function() {
@@ -9963,9 +10056,9 @@ const PostLocationMapComponent = (function() {
         // Store owner ID on container for release
         container.setAttribute('data-map-owner', ownerId);
 
-        // Claim SecondaryMap for live display
-        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.claim === 'function') {
-            SecondaryMap.claim(ownerId, container, {
+        // Claim MiniMap for live display
+        if (typeof MiniMap !== 'undefined' && typeof MiniMap.claim === 'function') {
+            MiniMap.claim(ownerId, container, {
                 locations: validLocs,
                 iconUrl: iconUrl,
                 iconSize: 24,
@@ -9998,8 +10091,8 @@ const PostLocationMapComponent = (function() {
     function release(container) {
         if (!container) return;
         var ownerId = container.getAttribute('data-map-owner');
-        if (ownerId && typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.release === 'function') {
-            SecondaryMap.release(ownerId);
+        if (ownerId && typeof MiniMap !== 'undefined' && typeof MiniMap.release === 'function') {
+            MiniMap.release(ownerId);
         }
         container.removeAttribute('data-map-owner');
         container.innerHTML = '';
@@ -10010,8 +10103,8 @@ const PostLocationMapComponent = (function() {
      * @param {number} index - Index of active marker
      */
     function setActiveMarker(index) {
-        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.setActiveMarker === 'function') {
-            SecondaryMap.setActiveMarker(index);
+        if (typeof MiniMap !== 'undefined' && typeof MiniMap.setActiveMarker === 'function') {
+            MiniMap.setActiveMarker(index);
         }
     }
 
@@ -10020,8 +10113,8 @@ const PostLocationMapComponent = (function() {
      * @param {number} index - Index to highlight, or -1 to clear
      */
     function highlightMarker(index) {
-        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.highlightMarker === 'function') {
-            SecondaryMap.highlightMarker(index);
+        if (typeof MiniMap !== 'undefined' && typeof MiniMap.highlightMarker === 'function') {
+            MiniMap.highlightMarker(index);
         }
     }
 
@@ -10249,6 +10342,7 @@ window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
+window.MiniMap = MiniMap;
 window.PostLocationMapComponent = PostLocationMapComponent;
 window.PostLocationComponent = PostLocationComponent;
 window.PostSessionComponent = PostSessionComponent;

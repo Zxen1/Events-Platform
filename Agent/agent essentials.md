@@ -262,6 +262,24 @@ Don't fetch data or load assets on startup. Wait until user action requires it.
 
 ---
 
+## MAP RULES (3-MAP MAXIMUM)
+
+The site uses Mapbox GL JS. There are exactly 3 map instances allowed, each with one dedicated purpose:
+
+| Map | Purpose | Projection |
+|-----|---------|------------|
+| **Main Map** | Interactive map panel | Globe |
+| **Secondary Map** | Wallpaper only (orbit animation, still capture) | Globe |
+| **Mini Map** | Location dropdown menus only | Mercator (flat) |
+
+### Rules
+1. **Never create a 4th map** - WebGL context limits and performance
+2. **Mini Map is shared** - Only one location dropdown can use it at a time
+3. **Most recent wins** - Opening a new location dropdown closes the previous one
+4. **Each map does one job** - Don't repurpose maps (e.g., don't use Secondary Map for dropdowns)
+
+---
+
 ## DEFAULT UI SIZING (New Site)
 
 - Height: 36px

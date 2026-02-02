@@ -933,7 +933,7 @@
   --menu-text: #fff;
   --menu-text-secondary: rgba(255, 255, 255, 0.7);
   --menu-muted: rgba(255, 255, 255, 0.5);
-  --menu-hover: rgba(255, 255, 255, 0.1);
+  --menu-hover: var(--blue-500);
   --menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --menu-radius: 5px;
 }
@@ -982,12 +982,16 @@
 }
 
 .menu-class-4 .menu-options {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: var(--layer-dropdown);
   background: var(--menu-bg);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
   box-shadow: var(--menu-shadow);
-  margin-bottom: 10px;
   max-height: 600px;
   overflow-y: auto;
   overflow-x: hidden;

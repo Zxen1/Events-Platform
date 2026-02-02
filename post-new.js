@@ -2836,28 +2836,23 @@ const PostModule = (function() {
     }
 
     // Location dropdown toggle
+    // MiniMap is independent (3rd map) - no wallpaper coordination needed
     var locationBtn = wrap.querySelector('.post-location-button');
     var locationArrow = wrap.querySelector('.post-location-arrow');
     var locationMapContainer = wrap.querySelector('.post-location-map');
     var locationOptions = wrap.querySelectorAll('.post-location-option');
     var locationMapOwnerId = null;
     var locationSelectedIndex = 0;
-    var wallpaperContainer = wrap.querySelector('.component-locationwallpaper-container');
 
     // Helper: Close location dropdown and cleanup
     function closeLocationDropdown() {
       locationBtn.classList.remove('menu-button--open');
       if (locationArrow) locationArrow.classList.remove('menu-arrow--open');
       
-      // Release the live map
+      // Release the mini map
       if (locationMapContainer && locationMapOwnerId) {
         PostLocationMapComponent.release(locationMapContainer);
         locationMapOwnerId = null;
-      }
-      
-      // Resume wallpaper if it was frozen
-      if (wallpaperContainer && wallpaperContainer.__locationWallpaperCtrl) {
-        try { wallpaperContainer.__locationWallpaperCtrl.refresh(); } catch (e) {}
       }
     }
 
@@ -2885,12 +2880,7 @@ const PostModule = (function() {
           locationBtn.classList.add('menu-button--open');
           if (locationArrow) locationArrow.classList.add('menu-arrow--open');
           
-          // Freeze wallpaper if in Orbit mode (so SecondaryMap is available)
-          if (wallpaperContainer && wallpaperContainer.__locationWallpaperCtrl) {
-            try { wallpaperContainer.__locationWallpaperCtrl.freeze(); } catch (e) {}
-          }
-          
-          // Init live map
+          // Init live map (MiniMap is independent - no wallpaper coordination needed)
           if (locationMapContainer) {
             var locationList = post.map_cards || [];
             var iconUrl = post.subcategory_icon_url || '';
@@ -2910,7 +2900,7 @@ const PostModule = (function() {
                 highlightListItem(index);
               },
               onDisconnect: function() {
-                // Another component claimed SecondaryMap, close dropdown
+                // Another dropdown claimed MiniMap, close this one
                 closeLocationDropdown();
               },
               onReady: function() {}
