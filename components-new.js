@@ -9088,27 +9088,23 @@ const LocationWallpaperComponent = (function() {
             function display(urls) {
                 if (!basicContainer) return;
                 var loaded = 0;
-                var firstShown = false;
                 urls.forEach(function(url, idx) {
                     if (!url || !basicImgs[idx]) return;
                     
                     basicImgs[idx].onload = function() {
                         basicImgs[idx].onload = null;
                         loaded++;
-                        // Show first image once it loads (start animation, then fade in)
-                        if (idx === 0 && !firstShown) {
-                            firstShown = true;
+                        // Wait for ALL 4 to load before showing anything
+                        if (loaded === 4) {
                             positionBasicImages();
                             // Start animation first (while still invisible)
                             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
-                            // Then fade in after a frame (animation already running)
+                            // Double rAF ensures browser paints opacity:0 before we trigger transition
                             requestAnimationFrame(function() {
-                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                requestAnimationFrame(function() {
+                                    basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                });
                             });
-                        }
-                        // Start timer once all 4 are loaded
-                        if (loaded === 4) {
-                            positionBasicImages();
                             if (basicTimer) clearInterval(basicTimer);
                             basicTimer = setInterval(advanceBasic, 18500);
                         }
@@ -9172,14 +9168,15 @@ const LocationWallpaperComponent = (function() {
             if (!basicImgs.length || !basicContainer) return;
             var prev = basicIndex;
             // Anti-clockwise rotation: 0 (N) -> 90 (E) -> 180 (S) -> 270 (W)
-            // Note: In Mapbox, increasing bearing rotates the camera clockwise, 
-            // which makes the world appear to rotate anti-clockwise.
             basicIndex = (basicIndex + 1) % 4;
+            var next = basicIndex; // Capture for closure
             // Start animation first (while still invisible)
-            basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--animating');
-            // Then fade in after a frame (animation already running)
+            basicImgs[next].classList.add('component-locationwallpaper-basic-image--animating');
+            // Double rAF ensures browser paints before we trigger transition
             requestAnimationFrame(function() {
-                basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
+                requestAnimationFrame(function() {
+                    if (basicImgs[next]) basicImgs[next].classList.add('component-locationwallpaper-basic-image--active');
+                });
             });
             // After fade complete (1.5s), remove classes from previous
             setTimeout(function() {
@@ -9202,9 +9199,11 @@ const LocationWallpaperComponent = (function() {
             basicIndex = 0;
             // Start animation first
             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
-            // Then fade in
+            // Double rAF ensures browser paints before we trigger transition
             requestAnimationFrame(function() {
-                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                requestAnimationFrame(function() {
+                    basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                });
             });
             if (prev !== 0) {
                 setTimeout(function() {
