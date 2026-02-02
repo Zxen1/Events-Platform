@@ -1451,7 +1451,7 @@
    Extends menu-class-1 with 70px height for location items
    ============================================================================ */
 
-.post-location {
+.post-location-container {
   position: relative;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
@@ -1523,16 +1523,90 @@
 
 /* ============================================================================
    POST SESSION COMPONENT
+   Extends menu-class-1 with 70px height
    ============================================================================ */
 
-.post-session {
+.post-session-container {
+  position: relative;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button layout: text + arrow */
+.post-session-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+/* Text container */
+.post-session-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-session-text-main {
+  font-weight: 600;
+}
+
+/* Arrow sizing */
+.post-session-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
 }
 
 /* ============================================================================
    POST PRICE COMPONENT
+   Extends menu-class-1 with 70px height
    ============================================================================ */
 
-.post-price {
+.post-price-container {
+  position: relative;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button layout: text + arrow */
+.post-price-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+/* Text container */
+.post-price-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-price-text-main {
+  font-weight: 600;
+}
+
+/* Arrow sizing */
+.post-price-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+/* Badge image */
+.post-price-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
 }

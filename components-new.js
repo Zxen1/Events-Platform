@@ -9565,7 +9565,7 @@ const PostLocationComponent = (function() {
         var html = [];
 
         // Container wrapper - uses menu-class-1 for standard menu styling
-        html.push('<div class="post-location menu-class-1" data-post-id="' + postId + '">');
+        html.push('<div class="post-location-container menu-class-1" data-post-id="' + postId + '">');
 
         // Button shows currently selected location info
         html.push('<button class="post-location-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
@@ -9626,12 +9626,14 @@ const PostSessionComponent = (function() {
 
         var html = [];
 
-        // Container wrapper
-        html.push('<div class="post-session">');
+        // Container wrapper - uses menu-class-1 for standard menu styling
+        html.push('<div class="post-session-container menu-class-1" data-post-id="' + postId + '">');
 
-        html.push('<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + postId + '">');
-        html.push('<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>');
-        html.push('<span class="post-info-button-arrow">▼</span>');
+        html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-session-text menu-text">');
+        html.push('<div class="post-session-text-main">📅 ' + escapeHtml(datesText) + '</div>');
+        html.push('</div>');
+        html.push('<div class="post-session-arrow menu-arrow"></div>');
         html.push('</button>');
 
         html.push('</div>');
@@ -9670,18 +9672,19 @@ const PostPriceComponent = (function() {
 
         var html = [];
 
-        // Container wrapper
-        html.push('<div class="post-price">');
+        // Container wrapper - uses menu-class-1 for standard menu styling
+        html.push('<div class="post-price-container menu-class-1" data-post-id="' + postId + '">');
 
-        // Build price HTML with badge
+        // Build price badge
         var badgeHtml = priceParts.flagUrl 
-            ? '<img class="post-image-badge post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + (priceParts.countryCode || '') + '" title="Currency: ' + (priceParts.countryCode || '').toUpperCase() + '">'
+            ? '<img class="post-price-badge" src="' + priceParts.flagUrl + '" alt="' + (priceParts.countryCode || '') + '" title="Currency: ' + (priceParts.countryCode || '').toUpperCase() + '">'
             : '💰 ';
-        var priceContent = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
 
-        html.push('<button class="post-info-button post-info-button-price" type="button" aria-haspopup="true" aria-expanded="false" id="price-btn-' + postId + '">');
-        html.push('<span class="post-info-button-text">' + priceContent + '</span>');
-        html.push('<span class="post-info-button-arrow">▼</span>');
+        html.push('<button class="post-price-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-price-text menu-text">');
+        html.push('<div class="post-price-text-main">' + badgeHtml + escapeHtml(priceParts.text) + '</div>');
+        html.push('</div>');
+        html.push('<div class="post-price-arrow menu-arrow"></div>');
         html.push('</button>');
 
         html.push('</div>');
