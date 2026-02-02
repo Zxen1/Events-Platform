@@ -2903,11 +2903,19 @@ const MapModule = (function() {
       map.setStyle(styleUrl);
     }, 260);
     
-    // Re-apply lighting after style loads
+    // Re-apply lighting and reload layers after style loads
     map.once('style.load', function() {
       if (token !== styleChangeToken) return;
       logDebug('[Map] Style loaded, re-applying lighting:', currentLighting);
       applyLightingDirect(currentLighting);
+      
+      // Style change removes all images/sources/layers - must reload clusters
+      clusterIconLoaded = false;
+      loadClusterIcon().then(function() {
+        if (token !== styleChangeToken) return;
+        setupClusterLayers();
+        logDebug('[Map] Cluster layers re-added after style change');
+      });
       
       // Fade back in on first render of the new style (fast; avoids waiting for full tile idle).
       try {
