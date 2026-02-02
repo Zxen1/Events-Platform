@@ -2852,12 +2852,37 @@ const PostModule = (function() {
           locationMapInitialized = true;
           var locationList = post.map_cards || [];
           var iconUrl = post.subcategory_icon_url || '';
-          PostLocationMapComponent.init(locationMapContainer, {
-            postId: post.id,
-            locations: locationList,
-            iconUrl: iconUrl,
-            onReady: function() {}
-          });
+
+          // Check if we have a cached image (no need to freeze wallpaper)
+          var cached = PostLocationMapComponent.getFromCache(String(post.id));
+          if (cached) {
+            // Cache hit - display instantly, no wallpaper disruption
+            PostLocationMapComponent.init(locationMapContainer, {
+              postId: post.id,
+              locations: locationList,
+              iconUrl: iconUrl,
+              onReady: function() {}
+            });
+          } else {
+            // Cache miss - need to capture, freeze wallpaper first
+            var wallpaperCtrl = wrap.__locationWallpaperCtrl || null;
+            if (wallpaperCtrl && typeof wallpaperCtrl.freeze === 'function') {
+              wallpaperCtrl.freeze();
+            }
+
+            PostLocationMapComponent.init(locationMapContainer, {
+              postId: post.id,
+              locations: locationList,
+              iconUrl: iconUrl,
+              onReady: function() {
+                // Re-activate wallpaper after capture
+                if (typeof LocationWallpaperComponent !== 'undefined' && 
+                    typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                  LocationWallpaperComponent.handleActiveContainerChange(document.body, wrap);
+                }
+              }
+            });
+          }
         }
       });
     }
