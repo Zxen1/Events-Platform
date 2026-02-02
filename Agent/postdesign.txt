@@ -226,6 +226,11 @@ COMPLETED CHANGES:
 - Uses post.map_cards for locations, post.subcategory_icon_url for markers
 
 TODO:
-- Delete unused createPostMap() from map-new.js
-- Implement marker click → highlight list item
+- Implement marker click → highlight list item (FUTURE)
 - Implement "fly to location" popup (FUTURE)
+
+CLEANUP COMPLETED:
+- Deleted unused createPostMap() from map-new.js
+- Deleted unused removePostMap() from map-new.js
+- Deleted unused postMaps variable from map-new.js
+- Removed exports for deleted functions

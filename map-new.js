@@ -110,7 +110,6 @@ const MapModule = (function() {
   /* State */
   
   let map = null;                    // Main Mapbox map instance
-  let postMaps = new Map();          // Post mini-maps: postId -> map instance
   let currentStyleUrl = '';          // Track active style URL to avoid unnecessary reload/flicker
   let styleChangeToken = 0;          // Increment to cancel stale async callbacks
   
@@ -2776,75 +2775,6 @@ const MapModule = (function() {
   }
 
 
-  /* --------------------------------------------------------------------------
-     POST MINI-MAPS
-     -------------------------------------------------------------------------- */
-  
-  /**
-   * Create a mini-map for a post's venue menu
-   * @param {HTMLElement|string} containerEl - DOM element or class selector
-   * @param {Array} locations - Array of location objects with lng/lat
-   */
-  function createPostMap(containerEl, locations) {
-    const container = typeof containerEl === 'string' 
-      ? document.querySelector(containerEl) 
-      : containerEl;
-    if (!container || !locations || !locations.length) return null;
-
-    // Calculate bounds from locations
-    const bounds = new mapboxgl.LngLatBounds();
-    locations.forEach(loc => {
-      if (loc.lng && loc.lat) {
-        bounds.extend([loc.lng, loc.lat]);
-      }
-    });
-
-    // Create mini-map (pass DOM element directly)
-    const postMap = new mapboxgl.Map({
-      container: container,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      bounds: bounds,
-      fitBoundsOptions: { padding: 50, maxZoom: 15 },
-      interactive: true,
-      attributionControl: false
-    });
-
-    // Add markers for each location
-    postMap.on('load', () => {
-      locations.forEach((loc) => {
-        if (!loc.lng || !loc.lat) return;
-
-        const el = document.createElement('div');
-        el.className = 'map-post-location-marker';
-        
-        new mapboxgl.Marker({ element: el })
-          .setLngLat([loc.lng, loc.lat])
-          .addTo(postMap);
-      });
-    });
-
-    // Store reference using the container element
-    postMaps.set(container, postMap);
-    
-    return postMap;
-  }
-
-  /**
-   * Remove a post mini-map
-   * @param {HTMLElement|string} containerEl - DOM element or class selector
-   */
-  function removePostMap(containerEl) {
-    const container = typeof containerEl === 'string' 
-      ? document.querySelector(containerEl) 
-      : containerEl;
-    const postMap = postMaps.get(container);
-    if (postMap) {
-      postMap.remove();
-      postMaps.delete(container);
-    }
-  }
-
-
   /* ==========================================================================
      SECTION 8: ZOOM INDICATOR (Mapbox)
      ========================================================================== */
@@ -3126,10 +3056,6 @@ const MapModule = (function() {
     // Clusters
     createClusterLayers,
     refreshClusters,
-    
-    // Post maps
-    createPostMap,
-    removePostMap,
     
     // Zoom indicator
     updateZoomIndicator,

@@ -9880,22 +9880,21 @@ const PostLocationComponent = (function() {
             html.push('<div class="post-location-text-secondary">' + escapeHtml(secondary) + '</div>');
         }
         html.push('</div>');
-        if (hasMultipleLocations) {
-            html.push('<div class="post-location-arrow menu-arrow"></div>');
-        }
+        // Always show arrow - dropdown has map even for single location
+        html.push('<div class="post-location-arrow menu-arrow"></div>');
         html.push('</button>');
 
-        // Dropdown options (all locations) - only if multiple
+        // Dropdown with map (always) and location list (if multiple)
+        html.push('<div class="post-location-options menu-options">');
+        // Mini-map at top (rendered by PostLocationMapComponent)
+        html.push(PostLocationMapComponent.render({ postId: postId }));
+        // Location list below map (only if multiple locations)
         if (hasMultipleLocations) {
-            html.push('<div class="post-location-options menu-options">');
-            // Mini-map at top (rendered by PostLocationMapComponent)
-            html.push(PostLocationMapComponent.render({ postId: postId }));
-            // Location list below map
             for (var i = 0; i < locationList.length; i++) {
                 html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
             }
-            html.push('</div>');
         }
+        html.push('</div>');
 
         html.push('</div>');
 
