@@ -2687,7 +2687,7 @@ const PostModule = (function() {
     }
 
     // Assemble structure
-    // Wrap content in a container compatible with LocationWallpaperComponent (uses generic component classes).
+    // Wrap content in a container compatible with LocationWallpaperComponent.
     var contentWrap = document.createElement('div');
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);

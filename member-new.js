@@ -3600,8 +3600,8 @@ const MemberModule = (function() {
             case 'city':
                 try {
                     var addr = el.querySelector('input.fieldset-input');
-                    var lat = el.querySelector('input.fieldset-lat');
-                    var lng = el.querySelector('input.fieldset-lng');
+                    var lat = el.querySelector('input.component-locationwallpaper-lat');
+                    var lng = el.querySelector('input.component-locationwallpaper-lng');
                     var cc = el.querySelector('input.fieldset-country');
                     return {
                         address_line: addr ? String(addr.value || '').trim() : '',
@@ -3618,8 +3618,8 @@ const MemberModule = (function() {
                     var inputs = el.querySelectorAll('input.fieldset-input');
                     var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
                     var venueAddr = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
-                    var vLat = el.querySelector('input.fieldset-lat');
-                    var vLng = el.querySelector('input.fieldset-lng');
+                    var vLat = el.querySelector('input.component-locationwallpaper-lat');
+                    var vLng = el.querySelector('input.component-locationwallpaper-lng');
                     var vCc = el.querySelector('input.fieldset-country');
                     return {
                         venue_name: venueName,

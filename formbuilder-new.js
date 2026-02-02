@@ -3889,9 +3889,9 @@
         var onDelete = options.onDelete || function() {};
         var onActivate = options.onActivate || function() {};
         
-        // Create container
+        // Create container (includes component-locationwallpaper-container for LocationWallpaperComponent)
         var container = document.createElement('div');
-        container.className = 'member-location-container container-class-2';
+        container.className = 'member-location-container component-locationwallpaper-container container-class-2';
         container.dataset.venue = String(locationNumber);
         container.dataset.locationNumber = String(locationNumber);
         

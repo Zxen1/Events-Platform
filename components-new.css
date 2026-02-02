@@ -3108,13 +3108,13 @@
     animation-play-state: paused;
 }
 
-/* Pan: centered image moves 50px right to 50px left (100px total travel) */
+/* Pan: centered image moves 100px leftward (matches base state at start, no jump) */
 @keyframes locationwallpaper-basic-pan {
     0% {
-        transform: translateX(calc(-50% + 50px));
+        transform: translateX(-50%);
     }
     100% {
-        transform: translateX(calc(-50% - 50px));
+        transform: translateX(calc(-50% - 100px));
     }
 }
 

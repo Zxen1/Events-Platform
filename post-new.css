@@ -783,7 +783,7 @@
   position: relative;
 }
 
-/* Location wallpaper integration (uses generic LocationWallpaperComponent classes) */
+/* Location wallpaper integration (uses LocationWallpaperComponent) */
 /* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
 .post .component-locationwallpaper-content--active > .post-header {
   position: sticky;

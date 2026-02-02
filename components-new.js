@@ -8460,11 +8460,8 @@ const LocationWallpaperComponent = (function() {
     function readLatLng(containerEl) {
         if (!containerEl) return null;
         try {
-            // Use generic component classes (also checks legacy fieldset classes for backwards compat)
-            var latEl = containerEl.querySelector('.component-locationwallpaper-lat') ||
-                        containerEl.querySelector('.fieldset-lat');
-            var lngEl = containerEl.querySelector('.component-locationwallpaper-lng') ||
-                        containerEl.querySelector('.fieldset-lng');
+            var latEl = containerEl.querySelector('.component-locationwallpaper-lat');
+            var lngEl = containerEl.querySelector('.component-locationwallpaper-lng');
             var lat = latEl ? safeNum(latEl.value) : null;
             var lng = lngEl ? safeNum(lngEl.value) : null;
             if (lat === null || lng === null) return null;
@@ -8502,9 +8499,7 @@ const LocationWallpaperComponent = (function() {
     function attachToLocationContainer(locationContainerEl) {
         if (!locationContainerEl) throw new Error('[LocationWallpaperComponent] locationContainerEl is required.');
 
-        // Use generic component class (also checks legacy member form class for backwards compat)
-        var contentEl = locationContainerEl.querySelector('.component-locationwallpaper-content') ||
-                        locationContainerEl.querySelector('.member-postform-location-content');
+        var contentEl = locationContainerEl.querySelector('.component-locationwallpaper-content');
         if (!contentEl) throw new Error('[LocationWallpaperComponent] .component-locationwallpaper-content not found.');
 
         // Root sits behind content; pointer-events none (wallpaper only).
@@ -9326,7 +9321,8 @@ const LocationWallpaperComponent = (function() {
 
         var nextLocationContainer = null;
         try {
-            if (clickedContainerEl && clickedContainerEl.classList && clickedContainerEl.classList.contains('member-location-container')) {
+            if (clickedContainerEl && clickedContainerEl.classList && 
+                clickedContainerEl.classList.contains('component-locationwallpaper-container')) {
                 nextLocationContainer = clickedContainerEl;
             }
         } catch (e) {}
@@ -9393,10 +9389,11 @@ const LocationWallpaperComponent = (function() {
             if (!activeCtrl) return;
             var t = e && e.target ? e.target : null;
             if (!t || !(t instanceof Element)) return;
-            var activeContainer = t.closest('.member-location-container[data-active="true"]');
+            var activeContainer = t.closest('.component-locationwallpaper-container[data-active="true"]');
             if (!activeContainer) return;
             if (activeCtrl !== (activeContainer.__locationWallpaperCtrl || null)) return;
-            if (t.classList && (t.classList.contains('fieldset-lat') || t.classList.contains('fieldset-lng'))) {
+            if (t.classList && (t.classList.contains('component-locationwallpaper-lat') || 
+                                t.classList.contains('component-locationwallpaper-lng'))) {
                 try { activeCtrl.refresh(); } catch (e2) {}
             }
         }, true);
