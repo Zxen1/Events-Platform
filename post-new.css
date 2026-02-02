@@ -1448,13 +1448,15 @@
 
 /* ============================================================================
    POST LOCATION COMPONENT
+   Extends menu-class-1 with 70px height for location items
    ============================================================================ */
 
-.post-location-container {
+.post-location {
   position: relative;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
+/* Button layout: text + arrow */
 .post-location-button {
   display: flex;
   align-items: center;
@@ -1462,91 +1464,68 @@
   width: 100%;
   min-height: 70px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
   text-align: left;
   line-height: 1.4;
 }
 
-.post-location-button:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.post-location-button-content {
+/* Text container */
+.post-location-text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
+.post-location-text-main {
+  font-weight: 600;
+}
+
+.post-location-text-secondary {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Arrow sizing */
 .post-location-arrow {
+  width: 12px;
+  height: 12px;
   flex: 0 0 auto;
   margin-left: 10px;
-  opacity: 0.6;
-  font-size: 10px;
-  transition: transform 0.2s ease;
 }
 
-.post-location-arrow--open {
-  transform: rotate(180deg);
-}
-
+/* Options panel visibility via aria-expanded */
 .post-location-options {
   display: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  background: rgba(0, 0, 0, 0.9);
-  overflow: hidden;
 }
 
-.post-location-options--open {
+.post-location-button.menu-button--open + .post-location-options {
   display: block;
 }
 
-.post-location-button[aria-expanded="true"] + .post-location-options {
-  display: block;
-}
-
-.post-location-button[aria-expanded="true"] {
-  border-radius: 5px 5px 0 0;
-}
-
-.post-location-button[aria-expanded="true"] .post-location-arrow {
-  transform: rotate(180deg);
-}
-
+/* Option rows: 70px height */
 .post-location-option {
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: 70px;
   padding: 10px;
-  font-size: 14px;
-  line-height: 1.4;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.post-location-option:last-child {
-  border-bottom: none;
+.post-location-option-main {
+  font-weight: 600;
 }
 
-.post-location-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.post-location-option--selected {
-  background: rgba(59, 130, 246, 0.2);
+.post-location-option-secondary {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
 }
 
 /* ============================================================================
    POST SESSION COMPONENT
    ============================================================================ */
 
-.post-session-container {
+.post-session {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
@@ -1554,6 +1533,6 @@
    POST PRICE COMPONENT
    ============================================================================ */
 
-.post-price-container {
+.post-price {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }

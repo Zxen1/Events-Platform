@@ -2837,11 +2837,13 @@ const PostModule = (function() {
 
     // Location dropdown toggle
     var locationBtn = wrap.querySelector('.post-location-button');
+    var locationArrow = wrap.querySelector('.post-location-arrow');
     if (locationBtn) {
       locationBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var isExpanded = locationBtn.getAttribute('aria-expanded') === 'true';
-        locationBtn.setAttribute('aria-expanded', String(!isExpanded));
+        var isOpen = locationBtn.classList.contains('menu-button--open');
+        locationBtn.classList.toggle('menu-button--open', !isOpen);
+        if (locationArrow) locationArrow.classList.toggle('menu-arrow--open', !isOpen);
       });
     }
 
@@ -2856,22 +2858,25 @@ const PostModule = (function() {
         if (!loc) return;
 
         // Update button content with selected location
-        var btnContent = wrap.querySelector('.post-location-button-content');
-        if (btnContent) {
-          var html = '<strong>' + escapeHtml(loc.venue_name || '') + '</strong>';
-          if (loc.address_line) html += '<br>' + escapeHtml(loc.address_line);
-          if (loc.city) html += '<br>' + escapeHtml(loc.city);
-          btnContent.innerHTML = html;
+        var btnTextMain = wrap.querySelector('.post-location-text-main');
+        var btnTextSecondary = wrap.querySelector('.post-location-text-secondary');
+        if (btnTextMain) {
+          btnTextMain.textContent = loc.venue_name || '';
+        }
+        if (btnTextSecondary) {
+          var secondary = (loc.address_line || '') + ((loc.address_line && loc.city) ? ', ' : '') + (loc.city || '');
+          btnTextSecondary.textContent = secondary;
         }
 
         // Update selected state
         locationOptions.forEach(function(o) {
-          o.classList.remove('post-location-option--selected');
+          o.classList.remove('menu-option--highlighted');
         });
-        opt.classList.add('post-location-option--selected');
+        opt.classList.add('menu-option--highlighted');
 
         // Close dropdown
-        locationBtn.setAttribute('aria-expanded', 'false');
+        locationBtn.classList.remove('menu-button--open');
+        if (locationArrow) locationArrow.classList.remove('menu-arrow--open');
       });
     });
 

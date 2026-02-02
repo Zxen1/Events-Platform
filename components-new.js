@@ -9530,10 +9530,12 @@ const PostLocationComponent = (function() {
         var city = loc.city || '';
 
         var html = [];
-        html.push('<div class="post-location-option menu-option' + (isSelected ? ' post-location-option--selected' : '') + '" data-index="' + index + '">');
-        html.push('<strong>' + escapeHtml(venueName) + '</strong>');
-        if (addressLine) html.push('<br>' + escapeHtml(addressLine));
-        if (city) html.push('<br>' + escapeHtml(city));
+        html.push('<div class="post-location-option menu-option' + (isSelected ? ' menu-option--highlighted' : '') + '" data-index="' + index + '">');
+        html.push('<div class="post-location-option-main menu-item-main">' + escapeHtml(venueName) + '</div>');
+        if (addressLine || city) {
+            var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
+            html.push('<div class="post-location-option-secondary menu-item-secondary">' + escapeHtml(secondary) + '</div>');
+        }
         html.push('</div>');
 
         return html.join('');
@@ -9562,18 +9564,20 @@ const PostLocationComponent = (function() {
 
         var html = [];
 
-        // Container wrapper
-        html.push('<div class="post-location-container" data-post-id="' + postId + '">');
+        // Container wrapper - uses menu-class-1 for standard menu styling
+        html.push('<div class="post-location menu-class-1" data-post-id="' + postId + '">');
 
         // Button shows currently selected location info
         html.push('<button class="post-location-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
-        html.push('<div class="post-location-button-content">');
-        html.push('<strong>' + escapeHtml(venueName) + '</strong>');
-        if (addressLine) html.push('<br>' + escapeHtml(addressLine));
-        if (city) html.push('<br>' + escapeHtml(city));
+        html.push('<div class="post-location-text menu-text">');
+        html.push('<div class="post-location-text-main">' + escapeHtml(venueName) + '</div>');
+        if (addressLine || city) {
+            var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
+            html.push('<div class="post-location-text-secondary">' + escapeHtml(secondary) + '</div>');
+        }
         html.push('</div>');
         if (hasMultipleLocations) {
-            html.push('<span class="post-location-arrow menu-arrow">▼</span>');
+            html.push('<div class="post-location-arrow menu-arrow"></div>');
         }
         html.push('</button>');
 
@@ -9623,7 +9627,7 @@ const PostSessionComponent = (function() {
         var html = [];
 
         // Container wrapper
-        html.push('<div class="post-session-container">');
+        html.push('<div class="post-session">');
 
         html.push('<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + postId + '">');
         html.push('<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>');
@@ -9667,7 +9671,7 @@ const PostPriceComponent = (function() {
         var html = [];
 
         // Container wrapper
-        html.push('<div class="post-price-container">');
+        html.push('<div class="post-price">');
 
         // Build price HTML with badge
         var badgeHtml = priceParts.flagUrl 
