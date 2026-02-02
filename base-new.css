@@ -906,6 +906,140 @@
 }
 
 /* ============================================================================
+   MENU CLASS 4 (Post info menus)
+   Used by: PostLocationComponent, PostSessionComponent, PostPriceComponent
+   
+   Features:
+   - 600px max height with scroll
+   - 70px height options
+   - Optional embedded map (2:1 aspect ratio)
+   - Dark background matching post panel
+   
+   Bridge classes:
+   - .menu-button      (trigger button)
+   - .menu-text        (button text)
+   - .menu-arrow       (arrow icon)
+   - .menu-options     (dropdown panel)
+   - .menu-option      (each option row)
+   - .menu-map         (optional embedded map)
+   ============================================================================ */
+
+.menu-class-4 {
+  --menu-bg: rgba(0, 0, 0, 0.35);
+  --menu-bg-focus: rgba(0, 0, 0, 0.45);
+  --menu-border: rgba(255, 255, 255, 0.12);
+  --menu-border-hover: rgba(255, 255, 255, 0.2);
+  --menu-border-focus: var(--blue-500);
+  --menu-text: #fff;
+  --menu-text-secondary: rgba(255, 255, 255, 0.7);
+  --menu-muted: rgba(255, 255, 255, 0.5);
+  --menu-hover: rgba(255, 255, 255, 0.1);
+  --menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --menu-radius: 5px;
+}
+
+.menu-class-4 .menu-button {
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--menu-radius);
+  color: var(--menu-text);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-4:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
+    border-color: var(--menu-border-hover);
+  }
+}
+
+.menu-class-4 .menu-button--open {
+  border-color: var(--menu-border-focus);
+  border-radius: var(--menu-radius) var(--menu-radius) 0 0;
+  border-bottom: none;
+}
+
+.menu-class-4 .menu-text {
+  color: var(--menu-text);
+}
+
+.menu-class-4 .menu-arrow {
+  background-color: var(--menu-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.menu-class-4 .menu-arrow--open {
+  transform: rotate(180deg);
+}
+
+.menu-class-4 .menu-options {
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border-focus);
+  border-top: none;
+  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
+  box-shadow: var(--menu-shadow);
+  margin-bottom: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.menu-class-4 .menu-option {
+  min-height: 70px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--menu-text);
+  font-size: 14px;
+  line-height: 1.4;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--menu-border);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.menu-class-4 .menu-option:last-child {
+  border-bottom: none;
+}
+
+.menu-class-4 .menu-option.menu-option--highlighted {
+  background: var(--menu-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-4 .menu-option:hover {
+    background: var(--menu-hover);
+  }
+}
+
+/* Embedded map container */
+.menu-class-4 .menu-map {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--menu-bg);
+  border-bottom: 1px solid var(--menu-border);
+}
+
+.menu-class-4 .menu-map img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)

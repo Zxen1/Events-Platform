@@ -8284,6 +8284,129 @@ var SecondaryMap = (function() {
         processQueue();
     }
 
+    /**
+     * Capture a flat 2D map with bounds and markers
+     * @param {Object} options
+     * @param {Array} options.bounds - [[minLng, minLat], [maxLng, maxLat]]
+     * @param {Array} options.markers - Array of {lat, lng} objects
+     * @param {string} options.markerIcon - URL of marker icon
+     * @param {number} options.markerSize - Marker size in pixels (default 24)
+     * @param {number} options.width - Capture width
+     * @param {number} options.height - Capture height
+     * @param {Function} callback - Called with data URL or null
+     */
+    function captureWithBounds(options, callback) {
+        var bounds = options.bounds;
+        var markers = options.markers || [];
+        var markerIcon = options.markerIcon || '';
+        var markerSize = options.markerSize || 24;
+        var w = options.width || 600;
+        var h = options.height || 300;
+
+        if (!bounds || !bounds[0] || !bounds[1]) {
+            callback(null);
+            return;
+        }
+
+        ensureMap(w, h, function(m) {
+            if (!m) {
+                callback(null);
+                return;
+            }
+
+            // Switch to flat projection
+            try {
+                m.setProjection('mercator');
+            } catch (e) {}
+
+            // Fit to bounds with padding
+            try {
+                var lngLatBounds = new mapboxgl.LngLatBounds(bounds[0], bounds[1]);
+                m.fitBounds(lngLatBounds, {
+                    padding: 40,
+                    maxZoom: 15,
+                    animate: false
+                });
+            } catch (e) {
+                callback(null);
+                return;
+            }
+
+            // Wait for render
+            m.once('idle', function() {
+                setTimeout(function() {
+                    // Capture base map
+                    var mapCanvas;
+                    try {
+                        mapCanvas = m.getCanvas();
+                    } catch (e) {
+                        callback(null);
+                        return;
+                    }
+
+                    // Create output canvas
+                    var canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    var ctx = canvas.getContext('2d');
+
+                    // Draw map
+                    try {
+                        ctx.drawImage(mapCanvas, 0, 0);
+                    } catch (e) {
+                        callback(null);
+                        return;
+                    }
+
+                    // If no markers or no icon, return map only
+                    if (!markers.length || !markerIcon) {
+                        var url = '';
+                        try { url = canvas.toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            try { url = canvas.toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                        }
+                        callback(url && url.indexOf('data:image') === 0 ? url : null);
+                        return;
+                    }
+
+                    // Load marker icon and draw markers
+                    var iconImg = new Image();
+                    iconImg.crossOrigin = 'anonymous';
+                    iconImg.onload = function() {
+                        // Draw each marker
+                        for (var i = 0; i < markers.length; i++) {
+                            var marker = markers[i];
+                            try {
+                                var point = m.project([marker.lng, marker.lat]);
+                                var x = point.x - (markerSize / 2);
+                                var y = point.y - (markerSize / 2);
+                                ctx.drawImage(iconImg, x, y, markerSize, markerSize);
+                            } catch (e) {}
+                        }
+
+                        // Output final image
+                        var url = '';
+                        try { url = canvas.toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            try { url = canvas.toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                        }
+                        callback(url && url.indexOf('data:image') === 0 ? url : null);
+                    };
+                    iconImg.onerror = function() {
+                        // Icon failed to load, return map without markers
+                        var url = '';
+                        try { url = canvas.toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            try { url = canvas.toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                        }
+                        callback(url && url.indexOf('data:image') === 0 ? url : null);
+                    };
+                    iconImg.src = markerIcon;
+                }, 300);
+            });
+        });
+    }
+
     function destroy() {
         queue = [];
         isCapturing = false;
@@ -8297,6 +8420,7 @@ var SecondaryMap = (function() {
 
     return {
         capture: capture,
+        captureWithBounds: captureWithBounds,
         destroy: destroy
     };
 })();
@@ -9513,6 +9637,186 @@ const LocationWallpaperComponent = (function() {
    Renders venue info and location selector for post info container.
    ============================================================================ */
 
+/* ============================================================================
+   POST LOCATION MAP COMPONENT
+   Renders a static 2:1 mini-map showing all locations with subcategory icons.
+   Uses SecondaryMap for capture. LRU cache (5 posts) in memory.
+   ============================================================================ */
+
+const PostLocationMapComponent = (function() {
+    'use strict';
+
+    // LRU cache - max 5 posts
+    var cache = [];
+    var CACHE_LIMIT = 5;
+
+    /**
+     * Get cached image for a post
+     * @param {string} postId - Post ID
+     * @returns {string|null} Cached image data URL or null
+     */
+    function getFromCache(postId) {
+        for (var i = 0; i < cache.length; i++) {
+            if (cache[i].postId === postId) {
+                // Move to front (most recently used)
+                var item = cache.splice(i, 1)[0];
+                cache.unshift(item);
+                return item.imageUrl;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add image to cache
+     * @param {string} postId - Post ID
+     * @param {string} imageUrl - Data URL of captured image
+     */
+    function addToCache(postId, imageUrl) {
+        // Remove if already exists
+        for (var i = 0; i < cache.length; i++) {
+            if (cache[i].postId === postId) {
+                cache.splice(i, 1);
+                break;
+            }
+        }
+        // Add to front
+        cache.unshift({ postId: postId, imageUrl: imageUrl });
+        // Evict oldest if over limit
+        if (cache.length > CACHE_LIMIT) {
+            cache.pop();
+        }
+    }
+
+    /**
+     * Render the map container HTML (image populated later)
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @returns {string} HTML string
+     */
+    function render(options) {
+        var postId = options.postId || '';
+        return '<div class="post-location-map" data-post-id="' + postId + '"></div>';
+    }
+
+    /**
+     * Initialize the map - check cache or capture new image
+     * @param {HTMLElement} container - The .post-location-map element
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @param {Array} options.locations - Array of {latitude, longitude} objects
+     * @param {string} options.iconUrl - Subcategory icon URL
+     * @param {Function} options.onReady - Callback when image is ready
+     */
+    function init(container, options) {
+        if (!container) return;
+
+        var postId = options.postId || '';
+        var locations = options.locations || [];
+        var iconUrl = options.iconUrl || '';
+        var onReady = options.onReady || function() {};
+
+        // Check cache first
+        var cached = getFromCache(postId);
+        if (cached) {
+            displayImage(container, cached);
+            onReady();
+            return;
+        }
+
+        // Need to capture - show loading state
+        container.innerHTML = '<div class="post-location-map-loading">Loading map...</div>';
+
+        // Capture using SecondaryMap
+        captureMap(locations, iconUrl, function(imageUrl) {
+            if (imageUrl) {
+                addToCache(postId, imageUrl);
+                displayImage(container, imageUrl);
+            } else {
+                container.innerHTML = '<div class="post-location-map-error">Map unavailable</div>';
+            }
+            onReady();
+        });
+    }
+
+    /**
+     * Display the captured image
+     * @param {HTMLElement} container - The .post-location-map element
+     * @param {string} imageUrl - Data URL of image
+     */
+    function displayImage(container, imageUrl) {
+        var img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = 'Location map';
+        img.className = 'post-location-map-image';
+        container.innerHTML = '';
+        container.appendChild(img);
+    }
+
+    /**
+     * Capture map image using SecondaryMap
+     * @param {Array} locations - Array of {latitude, longitude} objects
+     * @param {string} iconUrl - Subcategory icon URL for markers
+     * @param {Function} callback - Called with image data URL or null
+     */
+    function captureMap(locations, iconUrl, callback) {
+        // Filter valid locations
+        var validLocs = [];
+        for (var i = 0; i < locations.length; i++) {
+            var loc = locations[i];
+            var lat = parseFloat(loc.latitude);
+            var lng = parseFloat(loc.longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                validLocs.push({ lat: lat, lng: lng });
+            }
+        }
+
+        if (validLocs.length === 0) {
+            callback(null);
+            return;
+        }
+
+        // Calculate bounds
+        var minLat = validLocs[0].lat, maxLat = validLocs[0].lat;
+        var minLng = validLocs[0].lng, maxLng = validLocs[0].lng;
+        for (var j = 1; j < validLocs.length; j++) {
+            if (validLocs[j].lat < minLat) minLat = validLocs[j].lat;
+            if (validLocs[j].lat > maxLat) maxLat = validLocs[j].lat;
+            if (validLocs[j].lng < minLng) minLng = validLocs[j].lng;
+            if (validLocs[j].lng > maxLng) maxLng = validLocs[j].lng;
+        }
+
+        // Use SecondaryMap to capture
+        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.captureWithBounds === 'function') {
+            SecondaryMap.captureWithBounds({
+                bounds: [[minLng, minLat], [maxLng, maxLat]],
+                markers: validLocs,
+                markerIcon: iconUrl,
+                markerSize: 24,
+                width: 600,
+                height: 300
+            }, callback);
+        } else {
+            callback(null);
+        }
+    }
+
+    /**
+     * Clear the cache (call on page unload or when needed)
+     */
+    function clearCache() {
+        cache = [];
+    }
+
+    return {
+        render: render,
+        init: init,
+        clearCache: clearCache,
+        getFromCache: getFromCache
+    };
+})();
+
+
 const PostLocationComponent = (function() {
     'use strict';
 
@@ -9564,8 +9868,8 @@ const PostLocationComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-1 for standard menu styling
-        html.push('<div class="post-location-container menu-class-1" data-post-id="' + postId + '">');
+        // Container wrapper - uses menu-class-4 for post info menu styling
+        html.push('<div class="post-location-container menu-class-4" data-post-id="' + postId + '">');
 
         // Button shows currently selected location info
         html.push('<button class="post-location-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
@@ -9584,6 +9888,9 @@ const PostLocationComponent = (function() {
         // Dropdown options (all locations) - only if multiple
         if (hasMultipleLocations) {
             html.push('<div class="post-location-options menu-options">');
+            // Mini-map at top (rendered by PostLocationMapComponent)
+            html.push(PostLocationMapComponent.render({ postId: postId }));
+            // Location list below map
             for (var i = 0; i < locationList.length; i++) {
                 html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
             }
@@ -9626,8 +9933,8 @@ const PostSessionComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-1 for standard menu styling
-        html.push('<div class="post-session-container menu-class-1" data-post-id="' + postId + '">');
+        // Container wrapper - uses menu-class-4 for post info menu styling
+        html.push('<div class="post-session-container menu-class-4" data-post-id="' + postId + '">');
 
         html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-session-text menu-text">');
@@ -9672,8 +9979,8 @@ const PostPriceComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-1 for standard menu styling
-        html.push('<div class="post-price-container menu-class-1" data-post-id="' + postId + '">');
+        // Container wrapper - uses menu-class-4 for post info menu styling
+        html.push('<div class="post-price-container menu-class-4" data-post-id="' + postId + '">');
 
         // Build price badge
         var badgeHtml = priceParts.flagUrl 
@@ -9725,6 +10032,7 @@ window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
+window.PostLocationMapComponent = PostLocationMapComponent;
 window.PostLocationComponent = PostLocationComponent;
 window.PostSessionComponent = PostSessionComponent;
 window.PostPriceComponent = PostPriceComponent;

@@ -75,30 +75,157 @@ PostLocationComponent redesign:
 
 FUTURE (to discuss):
 - Map flies to selected location when changed
-- Possible mini flat-map showing all locations plotted
+
+=====================================
+POST LOCATION MINI-MAP PLAN
+=====================================
+
+PURPOSE:
+- Show all locations for a post on a flat 2D map
+- Auto-fit bounds to show all points with padding
+- Subcategory icons as markers at each location
+
+STRICT 2-MAP RULE:
+1. Main map (always present)
+2. SecondaryMap (shared between orbit wallpaper and location mini-map)
+
+NEVER 3 MAPS. SecondaryMap does one job at a time.
+
+MINI-MAP TYPE: Static image with clickable markers
+- Reference tool - shows all locations at a glance
+- No zoom/pan - would defeat the purpose
+- Markers ARE clickable:
+  - Click marker → highlight corresponding list item
+  - FUTURE: popup asks "fly to this location?"
+  - If yes, main map flies there, button updates to show that location
+
+MAP LAYOUT:
+- Full width of dropdown
+- Aspect ratio 2:1 (width:height) - e.g., 500px wide = 250px high
+- Position: directly under first result (at top of menu)
+- Part of scroll content (scrolls out of view)
+- Style: matches main map's current style
+
+DROPDOWN CONSTRAINTS:
+- Max height: 600px
+- After 600px: scroll wheel activates
+
+BUTTON TEXT BEHAVIOR:
+- Shows currently selected/viewed location
+- If user flies to location 2, button shows location 2's info
+- Not always showing first location
+
+CACHING:
+- In-memory LRU cache (5-10 posts)
+- Keyed by post ID
+- Cleared on page refresh (no localStorage)
+- Jumping between same posts = instant
+- Oldest evicted when over limit
+
+FLOW WHEN LOCATION DROPDOWN OPENS:
+1. Check cache for this post's mini-map image
+2. If cached: display instantly
+3. If not cached:
+   a. Orbit mode stops, wallpaper converts to still
+   b. SecondaryMap captures flat 2D image with bounds + markers
+   c. Store in cache
+   d. Display image
+4. SecondaryMap released, wallpaper can resume
+
+FLOW WHEN LOCATION DROPDOWN CLOSES:
+1. Image stays in cache
+2. Wallpaper can resume orbit if needed
+
+IMPLEMENTATION COMPLETE:
+
+1. PostLocationMapComponent (components-new.js):
+   - render() - returns container HTML
+   - init() - checks cache or captures new
+   - LRU cache (5 posts) in memory
+   - clearCache() for cleanup
+
+2. SecondaryMap.captureWithBounds() added:
+   - Sets flat mercator projection
+   - Fits bounds with 40px padding
+   - Draws 24px markers on canvas
+   - Returns data URL
+
+3. CSS (post-new.css):
+   - .post-location-map - 2:1 ratio, full width, no padding
+   - Loading/error states
+   - Reserved space (no layout shift)
+
+4. Event wiring (post-new.js):
+   - Map initialized on first dropdown open
+   - Uses post.map_cards for locations
+   - Uses post.subcategory_icon_url for markers
+
+TODO: Delete unused createPostMap() from map-new.js
 
 =====================================
 COMPLETED CHANGES:
 =====================================
 
-[2026-02-03] Created three post info components in components-new.js:
+[2026-02-03] Created menu-class-4 in base-new.css:
+- Post info menu styling (location, session, price)
+- 600px max height with scroll
+- 70px min-height options
+- Background: rgba(0,0,0,0.35) - matches other menu classes
+- Optional embedded map (.menu-map with 2:1 aspect ratio)
+- Bridge classes: menu-button, menu-arrow, menu-options, menu-option
+- State classes: menu-button--open, menu-arrow--open, menu-option--highlighted
 
-1. PostLocationComponent
-   - Container: .post-location (extends menu-class-1)
-   - Button shows selected location (venue name + address/city)
-   - Dropdown shows all locations (70px min-height each)
-   - Uses bridge classes: menu-button, menu-arrow, menu-options, menu-option
-   - Uses state classes: menu-button--open, menu-arrow--open, menu-option--highlighted
+[2026-02-03] Created four post info components in components-new.js:
 
-2. PostSessionComponent
-   - Container: .post-session
-   - Renders session/dates button
+1. PostLocationMapComponent
+   - render() - returns .post-location-map container
+   - init() - checks LRU cache (5 posts) or captures new
+   - captureMap() - uses SecondaryMap.captureWithBounds()
+   - clearCache() - clears memory cache
+   - getFromCache() - retrieves cached image
 
-3. PostPriceComponent
-   - Container: .post-price
-   - Renders price button with currency badge
+2. PostLocationComponent
+   - Container: .post-location-container.menu-class-4
+   - Button: .post-location-button.menu-button
+   - Text: .post-location-text.menu-text + -main/-secondary
+   - Arrow: .post-location-arrow.menu-arrow
+   - Options: .post-location-options.menu-options
+   - Option: .post-location-option.menu-option
+   - Includes PostLocationMapComponent at top of dropdown
 
-Updated post-new.js:
-- Uses these components instead of inline HTML
-- Location dropdown toggle uses menu-button--open / menu-arrow--open classes
-- Option selection updates button text and highlights selected option
+3. PostSessionComponent
+   - Container: .post-session-container.menu-class-4
+   - Button: .post-session-button.menu-button
+   - Text: .post-session-text.menu-text + -main
+   - Arrow: .post-session-arrow.menu-arrow
+
+4. PostPriceComponent
+   - Container: .post-price-container.menu-class-4
+   - Button: .post-price-button.menu-button
+   - Text: .post-price-text.menu-text + -main
+   - Arrow: .post-price-arrow.menu-arrow
+   - Badge: .post-price-badge (currency flag)
+
+[2026-02-03] Added SecondaryMap.captureWithBounds() in components-new.js:
+- Switches to flat mercator projection
+- Fits bounds with 40px padding, maxZoom 15
+- Draws base map to canvas
+- Overlays 24px marker icons at each location
+- Returns data URL (webp or jpeg)
+
+[2026-02-03] Updated post-new.css:
+- .post-location-container, .post-session-container, .post-price-container
+- .post-location-map - 2:1 ratio, full width, reserved space
+- .post-location-map-image, -loading, -error states
+- .post-location-map-marker - 24px absolute positioned
+
+[2026-02-03] Updated post-new.js:
+- Components called from buildPostDetail()
+- Location dropdown toggle initializes map on first open
+- Option selection updates button text and highlights
+- Uses post.map_cards for locations, post.subcategory_icon_url for markers
+
+TODO:
+- Delete unused createPostMap() from map-new.js
+- Implement marker click → highlight list item
+- Implement "fly to location" popup (FUTURE)

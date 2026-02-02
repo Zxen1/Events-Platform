@@ -2838,12 +2838,27 @@ const PostModule = (function() {
     // Location dropdown toggle
     var locationBtn = wrap.querySelector('.post-location-button');
     var locationArrow = wrap.querySelector('.post-location-arrow');
+    var locationMapContainer = wrap.querySelector('.post-location-map');
+    var locationMapInitialized = false;
     if (locationBtn) {
       locationBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var isOpen = locationBtn.classList.contains('menu-button--open');
         locationBtn.classList.toggle('menu-button--open', !isOpen);
         if (locationArrow) locationArrow.classList.toggle('menu-arrow--open', !isOpen);
+
+        // Initialize map on first open (if multiple locations)
+        if (!isOpen && locationMapContainer && !locationMapInitialized) {
+          locationMapInitialized = true;
+          var locationList = post.map_cards || [];
+          var iconUrl = post.subcategory_icon_url || '';
+          PostLocationMapComponent.init(locationMapContainer, {
+            postId: post.id,
+            locations: locationList,
+            iconUrl: iconUrl,
+            onReady: function() {}
+          });
+        }
       });
     }
 
