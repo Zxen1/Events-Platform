@@ -925,8 +925,8 @@
    ============================================================================ */
 
 .menu-class-4 {
-  --menu-bg: rgba(0, 0, 0, 0.85);
-  --menu-bg-focus: rgba(0, 0, 0, 0.9);
+  --menu-bg: rgba(0, 0, 0, 0.5);
+  --menu-bg-focus: rgba(0, 0, 0, 0.35);
   --menu-border: rgba(255, 255, 255, 0.12);
   --menu-border-hover: rgba(255, 255, 255, 0.2);
   --menu-border-focus: var(--blue-500);
@@ -939,7 +939,7 @@
 }
 
 .menu-class-4 .menu-button {
-  background: var(--menu-bg);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--menu-border);
   border-radius: var(--menu-radius);
   color: var(--menu-text);
@@ -987,7 +987,7 @@
   right: 0;
   top: 100%;
   z-index: var(--layer-menu);
-  background: var(--menu-bg);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--menu-border-focus);
