@@ -2839,33 +2839,98 @@ const PostModule = (function() {
     var locationBtn = wrap.querySelector('.post-location-button');
     var locationArrow = wrap.querySelector('.post-location-arrow');
     var locationMapContainer = wrap.querySelector('.post-location-map');
-    var locationMapInitialized = false;
-    if (locationBtn) {
-      locationBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var isOpen = locationBtn.classList.contains('menu-button--open');
-        locationBtn.classList.toggle('menu-button--open', !isOpen);
-        if (locationArrow) locationArrow.classList.toggle('menu-arrow--open', !isOpen);
+    var locationOptions = wrap.querySelectorAll('.post-location-option');
+    var locationMapOwnerId = null;
+    var locationSelectedIndex = 0;
+    var wallpaperContainer = wrap.querySelector('.component-locationwallpaper-container');
 
-        // Initialize map on first open (if multiple locations)
-        if (!isOpen && locationMapContainer && !locationMapInitialized) {
-          locationMapInitialized = true;
-          var locationList = post.map_cards || [];
-          var iconUrl = post.subcategory_icon_url || '';
+    // Helper: Close location dropdown and cleanup
+    function closeLocationDropdown() {
+      locationBtn.classList.remove('menu-button--open');
+      if (locationArrow) locationArrow.classList.remove('menu-arrow--open');
+      
+      // Release the live map
+      if (locationMapContainer && locationMapOwnerId) {
+        PostLocationMapComponent.release(locationMapContainer);
+        locationMapOwnerId = null;
+      }
+      
+      // Resume wallpaper if it was frozen
+      if (wallpaperContainer && wallpaperContainer.__locationWallpaperCtrl) {
+        try { wallpaperContainer.__locationWallpaperCtrl.refresh(); } catch (e) {}
+      }
+    }
 
-          // Initialize map - SecondaryMap uses its own off-screen instance
-          PostLocationMapComponent.init(locationMapContainer, {
-            postId: post.id,
-            locations: locationList,
-            iconUrl: iconUrl,
-            onReady: function() {}
-          });
+    // Helper: Highlight list item by index
+    function highlightListItem(index) {
+      locationOptions.forEach(function(o, i) {
+        if (i === index) {
+          o.classList.add('menu-option--hover');
+        } else {
+          o.classList.remove('menu-option--hover');
         }
       });
     }
 
+    if (locationBtn) {
+      locationBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = locationBtn.classList.contains('menu-button--open');
+        
+        if (isOpen) {
+          // Closing
+          closeLocationDropdown();
+        } else {
+          // Opening
+          locationBtn.classList.add('menu-button--open');
+          if (locationArrow) locationArrow.classList.add('menu-arrow--open');
+          
+          // Freeze wallpaper if in Orbit mode (so SecondaryMap is available)
+          if (wallpaperContainer && wallpaperContainer.__locationWallpaperCtrl) {
+            try { wallpaperContainer.__locationWallpaperCtrl.freeze(); } catch (e) {}
+          }
+          
+          // Init live map
+          if (locationMapContainer) {
+            var locationList = post.map_cards || [];
+            var iconUrl = post.subcategory_icon_url || '';
+            
+            locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
+              postId: post.id,
+              locations: locationList,
+              iconUrl: iconUrl,
+              activeIndex: locationSelectedIndex,
+              onMarkerClick: function(index) {
+                // Select this location
+                var opt = locationOptions[index];
+                if (opt) opt.click();
+              },
+              onMarkerHover: function(index) {
+                // Highlight corresponding list item
+                highlightListItem(index);
+              },
+              onDisconnect: function() {
+                // Another component claimed SecondaryMap, close dropdown
+                closeLocationDropdown();
+              },
+              onReady: function() {}
+            });
+          }
+        }
+      });
+    }
+
+    // Location option hover (highlight marker)
+    locationOptions.forEach(function(opt, index) {
+      opt.addEventListener('mouseenter', function() {
+        PostLocationMapComponent.highlightMarker(index);
+      });
+      opt.addEventListener('mouseleave', function() {
+        PostLocationMapComponent.highlightMarker(-1);
+      });
+    });
+
     // Location option selection
-    var locationOptions = wrap.querySelectorAll('.post-location-option');
     locationOptions.forEach(function(opt) {
       opt.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -2873,6 +2938,9 @@ const PostModule = (function() {
         var locationList = post.map_cards || [];
         var loc = locationList[index];
         if (!loc) return;
+
+        // Update selected index
+        locationSelectedIndex = index;
 
         // Update button content with selected location
         var btnTextMain = wrap.querySelector('.post-location-text-main');
@@ -2885,16 +2953,27 @@ const PostModule = (function() {
           btnTextSecondary.textContent = secondary;
         }
 
-        // Update selected state
+        // Update selected state in list
         locationOptions.forEach(function(o) {
           o.classList.remove('menu-option--highlighted');
         });
         opt.classList.add('menu-option--highlighted');
 
-        // Close dropdown
-        locationBtn.classList.remove('menu-button--open');
-        if (locationArrow) locationArrow.classList.remove('menu-arrow--open');
+        // Close dropdown (also releases map and resumes wallpaper)
+        closeLocationDropdown();
       });
+    });
+
+    // Click-outside handler for location dropdown
+    document.addEventListener('click', function(e) {
+      if (!locationBtn || !locationBtn.classList.contains('menu-button--open')) return;
+      var target = e.target;
+      if (!target) return;
+      // If click is inside the dropdown or button, ignore
+      var container = wrap.querySelector('.post-location-container');
+      if (container && container.contains(target)) return;
+      // Close dropdown
+      closeLocationDropdown();
     });
 
     /* ........................................................................

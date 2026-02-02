@@ -1018,6 +1018,10 @@
   background: var(--menu-hover);
 }
 
+.menu-class-4 .menu-option.menu-option--hover {
+  background: var(--menu-hover);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .menu-class-4 .menu-option:hover {
     background: var(--menu-hover);

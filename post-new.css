@@ -1540,14 +1540,24 @@
 .post-location-map-marker {
   width: 24px;
   height: 24px;
-  position: absolute;
-  transform: translate(-50%, -50%);
+  border: 2px solid transparent;
+  border-radius: 4px;
+  box-sizing: content-box;
+  transition: border-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
 }
 
-.post-location-map-marker img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.post-location-map-marker--hover {
+  border-color: var(--accent);
+}
+
+.post-location-map-marker--active {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.15);
+}
+
+.post-location-map-marker--current {
+  filter: brightness(1.3);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 /* ============================================================================

@@ -8180,6 +8180,12 @@ var SecondaryMap = (function() {
     var currentHeight = 0;
     var isCapturing = false;
     var queue = [];
+    
+    // Live display state (most recent wins)
+    var currentOwner = null;
+    var currentMarkers = [];
+    var onDisconnectCallback = null;
+    var originalParent = null;
 
     // Wallpaper always uses standard style with night lighting for consistent dark aesthetic
     var STYLE_URL = 'mapbox://styles/mapbox/standard';
@@ -8418,10 +8424,231 @@ var SecondaryMap = (function() {
         currentHeight = 0;
     }
 
+    /**
+     * Clear all markers from the map
+     */
+    function clearMarkers() {
+        for (var i = 0; i < currentMarkers.length; i++) {
+            try { currentMarkers[i].remove(); } catch (e) {}
+        }
+        currentMarkers = [];
+    }
+
+    /**
+     * Move map back to off-screen position
+     */
+    function moveOffScreen() {
+        if (!mount) return;
+        originalParent = null;
+        mount.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:' + currentWidth + 'px;height:' + currentHeight + 'px;';
+        if (mount.parentNode !== document.body) {
+            try { document.body.appendChild(mount); } catch (e) {}
+        }
+    }
+
+    /**
+     * Claim the map for live display (most recent wins)
+     * @param {string} ownerId - Unique identifier for the claimer
+     * @param {HTMLElement} container - Target container to display map in
+     * @param {Object} options - Configuration options
+     * @param {Array} options.locations - Array of {lat, lng, label} objects
+     * @param {string} options.iconUrl - URL for marker icons
+     * @param {number} options.iconSize - Marker size in pixels (default 24)
+     * @param {number} options.activeIndex - Index of currently active/selected location
+     * @param {Function} options.onMarkerClick - Callback when marker is clicked (receives index)
+     * @param {Function} options.onMarkerHover - Callback when marker is hovered (receives index or -1)
+     * @param {Function} options.onDisconnect - Callback when kicked off by another claimer
+     * @param {Function} callback - Called with true on success, false on failure
+     */
+    function claim(ownerId, container, options, callback) {
+        if (!container || !ownerId) {
+            if (callback) callback(false);
+            return;
+        }
+
+        // Most recent wins: kick off previous owner
+        if (currentOwner && currentOwner !== ownerId) {
+            if (onDisconnectCallback) {
+                try { onDisconnectCallback(); } catch (e) {}
+            }
+            clearMarkers();
+        }
+
+        currentOwner = ownerId;
+        onDisconnectCallback = options.onDisconnect || null;
+
+        var locations = options.locations || [];
+        var iconUrl = options.iconUrl || '';
+        var iconSize = options.iconSize || 24;
+        var activeIndex = typeof options.activeIndex === 'number' ? options.activeIndex : 0;
+        var onMarkerClick = options.onMarkerClick || null;
+        var onMarkerHover = options.onMarkerHover || null;
+
+        // Ensure map exists
+        var containerWidth = container.offsetWidth || 300;
+        var containerHeight = container.offsetHeight || 150;
+
+        ensureMap(containerWidth, containerHeight, function(m) {
+            if (!m) {
+                currentOwner = null;
+                if (callback) callback(false);
+                return;
+            }
+
+            // Move mount into container
+            originalParent = mount.parentNode;
+            mount.style.cssText = 'width:100%;height:100%;position:relative;';
+            try { container.appendChild(mount); } catch (e) {}
+            try { m.resize(); } catch (e) {}
+
+            // Switch to flat projection for mini-map
+            try { m.setProjection('mercator'); } catch (e) {}
+
+            // Calculate bounds from locations
+            if (locations.length === 0) {
+                if (callback) callback(true);
+                return;
+            }
+
+            var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            for (var i = 0; i < locations.length; i++) {
+                var loc = locations[i];
+                if (loc.lat < minLat) minLat = loc.lat;
+                if (loc.lat > maxLat) maxLat = loc.lat;
+                if (loc.lng < minLng) minLng = loc.lng;
+                if (loc.lng > maxLng) maxLng = loc.lng;
+            }
+
+            // Fit bounds
+            try {
+                var lngLatBounds = new mapboxgl.LngLatBounds(
+                    [minLng, minLat],
+                    [maxLng, maxLat]
+                );
+                m.fitBounds(lngLatBounds, {
+                    padding: 40,
+                    maxZoom: 15,
+                    animate: false
+                });
+            } catch (e) {}
+
+            // Add markers after map settles
+            m.once('idle', function() {
+                clearMarkers();
+
+                for (var i = 0; i < locations.length; i++) {
+                    (function(index) {
+                        var loc = locations[index];
+                        
+                        // Create marker element
+                        var el = document.createElement('div');
+                        el.className = 'post-location-map-marker';
+                        if (index === activeIndex) {
+                            el.className += ' post-location-map-marker--current';
+                        }
+                        el.style.width = iconSize + 'px';
+                        el.style.height = iconSize + 'px';
+                        el.style.backgroundImage = 'url(' + iconUrl + ')';
+                        el.style.backgroundSize = 'contain';
+                        el.style.backgroundRepeat = 'no-repeat';
+                        el.style.cursor = 'pointer';
+                        el.setAttribute('data-index', index);
+
+                        // Hover events
+                        el.addEventListener('mouseenter', function() {
+                            el.classList.add('post-location-map-marker--hover');
+                            if (onMarkerHover) onMarkerHover(index);
+                        });
+                        el.addEventListener('mouseleave', function() {
+                            el.classList.remove('post-location-map-marker--hover');
+                            if (onMarkerHover) onMarkerHover(-1);
+                        });
+
+                        // Click event
+                        el.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (onMarkerClick) onMarkerClick(index);
+                        });
+
+                        // Create Mapbox marker
+                        var marker = new mapboxgl.Marker({ element: el })
+                            .setLngLat([loc.lng, loc.lat])
+                            .addTo(m);
+                        
+                        currentMarkers.push(marker);
+                    })(i);
+                }
+
+                if (callback) callback(true);
+            });
+        });
+    }
+
+    /**
+     * Update the active marker (highlight current location)
+     * @param {number} index - Index of the active marker
+     */
+    function setActiveMarker(index) {
+        for (var i = 0; i < currentMarkers.length; i++) {
+            var el = currentMarkers[i].getElement();
+            if (i === index) {
+                el.classList.add('post-location-map-marker--active');
+            } else {
+                el.classList.remove('post-location-map-marker--active');
+            }
+        }
+    }
+
+    /**
+     * Highlight a marker (for hover coordination with list)
+     * @param {number} index - Index to highlight, or -1 to clear
+     */
+    function highlightMarker(index) {
+        for (var i = 0; i < currentMarkers.length; i++) {
+            var el = currentMarkers[i].getElement();
+            if (i === index) {
+                el.classList.add('post-location-map-marker--hover');
+            } else {
+                el.classList.remove('post-location-map-marker--hover');
+            }
+        }
+    }
+
+    /**
+     * Release the map (move back off-screen)
+     * @param {string} ownerId - Must match current owner
+     */
+    function release(ownerId) {
+        if (currentOwner !== ownerId) return;
+        
+        currentOwner = null;
+        onDisconnectCallback = null;
+        clearMarkers();
+        moveOffScreen();
+        
+        // Restore globe projection for wallpaper use
+        if (map) {
+            try { map.setProjection('globe'); } catch (e) {}
+        }
+    }
+
+    /**
+     * Check if currently owned
+     * @returns {string|null} Current owner ID or null
+     */
+    function getOwner() {
+        return currentOwner;
+    }
+
     return {
         capture: capture,
         captureWithBounds: captureWithBounds,
-        destroy: destroy
+        destroy: destroy,
+        claim: claim,
+        release: release,
+        setActiveMarker: setActiveMarker,
+        highlightMarker: highlightMarker,
+        getOwner: getOwner
     };
 })();
 
@@ -9659,57 +9886,17 @@ const LocationWallpaperComponent = (function() {
 
 /* ============================================================================
    POST LOCATION MAP COMPONENT
-   Renders a static 2:1 mini-map showing all locations with subcategory icons.
-   Uses SecondaryMap for capture. LRU cache (5 posts) in memory.
+   Renders a live mini-map showing all locations with interactive markers.
+   Uses SecondaryMap for live display. Most recent wins.
    ============================================================================ */
 
 const PostLocationMapComponent = (function() {
     'use strict';
 
-    // LRU cache - max 5 posts
-    var cache = [];
-    var CACHE_LIMIT = 5;
+    var instanceCounter = 0;
 
     /**
-     * Get cached image for a post
-     * @param {string} postId - Post ID
-     * @returns {string|null} Cached image data URL or null
-     */
-    function getFromCache(postId) {
-        for (var i = 0; i < cache.length; i++) {
-            if (cache[i].postId === postId) {
-                // Move to front (most recently used)
-                var item = cache.splice(i, 1)[0];
-                cache.unshift(item);
-                return item.imageUrl;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Add image to cache
-     * @param {string} postId - Post ID
-     * @param {string} imageUrl - Data URL of captured image
-     */
-    function addToCache(postId, imageUrl) {
-        // Remove if already exists
-        for (var i = 0; i < cache.length; i++) {
-            if (cache[i].postId === postId) {
-                cache.splice(i, 1);
-                break;
-            }
-        }
-        // Add to front
-        cache.unshift({ postId: postId, imageUrl: imageUrl });
-        // Evict oldest if over limit
-        if (cache.length > CACHE_LIMIT) {
-            cache.pop();
-        }
-    }
-
-    /**
-     * Render the map container HTML (image populated later)
+     * Render the map container HTML
      * @param {Object} options
      * @param {string} options.postId - Post ID
      * @returns {string} HTML string
@@ -9720,66 +9907,35 @@ const PostLocationMapComponent = (function() {
     }
 
     /**
-     * Initialize the map - check cache or capture new image
+     * Initialize the live map
      * @param {HTMLElement} container - The .post-location-map element
      * @param {Object} options
      * @param {string} options.postId - Post ID
-     * @param {Array} options.locations - Array of {latitude, longitude} objects
+     * @param {Array} options.locations - Array of {latitude, longitude, venue_name} objects
      * @param {string} options.iconUrl - Subcategory icon URL
-     * @param {Function} options.onReady - Callback when image is ready
+     * @param {number} options.activeIndex - Currently active location index
+     * @param {Function} options.onMarkerClick - Called when marker clicked (index)
+     * @param {Function} options.onMarkerHover - Called when marker hovered (index or -1)
+     * @param {Function} options.onDisconnect - Called if kicked off by another claimer
+     * @param {Function} options.onReady - Callback when map is ready
+     * @returns {string} Owner ID for this instance (use to release)
      */
     function init(container, options) {
-        if (!container) return;
+        if (!container) return null;
 
         var postId = options.postId || '';
         var locations = options.locations || [];
         var iconUrl = options.iconUrl || '';
+        var activeIndex = typeof options.activeIndex === 'number' ? options.activeIndex : 0;
+        var onMarkerClick = options.onMarkerClick || null;
+        var onMarkerHover = options.onMarkerHover || null;
+        var onDisconnect = options.onDisconnect || null;
         var onReady = options.onReady || function() {};
 
-        // Check cache first
-        var cached = getFromCache(postId);
-        if (cached) {
-            displayImage(container, cached);
-            onReady();
-            return;
-        }
+        // Generate unique owner ID
+        instanceCounter++;
+        var ownerId = 'post-location-map-' + postId + '-' + instanceCounter;
 
-        // Need to capture - show loading state
-        container.innerHTML = '<div class="post-location-map-loading">Loading map...</div>';
-
-        // Capture using SecondaryMap
-        captureMap(locations, iconUrl, function(imageUrl) {
-            if (imageUrl) {
-                addToCache(postId, imageUrl);
-                displayImage(container, imageUrl);
-            } else {
-                container.innerHTML = '<div class="post-location-map-error">Map unavailable</div>';
-            }
-            onReady();
-        });
-    }
-
-    /**
-     * Display the captured image
-     * @param {HTMLElement} container - The .post-location-map element
-     * @param {string} imageUrl - Data URL of image
-     */
-    function displayImage(container, imageUrl) {
-        var img = document.createElement('img');
-        img.src = imageUrl;
-        img.alt = 'Location map';
-        img.className = 'post-location-map-image';
-        container.innerHTML = '';
-        container.appendChild(img);
-    }
-
-    /**
-     * Capture map image using SecondaryMap
-     * @param {Array} locations - Array of {latitude, longitude} objects
-     * @param {string} iconUrl - Subcategory icon URL for markers
-     * @param {Function} callback - Called with image data URL or null
-     */
-    function captureMap(locations, iconUrl, callback) {
         // Filter valid locations
         var validLocs = [];
         for (var i = 0; i < locations.length; i++) {
@@ -9787,52 +9943,94 @@ const PostLocationMapComponent = (function() {
             var lat = parseFloat(loc.latitude);
             var lng = parseFloat(loc.longitude);
             if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                validLocs.push({ lat: lat, lng: lng });
+                validLocs.push({
+                    lat: lat,
+                    lng: lng,
+                    label: loc.venue_name || ''
+                });
             }
         }
 
         if (validLocs.length === 0) {
-            callback(null);
-            return;
+            container.innerHTML = '<div class="post-location-map-error">No locations</div>';
+            onReady();
+            return null;
         }
 
-        // Calculate bounds
-        var minLat = validLocs[0].lat, maxLat = validLocs[0].lat;
-        var minLng = validLocs[0].lng, maxLng = validLocs[0].lng;
-        for (var j = 1; j < validLocs.length; j++) {
-            if (validLocs[j].lat < minLat) minLat = validLocs[j].lat;
-            if (validLocs[j].lat > maxLat) maxLat = validLocs[j].lat;
-            if (validLocs[j].lng < minLng) minLng = validLocs[j].lng;
-            if (validLocs[j].lng > maxLng) maxLng = validLocs[j].lng;
-        }
+        // Show loading state
+        container.innerHTML = '<div class="post-location-map-loading">Loading map...</div>';
 
-        // Use SecondaryMap to capture
-        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.captureWithBounds === 'function') {
-            SecondaryMap.captureWithBounds({
-                bounds: [[minLng, minLat], [maxLng, maxLat]],
-                markers: validLocs,
-                markerIcon: iconUrl,
-                markerSize: 24,
-                width: 600,
-                height: 300
-            }, callback);
+        // Store owner ID on container for release
+        container.setAttribute('data-map-owner', ownerId);
+
+        // Claim SecondaryMap for live display
+        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.claim === 'function') {
+            SecondaryMap.claim(ownerId, container, {
+                locations: validLocs,
+                iconUrl: iconUrl,
+                iconSize: 24,
+                activeIndex: activeIndex,
+                onMarkerClick: onMarkerClick,
+                onMarkerHover: onMarkerHover,
+                onDisconnect: function() {
+                    container.innerHTML = '<div class="post-location-map-disconnected"></div>';
+                    if (onDisconnect) onDisconnect();
+                }
+            }, function(success) {
+                if (!success) {
+                    container.innerHTML = '<div class="post-location-map-error">Map unavailable</div>';
+                }
+                onReady();
+            });
         } else {
-            callback(null);
+            container.innerHTML = '<div class="post-location-map-error">Map unavailable</div>';
+            onReady();
+            return null;
+        }
+
+        return ownerId;
+    }
+
+    /**
+     * Release the map (call when dropdown closes)
+     * @param {HTMLElement} container - The .post-location-map element
+     */
+    function release(container) {
+        if (!container) return;
+        var ownerId = container.getAttribute('data-map-owner');
+        if (ownerId && typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.release === 'function') {
+            SecondaryMap.release(ownerId);
+        }
+        container.removeAttribute('data-map-owner');
+        container.innerHTML = '';
+    }
+
+    /**
+     * Update active marker
+     * @param {number} index - Index of active marker
+     */
+    function setActiveMarker(index) {
+        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.setActiveMarker === 'function') {
+            SecondaryMap.setActiveMarker(index);
         }
     }
 
     /**
-     * Clear the cache (call on page unload or when needed)
+     * Highlight marker (for list hover coordination)
+     * @param {number} index - Index to highlight, or -1 to clear
      */
-    function clearCache() {
-        cache = [];
+    function highlightMarker(index) {
+        if (typeof SecondaryMap !== 'undefined' && typeof SecondaryMap.highlightMarker === 'function') {
+            SecondaryMap.highlightMarker(index);
+        }
     }
 
     return {
         render: render,
         init: init,
-        clearCache: clearCache,
-        getFromCache: getFromCache
+        release: release,
+        setActiveMarker: setActiveMarker,
+        highlightMarker: highlightMarker
     };
 })();
 
