@@ -5,6 +5,11 @@ When adding new rules to this file, keep each entry to 3 lines maximum.
 
 ---
 
+## THE WEBSITE
+This is **funmap.com** — a highly advanced CMS platform, fifteen years in development.
+
+---
+
 ## CRITICAL: WHAT IS FORBIDDEN
 
 ### No Snapshots
