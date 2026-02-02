@@ -7991,7 +7991,7 @@ const AgeRatingComponent = (function(){
 /* ============================================================================
    LOCATION WALLPAPER - Standalone wallpaper component for any container.
    Reads lat/lng from context (posts: post_map_cards, forms: Google Places inputs).
-   Modes: off, still (static), basic (4-image pan animation), orbit (live SecondaryMap).
+   Modes: off, still (static), basic (4-image pan), orbit (live map in container).
    Images 700x2500, fetched from storage first, generated only if missing.
    See Agent/wallpaper-settings.txt for full specification.
    ============================================================================ */
@@ -8306,7 +8306,6 @@ const LocationWallpaperComponent = (function() {
 
     var activeCtrl = null;
     var activeContainerEl = null;
-    var frozenCtrl = null;  // Track frozen controller to destroy if new one activates
     var docListenerInstalled = false;
     var didPrewarm = false;
 
@@ -9349,29 +9348,15 @@ const LocationWallpaperComponent = (function() {
             return;
         }
 
-        // Clean up previous container's wallpaper
+        // Freeze previous container's wallpaper
         if (activeCtrl && (!nextLocationContainer || activeCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null))) {
-            if (nextLocationContainer) {
-                // Switching to different container: destroy immediately (never more than 2 maps)
-                try { activeCtrl.destroy(); } catch (e2) {}
-                frozenCtrl = null;
-            } else {
-                // Clicking outside: freeze (keep map briefly in case they return)
-                try { activeCtrl.freeze(); } catch (e2) {}
-                frozenCtrl = activeCtrl;
-            }
+            try { activeCtrl.freeze(); } catch (e2) {}
             activeCtrl = null;
             activeContainerEl = null;
         }
 
         // Activate new container's wallpaper
         if (nextLocationContainer) {
-            // Destroy any frozen controller first (never more than 2 maps)
-            if (frozenCtrl && frozenCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null)) {
-                try { frozenCtrl.destroy(); } catch (e4) {}
-            }
-            frozenCtrl = null;
-            
             var ctrl = getOrCreateCtrl(nextLocationContainer);
             activeCtrl = ctrl;
             activeContainerEl = nextLocationContainer;
@@ -9410,7 +9395,6 @@ const LocationWallpaperComponent = (function() {
                 if (t.closest && t.closest('.fieldset-location-dropdown')) return;
                 if (activeContainerEl.contains(t)) return;
                 try { activeCtrl.freeze(); } catch (_eF) {}
-                frozenCtrl = activeCtrl;
                 activeCtrl = null;
                 activeContainerEl = null;
             }, true);

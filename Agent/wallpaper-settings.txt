@@ -8,15 +8,16 @@ MAP ARCHITECTURE
 ----------------
 
 Main map        Spinning globe, clusters, always visible
-Secondary map   All wallpaper captures AND orbit rendering
+Secondary map   Created when needed, destroyed when done
 
-Rule: NEVER more than 2 live maps. Queue system prevents third map.
+Rule: NEVER more than 2 live maps.
+  - Posts: Wallpaper destroyed when post closes
+  - Forms: Wallpaper freezes (shows still), lazy cleanup destroys map after 2s
 
-Secondary map location:
-  Lives in components-new.js as SecondaryMap utility
-  Persistent - created once, reused for all captures
-  Any component can request via SecondaryMap.capture(camera, w, h, callback)
-  Queue handles multiple requests, eliminates WebGL stutter
+SecondaryMap utility (components-new.js):
+  Used for still/basic mode captures only
+  Queue handles multiple capture requests
+  Created on first capture, destroyed when done
 
 
 IMAGE STORAGE
@@ -73,9 +74,10 @@ BASIC
   Click back: resumes
 
 ORBIT
-  Live SecondaryMap rendering, horizontally centered (never stored)
+  Live map rendering in container, horizontally centered (never stored)
+  Creates its own map, destroyed when post closes or container deactivates
   Fade in 1.5s
-  Click outside: still image fades in 1.5s
+  Click outside: still image fades in 1.5s, map cleaned up after 2s
   Click back: still fades out 1.5s, orbit reactivates from saved camera
 
 

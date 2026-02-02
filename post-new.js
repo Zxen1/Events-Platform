@@ -3234,10 +3234,10 @@ const PostModule = (function() {
               LocationWallpaperComponent.handleActiveContainerChange(wrap, wrap);
             }
           } else {
-            // Freeze wallpaper (do not affect other active containers)
+            // Destroy wallpaper when post closes (post is no longer visible)
             wrap.removeAttribute('data-active');
-            if (wrap.__locationWallpaperCtrl && typeof wrap.__locationWallpaperCtrl.freeze === 'function') {
-              wrap.__locationWallpaperCtrl.freeze();
+            if (wrap.__locationWallpaperCtrl && typeof wrap.__locationWallpaperCtrl.destroy === 'function') {
+              wrap.__locationWallpaperCtrl.destroy();
             }
           }
         } catch (_eLWPost) {}

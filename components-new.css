@@ -3070,8 +3070,8 @@
    BASIC MODE - 4 pan images (N/E/S/W) with class-toggled crossfade
    Lightweight alternative to orbit mode for slower PCs
    
-   Images are centered and pan 50px in each direction (100px total).
-   This ensures coverage regardless of container width.
+   Images are left-anchored and pan 100px leftward over 20s.
+   700px width ensures coverage on containers up to 600px wide.
    ---------------------------------------------------------------------------- */
 
 .component-locationwallpaper-basic-container {
