@@ -9594,19 +9594,39 @@ const LocationWallpaperComponent = (function() {
             } catch (_ePW) {}
         }
 
-        // Global click handler for click-away detection
+        // Global click handler for click-away and click-back detection
         if (!docListenerInstalled) {
             docListenerInstalled = true;
             document.addEventListener('click', function(e) {
-                if (!activeCtrl || !activeContainerEl) return;
                 var t = e && e.target ? e.target : null;
                 if (!t || !(t instanceof Element)) return;
                 if (t.closest && t.closest('.pac-container')) return;
                 if (t.closest && t.closest('.fieldset-location-dropdown')) return;
-                if (activeContainerEl.contains(t)) return;
-                try { activeCtrl.freeze(); } catch (_eF) {}
-                activeCtrl = null;
-                activeContainerEl = null;
+
+                // Find if click is inside a wallpaper container
+                var clickedContainer = t.closest ? t.closest('.component-locationwallpaper-container') : null;
+
+                // If clicking inside the already-active container, do nothing
+                if (clickedContainer && clickedContainer === activeContainerEl && activeCtrl) {
+                    return;
+                }
+
+                // Freeze previous container if clicking elsewhere
+                if (activeCtrl && activeContainerEl) {
+                    try { activeCtrl.freeze(); } catch (_eF) {}
+                    activeCtrl = null;
+                    activeContainerEl = null;
+                }
+
+                // Activate new container if clicking inside one
+                if (clickedContainer) {
+                    var ctrl = getOrCreateCtrl(clickedContainer);
+                    if (ctrl) {
+                        activeCtrl = ctrl;
+                        activeContainerEl = clickedContainer;
+                        try { ctrl.refresh(); } catch (_eR) {}
+                    }
+                }
             }, true);
         }
 

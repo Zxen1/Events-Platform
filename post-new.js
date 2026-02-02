@@ -2853,41 +2853,13 @@ const PostModule = (function() {
           var locationList = post.map_cards || [];
           var iconUrl = post.subcategory_icon_url || '';
 
-          // Check if we have a cached image
-          var cached = PostLocationMapComponent.getFromCache(String(post.id));
-          var wallpaperCtrl = wrap.__locationWallpaperCtrl || null;
-          
-          if (cached) {
-            // Cache hit - display instantly, no wallpaper disruption
-            PostLocationMapComponent.init(locationMapContainer, {
-              postId: post.id,
-              locations: locationList,
-              iconUrl: iconUrl,
-              onReady: function() {}
-            });
-          } else {
-            // Cache miss - need to capture
-            // Freeze wallpaper if in orbit mode (check for visible map mount)
-            var mapMount = wallpaperCtrl && wallpaperCtrl.element ? 
-                           wallpaperCtrl.element.querySelector('.component-locationwallpaper-mapmount') : null;
-            var isOrbitMode = mapMount && mapMount.style.opacity === '1';
-            
-            if (isOrbitMode && typeof wallpaperCtrl.freeze === 'function') {
-              wallpaperCtrl.freeze();
-            }
-
-            PostLocationMapComponent.init(locationMapContainer, {
-              postId: post.id,
-              locations: locationList,
-              iconUrl: iconUrl,
-              onReady: function() {
-                // Re-activate wallpaper after capture by calling refresh directly
-                if (isOrbitMode && wallpaperCtrl && typeof wallpaperCtrl.refresh === 'function') {
-                  wallpaperCtrl.refresh();
-                }
-              }
-            });
-          }
+          // Initialize map - SecondaryMap uses its own off-screen instance
+          PostLocationMapComponent.init(locationMapContainer, {
+            postId: post.id,
+            locations: locationList,
+            iconUrl: iconUrl,
+            onReady: function() {}
+          });
         }
       });
     }
