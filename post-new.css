@@ -1547,9 +1547,13 @@
 }
 
 .post-location-map-marker--hover,
-.post-location-map-marker--active,
-.post-location-map-marker--current {
+.post-location-map-marker--active {
   border-color: var(--blue-500);
+}
+
+/* Current location always has solid white border */
+.post-location-map-marker--current {
+  border-color: #fff;
 }
 
 /* ============================================================================

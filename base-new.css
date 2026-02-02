@@ -996,39 +996,31 @@
 .menu-class-4 .menu-option {
   min-height: 70px;
   padding: 10px;
-  padding-left: 8px;
   cursor: pointer;
   color: var(--menu-text);
   font-size: 14px;
   line-height: 1.4;
   background: transparent;
-  border-left: 2px solid transparent;
+  border: none;
   border-bottom: 1px solid var(--menu-border);
   text-align: left;
   width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-sizing: border-box;
 }
 
 .menu-class-4 .menu-option:last-child {
   border-bottom: none;
 }
 
-.menu-class-4 .menu-option.menu-option--highlighted {
-  border-left-color: var(--blue-500);
-  background: var(--menu-hover);
-}
-
+.menu-class-4 .menu-option.menu-option--highlighted,
 .menu-class-4 .menu-option.menu-option--hover {
-  border-left-color: var(--blue-500);
   background: var(--menu-hover);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .menu-class-4 .menu-option:hover {
-    border-left-color: var(--blue-500);
     background: var(--menu-hover);
   }
 }
