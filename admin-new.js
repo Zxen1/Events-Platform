@@ -2906,6 +2906,80 @@ const AdminModule = (function() {
                 if (flaggedEmpty) flaggedEmpty.classList.remove('admin-moderation-empty--hidden');
             }
         }
+        
+        // Render missing map images list
+        var mapImagesCount = moderationTabContainer.querySelector('#admin-moderation-mapimages-count');
+        var mapImagesList = moderationTabContainer.querySelector('#admin-moderation-mapimages-list');
+        var mapImagesEmpty = moderationTabContainer.querySelector('#admin-moderation-mapimages-empty');
+        
+        if (mapImagesCount) {
+            mapImagesCount.textContent = moderationData.missing_map_images_count || 0;
+            mapImagesCount.classList.toggle('admin-moderation-accordion-count--alert', moderationData.missing_map_images_count > 0);
+        }
+        if (mapImagesList) {
+            mapImagesList.innerHTML = '';
+            if (moderationData.missing_map_images && moderationData.missing_map_images.length > 0) {
+                moderationData.missing_map_images.forEach(function(entry) {
+                    mapImagesList.appendChild(createMapImagesItem(entry));
+                });
+                if (mapImagesEmpty) mapImagesEmpty.classList.add('admin-moderation-empty--hidden');
+            } else {
+                if (mapImagesEmpty) mapImagesEmpty.classList.remove('admin-moderation-empty--hidden');
+            }
+        }
+    }
+    
+    function createMapImagesItem(entry) {
+        var item = document.createElement('div');
+        item.className = 'admin-moderation-item';
+        item.dataset.logId = entry.id;
+        item.dataset.postId = entry.post_id;
+        
+        // Map icon
+        var icon = document.createElement('div');
+        icon.className = 'admin-moderation-item-avatar';
+        icon.innerHTML = '<div class="admin-moderation-item-avatar-icon admin-moderation-item-avatar-icon--map"></div>';
+        icon.style.display = 'flex';
+        icon.style.alignItems = 'center';
+        icon.style.justifyContent = 'center';
+        
+        // Info
+        var info = document.createElement('div');
+        info.className = 'admin-moderation-item-info';
+        
+        var name = document.createElement('span');
+        name.className = 'admin-moderation-item-name';
+        name.textContent = entry.post_title || 'Post #' + entry.post_id;
+        
+        var meta = document.createElement('span');
+        meta.className = 'admin-moderation-item-meta';
+        if (entry.lat && entry.lng) {
+            meta.textContent = 'Lat: ' + Number(entry.lat).toFixed(4) + ', Lng: ' + Number(entry.lng).toFixed(4);
+        } else {
+            meta.textContent = 'Coordinates unknown';
+        }
+        
+        info.appendChild(name);
+        info.appendChild(meta);
+        
+        // Actions
+        var actions = document.createElement('div');
+        actions.className = 'admin-moderation-item-actions';
+        
+        var dismissBtn = document.createElement('button');
+        dismissBtn.type = 'button';
+        dismissBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--reactivate';
+        dismissBtn.innerHTML = '<div class="admin-moderation-item-btn-icon admin-moderation-item-btn-icon--tick"></div>';
+        dismissBtn.title = 'Dismiss (Mark as Resolved)';
+        dismissBtn.onclick = function() { handleModerationAction('dismiss_missing_map_images', null, null, entry.id); };
+        
+        actions.appendChild(dismissBtn);
+        
+        item.appendChild(icon);
+        item.appendChild(info);
+        item.appendChild(actions);
+        
+        return item;
     }
     
     function createMemberItem(member) {
@@ -3047,10 +3121,11 @@ const AdminModule = (function() {
         }
     }
     
-    function handleModerationAction(action, memberId, postId) {
+    function handleModerationAction(action, memberId, postId, logId) {
         var body = { action: action };
         if (memberId) body.member_id = memberId;
         if (postId) body.post_id = postId;
+        if (logId) body.log_id = logId;
         
         fetch('/gateway.php?action=moderation-action', {
             method: 'POST',

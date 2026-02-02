@@ -2695,13 +2695,17 @@ const PostModule = (function() {
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
+      // Store post ID for missing wallpaper flagging
+      if (post && post.id) {
+        wrap.dataset.postId = String(post.id);
+      }
       var latEl = document.createElement('input');
       latEl.type = 'hidden';
-      latEl.className = 'component-locationwallpaper-lat';
+      latEl.className = 'fieldset-lat';
       latEl.value = String(lat);
       var lngEl = document.createElement('input');
       lngEl.type = 'hidden';
-      lngEl.className = 'component-locationwallpaper-lng';
+      lngEl.className = 'fieldset-lng';
       lngEl.value = String(lng);
       wrap.appendChild(latEl);
       wrap.appendChild(lngEl);

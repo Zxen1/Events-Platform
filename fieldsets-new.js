@@ -1472,10 +1472,10 @@ const FieldsetBuilder = (function(){
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
-                addrLatInput.className = 'component-locationwallpaper-lat';
+                addrLatInput.className = 'fieldset-lat';
                 var addrLngInput = document.createElement('input');
                 addrLngInput.type = 'hidden';
-                addrLngInput.className = 'component-locationwallpaper-lng';
+                addrLngInput.className = 'fieldset-lng';
                 var addrCountryInput = document.createElement('input');
                 addrCountryInput.type = 'hidden';
                 addrCountryInput.className = 'fieldset-country';
@@ -1517,10 +1517,10 @@ const FieldsetBuilder = (function(){
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
-                cityLatInput.className = 'component-locationwallpaper-lat';
+                cityLatInput.className = 'fieldset-lat';
                 var cityLngInput = document.createElement('input');
                 cityLngInput.type = 'hidden';
-                cityLngInput.className = 'component-locationwallpaper-lng';
+                cityLngInput.className = 'fieldset-lng';
                 var cityCountryInput = document.createElement('input');
                 cityCountryInput.type = 'hidden';
                 cityCountryInput.className = 'fieldset-country';
@@ -4787,10 +4787,10 @@ const FieldsetBuilder = (function(){
                 // Hidden lat/lng fields
                 var smartLatInput = document.createElement('input');
                 smartLatInput.type = 'hidden';
-                smartLatInput.className = 'component-locationwallpaper-lat';
+                smartLatInput.className = 'fieldset-lat';
                 var smartLngInput = document.createElement('input');
                 smartLngInput.type = 'hidden';
-                smartLngInput.className = 'component-locationwallpaper-lng';
+                smartLngInput.className = 'fieldset-lng';
                 var smartCountryInput = document.createElement('input');
                 smartCountryInput.type = 'hidden';
                 smartCountryInput.className = 'fieldset-country';
@@ -5370,8 +5370,8 @@ const FieldsetBuilder = (function(){
                 case 'location': {
                     // Address/City must be Google Places confirmed (not manual typing).
                     var addr = fieldset.querySelector('input.fieldset-input');
-                    var lat = fieldset.querySelector('input.component-locationwallpaper-lat');
-                    var lng = fieldset.querySelector('input.component-locationwallpaper-lng');
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(addr.value, minLength, maxLength)) return false;
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
@@ -5384,8 +5384,8 @@ const FieldsetBuilder = (function(){
                     var inputs = fieldset.querySelectorAll('input.fieldset-input');
                     var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
                     var addr = inputs && inputs[1] ? inputs[1] : null;
-                    var lat = fieldset.querySelector('input.component-locationwallpaper-lat');
-                    var lng = fieldset.querySelector('input.component-locationwallpaper-lng');
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
                     if (!venueName) return false;
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(String(addr.value || ''), minLength, maxLength)) return false;

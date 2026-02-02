@@ -1148,6 +1148,21 @@ if (empty($ogTitle)) {
             </div>
           </div>
           
+          <!-- Missing Map Images Accordion -->
+          <div class="admin-moderation-accordion accordion-class-1" id="admin-moderation-mapimages">
+            <div class="admin-moderation-accordion-header accordion-header">
+              <span class="admin-moderation-accordion-title">Missing Map Images</span>
+              <span class="admin-moderation-accordion-count" id="admin-moderation-mapimages-count">0</span>
+              <span class="admin-moderation-accordion-arrow"></span>
+            </div>
+            <div class="admin-moderation-accordion-body accordion-body">
+              <div class="admin-moderation-list" id="admin-moderation-mapimages-list">
+                <!-- Populated by JavaScript -->
+              </div>
+              <p class="admin-moderation-empty" id="admin-moderation-mapimages-empty">No posts with missing map images.</p>
+            </div>
+          </div>
+          
         </section>
 
         <!-- Sitemap Tab -->

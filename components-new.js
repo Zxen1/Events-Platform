@@ -7989,16 +7989,11 @@ const AgeRatingComponent = (function(){
 
 
 /* ============================================================================
-   LOCATION WALLPAPER (Member-only, location containers)
-   ============================================================================
-   Modes (member preference: animation_preference):
-   - "off": No wallpaper shown
-   - "still": Capture single image, show static
-   - "basic": Capture 4 pan images (N/E/S/W), CSS animation. Lightweight.
-   - "orbit": Live orbiting map while container is active
-   
-   Source of truth: member's animation_preference (logged in) or localStorage (guest).
-   Default: 'basic'
+   LOCATION WALLPAPER - Standalone wallpaper component for any container.
+   Reads lat/lng from context (posts: post_map_cards, forms: Google Places inputs).
+   Modes: off, still (static), basic (4-image pan animation), orbit (live SecondaryMap).
+   Images 700x2500, fetched from storage first, generated only if missing.
+   See Agent/wallpaper-settings.txt for full specification.
    ============================================================================ */
 
 /* ============================================================================
@@ -8311,6 +8306,7 @@ const LocationWallpaperComponent = (function() {
 
     var activeCtrl = null;
     var activeContainerEl = null;
+    var frozenCtrl = null;  // Track frozen controller to destroy if new one activates
     var docListenerInstalled = false;
     var didPrewarm = false;
 
@@ -8330,6 +8326,22 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {
             return false;
         }
+    }
+
+    // Track flagged posts to avoid duplicate flags
+    var flaggedPostIds = {};
+    
+    function flagMissingMapImages(postId, lat, lng) {
+        if (!postId || flaggedPostIds[postId]) return;
+        flaggedPostIds[postId] = true;
+        
+        try {
+            fetch('/gateway.php?action=moderation-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'flag_missing_map_images', post_id: parseInt(postId, 10), lat: lat, lng: lng })
+            }).catch(function() {});
+        } catch (e) {}
     }
 
     function getWallpaperMode() {
@@ -8460,8 +8472,8 @@ const LocationWallpaperComponent = (function() {
     function readLatLng(containerEl) {
         if (!containerEl) return null;
         try {
-            var latEl = containerEl.querySelector('.component-locationwallpaper-lat');
-            var lngEl = containerEl.querySelector('.component-locationwallpaper-lng');
+            var latEl = containerEl.querySelector('.fieldset-lat');
+            var lngEl = containerEl.querySelector('.fieldset-lng');
             var lat = latEl ? safeNum(latEl.value) : null;
             var lng = lngEl ? safeNum(lngEl.value) : null;
             if (lat === null || lng === null) return null;
@@ -9123,6 +9135,11 @@ const LocationWallpaperComponent = (function() {
                     if (cacheHits === 4) {
                         display(cached);
                     } else {
+                        // Flag missing map images for posts (not forms)
+                        var postId = locationContainerEl.dataset ? locationContainerEl.dataset.postId : null;
+                        if (postId) {
+                            flagMissingMapImages(postId, lat, lng);
+                        }
                         var capturedUrls = [];
                         var captureNext = function(idx) {
                             if (idx >= 4) {
@@ -9332,15 +9349,29 @@ const LocationWallpaperComponent = (function() {
             return;
         }
 
-        // Freeze previous container's wallpaper
+        // Clean up previous container's wallpaper
         if (activeCtrl && (!nextLocationContainer || activeCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null))) {
-            try { activeCtrl.freeze(); } catch (e2) {}
+            if (nextLocationContainer) {
+                // Switching to different container: destroy immediately (never more than 2 maps)
+                try { activeCtrl.destroy(); } catch (e2) {}
+                frozenCtrl = null;
+            } else {
+                // Clicking outside: freeze (keep map briefly in case they return)
+                try { activeCtrl.freeze(); } catch (e2) {}
+                frozenCtrl = activeCtrl;
+            }
             activeCtrl = null;
             activeContainerEl = null;
         }
 
         // Activate new container's wallpaper
         if (nextLocationContainer) {
+            // Destroy any frozen controller first (never more than 2 maps)
+            if (frozenCtrl && frozenCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null)) {
+                try { frozenCtrl.destroy(); } catch (e4) {}
+            }
+            frozenCtrl = null;
+            
             var ctrl = getOrCreateCtrl(nextLocationContainer);
             activeCtrl = ctrl;
             activeContainerEl = nextLocationContainer;
@@ -9379,6 +9410,7 @@ const LocationWallpaperComponent = (function() {
                 if (t.closest && t.closest('.fieldset-location-dropdown')) return;
                 if (activeContainerEl.contains(t)) return;
                 try { activeCtrl.freeze(); } catch (_eF) {}
+                frozenCtrl = activeCtrl;
                 activeCtrl = null;
                 activeContainerEl = null;
             }, true);
@@ -9392,8 +9424,8 @@ const LocationWallpaperComponent = (function() {
             var activeContainer = t.closest('.component-locationwallpaper-container[data-active="true"]');
             if (!activeContainer) return;
             if (activeCtrl !== (activeContainer.__locationWallpaperCtrl || null)) return;
-            if (t.classList && (t.classList.contains('component-locationwallpaper-lat') || 
-                                t.classList.contains('component-locationwallpaper-lng'))) {
+            if (t.classList && (t.classList.contains('fieldset-lat') || 
+                                t.classList.contains('fieldset-lng'))) {
                 try { activeCtrl.refresh(); } catch (e2) {}
             }
         }, true);

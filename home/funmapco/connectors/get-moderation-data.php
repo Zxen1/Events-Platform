@@ -138,10 +138,41 @@ if ($stmt->execute()) {
 }
 $stmt->close();
 
+// Get posts with missing map images
+$missingMapImages = [];
+$stmt = $mysqli->prepare('
+  SELECT id, post_id, post_title, reason, created_at
+  FROM `moderation_log` 
+  WHERE action = "missing_map_images"
+  ORDER BY created_at DESC
+  LIMIT 50
+');
+if ($stmt) {
+  if ($stmt->execute()) {
+    $res = $stmt->get_result();
+    if ($res) {
+      while ($row = $res->fetch_assoc()) {
+        $reasonData = json_decode($row['reason'], true);
+        $missingMapImages[] = [
+          'id' => (int)$row['id'],
+          'post_id' => (int)$row['post_id'],
+          'post_title' => $row['post_title'],
+          'lat' => isset($reasonData['lat']) ? $reasonData['lat'] : null,
+          'lng' => isset($reasonData['lng']) ? $reasonData['lng'] : null,
+          'created_at' => $row['created_at']
+        ];
+      }
+    }
+  }
+  $stmt->close();
+}
+
 echo json_encode([
   'success' => true,
   'pending_deletion' => $pendingDeletion,
   'pending_deletion_count' => count($pendingDeletion),
   'flagged_posts' => $flaggedPosts,
-  'flagged_posts_count' => count($flaggedPosts)
+  'flagged_posts_count' => count($flaggedPosts),
+  'missing_map_images' => $missingMapImages,
+  'missing_map_images_count' => count($missingMapImages)
 ]);
