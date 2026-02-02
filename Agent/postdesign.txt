@@ -66,3 +66,25 @@ PLANNED CHANGES:
 =====================================
 
 (none yet)
+
+=====================================
+COMPLETED CHANGES:
+=====================================
+
+[2026-02-03] Created three post info components in components-new.js:
+
+1. PostLocationComponent
+   - Renders venue info (name, address, city)
+   - Renders multi-location button if >1 locations
+   - Method: render(options) returns HTML string
+
+2. PostSessionComponent
+   - Renders session/dates button
+   - Method: render(options) returns HTML string
+
+3. PostPriceComponent
+   - Renders price button with currency badge
+   - Method: render(options) returns HTML string
+
+Updated post-new.js to use these components instead of inline HTML.
+Front-end appearance unchanged.

@@ -9508,6 +9508,145 @@ const LocationWallpaperComponent = (function() {
 })();
 
 
+/* ============================================================================
+   POST LOCATION COMPONENT
+   Renders venue info and location selector for post info container.
+   ============================================================================ */
+
+const PostLocationComponent = (function() {
+    'use strict';
+
+    /**
+     * Render the location section HTML
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @param {string} options.venueName - Venue name
+     * @param {string} options.addressLine - Address line
+     * @param {string} options.city - City
+     * @param {Array} options.locationList - Array of location objects
+     * @param {Function} options.escapeHtml - HTML escape function
+     * @returns {string} HTML string
+     */
+    function render(options) {
+        var postId = options.postId || '';
+        var venueName = options.venueName || '';
+        var addressLine = options.addressLine || '';
+        var city = options.city || '';
+        var locationList = options.locationList || [];
+        var escapeHtml = options.escapeHtml || function(s) { return s; };
+
+        var hasMultipleLocations = locationList.length > 1;
+
+        var html = [];
+
+        // Venue info (venue_name, address_line, city)
+        html.push('<div id="venue-info-' + postId + '" class="post-info-venue">');
+        html.push('<strong>' + escapeHtml(venueName) + '</strong>');
+        if (addressLine) html.push('<br>' + escapeHtml(addressLine));
+        if (city) html.push('<br>' + escapeHtml(city));
+        html.push('</div>');
+
+        // Location button (if multiple locations)
+        if (hasMultipleLocations) {
+            html.push('<button class="post-info-button post-info-button-location" type="button" aria-haspopup="true" aria-expanded="false">');
+            html.push('<span class="post-info-button-text">📍 ' + locationList.length + ' locations</span>');
+            html.push('<span class="post-info-button-arrow">▼</span>');
+            html.push('</button>');
+        }
+
+        return html.join('');
+    }
+
+    return {
+        render: render
+    };
+})();
+
+
+/* ============================================================================
+   POST SESSION COMPONENT
+   Renders session/dates info for post info container.
+   ============================================================================ */
+
+const PostSessionComponent = (function() {
+    'use strict';
+
+    /**
+     * Render the session section HTML
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @param {string} options.datesText - Session summary text
+     * @param {Function} options.escapeHtml - HTML escape function
+     * @returns {string} HTML string
+     */
+    function render(options) {
+        var postId = options.postId || '';
+        var datesText = options.datesText || '';
+        var escapeHtml = options.escapeHtml || function(s) { return s; };
+
+        if (!datesText) return '';
+
+        var html = [];
+
+        html.push('<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + postId + '">');
+        html.push('<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>');
+        html.push('<span class="post-info-button-arrow">▼</span>');
+        html.push('</button>');
+
+        return html.join('');
+    }
+
+    return {
+        render: render
+    };
+})();
+
+
+/* ============================================================================
+   POST PRICE COMPONENT
+   Renders price info for post info container.
+   ============================================================================ */
+
+const PostPriceComponent = (function() {
+    'use strict';
+
+    /**
+     * Render the price section HTML
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @param {Object} options.priceParts - Parsed price parts { text, flagUrl, countryCode }
+     * @param {Function} options.escapeHtml - HTML escape function
+     * @returns {string} HTML string
+     */
+    function render(options) {
+        var postId = options.postId || '';
+        var priceParts = options.priceParts || {};
+        var escapeHtml = options.escapeHtml || function(s) { return s; };
+
+        if (!priceParts.text) return '';
+
+        var html = [];
+
+        // Build price HTML with badge
+        var badgeHtml = priceParts.flagUrl 
+            ? '<img class="post-image-badge post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + (priceParts.countryCode || '') + '" title="Currency: ' + (priceParts.countryCode || '').toUpperCase() + '">'
+            : '💰 ';
+        var priceContent = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
+
+        html.push('<button class="post-info-button post-info-button-price" type="button" aria-haspopup="true" aria-expanded="false" id="price-btn-' + postId + '">');
+        html.push('<span class="post-info-button-text">' + priceContent + '</span>');
+        html.push('<span class="post-info-button-arrow">▼</span>');
+        html.push('</button>');
+
+        return html.join('');
+    }
+
+    return {
+        render: render
+    };
+})();
+
+
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
@@ -9535,6 +9674,9 @@ window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
+window.PostLocationComponent = PostLocationComponent;
+window.PostSessionComponent = PostSessionComponent;
+window.PostPriceComponent = PostPriceComponent;
 
 
 

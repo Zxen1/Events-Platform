@@ -2598,27 +2598,27 @@ const PostModule = (function() {
           infoIconHtml,
           '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
-        // Venue info (venue_name, address_line, city)
-        '<div id="venue-info-' + post.id + '" class="post-info-venue">',
-          '<strong>' + escapeHtml(venueName) + '</strong>' +
-          (addressLine ? '<br>' + escapeHtml(addressLine) : '') +
-          (city ? '<br>' + escapeHtml(city) : ''),
-        '</div>',
-        // Location button (if multiple locations)
-        hasMultipleLocations ? '<button class="post-info-button post-info-button-location" type="button" aria-haspopup="true" aria-expanded="false">' +
-          '<span class="post-info-button-text">📍 ' + locationList.length + ' locations</span>' +
-          '<span class="post-info-button-arrow">▼</span>' +
-        '</button>' : '',
-        // Session summary button (if sessions exist)
-        datesText ? '<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + post.id + '">' +
-          '<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>' +
-          '<span class="post-info-button-arrow">▼</span>' +
-        '</button>' : '',
-        // Price summary button (if price exists)
-        priceParts.text ? '<button class="post-info-button post-info-button-price" type="button" aria-haspopup="true" aria-expanded="false" id="price-btn-' + post.id + '">' +
-          '<span class="post-info-button-text">' + priceHtml + '</span>' +
-          '<span class="post-info-button-arrow">▼</span>' +
-        '</button>' : '',
+        // Location component (venue info + multi-location button)
+        PostLocationComponent.render({
+          postId: post.id,
+          venueName: venueName,
+          addressLine: addressLine,
+          city: city,
+          locationList: locationList,
+          escapeHtml: escapeHtml
+        }),
+        // Session component (dates button)
+        PostSessionComponent.render({
+          postId: post.id,
+          datesText: datesText,
+          escapeHtml: escapeHtml
+        }),
+        // Price component (price button)
+        PostPriceComponent.render({
+          postId: post.id,
+          priceParts: priceParts,
+          escapeHtml: escapeHtml
+        }),
         // Website URL
         websiteUrl ? '<div class="post-info-row post-info-row-website">' +
           '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
