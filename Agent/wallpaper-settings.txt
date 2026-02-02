@@ -86,7 +86,7 @@ ORBIT
 TRANSITIONS
 -----------
 
-All elements fade IN 1.5s (additive dissolve, no dip to black)
+All elements fade IN 1.5s linear (additive dissolve, no dip to black)
 Animation/orbit starts BEFORE fade begins (movement visible during fade-in)
 Exception: still fades OUT when returning to orbit
 

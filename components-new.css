@@ -3029,7 +3029,7 @@
     width: var(--locationwallpaper-width, 600px);
     height: 2500px;
     opacity: 0;
-    transition: opacity 1.5s ease;
+    transition: opacity 1.5s linear;
     will-change: opacity;
     z-index: 1;
 }
@@ -3042,7 +3042,7 @@
     width: var(--locationwallpaper-width, 600px);
     height: 2500px;
     opacity: 0;
-    transition: opacity 1.5s ease;
+    transition: opacity 1.5s linear;
     will-change: opacity;
     z-index: 2;
 }
@@ -3091,7 +3091,7 @@
     object-fit: cover;
     object-position: center top;
     opacity: 0;
-    transition: opacity 1.5s ease;
+    transition: opacity 1.5s linear;
     z-index: 1;
 }
 

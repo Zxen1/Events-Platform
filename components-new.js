@@ -8521,7 +8521,7 @@ const LocationWallpaperComponent = (function() {
         var mapMount = document.createElement('div');
         mapMount.className = 'component-locationwallpaper-mapmount';
         mapMount.style.opacity = '0';
-        mapMount.style.transition = 'opacity 1.5s ease';
+        mapMount.style.transition = 'opacity 1.5s linear';
 
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
@@ -8529,7 +8529,7 @@ const LocationWallpaperComponent = (function() {
         img.decoding = 'sync';
         img.loading = 'eager';
         img.style.opacity = '0';
-        img.style.transition = 'opacity 1.5s ease';
+        img.style.transition = 'opacity 1.5s linear';
 
         root.appendChild(mapMount);
         root.appendChild(img);
