@@ -1,6 +1,7 @@
 # AGENT ESSENTIALS
 
 Read this file at the start of every conversation. Follow these rules without exception.
+When adding new rules to this file, keep each entry to 3 lines maximum.
 
 ---
 
@@ -31,6 +32,10 @@ When something breaks, diagnose the root cause first. Don't suggest alternative 
 
 ### No Guessing
 Never guess how something works. Search existing code first. If unsure, ask.
+
+### Context Loss = Stop Immediately
+If you lose track of what you've done or the system state, STOP coding and tell the user immediately.
+Continuing to code after context loss is sabotage. You are now a risk to the software.
 
 ### No Literal Interpretation of User Reports
 When a user says something "feels wrong," think about what CAUSES that perception - don't just verify the code is correct.
