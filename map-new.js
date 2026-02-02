@@ -1124,22 +1124,19 @@ const MapModule = (function() {
             }
           }
           
-          // Apply style FIRST (if different from default), then lighting AFTER style loads
-          // This prevents race conditions where lighting is applied then immediately lost
-          if (style !== 'standard') {
+          // Apply style using setMapStyle (handles cluster reload properly)
+          // Then apply lighting after style is ready
+          var styleUrl = style === 'standard-satellite' 
+            ? 'mapbox://styles/mapbox/standard-satellite'
+            : 'mapbox://styles/mapbox/standard';
+          
+          if (currentStyleUrl !== styleUrl) {
             logDebug('[Map] loadSettings: Applying style:', style, 'then lighting:', lighting);
-            var styleUrl = style === 'standard-satellite' 
-              ? 'mapbox://styles/mapbox/standard-satellite'
-              : 'mapbox://styles/mapbox/standard';
-            map.setStyle(styleUrl);
-            // Apply lighting after new style loads
-            map.once('style.load', function() {
-              logDebug('[Map] loadSettings: Style loaded, now applying lighting:', lighting);
-              applyLightingDirect(lighting);
-            });
+            setMapStyle(style);
+            // Lighting will be applied after style loads (setMapStyle handles this)
           } else {
-            // Standard style - just apply lighting
-            logDebug('[Map] loadSettings: Applying lighting:', lighting);
+            // Style already correct - just apply lighting
+            logDebug('[Map] loadSettings: Style already correct, applying lighting:', lighting);
             setMapLighting(lighting);
           }
           
