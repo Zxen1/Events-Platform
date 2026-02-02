@@ -1536,28 +1536,20 @@
   font-size: 14px;
 }
 
-/* Map markers - 24px subcategory icons */
+/* Map markers - 24px round subcategory icons (matches header avatar pattern) */
 .post-location-map-marker {
   width: 24px;
   height: 24px;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  box-sizing: content-box;
-  transition: border-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  object-fit: cover;
+  box-sizing: border-box;
 }
 
-.post-location-map-marker--hover {
-  border-color: var(--accent);
-}
-
-.post-location-map-marker--active {
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.15);
-}
-
+.post-location-map-marker--hover,
+.post-location-map-marker--active,
 .post-location-map-marker--current {
-  filter: brightness(1.3);
-  box-shadow: 0 0 8px var(--accent);
+  border-color: var(--blue-500);
 }
 
 /* ============================================================================
