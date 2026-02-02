@@ -986,7 +986,7 @@
   left: 0;
   right: 0;
   top: 100%;
-  z-index: var(--layer-dropdown);
+  z-index: var(--layer-menu);
   background: var(--menu-bg);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
