@@ -234,3 +234,21 @@ CLEANUP COMPLETED:
 - Deleted unused removePostMap() from map-new.js
 - Deleted unused postMaps variable from map-new.js
 - Removed exports for deleted functions
+
+[2026-02-03] Fixed LocationWallpaperComponent click-back detection:
+- Global click handler now detects clicks inside wallpaper containers
+- Clicking back inside container after freeze now activates and refreshes (resumes orbit)
+- Fixed: freeze + clear activeCtrl wasn't allowing re-activation
+
+[2026-02-03] Simplified PostLocationMapComponent integration:
+- Removed wallpaper freeze/refresh coordination
+- SecondaryMap uses its own off-screen map instance
+- No interference with wallpaper orbit
+- Mini-map capture happens in background
+
+FILES MODIFIED THIS SESSION:
+- base-new.css: Added menu-class-4
+- components-new.js: PostLocationMapComponent, PostLocationComponent, PostSessionComponent, PostPriceComponent, SecondaryMap.captureWithBounds(), LocationWallpaperComponent click handler fix
+- post-new.css: Component styles, map container styles
+- post-new.js: Component integration, event handlers
+- map-new.js: Removed unused post mini-map code
