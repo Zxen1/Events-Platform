@@ -8435,6 +8435,7 @@ var SecondaryMap = (function() {
    Dedicated to location dropdown menus only. Always mercator (flat) projection.
    Part of the 3-map system: Main Map, Secondary Map (wallpaper), Mini Map (dropdowns).
    Only one location dropdown can use it at a time (most recent wins).
+   Uses same style/lighting as main map (member > localStorage > admin > default).
    ============================================================================ */
 var MiniMap = (function() {
     'use strict';
@@ -8448,12 +8449,77 @@ var MiniMap = (function() {
     var currentMarkers = [];
     var onDisconnectCallback = null;
 
-    // Mini map uses standard style with night lighting
-    var STYLE_URL = 'mapbox://styles/mapbox/standard';
-    var LIGHT_PRESET = 'night';
+    /**
+     * Get current map style URL from user settings
+     * Priority: member > localStorage > admin > default
+     */
+    function getStyleUrl() {
+        var style = 'standard';
+        
+        // Check member settings
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+            var member = window.MemberModule.getCurrentUser();
+            if (member && member.map_style) {
+                style = member.map_style;
+            }
+        }
+        
+        // Fall back to localStorage
+        if (style === 'standard') {
+            var stored = localStorage.getItem('map_style');
+            if (stored) style = stored;
+        }
+        
+        // Fall back to admin settings
+        if (style === 'standard' && window.App && window.App.getState) {
+            var settings = window.App.getState('settings');
+            if (settings && settings.map_style) {
+                style = settings.map_style;
+            }
+        }
+        
+        return style === 'standard-satellite'
+            ? 'mapbox://styles/mapbox/standard-satellite'
+            : 'mapbox://styles/mapbox/standard';
+    }
+
+    /**
+     * Get current lighting preset from user settings
+     * Priority: member > localStorage > admin > default
+     */
+    function getLightPreset() {
+        var lighting = 'day';
+        
+        // Check member settings
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+            var member = window.MemberModule.getCurrentUser();
+            if (member && member.map_lighting) {
+                lighting = member.map_lighting;
+            }
+        }
+        
+        // Fall back to localStorage
+        if (lighting === 'day') {
+            var stored = localStorage.getItem('map_lighting');
+            if (stored) lighting = stored;
+        }
+        
+        // Fall back to admin settings
+        if (lighting === 'day' && window.App && window.App.getState) {
+            var settings = window.App.getState('settings');
+            if (settings && settings.map_lighting) {
+                lighting = settings.map_lighting;
+            }
+        }
+        
+        return lighting;
+    }
 
     function ensureMap(w, h, cb) {
         if (!window.mapboxgl || !mapboxgl.accessToken) { cb(null); return; }
+        
+        var styleUrl = getStyleUrl();
+        var lightPreset = getLightPreset();
         
         // Resize if needed
         if (map && mount && (w !== currentWidth || h !== currentHeight)) {
@@ -8473,11 +8539,11 @@ var MiniMap = (function() {
         currentWidth = w;
         currentHeight = h;
         
-        // Create map - always mercator (flat) projection
+        // Create map - always mercator (flat) projection, uses user's style/lighting
         try {
             map = new mapboxgl.Map({
                 container: mount,
-                style: STYLE_URL,
+                style: styleUrl,
                 projection: 'mercator',
                 center: [0, 0],
                 zoom: 1,
@@ -8494,7 +8560,7 @@ var MiniMap = (function() {
         
         map.once('style.load', function() {
             try {
-                map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
+                map.setConfigProperty('basemap', 'lightPreset', lightPreset);
                 map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
                 map.setConfigProperty('basemap', 'showPlaceLabels', false);
                 map.setConfigProperty('basemap', 'showRoadLabels', false);
