@@ -2910,8 +2910,11 @@ const MapModule = (function() {
         applyLightingDirect(currentLighting);
         
         // Style change removes all images/sources/layers - must reload clusters
-        console.log('[Map] Resetting clusterIconLoaded and reloading icon...');
+        // Also reset cluster cache keys so updateClusterData will fetch fresh data
+        console.log('[Map] Resetting cluster state and reloading icon...');
         clusterIconLoaded = false;
+        lastClusterBucketKey = null;
+        lastClusterRequestKey = null;
         loadClusterIcon().then(function() {
           console.log('[Map] loadClusterIcon resolved, clusterIconLoaded =', clusterIconLoaded);
           if (token !== styleChangeToken) {
