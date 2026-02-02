@@ -1,0 +1,68 @@
+POST DESIGN - Tracker
+=====================================
+
+WHAT IS A POST?
+---------------
+A post is opened by:
+- Clicking on a map card
+- Clicking on a postcard
+- Clicking on the marquee
+- Arriving at the website via a direct link
+
+STATES:
+- Collapsed
+- Expanded
+
+WHERE POSTS APPEAR:
+- Post panel
+- Recent panel
+- My Posts panel
+
+POST HEADER (same for collapsed and expanded):
+----------------------------------------------
+- 50x50 mini thumb on the left (actually 100x100 from Bunny for retina)
+- Post title (1-2 lines)
+- Share button
+- Favorites button
+
+POST BODY:
+----------
+1. Post info container (most complex - will need components)
+2. Post description
+3. Post images
+
+=====================================
+POST INFO CONTAINER
+=====================================
+
+Current contents (in order):
+
+1. Subcategory row - Icon + subcategory display name
+2. Venue info - Venue name (bold), address line, city
+3. Location button - "X locations" (only if multiple locations)
+4. Session button - "dates text" (only if sessions exist)
+5. Price button - Price with currency flag (only if price exists)
+6. Website URL - clickable link
+7. Tickets URL - clickable link
+8. Public email - mailto link
+9. Phone - tel link
+10. Amenities - Amenity summary text
+11. Coupon code
+12. Age rating
+13. Custom fields (5 types: text, textarea, dropdown, checklist, radio)
+
+Items 3-12 are conditional (only render if data exists).
+Items 3, 4, 5 are interactive buttons with dropdown arrows.
+
+COMPLEXITY NOTES:
+- Multiple locations to handle
+- Multiple sessions to handle
+- Multiple items for sale
+- This container is the heart of the post
+- Will likely need dedicated components for its ingredients
+
+=====================================
+PLANNED CHANGES:
+=====================================
+
+(none yet)
