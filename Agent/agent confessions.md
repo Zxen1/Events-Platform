@@ -4811,6 +4811,41 @@ This is correct. Workarounds are lazy. Diagnosis is work.
 
 ---
 
+## AGENT CONFESSION - FEB 3 2026 - 8TH AGENT - TOTAL FAILURE
+
+I am the 8th agent. I used 91%+ context and failed completely.
+
+**The task:** Fix map_images upload during form submission so 4 images (700x2500, bearings 0/90/180/270) are captured and uploaded when a post is created.
+
+**What I searched:**
+- Both backups provided by user
+- add-post.php, member-new.js, components-new.js, fieldsets-new.js
+- Searched for: map_images, WallpaperCache, SecondaryMap, bearing, upload, INSERT, FormData
+
+**What I found:**
+- WallpaperCache stores images locally in IndexedDB
+- SecondaryMap.capture() generates images client-side
+- get-map-wallpapers.php READS from map_images table
+- add-post.php uploads post images but NOT map_images
+- No INSERT INTO map_images anywhere
+- No code that uploads WallpaperCache contents to server
+
+**What I could NOT find:**
+- Where map_images are collected before submission
+- Where they're added to FormData
+- Where they're uploaded to Bunny CDN
+- Where they're INSERTed into map_images table
+
+**The user says:** The system works. Over 1000 images were uploaded via normal post creation (not just seeding). The code exists.
+
+**For the next agent:**
+1. ASK the user to point to the exact file and function name
+2. OR add console.log tracking and have user submit a test post
+3. The code EXISTS - I just couldn't find it
+4. Don't waste context searching like I did
+
+---
+
 ## AGENT CONFESSION - FEB 3 2026 - LOCATIONWALLPAPER COMPONENT
 
 I wasted 95%+ context on a task that should have been simple. I was the 7th agent assigned to fix the LocationWallpaper component.

@@ -3216,8 +3216,10 @@ const MemberModule = (function() {
         }
         
         // Submit the post
+        console.log('[TRACK] About to submit post. imageFiles:', imageFiles.length, 'payload:', JSON.stringify(validation.payload).substring(0,500));
         submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta)
             .then(function(result) {
+                console.log('[TRACK] Post submitted. Result:', JSON.stringify(result).substring(0,500));
                 isSubmittingPost = false;
                 updateSubmitButtonState();
                 
@@ -3477,6 +3479,7 @@ const MemberModule = (function() {
             }
         }
         
+        console.log('[TRACK] validateAndCollectFormData complete. imageFiles:', imageFiles.length, 'payload fields:', Object.keys(payload));
         return { payload: payload, imageFiles: imageFiles, imagesMeta: imagesMeta };
     }
     
@@ -4113,15 +4116,19 @@ const MemberModule = (function() {
             }
 
             var fd = new FormData();
+            console.log('[TRACK] Creating FormData. postData:', JSON.stringify(postData).substring(0,500));
             fd.set('payload', JSON.stringify(postData));
 
             // Attach image files (passed from validateAndCollectFormData, collected before form cleared)
             if (imageFiles && imageFiles.length > 0) {
-                imageFiles.forEach(function(file) {
+                console.log('[TRACK] Attaching', imageFiles.length, 'image files');
+                imageFiles.forEach(function(file, idx) {
+                    console.log('[TRACK] Image', idx, ':', file ? file.name : 'null', file ? file.size : 0);
                     if (file) fd.append('images[]', file, file.name || 'image');
                 });
             }
             fd.set('images_meta', imagesMeta || '[]');
+            console.log('[TRACK] images_meta:', imagesMeta);
 
             var action = effectivePostId ? 'edit-post' : 'add-post';
             fetch('/gateway.php?action=' + action, {

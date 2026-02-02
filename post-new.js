@@ -326,7 +326,8 @@ const PostModule = (function() {
     });
 
     // Refresh posts when a new one is created or an existing one is updated
-    App.on('post:created', function() {
+    App.on('post:created', function(data) {
+      console.log('[TRACK] post:created event fired. Data:', JSON.stringify(data));
       refreshPosts();
     });
     App.on('post:updated', function() {
