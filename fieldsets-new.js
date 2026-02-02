@@ -312,6 +312,7 @@ const FieldsetBuilder = (function(){
                                 inputElement.value = place.displayName || place.formattedAddress || mainText;
                                 kb.close();
                                 
+                                console.log('[TRACK] Google Places selected. Lat:', lat, 'Lng:', lng);
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
                                 if (countryInput) countryInput.value = cc;

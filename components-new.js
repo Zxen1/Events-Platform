@@ -9234,28 +9234,40 @@ const LocationWallpaperComponent = (function() {
         function ensureAllFourImages(lat, lng) {
             // Always capture all 4 bearings when location changes.
             // This runs regardless of viewing mode (off/still/basic/orbit).
+            console.log('[TRACK] ensureAllFourImages called for', lat, lng);
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var cameras = getBasicModeCameras(locationType, [lng, lat]);
             var bearings = [0, 90, 180, 270];
 
             // Check library first (already uploaded to server)
             getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                console.log('[TRACK] Library check result:', lib ? Object.keys(lib).length + ' images' : 'none');
                 if (lib && Object.keys(lib).length === 4) {
                     // All 4 already exist on server - nothing to do
+                    console.log('[TRACK] All 4 exist on server, skipping capture');
                     return;
                 }
 
                 // Check local cache, capture any missing
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+                    var cacheCount = cached.filter(function(url) { return !!url; }).length;
+                    console.log('[TRACK] Cache check:', cacheCount, '/4 in local cache');
                     var allCached = cached.every(function(url) { return !!url; });
-                    if (allCached) return; // All 4 in local cache
+                    if (allCached) {
+                        console.log('[TRACK] All 4 in local cache, skipping capture');
+                        return; // All 4 in local cache
+                    }
 
                     // Capture missing images sequentially
                     var capturedUrls = cached.slice(); // Start with what we have
+                    console.log('[TRACK] Starting capture of missing images');
                     var captureNext = function(idx) {
                         if (idx >= 4) {
                             // Store all to cache
-                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            console.log('[TRACK] All 4 captured, storing to cache');
+                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {
+                                console.log('[TRACK] Stored to WallpaperCache');
+                            });
                             return;
                         }
                         if (capturedUrls[idx]) {
@@ -9263,7 +9275,9 @@ const LocationWallpaperComponent = (function() {
                             captureNext(idx + 1);
                             return;
                         }
+                        console.log('[TRACK] Capturing bearing', bearings[idx]);
                         SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                            console.log('[TRACK] Captured bearing', bearings[idx], url ? 'SUCCESS' : 'FAILED');
                             capturedUrls[idx] = url || '';
                             captureNext(idx + 1);
                         });
@@ -9301,6 +9315,7 @@ const LocationWallpaperComponent = (function() {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
                 // CRITICAL: Ensure all 4 images are captured regardless of viewing mode
+                console.log('[TRACK] Location changed. Lat:', lat, 'Lng:', lng, 'Calling ensureAllFourImages');
                 ensureAllFourImages(lat, lng);
             }
 
