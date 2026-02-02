@@ -8443,6 +8443,7 @@ var MiniMap = (function() {
     var mount = null;
     var currentWidth = 0;
     var currentHeight = 0;
+    var currentStyleUrl = null;
     
     // Live display state (most recent wins)
     var currentOwner = null;
@@ -8530,6 +8531,27 @@ var MiniMap = (function() {
             try { map.resize(); } catch (e) {}
         }
         
+        // If map exists but style changed, update the style
+        if (map && currentStyleUrl && currentStyleUrl !== styleUrl) {
+            currentStyleUrl = styleUrl;
+            try {
+                map.setStyle(styleUrl);
+                map.once('style.load', function() {
+                    try {
+                        map.setConfigProperty('basemap', 'lightPreset', lightPreset);
+                        map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                        map.setConfigProperty('basemap', 'showPlaceLabels', false);
+                        map.setConfigProperty('basemap', 'showRoadLabels', false);
+                        map.setConfigProperty('basemap', 'showTransitLabels', false);
+                    } catch (e) {}
+                    cb(map);
+                });
+            } catch (e) {
+                cb(map);
+            }
+            return;
+        }
+        
         if (map) { cb(map); return; }
         
         // Create mount (off-screen)
@@ -8551,6 +8573,7 @@ var MiniMap = (function() {
                 attributionControl: false,
                 preserveDrawingBuffer: true
             });
+            currentStyleUrl = styleUrl;
         } catch (e) {
             try { document.body.removeChild(mount); } catch (e2) {}
             mount = null;

@@ -925,8 +925,8 @@
    ============================================================================ */
 
 .menu-class-4 {
-  --menu-bg: rgba(0, 0, 0, 0.35);
-  --menu-bg-focus: rgba(0, 0, 0, 0.45);
+  --menu-bg: rgba(0, 0, 0, 0.85);
+  --menu-bg-focus: rgba(0, 0, 0, 0.9);
   --menu-border: rgba(255, 255, 255, 0.12);
   --menu-border-hover: rgba(255, 255, 255, 0.2);
   --menu-border-focus: var(--blue-500);
