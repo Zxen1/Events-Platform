@@ -9229,6 +9229,51 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
+        // ENSURE ALL 4 IMAGES EXIST (regardless of viewing mode)
+        // ============================================================
+        function ensureAllFourImages(lat, lng) {
+            // Always capture all 4 bearings when location changes.
+            // This runs regardless of viewing mode (off/still/basic/orbit).
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var cameras = getBasicModeCameras(locationType, [lng, lat]);
+            var bearings = [0, 90, 180, 270];
+
+            // Check library first (already uploaded to server)
+            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                if (lib && Object.keys(lib).length === 4) {
+                    // All 4 already exist on server - nothing to do
+                    return;
+                }
+
+                // Check local cache, capture any missing
+                WallpaperCache.getAll(lat, lng, bearings, function(cached) {
+                    var allCached = cached.every(function(url) { return !!url; });
+                    if (allCached) return; // All 4 in local cache
+
+                    // Capture missing images sequentially
+                    var capturedUrls = cached.slice(); // Start with what we have
+                    var captureNext = function(idx) {
+                        if (idx >= 4) {
+                            // Store all to cache
+                            WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {});
+                            return;
+                        }
+                        if (capturedUrls[idx]) {
+                            // Already have this one
+                            captureNext(idx + 1);
+                            return;
+                        }
+                        SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                            capturedUrls[idx] = url || '';
+                            captureNext(idx + 1);
+                        });
+                    };
+                    captureNext(0);
+                });
+            });
+        }
+
+        // ============================================================
         // PUBLIC API
         // ============================================================
         function refresh() {
@@ -9238,22 +9283,10 @@ const LocationWallpaperComponent = (function() {
             var mode = getWallpaperMode();
             st.mode = mode;
 
-            if (mode === 'off') {
-                // Hide everything
-                clearAllTimers();
-                removeMap();
-                setImageUrl('');
-                try { root.style.display = 'none'; } catch (e) {}
-                return;
-            }
-
-            try { root.style.display = ''; } catch (e) {}
-            ensureMinHeightLocked();
-            updateDynamicWidth();
-
+            // Read location FIRST (before mode check) so we can ensure images exist
             var ll = readLatLng(locationContainerEl);
             if (!ll) {
-                // No location yet - nothing to show
+                // No location yet - nothing to show or capture
                 return;
             }
 
@@ -9267,7 +9300,23 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
+                // CRITICAL: Ensure all 4 images are captured regardless of viewing mode
+                ensureAllFourImages(lat, lng);
             }
+
+            // Now handle display based on mode
+            if (mode === 'off') {
+                // Hide everything (but images were still captured above)
+                clearAllTimers();
+                removeMap();
+                setImageUrl('');
+                try { root.style.display = 'none'; } catch (e) {}
+                return;
+            }
+
+            try { root.style.display = ''; } catch (e) {}
+            ensureMinHeightLocked();
+            updateDynamicWidth();
 
             // Clean up other modes before starting new one (never more than 2 maps)
             if (mode !== 'basic') removeBasicMode();
