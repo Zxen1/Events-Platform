@@ -1183,12 +1183,17 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             }
           }
           
-          // Upload the map image
-          $mapOrigName = (string)($_FILES['map_images']['name'][$mi] ?? 'map_image');
-          $mapExt = strtolower(pathinfo($mapOrigName, PATHINFO_EXTENSION));
-          if ($mapExt === '') $mapExt = 'webp';
-          $mapHash = substr(md5($lat . '_' . $lng . '_' . $bearing), 0, 8);
-          $mapFilename = 'map_' . number_format($lat, 6, '.', '') . '_' . number_format($lng, 6, '.', '') . '_' . $bearing . '_' . $mapHash . '.' . $mapExt;
+          // Upload the map image - use client filename if valid, follows format: slug__lat_lng__Z18-P75-{N/E/S/W}.webp
+          $mapOrigName = (string)($_FILES['map_images']['name'][$mi] ?? '');
+          // Validate client filename matches expected pattern
+          if (preg_match('/^[a-z0-9-]+__-?\d+\.\d+_-?\d+\.\d+__Z\d+-P\d+-[NESW]\.webp$/i', $mapOrigName)) {
+            $mapFilename = $mapOrigName;
+          } else {
+            // Fallback: generate filename server-side
+            $bearingMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
+            $dir = $bearingMap[$bearing] ?? 'N';
+            $mapFilename = 'location__' . number_format($lat, 6, '.', '') . '_' . number_format($lng, 6, '.', '') . '__Z18-P75-' . $dir . '.webp';
+          }
           
           $mapBytes = file_get_contents($mapTmp);
           if ($mapBytes === false) {

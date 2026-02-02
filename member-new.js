@@ -3208,16 +3208,18 @@ const MemberModule = (function() {
         var imageFiles = validation.imageFiles || [];
         var imagesMeta = validation.imagesMeta || '[]';
         
-        // Collect map images for final locations before submission
+        // Immediately switch to My Posts with loading placeholder (no delay)
+        resetCreatePostForm();
+        try { requestTabSwitch('myposts'); } catch (e0) {}
+        if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
+            PostEditorModule.showLoadingPlaceholder(validation.payload);
+        }
+        
+        // Collect map images for final locations (runs while loading shows)
         var finalLocations = extractLocationsFromPayload(validation.payload);
         console.log('[TRACK] Final locations for map images:', finalLocations.length, finalLocations);
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
             console.log('[TRACK] Map images collected:', mapImageData.files.length);
-            resetCreatePostForm();
-            try { requestTabSwitch('myposts'); } catch (e0) {}
-            if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
-                PostEditorModule.showLoadingPlaceholder(validation.payload);
-            }
             
             submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData)
             .then(function(result) {
@@ -3416,17 +3418,19 @@ const MemberModule = (function() {
             // Look for venue, city, or address fieldsets with latitude/longitude
             if (field.key === 'venue' || field.key === 'city' || field.key === 'address') {
                 var lat = null, lng = null, locNum = field.location_number || 1;
+                var venueName = '';
                 if (field.value && typeof field.value === 'object') {
-                    // Payload stores as 'latitude'/'longitude' strings, not 'lat'/'lng'
                     lat = parseFloat(field.value.latitude);
                     lng = parseFloat(field.value.longitude);
+                    // Get venue/location name for filename
+                    venueName = field.value.venue_name || field.value.address_line || '';
                 }
                 if (Number.isFinite(lat) && Number.isFinite(lng)) {
                     var exists = locations.some(function(loc) {
                         return loc.lat === lat && loc.lng === lng;
                     });
                     if (!exists) {
-                        locations.push({ lat: lat, lng: lng, location_number: locNum });
+                        locations.push({ lat: lat, lng: lng, location_number: locNum, venue_name: venueName });
                     }
                 }
             }
@@ -3436,18 +3440,32 @@ const MemberModule = (function() {
     }
     
     // Convert dataUrl to File for upload
-    function dataUrlToFile(dataUrl, lat, lng, bearing) {
+    // Naming convention: slug__lat_lng__Z18-P75-{N/E/S/W}.webp
+    function dataUrlToFile(dataUrl, lat, lng, bearing, venueName) {
         try {
             var parts = dataUrl.split(',');
             var mime = parts[0].match(/:(.*?);/)[1];
-            var ext = mime === 'image/png' ? 'png' : 'jpg';
             var bstr = atob(parts[1]);
             var n = bstr.length;
             var u8arr = new Uint8Array(n);
             while (n--) u8arr[n] = bstr.charCodeAt(n);
             var blob = new Blob([u8arr], { type: mime });
-            var filename = 'map_' + lat.toFixed(6) + '_' + lng.toFixed(6) + '_' + bearing + '.' + ext;
-            return new File([blob], filename, { type: mime });
+            
+            // Bearing to direction letter
+            var bearingMap = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
+            var dir = bearingMap[bearing] || 'N';
+            
+            // Slugify venue name or use 'location'
+            var slug = 'location';
+            if (venueName && typeof venueName === 'string' && venueName.trim()) {
+                slug = venueName.toLowerCase().trim()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .substring(0, 50) || 'location';
+            }
+            
+            var filename = slug + '__' + lat.toFixed(6) + '_' + lng.toFixed(6) + '__Z18-P75-' + dir + '.webp';
+            return new File([blob], filename, { type: 'image/webp' });
         } catch (e) {
             return null;
         }
@@ -3492,7 +3510,7 @@ const MemberModule = (function() {
                             
                             if (foundCount === 4) {
                                 bearings.forEach(function(bearing, idx) {
-                                    addToResult(dataUrlToFile(cachedUrls[idx], loc.lat, loc.lng, bearing), loc, bearing);
+                                    addToResult(dataUrlToFile(cachedUrls[idx], loc.lat, loc.lng, bearing, loc.venue_name), loc, bearing);
                                 });
                                 pending--;
                                 if (pending === 0) resolve(result);
@@ -3518,13 +3536,13 @@ const MemberModule = (function() {
         var capturedCount = 0;
         bearings.forEach(function(bearing, idx) {
             if (cachedUrls[idx]) {
-                addToResult(dataUrlToFile(cachedUrls[idx], loc.lat, loc.lng, bearing), loc, bearing);
+                addToResult(dataUrlToFile(cachedUrls[idx], loc.lat, loc.lng, bearing, loc.venue_name), loc, bearing);
                 capturedCount++;
                 if (capturedCount === 4) done();
             } else if (window.SecondaryMap && typeof SecondaryMap.capture === 'function') {
                 var camera = { center: [loc.lng, loc.lat], zoom: 18, pitch: 75, bearing: bearing };
                 SecondaryMap.capture(camera, 700, 2500, function(dataUrl) {
-                    if (dataUrl) addToResult(dataUrlToFile(dataUrl, loc.lat, loc.lng, bearing), loc, bearing);
+                    if (dataUrl) addToResult(dataUrlToFile(dataUrl, loc.lat, loc.lng, bearing, loc.venue_name), loc, bearing);
                     capturedCount++;
                     if (capturedCount === 4) done();
                 });
