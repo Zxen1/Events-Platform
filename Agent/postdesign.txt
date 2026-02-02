@@ -65,7 +65,17 @@ COMPLEXITY NOTES:
 PLANNED CHANGES:
 =====================================
 
-(none yet)
+PostLocationComponent redesign:
+- Remove separate venue info display
+- First location becomes first item in dropdown (not separate)
+- Dropdown shows ALL locations (including currently selected)
+- Each location option: 70px height
+- Button shows currently selected location info
+- Clicking expands to show all locations as selectable options
+
+FUTURE (to discuss):
+- Map flies to selected location when changed
+- Possible mini flat-map showing all locations plotted
 
 =====================================
 COMPLETED CHANGES:

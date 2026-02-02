@@ -9517,44 +9517,73 @@ const PostLocationComponent = (function() {
     'use strict';
 
     /**
+     * Render a single location option HTML
+     * @param {Object} loc - Location object
+     * @param {number} index - Index in location list
+     * @param {boolean} isSelected - Whether this is the currently selected location
+     * @param {Function} escapeHtml - HTML escape function
+     * @returns {string} HTML string
+     */
+    function renderLocationOption(loc, index, isSelected, escapeHtml) {
+        var venueName = loc.venue_name || '';
+        var addressLine = loc.address_line || '';
+        var city = loc.city || '';
+
+        var html = [];
+        html.push('<div class="post-location-option menu-option' + (isSelected ? ' post-location-option--selected' : '') + '" data-index="' + index + '">');
+        html.push('<strong>' + escapeHtml(venueName) + '</strong>');
+        if (addressLine) html.push('<br>' + escapeHtml(addressLine));
+        if (city) html.push('<br>' + escapeHtml(city));
+        html.push('</div>');
+
+        return html.join('');
+    }
+
+    /**
      * Render the location section HTML
      * @param {Object} options
      * @param {string} options.postId - Post ID
-     * @param {string} options.venueName - Venue name
-     * @param {string} options.addressLine - Address line
-     * @param {string} options.city - City
      * @param {Array} options.locationList - Array of location objects
      * @param {Function} options.escapeHtml - HTML escape function
      * @returns {string} HTML string
      */
     function render(options) {
         var postId = options.postId || '';
-        var venueName = options.venueName || '';
-        var addressLine = options.addressLine || '';
-        var city = options.city || '';
         var locationList = options.locationList || [];
         var escapeHtml = options.escapeHtml || function(s) { return s; };
 
+        if (!locationList.length) return '';
+
+        var loc0 = locationList[0] || {};
+        var venueName = loc0.venue_name || '';
+        var addressLine = loc0.address_line || '';
+        var city = loc0.city || '';
         var hasMultipleLocations = locationList.length > 1;
 
         var html = [];
 
         // Container wrapper
-        html.push('<div class="post-location-container">');
+        html.push('<div class="post-location-container" data-post-id="' + postId + '">');
 
-        // Venue info (venue_name, address_line, city)
-        html.push('<div id="venue-info-' + postId + '" class="post-info-venue">');
+        // Button shows currently selected location info
+        html.push('<button class="post-location-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-location-button-content">');
         html.push('<strong>' + escapeHtml(venueName) + '</strong>');
         if (addressLine) html.push('<br>' + escapeHtml(addressLine));
         if (city) html.push('<br>' + escapeHtml(city));
         html.push('</div>');
-
-        // Location button (if multiple locations)
         if (hasMultipleLocations) {
-            html.push('<button class="post-info-button post-info-button-location" type="button" aria-haspopup="true" aria-expanded="false">');
-            html.push('<span class="post-info-button-text">📍 ' + locationList.length + ' locations</span>');
-            html.push('<span class="post-info-button-arrow">▼</span>');
-            html.push('</button>');
+            html.push('<span class="post-location-arrow menu-arrow">▼</span>');
+        }
+        html.push('</button>');
+
+        // Dropdown options (all locations) - only if multiple
+        if (hasMultipleLocations) {
+            html.push('<div class="post-location-options menu-options">');
+            for (var i = 0; i < locationList.length; i++) {
+                html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
+            }
+            html.push('</div>');
         }
 
         html.push('</div>');

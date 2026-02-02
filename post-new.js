@@ -2598,12 +2598,9 @@ const PostModule = (function() {
           infoIconHtml,
           '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
-        // Location component (venue info + multi-location button)
+        // Location component (dropdown with all locations)
         PostLocationComponent.render({
           postId: post.id,
-          venueName: venueName,
-          addressLine: addressLine,
-          city: city,
           locationList: locationList,
           escapeHtml: escapeHtml
         }),
