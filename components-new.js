@@ -8393,11 +8393,13 @@ const LocationWallpaperComponent = (function() {
      * @param {Function} callback - Called with wallpapers object or null
      */
     function getLibraryWallpapers(containerEl, lat, lng, callback) {
+        console.log('[TRACK-VIEW] getLibraryWallpapers called for', lat, lng);
         // 1. Check cached on container (from previous API call)
         try {
             if (containerEl.__libraryWallpapers) {
                 var cached = containerEl.__libraryWallpapers;
                 if (cached.lat === lat && cached.lng === lng && cached.wallpapers) {
+                    console.log('[TRACK-VIEW] Found in CONTAINER CACHE:', Object.keys(cached.wallpapers).length, 'images');
                     callback(cached.wallpapers);
                     return;
                 }
@@ -8410,6 +8412,7 @@ const LocationWallpaperComponent = (function() {
             if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
                 var lib = mapCardEl.__mapCardData.library_wallpapers;
                 if (lib && Object.keys(lib).length > 0) {
+                    console.log('[TRACK-VIEW] Found in MAP CARD DATA (library_wallpapers):', Object.keys(lib).length, 'images', lib);
                     callback(lib);
                     return;
                 }
@@ -8417,6 +8420,7 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {}
 
         // 3. Fetch from API (for form/profile contexts)
+        console.log('[TRACK-VIEW] Fetching from API...');
         fetch('/gateway.php?action=get-map-wallpapers&lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng))
             .then(function(response) {
                 if (!response.ok) return null;
@@ -8424,6 +8428,7 @@ const LocationWallpaperComponent = (function() {
             })
             .then(function(resp) {
                 if (resp && resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length > 0) {
+                    console.log('[TRACK-VIEW] API returned:', Object.keys(resp.wallpapers).length, 'images from DATABASE', resp.wallpapers);
                     // Cache on container for future use
                     containerEl.__libraryWallpapers = {
                         lat: lat,
@@ -8432,10 +8437,12 @@ const LocationWallpaperComponent = (function() {
                     };
                     callback(resp.wallpapers);
                 } else {
+                    console.log('[TRACK-VIEW] API returned NO images - will need to GENERATE');
                     callback(null);
                 }
             })
             .catch(function() {
+                console.log('[TRACK-VIEW] API FAILED - will need to GENERATE');
                 callback(null);
             });
     }
@@ -8989,11 +8996,14 @@ const LocationWallpaperComponent = (function() {
 
             // Check for library wallpapers (container cache, post data, or API)
             getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                console.log('[TRACK-VIEW] STILL MODE - library result:', lib ? 'FOUND ' + Object.keys(lib).length : 'NOT FOUND');
                 if (lib && lib[0]) {
                     // Library wallpaper found - instant display
+                    console.log('[TRACK-VIEW] STILL MODE - displaying from STORAGE:', lib[0].substring(0, 80));
                     displayInstant(lib[0]);
                     return;
                 }
+                console.log('[TRACK-VIEW] STILL MODE - will GENERATE on the fly');
 
                 // No library wallpapers - use fallback chain
                 if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
@@ -9153,9 +9163,12 @@ const LocationWallpaperComponent = (function() {
             }
 
             getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                console.log('[TRACK-VIEW] BASIC MODE - library result:', lib ? Object.keys(lib).length + ' images' : 'NOT FOUND');
                 if (lib && Object.keys(lib).length === 4) {
+                    console.log('[TRACK-VIEW] BASIC MODE - displaying from STORAGE');
                     displayInstant(lib);
                 } else {
+                    console.log('[TRACK-VIEW] BASIC MODE - will GENERATE or use cache');
                     fallbackToCache();
                 }
             });
