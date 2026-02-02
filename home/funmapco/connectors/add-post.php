@@ -429,13 +429,14 @@ function load_bunny_settings(mysqli $mysqli): array
 {
   $out = [
     'folder_post_images' => '',
+    'folder_map_images' => '',
     'storage_api_key' => '',
     'storage_zone_name' => '',
     'image_min_width' => 1000,
     'image_min_height' => 1000,
     'image_max_size' => 5242880, // 5MB default
   ];
-  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
+  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','folder_map_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
   if ($res) {
     while ($row = $res->fetch_assoc()) {
       $k = $row['setting_key'] ?? '';
@@ -1096,6 +1097,137 @@ if (!empty($mediaIds)) {
     $stmtUpd->bind_param('si', $mediaString, $insertId);
     $stmtUpd->execute();
     $stmtUpd->close();
+  }
+}
+
+// Upload map images (if any) - 4 bearings per location (0, 90, 180, 270)
+$mapImageUploadedPaths = [];
+if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
+  $mapSettings = load_bunny_settings($mysqli);
+  $mapFolder = rtrim((string)$mapSettings['folder_map_images'], '/');
+  if ($mapFolder === '') {
+    // Silently skip if no map folder configured - don't abort
+    error_log('Map images upload skipped: folder_map_images not configured');
+  } else {
+    $mapIsExternal = preg_match('#^https?://#i', $mapFolder);
+    
+    if ($mapIsExternal) {
+      $mapStorageApiKey = (string)$mapSettings['storage_api_key'];
+      $mapStorageZoneName = (string)$mapSettings['storage_zone_name'];
+      if ($mapStorageApiKey === '' || $mapStorageZoneName === '') {
+        error_log('Map images upload skipped: missing storage credentials');
+      } else {
+        $mapCdnPath = preg_replace('#^https?://[^/]+/#', '', $mapFolder);
+        $mapCdnPath = rtrim((string)$mapCdnPath, '/');
+        
+        // Parse map_images_meta for lat/lng/bearing info
+        $mapMeta = [];
+        if (!empty($_POST['map_images_meta'])) {
+          $mm = json_decode((string)$_POST['map_images_meta'], true);
+          if (is_array($mm)) $mapMeta = $mm;
+        }
+        
+        $mapCount = count($_FILES['map_images']['name']);
+        
+        for ($mi = 0; $mi < $mapCount; $mi++) {
+          $mapTmp = $_FILES['map_images']['tmp_name'][$mi] ?? '';
+          if (!$mapTmp || !is_uploaded_file($mapTmp)) continue;
+          
+          // Get metadata for this image
+          $lat = isset($mapMeta[$mi]['lat']) ? (float)$mapMeta[$mi]['lat'] : null;
+          $lng = isset($mapMeta[$mi]['lng']) ? (float)$mapMeta[$mi]['lng'] : null;
+          $bearing = isset($mapMeta[$mi]['bearing']) ? (int)$mapMeta[$mi]['bearing'] : null;
+          
+          if ($lat === null || $lng === null || $bearing === null) {
+            error_log("Map image $mi skipped: missing metadata");
+            continue;
+          }
+          
+          // Check if this exact combo already exists in DB with a valid file
+          $checkStmt = $mysqli->prepare("SELECT file_url FROM map_images WHERE latitude = ? AND longitude = ? AND bearing = ?");
+          if ($checkStmt) {
+            $checkStmt->bind_param('ddi', $lat, $lng, $bearing);
+            $checkStmt->execute();
+            $checkStmt->bind_result($existingUrl);
+            $foundExisting = $checkStmt->fetch();
+            $checkStmt->close();
+            
+            if ($foundExisting && $existingUrl) {
+              // Record exists, verify file exists on storage
+              $fileExists = false;
+              if ($mapIsExternal) {
+                // Check if file exists on Bunny CDN via HEAD request
+                $checkUrl = $existingUrl;
+                $ch = curl_init($checkUrl);
+                curl_setopt($ch, CURLOPT_NOBODY, true);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                $fileExists = ($httpCode >= 200 && $httpCode < 400);
+              }
+              
+              if ($fileExists) {
+                // Both DB record and file exist, skip
+                continue;
+              } else {
+                // DB record exists but file missing - delete orphan record
+                $delStmt = $mysqli->prepare("DELETE FROM map_images WHERE latitude = ? AND longitude = ? AND bearing = ?");
+                if ($delStmt) {
+                  $delStmt->bind_param('ddi', $lat, $lng, $bearing);
+                  $delStmt->execute();
+                  $delStmt->close();
+                }
+              }
+            }
+          }
+          
+          // Upload the map image
+          $mapOrigName = (string)($_FILES['map_images']['name'][$mi] ?? 'map_image');
+          $mapExt = strtolower(pathinfo($mapOrigName, PATHINFO_EXTENSION));
+          if ($mapExt === '') $mapExt = 'webp';
+          $mapHash = substr(md5($lat . '_' . $lng . '_' . $bearing), 0, 8);
+          $mapFilename = 'map_' . number_format($lat, 6, '.', '') . '_' . number_format($lng, 6, '.', '') . '_' . $bearing . '_' . $mapHash . '.' . $mapExt;
+          
+          $mapBytes = file_get_contents($mapTmp);
+          if ($mapBytes === false) {
+            error_log("Map image $mi: failed to read bytes");
+            continue;
+          }
+          
+          // Get image dimensions
+          $mapImageInfo = @getimagesize($mapTmp);
+          $mapWidth = ($mapImageInfo && isset($mapImageInfo[0])) ? (int)$mapImageInfo[0] : 700;
+          $mapHeight = ($mapImageInfo && isset($mapImageInfo[1])) ? (int)$mapImageInfo[1] : 2500;
+          
+          $mapFullPath = $mapCdnPath . '/' . $mapFilename;
+          $mapHttpCode = 0;
+          $mapResp = '';
+          if (bunny_upload_bytes($mapStorageApiKey, $mapStorageZoneName, $mapFullPath, $mapBytes, $mapHttpCode, $mapResp)) {
+            $mapImageUploadedPaths[] = $mapFullPath;
+            $mapPublicUrl = $mapFolder . '/' . $mapFilename;
+            
+            // Insert into map_images table
+            $mapFileSize = (int)($_FILES['map_images']['size'][$mi] ?? strlen($mapBytes));
+            $locationType = 'post'; // Could be enhanced to detect venue/city/address
+            $pitch = 75;
+            $zoom = 18;
+            
+            $insMapStmt = $mysqli->prepare("INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            if ($insMapStmt) {
+              $insMapStmt->bind_param('ddsiiiiiis', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $mapWidth, $mapHeight, $mapFileSize, $mapPublicUrl);
+              if (!$insMapStmt->execute()) {
+                error_log("Map image $mi: failed to insert DB record - " . $insMapStmt->error);
+              }
+              $insMapStmt->close();
+            }
+          } else {
+            error_log("Map image $mi: upload to CDN failed (HTTP $mapHttpCode)");
+          }
+        }
+      }
+    }
   }
 }
 

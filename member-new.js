@@ -3208,16 +3208,24 @@ const MemberModule = (function() {
         var imageFiles = validation.imageFiles || [];
         var imagesMeta = validation.imagesMeta || '[]';
         
-        // Immediately switch to My Posts and show loading placeholder
-        resetCreatePostForm();
-        try { requestTabSwitch('myposts'); } catch (e0) {}
-        if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
-            PostEditorModule.showLoadingPlaceholder(validation.payload);
-        }
+        // Extract final locations from payload for map image capture
+        var finalLocations = extractLocationsFromPayload(validation.payload);
+        console.log('[TRACK] Final locations for map images:', finalLocations.length);
         
-        // Submit the post
-        console.log('[TRACK] About to submit post. imageFiles:', imageFiles.length, 'payload:', JSON.stringify(validation.payload).substring(0,500));
-        submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta)
+        // Capture map images for final locations (if not already in storage)
+        captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
+            console.log('[TRACK] Map images captured:', mapImageData.files.length);
+            
+            // Immediately switch to My Posts and show loading placeholder
+            resetCreatePostForm();
+            try { requestTabSwitch('myposts'); } catch (e0) {}
+            if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
+                PostEditorModule.showLoadingPlaceholder(validation.payload);
+            }
+            
+            // Submit the post with map images
+            console.log('[TRACK] About to submit post. imageFiles:', imageFiles.length, 'mapImages:', mapImageData.files.length);
+            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData)
             .then(function(result) {
                 console.log('[TRACK] Post submitted. Result:', JSON.stringify(result).substring(0,500));
                 isSubmittingPost = false;
@@ -3309,6 +3317,7 @@ const MemberModule = (function() {
                     }
                 }
             });
+        }); // End captureMapImagesForLocations.then
     }
     
     function updateFormpickerSelections(catName, subName) {
@@ -3403,6 +3412,174 @@ const MemberModule = (function() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+    
+    // Extract lat/lng from final locations in payload
+    function extractLocationsFromPayload(payload) {
+        var locations = [];
+        if (!payload || !Array.isArray(payload.fields)) return locations;
+        
+        payload.fields.forEach(function(field) {
+            // Look for venue, city, or address fieldsets with lat/lng
+            if (field.key === 'venue' || field.key === 'city' || field.key === 'address') {
+                var lat = null, lng = null, locNum = field.location_number || 1;
+                if (field.value && typeof field.value === 'object') {
+                    lat = parseFloat(field.value.lat);
+                    lng = parseFloat(field.value.lng);
+                }
+                if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    // Check if we already have this location
+                    var exists = locations.some(function(loc) {
+                        return loc.lat === lat && loc.lng === lng;
+                    });
+                    if (!exists) {
+                        locations.push({ lat: lat, lng: lng, location_number: locNum });
+                    }
+                }
+            }
+        });
+        
+        return locations;
+    }
+    
+    // Collect map images for final locations from browser cache (WallpaperCache)
+    // Images were captured when location was selected; now we just retrieve and upload
+    function captureMapImagesForLocations(locations) {
+        return new Promise(function(resolve) {
+            var result = { files: [], meta: [] };
+            if (!locations || !locations.length) {
+                resolve(result);
+                return;
+            }
+            
+            var bearings = [0, 90, 180, 270];
+            var pending = locations.length;
+            
+            locations.forEach(function(loc) {
+                // First check if images already exist on server
+                fetch('/gateway.php?action=get-map-wallpapers&lat=' + encodeURIComponent(loc.lat) + '&lng=' + encodeURIComponent(loc.lng))
+                    .then(function(r) { return r.json(); })
+                    .then(function(resp) {
+                        if (resp && resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length === 4) {
+                            // All 4 already exist on server, skip upload
+                            console.log('[TRACK] Map images already on server for', loc.lat, loc.lng);
+                            pending--;
+                            if (pending === 0) resolve(result);
+                            return;
+                        }
+                        
+                        // Images not on server - get from browser cache (WallpaperCache)
+                        if (window.WallpaperCache && typeof WallpaperCache.getAll === 'function') {
+                            WallpaperCache.getAll(loc.lat, loc.lng, bearings, function(cachedUrls) {
+                                var foundCount = cachedUrls.filter(function(u) { return !!u; }).length;
+                                console.log('[TRACK] Found', foundCount, '/4 in browser cache for', loc.lat, loc.lng);
+                                
+                                if (foundCount === 4) {
+                                    // All 4 in cache, convert to files for upload
+                                    bearings.forEach(function(bearing, idx) {
+                                        if (cachedUrls[idx]) {
+                                            var blob = dataUrlToBlob(cachedUrls[idx]);
+                                            if (blob) {
+                                                var filename = 'map_' + loc.lat.toFixed(6) + '_' + loc.lng.toFixed(6) + '_' + bearing + '.webp';
+                                                result.files.push(new File([blob], filename, { type: blob.type }));
+                                                result.meta.push({
+                                                    lat: loc.lat,
+                                                    lng: loc.lng,
+                                                    bearing: bearing,
+                                                    location_number: loc.location_number
+                                                });
+                                            }
+                                        }
+                                    });
+                                    pending--;
+                                    if (pending === 0) resolve(result);
+                                } else {
+                                    // Not all in cache - capture missing ones now (fallback)
+                                    console.log('[TRACK] Capturing missing images for', loc.lat, loc.lng);
+                                    captureAndCollectMissing(loc, bearings, cachedUrls, result, function() {
+                                        pending--;
+                                        if (pending === 0) resolve(result);
+                                    });
+                                }
+                            });
+                        } else {
+                            // No WallpaperCache available
+                            pending--;
+                            if (pending === 0) resolve(result);
+                        }
+                    })
+                    .catch(function() {
+                        pending--;
+                        if (pending === 0) resolve(result);
+                    });
+            });
+        });
+    }
+    
+    // Fallback: capture any missing images that weren't in browser cache
+    function captureAndCollectMissing(loc, bearings, cachedUrls, result, done) {
+        var WIDTH = 700;
+        var HEIGHT = 2500;
+        var capturedCount = 0;
+        
+        bearings.forEach(function(bearing, idx) {
+            if (cachedUrls[idx]) {
+                // Already have this one from cache
+                var blob = dataUrlToBlob(cachedUrls[idx]);
+                if (blob) {
+                    var filename = 'map_' + loc.lat.toFixed(6) + '_' + loc.lng.toFixed(6) + '_' + bearing + '.webp';
+                    result.files.push(new File([blob], filename, { type: blob.type }));
+                    result.meta.push({
+                        lat: loc.lat,
+                        lng: loc.lng,
+                        bearing: bearing,
+                        location_number: loc.location_number
+                    });
+                }
+                capturedCount++;
+                if (capturedCount === 4) done();
+            } else if (window.SecondaryMap && typeof SecondaryMap.capture === 'function') {
+                // Capture this missing one
+                var camera = { center: [loc.lng, loc.lat], zoom: 18, pitch: 75, bearing: bearing };
+                SecondaryMap.capture(camera, WIDTH, HEIGHT, function(dataUrl) {
+                    if (dataUrl) {
+                        var blob = dataUrlToBlob(dataUrl);
+                        if (blob) {
+                            var filename = 'map_' + loc.lat.toFixed(6) + '_' + loc.lng.toFixed(6) + '_' + bearing + '.webp';
+                            result.files.push(new File([blob], filename, { type: blob.type }));
+                            result.meta.push({
+                                lat: loc.lat,
+                                lng: loc.lng,
+                                bearing: bearing,
+                                location_number: loc.location_number
+                            });
+                        }
+                    }
+                    capturedCount++;
+                    if (capturedCount === 4) done();
+                });
+            } else {
+                capturedCount++;
+                if (capturedCount === 4) done();
+            }
+        });
+    }
+    
+    // Convert dataUrl to Blob
+    function dataUrlToBlob(dataUrl) {
+        try {
+            var parts = dataUrl.split(',');
+            var mime = parts[0].match(/:(.*?);/)[1];
+            var bstr = atob(parts[1]);
+            var n = bstr.length;
+            var u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        } catch (e) {
+            return null;
+        }
     }
     
     function validateAndCollectFormData() {
@@ -4078,7 +4255,7 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta) {
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
@@ -4129,6 +4306,17 @@ const MemberModule = (function() {
             }
             fd.set('images_meta', imagesMeta || '[]');
             console.log('[TRACK] images_meta:', imagesMeta);
+            
+            // Attach map images (captured at submission time for final locations)
+            if (mapImageData && mapImageData.files && mapImageData.files.length > 0) {
+                console.log('[TRACK] Attaching', mapImageData.files.length, 'map images');
+                mapImageData.files.forEach(function(file, idx) {
+                    console.log('[TRACK] Map image', idx, ':', file ? file.name : 'null', file ? file.size : 0);
+                    if (file) fd.append('map_images[]', file, file.name || 'map_image');
+                });
+                fd.set('map_images_meta', JSON.stringify(mapImageData.meta || []));
+                console.log('[TRACK] map_images_meta:', JSON.stringify(mapImageData.meta));
+            }
 
             var action = effectivePostId ? 'edit-post' : 'add-post';
             fetch('/gateway.php?action=' + action, {

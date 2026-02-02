@@ -9327,8 +9327,8 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
-                // CRITICAL: Ensure all 4 images are captured regardless of viewing mode
-                console.log('[TRACK] Location changed. Lat:', lat, 'Lng:', lng, 'Calling ensureAllFourImages');
+                // Ensure all 4 images are captured and stored in browser cache
+                // This happens regardless of view mode - images are needed for submission
                 ensureAllFourImages(lat, lng);
             }
 
