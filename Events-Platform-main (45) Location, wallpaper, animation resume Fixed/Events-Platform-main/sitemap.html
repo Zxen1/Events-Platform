@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sitemap</title>
+    <link rel="stylesheet" href="base-new.css?v=20251228i">
+    <style>
+      :root{
+        --sitemap-header-h: 40px;
+        --sitemap-header-font: 13px;
+        --sitemap-gap: 12px;
+        --sitemap-border: 1px solid rgba(255, 255, 255, 0.2);
+        --sitemap-panel-padding: 10px;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        color: var(--text, #ffffff);
+        scroll-behavior: smooth;
+      }
+
+      /* base-new.css sets body to flex + overflow hidden; undo for this standalone page */
+      body {
+        display: block;
+        overflow: auto;
+        min-height: 0;
+      }
+
+      .sitemap-root {
+        padding: 10px 10px 0 0;
+        box-sizing: border-box;
+      }
+
+      .sitemap-wrap {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .sitemap-viewport {
+        border: var(--sitemap-border);
+        border-radius: 5px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #0f172a;
+      }
+
+      .sitemap-viewport-header {
+        height: var(--sitemap-header-h);
+        line-height: var(--sitemap-header-h);
+        font-size: var(--sitemap-header-font);
+        padding: 0;
+        border-bottom: var(--sitemap-border);
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sitemap-header-btn {
+        width: 100%;
+        height: 100%;
+        line-height: var(--sitemap-header-h);
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 5px 5px 0 0;
+      }
+
+      .sitemap-viewport-body {
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .sitemap-viewport--landscape {
+        width: 100%;
+        aspect-ratio: 2 / 1;
+      }
+
+      .sitemap-viewport--portrait {
+        width: 50%;
+        aspect-ratio: 1 / 2;
+      }
+
+
+      .sitemap-landscape-panels {
+        height: 100%;
+        display: flex;
+      }
+
+      .sitemap-landscape-panel-left,
+      .sitemap-landscape-panel-right {
+        flex: 0 0 25%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        padding: var(--sitemap-panel-padding);
+      }
+
+      .sitemap-landscape-panel-left {
+        border-right: var(--sitemap-border);
+      }
+
+      .sitemap-landscape-panel-right {
+        border-left: var(--sitemap-border);
+      }
+
+      .sitemap-landscape-map-gap {
+        flex: 0 0 50%;
+        box-sizing: border-box;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+      }
+
+      .sitemap-landscape-map-gap .sitemap-panel-item {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+      }
+
+      .sitemap-spacer {
+        height: var(--sitemap-gap);
+      }
+
+      .sitemap-panel-item,
+      .sitemap-portrait-item {
+        text-align: center;
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      .sitemap-portrait-wrap {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .sitemap-portrait-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: var(--sitemap-panel-padding);
+        box-sizing: border-box;
+      }
+
+      .sitemap-dims {
+        display: flex;
+        flex-direction: column;
+        font-size: 13px;
+        opacity: 0.7;
+      }
+
+      .sitemap-dim--header {
+        height: calc(var(--sitemap-header-h) + 1px);
+        line-height: var(--sitemap-header-h);
+        box-sizing: border-box;
+      }
+
+      .sitemap-dims-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        flex: 1 1 auto;
+        padding: var(--sitemap-panel-padding) 0;
+        box-sizing: border-box;
+      }
+
+      .sitemap-dims-body .sitemap-dim {
+        height: 36px;
+        line-height: 36px;
+      }
+
+      .sitemap-title {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+
+      .sitemap-intro {
+        font-size: 13px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+      }
+
+      .sitemap-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        opacity: 0.7;
+      }
+
+      .sitemap-layout-col {
+        margin-bottom: 12px;
+      }
+
+      .sitemap-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        opacity: 0.7;
+      }
+
+      .sitemap-sections-header {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .sitemap-section {
+        margin-bottom: 10px;
+      }
+
+      .sitemap-section-title {
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        padding: 0 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 200px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+
+      .sitemap-elements {
+        margin-top: 10px;
+        margin-left: 20px;
+      }
+
+      .sitemap-element {
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        padding: 0 10px;
+        cursor: pointer;
+      }
+
+      .sitemap-element--bold {
+        font-weight: bold;
+      }
+
+      .sitemap-subelements {
+        margin-left: 20px;
+      }
+
+      /* Hover states */
+      .sitemap-panel-item:hover,
+      .sitemap-portrait-item:hover,
+      .sitemap-header-btn:hover,
+      .sitemap-section-title:hover {
+        outline: 1px solid rgba(255, 255, 255, 0.3);
+        outline-offset: -1px;
+      }
+
+      /* Section colors */
+      .sitemap-btn-header { background: #1e293b; }
+      .sitemap-btn-map { background: #14532d; }
+      .sitemap-btn-posts { background: #1e40af; }
+      .sitemap-btn-recent { background: #2563eb; }
+      .sitemap-btn-filter { background: #0891b2; }
+      .sitemap-btn-marquee { background: #7e22ce; }
+      .sitemap-btn-member { background: #a21caf; }
+      .sitemap-btn-admin { background: #db2777; }
+    </style>
+  </head>
+  <body>
+    <div class="sitemap-root">
+      <div class="sitemap-wrap">
+        <div class="sitemap-title">Sitemap</div>
+        <div class="sitemap-intro">Layout reference for desktop and mobile. Click a section below for details.</div>
+
+        <div class="sitemap-layout-col">
+          <div class="sitemap-label">Landscape</div>
+          <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
+            <div class="sitemap-viewport-header">
+              <div class="sitemap-header-btn sitemap-btn-header" onclick="document.getElementById('section-header').scrollIntoView({behavior:'smooth'})">Header</div>
+            </div>
+            <div class="sitemap-viewport-body">
+              <div class="sitemap-landscape-panels">
+                <div class="sitemap-landscape-panel-left">
+                  <div class="sitemap-panel-item sitemap-btn-posts" onclick="document.getElementById('section-posts').scrollIntoView({behavior:'smooth'})">Posts</div>
+                  <div class="sitemap-panel-item sitemap-btn-recent" onclick="document.getElementById('section-recent').scrollIntoView({behavior:'smooth'})">Recent</div>
+                  <div class="sitemap-panel-item sitemap-btn-filter" onclick="document.getElementById('section-filter').scrollIntoView({behavior:'smooth'})">Filter</div>
+                </div>
+                <div class="sitemap-landscape-map-gap">
+                  <div class="sitemap-panel-item sitemap-btn-map" onclick="document.getElementById('section-map').scrollIntoView({behavior:'smooth'})">Map</div>
+                </div>
+                <div class="sitemap-landscape-panel-right">
+                  <div class="sitemap-panel-item sitemap-btn-marquee" onclick="document.getElementById('section-marquee').scrollIntoView({behavior:'smooth'})">Marquee</div>
+                  <div class="sitemap-panel-item sitemap-btn-member" onclick="document.getElementById('section-member').scrollIntoView({behavior:'smooth'})">Member</div>
+                  <div class="sitemap-panel-item sitemap-btn-admin" onclick="document.getElementById('section-admin').scrollIntoView({behavior:'smooth'})">Admin</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sitemap-layout-col">
+          <div class="sitemap-label">Portrait</div>
+          <div class="sitemap-portrait-wrap">
+            <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
+              <div class="sitemap-viewport-header">
+                <div class="sitemap-header-btn sitemap-btn-header" onclick="document.getElementById('section-header').scrollIntoView({behavior:'smooth'})">Header</div>
+              </div>
+              <div class="sitemap-portrait-body">
+                <div class="sitemap-portrait-item sitemap-btn-map" onclick="document.getElementById('section-map').scrollIntoView({behavior:'smooth'})">Map</div>
+                <div class="sitemap-portrait-item sitemap-btn-posts" onclick="document.getElementById('section-posts').scrollIntoView({behavior:'smooth'})">Posts Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-recent" onclick="document.getElementById('section-recent').scrollIntoView({behavior:'smooth'})">Recent Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-filter" onclick="document.getElementById('section-filter').scrollIntoView({behavior:'smooth'})">Filter Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-marquee" onclick="document.getElementById('section-marquee').scrollIntoView({behavior:'smooth'})">Marquee Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-member" onclick="document.getElementById('section-member').scrollIntoView({behavior:'smooth'})">Member Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-admin" onclick="document.getElementById('section-admin').scrollIntoView({behavior:'smooth'})">Admin Panel</div>
+              </div>
+            </div>
+            <div class="sitemap-dims">
+              <div class="sitemap-dim sitemap-dim--header">56px height</div>
+              <div class="sitemap-dims-body">
+                <div class="sitemap-dim">Full Screen</div>
+                <div class="sitemap-dim">530px / Fluid</div>
+                <div class="sitemap-dim">530px / Fluid</div>
+                <div class="sitemap-dim">380px / Fluid</div>
+                <div class="sitemap-dim">440px / Fluid</div>
+                <div class="sitemap-dim">440px / Fluid</div>
+                <div class="sitemap-dim">440px / Fluid</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sitemap-sections-header">Section Details</div>
+
+        <div class="sitemap-section" id="section-header">
+          <div class="sitemap-section-title sitemap-btn-header">Header</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Logo</div>
+            <div class="sitemap-element">Filter Button</div>
+            <div class="sitemap-element">Recent Button</div>
+            <div class="sitemap-element">Posts Button</div>
+            <div class="sitemap-element">Map Button</div>
+            <div class="sitemap-element">Member Button</div>
+            <div class="sitemap-element">Admin Button</div>
+            <div class="sitemap-element">Fullscreen Button</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-map">
+          <div class="sitemap-section-title sitemap-btn-map">Map</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Mapbox Map</div>
+            <div class="sitemap-element">Map Controls</div>
+            <div class="sitemap-element">Marker Clusters</div>
+            <div class="sitemap-element">Map Cards</div>
+            <div class="sitemap-element">Map Icons</div>
+            <div class="sitemap-element">Map Dots</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-posts">
+          <div class="sitemap-section-title sitemap-btn-posts">Posts Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Post Cards</div>
+            <div class="sitemap-element">Posts</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-recent">
+          <div class="sitemap-section-title sitemap-btn-recent">Recent Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Timestamp</div>
+            <div class="sitemap-element">Post Cards</div>
+            <div class="sitemap-element">Posts</div>
+            <div class="sitemap-element">Linked Posts</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-filter">
+          <div class="sitemap-section-title sitemap-btn-filter">Filter Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Filter Panel Header</div>
+            <div class="sitemap-element">Counter Message</div>
+            <div class="sitemap-element">Map Controls</div>
+            <div class="sitemap-element">Reset All Filters Button</div>
+            <div class="sitemap-element">Reset All Categories Button</div>
+            <div class="sitemap-element">Favorites On Top Button</div>
+            <div class="sitemap-element">Sort Order Menu</div>
+            <div class="sitemap-element">Keywords Search</div>
+            <div class="sitemap-element">Price Range Search</div>
+            <div class="sitemap-element">Date Range Search</div>
+            <div class="sitemap-element">Show Expired Events Switch</div>
+            <div class="sitemap-element">Category Filters</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-marquee">
+          <div class="sitemap-section-title sitemap-btn-marquee">Marquee Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element">Full Height Advertisements</div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-member">
+          <div class="sitemap-section-title sitemap-btn-member">Member Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element sitemap-element--bold">Profile Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Map Style Container</div>
+              <div class="sitemap-element">Login Container</div>
+              <div class="sitemap-element">Profile Container</div>
+              <div class="sitemap-element">Logout Button</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Create Post Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Form Picker</div>
+              <div class="sitemap-element">Primary Subcategory Form</div>
+              <div class="sitemap-element">Location Subcategory Form</div>
+              <div class="sitemap-element">Checkout Form</div>
+              <div class="sitemap-element">Payment And Submission Form</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">My Posts / Edit Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Timestamps</div>
+              <div class="sitemap-element">Post Cards</div>
+              <div class="sitemap-element">Post Viewer</div>
+              <div class="sitemap-element">Post Editor</div>
+              <div class="sitemap-element">Post Manager</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Support Funmap / Registration Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Thank You Message</div>
+              <div class="sitemap-element">Payment Presets</div>
+              <div class="sitemap-element">Registration Form</div>
+              <div class="sitemap-element">Submission And Payment</div>
+            </div>
+          </div>
+        </div>
+        <div class="sitemap-section" id="section-admin">
+          <div class="sitemap-section-title sitemap-btn-admin">Admin Panel</div>
+          <div class="sitemap-elements">
+            <div class="sitemap-element sitemap-element--bold">Settings Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">General Website Details Container</div>
+              <div class="sitemap-element">Countdown Container</div>
+              <div class="sitemap-element">Image Files Container</div>
+              <div class="sitemap-element">Image Folders Container</div>
+              <div class="sitemap-element">Color Palette Container</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Forms Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Form Builder</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Map Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Starting Map Container</div>
+              <div class="sitemap-element">Map Spin Container</div>
+              <div class="sitemap-element">Admin Map Style Container</div>
+              <div class="sitemap-element">Map Wallpaper Container</div>
+              <div class="sitemap-element">Map Card Elements Container</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Messages Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">User Messages</div>
+              <div class="sitemap-element">Member Messages</div>
+              <div class="sitemap-element">Admin Messages</div>
+              <div class="sitemap-element">Email Messages</div>
+              <div class="sitemap-element">Fieldset Tooltips</div>
+              <div class="sitemap-element">Field Tooltips</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Checkout Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Payment Gateway Container</div>
+              <div class="sitemap-element">Checkout Options Container</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Moderation Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Deletion Container</div>
+              <div class="sitemap-element">Flagged Container</div>
+            </div>
+            <div class="sitemap-element sitemap-element--bold">Sitemap Tab</div>
+            <div class="sitemap-subelements">
+              <div class="sitemap-element">Site Layout</div>
+              <div class="sitemap-element">Site Description</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
