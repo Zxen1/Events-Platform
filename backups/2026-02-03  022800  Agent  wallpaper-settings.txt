@@ -1,0 +1,137 @@
+LOCATION WALLPAPER COMPONENT
+============================
+
+Standalone component. Reads lat/lng from context (posts: post_map_cards table, forms: Google Places inputs). No dedicated lat/lng inputs. Insertable anywhere, any container size.
+
+
+MAP ARCHITECTURE
+----------------
+
+Main map        Spinning globe, clusters, always visible
+Secondary map   Created when needed, destroyed when done
+
+Rule: NEVER more than 2 live maps.
+  - Posts: Wallpaper destroyed when post closes
+  - Forms: Wallpaper freezes (shows still), lazy cleanup destroys map after 2s
+
+SecondaryMap utility (components-new.js):
+  Used for still/basic mode captures only
+  Queue handles multiple capture requests
+  Created on first capture, destroyed when done
+
+
+IMAGE STORAGE
+-------------
+
+Location: Map images folder (not hardcoded to any CDN)
+Priority: Fetch existing images first, only generate if not found
+Dimensions: 700x2500 pixels (fixed)
+Bearings: N(0), E(90), S(180), W(270)
+
+
+POSITIONING
+-----------
+
+Vertical: Image center positioned below container header (currently 300px, configurable)
+Horizontal: Still/Orbit centered, Basic left-anchored (configurable)
+
+Container growth handling:
+  - 2500px height accommodates most containers without stretch
+  - As container grows, image stays in place
+  - When image bottom reaches container footer, bottom anchors to footer
+  - Only stretches if container exceeds 2500px (rare)
+  - Never black bars
+
+
+USER PREFERENCE
+---------------
+
+Priority:
+  1. Member's animation_preference (members/admins table)
+  2. localStorage (guests)
+  3. Admin default (new users)
+
+Setting location: Member profile (Map Settings section)
+Options: Off, Still, Basic, Orbit
+
+
+MODES
+-----
+
+OFF
+  Nothing displayed
+
+STILL
+  Single north-facing image, horizontally centered
+  Fade in 1.5s
+
+BASIC
+  All 4 images (N/E/S/W)
+  Left-anchored, pans leftward (currently 100px over 20s, configurable)
+  Additive dissolve: next image fades in from 18.5s to 20s (no dip to black)
+  Animation never stops unless click outside container
+  Click outside: pauses on current frame
+  Click back: resumes
+
+ORBIT
+  Live map rendering in container, horizontally centered (never stored)
+  Creates its own map, destroyed when post closes or container deactivates
+  Fade in 1.5s
+  Click outside: still image fades in 1.5s, map cleaned up after 2s
+  Click back: still fades out 1.5s, orbit reactivates from saved camera
+
+
+TRANSITIONS
+-----------
+
+All elements fade IN 1.5s (additive dissolve, no dip to black)
+Exception: still fades OUT when returning to orbit
+
+
+FORM SUBMISSION
+---------------
+
+Generate 4 images only if they don't exist for those coordinates
+Store with post images
+
+
+CONFIGURABLE VALUES
+-------------------
+
+These may change based on testing:
+  - Image center offset below header (currently 300px)
+  - Pan distance (currently 100px)
+  - Pan duration (currently 20s)
+  - Pan direction (currently leftward)
+  - Dissolve timing (currently 18.5s-20s, may extend if glitches occur)
+
+
+CSS CLASSES
+-----------
+
+.component-locationwallpaper
+.component-locationwallpaper-container
+.component-locationwallpaper-content
+.component-locationwallpaper-content--active
+.component-locationwallpaper-mapmount
+.component-locationwallpaper-image
+.component-locationwallpaper-basic-container
+.component-locationwallpaper-basic-image
+.component-locationwallpaper-basic-image--active
+@keyframes locationwallpaper-basic-pan
+
+Lat/lng read from context using .fieldset-lat / .fieldset-lng (no dedicated component classes)
+
+
+JS UTILITIES
+------------
+
+SecondaryMap.capture(camera, w, h, cb)  - Queue a capture request
+WallpaperCache.get/put/getAll/putAll    - IndexedDB image cache
+
+
+FUTURE
+------
+
+This is one wallpaper type. More may be added.
+Auto-detection (connection speed, memory, battery) may force mode downgrade.
