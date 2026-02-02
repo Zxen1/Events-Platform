@@ -445,7 +445,7 @@ if ($stmt) {
 
 // 2. Clear old sub-data for this post
 // IMPORTANT: We clear sub-data because we'll re-insert it from the updated payload.
-// Fetch map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
+// Fetch post_map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
 $oldMapCardIds = [];
 $mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId");
 if ($mcResult) {
@@ -457,11 +457,11 @@ if ($mcResult) {
 
 if (!empty($oldMapCardIds)) {
   $mcIdList = implode(',', $oldMapCardIds);
-  $mysqli->query("DELETE FROM post_ticket_pricing WHERE map_card_id IN ($mcIdList)");
-  $mysqli->query("DELETE FROM post_item_pricing WHERE map_card_id IN ($mcIdList)");
-  $mysqli->query("DELETE FROM post_sessions WHERE map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_ticket_pricing WHERE post_map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_item_pricing WHERE post_map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_sessions WHERE post_map_card_id IN ($mcIdList)");
   // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
-  $mysqli->query("DELETE FROM post_amenities WHERE map_card_id IN ($mcIdList)");
+  $mysqli->query("DELETE FROM post_amenities WHERE post_map_card_id IN ($mcIdList)");
 }
 // Now delete the map cards themselves
 $mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
@@ -689,7 +689,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Amenities
     if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
-      $stmtAm = $mysqli->prepare("INSERT INTO post_amenities (map_card_id, amenity_key, value, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
+      $stmtAm = $mysqli->prepare("INSERT INTO post_amenities (post_map_card_id, amenity_key, value, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
       if ($stmtAm) {
         foreach ($card['amenities_data'] as $am) {
           if (!is_array($am)) continue;
@@ -738,7 +738,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     if ($writeSessionPricing) {
       if (is_array($sessionsToWrite)) {
-        $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())");
+        $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (post_map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())");
         foreach ($sessionsToWrite as $s) {
           if (!is_array($s)) continue;
           $date = (string)($s['date'] ?? '');
@@ -755,7 +755,7 @@ foreach ($byLoc as $locNum => $entries) {
       }
 
       if (is_array($pricingGroupsToWrite)) {
-        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
         foreach ($pricingGroupsToWrite as $gkRaw => $seats) {
           $gk = trim((string)$gkRaw);
           if ($gk === '' || !is_array($seats)) continue;
@@ -785,7 +785,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Item Pricing
     if (is_array($itemPricing) && !empty($itemPricing['item_name'])) {
-      $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
       if ($stmtItem) {
         $variants = json_encode($itemPricing['item_variants'] ?? [], JSON_UNESCAPED_UNICODE);
         $price = normalize_price_amount($itemPricing['item_price'] ?? null);

@@ -816,7 +816,7 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Insert amenities into post_amenities subtable
   if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
-    $stmtAmenity = $mysqli->prepare("INSERT INTO post_amenities (map_card_id, amenity_key, value, created_at, updated_at)
+    $stmtAmenity = $mysqli->prepare("INSERT INTO post_amenities (post_map_card_id, amenity_key, value, created_at, updated_at)
       VALUES (?, ?, ?, NOW(), NOW())");
     if ($stmtAmenity) {
       foreach ($card['amenities_data'] as $amenityItem) {
@@ -874,7 +874,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write sessions with their per-time-slot ticket_group_key
     if (is_array($sessionsToWrite)) {
-      $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
+      $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (post_map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtSess) {
         abort_with_error($mysqli, 500, 'Prepare post_sessions', $transactionActive);
@@ -897,7 +897,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write pricing rows for each pricing group
     if (is_array($pricingGroupsToWrite)) {
-      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at)
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtPrice) {
         abort_with_error($mysqli, 500, 'Prepare post_ticket_pricing', $transactionActive);
@@ -937,7 +937,7 @@ foreach ($byLoc as $locNum => $entries) {
     if (!table_exists($mysqli, 'post_item_pricing')) {
       abort_with_error($mysqli, 500, 'Missing post_item_pricing', $transactionActive);
     }
-    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at)
+    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
     if (!$stmtItem) {
       abort_with_error($mysqli, 500, 'Prepare post_item_pricing', $transactionActive);

@@ -154,7 +154,7 @@ try {
     $start = $dateStart !== '' ? $dateStart : $dateEnd;
     $end = $dateEnd !== '' ? $dateEnd : $dateStart;
     if ($start === '' || $end === '') { $end = $start; }
-    $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
+    $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
     $paramsFiltered[] = $start;
     $paramsFiltered[] = $end;
     $typesFiltered .= 'ss';
@@ -164,15 +164,15 @@ try {
     $min = $minPrice !== null ? $minPrice : null;
     $max = $maxPrice !== null ? $maxPrice : null;
     if ($min !== null && $max !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
       $paramsFiltered[] = $min; $paramsFiltered[] = $max; $paramsFiltered[] = $min; $paramsFiltered[] = $max;
       $typesFiltered .= 'dddd';
     } elseif ($min !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price >= ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price >= ?))';
       $paramsFiltered[] = $min; $paramsFiltered[] = $min;
       $typesFiltered .= 'dd';
     } elseif ($max !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price <= ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price <= ?))';
       $paramsFiltered[] = $max; $paramsFiltered[] = $max;
       $typesFiltered .= 'dd';
     }

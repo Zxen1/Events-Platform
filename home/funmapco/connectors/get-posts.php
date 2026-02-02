@@ -231,7 +231,7 @@ try {
         $start = $dateStart !== '' ? $dateStart : $dateEnd;
         $end = $dateEnd !== '' ? $dateEnd : $dateStart;
         if ($start === '' || $end === '') { $start = $start ?: $end; $end = $start; }
-        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
+        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
         $params[] = $start;
         $params[] = $end;
         $types .= 'ss';
@@ -240,15 +240,15 @@ try {
     // Price range filter (correct: uses pricing tables)
     if ($minPrice !== null || $maxPrice !== null) {
         if ($minPrice !== null && $maxPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
             $params[] = $minPrice; $params[] = $maxPrice; $params[] = $minPrice; $params[] = $maxPrice;
             $types .= 'dddd';
         } elseif ($minPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price >= ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price >= ?))';
             $params[] = $minPrice; $params[] = $minPrice;
             $types .= 'dd';
         } elseif ($maxPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price <= ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price <= ?))';
             $params[] = $maxPrice; $params[] = $maxPrice;
             $types .= 'dd';
         }
@@ -345,7 +345,7 @@ try {
             sc.icon_path AS subcategory_icon_path,
             sc.subcategory_name AS subcategory_name,
             sc.color_hex AS subcategory_color,
-            mc.id AS map_card_id,
+            mc.id AS post_map_card_id,
             mc.subcategory_key AS map_card_subcategory_key,
             mc.title,
             mc.description,
@@ -441,7 +441,7 @@ try {
         }
 
         // Add map card if present
-        if ($row['map_card_id'] !== null) {
+        if ($row['post_map_card_id'] !== null) {
             $mediaIds = $row['media_ids'];
             
             // Collect media IDs for batch lookup
@@ -451,7 +451,7 @@ try {
             }
             
             $postsById[$postId]['map_cards'][] = [
-                'id' => (int)$row['map_card_id'],
+                'id' => (int)$row['post_map_card_id'],
                 'subcategory_key' => (string)($row['map_card_subcategory_key'] ?? ''),
                 'title' => $row['title'],
                 'description' => $row['description'],
@@ -587,10 +587,10 @@ try {
         $cardIdsCsv = implode(',', $allMapCardIds);
         
         // Sessions
-        $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
+        $sessRes = $mysqli->query("SELECT post_map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE post_map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
         if ($sessRes) {
             while ($sRow = $sessRes->fetch_assoc()) {
-                $cid = (int)$sRow['map_card_id'];
+                $cid = (int)$sRow['post_map_card_id'];
                 if (!isset($sessionsByCard[$cid])) $sessionsByCard[$cid] = [];
                 
                 $date = $sRow['session_date'];
@@ -605,10 +605,10 @@ try {
         }
 
         // Ticket Pricing
-        $priceRes = $mysqli->query("SELECT map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($priceRes) {
             while ($pRow = $priceRes->fetch_assoc()) {
-                $cid = (int)$pRow['map_card_id'];
+                $cid = (int)$pRow['post_map_card_id'];
                 $gk = $pRow['ticket_group_key'];
                 if (!isset($pricingByCard[$cid])) $pricingByCard[$cid] = [];
                 if (!isset($pricingByCard[$cid][$gk])) $pricingByCard[$cid][$gk] = [];
@@ -629,10 +629,10 @@ try {
         }
 
         // Item Pricing
-        $itemRes = $mysqli->query("SELECT map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $itemRes = $mysqli->query("SELECT post_map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($itemRes) {
             while ($iRow = $itemRes->fetch_assoc()) {
-                $cid = (int)$iRow['map_card_id'];
+                $cid = (int)$iRow['post_map_card_id'];
                 $itemsByCard[$cid] = [
                     'item_name' => $iRow['item_name'],
                     'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
@@ -654,10 +654,10 @@ try {
             }
         }
         
-        $amenityRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv)");
+        $amenityRes = $mysqli->query("SELECT post_map_card_id, amenity_key, value FROM post_amenities WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($amenityRes) {
             while ($aRow = $amenityRes->fetch_assoc()) {
-                $cid = (int)$aRow['map_card_id'];
+                $cid = (int)$aRow['post_map_card_id'];
                 $key = $aRow['amenity_key'];
                 $name = isset($amenityKeyToName[$key]) ? $amenityKeyToName[$key] : $key;
                 if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];

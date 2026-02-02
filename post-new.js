@@ -1520,7 +1520,7 @@ const PostModule = (function() {
     return {
       id: post.id,
       post_key: post.post_key,
-      map_card_id: mapCard.id,
+      post_map_card_id: mapCard.id,
       map_card_index: mapCardIndex,
       title: title,
       venue: venueName,
