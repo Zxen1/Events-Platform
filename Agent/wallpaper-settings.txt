@@ -68,6 +68,7 @@ STILL
 BASIC
   All 4 images (N/E/S/W)
   Left-anchored, pans leftward (currently 100px over 20s, configurable)
+  Animation starts first (while invisible), then fade begins (movement visible during fade)
   Additive dissolve: next image fades in from 18.5s to 20s (no dip to black)
   Animation never stops unless click outside container
   Click outside: pauses on current frame
@@ -76,7 +77,7 @@ BASIC
 ORBIT
   Live map rendering in container, horizontally centered (never stored)
   Creates its own map, destroyed when post closes or container deactivates
-  Fade in 1.5s
+  Orbit starts first (while invisible), then fade begins (movement visible during fade)
   Click outside: still image fades in 1.5s, map cleaned up after 2s
   Click back: still fades out 1.5s, orbit reactivates from saved camera
 
@@ -85,6 +86,7 @@ TRANSITIONS
 -----------
 
 All elements fade IN 1.5s (additive dissolve, no dip to black)
+Animation/orbit starts BEFORE fade begins (movement visible during fade-in)
 Exception: still fades OUT when returning to orbit
 
 
@@ -117,7 +119,8 @@ CSS CLASSES
 .component-locationwallpaper-image
 .component-locationwallpaper-basic-container
 .component-locationwallpaper-basic-image
-.component-locationwallpaper-basic-image--active
+.component-locationwallpaper-basic-image--animating (starts pan, may still be invisible)
+.component-locationwallpaper-basic-image--active (triggers visibility/fade)
 @keyframes locationwallpaper-basic-pan
 
 Lat/lng read from context using .fieldset-lat / .fieldset-lng (no dedicated component classes)

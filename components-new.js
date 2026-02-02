@@ -8887,9 +8887,10 @@ const LocationWallpaperComponent = (function() {
             st.didReveal = false;
             var onMapLoad = function() {
                 if (!st.map || st.didReveal) return;
-                revealMapCrossfade();
+                // Start orbit first, then fade in
                 stopOrbit();
                 startOrbit(desired.zoom);
+                revealMapCrossfade();
             };
 
             try { st.map.once('load', onMapLoad); } catch (e) {}
@@ -8976,11 +8977,14 @@ const LocationWallpaperComponent = (function() {
             }
 
             function displayInstant(url) {
-                // INSTANT RENDER: Don't wait for onload
+                // Wait for image to load, then fade in
                 st.latestCaptureUrl = url;
+                img.onload = function() {
+                    img.onload = null;
+                    positionStillImage();
+                    showImage();
+                };
                 setImageUrl(url);
-                positionStillImage();
-                showImage();
             }
 
             // Check for library wallpapers (container cache, post data, or API)
@@ -9084,46 +9088,43 @@ const LocationWallpaperComponent = (function() {
             function display(urls) {
                 if (!basicContainer) return;
                 var loaded = 0;
+                var firstShown = false;
                 urls.forEach(function(url, idx) {
                     if (!url || !basicImgs[idx]) return;
                     
-                    // INSTANT RENDER: If it's a library URL, don't wait for onload to show the first one
-                    if (url.indexOf('http') === 0 && idx === 0) {
-                        basicImgs[0].src = url;
-                        positionBasicImages();
-                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                    }
-
                     basicImgs[idx].onload = function() {
                         basicImgs[idx].onload = null;
                         loaded++;
+                        // Show first image once it loads (start animation, then fade in)
+                        if (idx === 0 && !firstShown) {
+                            firstShown = true;
+                            positionBasicImages();
+                            // Start animation first (while still invisible)
+                            basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
+                            // Then fade in after a frame (animation already running)
+                            requestAnimationFrame(function() {
+                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                            });
+                        }
+                        // Start timer once all 4 are loaded
                         if (loaded === 4) {
                             positionBasicImages();
-                            if (!basicImgs[0].classList.contains('component-locationwallpaper-basic-image--active')) {
-                                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                            }
                             if (basicTimer) clearInterval(basicTimer);
                             basicTimer = setInterval(advanceBasic, 18500);
                         }
                     };
-                    if (idx !== 0 || url.indexOf('http') !== 0) {
-                        basicImgs[idx].src = url;
-                    }
+                    basicImgs[idx].src = url;
                 });
             }
 
             function displayInstant(libraryWallpapers) {
-                // Library wallpapers found - instant display
+                // Library wallpapers found - wait for first image to load, then fade in
                 var urls = [
                     libraryWallpapers[0],  // North
                     libraryWallpapers[90], // East
                     libraryWallpapers[180],// South
                     libraryWallpapers[270] // West
                 ];
-                // Force instant display of the first image
-                basicImgs[0].src = urls[0];
-                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
-                positionBasicImages();
                 display(urls);
             }
 
@@ -9174,12 +9175,17 @@ const LocationWallpaperComponent = (function() {
             // Note: In Mapbox, increasing bearing rotates the camera clockwise, 
             // which makes the world appear to rotate anti-clockwise.
             basicIndex = (basicIndex + 1) % 4;
-            // Old image stays active (100% opacity) while new one fades in on top
-            basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
-            // After fade complete (1.5s), remove active from previous
+            // Start animation first (while still invisible)
+            basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--animating');
+            // Then fade in after a frame (animation already running)
+            requestAnimationFrame(function() {
+                basicImgs[basicIndex].classList.add('component-locationwallpaper-basic-image--active');
+            });
+            // After fade complete (1.5s), remove classes from previous
             setTimeout(function() {
                 if (basicImgs[prev] && basicContainer) {
                     basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                    basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--animating');
                 }
             }, 1500);
         }
@@ -9194,10 +9200,18 @@ const LocationWallpaperComponent = (function() {
             basicContainer.classList.remove('component-locationwallpaper-basic-container--paused');
             var prev = basicIndex;
             basicIndex = 0;
-            basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+            // Start animation first
+            basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
+            // Then fade in
+            requestAnimationFrame(function() {
+                basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+            });
             if (prev !== 0) {
                 setTimeout(function() {
-                    if (basicImgs[prev] && basicContainer) basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                    if (basicImgs[prev] && basicContainer) {
+                        basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--active');
+                        basicImgs[prev].classList.remove('component-locationwallpaper-basic-image--animating');
+                    }
                 }, 1500);
             }
             setTimeout(function() {

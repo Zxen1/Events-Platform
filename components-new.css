@@ -3095,15 +3095,19 @@
     z-index: 1;
 }
 
-/* Active image: visible, on top, starts pan animation fresh */
-.component-locationwallpaper-basic-image--active {
-    opacity: 1;
+/* Animating image: starts pan animation (may still be invisible) */
+.component-locationwallpaper-basic-image--animating {
     z-index: 2;
     animation: locationwallpaper-basic-pan 20s linear forwards;
 }
 
+/* Active image: visible */
+.component-locationwallpaper-basic-image--active {
+    opacity: 1;
+}
+
 /* Paused state: freeze animation at current position */
-.component-locationwallpaper-basic-container--paused .component-locationwallpaper-basic-image--active {
+.component-locationwallpaper-basic-container--paused .component-locationwallpaper-basic-image--animating {
     animation-play-state: paused;
 }
 
@@ -3121,7 +3125,7 @@
     .component-locationwallpaper-basic-image {
         transition: none;
     }
-    .component-locationwallpaper-basic-image--active {
+    .component-locationwallpaper-basic-image--animating {
         animation: none;
     }
 }
