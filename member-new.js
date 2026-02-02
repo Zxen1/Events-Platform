@@ -3413,15 +3413,15 @@ const MemberModule = (function() {
         if (!payload || !Array.isArray(payload.fields)) return locations;
         
         payload.fields.forEach(function(field) {
-            // Look for venue, city, or address fieldsets with lat/lng
+            // Look for venue, city, or address fieldsets with latitude/longitude
             if (field.key === 'venue' || field.key === 'city' || field.key === 'address') {
                 var lat = null, lng = null, locNum = field.location_number || 1;
                 if (field.value && typeof field.value === 'object') {
-                    lat = parseFloat(field.value.lat);
-                    lng = parseFloat(field.value.lng);
+                    // Payload stores as 'latitude'/'longitude' strings, not 'lat'/'lng'
+                    lat = parseFloat(field.value.latitude);
+                    lng = parseFloat(field.value.longitude);
                 }
                 if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                    // Check if we already have this location
                     var exists = locations.some(function(loc) {
                         return loc.lat === lat && loc.lng === lng;
                     });
