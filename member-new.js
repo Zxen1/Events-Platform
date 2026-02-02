@@ -3210,7 +3210,9 @@ const MemberModule = (function() {
         
         // Collect map images for final locations before submission
         var finalLocations = extractLocationsFromPayload(validation.payload);
+        console.log('[TRACK] Final locations for map images:', finalLocations.length, finalLocations);
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
+            console.log('[TRACK] Map images collected:', mapImageData.files.length);
             resetCreatePostForm();
             try { requestTabSwitch('myposts'); } catch (e0) {}
             if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
