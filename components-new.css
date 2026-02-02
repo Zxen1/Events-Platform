@@ -3091,7 +3091,7 @@
     object-fit: cover;
     object-position: center top;
     opacity: 0;
-    transition: opacity 1.5s ease-in-out;
+    transition: opacity 1.5s ease;
     z-index: 1;
 }
 

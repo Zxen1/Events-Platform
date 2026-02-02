@@ -78,6 +78,7 @@ ORBIT
   Live map rendering in container, horizontally centered (never stored)
   Creates its own map, destroyed when post closes or container deactivates
   Orbit starts first (while invisible), then fade begins (movement visible during fade)
+  Rotation speed: 1 full rotation per 10 minutes (6° per 10s)
   Click outside: still image fades in 1.5s, map cleaned up after 2s
   Click back: still fades out 1.5s, orbit reactivates from saved camera
 
