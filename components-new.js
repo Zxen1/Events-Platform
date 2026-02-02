@@ -9539,6 +9539,9 @@ const PostLocationComponent = (function() {
 
         var html = [];
 
+        // Container wrapper
+        html.push('<div class="post-location-container">');
+
         // Venue info (venue_name, address_line, city)
         html.push('<div id="venue-info-' + postId + '" class="post-info-venue">');
         html.push('<strong>' + escapeHtml(venueName) + '</strong>');
@@ -9553,6 +9556,8 @@ const PostLocationComponent = (function() {
             html.push('<span class="post-info-button-arrow">▼</span>');
             html.push('</button>');
         }
+
+        html.push('</div>');
 
         return html.join('');
     }
@@ -9588,10 +9593,15 @@ const PostSessionComponent = (function() {
 
         var html = [];
 
+        // Container wrapper
+        html.push('<div class="post-session-container">');
+
         html.push('<button class="post-info-button post-info-button-session" type="button" aria-haspopup="true" aria-expanded="false" id="session-btn-' + postId + '">');
         html.push('<span class="post-info-button-text">📅 ' + escapeHtml(datesText) + '</span>');
         html.push('<span class="post-info-button-arrow">▼</span>');
         html.push('</button>');
+
+        html.push('</div>');
 
         return html.join('');
     }
@@ -9627,6 +9637,9 @@ const PostPriceComponent = (function() {
 
         var html = [];
 
+        // Container wrapper
+        html.push('<div class="post-price-container">');
+
         // Build price HTML with badge
         var badgeHtml = priceParts.flagUrl 
             ? '<img class="post-image-badge post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + (priceParts.countryCode || '') + '" title="Currency: ' + (priceParts.countryCode || '').toUpperCase() + '">'
@@ -9637,6 +9650,8 @@ const PostPriceComponent = (function() {
         html.push('<span class="post-info-button-text">' + priceContent + '</span>');
         html.push('<span class="post-info-button-arrow">▼</span>');
         html.push('</button>');
+
+        html.push('</div>');
 
         return html.join('');
     }
