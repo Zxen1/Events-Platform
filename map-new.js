@@ -2897,42 +2897,43 @@ const MapModule = (function() {
     setTimeout(function() {
       if (!map) return;
       if (token !== styleChangeToken) return;
-      map.setStyle(styleUrl);
-    }, 260);
-    
-    // Re-apply lighting and reload layers after style loads
-    map.once('style.load', function() {
-      if (token !== styleChangeToken) return;
-      logDebug('[Map] Style loaded, re-applying lighting:', currentLighting);
-      applyLightingDirect(currentLighting);
       
-      // Style change removes all images/sources/layers - must reload clusters
-      clusterIconLoaded = false;
-      loadClusterIcon().then(function() {
+      // Register style.load handler BEFORE calling setStyle
+      map.once('style.load', function() {
         if (token !== styleChangeToken) return;
-        setupClusterLayers();
-        logDebug('[Map] Cluster layers re-added after style change');
+        logDebug('[Map] Style loaded, re-applying lighting:', currentLighting);
+        applyLightingDirect(currentLighting);
+        
+        // Style change removes all images/sources/layers - must reload clusters
+        clusterIconLoaded = false;
+        loadClusterIcon().then(function() {
+          if (token !== styleChangeToken) return;
+          setupClusterLayers();
+          logDebug('[Map] Cluster layers re-added after style change');
+        });
+        
+        // Fade back in on first render of the new style
+        try {
+          map.once('render', function() {
+            if (token !== styleChangeToken) return;
+            var el = document.querySelector('.map-container');
+            if (el) {
+              el.style.transition = 'opacity 0.8s ease-in';
+              el.style.opacity = '1';
+            }
+          });
+        } catch (_eFadeIn) {
+          var el2 = document.querySelector('.map-container');
+          if (el2) {
+            el2.style.transition = 'opacity 0.8s ease-in';
+            el2.style.opacity = '1';
+          }
+        }
       });
       
-      // Fade back in on first render of the new style (fast; avoids waiting for full tile idle).
-      try {
-        map.once('render', function() {
-          if (token !== styleChangeToken) return;
-          var el = document.querySelector('.map-container');
-          if (el) {
-            el.style.transition = 'opacity 0.8s ease-in';
-            el.style.opacity = '1';
-          }
-        });
-      } catch (_eFadeIn) {
-        // Fallback: ensure visible even if render event isn't available
-        var el2 = document.querySelector('.map-container');
-        if (el2) {
-          el2.style.transition = 'opacity 0.8s ease-in';
-          el2.style.opacity = '1';
-        }
-      }
-    });
+      // Now call setStyle
+      map.setStyle(styleUrl);
+    }, 260);
   }
 
   /**
