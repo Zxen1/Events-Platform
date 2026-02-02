@@ -32,6 +32,10 @@ When something breaks, diagnose the root cause first. Don't suggest alternative 
 ### No Guessing
 Never guess how something works. Search existing code first. If unsure, ask.
 
+### No Literal Interpretation of User Reports
+When a user says something "feels wrong," think about what CAUSES that perception - don't just verify the code is correct.
+Example: "1.5s fade feels like 0.5s" → The `ease` curve front-loads the change. Switch to `linear`. The user's perception is accurate; find out why.
+
 ### No Inventing
 Never invent new approaches. Always copy existing patterns from the codebase exactly.
 
