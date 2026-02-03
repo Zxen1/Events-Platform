@@ -2391,7 +2391,8 @@ const PostModule = (function() {
     }
 
     // Build the detail view (may reuse the removed target element)
-    var detail = buildPostDetail(post, target, fromRecent);
+    // IMPORTANT: pass mapCardIndex so the open post reflects the correct active location context.
+    var detail = buildPostDetail(post, target, fromRecent, mapCardIndex);
 
     // Insert detail at original position, or at top of container
     if (targetParent && targetNextSibling) {
@@ -2457,19 +2458,33 @@ const PostModule = (function() {
    * @param {Object} post - Post data
    * @param {HTMLElement} existingCard - Existing card element (optional)
    * @param {boolean} fromRecent - Whether opened from recent panel
+   * @param {number} [activeMapCardIndex] - Which map card/location should be active for this open view
    * @returns {HTMLElement} Detail view element
    */
-  function buildPostDetail(post, existingCard, fromRecent) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
     // Get all map cards (locations)
-    var locationList = post.map_cards || [];
-    var loc0 = locationList[0] || {};
+    var locationListAll = post.map_cards || [];
+    var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
+    if (idx < 0) idx = 0;
+    if (idx >= locationListAll.length) idx = 0;
+
+    // Active location (the user's current context)
+    var activeLoc = locationListAll[idx] || locationListAll[0] || {};
+
+    // IMPORTANT UX RULE:
+    // The active location must become the button, and all other locations must be listed below it.
+    // We achieve this by re-ordering the list so the activeLoc is at index 0.
+    var locationList = locationListAll;
+    if (locationListAll.length > 1 && idx > 0 && activeLoc) {
+      locationList = [activeLoc].concat(locationListAll.slice(0, idx), locationListAll.slice(idx + 1));
+    }
 
     // Get display data from first location
-    var title = loc0.title || post.checkout_title || '';
-    var description = loc0.description || '';
-    var venueName = loc0.venue_name || '';
-    var addressLine = loc0.address_line || '';
-    var mediaUrls = loc0.media_urls || [];
+    var title = activeLoc.title || post.checkout_title || '';
+    var description = activeLoc.description || '';
+    var venueName = activeLoc.venue_name || '';
+    var addressLine = activeLoc.address_line || '';
+    var mediaUrls = activeLoc.media_urls || [];
     // Hero image uses 'imagebox' class (530x530)
     var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
@@ -2484,7 +2499,7 @@ const PostModule = (function() {
     }
 
     // Format dates - use pre-formatted session_summary from database
-    var datesText = (loc0 ? loc0.session_summary : post.session_summary) || '';
+    var datesText = (activeLoc ? activeLoc.session_summary : post.session_summary) || '';
 
     // Posted by info
     var posterName = post.member_name || 'Anonymous';
@@ -2493,7 +2508,7 @@ const PostModule = (function() {
     var avatarSrc = resolveAvatarSrcForUser(post.member_avatar || '', post.member_id);
 
     // Default session info display
-    var priceParts = parsePriceSummary(loc0.price_summary || '');
+    var priceParts = parsePriceSummary(activeLoc.price_summary || '');
     var priceHtml = '';
     if (priceParts.text) {
       var badgeHtml = priceParts.flagUrl 
@@ -2508,20 +2523,20 @@ const PostModule = (function() {
       : (priceHtml ? priceHtml : '');
 
     // Additional info fields from map card
-    var city = loc0.city || '';
-    var websiteUrl = loc0.website_url || '';
-    var ticketsUrl = loc0.tickets_url || '';
-    var publicEmail = loc0.public_email || '';
-    var phonePrefix = loc0.phone_prefix || '';
-    var publicPhone = loc0.public_phone || '';
-    var ageRating = loc0.age_rating || '';
-    var couponCode = loc0.coupon_code || '';
-    var customText = loc0.custom_text || '';
-    var customTextarea = loc0.custom_textarea || '';
-    var customDropdown = loc0.custom_dropdown || '';
-    var customChecklist = loc0.custom_checklist || '';
-    var customRadio = loc0.custom_radio || '';
-    var amenitySummary = loc0.amenity_summary || '';
+    var city = activeLoc.city || '';
+    var websiteUrl = activeLoc.website_url || '';
+    var ticketsUrl = activeLoc.tickets_url || '';
+    var publicEmail = activeLoc.public_email || '';
+    var phonePrefix = activeLoc.phone_prefix || '';
+    var publicPhone = activeLoc.public_phone || '';
+    var ageRating = activeLoc.age_rating || '';
+    var couponCode = activeLoc.coupon_code || '';
+    var customText = activeLoc.custom_text || '';
+    var customTextarea = activeLoc.custom_textarea || '';
+    var customDropdown = activeLoc.custom_dropdown || '';
+    var customChecklist = activeLoc.custom_checklist || '';
+    var customRadio = activeLoc.custom_radio || '';
+    var amenitySummary = activeLoc.amenity_summary || '';
     var hasMultipleLocations = locationList.length > 1;
 
     // Check favorite status
@@ -2533,7 +2548,9 @@ const PostModule = (function() {
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
     // Store reference to post data for LocationWallpaperComponent library lookup
-    wrap.__mapCardData = loc0;
+    wrap.__mapCardData = activeLoc;
+    // Store the ordered location list used by the UI so event handlers use the same index mapping.
+    wrap.__postLocationList = locationList;
 
     // Location wallpaper integration (reuses LocationWallpaperComponent pattern):
     // - Only activates when post is expanded (handled in setupPostDetailEvents)
@@ -2542,8 +2559,8 @@ const PostModule = (function() {
     var lat = null;
     var lng = null;
     try {
-      lat = (loc0 && loc0.latitude !== undefined && loc0.latitude !== null) ? Number(loc0.latitude) : null;
-      lng = (loc0 && loc0.longitude !== undefined && loc0.longitude !== null) ? Number(loc0.longitude) : null;
+      lat = (activeLoc && activeLoc.latitude !== undefined && activeLoc.latitude !== null) ? Number(activeLoc.latitude) : null;
+      lng = (activeLoc && activeLoc.longitude !== undefined && activeLoc.longitude !== null) ? Number(activeLoc.longitude) : null;
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) { lat = null; lng = null; }
     } catch (_eLL) { lat = null; lng = null; }
 
@@ -2856,6 +2873,23 @@ const PostModule = (function() {
     var locationMapOwnerId = null;
     var locationSelectedIndex = 0;
 
+    // IMPORTANT: Use the same ordered location list used for rendering, not post.map_cards directly.
+    // Otherwise the UI index mapping breaks when the active location is moved to the top.
+    function getLocationListForUi() {
+      var list = null;
+      try { list = wrap.__postLocationList; } catch (_eL0) { list = null; }
+      if (Array.isArray(list) && list.length) return list;
+      return post.map_cards || [];
+    }
+
+    function getMapCardIndexById(postObj, mapCardId) {
+      if (!postObj || !mapCardId || !postObj.map_cards) return 0;
+      for (var i = 0; i < postObj.map_cards.length; i++) {
+        if (String(postObj.map_cards[i].id) === String(mapCardId)) return i;
+      }
+      return 0;
+    }
+
     // Helper: Close location dropdown and cleanup
     function closeLocationDropdown() {
       locationBtn.classList.remove('menu-button--open');
@@ -2894,7 +2928,7 @@ const PostModule = (function() {
           
           // Init live map (MiniMap is independent - no wallpaper coordination needed)
           if (locationMapContainer) {
-            var locationList = post.map_cards || [];
+            var locationList = getLocationListForUi();
             var iconUrl = post.subcategory_icon_url || '';
             
             locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
@@ -2937,7 +2971,7 @@ const PostModule = (function() {
       opt.addEventListener('click', function(e) {
         e.stopPropagation();
         var index = parseInt(opt.dataset.index, 10);
-        var locationList = post.map_cards || [];
+        var locationList = getLocationListForUi();
         var loc = locationList[index];
         if (!loc) return;
 
@@ -2964,8 +2998,9 @@ const PostModule = (function() {
         // Close dropdown (also releases map and resumes wallpaper)
         closeLocationDropdown();
 
-        // Track this specific location in recent history
-        addToRecentHistory(post, index);
+        // Track this specific location in recent history (must be indexed against the post's true map_cards list)
+        var originalIndex = getMapCardIndexById(post, loc.id);
+        addToRecentHistory(post, originalIndex);
 
         // Fly to location on main map (zoom 10 for context)
         var lat = Number(loc.latitude);
@@ -4018,21 +4053,27 @@ const PostModule = (function() {
       var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
       if (!Array.isArray(history)) return [];
 
-      // Defensive: de-dup by id (string-safe), keeping the most recent timestamp.
-      var bestById = {};
+      // Defensive: de-dup by post_map_card_id when available (location-specific),
+      // falling back to post id for legacy entries.
+      var bestByKey = {};
       for (var i = 0; i < history.length; i++) {
         var h = history[i];
         if (!h) continue;
-        var hid = (h.id !== undefined && h.id !== null) ? String(h.id) : '';
-        if (!hid) continue;
+        var key = '';
+        if (h.post_map_card_id !== undefined && h.post_map_card_id !== null && String(h.post_map_card_id) !== '') {
+          key = String(h.post_map_card_id);
+        } else if (h.id !== undefined && h.id !== null) {
+          key = String(h.id);
+        }
+        if (!key) continue;
         var ts = Number(h.timestamp) || 0;
-        if (!bestById[hid] || ts > (Number(bestById[hid].timestamp) || 0)) {
-          bestById[hid] = h;
+        if (!bestByKey[key] || ts > (Number(bestByKey[key].timestamp) || 0)) {
+          bestByKey[key] = h;
         }
       }
 
       // Return newest-first list (matches UI expectation).
-      var out = Object.keys(bestById).map(function(id) { return bestById[id]; });
+      var out = Object.keys(bestByKey).map(function(k) { return bestByKey[k]; });
       out.sort(function(a, b) { return (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0); });
       return out.slice(0, 50);
     } catch (e) {
@@ -4315,12 +4356,27 @@ const PostModule = (function() {
             var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
             if (!Array.isArray(history)) history = [];
             var targetId = String(entry.id);
+            var targetMapCardId = (entry.post_map_card_id !== undefined && entry.post_map_card_id !== null) ? String(entry.post_map_card_id) : '';
             for (var i = 0; i < history.length; i++) {
               if (!history[i]) continue;
               if (String(history[i].id) !== targetId) continue;
+              if (targetMapCardId) {
+                if (String(history[i].post_map_card_id || '') !== targetMapCardId) continue;
+              }
               history[i].thumb_url = rawThumb;
               // Keep title fresh too (safe improvement).
-              history[i].title = history[i].title || (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '';
+              if (!history[i].title) {
+                var mcTitle = '';
+                if (targetMapCardId && post.map_cards && post.map_cards.length) {
+                  for (var j = 0; j < post.map_cards.length; j++) {
+                    if (String(post.map_cards[j].id) === targetMapCardId) {
+                      mcTitle = post.map_cards[j].title || '';
+                      break;
+                    }
+                  }
+                }
+                history[i].title = mcTitle || (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '';
+              }
               break;
             }
             localStorage.setItem('recentPosts', JSON.stringify(history));
