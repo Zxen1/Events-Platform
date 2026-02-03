@@ -2463,12 +2463,6 @@ const PostModule = (function() {
       container.insertBefore(detail, container.firstChild);
     }
 
-    // Scroll to top
-    try {
-      // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
-      if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
-      if (!fromRecent && postListEl) postListEl.scrollTop = 0;
-    } catch (_eScrollTop) {}
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
