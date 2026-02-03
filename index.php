@@ -184,6 +184,8 @@ if (empty($ogTitle)) {
   
   <!-- PWA: iOS standalone mode -->
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- PWA: Standard (non-iOS) standalone mode -->
+  <meta name="mobile-web-app-capable" content="yes">
   <!-- PWA: Status bar style - "default" keeps status bar separate (no content behind it) -->
   <!-- "black-translucent" would extend content behind status bar but requires CSS adjustments -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
