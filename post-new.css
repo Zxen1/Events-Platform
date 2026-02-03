@@ -274,7 +274,7 @@
 }
 
 /* Timestamp above recent card - purple for Recent panel distinction */
-.recent-card-timestamp {
+.recent-status-bar {
   font-size: 12px;
   margin: 0;
   background: #7c3aed;

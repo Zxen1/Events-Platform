@@ -2350,15 +2350,27 @@ const PostModule = (function() {
   /**
    * Open a post (show detail view)
    * @param {Object} post - Post data
-   * @param {Object} options - { fromRecent: boolean, originEl: HTMLElement }
+   * @param {Object} options - { fromRecent: boolean, originEl: HTMLElement, postMapCardId: string }
    */
   function openPost(post, options) {
     options = options || {};
     var fromRecent = options.fromRecent || false;
     var originEl = options.originEl || null;
+    var postMapCardId = options.postMapCardId;
+
+    // Find the map card index from post_map_card_id
+    var mapCardIndex = 0;
+    if (postMapCardId && post.map_cards) {
+      for (var i = 0; i < post.map_cards.length; i++) {
+        if (String(post.map_cards[i].id) === String(postMapCardId)) {
+          mapCardIndex = i;
+          break;
+        }
+      }
+    }
 
     // Add to recent history
-    addToRecentHistory(post);
+    addToRecentHistory(post, mapCardIndex);
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
@@ -2951,6 +2963,24 @@ const PostModule = (function() {
 
         // Close dropdown (also releases map and resumes wallpaper)
         closeLocationDropdown();
+
+        // Track this specific location in recent history
+        addToRecentHistory(post, index);
+
+        // Fly to location on main map (zoom 10 for context)
+        var lat = Number(loc.latitude);
+        var lng = Number(loc.longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && window.MapModule && typeof MapModule.flyTo === 'function') {
+          MapModule.flyTo(lng, lat, 10);
+          
+          // Switch to posts mode if not already there (keeps post visible during fly)
+          if (currentMode !== 'posts') {
+            var postsBtn = getModeButton('posts');
+            if (postsBtn && postsEnabled) {
+              postsBtn.click();
+            }
+          }
+        }
       });
     });
 
@@ -3604,54 +3634,80 @@ const PostModule = (function() {
 
   /**
    * Add post to recent history
+   * Tracks specific locations (post_map_card_id) so multi-location posts can have
+   * separate history entries for each visited location (e.g., world tours, hotel chains).
    * @param {Object} post - Post data
+   * @param {number} mapCardIndex - Index of the specific map card/location (default 0)
    */
-  function addToRecentHistory(post) {
+  function addToRecentHistory(post, mapCardIndex) {
     try {
       var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
       if (!Array.isArray(history)) history = [];
 
       var now = Date.now();
-      var targetId = (post && post.id !== undefined && post.id !== null) ? String(post.id) : '';
-      if (!targetId) return;
+      var postId = (post && post.id !== undefined && post.id !== null) ? String(post.id) : '';
+      if (!postId) return;
+
+      // Get the specific map card for this location
+      var cardIndex = (typeof mapCardIndex === 'number' && mapCardIndex >= 0) ? mapCardIndex : 0;
+      var mapCards = (post && post.map_cards && post.map_cards.length) ? post.map_cards : [];
+      var mapCard = mapCards[cardIndex] || mapCards[0] || null;
+      
+      // Get post_map_card_id for this specific location
+      var postMapCardId = (mapCard && mapCard.id) ? String(mapCard.id) : '';
+      if (!postMapCardId) return; // Cannot track without post_map_card_id
+      
+      // Use post_map_card_id as the deduplication key (tracks specific locations)
+      var dedupeKey = postMapCardId;
 
       // Store key display fields directly in recent history so Recents can render without any in-memory caching.
       var rawThumbUrl = getPostThumbnailUrl(post);
-      var mapCard0 = (post && post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-      var subKey0 = (mapCard0 && mapCard0.subcategory_key) ? String(mapCard0.subcategory_key) : String(post.subcategory_key || '');
-      var subName0 = post.subcategory_name || (mapCard0 && mapCard0.subcategory_name) || '';
-      var iconUrl0 = post.subcategory_icon_url || '';
-      var loc0 = (mapCard0 && (mapCard0.city || mapCard0.venue_name)) ? String(mapCard0.city || mapCard0.venue_name) : '';
+      var subKey = (mapCard && mapCard.subcategory_key) ? String(mapCard.subcategory_key) : String(post.subcategory_key || '');
+      var subName = post.subcategory_name || (mapCard && mapCard.subcategory_name) || '';
+      var iconUrl = post.subcategory_icon_url || '';
+      
+      // Location text from the specific map card
+      var locText = '';
+      if (mapCard) {
+        var venue = mapCard.venue_name || '';
+        var city = mapCard.city || '';
+        locText = venue || city;
+        // If multi-location post, show more context
+        if (mapCards.length > 1 && venue && city) {
+          locText = venue + ', ' + city;
+        }
+      }
 
-      // Deduplicate (string-safe) and update "last seen" timestamp if already present.
+      // Deduplicate by post_map_card_id (string-safe)
       var seen = {};
       var next = [];
 
-      // 1) Insert/refresh this post at the top.
-      var title = (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || post.title || '';
-      if (title === 'Array') title = 'Post #' + post.id;
+      // 1) Insert/refresh this location at the top.
+      var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
+      if (title === 'Array') title = 'Post #' + postId;
 
       next.push({
-        id: targetId,
+        id: postId,
+        post_map_card_id: postMapCardId,
         post_key: post.post_key,
         title: title,
         thumb_url: rawThumbUrl || '',
-        subcategory_key: subKey0 || '',
-        subcategory_name: subName0,
-        subcategory_icon_url: iconUrl0,
-        location_text: loc0 || '',
+        subcategory_key: subKey || '',
+        subcategory_name: subName,
+        subcategory_icon_url: iconUrl,
+        location_text: locText || '',
         timestamp: now
       });
-      seen[targetId] = true;
+      seen[dedupeKey] = true;
 
-      // 2) Carry over existing entries (skip duplicates + skip this id).
+      // 2) Carry over existing entries (skip duplicates by post_map_card_id).
       for (var i = 0; i < history.length; i++) {
         var h = history[i];
         if (!h) continue;
-        var hid = (h.id !== undefined && h.id !== null) ? String(h.id) : '';
-        if (!hid) continue;
-        if (seen[hid]) continue;
-        seen[hid] = true;
+        // Skip entries without post_map_card_id (old data will age out)
+        if (!h.post_map_card_id) continue;
+        if (seen[h.post_map_card_id]) continue;
+        seen[h.post_map_card_id] = true;
         next.push(h);
       }
 
@@ -4035,7 +4091,7 @@ const PostModule = (function() {
 
   /**
    * Render a recent card
-   * Structure: .recent-card-wrapper > .recent-card-timestamp + .recent-card
+   * Structure: .recent-card-wrapper > .recent-status-bar + .recent-card
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
    * @returns {HTMLElement|null} Recent card wrapper element
    */
@@ -4049,6 +4105,10 @@ const PostModule = (function() {
     var el = document.createElement('article');
     el.className = 'recent-card';
     el.dataset.id = String(entry.id);
+    // Store post_map_card_id for location-specific tracking
+    if (entry.post_map_card_id) {
+      el.dataset.postMapCardId = String(entry.post_map_card_id);
+    }
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
 
@@ -4104,7 +4164,7 @@ const PostModule = (function() {
     // Add timestamp above card
     if (lastOpenedText) {
       var timestamp = document.createElement('div');
-      timestamp.className = 'recent-card-timestamp';
+      timestamp.className = 'recent-status-bar';
       timestamp.textContent = lastOpenedText;
       wrapper.appendChild(timestamp);
     }
@@ -4129,7 +4189,7 @@ const PostModule = (function() {
       // No in-memory post cache: always fetch the post payload before opening.
       loadPostById(entry.id).then(function(fetchedPost) {
         if (!fetchedPost) return;
-        openPost(fetchedPost, { fromRecent: true, originEl: el });
+        openPost(fetchedPost, { fromRecent: true, originEl: el, postMapCardId: entry.post_map_card_id });
       });
     });
 
