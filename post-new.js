@@ -2406,6 +2406,7 @@ const PostModule = (function() {
     var fromRecent = options.fromRecent || false;
     var originEl = options.originEl || null;
     var postMapCardId = options.postMapCardId;
+    var autoExpand = !!options.autoExpand;
 
     if (!postMapCardId) {
       // Source of truth: MapModule active map card selection (no DOM scraping, no heuristics).
@@ -2471,6 +2472,24 @@ const PostModule = (function() {
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
+
+    // If requested (fly destination), open the post in expanded mode.
+    // IMPORTANT: The description truncation initializes on requestAnimationFrame; expand after that runs
+    // to avoid applyTruncation overwriting the expanded DOM.
+    if (autoExpand && detail) {
+      try {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            try {
+              var descEl = detail.querySelector('.post-description-text');
+              if (descEl && typeof descEl.click === 'function') {
+                descEl.click();
+              }
+            } catch (_eExp0) {}
+          });
+        });
+      } catch (_eExp1) {}
+    }
 
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
@@ -3126,7 +3145,7 @@ const PostModule = (function() {
                 setTimeout(function() {
                   loadPostById(post.id).then(function(freshPost) {
                     if (freshPost) {
-                      openPost(freshPost, { postMapCardId: String(loc.id) });
+                      openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
                     }
                   });
                 }, 50);
