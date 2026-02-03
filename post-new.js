@@ -2438,25 +2438,24 @@ const PostModule = (function() {
     // Find or create the target element
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
-    // Store parent reference and remove target from DOM before building detail
-    var targetParent = target ? target.parentElement : null;
-    var targetNextSibling = target ? target.nextSibling : null;
-    if (target && targetParent) {
-      targetParent.removeChild(target);
+    // Collapse the clicked card to zero height (keeps it in DOM for slack anchoring).
+    // This matches the accordion pattern: element stays in place, content expands below.
+    if (target) {
+      collapseCardForSlack(target);
     }
 
-    // Build the detail view with a FRESH card (do not reuse the clicked element).
-    // TopSlack anchors to the clicked element; if we reuse it inside the detail wrapper,
-    // TopSlack sees it moved and adjusts scrollTop (causes jumping). Passing null ensures
-    // the clicked element stays disconnected, so TopSlack's anchor check bails out.
+    // Build the detail view with a FRESH card (the original stays collapsed as anchor).
     // IMPORTANT: pass mapCardIndex so the open post reflects the correct active location context.
     var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
-    // Insert detail at original position, or at top of container
-    if (targetParent && targetNextSibling) {
-      targetParent.insertBefore(detail, targetNextSibling);
-    } else if (targetParent) {
-      targetParent.appendChild(detail);
+    // Link the detail to the collapsed card so closeOpenPost can find and restore it
+    if (target) {
+      detail.dataset.collapsedCardId = target.dataset.id;
+    }
+
+    // Insert detail right after the collapsed card, or at top of container
+    if (target && target.parentElement) {
+      target.parentElement.insertBefore(detail, target.nextSibling);
     } else {
       // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
       var topSlack = null;
@@ -2494,6 +2493,63 @@ const PostModule = (function() {
   }
 
   /**
+   * Collapse a card to zero height for slack anchoring.
+   * The card stays in DOM so the slack system can track it.
+   * @param {HTMLElement} cardEl - Card element to collapse
+   */
+  function collapseCardForSlack(cardEl) {
+    if (!cardEl) return;
+    try {
+      // Store original styles for restoration
+      cardEl._slackRestore = {
+        style: cardEl.getAttribute('style') || '',
+        ariaHidden: cardEl.getAttribute('aria-hidden'),
+        tabIndex: cardEl.getAttribute('tabindex')
+      };
+      // Collapse to zero height
+      cardEl.style.height = '0px';
+      cardEl.style.minHeight = '0px';
+      cardEl.style.overflow = 'hidden';
+      cardEl.style.margin = '0';
+      cardEl.style.padding = '0';
+      cardEl.style.border = 'none';
+      cardEl.style.opacity = '0';
+      cardEl.style.pointerEvents = 'none';
+      cardEl.setAttribute('aria-hidden', 'true');
+      cardEl.setAttribute('tabindex', '-1');
+    } catch (_e) {}
+  }
+
+  /**
+   * Restore a collapsed card to its original state.
+   * @param {HTMLElement} cardEl - Card element to restore
+   */
+  function restoreCardFromSlack(cardEl) {
+    if (!cardEl) return;
+    try {
+      var restore = cardEl._slackRestore;
+      if (restore) {
+        cardEl.setAttribute('style', restore.style || '');
+        if (restore.ariaHidden === null || restore.ariaHidden === undefined) {
+          cardEl.removeAttribute('aria-hidden');
+        } else {
+          cardEl.setAttribute('aria-hidden', restore.ariaHidden);
+        }
+        if (restore.tabIndex === null || restore.tabIndex === undefined) {
+          cardEl.removeAttribute('tabindex');
+        } else {
+          cardEl.setAttribute('tabindex', restore.tabIndex);
+        }
+        delete cardEl._slackRestore;
+      } else {
+        // Fallback: just clear inline styles
+        cardEl.removeAttribute('style');
+        cardEl.removeAttribute('aria-hidden');
+      }
+    } catch (_e) {}
+  }
+
+  /**
    * Close any open post in a container
    * @param {HTMLElement} container - Container element
    */
@@ -2502,23 +2558,25 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var postId = openPost.dataset.id;
+    var collapsedCardId = openPost.dataset.collapsedCardId;
 
-    // Restore the original card element (recent-card stays recent-card).
-    // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
-    try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
-      if (cardEl) {
-        if (openPost.parentElement) {
-          openPost.parentElement.replaceChild(cardEl, openPost);
-        } else {
-          openPost.remove();
-        }
-      } else {
-        openPost.remove();
-      }
-    } catch (_eRestore) {
-      try { openPost.remove(); } catch (_eRemove) {}
+    // Find and restore the collapsed original card (sibling of the open post)
+    var collapsedCard = null;
+    if (collapsedCardId) {
+      try {
+        collapsedCard = container.querySelector('.post-card[data-id="' + collapsedCardId + '"], .recent-card[data-id="' + collapsedCardId + '"]');
+      } catch (_e) {}
     }
+
+    // Restore the collapsed card if found
+    if (collapsedCard) {
+      restoreCardFromSlack(collapsedCard);
+    }
+
+    // Remove the open post detail
+    try {
+      openPost.remove();
+    } catch (_eRemove) {}
 
     // Emit close event
     if (window.App && typeof App.emit === 'function') {
@@ -3643,18 +3701,25 @@ const PostModule = (function() {
     if (!openPost) return;
 
     var container = openPost.parentElement;
+    var collapsedCardId = openPost.dataset.collapsedCardId;
 
-    // Restore the original card element (recent-card stays recent-card).
-    try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
-      if (cardEl && openPost.parentElement) {
-        openPost.parentElement.replaceChild(cardEl, openPost);
-      } else {
-        openPost.remove();
-      }
-    } catch (_eRestore) {
-      try { openPost.remove(); } catch (_eRemove) {}
+    // Find and restore the collapsed original card (sibling of the open post)
+    var collapsedCard = null;
+    if (collapsedCardId && container) {
+      try {
+        collapsedCard = container.querySelector('.post-card[data-id="' + collapsedCardId + '"], .recent-card[data-id="' + collapsedCardId + '"]');
+      } catch (_e) {}
     }
+
+    // Restore the collapsed card if found
+    if (collapsedCard) {
+      restoreCardFromSlack(collapsedCard);
+    }
+
+    // Remove the open post detail
+    try {
+      openPost.remove();
+    } catch (_eRemove) {}
 
     // Emit close event
     if (window.App && typeof App.emit === 'function') {
