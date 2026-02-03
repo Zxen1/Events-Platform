@@ -2971,14 +2971,38 @@ const PostModule = (function() {
         var lat = Number(loc.latitude);
         var lng = Number(loc.longitude);
         if (Number.isFinite(lat) && Number.isFinite(lng) && window.MapModule && typeof MapModule.flyTo === 'function') {
+          // Close posts panel during flight (switch to map mode)
+          var mapBtn = getModeButton('map');
+          if (mapBtn && currentMode !== 'map') {
+            mapBtn.click();
+          }
+          
+          // Fly to location
           MapModule.flyTo(lng, lat, 10);
           
-          // Switch to posts mode if not already there (keeps post visible during fly)
-          if (currentMode !== 'posts') {
-            var postsBtn = getModeButton('posts');
-            if (postsBtn && postsEnabled) {
-              postsBtn.click();
-            }
+          // When landed (moveend event): open posts panel and show the post
+          var mainMap = MapModule.getMap();
+          if (mainMap) {
+            mainMap.once('moveend', function() {
+              // Check if we landed near the target (user may have interrupted)
+              var center = mainMap.getCenter();
+              var latDiff = Math.abs(center.lat - lat);
+              var lngDiff = Math.abs(center.lng - lng);
+              if (latDiff > 0.01 || lngDiff > 0.01) return; // Interrupted, abort
+              
+              var postsBtn = getModeButton('posts');
+              if (postsBtn && postsEnabled) {
+                postsBtn.click();
+                // Wait for mode change then open (matches openPostById pattern)
+                setTimeout(function() {
+                  loadPostById(post.id).then(function(freshPost) {
+                    if (freshPost) {
+                      openPost(freshPost, { postMapCardId: String(loc.id) });
+                    }
+                  });
+                }, 50);
+              }
+            });
           }
         }
       });
