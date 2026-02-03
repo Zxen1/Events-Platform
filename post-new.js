@@ -1451,6 +1451,58 @@ const PostModule = (function() {
     normalizeSlackPositions(scrollEl);
   }
 
+  function collapseCardForAnchor(cardEl) {
+    if (!cardEl) return;
+    // Keep the original clicked element connected so TopSlack can anchor correctly,
+    // but make it take up zero space so the post header lands at the same top position.
+    try {
+      // Store a minimal snapshot for restoration (avoid copying full cssText).
+      if (!cardEl.__slackRestore) {
+        cardEl.__slackRestore = {
+          style: cardEl.getAttribute('style') || '',
+          ariaHidden: cardEl.getAttribute('aria-hidden'),
+          tabIndex: cardEl.getAttribute('tabindex'),
+          role: cardEl.getAttribute('role'),
+          pointerEvents: cardEl.style.pointerEvents || ''
+        };
+      }
+    } catch (_eStore) {}
+
+    try { cardEl.setAttribute('aria-hidden', 'true'); } catch (_eA0) {}
+    try { cardEl.setAttribute('tabindex', '-1'); } catch (_eA1) {}
+    // Keep role attribute as-is (TopSlack anchors to [role="button"]).
+    try { cardEl.style.pointerEvents = 'none'; } catch (_ePe) {}
+    try { cardEl.style.height = '0px'; } catch (_eH) {}
+    try { cardEl.style.overflow = 'hidden'; } catch (_eO) {}
+    try { cardEl.style.margin = '0'; } catch (_eM) {}
+    try { cardEl.style.padding = '0'; } catch (_eP) {}
+    try { cardEl.style.border = '0'; } catch (_eB) {}
+  }
+
+  function restoreCardAfterAnchor(cardEl) {
+    if (!cardEl) return;
+    var snap = null;
+    try { snap = cardEl.__slackRestore; } catch (_eSnap) { snap = null; }
+    if (!snap) return;
+
+    try { cardEl.setAttribute('style', snap.style || ''); } catch (_eS) {}
+    try {
+      if (snap.ariaHidden === null || snap.ariaHidden === undefined) cardEl.removeAttribute('aria-hidden');
+      else cardEl.setAttribute('aria-hidden', snap.ariaHidden);
+    } catch (_eAh) {}
+    try {
+      if (snap.tabIndex === null || snap.tabIndex === undefined) cardEl.removeAttribute('tabindex');
+      else cardEl.setAttribute('tabindex', snap.tabIndex);
+    } catch (_eTi) {}
+    try {
+      if (snap.role === null || snap.role === undefined) cardEl.removeAttribute('role');
+      else cardEl.setAttribute('role', snap.role);
+    } catch (_eRole) {}
+    try { cardEl.style.pointerEvents = snap.pointerEvents || ''; } catch (_ePe2) {}
+
+    try { delete cardEl.__slackRestore; } catch (_eDel) { try { cardEl.__slackRestore = null; } catch (_eDel2) {} }
+  }
+
   /**
    * Render the post list
    * @param {Array} posts - Array of post data
@@ -2585,6 +2637,8 @@ const PostModule = (function() {
       if (!cardEl) {
         cardEl = openPost.querySelector('.post-card, .recent-card');
       }
+      // Restore any temporary anchor-collapsed styles.
+      try { restoreCardAfterAnchor(cardEl); } catch (_eRest0) {}
       if (cardEl) {
         if (openPost.parentElement) {
           openPost.parentElement.replaceChild(cardEl, openPost);
@@ -2906,9 +2960,11 @@ const PostModule = (function() {
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
-    // Store card element for restoration on close (do NOT render it above the header).
-    // Requirement: the post header should land exactly where the card's top was.
+    // Store card element for restoration on close.
     wrap.__restoreCardEl = cardEl;
+    // Keep the clicked card in the DOM (so TopSlack can anchor correctly),
+    // but collapse it to 0px so the header lands at the same top position.
+    collapseCardForAnchor(cardEl);
 
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
@@ -2930,6 +2986,7 @@ const PostModule = (function() {
     }
 
     // Append header and body (unified header for both collapsed and expanded states)
+    contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
     contentWrap.appendChild(postBody);
 
@@ -3731,6 +3788,8 @@ const PostModule = (function() {
       if (!cardEl) {
         cardEl = openPost.querySelector('.post-card, .recent-card');
       }
+      // Restore any temporary anchor-collapsed styles.
+      try { restoreCardAfterAnchor(cardEl); } catch (_eRest1) {}
       if (cardEl && openPost.parentElement) {
         openPost.parentElement.replaceChild(cardEl, openPost);
       } else {
