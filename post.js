@@ -3333,7 +3333,7 @@ const PostModule = (function() {
         var dateLeft = formatSessionDateLeft(iso);
         var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
         return [
-          '<button class="post-session-time menu-option' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
+          '<button class="post-session-time menu-option' + (isSelected ? ' menu-option--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
             '<span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span>',
             '<span class="post-session-time-right">' + escapeHtml(timeText) + '</span>',
           '</button>'
@@ -3573,14 +3573,12 @@ const PostModule = (function() {
           if (!timeText) return;
           selectedSessionTime = timeText;
 
-          // Mark selected date box with solid blue background
+          // Mark selected date box with solid blue background (menu-class-5 owns styling)
           try {
             if (sessionCalendarMount && sessionPopoverIso) {
-              sessionCalendarMount.querySelectorAll('.calendar-day.post-session-selected').forEach(function(c) {
-                c.classList.remove('post-session-selected');
-              });
+              sessionCalendarMount.querySelectorAll('.calendar-day.menu-day--selected').forEach(function(c) { c.classList.remove('menu-day--selected'); });
               var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + sessionPopoverIso + '"]');
-              if (cell) cell.classList.add('post-session-selected');
+              if (cell) cell.classList.add('menu-day--selected');
             }
           } catch (_eSel) {}
 
@@ -3639,6 +3637,15 @@ const PostModule = (function() {
 
           // If user already has a selection, ensure the button text reflects it.
           updateSessionButtonText();
+
+          // Persist selected date fill on reopen (if a time was selected).
+          try {
+            if (sessionCalendarMount && selectedSessionIso && selectedSessionTime) {
+              sessionCalendarMount.querySelectorAll('.calendar-day.menu-day--selected').forEach(function(c) { c.classList.remove('menu-day--selected'); });
+              var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + selectedSessionIso + '"]');
+              if (cell) cell.classList.add('menu-day--selected');
+            }
+          } catch (_ePersist0) {}
         });
       });
     }

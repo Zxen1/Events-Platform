@@ -1160,15 +1160,54 @@
   border-bottom: none;
 }
 
+/* Hover: blue-500 border only (NO fill) */
 .menu-class-5 .menu-option.menu-option--highlighted,
 .menu-class-5 .menu-option.menu-option--hover {
-  background: var(--menu-hover);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .menu-class-5 .menu-option:hover {
-    background: var(--menu-hover);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--blue-500);
   }
+}
+
+/* Selected: solid blue-500 fill */
+.menu-class-5 .menu-option.menu-option--selected {
+  background: var(--blue-500);
+  box-shadow: none;
+}
+
+/* Calendar inside menu-class-5:
+   Hover must be border only; selected must be fill. */
+.menu-class-5 .calendar-day.available-day {
+  /* Keep calendar's base look; only adjust interactions below */
+}
+
+/* Hover (border only, no fill) */
+@media (hover: hover) and (pointer: fine) {
+  .menu-class-5 .calendar-day.available-day:hover {
+    background: #222;
+    border-color: var(--blue-500);
+    color: #fff;
+  }
+}
+
+/* First tap / focused date (Calendar uses .selected on click):
+   treat as border-only, not fill. */
+.menu-class-5 .calendar-day.selected {
+  background: #222;
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+/* Actual selection fill (applied when a time is chosen) */
+.menu-class-5 .calendar-day.menu-day--selected {
+  background: var(--blue-500);
+  border-color: var(--blue-500);
+  color: #fff;
 }
 
 /* ============================================================================

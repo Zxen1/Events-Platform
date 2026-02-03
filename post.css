@@ -1682,20 +1682,6 @@
   color: inherit;
 }
 
-/* Hover border (blue-500) on clickable dates */
-@media (hover: hover) and (pointer: fine) {
-  .post-session-container .post-session-calendar-slot .calendar-day.available-day:hover {
-    border-color: var(--blue-500);
-  }
-}
-
-/* Selected date: solid blue-500 background */
-.post-session-container .post-session-calendar-slot .calendar-day.post-session-selected {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
-  color: #fff;
-}
-
 /* Times list (36px rows) */
 .post-session-times {
   width: 100%;
@@ -1726,14 +1712,7 @@
 }
 
 .post-session-time--selected {
-  background: var(--blue-500);
-}
-
-/* Hover border (blue-500) on rows */
-@media (hover: hover) and (pointer: fine) {
-  .post-session-time:hover:not(.post-session-time--selected) {
-    box-shadow: inset 0 0 0 1px var(--blue-500);
-  }
+  background: var(--blue-600, #2563eb);
 }
 
 .post-session-empty {
