@@ -2469,6 +2469,14 @@ const PostModule = (function() {
       container.insertBefore(detail, insertBeforeNode);
     }
 
+    // Scroll to top only for external sources (map card, marquee).
+    // Direct postcard clicks have originEl set - don't scroll those.
+    if (!originEl) {
+      try {
+        if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
+        if (!fromRecent && postListEl) postListEl.scrollTop = 0;
+      } catch (_eScrollTop) {}
+    }
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
