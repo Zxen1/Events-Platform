@@ -1,0 +1,1806 @@
+/* ============================================================================
+   POST / RECENT PANELS - CSS
+   ============================================================================
+   
+   Post cards, recent cards, open post view.
+   
+   FUTURE COMPONENTS (will have separate CSS):
+   - ImageGalleryComponent - Hero + thumbnails + swipe + zoom
+   - VenueMenuComponent - Map + venue list dropdown
+   - SessionMenuComponent - Calendar + session list dropdown
+   
+   ============================================================================ */
+
+/* ============================================================================
+   POST MODE BACKGROUND
+   ============================================================================ */
+
+.post-mode-background {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(var(--post-mode-bg-color), var(--post-mode-bg-opacity));
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.post-mode-background--visible {
+  display: block;
+}
+
+/* ============================================================================
+   POST PANEL
+   ============================================================================ */
+
+.post-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-post-panel);
+  pointer-events: none;
+}
+
+.post-panel--show {
+  display: block;
+}
+
+.post-panel-content {
+  --panel-transition-duration: 0.3s;
+  position: absolute;
+  left: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  /* Scroll lives in .post-list so sticky headers work and wheel/keys target the list */
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .post-panel-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
+.post-panel-content--side-left {
+  transform: translateX(-100%);
+}
+
+.post-panel-content--hidden {
+  pointer-events: none;
+}
+
+.post-panel-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 530px) {
+  .post-panel {
+    position: relative;
+    height: auto;
+    /* Fill the screen even with short content (prevents map showing underneath) */
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .post-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    /* Fill the screen even with short content */
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+}
+
+/* ============================================================================
+   RECENT PANEL
+   ============================================================================ */
+
+.recent-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-post-panel);
+  pointer-events: none;
+}
+
+.recent-panel--show {
+  display: block;
+}
+
+.recent-panel-content {
+  --panel-transition-duration: 0.3s;
+  position: absolute;
+  left: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .recent-panel-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
+.recent-panel-content--side-left {
+  transform: translateX(-100%);
+}
+
+.recent-panel-content--hidden {
+  pointer-events: none;
+}
+
+.recent-panel-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 530px) {
+  .recent-panel {
+    position: relative;
+    height: auto;
+    /* Fill the screen even with short content (prevents map showing underneath) */
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .recent-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    /* Fill the screen even with short content */
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+}
+
+/* Mobile exclusivity: hide Post/Recent whenever Filter/Member/Admin is open.
+   This avoids changing "mode" in JS (which caused regressions). */
+@media (max-width: 530px) {
+  body:has(.filter-panel.show) .post-panel,
+  body:has(.filter-panel.show) .recent-panel,
+  body:has(.member-panel.member-panel--show) .post-panel,
+  body:has(.member-panel.member-panel--show) .recent-panel,
+  body:has(.admin-panel.admin-panel--show) .post-panel,
+  body:has(.admin-panel.admin-panel--show) .recent-panel {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   POST LIST - Shared by both panels
+   ============================================================================ */
+
+.post-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  will-change: transform;
+}
+
+.post-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.post-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.post-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.recent-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-panel-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.recent-panel-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.recent-panel-content::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/* ============================================================================
+   CARDS - Base styling for .post-card, .recent-card
+   Class naming: .{section}-{name}-{type}-{part}--{state}
+   ============================================================================ */
+
+/* Recent card wrapper - holds timestamp + card */
+.recent-card-wrapper {
+  margin-bottom: 0;
+}
+
+/* Status bar above recent card - purple for Recent panel distinction */
+.recent-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  margin: 0;
+  background: var(--purple-500, #7c3aed);
+  color: #fff;
+  padding: 2px 4px;
+}
+
+.recent-status-bar-timestamp {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.recent-status-bar-status {
+  flex-shrink: 0;
+}
+
+/* Unavailable state - gray background */
+.recent-status-bar--unavailable {
+  background: var(--gray-500, #6b7280);
+}
+
+.recent-card,
+.post-card {
+  display: grid;
+  grid-template-columns: 100px 1fr 36px;
+  gap: 12px;
+  align-items: flex-start;
+  background-color: transparent;
+  border: none;
+  box-shadow: inset 0 0 0 1px transparent;
+  border-radius: 8px;
+  padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Post cards have margin-bottom; recent cards get it from wrapper */
+.post-card {
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+.post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+.recent-card:hover {
+  box-shadow: inset 0 0 0 1px #7c3aed;
+}
+
+/* Card in post-panel */
+.post-panel-content .post-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.post-panel-content .post-card,
+.post-panel-content .post {
+  background-color: transparent;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.post-panel-content .post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+
+.post-panel-content .post-card.post-card--map-highlight {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+
+.post-panel-content .post-card:last-child,
+.post-panel-content .post:last-child {
+  border-bottom: none;
+}
+
+.post-panel-content .post-card-image {
+  border-radius: 8px;
+}
+
+/* Buttons with dark background inside panels */
+.post-card-button-dark {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
+}
+
+/* Card in recent-panel */
+.recent-panel-content .recent-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.recent-panel-content .recent-card {
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+  border-bottom: 1px solid #7c3aed;
+}
+.recent-panel-content .post {
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.recent-panel-content .recent-card:last-child {
+  border-bottom: none;
+}
+
+.recent-card[aria-selected="true"] {
+  position: relative;
+  z-index: 0;
+  background: none;
+  box-shadow: inset 0 0 0 1px #7c3aed;
+}
+
+/* Unavailable recent cards - desaturated, not interactive */
+.recent-card--unavailable {
+  filter: grayscale(1);
+  cursor: default;
+  pointer-events: none;
+}
+
+.recent-panel-content .recent-card--unavailable {
+  border-bottom-color: var(--gray-500, #6b7280);
+}
+
+.recent-card[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+/* Post panel summary (count at top) - matches filter-panel-summary */
+.post-panel-summary,
+.post-panel-empty-summary {
+  font-size: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 2px 4px;
+  background: var(--blue-900);
+  color: #fff;
+  text-align: left;
+}
+.post-panel-summary--active,
+.post-panel-empty-summary--active {
+  background: var(--filter-active-color);
+}
+
+/* Post panel empty state image */
+.post-panel-empty-image {
+  margin-top: 10px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Post panel empty state message */
+.post-panel-empty-message {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Recent panel reminder image */
+.recent-panel-reminder-image {
+  margin-top: 10px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Recent panel reminder message */
+.recent-panel-reminder-text {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* ============================================================================
+   CARD COMPONENTS - image, meta, text-title, container-info, badge, button-fav
+   ============================================================================ */
+
+/* Thumbnail image */
+.post-card-image,
+.recent-card-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: var(--panel-bg);
+  flex: 0 0 100px;
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+}
+
+/* When a post truly has no image (or before a stored thumb_url exists), render a solid block
+   instead of a broken-image icon. */
+.post-card-image--empty,
+.recent-card-image--empty {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+}
+
+/* Meta container */
+.post-card-meta,
+.recent-card-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* 12px gap between title and info rows */
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+}
+
+/* Subcategory icon image/svg */
+.post-card-image-sub,
+.recent-card-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Category row */
+.post-card-row-cat,
+.recent-card-row-cat {
+  display: flex;
+  align-items: center;
+}
+
+.post-card-row-cat .post-card-icon-sub,
+.recent-card-row-cat .recent-card-icon-sub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
+  padding-right: 5px;
+  box-sizing: border-box;
+}
+
+.post-card-row-cat .post-card-icon-sub:empty,
+.recent-card-row-cat .recent-card-icon-sub:empty {
+  display: none;
+  padding-right: 0;
+}
+
+/* Title - single line with ellipsis */
+.post-card-text-title,
+.recent-card-text-title {
+  margin: 0;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Info container */
+.post-card-container-info,
+.recent-card-container-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0; /* Gap: 0 - using margin-bottom on rows instead */
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Info rows - single line with ellipsis truncation */
+.post-card-row-loc,
+.post-card-row-date,
+.post-card-row-price,
+.post-card-row-cat,
+.recent-card-row-loc,
+.recent-card-row-date,
+.recent-card-row-price,
+.recent-card-row-cat {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 6px; /* Vertical spacing: 6px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Text inside info rows truncates */
+.post-card-row-loc > span,
+.post-card-row-date > span,
+.post-card-row-price > span,
+.post-card-row-cat > span:not(.post-card-icon-sub),
+.recent-card-row-loc > span,
+.recent-card-row-date > span,
+.recent-card-row-price > span,
+.recent-card-row-cat > span:not(.recent-card-icon-sub) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Prevent double-up on last row */
+.post-card-container-info > *:last-child,
+.recent-card-container-info > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Badge - fixed width column for icon alignment, 18px icon centered */
+.post-card-badge,
+.recent-card-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
+  height: 18px;
+  padding-right: 5px;
+  border: 0;
+  border-radius: 0;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* Badge image sizing (No Hardcode Rule) */
+.post-card-image-badge,
+.recent-card-image-badge,
+.post-image-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Inline badge image (e.g. in post detail) */
+.post-image-badge--inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+/* Actions container */
+.post-card-container-actions,
+.recent-card-container-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
+}
+
+/* Favorite button */
+.post-card-button-fav,
+.recent-card-button-fav {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.post-card-button-fav:hover,
+.recent-card-button-fav:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-card-icon-fav,
+.recent-card-icon-fav {
+  width: 18px;
+  height: 18px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-favourites);
+  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  pointer-events: none;
+}
+
+.post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+.recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #fbbf24;
+  -webkit-mask-image: none;
+  mask-image: none;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+/* Edit button */
+.post-card-button-edit {
+  width: auto;
+  min-width: 36px;
+  height: auto;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   DESCRIPTION
+   ============================================================================ */
+
+.post-description-wrap {
+  cursor: pointer;
+  width: 100%;
+}
+
+.post-description {
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.post-description:focus {
+  outline: none;
+}
+
+.post-see-more {
+  color: #888888;
+}
+
+/* ============================================================================
+   DATES
+   ============================================================================ */
+
+.post-dates {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.post-date {
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+/* ============================================================================
+   PILL BUTTON
+   ============================================================================ */
+
+.post-pill {
+  border: 1px solid var(--btn);
+  background: var(--btn);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   CLOSE BUTTON
+   ============================================================================ */
+
+.post-close-button {
+  border: 0;
+  background: #16283f;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   POST MAP
+   ============================================================================ */
+
+.post-map {
+  border-radius: 5px;
+}
+
+.post-map-container {
+  position: relative;
+  width: 100%;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #222222;
+  min-height: 200px;
+  flex: 0 0 auto;
+}
+
+/* ============================================================================
+   POST (Open Post View)
+   Class naming: .post-{type}-{part}--{state}
+   States: --collapsed, --expanded, --map-highlight
+   ============================================================================ */
+
+.post {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding-top: 0;
+  overflow: visible;
+  color: #fff;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* Location wallpaper integration (uses LocationWallpaperComponent) */
+/* Restore sticky: LocationWallpaperComponent sets position: relative on direct children */
+.post .component-locationwallpaper-content--active > .post-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
+}
+
+/* Only show wallpaper when post is expanded */
+.post:not(.post--expanded) .component-locationwallpaper {
+  display: none;
+}
+
+/* Post wallpaper should be square (no rounding) */
+.post .component-locationwallpaper {
+  border-radius: 0;
+}
+
+.post::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* 3-sided frame: lid is owned by the sticky header so it doesn't scroll away */
+  border-left: 1px solid var(--blue-500);
+  border-right: 1px solid var(--blue-500);
+  border-bottom: 1px solid var(--blue-500);
+  border-top: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
+}
+
+/* Recent panel posts use purple border */
+.recent-panel-content .post::after {
+  border-left-color: #7c3aed;
+  border-right-color: #7c3aed;
+  border-bottom-color: #7c3aed;
+}
+.recent-panel-content .post-header {
+  border-top-color: #7c3aed;
+}
+
+.post-panel-content .post {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ============================================================================
+   POST HEADER - Unified header for both collapsed and expanded states
+   Same design, collapsed just shows less information
+   ============================================================================ */
+
+/* Hide post-card/recent-card when inside .post (kept for restoration on close) */
+.post .post-card,
+.post .recent-card {
+  display: none;
+}
+
+/* Post header - always visible, 70px total height */
+.post-header {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
+  background: transparent;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--blue-500);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 0;
+  box-shadow: none;
+  padding: 10px;
+  height: 70px;
+  box-sizing: border-box;
+}
+
+.post-header:hover {
+  background: var(--panel-bg);
+  box-shadow: none;
+}
+
+/* Header actions - horizontal layout to fit 70px header */
+.post-header-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Thumbnail image - 50x50 minithumb size */
+.post-header-image-minithumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: var(--panel-bg);
+  flex: 0 0 50px;
+}
+
+.post-header-image-minithumb--empty {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Meta container */
+.post-header-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Title */
+.post-header-text-title {
+  margin: 0;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Category row */
+.post-header-row-cat {
+  display: flex;
+  align-items: center;
+}
+
+.post-header-row-cat .post-header-icon-sub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-right: 5px;
+}
+
+.post-header-row-cat .post-header-icon-sub:empty {
+  display: none;
+  padding-right: 0;
+}
+
+/* Subcategory icon image/svg */
+.post-header-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Info rows */
+.post-header-row-loc,
+.post-header-row-date,
+.post-header-row-price,
+.post-header-row-cat {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+/* Badge */
+.post-header-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding-right: 5px;
+  border: 0;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  line-height: 1;
+}
+
+/* Badge image */
+.post-header-image-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Favorite button */
+.post-header-button-fav {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.post-header-button-fav:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-header-icon-fav {
+  width: 18px;
+  height: 18px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-favourites);
+  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  pointer-events: none;
+}
+
+.post-header-button-fav[aria-pressed="true"] .post-header-icon-fav {
+  background-color: #fbbf24;
+  -webkit-mask-image: none;
+  mask-image: none;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.post.post--collapsed .post-button-share {
+  display: none;
+}
+
+/* Share button in post */
+.post-button-share {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.post-button-share:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-icon-share {
+  width: 18px;
+  height: 18px;
+  background-color: var(--button-text);
+  -webkit-mask-image: var(--ui-icon-share);
+  mask-image: var(--ui-icon-share);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   POST BODY
+   ============================================================================ */
+
+.post-body {
+  padding: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+  align-content: flex-start;
+  flex: 1 1 auto;
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  transition: none;
+  max-height: 5000px;
+  opacity: 1;
+  background: transparent;
+  margin-top: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.post.post--collapsed .post-body {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   POST BODY - collapsed/expanded visibility
+   ============================================================================ */
+
+.post:not(.post--expanded) .post-info-container,
+.post:not(.post--expanded) .post-description-member {
+  display: none;
+}
+
+.post:not(.post--expanded) .post-description-text {
+  margin-top: 0;
+}
+
+/* ============================================================================
+   POST DESCRIPTION CONTAINER
+   ============================================================================ */
+
+.post-description-container {
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+/* Description text */
+.post-description-text {
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* See more link - inline at end of truncated text (Facebook-style) */
+.post-description-seemore {
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.post-description-seemore:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Hide See more when expanded */
+.post.post--expanded .post-description-seemore {
+  display: none;
+}
+
+/* See less link - inline at end of expanded text (Facebook-style) */
+.post-description-seeless {
+  display: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.post-description-seeless:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Show See less when expanded */
+.post.post--expanded .post-description-seeless {
+  display: inline;
+}
+
+/* Member row */
+.post-description-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 10px;
+}
+
+.post-description-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.post-description-postedby {
+  line-height: 1.3;
+}
+
+/* ============================================================================
+   POST IMAGES CONTAINER [FUTURE: ImageGalleryComponent]
+   Hero image + thumbnail row. Will become a separate component.
+   ============================================================================ */
+
+.post-images-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  align-self: stretch;
+}
+
+.post.post--expanded .post-images-container {
+  position: static;
+  margin-top: var(--gap);
+}
+
+.post-hero {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1/1;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0);
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+}
+
+.post-hero--clickable {
+  cursor: pointer;
+}
+
+.post-track-hero {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+  touch-action: pan-y;
+}
+
+.post-image-hero {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.post-image-hero--ready {
+  object-fit: cover;
+}
+
+/* Thumbnail container */
+.post-thumbs {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  padding: 0 10px 5px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Webkit scrollbar styling for thumbnails */
+.post-thumbs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.post-thumbs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.post-thumbs::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+}
+
+.post-thumbs::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+.post-image-thumb {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  object-fit: cover;
+  object-position: center;
+  aspect-ratio: 1/1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.post-image-thumb--active {
+  border-color: var(--blue-500);
+}
+
+/* ============================================================================
+   INFO GRID
+   ============================================================================ */
+
+/* Info container - holds subcategory, location, date, price rows */
+.post-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+/* Info row - each line of info */
+.post-info-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+.post-info-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Venue info - venue name (bold) + address */
+.post-info-venue {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+/* Session info - dates, price, features */
+.post-info-session {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+}
+
+.post-info-session:last-child,
+.post-info-venue:last-child {
+  margin-bottom: 0;
+}
+
+/* Info container buttons (36px min height, flexible) */
+.post-info-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.post-info-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.post-info-button:last-child {
+  margin-bottom: 0;
+}
+
+.post-info-button-text {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-info-button-arrow {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  opacity: 0.6;
+  font-size: 10px;
+}
+
+/* Info row links */
+.post-info-row a {
+  color: var(--blue-400, #60a5fa);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-info-row a:hover {
+  text-decoration: underline;
+}
+
+/* Subcategory icon wrapper */
+.post-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* Subcategory icon image */
+.post-info-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Price badge image (currency flag) */
+.post-info-image-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Badge (emoji icons) */
+.post-info-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Badge image (flag icons for currency) */
+.post-info-badge img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Info text */
+.post-info-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   POST LOCATION COMPONENT
+   Uses menu-class-4 for base styling
+   ============================================================================ */
+
+.post-location-container {
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button layout: text + arrow */
+.post-location-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+}
+
+/* Text container */
+.post-location-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.post-location-text-main {
+  font-weight: 600;
+}
+
+.post-location-text-secondary {
+  font-size: 12px;
+  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
+  margin-top: 2px;
+}
+
+/* Arrow sizing */
+.post-location-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+/* Options panel visibility */
+.post-location-options {
+  display: none;
+}
+
+.post-location-button.menu-button--open + .post-location-options {
+  display: block;
+}
+
+/* Option text */
+.post-location-option-main {
+  font-weight: 600;
+  text-align: left;
+}
+
+.post-location-option-secondary {
+  font-size: 12px;
+  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
+  margin-top: 2px;
+  text-align: left;
+}
+
+/* Mini-map container - full width, no padding, 2:1 ratio */
+.post-location-map {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.post-location-map-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post-location-map-loading,
+.post-location-map-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 14px;
+}
+
+/* Map markers - 24px round subcategory icons (matches header avatar pattern) */
+.post-location-map-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+/* Hover/active: blue ring 2px outside the icon */
+.post-location-map-marker--hover,
+.post-location-map-marker--active {
+  box-shadow: 0 0 0 2px var(--blue-500);
+}
+
+/* Current location: solid white border (always visible) */
+.post-location-map-marker--current {
+  border-color: #fff;
+}
+
+/* Current + hover: white border stays, blue ring outside */
+.post-location-map-marker--current.post-location-map-marker--hover,
+.post-location-map-marker--current.post-location-map-marker--active {
+  box-shadow: 0 0 0 2px var(--blue-500);
+}
+
+/* ============================================================================
+   POST SESSION COMPONENT
+   Uses menu-class-5 for base styling
+   ============================================================================ */
+
+.post-session-container {
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button layout: text + arrow */
+.post-session-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+}
+
+/* Text container */
+.post-session-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-session-text-main {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Arrow sizing */
+.post-session-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+/* Options panel visibility */
+.post-session-options {
+  display: none;
+}
+
+.post-session-button.menu-button--open + .post-session-options {
+  display: block;
+}
+
+/* Dropdown layout: square calendar viewport + times list */
+.post-session-calendar-slot {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+}
+
+/* Make the CalendarComponent fill the square viewport (post.css loads before components.css,
+   so selectors must be more specific than components.css to win). */
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount.calendar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
+  flex: 1 1 auto;
+}
+
+/* Only session dates are interactive */
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:hover,
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:active {
+  background: #222;
+  border-color: transparent;
+  color: inherit;
+}
+
+/* Times list (36px rows) */
+.post-session-times {
+  width: 100%;
+}
+
+.post-session-times-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-session-time {
+  /* Uses menu-class-5 .menu-option for sizing/appearance */
+}
+
+.post-session-date-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-session-time-right {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-session-time--selected {
+  background: var(--blue-600, #2563eb);
+}
+
+.post-session-empty {
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
+  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+  box-sizing: border-box;
+}
+
+/* Instant popover beside a selected date */
+.post-session-popover {
+  position: absolute;
+  z-index: var(--layer-popover);
+  min-width: 140px;
+  max-width: 220px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.post-session-popover-time {
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.post-session-popover-time:last-child {
+  border-bottom: none;
+}
+
+/* ============================================================================
+   POST PRICE COMPONENT
+   Uses menu-class-4 for base styling
+   ============================================================================ */
+
+.post-price-container {
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button layout: text + arrow */
+.post-price-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+}
+
+/* Text container */
+.post-price-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-price-text-main {
+  font-weight: 600;
+}
+
+/* Arrow sizing */
+.post-price-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+}
+
+/* Badge image */
+.post-price-badge {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+}
