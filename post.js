@@ -3572,6 +3572,18 @@ const PostModule = (function() {
           var timeText = String(btn.dataset.time || '').trim();
           if (!timeText) return;
           selectedSessionTime = timeText;
+
+          // Mark selected date box with solid blue background
+          try {
+            if (sessionCalendarMount && sessionPopoverIso) {
+              sessionCalendarMount.querySelectorAll('.calendar-day.post-session-selected').forEach(function(c) {
+                c.classList.remove('post-session-selected');
+              });
+              var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + sessionPopoverIso + '"]');
+              if (cell) cell.classList.add('post-session-selected');
+            }
+          } catch (_eSel) {}
+
           updateSessionButtonText();
           renderSessionTimesList();
           closeSessionDropdown();
