@@ -611,7 +611,7 @@
 }
 
 /* Menu part hooks (appearance only)
-   These classes must be applied by menu components (in components-new.js):
+   These classes must be applied by menu components (in components.js):
    - .menu-button   (trigger)
    - .menu-input    (search/display input)
    - .menu-arrow    (arrow icon/chevron)
@@ -1178,7 +1178,7 @@ body {
 /* ============================================================================
    WELCOME MODAL
    STARTUP EXCEPTION: This modal displays immediately on page load, so its CSS
-   must be in base-new.css (not lazy-loaded). Other modals go in components-new.css.
+  must be in base.css (not lazy-loaded). Other modals go in components.css.
    ============================================================================ */
 
 .welcome-modal {
@@ -1597,7 +1597,7 @@ body {
 /* ============================================================================
    LAZY-LOADED PANELS (Critical CSS)
    Hide panels that have lazy-loaded CSS to prevent FOUC
-   These rules are overridden when the full filter-new.css loads
+   These rules are overridden when the full filter.css loads
    ============================================================================ */
 
 .filter-panel {
@@ -1715,4 +1715,4 @@ body {
   color: var(--error-color, #f44336);
 }
 
-/* My Posts item styling moved to member-new.css */
+/* My Posts item styling moved to member.css */

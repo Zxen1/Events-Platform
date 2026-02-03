@@ -1338,8 +1338,8 @@
    AVATAR PICKER / UPLOAD
    ============================================================================ */
 
-/* Note: AvatarPickerComponent styles live in components-new.css (.component-avatarpicker-*) */
-/* Note: AvatarCropperComponent styles live in components-new.css (.component-avatarcropper-tool-*) */
+/* Note: AvatarPickerComponent styles live in components.css (.component-avatarpicker-*) */
+/* Note: AvatarCropperComponent styles live in components.css (.component-avatarcropper-tool-*) */
 
 .member-profile-actions {
   position: static;
@@ -1455,7 +1455,7 @@
 
 
 /* Formpicker menu
-   Appearance governed by menu-class-3 from base-new.css.
+   Appearance governed by menu-class-3 from base.css.
    This section contains LAYOUT ONLY. */
 .member-formpicker-menu {
   position: relative;
@@ -1542,6 +1542,6 @@
 
 /* ============================================================================
    MY POSTS TAB
-   Styles moved to posteditor-new.css
+   Styles moved to posteditor.css
    ============================================================================ */
 

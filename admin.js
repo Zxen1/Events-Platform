@@ -13,11 +13,11 @@
    - Messages tab (to be built)
    
    DEPENDENCIES:
-   - index-new.js (backbone - App object)
+   - index.js (backbone - App object)
    
    COMMUNICATES WITH:
-   - header-new.js (admin button state)
-   - member-new.js (admin login state)
+   - header.js (admin button state)
+   - member.js (admin login state)
    
    ============================================================================ */
 
@@ -44,7 +44,7 @@ const AdminModule = (function() {
        DEVELOPER NOTE:
        Icons are now loaded via CSS mask-image from Bunny CDN.
        Icon elements are empty divs/spans with appropriate classes.
-       CSS variables (--ui-icon-*) are set in index-new.js on app load.
+       CSS variables (--ui-icon-*) are set in index.js on app load.
        -------------------------------------------------------------------------- */
 
     /* --------------------------------------------------------------------------
@@ -412,7 +412,7 @@ const AdminModule = (function() {
         // Listen for member state changes (to know if admin is logged in)
         App.on('member:stateChanged', function(data) {
             // Admin panel access is controlled by header button visibility
-            // which is handled in header-new.js
+            // which is handled in header.js
         });
     }
 
@@ -2505,7 +2505,7 @@ const AdminModule = (function() {
             // Keep Mapbox geocoder visible at all times (display:none breaks sizing and can freeze typing).
             if (startingAddressDisplay) startingAddressDisplay.hidden = true;
             setTimeout(function() {
-                // Mapbox geocoder input (created by map-new.js)
+                // Mapbox geocoder input (created by map.js)
                 var input = startingGeocoderContainer.querySelector('.admin-mapbox-geocoder-input--starting') ||
                             startingGeocoderContainer.querySelector('input.mapboxgl-ctrl-geocoder--input') ||
                             startingGeocoderContainer.querySelector('input');
@@ -2544,7 +2544,7 @@ const AdminModule = (function() {
             }
         };
         
-        // Mapbox geocoder is created by `map-new.js` and emits `map:startingLocationChanged`.
+        // Mapbox geocoder is created by `map.js` and emits `map:startingLocationChanged`.
         // We listen and store values in mapTabData fields for saving.
         if (window.App && typeof App.on === 'function') {
             if (!startingGeocoderContainer.dataset.startingListenerAdded) {

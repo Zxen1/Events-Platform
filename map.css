@@ -69,7 +69,7 @@
   font-weight: 400;
 }
 
-/* Mapbox button styling is in components-new.css (single source of truth) */
+/* Mapbox button styling is in components.css (single source of truth) */
 
 /* ============================================================================
    MAP CONTAINER & AREA
@@ -218,7 +218,7 @@
    MAP CARD STYLES
    ============================================================================
    
-   Map card CSS is DYNAMICALLY INJECTED by map-new.js injectMapCardStyles()
+   Map card CSS is DYNAMICALLY INJECTED by map.js injectMapCardStyles()
    This allows pill background images to be set from admin settings.
    
    Classes injected dynamically:

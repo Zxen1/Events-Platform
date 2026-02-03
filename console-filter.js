@@ -22,7 +22,7 @@
   // This file is loaded on every page.
   // IMPORTANT: Do not depend on localStorage. Many dev workflows clear it frequently.
   // The admin setting (database source of truth) is applied by the app after settings load:
-  //   - `index-new.js` calls `window.ConsoleFilter.enable()/disable()`
+  //   - `index.js` calls `window.ConsoleFilter.enable()/disable()`
 
   const originalWarn = console.warn;
   const originalLog = console.log;

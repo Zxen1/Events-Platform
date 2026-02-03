@@ -23,19 +23,19 @@ const PostModule = (function() {
   /* ==========================================================================
      IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
      --------------------------------------------------------------------------
-     This file (`post-new.js`) owns the HIGH-ZOOM filtering pipeline:
+    This file (`post.js`) owns the HIGH-ZOOM filtering pipeline:
        zoom >= postsLoadZoom (default 8)
      
      High zoom is "in this map area" mode:
-     - We listen for `App.emit('filter:changed', state)` from `filter-new.js`
-     - We also listen for `App.emit('map:boundsChanged', { zoom, ... })` from `map-new.js`
+    - We listen for `App.emit('filter:changed', state)` from `filter.js`
+    - We also listen for `App.emit('map:boundsChanged', { zoom, ... })` from `map.js`
      - We fetch detailed posts via `/gateway.php?action=get-posts` using:
          - saved filter params (keyword/date/price/subcategory keys/etc.)
          - `bounds` (the map area filter)
      - We render Post cards + Map cards (detailed payload)
      
      Low zoom (< postsLoadZoom) does NOT load detailed posts worldwide.
-     That mode is handled by clusters in `map-new.js` via `/gateway.php?action=get-clusters`.
+    That mode is handled by clusters in `map.js` via `/gateway.php?action=get-clusters`.
      ========================================================================== */
 
   /* --------------------------------------------------------------------------
@@ -562,7 +562,7 @@ const PostModule = (function() {
 
     // Panel-level keyboard behavior (Post/Recent):
     // - Escape closes open post first, then returns to map mode
-    // Note: index-new.js global Escape handler does not manage Post/Recent panels.
+    // Note: index.js global Escape handler does not manage Post/Recent panels.
     document.addEventListener('keydown', function(e) {
       try {
         if (!e || (e.key !== 'Escape')) return;
@@ -4679,10 +4679,10 @@ const PostModule = (function() {
   function attachButtonAnchors() {
     if (!postListEl || !recentPanelContentEl) return;
     if (!window.BottomSlack) {
-      throw new Error('[Post] BottomSlack is required (components-new.js).');
+      throw new Error('[Post] BottomSlack is required (components.js).');
     }
     if (!window.TopSlack) {
-      throw new Error('[Post] TopSlack is required (components-new.js).');
+      throw new Error('[Post] TopSlack is required (components.js).');
     }
 
     // Same options used elsewhere (keep site-wide feel consistent).

@@ -5453,7 +5453,7 @@ const FieldsetBuilder = (function(){
         fieldset.addEventListener('change', updateCompleteFromDom, true);
         fieldset.addEventListener('blur', updateCompleteFromDom, true);
 
-        // Browser autofill detection handled by global initGlobalAutofillHandler() in index-new.js
+        // Browser autofill detection handled by global initGlobalAutofillHandler() in index.js
 
         // Confirm-password depends on the password field above it, so it must revalidate when that field changes too.
         if (key === 'confirm-password' && container && typeof container.addEventListener === 'function') {

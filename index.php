@@ -245,18 +245,18 @@ if (empty($ogTitle)) {
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places&loading=async"></script>
   
   <!-- CSS Files (10 total) -->
-  <link rel="stylesheet" href="base-new.css?v=20251228i">
-  <link rel="stylesheet" href="header-new.css?v=20251228i">
-  <!-- filter-new.css loaded lazily on first use -->
-  <link rel="stylesheet" href="map-new.css?v=20251228i">
-  <link rel="stylesheet" href="post-new.css?v=20251228i">
-  <link rel="stylesheet" href="components-new.css?v=20251228i">
-  <link rel="stylesheet" href="fieldsets-new.css?v=20251228i">
-  <link rel="stylesheet" href="admin-new.css?v=20251228i">
-  <link rel="stylesheet" href="formbuilder-new.css?v=20251228i">
-  <link rel="stylesheet" href="member-new.css?v=20251228i">
-  <link rel="stylesheet" href="posteditor-new.css?v=20251228i">
-  <link rel="stylesheet" href="marquee-new.css?v=20251228i">
+  <link rel="stylesheet" href="base.css?v=20251228i">
+  <link rel="stylesheet" href="header.css?v=20251228i">
+  <!-- filter.css loaded lazily on first use -->
+  <link rel="stylesheet" href="map.css?v=20251228i">
+  <link rel="stylesheet" href="post.css?v=20251228i">
+  <link rel="stylesheet" href="components.css?v=20251228i">
+  <link rel="stylesheet" href="fieldsets.css?v=20251228i">
+  <link rel="stylesheet" href="admin.css?v=20251228i">
+  <link rel="stylesheet" href="formbuilder.css?v=20251228i">
+  <link rel="stylesheet" href="member.css?v=20251228i">
+  <link rel="stylesheet" href="posteditor.css?v=20251228i">
+  <link rel="stylesheet" href="marquee.css?v=20251228i">
 </head>
 <body>
 
@@ -1380,7 +1380,7 @@ if (empty($ogTitle)) {
     </div>
   </div>
 
-  <!-- Avatar cropper + picker UI are created dynamically by components (components-new.js) -->
+  <!-- Avatar cropper + picker UI are created dynamically by components (components.js) -->
 
   <!-- ========================================================================
        SECTION 7: MARQUEE
@@ -1417,18 +1417,18 @@ if (empty($ogTitle)) {
        JAVASCRIPT FILES (10 total)
        Load order matters: backbone first, then sections
        ======================================================================== -->
-  <script src="fieldsets-new.js?v=20251228w"></script>
-  <script src="components-new.js?v=20251228w"></script>
-  <script src="index-new.js?v=20251228w"></script>
-  <script src="header-new.js?v=20251228w"></script>
-  <!-- filter-new.js loaded lazily on first use -->
-  <script src="map-new.js?v=20251228w"></script>
-  <script src="post-new.js?v=20251228w"></script>
-  <script src="admin-new.js?v=20251228w"></script>
-  <script src="formbuilder-new.js?v=20251228w"></script>
-  <script src="posteditor-new.js?v=20251228w"></script>
-  <script src="member-new.js?v=20251228w"></script>
-  <script src="marquee-new.js?v=20251228w"></script>
+  <script src="fieldsets.js?v=20251228w"></script>
+  <script src="components.js?v=20251228w"></script>
+  <script src="index.js?v=20251228w"></script>
+  <script src="header.js?v=20251228w"></script>
+  <!-- filter.js loaded lazily on first use -->
+  <script src="map.js?v=20251228w"></script>
+  <script src="post.js?v=20251228w"></script>
+  <script src="admin.js?v=20251228w"></script>
+  <script src="formbuilder.js?v=20251228w"></script>
+  <script src="posteditor.js?v=20251228w"></script>
+  <script src="member.js?v=20251228w"></script>
+  <script src="marquee.js?v=20251228w"></script>
 
 </body>
 </html>

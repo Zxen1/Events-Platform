@@ -16,7 +16,7 @@
    
    FILES INVOLVED:
    
-   1. components-new.js
+   1. components.js
       - IconPickerComponent: Category icon picker menu
       - SystemImagePickerComponent: System image picker menu
       - Both components:
@@ -635,7 +635,7 @@ const App = (function() {
 
   /* --------------------------------------------------------------------------
      BUTTON ANCHOR INIT
-     Implemented as reusable components in `components-new.js`.
+     Implemented as reusable components in `components.js`.
   */
   function initSlack() {
     // Apply per-tab config first

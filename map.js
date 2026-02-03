@@ -23,8 +23,8 @@
    - Mapbox Geocoder (MapboxGeocoder) - admin only
    
    INTERNAL DEPENDENCIES:
-   - index-new.js (App backbone)
-   - components-new.js (MapControlRowComponent)
+   - index.js (App backbone)
+   - components.js (MapControlRowComponent)
    
    ============================================================================ */
 
@@ -34,7 +34,7 @@ const MapModule = (function() {
   /* ==========================================================================
      IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
      --------------------------------------------------------------------------
-     This file (`map-new.js`) owns the LOW-ZOOM filtering pipeline (clusters).
+     This file (`map.js`) owns the LOW-ZOOM filtering pipeline (clusters).
      It is designed to stay fast at worldwide zoom levels by fetching AGGREGATED data.
      
      - Source of truth for current filters is `localStorage['funmap_filters']`
@@ -42,7 +42,7 @@ const MapModule = (function() {
        via `/gateway.php?action=get-clusters`
      
      At HIGH ZOOM (zoom >= postsLoadZoom; default 8), the app switches to the
-     detailed pipeline in `post-new.js`:
+     detailed pipeline in `post.js`:
      - Fetches actual posts/map-cards "in this map area" using `bounds`
        via `/gateway.php?action=get-posts`
      
@@ -367,7 +367,7 @@ const MapModule = (function() {
   }
   
   /**
-   * Get font string for text measurement (matches global font from base-new.css)
+   * Get font string for text measurement (matches global font from base.css)
    */
   function measureFont() {
     return `${MARKER_LABEL_TEXT_SIZE}px system-ui, sans-serif`;
@@ -705,7 +705,7 @@ const MapModule = (function() {
         }
       }
       
-      /* Text styling - inherits global font from base-new.css */
+      /* Text styling - inherits global font from base.css */
       .map-card-title {
         color: #fff;
         font-family: inherit;
@@ -1229,7 +1229,7 @@ const MapModule = (function() {
 
   /* ==========================================================================
      SECTION 3: GOOGLE PLACES - Geocoder Controls
-     Uses MapControlRowComponent from components-new.js
+     Uses MapControlRowComponent from components.js
      ========================================================================== */
   
   // Store control instances

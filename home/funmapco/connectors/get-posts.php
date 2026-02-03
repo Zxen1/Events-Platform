@@ -3,7 +3,7 @@
  * get-posts.php - Fetch posts with map card data for display
  * 
  * Returns paginated posts with their associated map card data.
- * Used by post-new.js to render post cards and map markers.
+ * Used by post.js to render post cards and map markers.
  * 
  * Query Parameters:
  *   - limit (int): Max posts to return (default 50, max 200)
@@ -118,12 +118,12 @@ try {
     // Parse query parameters
     //
     // IMPORTANT (Developer Note):
-    // This endpoint is used by the HIGH-ZOOM pipeline (zoom >= postsLoadZoom; default 8) in `post-new.js`.
+    // This endpoint is used by the HIGH-ZOOM pipeline (zoom >= postsLoadZoom; default 8) in `post.js`.
     // It must respect BOTH:
     // - the saved filter state (keyword/date/price/subcategory keys/etc.)
     // - the map area filter (`bounds`)
     //
-    // LOW-ZOOM worldwide filtering is handled by the cluster pipeline in `map-new.js`
+    // LOW-ZOOM worldwide filtering is handled by the cluster pipeline in `map.js`
     // via `/gateway.php?action=get-clusters` (aggregated results).
     $limit = isset($_GET['limit']) ? min(200, max(1, intval($_GET['limit']))) : 50;
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;

@@ -122,7 +122,7 @@ const HeaderModule = (function() {
         if (active) {
             // Color is intentionally inline so it stays correct even if filter module is never loaded.
             // Paul may change this color later; this is the single place to do it.
-            // Use the platform variable (base-new.css) instead of hardcoding.
+            // Use the platform variable (base.css) instead of hardcoding.
             filterIcon.style.backgroundColor = 'var(--filter-active-color)';
         } else {
             filterIcon.style.backgroundColor = '';
@@ -403,7 +403,7 @@ const HeaderModule = (function() {
             // Load CSS
             var link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'filter-new.css?v=' + (window.APP_VERSION || Date.now());
+            link.href = 'filter.css?v=' + (window.APP_VERSION || Date.now());
             link.onload = function() {
                 cssLoaded = true;
                 checkDone();
@@ -417,7 +417,7 @@ const HeaderModule = (function() {
             
             // Load JS
             var script = document.createElement('script');
-            script.src = 'filter-new.js?v=' + (window.APP_VERSION || Date.now());
+            script.src = 'filter.js?v=' + (window.APP_VERSION || Date.now());
             script.onload = function() {
                 jsLoaded = true;
                 checkDone();
@@ -436,7 +436,7 @@ const HeaderModule = (function() {
         filterBtn = document.querySelector('.header-filter');
         if (!filterBtn) return;
         
-        // Set the correct visual state on boot without loading filter-new.js.
+        // Set the correct visual state on boot without loading filter.js.
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.

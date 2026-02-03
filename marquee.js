@@ -91,7 +91,7 @@ const MarqueeModule = (function() {
      VISIBILITY (matches post/recent panel togglePanel pattern)
      -------------------------------------------------------------------------- */
   
-  // Animation state tracking (same pattern as post-new.js panelMotion)
+  // Animation state tracking (same pattern as post.js panelMotion)
   let motionToken = 0;
   let hideHandler = null;
   let hideTimeoutId = 0;
@@ -121,7 +121,7 @@ const MarqueeModule = (function() {
   }
   
   /**
-   * Show the marquee panel (same pattern as togglePanel in post-new.js)
+   * Show the marquee panel (same pattern as togglePanel in post.js)
    */
   function show() {
     if (!marqueeEl || !contentEl) return;
@@ -158,7 +158,7 @@ const MarqueeModule = (function() {
   }
   
   /**
-   * Hide the marquee panel (same pattern as togglePanel in post-new.js)
+   * Hide the marquee panel (same pattern as togglePanel in post.js)
    */
   function hide() {
     if (!marqueeEl || !contentEl) return;

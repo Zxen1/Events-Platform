@@ -23,12 +23,12 @@
      - User's posts list (not yet coded)
    
    DEPENDENCIES:
-   - index-new.js (backbone - App object)
-   - components-new.js (fieldsets for create post form)
+   - index.js (backbone - App object)
+   - components.js (fieldsets for create post form)
    
    COMMUNICATES WITH:
-   - header-new.js (member button state, avatar display)
-   - post-new.js (created posts appear in posts)
+   - header.js (member button state, avatar display)
+   - post.js (created posts appear in posts)
    
    ============================================================================ */
 
@@ -186,7 +186,7 @@ const MemberModule = (function() {
     var createAuthPendingSubmit = false;
     var createAuthPendingSubmitIsAdminFree = false;
 
-    // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
+    // Unsaved prompt uses ThreeButtonDialogComponent (components.js)
     
     // Terms modal elements
     var termsModalContainer = null;
@@ -411,7 +411,7 @@ const MemberModule = (function() {
         createCountryMenuContainer = null;
         createCountryHiddenInput = null;
 
-        // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
+        // Note: Avatar cropper is now handled by AvatarCropperComponent (components.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
 
@@ -697,7 +697,7 @@ const MemberModule = (function() {
             });
         }
 
-        // Note: Avatar picker/cropper UI is handled by AvatarPickerComponent + AvatarCropperComponent (components-new.js)
+        // Note: Avatar picker/cropper UI is handled by AvatarPickerComponent + AvatarCropperComponent (components.js)
         // Note: unsaved changes dialogs are controlled from components.
         
         // Map Lighting buttons
@@ -2056,7 +2056,7 @@ const MemberModule = (function() {
 
     /* --------------------------------------------------------------------------
        FORMPICKER (Category/Subcategory selection)
-       Copied from forms.js, using member-formpicker-menu classes from member-new.css
+       Copied from forms.js, using member-formpicker-menu classes from member.css
        -------------------------------------------------------------------------- */
     
     var formpickerLoaded = false;

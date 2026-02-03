@@ -87,7 +87,7 @@ const ImageAddTileComponent = (function(){
    5. For keyboard navigation, call menuArrowKeyNav(e, optsEl, '.menu-option', null)
       in your keydown handler when the menu is open.
    
-   MENU CLASSES (in base-new.css):
+   MENU CLASSES (in base.css):
    - menu-class-1: Standard menus (translucent, type-to-filter support)
    - menu-class-2: Location dropdowns (no button trigger, two-line items)
    - menu-class-3: Category pickers (solid blue hover, icon+text options)
@@ -440,7 +440,7 @@ function menuArrowKeyNav(e, optsContainer, optionSelector, onSelect) {
     return true;
 }
 
-// Expose for use by other modules (member-new.js formpicker)
+// Expose for use by other modules (member.js formpicker)
 window.menuArrowKeyNav = menuArrowKeyNav;
 
 
