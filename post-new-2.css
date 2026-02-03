@@ -16,16 +16,12 @@
   top: 0;
   left: var(--post-panel-max-w);
   right: 0;
-  width: var(--post-panel-max-w);
+  width: 530px;
   height: calc(var(--vh, 1vh) * 100);
   background: transparent;
-  display: none;
+  display: block;
   z-index: var(--layer-post-panel);
   pointer-events: none;
-}
-
-.post-panel-2--show {
-  display: block;
 }
 
 .post-panel-2-content {
@@ -34,8 +30,8 @@
   left: 0;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
-  width: var(--post-panel-max-w);
-  max-width: var(--post-panel-max-w);
+  width: 530px;
+  max-width: 530px;
   height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -59,17 +55,8 @@
   }
 }
 
-.post-panel-2-content--side-left {
-  transform: translateX(-100%);
-}
-
-.post-panel-2-content--hidden {
-  pointer-events: none;
-}
-
 .post-panel-2-content--visible {
   pointer-events: auto;
-  transform: translateX(0);
 }
 
 @media (max-width: 530px) {
@@ -99,16 +86,12 @@
   top: 0;
   left: var(--post-panel-max-w);
   right: 0;
-  width: var(--post-panel-max-w);
+  width: 530px;
   height: calc(var(--vh, 1vh) * 100);
   background: transparent;
-  display: none;
+  display: block;
   z-index: var(--layer-post-panel);
   pointer-events: none;
-}
-
-.recent-panel-2--show {
-  display: block;
 }
 
 .recent-panel-2-content {
@@ -117,8 +100,8 @@
   left: 0;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
-  width: var(--post-panel-max-w);
-  max-width: var(--post-panel-max-w);
+  width: 530px;
+  max-width: 530px;
   height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
@@ -146,17 +129,8 @@
   }
 }
 
-.recent-panel-2-content--side-left {
-  transform: translateX(-100%);
-}
-
-.recent-panel-2-content--hidden {
-  pointer-events: none;
-}
-
 .recent-panel-2-content--visible {
   pointer-events: auto;
-  transform: translateX(0);
 }
 
 @media (max-width: 530px) {

@@ -56,7 +56,7 @@ const PostModule2 = (function() {
       recentPanelEl.className = 'recent-panel-2';
       recentPanelEl.setAttribute('aria-hidden', 'true');
       recentPanelEl.setAttribute('role', 'dialog');
-      recentPanelEl.innerHTML = '<div class="recent-panel-2-content recent-panel-2-content--side-left recent-panel-2-content--hidden"></div>';
+      recentPanelEl.innerHTML = '<div class="recent-panel-2-content recent-panel-2-content--visible"></div>';
       panelsContainerEl.appendChild(recentPanelEl);
     }
     recentPanelContentEl = recentPanelEl.querySelector('.recent-panel-2-content');
@@ -68,7 +68,7 @@ const PostModule2 = (function() {
       postPanelEl.className = 'post-panel-2';
       postPanelEl.setAttribute('aria-hidden', 'true');
       postPanelEl.setAttribute('role', 'dialog');
-      postPanelEl.innerHTML = '<div class="post-panel-2-content post-panel-2-content--side-left post-panel-2-content--hidden"><div class="post-list-2"></div></div>';
+      postPanelEl.innerHTML = '<div class="post-panel-2-content post-panel-2-content--visible"><div class="post-list-2"></div></div>';
       panelsContainerEl.appendChild(postPanelEl);
     }
     postPanelContentEl = postPanelEl.querySelector('.post-panel-2-content');
