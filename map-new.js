@@ -2458,8 +2458,10 @@ const MapModule = (function() {
       setCurrentHoverPostIds([]);
       hoveredVenueKey = '';
       clearHoverClearTimer();
-      // Clear remembered active associations
-      lastActiveVenueKeyByPostId.clear();
+      // IMPORTANT:
+      // Do NOT clear lastActiveVenueKeyByPostId here.
+      // We are clearing VISUAL "active/big" state (because there is no open post context),
+      // but the user's last selected location for a multi-location post must remain the source-of-truth.
     } catch (_e) {}
   }
 
@@ -2487,7 +2489,11 @@ const MapModule = (function() {
       }
       // Second tap (already active): open.
       stopSpin();
-      App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
+      App.emit('map:cardClicked', {
+        postId: entry.post && entry.post.id ? entry.post.id : null,
+        post_map_card_id: entry.post && entry.post.post_map_card_id ? entry.post.post_map_card_id : null,
+        venueKey: entry.venueKey
+      });
       return;
     }
 
@@ -2506,7 +2512,38 @@ const MapModule = (function() {
     stopSpin();
 
     // Emit event for post module to open the post
-    App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
+    App.emit('map:cardClicked', {
+      postId: entry.post && entry.post.id ? entry.post.id : null,
+      post_map_card_id: entry.post && entry.post.post_map_card_id ? entry.post.post_map_card_id : null,
+      venueKey: entry.venueKey
+    });
+  }
+
+  /**
+   * Set the active marker for a specific post_map_card_id (no guessing).
+   * @param {string|number} postId
+   * @param {string|number} postMapCardId
+   * @returns {boolean} true if set, false if not found
+   */
+  function setActiveMapCardByPostMapCardId(postId, postMapCardId) {
+    const pid = String(postId || '');
+    const pmc = String(postMapCardId || '');
+    if (!pid || !pmc) return false;
+    try {
+      let target = null;
+      for (const [key, entry] of mapCardMarkers) {
+        if (!entry || !entry.post || !entry.postIds) continue;
+        if (!entry.postIds.includes(pid)) continue;
+        if (String(entry.post.post_map_card_id || '') !== pmc) continue;
+        target = entry;
+        break;
+      }
+      if (!target) return false;
+      setActiveMapCard(pid, { venueKey: target.venueKey });
+      return true;
+    } catch (_e) {
+      return false;
+    }
   }
 
   function clearHoverClearTimer() {
@@ -2661,6 +2698,28 @@ const MapModule = (function() {
       lastActiveVenueKeyByPostId.set(pid, targetKey);
       updateMapCardStateByKey(targetKey, 'big');
       targetEntry.element.classList.add('is-active');
+    }
+  }
+
+  /**
+   * Get the active (selected) post_map_card_id for a postId (single-post/multi-location).
+   * Source-of-truth is MapModule's active marker selection (lastActiveVenueKeyByPostId).
+   * This prevents other modules from guessing based on map center or DOM.
+   * @param {string|number} postId
+   * @returns {string} post_map_card_id or empty string if none is selected
+   */
+  function getActivePostMapCardId(postId) {
+    const pid = String(postId || '');
+    if (!pid) return '';
+    try {
+      if (!lastActiveVenueKeyByPostId.has(pid)) return '';
+      const key = lastActiveVenueKeyByPostId.get(pid);
+      const entry = key ? findMarkerByVenueKey(key) : null;
+      if (!entry || !entry.post) return '';
+      const pmc = entry.post.post_map_card_id;
+      return (pmc !== undefined && pmc !== null) ? String(pmc) : '';
+    } catch (_e) {
+      return '';
     }
   }
 
@@ -3062,6 +3121,8 @@ const MapModule = (function() {
     clearAllMapCardMarkers,
     clearActiveMapCards,
     setActiveMapCard,
+    getActivePostMapCardId,
+    setActiveMapCardByPostMapCardId,
     // Expose current marker keys so PostModule can remove stale markers without "drift".
     getMapCardMarkerVenueKeys: () => Array.from(mapCardMarkers.keys()),
     // MapCards-style hover API (compat layer for PostModule)

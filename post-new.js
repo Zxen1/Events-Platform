@@ -508,7 +508,7 @@ const PostModule = (function() {
     // Listen for map marker clicks
     App.on('map:cardClicked', function(data) {
       if (!data || !data.postId) return;
-      openPostById(data.postId, { fromMap: true });
+      openPostById(data.postId, { fromMap: true, postMapCardId: data.post_map_card_id ? String(data.post_map_card_id) : '' });
     });
 
     // Listen for marquee slide clicks
@@ -649,6 +649,17 @@ const PostModule = (function() {
       if (!post) {
         console.warn('[Post] Post not found:', postId);
         return;
+      }
+
+      // If the caller didn't provide a location context, choose the in-area map card for this post.
+      // This keeps Marquee/Postcards aligned to the current map view without removing any locations.
+      if (!options.postMapCardId) {
+        try {
+          var pick = pickMapCardInCurrentBounds(post);
+          if (pick && pick.mapCard && pick.mapCard.id !== undefined && pick.mapCard.id !== null) {
+            options.postMapCardId = String(pick.mapCard.id);
+          }
+        } catch (_ePick) {}
       }
 
       // Switch to posts mode if coming from map
@@ -1118,9 +1129,28 @@ const PostModule = (function() {
    * @param {Object} post - Post data from API
    * @returns {string} Image URL or empty string
    */
+  function pickMapCardInCurrentBounds(post) {
+    var cards = (post && Array.isArray(post.map_cards)) ? post.map_cards : [];
+    if (!cards.length) return { mapCard: null, index: 0 };
+    var bounds = getMapBounds();
+    if (!bounds) return { mapCard: cards[0], index: 0 };
+    for (var i = 0; i < cards.length; i++) {
+      var mc = cards[i];
+      if (!mc) continue;
+      var lng = Number(mc.longitude);
+      var lat = Number(mc.latitude);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+      if (pointWithinBounds(lng, lat, bounds)) {
+        return { mapCard: mc, index: i };
+      }
+    }
+    return { mapCard: cards[0], index: 0 };
+  }
+
   function getPostThumbnailUrl(post) {
-    // Get first map card
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    // Use the in-area map card if available (keeps postcards aligned to the current map view).
+    var pick = pickMapCardInCurrentBounds(post);
+    var mapCard = pick.mapCard;
     if (!mapCard) return '';
 
     // Use media_urls array (populated by backend)
@@ -1144,7 +1174,8 @@ const PostModule = (function() {
    * @returns {string} Formatted date string or empty
    */
   function formatPostDates(post) {
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    var pick = pickMapCardInCurrentBounds(post);
+    var mapCard = pick.mapCard;
     var summary = (mapCard ? mapCard.session_summary : post.session_summary) || '';
     
     // Primary source: pre-formatted string (non-JSON)
@@ -1204,8 +1235,11 @@ const PostModule = (function() {
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
 
-    // Get first map card data
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    // Use the in-area map card for display (location context must match the current map view).
+    var pick = pickMapCardInCurrentBounds(post);
+    var mapCard = pick.mapCard;
+    // Store post_map_card_id on the card so opening is unambiguous.
+    try { if (mapCard && mapCard.id !== undefined && mapCard.id !== null) el.dataset.postMapCardId = String(mapCard.id); } catch (_ePmc) {}
 
     // Get display data
     var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
@@ -1300,7 +1334,7 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        openPost(post, { originEl: el });
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
       }
     });
 
@@ -1311,7 +1345,7 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPost(post, { originEl: el });
+      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
     });
 
     // Favorite toggle handler
@@ -1813,19 +1847,34 @@ const PostModule = (function() {
   }
 
   function restoreActiveMapCardFromOpenPost() {
-    var postId = getOpenPostIdFromDom();
+    var openEl = null;
+    try { openEl = document.querySelector('.post[data-id]'); } catch (_eEl) { openEl = null; }
+    if (!openEl) return;
+    var postId = openEl.getAttribute('data-id');
     if (!postId) return;
-    if (!window.MapModule || !MapModule.setActiveMapCard) return;
-    MapModule.setActiveMapCard(postId);
+    var postMapCardId = '';
+    try { postMapCardId = openEl.getAttribute('data-post-map-card-id') || ''; } catch (_ePmc) { postMapCardId = ''; }
+    highlightMapMarker(postId, postMapCardId);
   }
 
   /**
    * Highlight a post's marker on the map
    * @param {number|string} postId - Post ID
    */
-  function highlightMapMarker(postId) {
-    if (!window.MapModule || !MapModule.setActiveMapCard) return;
-    MapModule.setActiveMapCard(postId);
+  function highlightMapMarker(postId, postMapCardId) {
+    if (!window.MapModule) return;
+    var pid = String(postId || '');
+    var pmc = String(postMapCardId || '');
+    if (!pid) return;
+    if (pmc && typeof MapModule.setActiveMapCardByPostMapCardId === 'function') {
+      try {
+        var ok = MapModule.setActiveMapCardByPostMapCardId(pid, pmc);
+        if (ok) return;
+      } catch (_eSetByPmc) {}
+    }
+    if (typeof MapModule.setActiveMapCard === 'function') {
+      MapModule.setActiveMapCard(pid);
+    }
   }
 
   /**
@@ -2358,6 +2407,16 @@ const PostModule = (function() {
     var originEl = options.originEl || null;
     var postMapCardId = options.postMapCardId;
 
+    if (!postMapCardId) {
+      // Source of truth: MapModule active map card selection (no DOM scraping, no heuristics).
+      try {
+        if (window.MapModule && typeof MapModule.getActivePostMapCardId === 'function') {
+          var inferred = MapModule.getActivePostMapCardId(post && post.id !== undefined && post.id !== null ? post.id : '');
+          if (inferred) postMapCardId = inferred;
+        }
+      } catch (_eInfer) {}
+    }
+
     // Find the map card index from post_map_card_id
     var mapCardIndex = 0;
     if (postMapCardId && post.map_cards) {
@@ -2410,8 +2469,8 @@ const PostModule = (function() {
       if (!fromRecent && postListEl) postListEl.scrollTop = 0;
     } catch (_eScrollTop) {}
 
-    // Highlight the map marker
-    highlightMapMarker(post.id);
+    // Highlight the exact map marker for this location context
+    highlightMapMarker(post.id, postMapCardId || '');
 
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
@@ -2471,12 +2530,45 @@ const PostModule = (function() {
     // Active location (the user's current context)
     var activeLoc = locationListAll[idx] || locationListAll[0] || {};
 
-    // IMPORTANT UX RULE:
-    // The active location must become the button, and all other locations must be listed below it.
-    // We achieve this by re-ordering the list so the activeLoc is at index 0.
+    // LOCATION MENU ORDER RULE:
+    // 1) Locations currently shown on the map (in-area) come first.
+    // 2) All other locations come after.
+    // 3) Active location becomes the button (top of the list) without removing any locations.
     var locationList = locationListAll;
-    if (locationListAll.length > 1 && idx > 0 && activeLoc) {
-      locationList = [activeLoc].concat(locationListAll.slice(0, idx), locationListAll.slice(idx + 1));
+    try {
+      var bounds = getMapBounds();
+      if (bounds && locationListAll.length > 1) {
+        var inArea = [];
+        var outArea = [];
+        for (var ii = 0; ii < locationListAll.length; ii++) {
+          var mc0 = locationListAll[ii];
+          if (!mc0) continue;
+          var lng0 = Number(mc0.longitude);
+          var lat0 = Number(mc0.latitude);
+          var ok0 = Number.isFinite(lng0) && Number.isFinite(lat0) && pointWithinBounds(lng0, lat0, bounds);
+          if (ok0) inArea.push(mc0);
+          else outArea.push(mc0);
+        }
+
+        // Default grouped order: all in-area first, then out-of-area (preserve original relative ordering).
+        locationList = inArea.concat(outArea);
+      }
+    } catch (_eBounds) {
+      locationList = locationListAll;
+    }
+
+    // Ensure active location is at index 0 (button), without disturbing the in-area-first grouping.
+    // If bounds are unknown, this still makes the active location first.
+    if (locationList && locationList.length > 1 && activeLoc && (activeLoc.id !== undefined && activeLoc.id !== null)) {
+      var activeId = String(activeLoc.id);
+      var rest = [];
+      for (var rr = 0; rr < locationList.length; rr++) {
+        var mcR = locationList[rr];
+        if (!mcR) continue;
+        if (String(mcR.id) === activeId) continue;
+        rest.push(mcR);
+      }
+      locationList = [activeLoc].concat(rest);
     }
 
     // Get display data from first location
@@ -2547,6 +2639,8 @@ const PostModule = (function() {
     wrap.className = 'post';
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
+    // Track the active location context for this open post (source-of-truth: post_map_card_id).
+    try { wrap.setAttribute('data-post-map-card-id', String(activeLoc && activeLoc.id !== undefined && activeLoc.id !== null ? activeLoc.id : '')); } catch (_eAttr) {}
     // Store reference to post data for LocationWallpaperComponent library lookup
     wrap.__mapCardData = activeLoc;
     // Store the ordered location list used by the UI so event handlers use the same index mapping.
