@@ -3240,6 +3240,8 @@ const PostModule = (function() {
     var selectedSessionTime = '';
     var sessionsLoading = false;
     var sessionPopoverIso = '';
+    var closeDelayId = 0;
+    var CLOSE_DELAY_MS = 180;
 
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
@@ -3254,12 +3256,12 @@ const PostModule = (function() {
       var nowYear = (new Date()).getFullYear();
 
       // Requirement:
-      // - Same year: "Mon 1 Jan."
+      // - Same year: "Mon 1 Jan"
       // - Different year: "Mon 1 Jan, 2027"
       if (year !== nowYear) {
         return dow + ' ' + day + ' ' + mon + ', ' + year;
       }
-      return dow + ' ' + day + ' ' + mon + '.';
+      return dow + ' ' + day + ' ' + mon;
     }
 
     function normalizeTimeHHMM(t) {
@@ -3276,16 +3278,49 @@ const PostModule = (function() {
 
     function updateSessionButtonText() {
       if (!wrap) return;
-      var main = wrap.querySelector('.post-session-text-main');
-      if (!main) return;
+      var leftText = wrap.querySelector('.post-session-button-date-text');
+      var rightText = wrap.querySelector('.post-session-button-time');
+      if (!leftText || !rightText) return;
 
       // Default (fast): keep the summary range until the user makes a choice.
-      if (!selectedSessionIso) return;
+      if (!selectedSessionIso || !selectedSessionTime) return;
 
       var left = formatSessionDateLeft(selectedSessionIso);
       var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
-      var text = timeText ? (left + ' ' + timeText) : left;
-      main.textContent = '📅 ' + text;
+      leftText.textContent = left;
+      rightText.textContent = timeText || '';
+
+      // Switch out of range mode after a real selection.
+      try { wrap.classList.remove('post-session-container--range'); } catch (_eR0) {}
+    }
+
+    function applySessionSelection(iso, timeText) {
+      selectedSessionIso = String(iso || '').trim();
+      selectedSessionTime = normalizeTimeHHMM(timeText);
+      if (!selectedSessionIso || !selectedSessionTime) return;
+
+      // Persist selected visuals (calendar + list)
+      try {
+        if (sessionCalendarMount) {
+          var prev = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-selected');
+          prev.forEach(function(c) { c.classList.remove('post-session-selected'); });
+          var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + selectedSessionIso + '"]');
+          if (cell) cell.classList.add('post-session-selected');
+        }
+      } catch (_eSel2) {}
+
+      updateSessionButtonText();
+      renderSessionTimesList();
+
+      // Close with a small delay so the user sees the color change.
+      if (closeDelayId) {
+        try { clearTimeout(closeDelayId); } catch (_eT0) {}
+        closeDelayId = 0;
+      }
+      closeDelayId = setTimeout(function() {
+        closeDelayId = 0;
+        closeSessionDropdown();
+      }, CLOSE_DELAY_MS);
     }
 
     function closeSessionDropdown() {
@@ -3344,7 +3379,7 @@ const PostModule = (function() {
     function setSelectedCalendarDay(iso) {
       selectedSessionIso = iso || '';
       if (!selectedSessionIso) {
-        updateSessionButtonText();
+        // Keep range summary until an actual time is selected.
       }
       // Update visual selection on calendar cells
       if (sessionCalendarMount) {
@@ -3358,7 +3393,6 @@ const PostModule = (function() {
         } catch (_eSel0) {}
       }
       renderSessionTimesList();
-      updateSessionButtonText();
     }
 
     function positionPopoverNextToCell(cellEl) {
@@ -3397,7 +3431,7 @@ const PostModule = (function() {
 
       sessionPopoverIso = iso;
       sessionPopover.innerHTML = times.map(function(t) {
-        var timeText = String(t || '').trim();
+        var timeText = normalizeTimeHHMM(t);
         return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
       }).join('');
       sessionPopover.style.display = 'block';
@@ -3416,6 +3450,7 @@ const PostModule = (function() {
           cell.classList.remove('post-session-disabled');
           // Keep CalendarComponent's "available-day" semantic for styling
           cell.classList.remove('available-day');
+          cell.classList.remove('post-session-hover');
 
           if (sessionAvailableSet[iso]) {
             cell.classList.add('available-day');
@@ -3423,6 +3458,12 @@ const PostModule = (function() {
             cell.classList.add('post-session-disabled');
           }
         });
+
+        // Re-apply persistent selection state (if any)
+        if (selectedSessionIso) {
+          var sel = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + selectedSessionIso + '"]');
+          if (sel) sel.classList.add('post-session-selected');
+        }
       } catch (_eDeco0) {}
     }
 
@@ -3551,6 +3592,20 @@ const PostModule = (function() {
     function bindSessionInteractions() {
       if (!sessionOptionsPanel) return;
 
+      // Calendar hover ring (desktop) + first tap ring (mobile via click handling below)
+      try {
+        sessionOptionsPanel.addEventListener('mouseover', function(e) {
+          var day = e.target && e.target.closest ? e.target.closest('.calendar-day.available-day') : null;
+          if (!day) return;
+          day.classList.add('post-session-hover');
+        });
+        sessionOptionsPanel.addEventListener('mouseout', function(e) {
+          var day = e.target && e.target.closest ? e.target.closest('.calendar-day.available-day') : null;
+          if (!day) return;
+          day.classList.remove('post-session-hover');
+        });
+      } catch (_eHov0) {}
+
       // Calendar day clicks (delegate)
       sessionOptionsPanel.addEventListener('click', function(e) {
         var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
@@ -3561,17 +3616,12 @@ const PostModule = (function() {
         e.stopPropagation();
         setSelectedCalendarDay(iso);
 
-        // If only one time exists for this date, selecting the date selects the time too.
-        var times = sessionByDate && sessionByDate[iso] ? sessionByDate[iso] : [];
-        if (times.length === 1) {
-          selectedSessionTime = normalizeTimeHHMM(times[0]);
-          updateSessionButtonText();
-          renderSessionTimesList();
-          closeSessionDropdown();
-          return;
-        }
+        // First tap behavior:
+        // - Blue-500 border ring (hover/first tap)
+        try { day.classList.add('post-session-hover'); } catch (_eTap0) {}
 
-        // Multiple times: show a compact popover on first click; second click hides it.
+        // Always show times instantly on first click.
+        // If popover is already open for this date, second click hides it.
         if (sessionPopover && sessionPopover.style.display === 'block' && sessionPopoverIso === iso) {
           hideSessionPopover();
           return;
@@ -3587,10 +3637,7 @@ const PostModule = (function() {
           e.stopPropagation();
           var timeText = String(btn.dataset.time || '').trim();
           if (!timeText) return;
-          selectedSessionTime = timeText;
-          updateSessionButtonText();
-          renderSessionTimesList();
-          closeSessionDropdown();
+          applySessionSelection(sessionPopoverIso, timeText);
         });
       }
 
@@ -3603,16 +3650,24 @@ const PostModule = (function() {
           var timeText = String(btn.dataset.time || '').trim();
           var iso = String(btn.dataset.iso || '').trim();
           if (!timeText) return;
-          if (iso) {
-            // Clicking a row also syncs calendar selection.
-            setSelectedCalendarDay(iso);
-          }
-          selectedSessionTime = timeText;
-          updateSessionButtonText();
-          renderSessionTimesList();
-          closeSessionDropdown();
+          if (iso) setSelectedCalendarDay(iso);
+          applySessionSelection(iso, timeText);
         });
       }
+
+      // List hover border (desktop)
+      try {
+        sessionTimesList.addEventListener('mouseover', function(e) {
+          var row = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+          if (!row) return;
+          row.classList.add('post-session-hover');
+        });
+        sessionTimesList.addEventListener('mouseout', function(e) {
+          var row = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+          if (!row) return;
+          row.classList.remove('post-session-hover');
+        });
+      } catch (_eHov1) {}
     }
 
     if (sessionBtn) {

@@ -10344,11 +10344,16 @@ const PostSessionComponent = (function() {
         var html = [];
 
         // Container wrapper - uses menu-class-5 for post sessions menu styling (36px rows + calendar)
-        html.push('<div class="post-session-container menu-class-5" data-post-id="' + postId + '">');
+        // Starts in "range" display mode (no specific session picked yet).
+        html.push('<div class="post-session-container post-session-container--range menu-class-5" data-post-id="' + postId + '">');
 
-        html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false" data-session-summary="' + escapeHtml(datesText) + '">');
         html.push('<div class="post-session-text menu-text">');
-        html.push('<div class="post-session-text-main">📅 ' + escapeHtml(datesText) + '</div>');
+        // Button layout matches option rows: date on left, time right-aligned
+        html.push('<div class="post-session-text-main">');
+        html.push('<span class="post-session-button-date post-session-date-left"><span class="post-session-icon" aria-hidden="true">📅</span><span class="post-session-button-date-text">' + escapeHtml(datesText) + '</span></span>');
+        html.push('<span class="post-session-button-time post-session-time-right"></span>');
+        html.push('</div>');
         html.push('</div>');
         html.push('<div class="post-session-arrow menu-arrow"></div>');
         html.push('</button>');
