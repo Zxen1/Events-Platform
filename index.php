@@ -1423,7 +1423,7 @@ if (empty($ogTitle)) {
   <script src="header-new.js?v=20251228w"></script>
   <!-- filter-new.js loaded lazily on first use -->
   <script src="map-new.js?v=20251228w"></script>
-  <script src="post-new.js?v=20260203a"></script>
+  <script src="post-new.js?v=20251228w"></script>
   <script src="admin-new.js?v=20251228w"></script>
   <script src="formbuilder-new.js?v=20251228w"></script>
   <script src="posteditor-new.js?v=20251228w"></script>

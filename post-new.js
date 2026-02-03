@@ -288,6 +288,11 @@ const PostModule = (function() {
     // (Divs are not focusable by default.)
     try { postListEl.setAttribute('tabindex', '0'); } catch (_eTab0) {}
     try { recentPanelContentEl.setAttribute('tabindex', '0'); } catch (_eTab1) {}
+
+    // Disable BottomSlack click-hold behavior inside these panels (it can block scrolling).
+    // The filter/admin/member panels are where the anti-jank spacer is actually needed.
+    try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
+    try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
   }
 
   function bindAppEvents() {
@@ -1383,126 +1388,6 @@ const PostModule = (function() {
     }
   }
 
-  // Slack helpers:
-  // Keep `.topSlack` as FIRST child and `.bottomSlack` as LAST child inside scroll containers,
-  // and avoid destroying them during re-renders (Slack controllers keep internal references).
-  function ensureSlackChildren(scrollEl) {
-    if (!scrollEl) return;
-    try {
-      // Ensure top slack placeholder exists (0px by default)
-      var top = scrollEl.querySelector('.topSlack');
-      if (!top) {
-        top = document.createElement('div');
-        top.className = 'topSlack';
-        top.setAttribute('aria-hidden', 'true');
-        scrollEl.insertBefore(top, scrollEl.firstChild);
-      }
-    } catch (_eTopSlack) {}
-    try {
-      // Ensure bottom slack placeholder exists (0px by default)
-      var bottom = scrollEl.querySelector('.bottomSlack');
-      if (!bottom) {
-        bottom = document.createElement('div');
-        bottom.className = 'bottomSlack';
-        bottom.setAttribute('aria-hidden', 'true');
-        scrollEl.appendChild(bottom);
-      }
-    } catch (_eBottomSlack) {}
-  }
-
-  function normalizeSlackPositions(scrollEl) {
-    if (!scrollEl) return;
-    try {
-      var top = scrollEl.querySelector('.topSlack');
-      if (top && scrollEl.firstChild !== top) {
-        scrollEl.insertBefore(top, scrollEl.firstChild);
-      }
-    } catch (_eTopPos) {}
-    try {
-      var bottom = scrollEl.querySelector('.bottomSlack');
-      if (bottom && scrollEl.lastChild !== bottom) {
-        scrollEl.appendChild(bottom);
-      }
-    } catch (_eBottomPos) {}
-  }
-
-  function clearScrollContainerPreserveSlack(scrollEl) {
-    if (!scrollEl) return;
-    ensureSlackChildren(scrollEl);
-    normalizeSlackPositions(scrollEl);
-
-    var top = null;
-    var bottom = null;
-    try { top = scrollEl.querySelector('.topSlack'); } catch (_e0) { top = null; }
-    try { bottom = scrollEl.querySelector('.bottomSlack'); } catch (_e1) { bottom = null; }
-
-    // Remove all children except slack placeholders.
-    try {
-      var node = scrollEl.firstChild;
-      while (node) {
-        var next = node.nextSibling;
-        if (node !== top && node !== bottom) {
-          try { scrollEl.removeChild(node); } catch (_eRm) {}
-        }
-        node = next;
-      }
-    } catch (_eClear) {}
-
-    normalizeSlackPositions(scrollEl);
-  }
-
-  function collapseCardForAnchor(cardEl) {
-    if (!cardEl) return;
-    // Keep the original clicked element connected so TopSlack can anchor correctly,
-    // but make it take up zero space so the post header lands at the same top position.
-    try {
-      // Store a minimal snapshot for restoration (avoid copying full cssText).
-      if (!cardEl.__slackRestore) {
-        cardEl.__slackRestore = {
-          style: cardEl.getAttribute('style') || '',
-          ariaHidden: cardEl.getAttribute('aria-hidden'),
-          tabIndex: cardEl.getAttribute('tabindex'),
-          role: cardEl.getAttribute('role'),
-          pointerEvents: cardEl.style.pointerEvents || ''
-        };
-      }
-    } catch (_eStore) {}
-
-    try { cardEl.setAttribute('aria-hidden', 'true'); } catch (_eA0) {}
-    try { cardEl.setAttribute('tabindex', '-1'); } catch (_eA1) {}
-    // Keep role attribute as-is (TopSlack anchors to [role="button"]).
-    try { cardEl.style.pointerEvents = 'none'; } catch (_ePe) {}
-    try { cardEl.style.height = '0px'; } catch (_eH) {}
-    try { cardEl.style.overflow = 'hidden'; } catch (_eO) {}
-    try { cardEl.style.margin = '0'; } catch (_eM) {}
-    try { cardEl.style.padding = '0'; } catch (_eP) {}
-    try { cardEl.style.border = '0'; } catch (_eB) {}
-  }
-
-  function restoreCardAfterAnchor(cardEl) {
-    if (!cardEl) return;
-    var snap = null;
-    try { snap = cardEl.__slackRestore; } catch (_eSnap) { snap = null; }
-    if (!snap) return;
-
-    try { cardEl.setAttribute('style', snap.style || ''); } catch (_eS) {}
-    try {
-      if (snap.ariaHidden === null || snap.ariaHidden === undefined) cardEl.removeAttribute('aria-hidden');
-      else cardEl.setAttribute('aria-hidden', snap.ariaHidden);
-    } catch (_eAh) {}
-    try {
-      if (snap.tabIndex === null || snap.tabIndex === undefined) cardEl.removeAttribute('tabindex');
-      else cardEl.setAttribute('tabindex', snap.tabIndex);
-    } catch (_eTi) {}
-    try {
-      if (snap.role === null || snap.role === undefined) cardEl.removeAttribute('role');
-      else cardEl.setAttribute('role', snap.role);
-    } catch (_eRole) {}
-    try { cardEl.style.pointerEvents = snap.pointerEvents || ''; } catch (_ePe2) {}
-
-    try { delete cardEl.__slackRestore; } catch (_eDel) { try { cardEl.__slackRestore = null; } catch (_eDel2) {} }
-  }
-
   /**
    * Render the post list
    * @param {Array} posts - Array of post data
@@ -1526,7 +1411,7 @@ const PostModule = (function() {
     }
     
     // Clear existing list content (cards + summary)
-    clearScrollContainerPreserveSlack(postListEl);
+    postListEl.innerHTML = '';
 
     // Final paint: restore full opacity once DOM is swapped.
     function finalizeRender() {
@@ -1534,8 +1419,6 @@ const PostModule = (function() {
         postListEl.style.opacity = '1';
         postListEl.style.pointerEvents = 'auto';
       }
-      // Ensure slack placeholders remain at the edges after all appends.
-      try { normalizeSlackPositions(postListEl); } catch (_eSlackPos) {}
     }
 
     // Show empty state if no posts
@@ -2577,20 +2460,15 @@ const PostModule = (function() {
     } else if (targetParent) {
       targetParent.appendChild(detail);
     } else {
-      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
-      var topSlack = null;
-      try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
-      var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
-      container.insertBefore(detail, insertBeforeNode);
+      container.insertBefore(detail, container.firstChild);
     }
 
-    // Only scroll to top when there was no originating card in the panel (inserted at top).
-    if (!targetParent) {
-      try {
-        if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
-        if (!fromRecent && postListEl) postListEl.scrollTop = 0;
-      } catch (_eScrollTop) {}
-    }
+    // Scroll to top
+    try {
+      // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
+      if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
+      if (!fromRecent && postListEl) postListEl.scrollTop = 0;
+    } catch (_eScrollTop) {}
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
@@ -2632,13 +2510,7 @@ const PostModule = (function() {
     // Restore the original card element (recent-card stays recent-card).
     // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
     try {
-      var cardEl = null;
-      try { cardEl = openPost.__restoreCardEl; } catch (_eStoredCard) { cardEl = null; }
-      if (!cardEl) {
-        cardEl = openPost.querySelector('.post-card, .recent-card');
-      }
-      // Restore any temporary anchor-collapsed styles.
-      try { restoreCardAfterAnchor(cardEl); } catch (_eRest0) {}
+      var cardEl = openPost.querySelector('.post-card, .recent-card');
       if (cardEl) {
         if (openPost.parentElement) {
           openPost.parentElement.replaceChild(cardEl, openPost);
@@ -2960,12 +2832,6 @@ const PostModule = (function() {
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
-    // Store card element for restoration on close.
-    wrap.__restoreCardEl = cardEl;
-    // Keep the clicked card in the DOM (so TopSlack can anchor correctly),
-    // but collapse it to 0px so the header lands at the same top position.
-    collapseCardForAnchor(cardEl);
-
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
@@ -2986,6 +2852,7 @@ const PostModule = (function() {
     }
 
     // Append header and body (unified header for both collapsed and expanded states)
+    // Note: cardEl is kept for restoration when closing, but header is used for display
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
     contentWrap.appendChild(postBody);
@@ -3783,13 +3650,7 @@ const PostModule = (function() {
 
     // Restore the original card element (recent-card stays recent-card).
     try {
-      var cardEl = null;
-      try { cardEl = openPost.__restoreCardEl; } catch (_eStoredCard2) { cardEl = null; }
-      if (!cardEl) {
-        cardEl = openPost.querySelector('.post-card, .recent-card');
-      }
-      // Restore any temporary anchor-collapsed styles.
-      try { restoreCardAfterAnchor(cardEl); } catch (_eRest1) {}
+      var cardEl = openPost.querySelector('.post-card, .recent-card');
       if (cardEl && openPost.parentElement) {
         openPost.parentElement.replaceChild(cardEl, openPost);
       } else {
@@ -4166,7 +4027,7 @@ const PostModule = (function() {
     if (!postListEl) return;
 
     // Always empty (no posts in this site yet).
-    clearScrollContainerPreserveSlack(postListEl);
+    postListEl.innerHTML = '';
     
     // Ensure full opacity if we reach empty state (avoids getting stuck at 0.6 from renderPostList).
     postListEl.style.opacity = '1';
@@ -4251,7 +4112,7 @@ const PostModule = (function() {
   function renderRecentEmptyState() {
     if (!recentPanelContentEl) return;
 
-    clearScrollContainerPreserveSlack(recentPanelContentEl);
+    recentPanelContentEl.innerHTML = '';
 
     var reminderWrap = document.createElement('div');
     reminderWrap.className = 'recent-panel-reminder';
@@ -4347,7 +4208,7 @@ const PostModule = (function() {
       return;
     }
 
-    clearScrollContainerPreserveSlack(recentPanelContentEl);
+    recentPanelContentEl.innerHTML = '';
 
     // Create list container
     var listEl = document.createElement('div');
@@ -4404,8 +4265,6 @@ const PostModule = (function() {
     }
 
     recentPanelContentEl.appendChild(reminderWrap);
-    // Ensure slack placeholders remain at the edges after all appends.
-    try { normalizeSlackPositions(recentPanelContentEl); } catch (_eSlackPos2) {}
   }
 
   /**
@@ -4819,39 +4678,15 @@ const PostModule = (function() {
 
   function attachButtonAnchors() {
     if (!postListEl || !recentPanelContentEl) return;
-    if (!window.BottomSlack || !window.TopSlack) {
-      throw new Error('[Post] BottomSlack and TopSlack are required (components-new.js).');
+    if (!window.BottomSlack) {
+      throw new Error('[Post] BottomSlack is required (components-new.js).');
     }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
-
-    // Mobile: DO NOT attach slack systems.
-    // They can block scroll direction at edges (known issue); keep these panels free-scrolling.
-    var isMobile = false;
-    try {
-      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
-    } catch (_eMob) { isMobile = false; }
-    if (isMobile) {
-      try { postListEl.setAttribute('data-topslack', 'false'); } catch (_eA0) {}
-      try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eA1) {}
-      try { recentPanelContentEl.setAttribute('data-topslack', 'false'); } catch (_eA2) {}
-      try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eA3) {}
-      return;
-    }
-
-    // Desktop: allow slack systems for anti-yank anchoring.
-    // Ensure these containers don't opt-out via data attributes.
-    try { if (postListEl.getAttribute('data-topslack') === 'false') postListEl.removeAttribute('data-topslack'); } catch (_eR0) {}
-    try { if (postListEl.getAttribute('data-bottomslack') === 'false') postListEl.removeAttribute('data-bottomslack'); } catch (_eR1) {}
-    try { if (recentPanelContentEl.getAttribute('data-topslack') === 'false') recentPanelContentEl.removeAttribute('data-topslack'); } catch (_eR2) {}
-    try { if (recentPanelContentEl.getAttribute('data-bottomslack') === 'false') recentPanelContentEl.removeAttribute('data-bottomslack'); } catch (_eR3) {}
-
     // Attach to the actual scroll containers.
     BottomSlack.attach(postListEl, options);
-    TopSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
-    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
