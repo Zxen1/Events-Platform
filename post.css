@@ -1598,7 +1598,7 @@
 
 /* ============================================================================
    POST SESSION COMPONENT
-   Uses menu-class-4 for base styling
+   Uses menu-class-5 for base styling
    ============================================================================ */
 
 .post-session-container {
@@ -1612,8 +1612,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 70px;
-  padding: 10px;
+  height: 36px;
+  padding: 0 10px;
 }
 
 /* Text container */
@@ -1624,6 +1624,9 @@
 
 .post-session-text-main {
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Arrow sizing */
@@ -1632,6 +1635,116 @@
   height: 12px;
   flex: 0 0 auto;
   margin-left: 10px;
+}
+
+/* Options panel visibility */
+.post-session-options {
+  display: none;
+}
+
+.post-session-button.menu-button--open + .post-session-options {
+  display: block;
+}
+
+/* Dropdown layout: square calendar viewport + times list */
+.post-session-calendar-slot {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+}
+
+.post-session-calendar-mount {
+  width: 100%;
+  height: 100%;
+}
+
+/* Make the CalendarComponent fill the square viewport (post.css loads before components.css,
+   so selectors must be more specific than components.css to win). */
+.post-session-container .post-session-calendar-slot .calendar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.post-session-container .post-session-calendar-slot .calendar-scroll-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.post-session-container .post-session-calendar-slot .calendar-scroll {
+  flex: 1 1 auto;
+}
+
+/* Only session dates are interactive */
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:hover,
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:active {
+  background: #222;
+  border-color: transparent;
+  color: inherit;
+}
+
+/* Times list (36px rows) */
+.post-session-times {
+  width: 100%;
+}
+
+.post-session-times-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-session-time {
+  /* Uses menu-class-5 .menu-option for sizing/appearance */
+}
+
+.post-session-time--selected {
+  background: var(--blue-600, #2563eb);
+}
+
+.post-session-empty {
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
+  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
+  box-sizing: border-box;
+}
+
+/* Instant popover beside a selected date */
+.post-session-popover {
+  position: absolute;
+  z-index: var(--layer-popover);
+  min-width: 140px;
+  max-width: 220px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.post-session-popover-time {
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.post-session-popover-time:last-child {
+  border-bottom: none;
 }
 
 /* ============================================================================

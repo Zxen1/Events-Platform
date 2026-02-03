@@ -10343,8 +10343,8 @@ const PostSessionComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-4 for post info menu styling
-        html.push('<div class="post-session-container menu-class-4" data-post-id="' + postId + '">');
+        // Container wrapper - uses menu-class-5 for post sessions menu styling (36px rows + calendar)
+        html.push('<div class="post-session-container menu-class-5" data-post-id="' + postId + '">');
 
         html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-session-text menu-text">');
@@ -10352,6 +10352,17 @@ const PostSessionComponent = (function() {
         html.push('</div>');
         html.push('<div class="post-session-arrow menu-arrow"></div>');
         html.push('</button>');
+
+        // Dropdown: square calendar viewport + time slots list (filled by PostModule on open)
+        html.push('<div class="post-session-options menu-options" aria-label="Session picker">');
+        html.push('<div class="post-session-calendar-slot">');
+        html.push('<div class="post-session-calendar-mount" aria-label="Session calendar"></div>');
+        html.push('<div class="post-session-popover" aria-hidden="true" style="display:none;"></div>');
+        html.push('</div>');
+        html.push('<div class="post-session-times">');
+        html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
+        html.push('</div>');
+        html.push('</div>');
 
         html.push('</div>');
 
