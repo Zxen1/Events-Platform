@@ -1627,35 +1627,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.post-session-container--range .post-session-text-main {
-  justify-content: flex-start; /* range stays entirely left-aligned */
-}
-
-.post-session-container--range .post-session-button-time {
-  display: none; /* hide right-aligned time column while showing range summary */
-}
-
-.post-session-button-date {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.post-session-button-date-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.post-session-icon {
-  flex: 0 0 auto;
 }
 
 /* Arrow sizing */
@@ -1702,54 +1673,13 @@
 /* Only session dates are interactive */
 .post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled {
   cursor: default;
-  color: #666; /* darker gray for non-clickable numbers */
-  background: #1a1a1a;
-  opacity: 1;
+  opacity: 0.55;
 }
 .post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:hover,
 .post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:active {
   background: #222;
   border-color: transparent;
   color: inherit;
-}
-
-/* Calendar background opacity 0.85 without dimming text:
-   Use an overlay layer behind content (text stays 100%). */
-.post-session-container .post-session-calendar-slot .post-session-calendar-mount.calendar-container {
-  position: relative;
-  background: transparent;
-}
-.post-session-container .post-session-calendar-slot .post-session-calendar-mount.calendar-container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: #222;
-  opacity: 0.85;
-  border-radius: 5px;
-  pointer-events: none;
-  z-index: 0;
-}
-/* Ensure calendar content paints above overlay */
-.post-session-container .post-session-calendar-slot .post-session-calendar-mount.calendar-container > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Hover/first-tap: blue-500 border only (no background fill) */
-.post-session-container .post-session-calendar-slot .calendar-day.available-day {
-  background: rgba(0, 0, 0, 0.2);
-  color: #ffffff;
-  cursor: pointer;
-}
-.post-session-container .post-session-calendar-slot .calendar-day.available-day.post-session-hover {
-  border-color: var(--blue-500);
-}
-
-/* Selected date: blue-500 background (persists) */
-.post-session-container .post-session-calendar-slot .calendar-day.post-session-selected {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
-  color: #fff;
 }
 
 /* Times list (36px rows) */
@@ -1782,18 +1712,7 @@
 }
 
 .post-session-time--selected {
-  background: var(--blue-500);
-}
-
-/* Hover/first-tap border on list rows (no fill) */
-.post-session-time.post-session-hover {
-  box-shadow: inset 0 0 0 1px var(--blue-500);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .post-session-time:hover:not(.post-session-time--selected) {
-    box-shadow: inset 0 0 0 1px var(--blue-500);
-  }
+  background: var(--blue-600, #2563eb);
 }
 
 .post-session-empty {
