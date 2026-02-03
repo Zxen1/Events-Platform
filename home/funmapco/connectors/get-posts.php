@@ -324,7 +324,79 @@ try {
         $folderStmt->close();
     }
 
-    // Fetch posts with map card data and subcategory icon
+    // ---------------------------------------------------------------------
+    // IMPORTANT: Pagination must be applied to POSTS, not JOINED ROWS.
+    // If we LIMIT the join directly, multi-location posts get truncated to a
+    // single map card (because each map card is a joined row).
+    //
+    // Fix: select the page of post IDs first (DISTINCT p.id), then fetch all
+    // joined map cards for those posts without a row-limit.
+    // ---------------------------------------------------------------------
+
+    // 1) Fetch page of post IDs (or, for single-post fetch, fetch matching id(s) without LIMIT)
+    $pagePostIds = [];
+    if ($postId > 0 || $postKey !== '') {
+        // Single post fetch: do NOT apply LIMIT/OFFSET; return all map cards for that post.
+        $idsSql = "
+            SELECT DISTINCT p.id
+            FROM `posts` p
+            LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+            LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
+            WHERE {$whereClause}
+            ORDER BY p.created_at DESC
+        ";
+        $idsStmt = $mysqli->prepare($idsSql);
+        if (!$idsStmt) fail(500, 'Failed to prepare post id query.');
+        if (!empty($params)) {
+            $idsParams = $params;
+            $idsTypes = $types;
+            bind_params_array($idsStmt, $idsTypes, $idsParams);
+        }
+    } else {
+        $idsSql = "
+            SELECT DISTINCT p.id
+            FROM `posts` p
+            LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+            LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
+            WHERE {$whereClause}
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        ";
+        $idsStmt = $mysqli->prepare($idsSql);
+        if (!$idsStmt) fail(500, 'Failed to prepare post id query.');
+        $idsParams = $params;
+        $idsParams[] = $limit;
+        $idsParams[] = $offset;
+        $idsTypes = $types . 'ii';
+        bind_params_array($idsStmt, $idsTypes, $idsParams);
+    }
+
+    $idsStmt->execute();
+    $idsRes = $idsStmt->get_result();
+    while ($idsRes && ($r = $idsRes->fetch_assoc())) {
+        $pagePostIds[] = (int)$r['id'];
+    }
+    $idsStmt->close();
+
+    if (empty($pagePostIds)) {
+        $response = [
+            'success' => true,
+            'posts' => [],
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+        $json = json_encode($response, JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            fail(500, 'JSON encoding failed: ' . json_last_error_msg());
+        }
+        ob_end_clean();
+        echo $json;
+        exit;
+    }
+
+    // 2) Fetch posts + ALL their map cards (no LIMIT; constrained by p.id IN (...))
+    $idPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
     $sql = "
         SELECT 
             p.id,
@@ -377,9 +449,12 @@ try {
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         LEFT JOIN `subcategories` sc ON sc.subcategory_key = COALESCE(p.subcategory_key, mc.subcategory_key)
         LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-        WHERE {$whereClause}
-        ORDER BY p.created_at DESC
-        LIMIT ? OFFSET ?
+        -- NOTE: Do NOT re-apply {$whereClause} here.
+        -- {$whereClause} contains map-card-based filters (mc.*) used to decide WHICH posts match.
+        -- Once we've selected the page of matching post IDs, we must return ALL map cards for those posts,
+        -- otherwise multi-location posts get "stripped" down to only the matching location rows.
+        WHERE p.id IN ($idPlaceholders)
+        ORDER BY p.created_at DESC, mc.id ASC
     ";
 
     $stmt = $mysqli->prepare($sql);
@@ -387,13 +462,9 @@ try {
         fail(500, 'Failed to prepare posts query.');
     }
 
-    // Add limit and offset to params
-    $params[] = $limit;
-    $params[] = $offset;
-    $types .= 'ii';
-
-    $paramsBind2 = $params;
-    bind_params_array($stmt, $types, $paramsBind2);
+    $paramsBind2 = $pagePostIds;
+    $types2 = str_repeat('i', count($pagePostIds));
+    bind_params_array($stmt, $types2, $paramsBind2);
     $stmt->execute();
     $result = $stmt->get_result();
 
