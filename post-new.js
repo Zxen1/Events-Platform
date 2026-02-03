@@ -289,10 +289,6 @@ const PostModule = (function() {
     try { postListEl.setAttribute('tabindex', '0'); } catch (_eTab0) {}
     try { recentPanelContentEl.setAttribute('tabindex', '0'); } catch (_eTab1) {}
 
-    // Disable BottomSlack click-hold behavior inside these panels (it can block scrolling).
-    // The filter/admin/member panels are where the anti-jank spacer is actually needed.
-    try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
-    try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
   }
 
   function bindAppEvents() {
