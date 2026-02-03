@@ -288,11 +288,6 @@ const PostModule = (function() {
     // (Divs are not focusable by default.)
     try { postListEl.setAttribute('tabindex', '0'); } catch (_eTab0) {}
     try { recentPanelContentEl.setAttribute('tabindex', '0'); } catch (_eTab1) {}
-
-    // Disable BottomSlack click-hold behavior inside these panels (it can block scrolling).
-    // The filter/admin/member panels are where the anti-jank spacer is actually needed.
-    try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
-    try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
   }
 
   function bindAppEvents() {
@@ -2442,6 +2437,16 @@ const PostModule = (function() {
     // Find or create the target element
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
+    // Anchor rule (Postcards/Recent cards):
+    // When opening from a clicked card, the TOP of that card should be exactly where the TOP
+    // of the post header lands after expansion.
+    var targetTopInView = null;
+    try {
+      if (target && container && typeof target.getBoundingClientRect === 'function' && typeof container.getBoundingClientRect === 'function') {
+        targetTopInView = target.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      }
+    } catch (_eTop) { targetTopInView = null; }
+
     // Store parent reference and remove target from DOM before building detail
     // (buildPostDetail will move the card inside the detail wrapper)
     var targetParent = target ? target.parentElement : null;
@@ -2463,12 +2468,31 @@ const PostModule = (function() {
       container.insertBefore(detail, container.firstChild);
     }
 
-    // Scroll to top
-    try {
-      // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
-      if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
-      if (!fromRecent && postListEl) postListEl.scrollTop = 0;
-    } catch (_eScrollTop) {}
+    // If we opened from a specific clicked card, align header top to that card top.
+    // Otherwise keep legacy behavior (scroll to top).
+    if (targetTopInView !== null) {
+      try {
+        requestAnimationFrame(function() {
+          try {
+            var headerEl = detail ? detail.querySelector('.post-header') : null;
+            if (!headerEl) return;
+            var headerTop = headerEl.getBoundingClientRect().top - container.getBoundingClientRect().top;
+            var delta = headerTop - targetTopInView;
+            // Only adjust when meaningful (avoid tiny sub-pixel jitter)
+            if (Math.abs(delta) > 0.5) {
+              container.scrollTop = (container.scrollTop || 0) + delta;
+            }
+          } catch (_eAlign2) {}
+        });
+      } catch (_eAlign1) {}
+    } else {
+      // Scroll to top (legacy)
+      try {
+        // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
+        if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
+        if (!fromRecent && postListEl) postListEl.scrollTop = 0;
+      } catch (_eScrollTop) {}
+    }
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
@@ -4678,15 +4702,39 @@ const PostModule = (function() {
 
   function attachButtonAnchors() {
     if (!postListEl || !recentPanelContentEl) return;
-    if (!window.BottomSlack) {
-      throw new Error('[Post] BottomSlack is required (components-new.js).');
+    if (!window.BottomSlack || !window.TopSlack) {
+      throw new Error('[Post] BottomSlack and TopSlack are required (components-new.js).');
     }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
+
+    // Mobile: DO NOT attach slack systems.
+    // They can block scroll direction at edges (known issue); keep these panels free-scrolling.
+    var isMobile = false;
+    try {
+      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
+    } catch (_eMob) { isMobile = false; }
+    if (isMobile) {
+      try { postListEl.setAttribute('data-topslack', 'false'); } catch (_eA0) {}
+      try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eA1) {}
+      try { recentPanelContentEl.setAttribute('data-topslack', 'false'); } catch (_eA2) {}
+      try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eA3) {}
+      return;
+    }
+
+    // Desktop: allow slack systems for anti-yank anchoring.
+    // Ensure these containers don't opt-out via data attributes.
+    try { if (postListEl.getAttribute('data-topslack') === 'false') postListEl.removeAttribute('data-topslack'); } catch (_eR0) {}
+    try { if (postListEl.getAttribute('data-bottomslack') === 'false') postListEl.removeAttribute('data-bottomslack'); } catch (_eR1) {}
+    try { if (recentPanelContentEl.getAttribute('data-topslack') === 'false') recentPanelContentEl.removeAttribute('data-topslack'); } catch (_eR2) {}
+    try { if (recentPanelContentEl.getAttribute('data-bottomslack') === 'false') recentPanelContentEl.removeAttribute('data-bottomslack'); } catch (_eR3) {}
+
     // Attach to the actual scroll containers.
     BottomSlack.attach(postListEl, options);
+    TopSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
+    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
