@@ -2460,7 +2460,11 @@ const PostModule = (function() {
     } else if (targetParent) {
       targetParent.appendChild(detail);
     } else {
-      container.insertBefore(detail, container.firstChild);
+      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
+      var topSlack = null;
+      try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
+      var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
+      container.insertBefore(detail, insertBeforeNode);
     }
 
 
@@ -4675,12 +4679,17 @@ const PostModule = (function() {
     if (!window.BottomSlack) {
       throw new Error('[Post] BottomSlack is required (components-new.js).');
     }
+    if (!window.TopSlack) {
+      throw new Error('[Post] TopSlack is required (components-new.js).');
+    }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
     // Attach to the actual scroll containers.
     BottomSlack.attach(postListEl, options);
+    TopSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
+    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
