@@ -4685,6 +4685,14 @@ const PostModule = (function() {
       throw new Error('[Post] TopSlack is required (components-new.js).');
     }
 
+    // Mobile: DO NOT attach slack systems.
+    // They can block scroll direction at edges.
+    var isMobile = false;
+    try {
+      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
+    } catch (_eMob) { isMobile = false; }
+    if (isMobile) return;
+
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
     // Attach to the actual scroll containers.
