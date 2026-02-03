@@ -155,6 +155,7 @@ const PostModule = (function() {
     }
 
     ensurePanelsDom();
+    attachBottomSlack();
     bindAppEvents();
     bindModeButtons();
 
@@ -4601,6 +4602,27 @@ const PostModule = (function() {
         window.history.replaceState({}, document.title, path);
       } catch (_eUrl) {}
     });
+  }
+
+  /* --------------------------------------------------------------------------
+     BOTTOM SLACK
+     Prevents buttons from moving when content above collapses (e.g. closing a post).
+     -------------------------------------------------------------------------- */
+
+  function attachBottomSlack() {
+    if (!postListEl || !recentPanelContentEl) return;
+    if (!window.BottomSlack) return;
+
+    // Mobile: skip - slack can block scroll direction at edges.
+    var isMobile = false;
+    try {
+      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
+    } catch (_e) {}
+    if (isMobile) return;
+
+    var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
+    BottomSlack.attach(postListEl, options);
+    BottomSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
