@@ -71,17 +71,13 @@ const PostModule = (function() {
     recent: { token: 0, hideHandler: null, hideTimeoutId: 0 }
   };
 
-  // Scroll anchoring state (keeps clicked postcards stationary when posts expand/collapse)
-  var scrollAnchor = {
-    post: { gapEl: null, gapBottomEl: null, isAdjusting: false, suppressUntil: 0 },
-    recent: { gapEl: null, gapBottomEl: null, isAdjusting: false, suppressUntil: 0 }
-  };
-
   /* --------------------------------------------------------------------------
      UI PERSISTENCE (panel mode + scroll positions)
      -------------------------------------------------------------------------- */
 
   var UI_STATE_STORAGE_KEY = 'funmap_ui_state';
+  var uiScrollSaveTimers = { post: 0, recent: 0 };
+  var uiRestoreApplied = { post: false, recent: false };
   var pendingModeRestore = ''; // 'map' | 'posts' | 'recent' | ''
 
   function loadUiState() {
@@ -112,6 +108,55 @@ const PostModule = (function() {
     return next;
   }
 
+  function scheduleSavePanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiScrollSaveTimers[panelKey]) {
+      clearTimeout(uiScrollSaveTimers[panelKey]);
+      uiScrollSaveTimers[panelKey] = 0;
+    }
+    uiScrollSaveTimers[panelKey] = setTimeout(function() {
+      uiScrollSaveTimers[panelKey] = 0;
+      try {
+        if (panelKey === 'post' && postListEl) {
+          mergeUiState({ postScrollTop: postListEl.scrollTop || 0 });
+        }
+        if (panelKey === 'recent' && recentPanelContentEl) {
+          mergeUiState({ recentScrollTop: recentPanelContentEl.scrollTop || 0 });
+        }
+      } catch (_e) {}
+    }, 180);
+  }
+
+  function bindUiPersistence() {
+    // Scroll positions (always-save, regardless of which mode is active).
+    try {
+      if (postListEl) {
+        postListEl.addEventListener('scroll', function() { scheduleSavePanelScroll('post'); }, { passive: true });
+      }
+    } catch (_ePostScroll) {}
+    try {
+      if (recentPanelContentEl) {
+        recentPanelContentEl.addEventListener('scroll', function() { scheduleSavePanelScroll('recent'); }, { passive: true });
+      }
+    } catch (_eRecentScroll) {}
+  }
+
+  function applySavedPanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiRestoreApplied[panelKey]) return;
+
+    var st = loadUiState() || {};
+    try {
+      if (panelKey === 'post' && postListEl && typeof st.postScrollTop === 'number') {
+        postListEl.scrollTop = Math.max(0, st.postScrollTop);
+        uiRestoreApplied.post = true;
+      }
+      if (panelKey === 'recent' && recentPanelContentEl && typeof st.recentScrollTop === 'number') {
+        recentPanelContentEl.scrollTop = Math.max(0, st.recentScrollTop);
+        uiRestoreApplied.recent = true;
+      }
+    } catch (_e) {}
+  }
 
   function maybeRestoreModeOnBoot() {
     // Deep links are authoritative: they decide the mode (recent) and scroll to top.
@@ -161,8 +206,8 @@ const PostModule = (function() {
     }
 
     ensurePanelsDom();
-    attachBottomSlack();
-    attachScrollAnchorListeners();
+    bindUiPersistence();
+    attachButtonAnchors();
     bindAppEvents();
     bindModeButtons();
 
@@ -244,6 +289,10 @@ const PostModule = (function() {
     try { postListEl.setAttribute('tabindex', '0'); } catch (_eTab0) {}
     try { recentPanelContentEl.setAttribute('tabindex', '0'); } catch (_eTab1) {}
 
+    // Disable BottomSlack click-hold behavior inside these panels (it can block scrolling).
+    // The filter/admin/member panels are where the anti-jank spacer is actually needed.
+    try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
+    try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
   }
 
   function bindAppEvents() {
@@ -781,9 +830,15 @@ const PostModule = (function() {
             focusEl.focus({ preventScroll: true });
           }
         } catch (_eFocus) {
-          // Fallback focus removed - it was missing preventScroll and could interfere with scroll position
+          try {
+            var focusEl2 = (panelKey === 'post') ? postListEl : contentEl;
+            if (focusEl2 && typeof focusEl2.focus === 'function') focusEl2.focus();
+          } catch (_eFocus2) {}
         }
 
+        // Restore the last scroll position for this panel (once per page load).
+        // This makes refresh feel like "nothing moved" for users browsing long lists.
+        try { applySavedPanelScroll(panelKey); } catch (_eScrollRestore) {}
       });
       return;
     }
@@ -2387,32 +2442,33 @@ const PostModule = (function() {
     // Find or create the target element
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
-    // Build the detail view with a fresh card.
+    // Store parent reference and remove target from DOM before building detail
+    var targetParent = target ? target.parentElement : null;
+    var targetNextSibling = target ? target.nextSibling : null;
+    if (target && targetParent) {
+      targetParent.removeChild(target);
+    }
+
+    // Build the detail view with a FRESH card (do not reuse the clicked element).
+    // TopSlack anchors to the clicked element; if we reuse it inside the detail wrapper,
+    // TopSlack sees it moved and adjusts scrollTop (causes jumping). Passing null ensures
+    // the clicked element stays disconnected, so TopSlack's anchor check bails out.
     // IMPORTANT: pass mapCardIndex so the open post reflects the correct active location context.
     var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
-    // Internal click (postcard in panel): use scroll anchoring to keep clicked position stationary
-    if (originEl && target) {
-      openPostWithAnchor(target, detail, fromRecent);
+    // Insert detail at original position, or at top of container
+    if (targetParent && targetNextSibling) {
+      targetParent.insertBefore(detail, targetNextSibling);
+    } else if (targetParent) {
+      targetParent.appendChild(detail);
     } else {
-      // External source (map card, marquee) or no target: insert at top and scroll to top
-      var targetParent = target ? target.parentElement : null;
-      var targetNextSibling = target ? target.nextSibling : null;
-      if (target && targetParent) {
-        targetParent.removeChild(target);
-      }
-      if (targetParent && targetNextSibling) {
-        targetParent.insertBefore(detail, targetNextSibling);
-      } else if (targetParent) {
-        targetParent.appendChild(detail);
-      } else {
-        container.insertBefore(detail, container.firstChild);
-      }
-      // Scroll to top for external sources - use setTimeout to ensure panel transition completed
-      setTimeout(function() {
-        try { container.scrollTop = 0; } catch (_e) {}
-      }, 350);
+      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
+      var topSlack = null;
+      try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
+      var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
+      container.insertBefore(detail, insertBeforeNode);
     }
+
 
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
@@ -4616,288 +4672,26 @@ const PostModule = (function() {
   }
 
   /* --------------------------------------------------------------------------
-     BOTTOM SLACK
-     Prevents buttons from moving when content above collapses (e.g. closing a post).
+     BUTTON ANCHORS (Anti-jank)
+     Attach to scroll containers so clicked controls don't "fly away"
      -------------------------------------------------------------------------- */
 
-  function attachBottomSlack() {
+  function attachButtonAnchors() {
     if (!postListEl || !recentPanelContentEl) return;
-    if (!window.BottomSlack) return;
+    if (!window.BottomSlack) {
+      throw new Error('[Post] BottomSlack is required (components-new.js).');
+    }
+    if (!window.TopSlack) {
+      throw new Error('[Post] TopSlack is required (components-new.js).');
+    }
 
-    // Mobile: skip - slack can block scroll direction at edges.
-    var isMobile = false;
-    try {
-      isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
-    } catch (_e) {}
-    if (isMobile) return;
-
+    // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
+    // Attach to the actual scroll containers.
     BottomSlack.attach(postListEl, options);
+    TopSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
-  }
-
-  /* --------------------------------------------------------------------------
-     SCROLL ANCHORING
-     Keeps clicked postcards stationary when posts expand/collapse.
-     Copied from formbuilder-new.js pattern.
-     -------------------------------------------------------------------------- */
-
-  function getScrollContainerForPanel(isRecent) {
-    return isRecent ? recentPanelContentEl : postListEl;
-  }
-
-  function ensureTopSlack(isRecent) {
-    var key = isRecent ? 'recent' : 'post';
-    var container = getScrollContainerForPanel(isRecent);
-    if (!container) return null;
-    if (scrollAnchor[key].gapEl && scrollAnchor[key].gapEl.isConnected) {
-      if (container.firstChild !== scrollAnchor[key].gapEl) {
-        container.insertBefore(scrollAnchor[key].gapEl, container.firstChild);
-      }
-      return scrollAnchor[key].gapEl;
-    }
-    var el = container.querySelector('.post-scroll-gap-top');
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'post-scroll-gap-top';
-      el.setAttribute('aria-hidden', 'true');
-    }
-    container.insertBefore(el, container.firstChild);
-    scrollAnchor[key].gapEl = el;
-    return el;
-  }
-
-  function ensureBottomSlackEl(isRecent) {
-    var key = isRecent ? 'recent' : 'post';
-    var container = getScrollContainerForPanel(isRecent);
-    if (!container) return null;
-    if (scrollAnchor[key].gapBottomEl && scrollAnchor[key].gapBottomEl.isConnected) {
-      if (container.lastChild !== scrollAnchor[key].gapBottomEl) {
-        container.appendChild(scrollAnchor[key].gapBottomEl);
-      }
-      return scrollAnchor[key].gapBottomEl;
-    }
-    var el = container.querySelector('.post-scroll-gap-bottom');
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'post-scroll-gap-bottom';
-      el.setAttribute('aria-hidden', 'true');
-    }
-    if (container.lastChild !== el) {
-      container.appendChild(el);
-    }
-    scrollAnchor[key].gapBottomEl = el;
-    return el;
-  }
-
-  function getTopSlackHeight(isRecent) {
-    var el = ensureTopSlack(isRecent);
-    return el ? (el.offsetHeight || 0) : 0;
-  }
-
-  function setTopSlackHeight(isRecent, px) {
-    var el = ensureTopSlack(isRecent);
-    if (!el) return;
-    el.style.height = Math.max(0, Math.round(px || 0)) + 'px';
-  }
-
-  function getBottomSlackHeight(isRecent) {
-    var el = ensureBottomSlackEl(isRecent);
-    return el ? (el.offsetHeight || 0) : 0;
-  }
-
-  function setBottomSlackHeight(isRecent, px) {
-    var el = ensureBottomSlackEl(isRecent);
-    if (!el) return;
-    el.style.height = Math.max(0, Math.round(px || 0)) + 'px';
-  }
-
-  function maybeConsumeSlackOnScroll(isRecent) {
-    var key = isRecent ? 'recent' : 'post';
-    if (scrollAnchor[key].isAdjusting) return;
-    if (scrollAnchor[key].suppressUntil && Date.now() < scrollAnchor[key].suppressUntil) return;
-
-    var sc = getScrollContainerForPanel(isRecent);
-    if (!sc) return;
-
-    var topGap = scrollAnchor[key].gapEl && scrollAnchor[key].gapEl.isConnected ? (scrollAnchor[key].gapEl.offsetHeight || 0) : 0;
-    var bottomGap = scrollAnchor[key].gapBottomEl && scrollAnchor[key].gapBottomEl.isConnected ? (scrollAnchor[key].gapBottomEl.offsetHeight || 0) : 0;
-    if (!topGap && !bottomGap) return;
-
-    // If user scrolls up into the top gap, remove it
-    if (topGap && sc.scrollTop < topGap) {
-      var reduceBy = topGap - sc.scrollTop;
-      scrollAnchor[key].isAdjusting = true;
-      setTopSlackHeight(isRecent, topGap - reduceBy);
-      sc.scrollTop = 0;
-      scrollAnchor[key].isAdjusting = false;
-    }
-
-    // If user scrolls down into the bottom gap, remove it
-    if (bottomGap) {
-      var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
-      var distanceToBottom = maxScrollTop - sc.scrollTop;
-      if (distanceToBottom < bottomGap) {
-        var reduceBottomBy = bottomGap - distanceToBottom;
-        scrollAnchor[key].isAdjusting = true;
-        setBottomSlackHeight(isRecent, bottomGap - reduceBottomBy);
-        sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
-        scrollAnchor[key].isAdjusting = false;
-      }
-    }
-  }
-
-  function runWithScrollAnchor(anchorEl, isRecent, fn) {
-    var key = isRecent ? 'recent' : 'post';
-    var sc = getScrollContainerForPanel(isRecent);
-    if (!sc || !anchorEl || typeof fn !== 'function') {
-      if (typeof fn === 'function') fn();
-      return;
-    }
-
-    if (!sc.contains(anchorEl)) {
-      fn();
-      return;
-    }
-
-    scrollAnchor[key].suppressUntil = Date.now() + 250;
-    ensureTopSlack(isRecent);
-    ensureBottomSlackEl(isRecent);
-
-    var scRect = sc.getBoundingClientRect();
-    var anchorRect = anchorEl.getBoundingClientRect();
-    var oldTop = anchorRect.top - scRect.top;
-    var oldScrollTop = sc.scrollTop;
-
-    fn();
-
-    requestAnimationFrame(function() {
-      if (!anchorEl.isConnected) return;
-      var scNow = getScrollContainerForPanel(isRecent);
-      if (!scNow) return;
-
-      var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-      if (oldScrollTop > maxAfter) {
-        var clampSlack = oldScrollTop - maxAfter;
-        setBottomSlackHeight(isRecent, getBottomSlackHeight(isRecent) + clampSlack);
-        void scNow.scrollHeight;
-      }
-
-      scrollAnchor[key].isAdjusting = true;
-      scNow.scrollTop = oldScrollTop;
-      scrollAnchor[key].isAdjusting = false;
-
-      var scNowRect = scNow.getBoundingClientRect();
-      var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-      var delta = newTop - oldTop;
-      if (!delta) return;
-
-      var currentScrollTop = scNow.scrollTop;
-
-      if (currentScrollTop + delta < 0) {
-        var topSlack = -(currentScrollTop + delta);
-        setTopSlackHeight(isRecent, getTopSlackHeight(isRecent) + topSlack);
-        delta = delta + topSlack;
-      }
-
-      var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-      if (currentScrollTop + delta > maxNow) {
-        var bottomSlack = (currentScrollTop + delta) - maxNow;
-        setBottomSlackHeight(isRecent, getBottomSlackHeight(isRecent) + bottomSlack);
-        void scNow.scrollHeight;
-      }
-
-      scrollAnchor[key].isAdjusting = true;
-      scNow.scrollTop = currentScrollTop + delta;
-      scrollAnchor[key].isAdjusting = false;
-    });
-  }
-
-  function attachScrollAnchorListeners() {
-    if (postListEl) {
-      postListEl.addEventListener('scroll', function() { maybeConsumeSlackOnScroll(false); }, { passive: true });
-    }
-    if (recentPanelContentEl) {
-      recentPanelContentEl.addEventListener('scroll', function() { maybeConsumeSlackOnScroll(true); }, { passive: true });
-    }
-  }
-
-  /**
-   * Open post with scroll anchoring - keeps clicked postcard position stationary
-   * @param {HTMLElement} clickedEl - The postcard that was clicked
-   * @param {HTMLElement} newEl - The new post detail element to insert
-   * @param {boolean} isRecent - Whether this is the recent panel
-   */
-  function openPostWithAnchor(clickedEl, newEl, isRecent) {
-    var key = isRecent ? 'recent' : 'post';
-    var sc = getScrollContainerForPanel(isRecent);
-    if (!sc || !clickedEl || !newEl) return;
-
-    scrollAnchor[key].suppressUntil = Date.now() + 250;
-    ensureTopSlack(isRecent);
-    ensureBottomSlackEl(isRecent);
-
-    // Record clicked element's position
-    var scRect = sc.getBoundingClientRect();
-    var clickedRect = clickedEl.getBoundingClientRect();
-    var oldTop = clickedRect.top - scRect.top;
-    var oldScrollTop = sc.scrollTop;
-
-    // Do the DOM swap
-    var parent = clickedEl.parentElement;
-    var nextSibling = clickedEl.nextSibling;
-    if (parent) {
-      parent.removeChild(clickedEl);
-      if (nextSibling) {
-        parent.insertBefore(newEl, nextSibling);
-      } else {
-        parent.appendChild(newEl);
-      }
-    }
-
-    // Anchor to the post header (top of the new element)
-    var anchorEl = newEl.querySelector('.post-header') || newEl;
-
-    requestAnimationFrame(function() {
-      if (!anchorEl.isConnected) return;
-      var scNow = getScrollContainerForPanel(isRecent);
-      if (!scNow) return;
-
-      var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-      if (oldScrollTop > maxAfter) {
-        var clampSlack = oldScrollTop - maxAfter;
-        setBottomSlackHeight(isRecent, getBottomSlackHeight(isRecent) + clampSlack);
-        void scNow.scrollHeight;
-      }
-
-      scrollAnchor[key].isAdjusting = true;
-      scNow.scrollTop = oldScrollTop;
-      scrollAnchor[key].isAdjusting = false;
-
-      var scNowRect = scNow.getBoundingClientRect();
-      var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-      var delta = newTop - oldTop;
-      if (!delta) return;
-
-      var currentScrollTop = scNow.scrollTop;
-
-      if (currentScrollTop + delta < 0) {
-        var topSlack = -(currentScrollTop + delta);
-        setTopSlackHeight(isRecent, getTopSlackHeight(isRecent) + topSlack);
-        delta = delta + topSlack;
-      }
-
-      var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-      if (currentScrollTop + delta > maxNow) {
-        var bottomSlack = (currentScrollTop + delta) - maxNow;
-        setBottomSlackHeight(isRecent, getBottomSlackHeight(isRecent) + bottomSlack);
-        void scNow.scrollHeight;
-      }
-
-      scrollAnchor[key].isAdjusting = true;
-      scNow.scrollTop = currentScrollTop + delta;
-      scrollAnchor[key].isAdjusting = false;
-    });
+    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {

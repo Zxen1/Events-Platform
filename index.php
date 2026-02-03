@@ -250,7 +250,6 @@ if (empty($ogTitle)) {
   <!-- filter-new.css loaded lazily on first use -->
   <link rel="stylesheet" href="map-new.css?v=20251228i">
   <link rel="stylesheet" href="post-new.css?v=20251228i">
-  <link rel="stylesheet" href="post-new-2.css?v=20260204a">
   <link rel="stylesheet" href="components-new.css?v=20251228i">
   <link rel="stylesheet" href="fieldsets-new.css?v=20251228i">
   <link rel="stylesheet" href="admin-new.css?v=20251228i">
@@ -1425,7 +1424,6 @@ if (empty($ogTitle)) {
   <!-- filter-new.js loaded lazily on first use -->
   <script src="map-new.js?v=20251228w"></script>
   <script src="post-new.js?v=20251228w"></script>
-  <script src="post-new-2.js?v=20260204a"></script>
   <script src="admin-new.js?v=20251228w"></script>
   <script src="formbuilder-new.js?v=20251228w"></script>
   <script src="posteditor-new.js?v=20251228w"></script>
