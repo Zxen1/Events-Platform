@@ -2702,7 +2702,7 @@ const PostModule = (function() {
       : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
     
     // Location display
-    var locationDisplay = venueName || loc0.city || '';
+    var locationDisplay = venueName || city || '';
     
     // Icon HTML for info section (subcategory icon)
     var infoIconHtml = iconUrl
