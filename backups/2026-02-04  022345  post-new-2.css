@@ -1,0 +1,233 @@
+/* ============================================================================
+   POST NEW 2 / RECENT NEW 2 PANELS - CSS
+   ============================================================================
+   
+   Clean rebuild of post/recent panel functionality.
+   This panel sits to the RIGHT of the original post panel.
+   
+   ============================================================================ */
+
+/* ============================================================================
+   POST PANEL 2
+   ============================================================================ */
+
+.post-panel-2 {
+  position: fixed;
+  top: 0;
+  left: var(--post-panel-max-w);
+  right: 0;
+  width: var(--post-panel-max-w);
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-post-panel);
+  pointer-events: none;
+}
+
+.post-panel-2--show {
+  display: block;
+}
+
+.post-panel-2-content {
+  --panel-transition-duration: 0.3s;
+  position: absolute;
+  left: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .post-panel-2-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
+.post-panel-2-content--side-left {
+  transform: translateX(-100%);
+}
+
+.post-panel-2-content--hidden {
+  pointer-events: none;
+}
+
+.post-panel-2-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 530px) {
+  .post-panel-2 {
+    position: relative;
+    left: 0;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .post-panel-2-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+}
+
+/* ============================================================================
+   RECENT PANEL 2
+   ============================================================================ */
+
+.recent-panel-2 {
+  position: fixed;
+  top: 0;
+  left: var(--post-panel-max-w);
+  right: 0;
+  width: var(--post-panel-max-w);
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-post-panel);
+  pointer-events: none;
+}
+
+.recent-panel-2--show {
+  display: block;
+}
+
+.recent-panel-2-content {
+  --panel-transition-duration: 0.3s;
+  position: absolute;
+  left: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
+@media (max-width: 530px) {
+  .recent-panel-2-content {
+    --panel-transition-duration: 0s;
+    transition: none;
+  }
+}
+
+.recent-panel-2-content--side-left {
+  transform: translateX(-100%);
+}
+
+.recent-panel-2-content--hidden {
+  pointer-events: none;
+}
+
+.recent-panel-2-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 530px) {
+  .recent-panel-2 {
+    position: relative;
+    left: 0;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .recent-panel-2-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+}
+
+/* ============================================================================
+   POST LIST 2 - Scrollable container
+   ============================================================================ */
+
+.post-list-2 {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  will-change: transform;
+}
+
+.post-list-2::-webkit-scrollbar {
+  width: 6px;
+}
+
+.post-list-2::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.post-list-2::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.recent-panel-2-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-panel-2-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.recent-panel-2-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.recent-panel-2-content::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/* ============================================================================
+   BOTTOM SLACK
+   ============================================================================ */
+
+.post-panel-2 .bottomSlack,
+.recent-panel-2 .bottomSlack {
+  flex: 0 0 auto;
+}
