@@ -3168,6 +3168,56 @@ const PostModule = (function() {
       closeLocationDropdown();
     });
 
+    // IMPORTANT:
+    // Menu buttons stopPropagation() to avoid unwanted post-close/selection clicks.
+    // That prevents bubble-phase "click-outside" handlers from running when you click INSIDE
+    // another menu, leaving the first menu open.
+    //
+    // Fix: capture-phase handler closes OTHER open menus before any target handlers run.
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      if (!target || !target.closest) return;
+
+      var clickedMenu = target.closest('.post-location-container, .post-session-container, .post-price-container');
+
+      function safeCloseLocation() {
+        try {
+          if (locationBtn && locationBtn.classList.contains('menu-button--open')) {
+            closeLocationDropdown();
+          }
+        } catch (_e0) {}
+      }
+      function safeCloseSession() {
+        try {
+          if (sessionBtn && sessionBtn.classList.contains('menu-button--open')) {
+            closeSessionDropdown();
+          }
+        } catch (_e1) {}
+      }
+
+      // Clicked outside all post menus: close any open menus.
+      if (!clickedMenu) {
+        safeCloseLocation();
+        safeCloseSession();
+        return;
+      }
+
+      // Clicked inside one menu: close the others.
+      if (clickedMenu.classList.contains('post-location-container')) {
+        safeCloseSession();
+        return;
+      }
+      if (clickedMenu.classList.contains('post-session-container')) {
+        safeCloseLocation();
+        return;
+      }
+      if (clickedMenu.classList.contains('post-price-container')) {
+        safeCloseLocation();
+        safeCloseSession();
+        return;
+      }
+    }, true); // capture
+
     /* ........................................................................
        POST SESSION MENU (Calendar + time slots)
        - Calendar uses CalendarComponent (touch-friendly 36px day cells)
@@ -3185,9 +3235,43 @@ const PostModule = (function() {
     var sessionCalendarApi = null;
     var sessionAvailableSet = null; // { [iso]: true }
     var sessionByDate = null; // { [iso]: [times...] }
+    var sessionItems = null; // [{ iso, time, ticket_group_key }]
     var selectedSessionIso = '';
     var selectedSessionTime = '';
     var sessionsLoading = false;
+
+    function formatSessionDateLeft(iso) {
+      // iso: YYYY-MM-DD
+      var d = null;
+      try { d = new Date(String(iso || '') + 'T00:00:00'); } catch (_e0) { d = null; }
+      if (!d || isNaN(d.getTime())) return String(iso || '');
+
+      var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+      var day = d.getDate();
+      var year = d.getFullYear();
+      var nowYear = (new Date()).getFullYear();
+
+      // Requirement:
+      // - Same year: "Mon 1 Jan."
+      // - Different year: "Mon 1 Jan, 2027"
+      if (year !== nowYear) {
+        return dow + ' ' + day + ' ' + mon + ', ' + year;
+      }
+      return dow + ' ' + day + ' ' + mon + '.';
+    }
+
+    function normalizeTimeHHMM(t) {
+      // Backend already sends HH:MM, but be defensive.
+      var s = String(t || '').trim();
+      if (!s) return '';
+      // Accept "HH:MM:SS" -> "HH:MM"
+      if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s.slice(0, 5);
+      // Accept "H:MM" -> pad
+      var m = s.match(/^(\d{1,2}):(\d{2})$/);
+      if (m) return String(m[1]).padStart(2, '0') + ':' + m[2];
+      return s;
+    }
 
     function closeSessionDropdown() {
       if (!sessionBtn) return;
@@ -3215,26 +3299,34 @@ const PostModule = (function() {
     function renderSessionTimesList() {
       if (!sessionTimesList) return;
 
-      if (!sessionByDate) {
+      if (!sessionItems) {
         sessionTimesList.innerHTML = '<div class="post-session-empty">Loading sessions…</div>';
         return;
       }
 
-      if (!selectedSessionIso) {
-        sessionTimesList.innerHTML = '<div class="post-session-empty">Pick a date</div>';
+      // Show full date+time rows.
+      // If a date is selected in the calendar, filter the list to that date.
+      var items = sessionItems;
+      if (selectedSessionIso) {
+        items = items.filter(function(it) { return it && String(it.iso) === String(selectedSessionIso); });
+      }
+
+      if (!items.length) {
+        sessionTimesList.innerHTML = '<div class="post-session-empty">' + (selectedSessionIso ? 'No sessions' : 'Pick a date') + '</div>';
         return;
       }
 
-      var times = sessionByDate[selectedSessionIso] || [];
-      if (!times.length) {
-        sessionTimesList.innerHTML = '<div class="post-session-empty">No times</div>';
-        return;
-      }
-
-      sessionTimesList.innerHTML = times.map(function(t) {
-        var timeText = String(t || '').trim();
-        var isSelected = (timeText && selectedSessionTime && timeText === selectedSessionTime);
-        return '<button class="post-session-time menu-option' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+      sessionTimesList.innerHTML = items.map(function(it) {
+        var iso = it ? String(it.iso || '').trim() : '';
+        var timeText = normalizeTimeHHMM(it ? it.time : '');
+        var dateLeft = formatSessionDateLeft(iso);
+        var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
+        return [
+          '<button class="post-session-time menu-option' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
+            '<span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span>',
+            '<span class="post-session-time-right">' + escapeHtml(timeText) + '</span>',
+          '</button>'
+        ].join('');
       }).join('');
     }
 
@@ -3328,6 +3420,7 @@ const PostModule = (function() {
     function buildSessionMapsFromSessions(sessions) {
       var byDate = {};
       var set = {};
+      var flat = [];
       (sessions || []).forEach(function(s) {
         if (!s) return;
         var iso = String(s.date || '').trim();
@@ -3338,11 +3431,17 @@ const PostModule = (function() {
         times.forEach(function(t) {
           if (!t) return;
           var timeText = '';
-          if (typeof t === 'string') timeText = t;
-          else if (t.time !== undefined && t.time !== null) timeText = String(t.time);
-          timeText = String(timeText || '').trim();
+          var ticketGroupKey = '';
+          if (typeof t === 'string') {
+            timeText = t;
+          } else {
+            if (t.time !== undefined && t.time !== null) timeText = String(t.time);
+            if (t.ticket_group_key !== undefined && t.ticket_group_key !== null) ticketGroupKey = String(t.ticket_group_key);
+          }
+          timeText = normalizeTimeHHMM(timeText);
           if (!timeText) return;
           byDate[iso].push(timeText);
+          flat.push({ iso: iso, time: timeText, ticket_group_key: ticketGroupKey });
         });
       });
 
@@ -3362,16 +3461,29 @@ const PostModule = (function() {
 
       sessionByDate = byDate;
       sessionAvailableSet = set;
+      // Sort flat list by date then time
+      flat.sort(function(a, b) {
+        var da = a && a.iso ? String(a.iso) : '';
+        var db = b && b.iso ? String(b.iso) : '';
+        if (da < db) return -1;
+        if (da > db) return 1;
+        var ta = a && a.time ? String(a.time) : '';
+        var tb = b && b.time ? String(b.time) : '';
+        if (ta < tb) return -1;
+        if (ta > tb) return 1;
+        return 0;
+      });
+      sessionItems = flat;
     }
 
     function ensureSessionsLoaded() {
-      if (sessionByDate && sessionAvailableSet) {
+      if (sessionItems && sessionByDate && sessionAvailableSet) {
         return Promise.resolve(true);
       }
       if (sessionsLoading) {
         // Best-effort: wait until next tick and re-check
         return new Promise(function(resolve) {
-          setTimeout(function() { resolve(!!(sessionByDate && sessionAvailableSet)); }, 50);
+          setTimeout(function() { resolve(!!(sessionItems && sessionByDate && sessionAvailableSet)); }, 50);
         });
       }
 
@@ -3412,6 +3524,7 @@ const PostModule = (function() {
           console.error('[Post] Failed to load sessions:', err);
           sessionByDate = {};
           sessionAvailableSet = {};
+          sessionItems = [];
           return false;
         })
         .finally(function() {
@@ -3454,7 +3567,12 @@ const PostModule = (function() {
           if (!btn) return;
           e.stopPropagation();
           var timeText = String(btn.dataset.time || '').trim();
+          var iso = String(btn.dataset.iso || '').trim();
           if (!timeText) return;
+          if (iso) {
+            // Clicking a row also syncs calendar selection.
+            setSelectedCalendarDay(iso);
+          }
           selectedSessionTime = timeText;
           renderSessionTimesList();
         });

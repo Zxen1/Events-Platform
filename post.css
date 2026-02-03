@@ -1656,23 +1656,18 @@
   border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
 }
 
-.post-session-calendar-mount {
-  width: 100%;
-  height: 100%;
-}
-
 /* Make the CalendarComponent fill the square viewport (post.css loads before components.css,
    so selectors must be more specific than components.css to win). */
-.post-session-container .post-session-calendar-slot .calendar-container {
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount.calendar-container {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
-.post-session-container .post-session-calendar-slot .calendar-scroll-wrapper {
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
   flex: 1 1 auto;
   min-height: 0;
 }
-.post-session-container .post-session-calendar-slot .calendar-scroll {
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
 }
 
@@ -1700,6 +1695,21 @@
 
 .post-session-time {
   /* Uses menu-class-5 .menu-option for sizing/appearance */
+}
+
+.post-session-date-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-session-time-right {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .post-session-time--selected {
