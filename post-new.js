@@ -1383,6 +1383,74 @@ const PostModule = (function() {
     }
   }
 
+  // Slack helpers:
+  // Keep `.topSlack` as FIRST child and `.bottomSlack` as LAST child inside scroll containers,
+  // and avoid destroying them during re-renders (Slack controllers keep internal references).
+  function ensureSlackChildren(scrollEl) {
+    if (!scrollEl) return;
+    try {
+      // Ensure top slack placeholder exists (0px by default)
+      var top = scrollEl.querySelector('.topSlack');
+      if (!top) {
+        top = document.createElement('div');
+        top.className = 'topSlack';
+        top.setAttribute('aria-hidden', 'true');
+        scrollEl.insertBefore(top, scrollEl.firstChild);
+      }
+    } catch (_eTopSlack) {}
+    try {
+      // Ensure bottom slack placeholder exists (0px by default)
+      var bottom = scrollEl.querySelector('.bottomSlack');
+      if (!bottom) {
+        bottom = document.createElement('div');
+        bottom.className = 'bottomSlack';
+        bottom.setAttribute('aria-hidden', 'true');
+        scrollEl.appendChild(bottom);
+      }
+    } catch (_eBottomSlack) {}
+  }
+
+  function normalizeSlackPositions(scrollEl) {
+    if (!scrollEl) return;
+    try {
+      var top = scrollEl.querySelector('.topSlack');
+      if (top && scrollEl.firstChild !== top) {
+        scrollEl.insertBefore(top, scrollEl.firstChild);
+      }
+    } catch (_eTopPos) {}
+    try {
+      var bottom = scrollEl.querySelector('.bottomSlack');
+      if (bottom && scrollEl.lastChild !== bottom) {
+        scrollEl.appendChild(bottom);
+      }
+    } catch (_eBottomPos) {}
+  }
+
+  function clearScrollContainerPreserveSlack(scrollEl) {
+    if (!scrollEl) return;
+    ensureSlackChildren(scrollEl);
+    normalizeSlackPositions(scrollEl);
+
+    var top = null;
+    var bottom = null;
+    try { top = scrollEl.querySelector('.topSlack'); } catch (_e0) { top = null; }
+    try { bottom = scrollEl.querySelector('.bottomSlack'); } catch (_e1) { bottom = null; }
+
+    // Remove all children except slack placeholders.
+    try {
+      var node = scrollEl.firstChild;
+      while (node) {
+        var next = node.nextSibling;
+        if (node !== top && node !== bottom) {
+          try { scrollEl.removeChild(node); } catch (_eRm) {}
+        }
+        node = next;
+      }
+    } catch (_eClear) {}
+
+    normalizeSlackPositions(scrollEl);
+  }
+
   /**
    * Render the post list
    * @param {Array} posts - Array of post data
@@ -1406,7 +1474,7 @@ const PostModule = (function() {
     }
     
     // Clear existing list content (cards + summary)
-    postListEl.innerHTML = '';
+    clearScrollContainerPreserveSlack(postListEl);
 
     // Final paint: restore full opacity once DOM is swapped.
     function finalizeRender() {
@@ -1414,6 +1482,8 @@ const PostModule = (function() {
         postListEl.style.opacity = '1';
         postListEl.style.pointerEvents = 'auto';
       }
+      // Ensure slack placeholders remain at the edges after all appends.
+      try { normalizeSlackPositions(postListEl); } catch (_eSlackPos) {}
     }
 
     // Show empty state if no posts
@@ -2437,16 +2507,6 @@ const PostModule = (function() {
     // Find or create the target element
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
-    // Anchor rule (Postcards/Recent cards):
-    // When opening from a clicked card, the TOP of that card should be exactly where the TOP
-    // of the post header lands after expansion.
-    var targetTopInView = null;
-    try {
-      if (target && container && typeof target.getBoundingClientRect === 'function' && typeof container.getBoundingClientRect === 'function') {
-        targetTopInView = target.getBoundingClientRect().top - container.getBoundingClientRect().top;
-      }
-    } catch (_eTop) { targetTopInView = null; }
-
     // Store parent reference and remove target from DOM before building detail
     // (buildPostDetail will move the card inside the detail wrapper)
     var targetParent = target ? target.parentElement : null;
@@ -2465,30 +2525,16 @@ const PostModule = (function() {
     } else if (targetParent) {
       targetParent.appendChild(detail);
     } else {
-      container.insertBefore(detail, container.firstChild);
+      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
+      var topSlack = null;
+      try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
+      var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
+      container.insertBefore(detail, insertBeforeNode);
     }
 
-    // If we opened from a specific clicked card, align header top to that card top.
-    // Otherwise keep legacy behavior (scroll to top).
-    if (targetTopInView !== null) {
+    // Only scroll to top when there was no originating card in the panel (inserted at top).
+    if (!targetParent) {
       try {
-        requestAnimationFrame(function() {
-          try {
-            var headerEl = detail ? detail.querySelector('.post-header') : null;
-            if (!headerEl) return;
-            var headerTop = headerEl.getBoundingClientRect().top - container.getBoundingClientRect().top;
-            var delta = headerTop - targetTopInView;
-            // Only adjust when meaningful (avoid tiny sub-pixel jitter)
-            if (Math.abs(delta) > 0.5) {
-              container.scrollTop = (container.scrollTop || 0) + delta;
-            }
-          } catch (_eAlign2) {}
-        });
-      } catch (_eAlign1) {}
-    } else {
-      // Scroll to top (legacy)
-      try {
-        // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
         if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
         if (!fromRecent && postListEl) postListEl.scrollTop = 0;
       } catch (_eScrollTop) {}
@@ -2534,7 +2580,11 @@ const PostModule = (function() {
     // Restore the original card element (recent-card stays recent-card).
     // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
     try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
+      var cardEl = null;
+      try { cardEl = openPost.__restoreCardEl; } catch (_eStoredCard) { cardEl = null; }
+      if (!cardEl) {
+        cardEl = openPost.querySelector('.post-card, .recent-card');
+      }
       if (cardEl) {
         if (openPost.parentElement) {
           openPost.parentElement.replaceChild(cardEl, openPost);
@@ -2856,6 +2906,10 @@ const PostModule = (function() {
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
+    // Store card element for restoration on close (do NOT render it above the header).
+    // Requirement: the post header should land exactly where the card's top was.
+    wrap.__restoreCardEl = cardEl;
+
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
@@ -2876,8 +2930,6 @@ const PostModule = (function() {
     }
 
     // Append header and body (unified header for both collapsed and expanded states)
-    // Note: cardEl is kept for restoration when closing, but header is used for display
-    contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
     contentWrap.appendChild(postBody);
 
@@ -3674,7 +3726,11 @@ const PostModule = (function() {
 
     // Restore the original card element (recent-card stays recent-card).
     try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
+      var cardEl = null;
+      try { cardEl = openPost.__restoreCardEl; } catch (_eStoredCard2) { cardEl = null; }
+      if (!cardEl) {
+        cardEl = openPost.querySelector('.post-card, .recent-card');
+      }
       if (cardEl && openPost.parentElement) {
         openPost.parentElement.replaceChild(cardEl, openPost);
       } else {
@@ -4051,7 +4107,7 @@ const PostModule = (function() {
     if (!postListEl) return;
 
     // Always empty (no posts in this site yet).
-    postListEl.innerHTML = '';
+    clearScrollContainerPreserveSlack(postListEl);
     
     // Ensure full opacity if we reach empty state (avoids getting stuck at 0.6 from renderPostList).
     postListEl.style.opacity = '1';
@@ -4136,7 +4192,7 @@ const PostModule = (function() {
   function renderRecentEmptyState() {
     if (!recentPanelContentEl) return;
 
-    recentPanelContentEl.innerHTML = '';
+    clearScrollContainerPreserveSlack(recentPanelContentEl);
 
     var reminderWrap = document.createElement('div');
     reminderWrap.className = 'recent-panel-reminder';
@@ -4232,7 +4288,7 @@ const PostModule = (function() {
       return;
     }
 
-    recentPanelContentEl.innerHTML = '';
+    clearScrollContainerPreserveSlack(recentPanelContentEl);
 
     // Create list container
     var listEl = document.createElement('div');
@@ -4289,6 +4345,8 @@ const PostModule = (function() {
     }
 
     recentPanelContentEl.appendChild(reminderWrap);
+    // Ensure slack placeholders remain at the edges after all appends.
+    try { normalizeSlackPositions(recentPanelContentEl); } catch (_eSlackPos2) {}
   }
 
   /**
