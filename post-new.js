@@ -4104,13 +4104,19 @@ const PostModule = (function() {
 
     var el = document.createElement('article');
     el.className = 'recent-card';
+    if (entry.unavailable) {
+      el.classList.add('recent-card--unavailable');
+    }
     el.dataset.id = String(entry.id);
     // Store post_map_card_id for location-specific tracking
     if (entry.post_map_card_id) {
       el.dataset.postMapCardId = String(entry.post_map_card_id);
     }
-    el.setAttribute('role', 'button');
-    el.setAttribute('tabindex', '0');
+    // Unavailable cards are not interactive
+    if (!entry.unavailable) {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+    }
 
     // Recents store lightweight display fields in localStorage (not full post payload).
     var title = entry.title || '';
@@ -4141,8 +4147,8 @@ const PostModule = (function() {
       ? '<span class="recent-card-icon-sub"><img class="recent-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
-    // Check favorite status
-    var isFav = isFavorite(entry.id);
+    // Check favorite status (unavailable posts are always unfavorited)
+    var isFav = entry.unavailable ? false : isFavorite(entry.id);
 
     // Standard Design (no date row - timestamp is above the card)
     el.innerHTML = [
@@ -4161,12 +4167,31 @@ const PostModule = (function() {
       '</div>'
     ].join('');
 
-    // Add timestamp above card
-    if (lastOpenedText) {
-      var timestamp = document.createElement('div');
-      timestamp.className = 'recent-status-bar';
-      timestamp.textContent = lastOpenedText;
-      wrapper.appendChild(timestamp);
+    // Add status bar above card (timestamp + optional status)
+    if (lastOpenedText || entry.unavailable) {
+      var statusBar = document.createElement('div');
+      statusBar.className = 'recent-status-bar';
+      if (entry.unavailable) {
+        statusBar.classList.add('recent-status-bar--unavailable');
+      }
+      
+      // Timestamp (left side)
+      if (lastOpenedText) {
+        var timestampSpan = document.createElement('span');
+        timestampSpan.className = 'recent-status-bar-timestamp';
+        timestampSpan.textContent = lastOpenedText;
+        statusBar.appendChild(timestampSpan);
+      }
+      
+      // Status text (right side) - shown when unavailable
+      if (entry.unavailable) {
+        var statusSpan = document.createElement('span');
+        statusSpan.className = 'recent-status-bar-status';
+        statusSpan.textContent = 'unavailable';
+        statusBar.appendChild(statusSpan);
+      }
+      
+      wrapper.appendChild(statusBar);
     }
 
     wrapper.appendChild(el);
@@ -4179,6 +4204,9 @@ const PostModule = (function() {
     // Click handler for opening/closing post (toggle)
     el.addEventListener('click', function(e) {
       if (e.target.closest('.recent-card-button-fav')) return;
+      
+      // Unavailable posts cannot be opened
+      if (entry.unavailable) return;
       
       // If this card is already inside a .post section, click means "close"
       if (el.closest('.post')) {
@@ -4196,6 +4224,7 @@ const PostModule = (function() {
     // Keyboard: Enter/Space opens card (matches button behavior)
     el.addEventListener('keydown', function(e) {
       if (!e) return;
+      if (entry.unavailable) return;
       var k = String(e.key || e.code || '');
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.recent-card-button-fav')) return;
