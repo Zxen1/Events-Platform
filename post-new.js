@@ -2471,11 +2471,17 @@ const PostModule = (function() {
 
     // Scroll to top only for external sources (map card, marquee).
     // Direct postcard clicks have originEl set - don't scroll those.
+    // Double requestAnimationFrame ensures this runs after all other queued work
+    // (TopSlack microtasks, panel toggle scroll restore, etc.)
     if (!originEl) {
-      try {
-        if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
-        if (!fromRecent && postListEl) postListEl.scrollTop = 0;
-      } catch (_eScrollTop) {}
+      var scrollContainer = fromRecent ? recentPanelContentEl : postListEl;
+      if (scrollContainer) {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            try { scrollContainer.scrollTop = 0; } catch (_e) {}
+          });
+        });
+      }
     }
 
     // Highlight the exact map marker for this location context
