@@ -2404,8 +2404,11 @@ const PostModule = (function() {
     }
 
     // Scroll to top for external sources (map card, marquee) - they have no originEl
+    // Use setTimeout to ensure panel transition has completed (300ms transition + buffer)
     if (!originEl) {
-      container.scrollTop = 0;
+      setTimeout(function() {
+        try { container.scrollTop = 0; } catch (_e) {}
+      }, 350);
     }
 
     // Highlight the exact map marker for this location context
