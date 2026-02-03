@@ -3239,6 +3239,7 @@ const PostModule = (function() {
     var selectedSessionIso = '';
     var selectedSessionTime = '';
     var sessionsLoading = false;
+    var sessionPopoverIso = '';
 
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
@@ -3273,6 +3274,20 @@ const PostModule = (function() {
       return s;
     }
 
+    function updateSessionButtonText() {
+      if (!wrap) return;
+      var main = wrap.querySelector('.post-session-text-main');
+      if (!main) return;
+
+      // Default (fast): keep the summary range until the user makes a choice.
+      if (!selectedSessionIso) return;
+
+      var left = formatSessionDateLeft(selectedSessionIso);
+      var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
+      var text = timeText ? (left + ' ' + timeText) : left;
+      main.textContent = '📅 ' + text;
+    }
+
     function closeSessionDropdown() {
       if (!sessionBtn) return;
       sessionBtn.classList.remove('menu-button--open');
@@ -3285,6 +3300,7 @@ const PostModule = (function() {
       if (!sessionPopover) return;
       sessionPopover.style.display = 'none';
       sessionPopover.innerHTML = '';
+      sessionPopoverIso = '';
     }
 
     function getActiveLocationForUi() {
@@ -3305,14 +3321,9 @@ const PostModule = (function() {
       }
 
       // Show full date+time rows.
-      // If a date is selected in the calendar, filter the list to that date.
-      var items = sessionItems;
-      if (selectedSessionIso) {
-        items = items.filter(function(it) { return it && String(it.iso) === String(selectedSessionIso); });
-      }
-
+      var items = sessionItems || [];
       if (!items.length) {
-        sessionTimesList.innerHTML = '<div class="post-session-empty">' + (selectedSessionIso ? 'No sessions' : 'Pick a date') + '</div>';
+        sessionTimesList.innerHTML = '<div class="post-session-empty">No sessions</div>';
         return;
       }
 
@@ -3332,6 +3343,9 @@ const PostModule = (function() {
 
     function setSelectedCalendarDay(iso) {
       selectedSessionIso = iso || '';
+      if (!selectedSessionIso) {
+        updateSessionButtonText();
+      }
       // Update visual selection on calendar cells
       if (sessionCalendarMount) {
         try {
@@ -3344,6 +3358,7 @@ const PostModule = (function() {
         } catch (_eSel0) {}
       }
       renderSessionTimesList();
+      updateSessionButtonText();
     }
 
     function positionPopoverNextToCell(cellEl) {
@@ -3380,6 +3395,7 @@ const PostModule = (function() {
         return;
       }
 
+      sessionPopoverIso = iso;
       sessionPopover.innerHTML = times.map(function(t) {
         var timeText = String(t || '').trim();
         return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
@@ -3544,6 +3560,22 @@ const PostModule = (function() {
         if (!sessionAvailableSet || !sessionAvailableSet[iso]) return; // only session dates
         e.stopPropagation();
         setSelectedCalendarDay(iso);
+
+        // If only one time exists for this date, selecting the date selects the time too.
+        var times = sessionByDate && sessionByDate[iso] ? sessionByDate[iso] : [];
+        if (times.length === 1) {
+          selectedSessionTime = normalizeTimeHHMM(times[0]);
+          updateSessionButtonText();
+          renderSessionTimesList();
+          closeSessionDropdown();
+          return;
+        }
+
+        // Multiple times: show a compact popover on first click; second click hides it.
+        if (sessionPopover && sessionPopover.style.display === 'block' && sessionPopoverIso === iso) {
+          hideSessionPopover();
+          return;
+        }
         showSessionPopoverForDate(day, iso);
       });
 
@@ -3556,7 +3588,9 @@ const PostModule = (function() {
           var timeText = String(btn.dataset.time || '').trim();
           if (!timeText) return;
           selectedSessionTime = timeText;
+          updateSessionButtonText();
           renderSessionTimesList();
+          closeSessionDropdown();
         });
       }
 
@@ -3574,7 +3608,9 @@ const PostModule = (function() {
             setSelectedCalendarDay(iso);
           }
           selectedSessionTime = timeText;
+          updateSessionButtonText();
           renderSessionTimesList();
+          closeSessionDropdown();
         });
       }
     }
@@ -3602,20 +3638,11 @@ const PostModule = (function() {
         if (sessionTimesList) sessionTimesList.innerHTML = '<div class="post-session-empty">Loading sessions…</div>';
         ensureSessionsLoaded().then(function() {
           decorateCalendarAvailability();
-          // Default selection: first available date (sorted)
-          if (!selectedSessionIso && sessionAvailableSet) {
-            var dates = Object.keys(sessionAvailableSet || {});
-            dates.sort();
-            if (dates.length) {
-              setSelectedCalendarDay(dates[0]);
-              var cell = sessionCalendarMount ? sessionCalendarMount.querySelector('.calendar-day[data-iso="' + dates[0] + '"]') : null;
-              if (cell) showSessionPopoverForDate(cell, dates[0]);
-            } else {
-              renderSessionTimesList();
-            }
-          } else {
-            renderSessionTimesList();
-          }
+          // Always render full list of session options.
+          renderSessionTimesList();
+
+          // If user already has a selection, ensure the button text reflects it.
+          updateSessionButtonText();
         });
       });
     }
