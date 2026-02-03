@@ -2403,6 +2403,11 @@ const PostModule = (function() {
       container.insertBefore(detail, container.firstChild);
     }
 
+    // Scroll to top for external sources (map card, marquee) - they have no originEl
+    if (!originEl) {
+      container.scrollTop = 0;
+    }
+
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
 
