@@ -2849,15 +2849,37 @@ const AdminModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({})
         })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.success) {
+        .then(function(res) {
+            return res.text().then(function(text) {
+                var data = null;
+                try { data = JSON.parse(text); } catch (_eParse) {}
+
+                if (!res.ok) {
+                    var msg = (data && (data.error || data.message)) ? (data.error || data.message) : ('Request failed (' + res.status + ')');
+                    console.error('[Admin] Moderation request failed:', res.status, data || text);
+                    showError(msg);
+                    return;
+                }
+
+                if (!data) {
+                    console.error('[Admin] Moderation response was not JSON:', text);
+                    showError('Moderation response was not JSON.');
+                    return;
+                }
+
+                if (!data.success) {
+                    console.error('[Admin] Moderation response error:', data);
+                    showError(data.error || data.message || 'Failed to load moderation data.');
+                    return;
+                }
+
                 moderationData = data;
                 renderModerationData();
-            }
+            });
         })
         .catch(function(err) {
             console.error('[Admin] Failed to load moderation data:', err);
+            showError('Failed to load moderation data.');
         });
     }
     

@@ -105,10 +105,19 @@ $stmt->close();
 // Get flagged posts (flag_reason is set)
 $flaggedPosts = [];
 $stmt = $mysqli->prepare('
-  SELECT id, post_key, member_id, member_name, checkout_title, flag_reason, moderation_status, created_at
-  FROM `posts` 
-  WHERE flag_reason IS NOT NULL AND flag_reason != ""
-  ORDER BY created_at DESC
+  SELECT 
+    p.id,
+    p.post_key,
+    p.member_id,
+    p.member_name,
+    co.checkout_title,
+    p.flag_reason,
+    p.moderation_status,
+    p.created_at
+  FROM `posts` p
+  LEFT JOIN `checkout_options` co ON co.checkout_key = p.checkout_key
+  WHERE p.flag_reason IS NOT NULL AND p.flag_reason != ""
+  ORDER BY p.created_at DESC
   LIMIT 50
 ');
 if (!$stmt) {
