@@ -449,10 +449,6 @@ try {
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         LEFT JOIN `subcategories` sc ON sc.subcategory_key = COALESCE(p.subcategory_key, mc.subcategory_key)
         LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-        -- NOTE: Do NOT re-apply {$whereClause} here.
-        -- {$whereClause} contains map-card-based filters (mc.*) used to decide WHICH posts match.
-        -- Once we've selected the page of matching post IDs, we must return ALL map cards for those posts,
-        -- otherwise multi-location posts get "stripped" down to only the matching location rows.
         WHERE p.id IN ($idPlaceholders)
         ORDER BY p.created_at DESC, mc.id ASC
     ";
