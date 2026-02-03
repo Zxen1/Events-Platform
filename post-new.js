@@ -774,10 +774,7 @@ const PostModule = (function() {
             focusEl.focus({ preventScroll: true });
           }
         } catch (_eFocus) {
-          try {
-            var focusEl2 = (panelKey === 'post') ? postListEl : contentEl;
-            if (focusEl2 && typeof focusEl2.focus === 'function') focusEl2.focus();
-          } catch (_eFocus2) {}
+          // Fallback focus removed - it was missing preventScroll and could interfere with scroll position
         }
 
       });
