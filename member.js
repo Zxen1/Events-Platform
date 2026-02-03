@@ -1906,10 +1906,10 @@ const MemberModule = (function() {
     }
 
     function requestTabSwitch(tabName) {
-        // Clear editing state when switching TO create tab from elsewhere (unless triggered by editPost)
-        if (tabName === 'create' && isEditingPostId === null) {
-            resetCreatePostForm();
-        }
+        // IMPORTANT:
+        // Do NOT reset panel DOM/state on tab switches.
+        // Users expect the browser to preserve in-progress input when they leave and return.
+        // The Create Post form is only reset on explicit actions (e.g. successful submit, explicit reset).
 
         // Only guard when leaving Profile tab with dirty edits
         var leavingProfile = false;
@@ -6329,6 +6329,9 @@ const MemberModule = (function() {
         var myPostsEl = document.getElementById('member-tab-myposts');
         if (myPostsEl) {
             myPostsEl.innerHTML = '';
+            try {
+                if (myPostsEl.dataset) delete myPostsEl.dataset.posteditorInitialized;
+            } catch (_eFlag) {}
         }
     }
 

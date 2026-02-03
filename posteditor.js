@@ -1643,6 +1643,20 @@
             return;
         }
         
+        // Preserve in-progress edits when switching away and back:
+        // MemberModule calls PostEditorModule.init() on tab activation.
+        // If we re-init, we'd reload posts and wipe any unsaved form inputs.
+        try {
+            if (containerEl.dataset && containerEl.dataset.posteditorInitialized === 'true') {
+                container = containerEl;
+                isLoaded = true;
+                return;
+            }
+            if (containerEl.dataset) {
+                containerEl.dataset.posteditorInitialized = 'true';
+            }
+        } catch (_eInitFlag) {}
+        
         container = containerEl;
         isLoaded = true;
         
