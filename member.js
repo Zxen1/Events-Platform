@@ -4480,7 +4480,12 @@ const MemberModule = (function() {
                 min_length: null,
                 max_length: null,
                 required: false,
-                location_specific: false
+                location_specific: false,
+
+                // Multi-field fieldsets (e.g. ticket-pricing, item-pricing) include sub-fields here.
+                // Preserve this so FieldsetBuilder can apply sub-field placeholders/tooltips correctly.
+                fields: null,
+                fieldset_fields: null
             };
         }
         var result = {
@@ -4508,7 +4513,12 @@ const MemberModule = (function() {
             min_length: null,
             max_length: null,
             required: false,
-            location_specific: false
+            location_specific: false,
+
+            // Multi-field fieldsets (e.g. ticket-pricing, item-pricing) include sub-fields here.
+            // Preserve this so FieldsetBuilder can apply sub-field placeholders/tooltips correctly.
+            fields: null,
+            fieldset_fields: null
         };
         
         if (field.name && typeof field.name === 'string') {
@@ -4581,6 +4591,15 @@ const MemberModule = (function() {
         }
         if (typeof field.max_length === 'number') {
             result.max_length = field.max_length;
+        }
+
+        // Preserve multi-field sub-field descriptors (from get-form.php).
+        // FieldsetBuilder handles string/array/object normalization internally.
+        if (field.fields !== undefined) {
+            result.fields = field.fields;
+        }
+        if (field.fieldset_fields !== undefined) {
+            result.fieldset_fields = field.fieldset_fields;
         }
 
         // Preserve required flag from backend/formbuilder
