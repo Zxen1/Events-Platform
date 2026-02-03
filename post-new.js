@@ -2443,16 +2443,18 @@ const PostModule = (function() {
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
     // Store parent reference and remove target from DOM before building detail
-    // (buildPostDetail will move the card inside the detail wrapper)
     var targetParent = target ? target.parentElement : null;
     var targetNextSibling = target ? target.nextSibling : null;
     if (target && targetParent) {
       targetParent.removeChild(target);
     }
 
-    // Build the detail view (may reuse the removed target element)
+    // Build the detail view with a FRESH card (do not reuse the clicked element).
+    // TopSlack anchors to the clicked element; if we reuse it inside the detail wrapper,
+    // TopSlack sees it moved and adjusts scrollTop (causes jumping). Passing null ensures
+    // the clicked element stays disconnected, so TopSlack's anchor check bails out.
     // IMPORTANT: pass mapCardIndex so the open post reflects the correct active location context.
-    var detail = buildPostDetail(post, target, fromRecent, mapCardIndex);
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
     // Insert detail at original position, or at top of container
     if (targetParent && targetNextSibling) {
@@ -2460,7 +2462,11 @@ const PostModule = (function() {
     } else if (targetParent) {
       targetParent.appendChild(detail);
     } else {
-      container.insertBefore(detail, container.firstChild);
+      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
+      var topSlack = null;
+      try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
+      var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
+      container.insertBefore(detail, insertBeforeNode);
     }
 
 
@@ -4675,12 +4681,17 @@ const PostModule = (function() {
     if (!window.BottomSlack) {
       throw new Error('[Post] BottomSlack is required (components-new.js).');
     }
+    if (!window.TopSlack) {
+      throw new Error('[Post] TopSlack is required (components-new.js).');
+    }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
     // Attach to the actual scroll containers.
     BottomSlack.attach(postListEl, options);
+    TopSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
+    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
