@@ -10604,6 +10604,7 @@ const PostSessionComponent = (function() {
         var postId = options.postId || '';
         var datesText = options.datesText || '';
         var ageRatings = options.ageRatings || {};
+        var priceSummary = options.priceSummary || '';
         var escapeHtml = options.escapeHtml || function(s) { return s; };
 
         if (!datesText) return '';
@@ -10633,6 +10634,21 @@ const PostSessionComponent = (function() {
             }).join('');
         }
 
+        // Build initial price summary (flag + price range)
+        var ticketSummaryHtml = '';
+        if (priceSummary) {
+            // Parse [cc] prefix for flag
+            var priceMatch = priceSummary.match(/^\[([a-z0-9_-]+)\]\s*(.*)$/i);
+            var countryCode = priceMatch ? priceMatch[1].toLowerCase() : '';
+            var priceText = priceMatch ? priceMatch[2].trim() : priceSummary;
+            var flagUrl = '';
+            if (countryCode && window.App && typeof window.App.getImageUrl === 'function') {
+                flagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
+            }
+            ticketSummaryHtml = (flagUrl ? '<img class="post-session-ticket-flag" src="' + escapeHtml(flagUrl) + '" alt="' + escapeHtml(countryCode) + '">' : '') +
+                '<span class="post-session-ticket-text">' + escapeHtml(priceText) + '</span>';
+        }
+
         var html = [];
         html.push('<div class="post-session-container" data-post-id="' + postId + '">');
         html.push('<button class="post-session-button" type="button" aria-haspopup="true" aria-expanded="false">');
@@ -10653,6 +10669,11 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times">');
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
+        html.push('</div>');
+        // Ticket container (shows price summary or detailed pricing based on session selection)
+        html.push('<div class="post-session-ticket-container">');
+        html.push('<div class="post-session-ticket-summary">' + ticketSummaryHtml + '</div>');
+        html.push('<div class="post-session-ticket-details"></div>');
         html.push('</div>');
         html.push('</div>');
 
@@ -10678,6 +10699,9 @@ const PostSessionComponent = (function() {
         var sessionCalendarMount = wrap.querySelector('.post-session-calendar-mount');
         var sessionTimesList = wrap.querySelector('.post-session-times-list');
         var sessionPopover = wrap.querySelector('.post-session-popover');
+        var ticketContainer = wrap.querySelector('.post-session-ticket-container');
+        var ticketSummary = wrap.querySelector('.post-session-ticket-summary');
+        var ticketDetails = wrap.querySelector('.post-session-ticket-details');
 
         if (!sessionBtn) return null;
 
@@ -10749,6 +10773,108 @@ const PostSessionComponent = (function() {
                 if (!url) return '';
                 return '<img class="post-session-age-rating-icon" src="' + escapeHtml(url) + '" alt="' + escapeHtml(val) + '" title="Age rating: ' + escapeHtml(val === 'all' ? 'All Ages' : val + '+') + '">';
             }).join('');
+        }
+
+        // Get currency flag URL from currency code
+        function getCurrencyFlagUrl(currencyCode) {
+            if (!currencyCode || !window.CurrencyComponent) return '';
+            var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
+            if (!currency || !currency.filename) return '';
+            var countryCode = currency.filename.replace('.svg', '');
+            if (window.App && typeof window.App.getImageUrl === 'function') {
+                return window.App.getImageUrl('currencies', countryCode + '.svg');
+            }
+            return '';
+        }
+
+        // Format price with symbol using CurrencyComponent
+        function formatPriceWithSymbol(price, currencyCode) {
+            if (!currencyCode || !window.CurrencyComponent) return String(price || '');
+            try {
+                return CurrencyComponent.formatWithSymbol(price, currencyCode);
+            } catch (_e) {
+                return String(price || '');
+            }
+        }
+
+        // Update ticket container based on session selection
+        function updateTicketContainer() {
+            if (!ticketSummary || !ticketDetails) return;
+            var activeLoc = getActiveLocationForUi();
+            if (!activeLoc) return;
+
+            if (!selectedSessionIso || !selectedSessionTime) {
+                // No session selected - show price summary
+                ticketSummary.style.display = '';
+                ticketDetails.style.display = 'none';
+                ticketDetails.innerHTML = '';
+                return;
+            }
+
+            // Session selected - find pricing for this session's ticket_group_key
+            var selectedItem = null;
+            if (sessionItems) {
+                for (var i = 0; i < sessionItems.length; i++) {
+                    var it = sessionItems[i];
+                    if (it && it.iso === selectedSessionIso && normalizeTimeHHMM(it.time) === selectedSessionTime) {
+                        selectedItem = it;
+                        break;
+                    }
+                }
+            }
+
+            if (!selectedItem || !selectedItem.ticket_group_key) {
+                // No ticket group - show summary
+                ticketSummary.style.display = '';
+                ticketDetails.style.display = 'none';
+                ticketDetails.innerHTML = '';
+                return;
+            }
+
+            var pricingGroups = activeLoc.pricing_groups || {};
+            var groupPricing = pricingGroups[selectedItem.ticket_group_key];
+            if (!groupPricing || typeof groupPricing !== 'object') {
+                // No pricing for this group - show summary
+                ticketSummary.style.display = '';
+                ticketDetails.style.display = 'none';
+                ticketDetails.innerHTML = '';
+                return;
+            }
+
+            // Hide summary, show details
+            ticketSummary.style.display = 'none';
+            ticketDetails.style.display = '';
+
+            // Build detailed pricing HTML
+            var html = [];
+            var ticketAreas = Object.keys(groupPricing);
+            ticketAreas.forEach(function(areaKey) {
+                var area = groupPricing[areaKey];
+                if (!area || !area.tiers || !area.tiers.length) return;
+
+                // Ticket area header
+                html.push('<div class="post-session-ticket-area">');
+                html.push('<div class="post-session-ticket-area-name">' + escapeHtml(area.ticket_area || areaKey) + '</div>');
+
+                // Pricing tiers
+                area.tiers.forEach(function(tier) {
+                    var flagUrl = getCurrencyFlagUrl(tier.currency);
+                    var priceFormatted = formatPriceWithSymbol(tier.price, tier.currency);
+                    html.push('<div class="post-session-ticket-tier">');
+                    html.push('<span class="post-session-ticket-tier-name">' + escapeHtml(tier.pricing_tier || '') + '</span>');
+                    html.push('<span class="post-session-ticket-tier-price">');
+                    if (flagUrl) {
+                        html.push('<img class="post-session-ticket-flag" src="' + escapeHtml(flagUrl) + '" alt="">');
+                    }
+                    html.push(escapeHtml(priceFormatted));
+                    html.push('</span>');
+                    html.push('</div>');
+                });
+
+                html.push('</div>');
+            });
+
+            ticketDetails.innerHTML = html.join('');
         }
 
         function getLocationSelectedIndex() {
@@ -10881,6 +11007,7 @@ const PostSessionComponent = (function() {
             }
             if (!selectedSessionIso) {
                 updateSessionButtonText();
+                updateTicketContainer();
             }
             if (sessionCalendarMount) {
                 try {
@@ -10894,6 +11021,7 @@ const PostSessionComponent = (function() {
             }
             renderSessionTimesList();
             updateSessionButtonText();
+            updateTicketContainer();
         }
 
         function getSideForCell(cellEl) {
@@ -11239,6 +11367,7 @@ const PostSessionComponent = (function() {
                     }
                     selectedSessionTime = timeText;
                     updateSessionButtonText();
+                    updateTicketContainer();
                     renderSessionTimesList();
                     // Mark selected in popover
                     var all = sessionPopover.querySelectorAll('.post-session-popover-time');
@@ -11267,6 +11396,7 @@ const PostSessionComponent = (function() {
                     }
                     selectedSessionTime = timeText;
                     updateSessionButtonText();
+                    updateTicketContainer();
                     renderSessionTimesList();
                     scrollCalendarToIso(iso);
                     if (closeSessionTimer) {
@@ -11314,6 +11444,7 @@ const PostSessionComponent = (function() {
                 decorateCalendarAvailability();
                 renderSessionTimesList();
                 updateSessionButtonText();
+                updateTicketContainer();
             });
         });
 

@@ -3585,6 +3585,75 @@ body.image-modal-open > *:not(.image-modal) {
 }
 
 /* ----------------------------------------------------------------------------
+   TICKET CONTAINER
+   ---------------------------------------------------------------------------- */
+
+.post-session-ticket-container {
+  margin-top: 10px;
+}
+
+/* Ticket summary (flag + price range) */
+.post-session-ticket-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+}
+
+.post-session-ticket-flag {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  object-fit: contain;
+}
+
+.post-session-ticket-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ticket details (areas and tiers) */
+.post-session-ticket-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-session-ticket-details:empty {
+  display: none;
+}
+
+/* Ticket area (header + tiers) */
+.post-session-ticket-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.post-session-ticket-area-name {
+  font-weight: 600;
+  color: var(--ps-fg);
+}
+
+/* Pricing tier row */
+.post-session-ticket-tier {
+  display: flex;
+  align-items: center;
+  height: 24px;
+}
+
+.post-session-ticket-tier-name {
+  flex: 0 0 120px;
+  color: var(--ps-muted);
+}
+
+.post-session-ticket-tier-price {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------------------------
    ARROW
    ---------------------------------------------------------------------------- */
 

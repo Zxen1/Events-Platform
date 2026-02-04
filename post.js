@@ -2757,17 +2757,12 @@ const PostModule = (function() {
           locationList: locationList,
           escapeHtml: escapeHtml
         }),
-        // Session component (dates button)
+        // Session component (dates button + ticket container)
         PostSessionComponent.render({
           postId: post.id,
           datesText: datesText,
           ageRatings: activeLoc.age_ratings || {},
-          escapeHtml: escapeHtml
-        }),
-        // Price component (price button)
-        PostPriceComponent.render({
-          postId: post.id,
-          priceParts: priceParts,
+          priceSummary: activeLoc.price_summary || '',
           escapeHtml: escapeHtml
         }),
         // Website URL
