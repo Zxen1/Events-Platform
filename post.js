@@ -3241,6 +3241,12 @@ const PostModule = (function() {
     var sessionsLoading = false;
     var sessionPopoverIso = '';
     var sessionLockedIso = '';
+    var sessionIsHoverCapable = false;
+    try {
+      sessionIsHoverCapable = !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    } catch (_eHoverCap) {
+      sessionIsHoverCapable = false;
+    }
 
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
@@ -3277,16 +3283,17 @@ const PostModule = (function() {
 
     function updateSessionButtonText() {
       if (!wrap) return;
-      var main = wrap.querySelector('.post-session-text-main');
-      if (!main) return;
+      var leftText = wrap.querySelector('.post-session-button-date-text');
+      var rightText = wrap.querySelector('.post-session-button-time');
+      if (!leftText || !rightText) return;
 
       // Default (fast): keep the summary range until the user makes a choice.
       if (!selectedSessionIso) return;
 
       var left = formatSessionDateLeft(selectedSessionIso);
       var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
-      var text = timeText ? (left + ' ' + timeText) : left;
-      main.textContent = '📅 ' + text;
+      leftText.textContent = left;
+      rightText.textContent = timeText || '';
     }
 
     function closeSessionDropdown() {
@@ -3612,9 +3619,17 @@ const PostModule = (function() {
         });
         sessionOptionsPanel.addEventListener('mouseout', function(e) {
           if (sessionLockedIso) return;
-          // When leaving the calendar area, clear linked hover and hide popover.
           var rel = e.relatedTarget;
-          if (rel && wrap && wrap.contains(rel)) return;
+          // If we moved into another interactive session element, don't clear.
+          // (The next mouseover will re-link as needed.)
+          try {
+            if (rel && rel.closest) {
+              if (rel.closest('.calendar-day.available-day')) return;
+              if (rel.closest('.post-session-time')) return;
+              if (rel.closest('.post-session-popover')) return;
+            }
+          } catch (_eRel0) {}
+          // Otherwise, clear linked hover and hide popover.
           clearLinkedActive();
           hideSessionPopover();
         });
@@ -3629,6 +3644,41 @@ const PostModule = (function() {
         if (!sessionAvailableSet || !sessionAvailableSet[iso]) return; // only session dates
         e.stopPropagation();
         setSelectedCalendarDay(iso);
+
+        // If there is only ONE time for this date, no lock is needed.
+        // - Mouse/trackpad: first click selects immediately.
+        // - Touch: first tap shows time; second tap confirms selection.
+        var times = (sessionByDate && sessionByDate[iso]) ? sessionByDate[iso] : [];
+        if (times.length === 1) {
+          if (sessionIsHoverCapable) {
+            // Desktop: select immediately.
+            selectedSessionIso = iso;
+            selectedSessionTime = normalizeTimeHHMM(times[0]);
+            applyLinkedSelectedCalendar(iso);
+            updateSessionButtonText();
+            renderSessionTimesList();
+            closeSessionDropdown();
+            return;
+          }
+
+          // Touch: tap once to preview (lock), tap again to select.
+          if (sessionLockedIso !== iso) {
+            sessionLockedIso = iso;
+            applyLinkedActive(iso);
+            showSessionPopoverForDate(day, iso);
+            return;
+          }
+
+          // Second tap: confirm selection.
+          selectedSessionIso = iso;
+          selectedSessionTime = normalizeTimeHHMM(times[0]);
+          applyLinkedSelectedCalendar(iso);
+          updateSessionButtonText();
+          renderSessionTimesList();
+          closeSessionDropdown();
+          return;
+        }
+
         // Click locks the linked glow + keeps times visible for selection.
         if (sessionLockedIso === iso) {
           sessionLockedIso = '';
@@ -3680,7 +3730,13 @@ const PostModule = (function() {
           sessionTimesList.addEventListener('mouseout', function(e) {
             if (sessionLockedIso) return;
             var rel = e.relatedTarget;
-            if (rel && wrap && wrap.contains(rel)) return;
+            try {
+              if (rel && rel.closest) {
+                if (rel.closest('.post-session-time')) return;
+                if (rel.closest('.calendar-day.available-day')) return;
+                if (rel.closest('.post-session-popover')) return;
+              }
+            } catch (_eRel1) {}
             clearLinkedActive();
             hideSessionPopover();
           });

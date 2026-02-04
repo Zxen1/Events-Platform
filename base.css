@@ -1177,9 +1177,11 @@
   }
 }
 .menu-class-5 .calendar-day.selected {
-  /* CalendarComponent uses .selected on click; treat as border-only (no fill). */
+  /* CalendarComponent uses .selected on click; in menu-class-5 this must NOT
+     introduce a third visual state. Locked uses .menu-link--active; selected uses
+     .menu-link--selected. So keep this visually neutral (no border, no fill). */
   background: #222;
-  border-color: var(--blue-500);
+  border-color: transparent;
   color: #fff;
 }
 
@@ -1203,6 +1205,30 @@
   background: var(--blue-500);
   border-color: var(--blue-500);
   color: #fff;
+}
+
+/* Disabled/unpickable dates: match "past" look (darker gray) */
+.menu-class-5 .calendar-day.post-session-disabled {
+  cursor: default;
+  background: #1a1a1a;
+  color: #808080;
+  opacity: 1;
+}
+.menu-class-5 .calendar-day.post-session-disabled:hover,
+.menu-class-5 .calendar-day.post-session-disabled:active {
+  background: #1a1a1a;
+  border-color: transparent;
+  color: #808080;
+}
+
+/* Past date boxes: no border radius (sessions menu only) */
+.menu-class-5 .calendar-day.past {
+  border-radius: 0;
+}
+
+/* Times popover: all times are "hot" options, so give each a blue border */
+.menu-class-5 .post-session-popover-time {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 /* ============================================================================
