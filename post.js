@@ -3241,7 +3241,7 @@ const PostModule = (function() {
     var sessionsLoading = false;
     var sessionPopoverIso = '';
     var sessionTimesSide = ''; // 'left' or 'right' - stable while menu is open
-    var defaultSessionButtonText = '';
+    var defaultSessionButtonDateText = '';
     var closeSessionTimer = null;
     var SESSION_SELECT_CLOSE_DELAY_MS = 500; // user requirement: let click feedback show
     var lastJoinedCell = null;
@@ -3251,8 +3251,8 @@ const PostModule = (function() {
     // Store the initial "date range" label so the button only changes
     // after a full date+time is selected.
     try {
-      var _mainInit = wrap.querySelector('.post-session-text-main');
-      if (_mainInit) defaultSessionButtonText = String(_mainInit.textContent || '');
+      var _dateInit = wrap.querySelector('.post-session-date-left');
+      if (_dateInit) defaultSessionButtonDateText = String(_dateInit.textContent || '');
     } catch (_eInit0) {}
 
     function formatSessionDateLeft(iso) {
@@ -3290,19 +3290,21 @@ const PostModule = (function() {
 
     function updateSessionButtonText() {
       if (!wrap) return;
-      var main = wrap.querySelector('.post-session-text-main');
-      if (!main) return;
+      var dateEl = wrap.querySelector('.post-session-date-left');
+      var timeEl = wrap.querySelector('.post-session-time-right');
+      if (!dateEl || !timeEl) return;
 
       // Keep the summary range until the user selects a full date+time.
       if (!selectedSessionIso || !selectedSessionTime) {
-        if (defaultSessionButtonText) main.textContent = defaultSessionButtonText;
+        if (defaultSessionButtonDateText) dateEl.textContent = defaultSessionButtonDateText;
+        timeEl.textContent = '';
         return;
       }
 
       var left = formatSessionDateLeft(selectedSessionIso);
       var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
-      var text = timeText ? (left + ' ' + timeText) : left;
-      main.textContent = text;
+      dateEl.textContent = left;
+      timeEl.textContent = timeText;
     }
 
     function closeSessionDropdown() {
@@ -3500,6 +3502,25 @@ const PostModule = (function() {
       sessionPopover.style.top = '0px';
       var popW = sessionPopover.offsetWidth || 180;
       var popH = sessionPopover.offsetHeight || 120;
+
+      // If the extension would be clipped horizontally, scroll just enough to show it.
+      try {
+        var bodyRect0 = bodyEl.getBoundingClientRect();
+        var cellRect0 = cellEl.getBoundingClientRect();
+        var cellX0 = (cellRect0.left - bodyRect0.left);
+        var cellW0 = cellRect0.width || 36;
+        var overlap0 = 1;
+        var extLeft0 = (side === 'left') ? (cellX0 - popW + overlap0) : (cellX0 + cellW0 - overlap0);
+        var extRight0 = extLeft0 + popW;
+        var viewLeft0 = scrollEl.scrollLeft;
+        var viewRight0 = scrollEl.scrollLeft + scrollEl.clientWidth;
+        var inset0 = 6;
+        if (extLeft0 < viewLeft0 + inset0) {
+          scrollEl.scrollLeft = Math.max(0, extLeft0 - inset0);
+        } else if (extRight0 > viewRight0 - inset0) {
+          scrollEl.scrollLeft = Math.max(0, scrollEl.scrollLeft + (extRight0 - (viewRight0 - inset0)));
+        }
+      } catch (_eScrollFit0) {}
 
       var cellRect = cellEl.getBoundingClientRect();
       var bodyRect = bodyEl.getBoundingClientRect();
@@ -3862,7 +3883,7 @@ const PostModule = (function() {
         clearSyncedMarks();
         setSelectedCalendarDay(iso);
         showSessionPopoverForDate(day, iso);
-        applySyncedHover(iso, '');
+        // Click selects the day; it should not leave "hover" styling behind.
       });
 
       // Desktop hover preview (does not change selected date)
