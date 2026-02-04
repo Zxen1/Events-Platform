@@ -1,0 +1,3208 @@
+/* ============================================================================
+   COMPONENTS.CSS - Reusable UI Component Styles
+   ============================================================================
+   
+   Shared component styles used across multiple sections.
+   
+   STRUCTURE:
+   - CLEAR BUTTON        - Reusable X/clear button
+   - SWITCH              - Toggle switch (has size variants)
+   - CALENDAR            - Horizontal scrolling date picker
+   - CURRENCY            - Currency selector (has variants)
+   - PHONE PREFIX        - Phone prefix selector
+   - ICON PICKER         - Category icon picker
+   - SYSTEM IMAGE PICKER - System image picker
+   - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
+   - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - CONFIRM DIALOG      - Confirmation dialog for destructive actions
+   - IMAGE MODAL         - Full-screen lightbox for images
+   - LOCATION WALLPAPER  - Animated map wallpaper for location displays
+   
+   ============================================================================ */
+
+/* ============================================================================
+   BOTTOM SLACK (Reusable bottom spacer)
+   ============================================================================
+   Use as the last child inside any scrollable container:
+   <div class="bottomSlack" aria-hidden="true"></div>
+   Default is 0px; the Slack system toggles this via: --bottomSlack
+   ============================================================================ */
+
+.bottomSlack {
+  /* Default is 0. The Slack system sets this variable as needed. */
+  height: var(--bottomSlack, 0px);
+  flex: 0 0 auto;
+  pointer-events: none;
+  /* Do not animate height changes (avoids visible resize/flick). */
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottomSlack {
+    transition: none;
+  }
+}
+
+
+/* ============================================================================
+   CLEAR BUTTON
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance */
+.clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: inherit;
+    transition: opacity 0.15s ease;
+}
+
+.clear-button-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask-image: var(--ui-icon-clear);
+    mask-image: var(--ui-icon-clear);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+/* States */
+.clear-button:hover {
+    opacity: 0.7;
+}
+
+
+/* ============================================================================
+   SWITCH
+   
+   Size variants: small, medium (default), large
+   ============================================================================ */
+
+/* Base - Medium (default) */
+.component-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.component-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+/* States */
+.component-switch-slider--on {
+    background: var(--blue-600);
+}
+
+.component-switch-slider--on::before {
+    transform: translateX(20px);
+}
+
+/* Size: Massive (44x24, 18px knob) */
+.component-massive-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-massive-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-massive-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.component-massive-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.component-massive-switch-slider--on {
+    background: var(--blue-500);
+}
+
+.component-massive-switch-slider--on::before {
+    transform: translateX(20px);
+}
+
+/* Size: Big (gray background, 36x20) */
+.component-big-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-big-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-big-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #444;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.component-big-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: #888;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.component-big-switch-slider--on {
+    background: var(--blue-600);
+}
+
+.component-big-switch-slider--on::before {
+    transform: translateX(16px);
+    background: #fff;
+}
+
+/* Size: Big Orange (orange when on, 36x20) */
+.component-bigorange-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-bigorange-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-bigorange-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #444;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.component-bigorange-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: #888;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.component-bigorange-switch-slider--on {
+    background: #cc6600;
+}
+
+.component-bigorange-switch-slider--on::before {
+    transform: translateX(16px);
+    background: #fff;
+}
+
+/* Size: Small (gray background, 32x18) */
+.component-small-switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-small-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-small-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #444;
+    border-radius: 9px;
+    transition: background 0.2s;
+}
+
+.component-small-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 2px;
+    top: 2px;
+    background: #888;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.component-small-switch-slider--on {
+    background: var(--blue-600);
+}
+
+.component-small-switch-slider--on::before {
+    transform: translateX(14px);
+    background: #fff;
+}
+
+
+/* ============================================================================
+   CALENDAR
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance */
+.calendar-container {
+    width: 100%;
+    overflow: hidden;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    position: relative;
+}
+
+.calendar-scroll-wrapper {
+    /* Core sizing (touch-friendly, consistent everywhere).
+       Applied here because every calendar instance creates this wrapper,
+       even when the mount element isn't `.calendar-container` (e.g. Filter). */
+    --calendar-cell: 36px;
+    --calendar-month-width: 252px; /* 7 * 36 */
+    position: relative;
+    width: 100%;
+}
+
+.calendar-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #222;
+}
+
+.calendar-scroll::-webkit-scrollbar {
+    height: 8px;
+    background: #222;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.calendar-body {
+    display: flex;
+    width: max-content;
+}
+
+.calendar-month {
+    flex: 0 0 auto;
+    width: var(--calendar-month-width, 252px);
+    box-sizing: border-box; /* keep month separators from changing the math */
+}
+
+.calendar-month:not(:first-child) {
+    border-left: 1px solid #1a1a1a;
+}
+
+.calendar-header {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    background: #111111;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, var(--calendar-cell, 36px));
+}
+
+.calendar-weekday,
+.calendar-day {
+    height: var(--calendar-cell, 36px);
+    width: var(--calendar-cell, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.calendar-weekday {
+    font-weight: bold;
+}
+
+.calendar-day {
+    cursor: pointer;
+    background: #222;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 12px;
+}
+
+.calendar-marker-container {
+    height: 8px;
+    position: relative;
+    background: #111;
+    width: 100%;
+}
+
+.calendar-today-marker {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blue-500);
+    cursor: pointer;
+    z-index: 10;
+}
+
+.calendar-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid #333;
+}
+
+/* .calendar-ok and .calendar-cancel use button-class-2 for appearance */
+
+/* States */
+.calendar-day.empty {
+    cursor: default;
+    background: #222;
+}
+
+.calendar-day.past {
+    background: #1a1a1a;
+    color: #808080;
+}
+
+.calendar-day.future {
+    background: #222;
+}
+
+.calendar-day.today {
+    color: var(--blue-500);
+    font-weight: 700;
+}
+
+.calendar-day:not(.selected):not(.empty):hover {
+    background: var(--blue-500);
+    border-color: var(--blue-500);
+    color: #fff;
+}
+
+.calendar-day:not(.selected):not(.empty):active {
+    background: var(--blue-600);
+    border-color: var(--blue-500);
+    color: #fff;
+}
+
+.calendar-day.selected {
+    background: var(--blue-600);
+    border-color: var(--blue-500);
+    color: #fff;
+}
+
+.calendar-day.selected.today {
+    color: #fff;
+}
+
+.calendar-day.range-start {
+    border-radius: 5px 0 0 5px;
+}
+
+.calendar-day.range-end {
+    border-radius: 0 5px 5px 0;
+}
+
+.calendar-day.in-range {
+    background: var(--blue-500);
+    border-color: var(--blue-500);
+    color: #fff;
+    border-radius: 0;
+}
+
+.calendar-day.available-day {
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.calendar-day.available-day:hover {
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+}
+
+.calendar-day.available-day.today,
+.calendar-day.available-day.selected.today,
+.calendar-day.selected.today {
+    color: var(--blue-500);
+}
+
+
+
+/* ============================================================================
+   CURRENCY
+   
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   FIELDSET VARIANT (compact)
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.fieldset-currency-wrapper {
+    width: 100px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-button {
+    width: 100px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fieldset-currency-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 6px;
+    font-size: 12px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fieldset-currency-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.fieldset-currency-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 250px;
+    background: #222;
+    border: 1px solid var(--blue-500);
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.fieldset-currency-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.fieldset-currency-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.fieldset-currency-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+}
+
+.fieldset-currency-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+
+/* ----------------------------------------------------------------------------
+   FULL VARIANT (component-currencyfull-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ---------------------------------------------------------------------------- */
+
+.component-currencyfull-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-languagefull-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-currencyfull-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-languagefull-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-currencyfull-menu-button-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.component-languagefull-menu-button-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.component-currencyfull-menu-button-input {
+    flex: 1;
+    text-align: left;
+    font-size: 14px;
+    min-width: 0;
+}
+
+.component-currencyfull-menu:not(.component-currencyfull-menu--open) .component-currencyfull-menu-button-input {
+    pointer-events: none;
+}
+
+.component-languagefull-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    min-width: 0;
+}
+
+.component-languagefull-menu:not(.component-languagefull-menu--open) .component-languagefull-menu-button-input {
+    pointer-events: none;
+}
+
+.component-currencyfull-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-languagefull-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-currencyfull-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-languagefull-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-currencyfull-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-languagefull-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-currencyfull-menu-option-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.component-languagefull-menu-option-image {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.component-currencyfull-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-languagefull-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-currencyfull-menu-options--open {
+    display: block;
+}
+
+.component-languagefull-menu-options--open {
+    display: block;
+}
+
+
+/* ----------------------------------------------------------------------------
+   COMPACT VARIANT (component-currencycompact-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ---------------------------------------------------------------------------- */
+
+.component-currencycompact-menu {
+    width: 120px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.component-currencycompact-menu-button {
+    width: 120px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+/* Compact menu: button and options are separated, so button keeps full border/radius */
+.component-currencycompact-menu .menu-button {
+    border-radius: 5px;
+}
+
+.component-currencycompact-menu .menu-button--open {
+    border-bottom: 1px solid var(--menu-border-focus);
+    border-radius: 5px;
+}
+
+.component-currencycompact-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.component-currencycompact-menu-button-input {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.component-currencycompact-menu:not(.component-currencycompact-menu--open) .component-currencycompact-menu-button-input {
+    pointer-events: none;
+}
+
+.component-currencycompact-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-currencycompact-menu-options {
+    display: none;
+    position: absolute;
+    top: 46px;
+    left: 0;
+    width: 250px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+/* Compact menu: options are separated, so they have full border/radius (lid on top) */
+.component-currencycompact-menu .menu-options {
+    border: 1px solid var(--menu-border-focus);
+    border-radius: 5px;
+}
+
+.component-currencycompact-menu-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-currencycompact-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-currencycompact-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+/* Compact states */
+.component-currencycompact-menu-options--open {
+    display: block;
+}
+
+/* TODO: Compact menus need menu-class-2 for proper narrow-button-wide-dropdown styling */
+
+
+/* ----------------------------------------------------------------------------
+   COMPACT VARIANT (component-phoneprefixcompact-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ---------------------------------------------------------------------------- */
+
+.component-phoneprefixcompact-menu {
+    width: 120px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.component-phoneprefixcompact-menu-button {
+    width: 120px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+/* Compact menu: button and options are separated, so button keeps full border/radius */
+.component-phoneprefixcompact-menu .menu-button {
+    border-radius: 5px;
+}
+
+.component-phoneprefixcompact-menu .menu-button--open {
+    border-bottom: 1px solid var(--menu-border-focus);
+    border-radius: 5px;
+}
+
+.component-phoneprefixcompact-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.component-phoneprefixcompact-menu-button-input {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.component-phoneprefixcompact-menu:not(.component-phoneprefixcompact-menu--open) .component-phoneprefixcompact-menu-button-input {
+    pointer-events: none;
+}
+
+.component-phoneprefixcompact-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-phoneprefixcompact-menu-options {
+    display: none;
+    position: absolute;
+    top: 46px;
+    left: 0;
+    width: 250px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+/* Compact menu: options are separated, so they have full border/radius (lid on top) */
+.component-phoneprefixcompact-menu .menu-options {
+    border: 1px solid var(--menu-border-focus);
+    border-radius: 5px;
+}
+
+.component-phoneprefixcompact-menu-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-phoneprefixcompact-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-phoneprefixcompact-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+.component-phoneprefixcompact-menu-options--open {
+    display: block;
+}
+
+
+/* ----------------------------------------------------------------------------
+   COUNTRY MENU (component-country-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ---------------------------------------------------------------------------- */
+
+.component-country-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-country-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-country-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-country-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.component-country-menu:not(.component-country-menu--open) .component-country-menu-button-input {
+    pointer-events: none;
+}
+
+.component-country-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.component-country-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-country-menu-options--open {
+    display: block;
+}
+
+.component-country-menu-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-country-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-country-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+
+/* ============================================================================
+   ICON PICKER
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ============================================================================ */
+
+.component-iconpicker-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-iconpicker-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.component-iconpicker-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-iconpicker-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    min-width: 0;
+}
+
+.component-iconpicker-menu:not(.component-iconpicker-menu--open) .component-iconpicker-menu-button-input {
+    pointer-events: none;
+}
+
+.component-iconpicker-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.component-iconpicker-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-iconpicker-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-iconpicker-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-iconpicker-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-iconpicker-menu-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.component-iconpicker-menu-options--open {
+    display: block;
+}
+
+.component-iconpicker-menu-loading {
+    padding: 20px;
+    text-align: center;
+}
+
+
+/* ============================================================================
+   SYSTEM IMAGE PICKER
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ============================================================================ */
+
+.component-systemimagepicker-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-systemimagepicker-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.component-systemimagepicker-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-systemimagepicker-menu-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-systemimagepicker-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.component-systemimagepicker-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-systemimagepicker-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-systemimagepicker-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-systemimagepicker-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-systemimagepicker-menu-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.component-systemimagepicker-menu-options--open {
+    display: block;
+}
+
+.component-systemimagepicker-menu-loading {
+    padding: 20px;
+    text-align: center;
+}
+
+
+/* ============================================================================
+   AMENITIES PICKER COMPONENT
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ============================================================================ */
+
+.component-amenitiespicker-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-amenitiespicker-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.component-amenitiespicker-menu-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-amenitiespicker-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.component-amenitiespicker-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-amenitiespicker-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-amenitiespicker-menu-option-checkbox {
+    margin-right: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.component-amenitiespicker-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+    transition: filter 0.2s;
+}
+
+.component-amenitiespicker-menu-option-image--selected {
+    filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
+}
+
+.component-amenitiespicker-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-amenitiespicker-menu-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.component-amenitiespicker-menu-options--open {
+    display: block;
+}
+
+
+/* ============================================================================
+   AGE RATING PICKER COMPONENT
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
+   ============================================================================ */
+
+.component-ageratingpicker-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-ageratingpicker-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.component-ageratingpicker-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.component-ageratingpicker-menu-button-text {
+    flex: 1;
+    text-align: left;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-ageratingpicker-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.component-ageratingpicker-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-ageratingpicker-menu-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.component-ageratingpicker-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-ageratingpicker-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-ageratingpicker-menu-options--open {
+    display: block;
+}
+
+
+/* ============================================================================
+   MAP CONTROL ROW
+   
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   FILTER PANEL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.filter-mapcontrol-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    padding-right: 4px;
+}
+
+.filter-mapcontrol-row:focus-within {
+    border-color: var(--blue-500);
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.filter-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+}
+
+.filter-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 100%;
+    padding: 0 36px 0 12px;
+    background-color: transparent;
+    border: none;
+    border-radius: 18px 0 0 18px;
+    font-size: 14px;
+    color: #ffffff;
+    caret-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.filter-mapcontrol-geocoder-input:focus {
+    outline: none;
+}
+
+.filter-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.filter-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: -64px;
+    margin-top: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.filter-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.filter-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.filter-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #aaaaaa;
+    margin-top: 2px;
+}
+
+.filter-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+}
+
+.filter-mapcontrol-geolocate {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.filter-mapcontrol-geolocate:hover,
+.filter-mapcontrol-geolocate:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.filter-mapcontrol-geolocate-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.filter-mapcontrol-compass {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.filter-mapcontrol-compass:hover,
+.filter-mapcontrol-compass:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.filter-mapcontrol-compass-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.filter-mapcontrol-compass-img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out, opacity 0.15s ease;
+    opacity: 0.6;
+}
+
+.filter-mapcontrol-compass:hover .filter-mapcontrol-compass-img,
+.filter-mapcontrol-compass:focus-visible .filter-mapcontrol-compass-img {
+    opacity: 1;
+}
+
+
+/* ----------------------------------------------------------------------------
+   MAP VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.map-mapcontrol-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    padding: 0 4px;
+}
+
+.map-mapcontrol-row:focus-within {
+    border-color: var(--blue-500);
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.map-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+}
+
+.map-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 100%;
+    padding: 0 36px 0 8px;
+    background-color: transparent;
+    border: none;
+    border-radius: 18px 0 0 18px;
+    font-size: 14px;
+    color: #ffffff;
+    caret-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.map-mapcontrol-geocoder-input:focus {
+    outline: none;
+}
+
+.map-mapcontrol-geocoder-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.map-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: -64px;
+    margin-top: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.map-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.map-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.map-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #aaaaaa;
+    margin-top: 2px;
+}
+
+.map-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+}
+
+.map-mapcontrol-geolocate {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.map-mapcontrol-geolocate:hover,
+.map-mapcontrol-geolocate:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.map-mapcontrol-geolocate-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.map-mapcontrol-compass {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.map-mapcontrol-compass:hover,
+.map-mapcontrol-compass:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.map-mapcontrol-compass-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.map-mapcontrol-compass-img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out, opacity 0.15s ease;
+    opacity: 0.6;
+}
+
+.map-mapcontrol-compass:hover .map-mapcontrol-compass-img,
+.map-mapcontrol-compass:focus-visible .map-mapcontrol-compass-img {
+    opacity: 1;
+}
+
+@media (max-width: 530px) {
+    .map-mapcontrol-row {
+        width: 100%;
+    }
+}
+
+
+/* ----------------------------------------------------------------------------
+   WELCOME MODAL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.welcome-mapcontrol-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    padding: 0 4px;
+    max-width: 420px;
+    width: 100%;
+}
+
+.welcome-mapcontrol-row:focus-within {
+    border-color: var(--blue-500);
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.welcome-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+}
+
+.welcome-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 100%;
+    padding: 0 36px 0 8px;
+    background-color: transparent;
+    border: none;
+    border-radius: 18px 0 0 18px;
+    font-size: 14px;
+    color: #ffffff;
+    caret-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.welcome-mapcontrol-geocoder-input:focus {
+    outline: none;
+}
+
+.welcome-mapcontrol-geocoder-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.welcome-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: -64px;
+    margin-top: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+}
+
+.welcome-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #aaaaaa;
+    margin-top: 2px;
+}
+
+.welcome-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+}
+
+.welcome-mapcontrol-geolocate {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.welcome-mapcontrol-geolocate:hover,
+.welcome-mapcontrol-geolocate:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.welcome-mapcontrol-geolocate-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.welcome-mapcontrol-compass {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.welcome-mapcontrol-compass:hover,
+.welcome-mapcontrol-compass:focus-visible {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.welcome-mapcontrol-compass-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.welcome-mapcontrol-compass-img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out, opacity 0.15s ease;
+    opacity: 0.6;
+}
+
+.welcome-mapcontrol-compass:hover .welcome-mapcontrol-compass-img,
+.welcome-mapcontrol-compass:focus-visible .welcome-mapcontrol-compass-img {
+    opacity: 1;
+}
+
+
+/* ----------------------------------------------------------------------------
+   STATES (shared)
+   ---------------------------------------------------------------------------- */
+
+.filter-mapcontrol-geocoder-input:focus,
+.map-mapcontrol-geocoder-input:focus,
+.welcome-mapcontrol-geocoder-input:focus {
+    outline: none;
+    border-color: var(--blue-500);
+}
+
+.filter-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.filter-mapcontrol-geocoder-dropdown-item--active {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.map-mapcontrol-geocoder-dropdown-item:hover,
+.welcome-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.map-mapcontrol-geocoder-dropdown-item--active,
+.welcome-mapcontrol-geocoder-dropdown-item--active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff;
+}
+
+.map-mapcontrol-geocoder-clear:hover,
+.welcome-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* Removed - hover styles now defined inline with each element */
+
+
+/* ----------------------------------------------------------------------------
+   USER LOCATION MARKER (pulsing dot with direction)
+   ---------------------------------------------------------------------------- */
+
+.user-location-marker {
+    position: relative;
+    width: 16px;
+    height: 16px;
+}
+
+.user-location-marker-dot {
+    width: 16px;
+    height: 16px;
+    background-color: var(--blue-500);
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+    animation: user-location-pulse 2s infinite;
+}
+
+.user-location-marker-heading {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 20px solid rgba(59, 130, 246, 0.6);
+    transform-origin: center bottom;
+}
+
+@keyframes user-location-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+/* Removed - hover styles now defined inline with each element */
+
+.filter-mapcontrol-geolocate--loading,
+.map-mapcontrol-geolocate--loading,
+.welcome-mapcontrol-geolocate--loading {
+    pointer-events: none;
+}
+
+.filter-mapcontrol-geolocate-icon--loading,
+.map-mapcontrol-geolocate-icon--loading,
+.welcome-mapcontrol-geolocate-icon--loading {
+    -webkit-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -moz-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -o-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -ms-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    animation: mapcontrol-geolocate-spin 2s infinite linear;
+}
+
+@-webkit-keyframes mapcontrol-geolocate-spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes mapcontrol-geolocate-spin {
+    0% { -moz-transform: rotate(0deg); }
+    100% { -moz-transform: rotate(360deg); }
+}
+
+@-o-keyframes mapcontrol-geolocate-spin {
+    0% { -o-transform: rotate(0deg); }
+    100% { -o-transform: rotate(360deg); }
+}
+
+@-ms-keyframes mapcontrol-geolocate-spin {
+    0% { -ms-transform: rotate(0deg); }
+    100% { -ms-transform: rotate(360deg); }
+}
+
+@keyframes mapcontrol-geolocate-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.filter-mapcontrol-geolocate--loading,
+.map-mapcontrol-geolocate--loading,
+.welcome-mapcontrol-geolocate--loading,
+.filter-mapcontrol-geolocate--active,
+.map-mapcontrol-geolocate--active,
+.welcome-mapcontrol-geolocate--active {
+    color: var(--blue-500);
+}
+
+/* Border animation for geolocate loading */
+@keyframes mapcontrol-border-pulse {
+    0% { 
+        box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
+    }
+    50% { 
+        box-shadow: 0 0 12px 4px rgba(59, 130, 245, 0.7);
+    }
+    100% { 
+        box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
+    }
+}
+
+.map-mapcontrol-row--loading,
+.filter-mapcontrol-row--loading,
+.welcome-mapcontrol-row--loading {
+    border-color: var(--blue-500);
+    box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
+    animation: mapcontrol-border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+
+/* ============================================================================
+   CHECKOUT OPTIONS
+   
+   Radio card selector for checkout tiers.
+   Used in member panel create post form.
+   ============================================================================ */
+
+/* Appearance - Group */
+.member-checkout-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.member-checkout-placeholder {
+    color: #888;
+    font-style: italic;
+    padding: 12px;
+}
+
+/* Appearance - Option Card */
+.member-checkout-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+    color: #888;
+}
+
+.member-checkout-option-radio {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 3px 0 0 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.member-checkout-option-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.member-checkout-option-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.member-checkout-option-name {
+    color: #fff;
+}
+
+.member-checkout-option-description {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Appearance - Price Section */
+.member-checkout-price-section {
+    margin-top: 8px;
+}
+
+.member-checkout-price-display {
+    /* Events price text: keep muted until the option is active (matches General duration button behavior) */
+    color: inherit;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Appearance - Duration Buttons (General posts) */
+.member-checkout-duration-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.member-checkout-duration-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-checkout-duration-radio {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.member-checkout-duration-text {
+    color: inherit;
+    line-height: 1.25;
+}
+
+/* States - Option Card */
+.member-checkout-option:hover {
+    border-color: var(--blue-500);
+    background: rgba(59, 130, 245, 0.05);
+    color: #fff;
+}
+
+.member-checkout-option--selected {
+    border-color: var(--blue-500);
+    /* Match selected duration button intensity */
+    background: rgba(59, 130, 245, 0.15);
+    color: #fff;
+}
+
+/* States - Disabled (no dates for events) */
+.member-checkout-option--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-style: dashed;
+}
+
+.member-checkout-option--disabled:hover {
+    border-color: #444;
+    background: transparent;
+}
+
+.member-checkout-price-display--disabled {
+    color: #888;
+    font-style: italic;
+}
+
+/* States - Duration Option */
+.member-checkout-duration-option:hover {
+    border-color: var(--blue-500);
+    color: #fff;
+}
+
+.member-checkout-duration-option--selected {
+    border-color: var(--blue-500);
+    background: rgba(59, 130, 245, 0.15);
+    color: #fff;
+}
+
+
+/* ============================================================================
+   CONFIRM DIALOG
+   
+   Reusable confirmation dialog for destructive actions.
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-confirm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-confirm-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-confirm-dialog {
+    background: #222222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    padding: 24px;
+    width: min(90vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-confirm-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-confirm-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-confirm-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.component-confirm-dialog-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-confirm-dialog-button--cancel {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.component-confirm-dialog-button--confirm {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* States */
+.component-confirm-dialog-button--cancel:focus-visible,
+.component-confirm-dialog-button--cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.component-confirm-dialog-button--confirm:focus-visible,
+.component-confirm-dialog-button--confirm:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Danger variant for destructive actions */
+.component-confirm-dialog-button--confirm.danger {
+    background: #7f1d1d;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.component-confirm-dialog-button--confirm.danger:focus-visible,
+.component-confirm-dialog-button--confirm.danger:hover {
+    background: #991b1b;
+}
+
+/* ============================================================================
+   THREE BUTTON DIALOG COMPONENT
+   Duplicated from ConfirmDialogComponent with independent classes
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-three-button-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-three-button-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-three-button-dialog {
+    background: #222222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    padding: 24px;
+    width: min(90vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-three-button-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-three-button-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-three-button-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.component-three-button-dialog-button--cancel {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-three-button-dialog-button--save {
+    background: var(--green-950);
+    color: #fff;
+    border: 1px solid var(--green-600);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-three-button-dialog-button--discard {
+    background: var(--red-950);
+    color: #fff;
+    border: 1px solid var(--red-600);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* States */
+.component-three-button-dialog-button--cancel:focus-visible,
+.component-three-button-dialog-button--cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.component-three-button-dialog-button--save:focus-visible,
+.component-three-button-dialog-button--save:hover {
+    background: var(--green-600);
+}
+
+.component-three-button-dialog-button--discard:focus-visible,
+.component-three-button-dialog-button--discard:hover {
+    background: var(--red-600);
+}
+
+/* ============================================================================
+   TOAST COMPONENT
+   Toast notifications matching old site design
+   ============================================================================ */
+
+.component-toast {
+    position: fixed;
+    top: calc(var(--safe-top, 0px) + 20px);
+    left: 50%;
+    transform: translate(-50%, -10px);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-toast--show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.component-toast--success {
+    background: #2ea060;
+    color: #fff;
+}
+
+.component-toast--error {
+    background: #c62828;
+    color: #fff;
+}
+
+.component-toast--warning {
+    background: #ff9800;
+    color: #fff;
+}
+
+
+/* ============================================================================
+   AVATAR CROPPER TOOL
+   
+   Standalone reusable avatar cropper (destructive - outputs cropped blob).
+   Used by AvatarPickerComponent.
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-avatarcropper-tool-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    /* Match dialog overlays used across the site (confirm/three-button). */
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-avatarcropper-tool-overlay[hidden] { display: none; }
+
+/* Appearance - Tool */
+.component-avatarcropper-tool {
+    width: min(420px, calc(100% - 40px));
+    max-height: calc((var(--vh, 1vh) * 100) - (var(--safe-top, 0px)) - 40px);
+    overflow: auto;
+    /* Use same core surface as dialogs; keep independent via hard fallback values. */
+    background: #222222;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    color: #fff;
+}
+
+.component-avatarcropper-tool-preview {
+    display: flex;
+    justify-content: center;
+}
+
+.component-avatarcropper-tool-canvas {
+    width: 260px;
+    height: 260px;
+    border-radius: 12px;
+    background: #111111;
+    border: 1px solid rgba(255,255,255,0.12);
+    cursor: grab;
+}
+
+.component-avatarcropper-tool-canvas:active {
+    cursor: grabbing;
+}
+
+.component-avatarcropper-tool-zoom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.component-avatarcropper-tool-zoom-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+}
+
+.component-avatarcropper-tool-zoom-input {
+    width: 100%;
+}
+
+.component-avatarcropper-tool-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.component-avatarcropper-tool-button {
+    /* Match confirm/three-button dialog button styling. */
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-avatarcropper-tool-button:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.component-avatarcropper-tool-button--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+/* ============================================================================
+   AVATAR PICKER
+   
+   Avatar selection interface used across the site (Member register/profile, etc).
+   Uses AvatarCropperComponent for cropping uploaded images (destructive square crop).
+   ============================================================================ */
+
+.component-avatarpicker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.component-avatarpicker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.component-avatarpicker-tile {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.25);
+    cursor: pointer;
+    padding: 2px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.9);
+}
+
+.component-avatarpicker-tile--selected {
+    border-color: var(--btn-selected, #3b82f5);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
+}
+
+.component-avatarpicker-tile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 6px;
+}
+
+.component-avatarpicker-tile-add {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.35);
+    border: 1px dashed rgba(255,255,255,0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.component-avatarpicker-tile-add::before {
+    content: '';
+    width: 28px;
+    height: 28px;
+    display: block;
+    background-color: currentColor;
+    -webkit-mask-image: var(--ui-icon-add-image);
+    mask-image: var(--ui-icon-add-image);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 0.9;
+}
+
+.component-avatarpicker-tile-add-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* ============================================================================
+   POST CROPPER TOOL
+   
+   Post image cropper (non-destructive - stores crop coords for Bunny API).
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-postcropper-tool-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-postcropper-tool-overlay[hidden] { display: none; }
+
+/* Appearance - Tool */
+.component-postcropper-tool {
+    width: min(420px, calc(100% - 40px));
+    max-height: calc((var(--vh, 1vh) * 100) - (var(--safe-top, 0px)) - 40px);
+    overflow: auto;
+    /* Match dialog surfaces used across the site; keep independent via hard fallback values. */
+    background: #222222;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    color: #fff;
+}
+
+.component-postcropper-tool-preview {
+    display: flex;
+    justify-content: center;
+}
+
+.component-postcropper-tool-canvas {
+    width: 260px;
+    height: 260px;
+    border-radius: 12px;
+    background: #111111;
+    border: 1px solid rgba(255,255,255,0.12);
+    cursor: grab;
+}
+
+.component-postcropper-tool-canvas:active {
+    cursor: grabbing;
+}
+
+.component-postcropper-tool-zoom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.component-postcropper-tool-zoom-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+}
+
+.component-postcropper-tool-zoom-input {
+    width: 100%;
+}
+
+.component-postcropper-tool-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.component-postcropper-tool-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-postcropper-tool-button:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.component-postcropper-tool-button--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+/* ============================================================================
+   LOCATION WALLPAPER
+   
+   Animated map wallpaper background for location displays.
+   Used in: Post panel, Recent panel, My Posts panel, Member forms.
+   
+   Decoupled from form-specific classes - uses generic component classes.
+   Width is dynamic via --locationwallpaper-width CSS variable (set by JS).
+   ============================================================================ */
+
+.component-locationwallpaper-content--active {
+    position: relative;
+    /* When wallpaper is used, ensure short containers still have enough vertical area. */
+    min-height: var(--locationwallpaper-minh, 0px);
+}
+
+/* Lift normal content above wallpaper without impacting menu z-index logic */
+.component-locationwallpaper-content--active > :not(.component-locationwallpaper) {
+    position: relative;
+}
+
+.component-locationwallpaper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 0 0 5px 5px;
+    opacity: var(--locationwallpaper-opacity, 1);
+    overflow: hidden; /* Clip the 200px buffer */
+}
+
+/* Dimmer overlay - controlled by admin setting */
+.component-locationwallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, var(--locationwallpaper-dimmer, 0.3));
+    z-index: 10;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.component-locationwallpaper-mapmount {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--locationwallpaper-width, 600px);
+    height: 2500px;
+    opacity: 0;
+    transition: opacity 1.5s linear;
+    will-change: opacity;
+    z-index: 1;
+}
+
+.component-locationwallpaper-image {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--locationwallpaper-width, 600px);
+    height: 2500px;
+    opacity: 0;
+    transition: opacity 1.5s linear;
+    will-change: opacity;
+    z-index: 2;
+}
+
+/* Move Mapbox logo to top-right for location wallpaper */
+.component-locationwallpaper .mapboxgl-ctrl-bottom-left {
+    bottom: auto;
+    left: auto;
+    top: 6px;
+    right: 6px;
+}
+
+.component-locationwallpaper .mapboxgl-ctrl-bottom-right {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .component-locationwallpaper-mapmount,
+    .component-locationwallpaper-image {
+        transition: none;
+    }
+}
+
+/* ----------------------------------------------------------------------------
+   BASIC MODE - 4 pan images (N/E/S/W) with class-toggled crossfade
+   Lightweight alternative to orbit mode for slower PCs
+   
+   Images are left-anchored and pan 100px leftward over 20s.
+   700px width ensures coverage on containers up to 600px wide.
+   ---------------------------------------------------------------------------- */
+
+.component-locationwallpaper-basic-container {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.component-locationwallpaper-basic-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--locationwallpaper-width, 600px);
+    height: 2500px;
+    object-fit: cover;
+    object-position: center top;
+    opacity: 0;
+    transition: opacity 1.5s linear;
+    z-index: 1;
+}
+
+/* Animating image: starts pan animation (may still be invisible) */
+.component-locationwallpaper-basic-image--animating {
+    z-index: 2;
+    animation: locationwallpaper-basic-pan 20s linear forwards;
+}
+
+/* Active image: visible */
+.component-locationwallpaper-basic-image--active {
+    opacity: 1;
+}
+
+/* Paused state: freeze animation at current position */
+.component-locationwallpaper-basic-container--paused .component-locationwallpaper-basic-image--animating {
+    animation-play-state: paused;
+}
+
+/* Pan: left-anchored image moves 100px leftward */
+@keyframes locationwallpaper-basic-pan {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .component-locationwallpaper-basic-image {
+        transition: none;
+    }
+    .component-locationwallpaper-basic-image--animating {
+        animation: none;
+    }
+}
+
+
+/* ============================================================================
+   IMAGE MODAL (LIGHTBOX)
+   Full-screen overlay for viewing images
+   ============================================================================ */
+
+/* Disable all interaction behind modal when open */
+body.image-modal-open > *:not(.image-modal) {
+  pointer-events: none;
+}
+
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--image-panel-bg, rgba(0, 0, 0, 0.85));
+  z-index: var(--layer-image-modal, 88);
+  display: none;
+  overflow: hidden;
+  cursor: pointer;
+  pointer-events: none;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.image-modal.show {
+  display: block;
+  pointer-events: auto;
+}
+
+.image-modal-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+  pointer-events: auto;
+  touch-action: pan-x;
+}
+
+.image-modal-slot {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.image-modal-image {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  cursor: pointer;
+  user-select: none;
+}
+
