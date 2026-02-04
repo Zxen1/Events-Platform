@@ -1781,10 +1781,11 @@
   z-index: var(--layer-popover);
   /* Visual goal: looks like a continuous extension of the date box */
   width: fit-content;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: #222; /* JS may override to match selected state */
+  border: 1px solid rgba(255, 255, 255, 0.35); /* JS may override to match cell border */
+  border-radius: 5px;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .post-session-popover-time {
@@ -1792,46 +1793,18 @@
   padding: 0 10px;
   display: flex;
   align-items: center;
-  background: #222;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-top: none;
+  background: transparent;
+  border: none;
   width: 100%;
   color: #fff;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
+  border-bottom: none;
   white-space: nowrap;
 }
-.post-session-popover-time:first-child {
-  border-top: 1px solid rgba(255, 255, 255, 0.35);
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-}
 .post-session-popover-time:last-child {
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-}
-
-/* When popover is on the RIGHT of the date box, remove left border/radius (connects to date) */
-.post-session-popover--right .post-session-popover-time {
-  border-left: none;
-}
-.post-session-popover--right .post-session-popover-time:first-child {
-  border-top-left-radius: 0;
-}
-.post-session-popover--right .post-session-popover-time:last-child {
-  border-bottom-left-radius: 0;
-}
-
-/* When popover is on the LEFT of the date box, remove right border/radius (connects to date) */
-.post-session-popover--left .post-session-popover-time {
-  border-right: none;
-}
-.post-session-popover--left .post-session-popover-time:first-child {
-  border-top-right-radius: 0;
-}
-.post-session-popover--left .post-session-popover-time:last-child {
-  border-bottom-right-radius: 0;
+  border-bottom: none;
 }
 
 .post-session-popover-time:hover {
@@ -1844,30 +1817,28 @@
 
 /* When we keep it highlighted for 500ms before closing */
 .post-session-popover-time.menu-option--highlighted {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
+  background: var(--blue-600, #2563eb);
 }
 
 /* Times list + extension: match calendar day hover (border/outline, no fill) */
 .post-session-container .post-session-time.menu-option--hover,
 .post-session-container .post-session-popover-time.menu-option--hover {
   background: transparent;
-  border-color: var(--blue-500);
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 .post-session-container .post-session-time.menu-option--highlighted,
 .post-session-container .post-session-popover-time.menu-option--highlighted {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
+  background: var(--blue-600, #2563eb);
+  box-shadow: none;
 }
 
 /* Override menu-class-5 default option hover fill for session times:
    sessions use "border hover" like calendar date boxes. */
 @media (hover: hover) and (pointer: fine) {
-  .post-session-container .post-session-time:hover,
-  .post-session-container .post-session-popover-time:hover {
+  .post-session-container .post-session-time:hover {
     background: transparent;
-    border-color: var(--blue-500);
+    box-shadow: inset 0 0 0 1px var(--blue-500);
   }
 }
 
