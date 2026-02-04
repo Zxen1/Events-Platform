@@ -3121,8 +3121,14 @@ const PostModule = (function() {
         var originalIndex = getMapCardIndexById(post, loc.id);
         addToRecentHistory(post, originalIndex);
 
-        // My Posts tab: Don't fly, just update UI in place
+        // My Posts tab: Don't fly, re-render post with new location data in place
         if (isInMyPosts) {
+          // Build new post detail with the new active location
+          var newWrap = buildPostDetail(post, null, false, originalIndex);
+          // Replace old wrap with new one
+          if (wrap.parentNode) {
+            wrap.parentNode.replaceChild(newWrap, wrap);
+          }
           return;
         }
 
