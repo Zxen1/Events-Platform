@@ -3761,45 +3761,23 @@ body.image-modal-open > *:not(.image-modal) {
   border-top: none;
   border-bottom: none;
   border-radius: var(--ps-radius);
-  box-shadow: none;
-  overflow: visible;
   display: none;
 }
 
-/* Popover on RIGHT of cell: seamless join at top, border below with rounded corner */
+/* Popover on RIGHT of cell */
 .post-session-popover.post-session-popover--right {
   display: block;
   border-left: none;
   border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
-.post-session-popover.post-session-popover--right::after {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: calc(var(--post-session-cell-h, 36px) - 1px);
-  bottom: -1px;
-  width: 1px;
-  background: var(--ps-border-focus);
-  border-bottom-left-radius: var(--ps-radius);
-}
-
-/* Popover on LEFT of cell: seamless join at top, border below with rounded corner */
+/* Popover on LEFT of cell */
 .post-session-popover.post-session-popover--left {
   display: block;
   border-right: none;
   border-top-right-radius: 0;
-}
-
-.post-session-popover.post-session-popover--left::after {
-  content: '';
-  position: absolute;
-  right: -1px;
-  top: calc(var(--post-session-cell-h, 36px) - 1px);
-  bottom: -1px;
-  width: 1px;
-  background: var(--ps-border-focus);
-  border-bottom-right-radius: var(--ps-radius);
+  border-bottom-right-radius: 0;
 }
 
 
@@ -3844,10 +3822,34 @@ body.image-modal-open > *:not(.image-modal) {
 
 .post-session-popover-time:first-child {
   border-top: 1px solid var(--ps-border-focus);
+  border-top-right-radius: var(--ps-radius);
 }
 
 .post-session-popover-time:last-child {
   border-bottom: 1px solid var(--ps-border-focus);
+  border-bottom-right-radius: var(--ps-radius);
+}
+
+/* When popover is on RIGHT of cell, exposed side is RIGHT */
+.post-session-popover--right .post-session-popover-time:first-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: var(--ps-radius);
+}
+
+.post-session-popover--right .post-session-popover-time:last-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: var(--ps-radius);
+}
+
+/* When popover is on LEFT of cell, exposed side is LEFT */
+.post-session-popover--left .post-session-popover-time:first-child {
+  border-top-right-radius: 0;
+  border-top-left-radius: var(--ps-radius);
+}
+
+.post-session-popover--left .post-session-popover-time:last-child {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: var(--ps-radius);
 }
 
 /* Popover time - Hover */
