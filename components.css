@@ -341,6 +341,9 @@
 
 /* Appearance */
 .calendar-container {
+    /* Core sizing (touch-friendly, consistent everywhere) */
+    --calendar-cell: 36px;
+    --calendar-month-width: 252px; /* 7 * 36 */
     width: 100%;
     overflow: hidden;
     background: #222;
@@ -383,7 +386,8 @@
 
 .calendar-month {
     flex: 0 0 auto;
-    width: 250px;
+    width: var(--calendar-month-width);
+    box-sizing: border-box; /* keep month separators from changing the math */
 }
 
 .calendar-month:not(:first-child) {
@@ -403,12 +407,13 @@
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, var(--calendar-cell));
 }
 
 .calendar-weekday,
 .calendar-day {
-    height: 36px;
+    height: var(--calendar-cell);
+    width: var(--calendar-cell);
     display: flex;
     align-items: center;
     justify-content: center;
