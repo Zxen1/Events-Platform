@@ -3123,11 +3123,26 @@ const PostModule = (function() {
 
         // My Posts tab: Don't fly, re-render post with new location data in place
         if (isInMyPosts) {
+          // Preserve expanded state
+          var wasExpanded = wrap.classList.contains('post--expanded');
+          
           // Build new post detail with the new active location
           var newWrap = buildPostDetail(post, null, false, originalIndex);
+          
           // Replace old wrap with new one
           if (wrap.parentNode) {
             wrap.parentNode.replaceChild(newWrap, wrap);
+          }
+          
+          // Restore expanded state by triggering click on description (runs showExpanded)
+          if (wasExpanded) {
+            var newDescEl = newWrap.querySelector('.post-description-text');
+            if (newDescEl) {
+              // Use setTimeout to ensure DOM is ready after replacement
+              setTimeout(function() {
+                newDescEl.click();
+              }, 0);
+            }
           }
           return;
         }
