@@ -3761,16 +3761,31 @@ body.image-modal-open > *:not(.image-modal) {
   display: none;
 }
 
-/* Popover on RIGHT of cell - 10px gap, own container */
+/* Popover on RIGHT of cell */
 .post-session-popover.post-session-popover--right {
   display: block;
-  margin-left: 10px;
 }
 
-/* Popover on LEFT of cell - 10px gap, own container */
+/* Popover on LEFT of cell */
 .post-session-popover.post-session-popover--left {
   display: block;
-  margin-right: 10px;
+}
+
+
+/* ----------------------------------------------------------------------------
+   CALENDAR CELL JOIN
+   ---------------------------------------------------------------------------- */
+
+/* Cell with popover on its RIGHT - flatten right corners */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-right {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Cell with popover on its LEFT - flatten left corners */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 

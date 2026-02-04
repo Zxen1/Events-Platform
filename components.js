@@ -10728,6 +10728,11 @@ const PostSessionComponent = (function() {
             sessionPopover.innerHTML = '';
             sessionPopoverIso = '';
             hoverPreviewIso = '';
+            // Remove cell join classes
+            if (sessionCalendarMount) {
+                var joinedCells = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
+                joinedCells.forEach(function(el) { el.classList.remove('post-session-cell--join-left', 'post-session-cell--join-right'); });
+            }
         }
 
         function getActiveLocationForUi() {
@@ -10798,6 +10803,21 @@ const PostSessionComponent = (function() {
                 return (cellMid < visibleMid) ? 'right' : 'left';
             } catch (_e) {
                 return 'right';
+            }
+        }
+
+        function applyJoinedCellClass(cellEl, side) {
+            if (!cellEl || !sessionCalendarMount) return;
+            // Remove join classes from all cells
+            var joinedCells = sessionCalendarMount.querySelectorAll('.post-session-cell--join-left, .post-session-cell--join-right');
+            joinedCells.forEach(function(el) {
+                el.classList.remove('post-session-cell--join-left', 'post-session-cell--join-right');
+            });
+            // Apply join class to current cell
+            if (side === 'right') {
+                cellEl.classList.add('post-session-cell--join-right');
+            } else {
+                cellEl.classList.add('post-session-cell--join-left');
             }
         }
 
@@ -10875,6 +10895,7 @@ const PostSessionComponent = (function() {
             } else {
                 sessionPopover.classList.add('post-session-popover--left');
             }
+            applyJoinedCellClass(cellEl, side);
             positionPopover(cellEl, side);
         }
 
