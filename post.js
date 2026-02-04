@@ -3316,6 +3316,21 @@ const PostModule = (function() {
       try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
       hideSessionPopover();
       sessionTimesSide = '';
+      // Never leave "hover" markers stuck on close.
+      try {
+        if (sessionCalendarMount) {
+          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
+          d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+        if (sessionTimesList) {
+          var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
+          d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+        if (sessionPopover) {
+          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
+          d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+      } catch (_eClrClose0) {}
     }
 
     function hideSessionPopover() {
@@ -3324,6 +3339,21 @@ const PostModule = (function() {
       sessionPopover.innerHTML = '';
       sessionPopoverIso = '';
       hoverPreviewIso = '';
+      // Clear synced hover markers when the extension hides.
+      try {
+        if (sessionCalendarMount) {
+          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
+          d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+        if (sessionTimesList) {
+          var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
+          d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+        if (sessionPopover) {
+          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
+          d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+        }
+      } catch (_eClrHide0) {}
       // Restore any temporary join styling on the date cell.
       try {
         if (lastJoinedCell && lastJoinedCellStyles) {
@@ -3517,6 +3547,17 @@ const PostModule = (function() {
         hideSessionPopover();
         return;
       }
+
+      // Keep the time-row height exactly matching the real calendar day height.
+      try {
+        if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
+          var rr = cellEl.getBoundingClientRect();
+          var hh = rr && rr.height ? Math.round(rr.height) : 0;
+          if (hh > 0) {
+            sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
+          }
+        }
+      } catch (_eCellH0) {}
 
       sessionPopoverIso = iso;
       sessionPopover.innerHTML = times.map(function(t) {
