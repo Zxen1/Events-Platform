@@ -10588,12 +10588,50 @@ const PostSessionComponent = (function() {
     /**
      * Render the session section HTML
      */
+    // Age rating sort order (all is lowest, 21 is highest)
+    var ageRatingSortOrder = { 'all': 1, '7': 2, '12': 3, '15': 4, '18': 5, '21': 6 };
+
+    function getAgeRatingImageUrlStatic(value) {
+        if (!value) return '';
+        var filename = 'age-rating-' + value + '.svg';
+        if (window.App && typeof window.App.getImageUrl === 'function') {
+            return window.App.getImageUrl('ageRatings', filename, 'minithumb');
+        }
+        return '';
+    }
+
     function render(options) {
         var postId = options.postId || '';
         var datesText = options.datesText || '';
+        var ageRatings = options.ageRatings || {};
         var escapeHtml = options.escapeHtml || function(s) { return s; };
 
         if (!datesText) return '';
+
+        // Build initial age rating icons from all unique ratings
+        var ageRatingsHtml = '';
+        if (ageRatings && typeof ageRatings === 'object') {
+            var ratings = [];
+            var seen = {};
+            Object.keys(ageRatings).forEach(function(key) {
+                var val = ageRatings[key];
+                if (val && !seen[val]) {
+                    seen[val] = true;
+                    ratings.push(val);
+                }
+            });
+            // Sort by age rating order
+            ratings.sort(function(a, b) {
+                var orderA = ageRatingSortOrder[a] || 99;
+                var orderB = ageRatingSortOrder[b] || 99;
+                return orderA - orderB;
+            });
+            ageRatingsHtml = ratings.map(function(val) {
+                var url = getAgeRatingImageUrlStatic(val);
+                if (!url) return '';
+                return '<img class="post-session-age-rating-icon" src="' + escapeHtml(url) + '" alt="' + escapeHtml(val) + '" title="Age rating: ' + escapeHtml(val === 'all' ? 'All Ages' : val + '+') + '">';
+            }).join('');
+        }
 
         var html = [];
         html.push('<div class="post-session-container" data-post-id="' + postId + '">');
@@ -10602,7 +10640,7 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-text-main">');
         html.push('<span class="post-session-date-left">' + escapeHtml(datesText) + '</span>');
         html.push('<span class="post-session-time-right"></span>');
-        html.push('<span class="post-session-age-ratings"></span>');
+        html.push('<span class="post-session-age-ratings">' + ageRatingsHtml + '</span>');
         html.push('</div>');
         html.push('</div>');
         html.push('<div class="post-session-arrow"></div>');
@@ -10667,9 +10705,6 @@ const PostSessionComponent = (function() {
             if (callbacks && callbacks.getLocationListForUi) return callbacks.getLocationListForUi();
             return post.map_cards || [];
         }
-
-        // Age rating sort order (all is lowest, 21 is highest)
-        var ageRatingSortOrder = { 'all': 1, '7': 2, '12': 3, '15': 4, '18': 5, '21': 6 };
 
         function getAgeRatingImageUrl(value) {
             if (!value) return '';

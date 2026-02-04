@@ -2753,6 +2753,7 @@ const PostModule = (function() {
         PostSessionComponent.render({
           postId: post.id,
           datesText: datesText,
+          ageRatings: activeLoc.age_ratings || {},
           escapeHtml: escapeHtml
         }),
         // Price component (price button)
