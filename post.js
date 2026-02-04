@@ -3447,7 +3447,7 @@ const PostModule = (function() {
         var dateLeft = formatSessionDateLeft(iso);
         var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
         return [
-          '<button class="post-session-time menu-option' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
+          '<button class="post-session-time' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
             '<span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span>',
             '<span class="post-session-time-right">' + escapeHtml(timeText) + '</span>',
           '</button>'
@@ -3635,7 +3635,7 @@ const PostModule = (function() {
       sessionPopoverIso = iso;
       sessionPopover.innerHTML = times.map(function(t) {
         var timeText = normalizeTimeHHMM(t);
-        return '<button class="post-session-popover-time menu-option" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+        return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
       }).join('');
       sessionPopover.style.display = 'block';
 
