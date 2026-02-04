@@ -1795,8 +1795,8 @@
   align-items: center;
   background: transparent;
   border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.35);
-  border-right: 1px solid rgba(255, 255, 255, 0.35);
+  border-left: 1px solid var(--blue-500);
+  border-right: 1px solid var(--blue-500);
   width: 100%;
   color: #fff;
   text-align: left;
@@ -1804,8 +1804,13 @@
   box-sizing: border-box;
   white-space: nowrap;
 }
-.post-session-popover-time:last-child {
-  border-bottom: none;
+
+/* Remove border on connecting side (no slice line between date box and times) */
+.post-session-popover--right .post-session-popover-time {
+  border-left: none;
+}
+.post-session-popover--left .post-session-popover-time {
+  border-right: none;
 }
 
 .post-session-popover-time:hover {
