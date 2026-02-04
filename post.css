@@ -1795,22 +1795,16 @@
   align-items: center;
   background: transparent;
   border: none;
-  border-left: 1px solid var(--blue-500);
-  border-right: 1px solid var(--blue-500);
   width: 100%;
   color: #fff;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
+  border-bottom: none;
   white-space: nowrap;
 }
-
-/* Remove border on connecting side (no slice line between date box and times) */
-.post-session-popover--right .post-session-popover-time {
-  border-left: none;
-}
-.post-session-popover--left .post-session-popover-time {
-  border-right: none;
+.post-session-popover-time:last-child {
+  border-bottom: none;
 }
 
 .post-session-popover-time:hover {
@@ -1842,8 +1836,7 @@
 /* Override menu-class-5 default option hover fill for session times:
    sessions use "border hover" like calendar date boxes. */
 @media (hover: hover) and (pointer: fine) {
-  .post-session-container .post-session-time:hover,
-  .post-session-container .post-session-popover-time:hover {
+  .post-session-container .post-session-time:hover {
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--blue-500);
   }

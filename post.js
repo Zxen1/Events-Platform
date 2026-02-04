@@ -3643,11 +3643,6 @@ const PostModule = (function() {
       ensureTimesSideChosen();
       var side = sessionTimesSide || 'right';
       applyJoinedCellStyles(cellEl, side);
-      
-      // Add position class for CSS to remove border on connecting side
-      sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
-      sessionPopover.classList.add('post-session-popover--' + side);
-      
       try {
         var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
         var borderColor = cs ? cs.borderColor : '';
