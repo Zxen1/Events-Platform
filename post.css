@@ -1682,6 +1682,25 @@
   color: inherit;
 }
 
+/* Available session dates: grey border only (no fill unless selected) */
+.post-session-container .post-session-calendar-slot .calendar-day.available-day {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Keep hover feedback without filling the box */
+.post-session-container .post-session-calendar-slot .calendar-day.available-day:hover {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+.post-session-container .post-session-calendar-slot .calendar-day.available-day:active {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+}
+
 /* Times list (36px rows) */
 .post-session-times {
   width: 100%;
