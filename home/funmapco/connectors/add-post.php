@@ -324,9 +324,11 @@ if (is_array($fieldsArr)) {
         if ($coStmt) {
           $coStmt->bind_param('i', $optionId);
           $coStmt->execute();
-          $coResult = $coStmt->get_result();
-          if ($coRow = $coResult->fetch_assoc()) {
-            $checkoutKey = $coRow['checkout_key'];
+          // No get_result(): mysqlnd isn't guaranteed on production.
+          $coKey = null;
+          $coStmt->bind_result($coKey);
+          if ($coStmt->fetch() && $coKey !== null) {
+            $checkoutKey = (string)$coKey;
           }
           $coStmt->close();
         }
@@ -397,8 +399,8 @@ foreach ($fieldsArr as $fld) {
 
 // Generate URL-friendly slug from title (preserves Unicode for international support)
 function generate_slug(string $text): string {
-  // Convert to lowercase (Unicode-aware)
-  $slug = mb_strtolower($text, 'UTF-8');
+  // Convert to lowercase (best-effort; avoids mbstring dependency)
+  $slug = strtolower($text);
   // Remove punctuation and special URL characters, but keep letters/numbers from all languages
   // \p{L} = any letter (including Chinese, Arabic, etc.)
   // \p{N} = any number
