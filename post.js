@@ -3088,6 +3088,12 @@ const PostModule = (function() {
         var loc = locationList[index];
         if (!loc) return;
 
+        // Detect context: is this inside the My Posts tab?
+        var isInMyPosts = !!(wrap.closest && wrap.closest('#member-tab-myposts'));
+        
+        // Detect if clicking the already-selected location
+        var isAlreadySelected = (index === locationSelectedIndex);
+
         // Update selected index
         locationSelectedIndex = index;
 
@@ -3115,43 +3121,66 @@ const PostModule = (function() {
         var originalIndex = getMapCardIndexById(post, loc.id);
         addToRecentHistory(post, originalIndex);
 
-        // Fly to location on main map (zoom 10 for context)
+        // My Posts tab: Don't fly, just update UI in place
+        if (isInMyPosts) {
+          return;
+        }
+
+        // Get coordinates for flying
         var lat = Number(loc.latitude);
         var lng = Number(loc.longitude);
-        if (Number.isFinite(lat) && Number.isFinite(lng) && window.MapModule && typeof MapModule.flyTo === 'function') {
-          // Close posts panel during flight (switch to map mode)
-          var mapBtn = getModeButton('map');
-          if (mapBtn && currentMode !== 'map') {
-            mapBtn.click();
-          }
-          
-          // Fly to location
-          MapModule.flyTo(lng, lat, 10);
-          
-          // When landed (moveend event): open posts panel and show the post
-          var mainMap = MapModule.getMap();
-          if (mainMap) {
-            mainMap.once('moveend', function() {
-              // Check if we landed near the target (user may have interrupted)
-              var center = mainMap.getCenter();
-              var latDiff = Math.abs(center.lat - lat);
-              var lngDiff = Math.abs(center.lng - lng);
-              if (latDiff > 0.01 || lngDiff > 0.01) return; // Interrupted, abort
-              
-              var postsBtn = getModeButton('posts');
-              if (postsBtn && postsEnabled) {
-                postsBtn.click();
-                // Wait for mode change then open (matches openPostById pattern)
-                setTimeout(function() {
-                  loadPostById(post.id).then(function(freshPost) {
-                    if (freshPost) {
-                      openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
-                    }
-                  });
-                }, 50);
-              }
-            });
-          }
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || !window.MapModule || typeof MapModule.flyTo !== 'function') {
+          return;
+        }
+
+        // Get zoom threshold from config (no hardcoded fallback)
+        if (!window.App || typeof App.getConfig !== 'function') {
+          throw new Error('[Post] App.getConfig is required for postsLoadZoom.');
+        }
+        var postsLoadZoom = App.getConfig('postsLoadZoom');
+        if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
+          throw new Error('[Post] postsLoadZoom config is missing or invalid.');
+        }
+
+        // Already-selected location: Just fly to center it without reloading
+        if (isAlreadySelected) {
+          MapModule.flyTo(lng, lat, postsLoadZoom);
+          return;
+        }
+
+        // Different location selected: Full fly + reload behavior
+        // Close posts panel during flight (switch to map mode)
+        var mapBtn = getModeButton('map');
+        if (mapBtn && currentMode !== 'map') {
+          mapBtn.click();
+        }
+        
+        // Fly to location
+        MapModule.flyTo(lng, lat, postsLoadZoom);
+        
+        // When landed (moveend event): open posts panel and show the post
+        var mainMap = MapModule.getMap();
+        if (mainMap) {
+          mainMap.once('moveend', function() {
+            // Check if we landed near the target (user may have interrupted)
+            var center = mainMap.getCenter();
+            var latDiff = Math.abs(center.lat - lat);
+            var lngDiff = Math.abs(center.lng - lng);
+            if (latDiff > 0.01 || lngDiff > 0.01) return; // Interrupted, abort
+            
+            var postsBtn = getModeButton('posts');
+            if (postsBtn && postsEnabled) {
+              postsBtn.click();
+              // Wait for mode change then open (matches openPostById pattern)
+              setTimeout(function() {
+                loadPostById(post.id).then(function(freshPost) {
+                  if (freshPost) {
+                    openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
+                  }
+                });
+              }, 50);
+            }
+          });
         }
       });
     });
