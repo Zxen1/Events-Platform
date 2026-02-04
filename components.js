@@ -10436,19 +10436,19 @@ const PostPriceComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-4 for post info menu styling
-        html.push('<div class="post-price-container menu-class-4" data-post-id="' + postId + '">');
+        // Container wrapper (TODO: make self-contained like PostLocationComponent)
+        html.push('<div class="post-price-container" data-post-id="' + postId + '">');
 
         // Build price badge
         var badgeHtml = priceParts.flagUrl 
             ? '<img class="post-price-badge" src="' + priceParts.flagUrl + '" alt="' + (priceParts.countryCode || '') + '" title="Currency: ' + (priceParts.countryCode || '').toUpperCase() + '">'
             : '💰 ';
 
-        html.push('<button class="post-price-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
-        html.push('<div class="post-price-text menu-text">');
+        html.push('<button class="post-price-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-price-text">');
         html.push('<div class="post-price-text-main">' + badgeHtml + escapeHtml(priceParts.text) + '</div>');
         html.push('</div>');
-        html.push('<div class="post-price-arrow menu-arrow"></div>');
+        html.push('<div class="post-price-arrow"></div>');
         html.push('</button>');
 
         html.push('</div>');
