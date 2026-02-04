@@ -63,7 +63,7 @@ try {
   $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 0.0;
 
   // Read map_card_breakpoint from database settings (no hardcoded fallback)
-  $thresholdSql = "SELECT setting_value FROM settings WHERE setting_key = 'map_card_breakpoint' LIMIT 1";
+  $thresholdSql = "SELECT setting_value FROM admin_settings WHERE setting_key = 'map_card_breakpoint' LIMIT 1";
   $thresholdResult = $mysqli->query($thresholdSql);
   if (!$thresholdResult) {
     fail(500, 'Failed to read map_card_breakpoint setting from database.');
