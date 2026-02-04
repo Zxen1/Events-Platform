@@ -10348,11 +10348,7 @@ const PostSessionComponent = (function() {
 
         html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-session-text menu-text">');
-        // Button layout matches options: date on left, time right-aligned (arrow stays far right)
-        html.push('<div class="post-session-text-main">');
-        html.push('<span class="post-session-button-date post-session-date-left"><span class="post-session-icon" aria-hidden="true">📅</span><span class="post-session-button-date-text">' + escapeHtml(datesText) + '</span></span>');
-        html.push('<span class="post-session-button-time post-session-time-right"></span>');
-        html.push('</div>');
+        html.push('<div class="post-session-text-main">📅 ' + escapeHtml(datesText) + '</div>');
         html.push('</div>');
         html.push('<div class="post-session-arrow menu-arrow"></div>');
         html.push('</button>');

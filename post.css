@@ -1627,27 +1627,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.post-session-button-date {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.post-session-button-date-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.post-session-icon {
-  flex: 0 0 auto;
 }
 
 /* Arrow sizing */
@@ -1689,6 +1668,18 @@
 }
 .post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
+}
+
+/* Only session dates are interactive */
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:hover,
+.post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled:active {
+  background: #222;
+  border-color: transparent;
+  color: inherit;
 }
 
 /* Times list (36px rows) */
