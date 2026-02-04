@@ -10720,20 +10720,6 @@ const PostSessionComponent = (function() {
             if (sessionArrow) sessionArrow.classList.remove('post-session-arrow--open');
             try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
             hideSessionPopover();
-            try {
-                if (sessionCalendarMount) {
-                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted, .calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
-                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted', 'post-session-cell--join-left', 'post-session-cell--join-right'); });
-                }
-                if (sessionTimesList) {
-                    var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
-                    d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                }
-                if (sessionPopover) {
-                    var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
-                    d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                }
-            } catch (_eClrClose0) {}
         }
 
         function hideSessionPopover() {
@@ -10742,20 +10728,11 @@ const PostSessionComponent = (function() {
             sessionPopover.innerHTML = '';
             sessionPopoverIso = '';
             hoverPreviewIso = '';
-            try {
-                if (sessionCalendarMount) {
-                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted, .calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
-                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted', 'post-session-cell--join-left', 'post-session-cell--join-right'); });
-                }
-                if (sessionTimesList) {
-                    var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
-                    d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                }
-                if (sessionPopover) {
-                    var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
-                    d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                }
-            } catch (_eClrHide0) {}
+            // Remove cell join classes
+            if (sessionCalendarMount) {
+                var joinedCells = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
+                joinedCells.forEach(function(el) { el.classList.remove('post-session-cell--join-left', 'post-session-cell--join-right'); });
+            }
         }
 
         function getActiveLocationForUi() {
@@ -10783,7 +10760,7 @@ const PostSessionComponent = (function() {
                 var timeText = normalizeTimeHHMM(it ? it.time : '');
                 var dateLeft = formatSessionDateLeft(iso);
                 var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
-                return '<button class="post-session-time' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span></button>';
+                return '<button class="post-session-option' + (isSelected ? ' post-session-option-selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span></button>';
             }).join('');
         }
 
@@ -10798,11 +10775,11 @@ const PostSessionComponent = (function() {
             }
             if (sessionCalendarMount) {
                 try {
-                    var cells = sessionCalendarMount.querySelectorAll('.calendar-day.selected');
-                    cells.forEach(function(c) { c.classList.remove('selected'); });
+                    var cells = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-date-selected');
+                    cells.forEach(function(c) { c.classList.remove('post-session-date-selected'); });
                     if (iso) {
                         var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
-                        if (cell) cell.classList.add('selected');
+                        if (cell) cell.classList.add('post-session-date-selected');
                     }
                 } catch (_eSel0) {}
             }
@@ -10894,23 +10871,24 @@ const PostSessionComponent = (function() {
             }
             // Set cell height CSS variable for popover time row sizing
             try {
-                if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
+                if (cellEl && cellEl.getBoundingClientRect && sessionPopover) {
                     var rr = cellEl.getBoundingClientRect();
                     var hh = rr && rr.height ? rr.height : 0;
                     if (hh > 0.5) {
-                        sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
+                        sessionPopover.style.setProperty('--post-session-cell-h', hh + 'px');
                     }
                 }
             } catch (_eCellH0) {}
             sessionPopoverIso = iso;
-            // Build popover content
+            // Build popover content with selected state
             sessionPopover.innerHTML = times.map(function(t) {
                 var timeText = normalizeTimeHHMM(t);
-                return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+                var isSelected = (selectedSessionIso === iso && selectedSessionTime === timeText);
+                return '<button class="post-session-popover-time' + (isSelected ? ' post-session-time-selected' : '') + '" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
             }).join('');
             // Determine side based on this cell's position
             var side = getSideForCell(cellEl);
-            // Apply CSS classes (no inline styles)
+            // Apply CSS classes
             sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
             if (side === 'right') {
                 sessionPopover.classList.add('post-session-popover--right');
@@ -10930,8 +10908,13 @@ const PostSessionComponent = (function() {
                     if (!iso) return;
                     cell.classList.remove('post-session-disabled');
                     cell.classList.remove('available-day');
+                    cell.classList.remove('post-session-date-selected');
                     if (sessionAvailableSet[iso]) {
                         cell.classList.add('available-day');
+                        // Restore selected state if this is the selected date
+                        if (selectedSessionIso && iso === selectedSessionIso) {
+                            cell.classList.add('post-session-date-selected');
+                        }
                     } else {
                         cell.classList.add('post-session-disabled');
                     }
@@ -11085,73 +11068,6 @@ const PostSessionComponent = (function() {
                 }
             }
 
-            function clearSyncedMarks() {
-                try {
-                    if (sessionCalendarMount) {
-                        var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
-                        d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                    }
-                    if (sessionTimesList) {
-                        var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
-                        d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                    }
-                    if (sessionPopover) {
-                        var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
-                        d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
-                    }
-                } catch (_eClear0) {}
-            }
-
-            function applySyncedHover(iso, timeText) {
-                if (!iso) return;
-                try {
-                    if (sessionTimesList) {
-                        var rows = sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]');
-                        rows.forEach(function(r) { r.classList.add('post-session-hover'); });
-                        if (timeText) {
-                            var exact = sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]');
-                            if (exact) exact.classList.add('post-session-hover');
-                        }
-                    }
-                } catch (_eApply0) {}
-            }
-
-            function applySyncedActivate(iso, timeText) {
-                if (!iso) return;
-                try {
-                    if (sessionCalendarMount) {
-                        var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
-                        if (day) day.classList.add('post-session-highlighted');
-                    }
-                    if (sessionTimesList) {
-                        var exact = timeText ? sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]') : null;
-                        if (exact) exact.classList.add('post-session-highlighted');
-                    }
-                    if (sessionPopover && timeText) {
-                        var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
-                        if (b) b.classList.add('post-session-highlighted');
-                    }
-                } catch (_eAct0) {}
-                try {
-                    setTimeout(function() {
-                        try {
-                            if (sessionCalendarMount) {
-                                var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-highlighted');
-                                d1.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
-                            }
-                            if (sessionTimesList) {
-                                var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-highlighted');
-                                d2.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
-                            }
-                            if (sessionPopover) {
-                                var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-highlighted');
-                                d3.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
-                            }
-                        } catch (_eActClr1) {}
-                    }, 300);
-                } catch (_eActClr0) {}
-            }
-
             function scrollCalendarToIso(iso) {
                 if (!iso) return;
                 try {
@@ -11171,7 +11087,6 @@ const PostSessionComponent = (function() {
                 if (!iso) return;
                 if (!sessionAvailableSet || !sessionAvailableSet[iso]) return;
                 e.stopPropagation();
-                clearSyncedMarks();
                 setSelectedCalendarDay(iso);
                 showSessionPopoverForDate(day, iso);
             });
@@ -11185,13 +11100,13 @@ const PostSessionComponent = (function() {
                 if (!sessionAvailableSet || !sessionAvailableSet[iso]) return;
                 if (hoverPreviewIso === iso) return;
                 hoverPreviewIso = iso;
-                clearSyncedMarks();
                 showSessionPopoverForDate(day, iso);
-                applySyncedHover(iso, '');
             });
 
             sessionOptionsPanel.addEventListener('mouseout', function(e) {
                 if (!supportsHover()) return;
+                // Don't hide if close timer is pending (user selected, waiting 500ms)
+                if (closeSessionTimer) return;
                 var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
                 if (!day) return;
                 if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) {
@@ -11199,7 +11114,6 @@ const PostSessionComponent = (function() {
                     return;
                 }
                 hideSessionPopover();
-                clearSyncedMarks();
             });
 
             if (sessionPopover) {
@@ -11215,15 +11129,10 @@ const PostSessionComponent = (function() {
                     selectedSessionTime = timeText;
                     updateSessionButtonText();
                     renderSessionTimesList();
-                    try {
-                        var all = sessionPopover.querySelectorAll('.post-session-popover-time');
-                        all.forEach(function(b) { b.classList.remove('post-session-highlighted'); });
-                        btn.classList.add('post-session-highlighted');
-                    } catch (_eHi0) {}
-                    clearSyncedMarks();
-                    applySyncedHover(sessionPopoverIso, timeText);
-                    applySyncedActivate(sessionPopoverIso, timeText);
-                    scrollCalendarToIso(sessionPopoverIso);
+                    // Mark selected in popover
+                    var all = sessionPopover.querySelectorAll('.post-session-popover-time');
+                    all.forEach(function(b) { b.classList.remove('post-session-time-selected'); });
+                    btn.classList.add('post-session-time-selected');
                     if (closeSessionTimer) {
                         try { clearTimeout(closeSessionTimer); } catch (_eT1) {}
                     }
@@ -11236,7 +11145,7 @@ const PostSessionComponent = (function() {
 
             if (sessionTimesList) {
                 sessionTimesList.addEventListener('click', function(e) {
-                    var btn = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+                    var btn = e.target && e.target.closest ? e.target.closest('.post-session-option') : null;
                     if (!btn) return;
                     e.stopPropagation();
                     var timeText = String(btn.dataset.time || '').trim();
@@ -11248,9 +11157,6 @@ const PostSessionComponent = (function() {
                     selectedSessionTime = timeText;
                     updateSessionButtonText();
                     renderSessionTimesList();
-                    clearSyncedMarks();
-                    applySyncedHover(iso, timeText);
-                    applySyncedActivate(iso, timeText);
                     scrollCalendarToIso(iso);
                     if (closeSessionTimer) {
                         try { clearTimeout(closeSessionTimer); } catch (_eT2) {}

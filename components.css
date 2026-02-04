@@ -3452,13 +3452,23 @@ body.image-modal-open > *:not(.image-modal) {
    - .post-session-calendar-*   (calendar section)
    - .post-session-times        (times list section)
    - .post-session-popover      (times popover beside date)
+   
+   STATES (for date, time, option):
+   - Idle: #222 background, grey border
+   - Hover: #222 background, blue border
+   - Selected: blue fill (persists)
    ============================================================================ */
 
-/* Component variables */
+
+/* ----------------------------------------------------------------------------
+   VARIABLES
+   ---------------------------------------------------------------------------- */
+
 .post-session-container {
   --ps-bg: rgba(0, 0, 0, 0.5);
   --ps-bg-button: rgba(0, 0, 0, 0.35);
   --ps-border: rgba(255, 255, 255, 0.12);
+  --ps-border-idle: rgba(255, 255, 255, 0.35);
   --ps-border-hover: rgba(255, 255, 255, 0.2);
   --ps-border-focus: var(--blue-500);
   --ps-text: #fff;
@@ -3472,7 +3482,10 @@ body.image-modal-open > *:not(.image-modal) {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
-/* Button */
+/* ----------------------------------------------------------------------------
+   BUTTON
+   ---------------------------------------------------------------------------- */
+
 .post-session-button {
   display: flex;
   align-items: center;
@@ -3500,7 +3513,10 @@ body.image-modal-open > *:not(.image-modal) {
   border-bottom: none;
 }
 
-/* Button text */
+/* ----------------------------------------------------------------------------
+   BUTTON TEXT
+   ---------------------------------------------------------------------------- */
+
 .post-session-text {
   flex: 1 1 auto;
   min-width: 0;
@@ -3534,7 +3550,10 @@ body.image-modal-open > *:not(.image-modal) {
   font-variant-numeric: tabular-nums;
 }
 
-/* Arrow */
+/* ----------------------------------------------------------------------------
+   ARROW
+   ---------------------------------------------------------------------------- */
+
 .post-session-arrow {
   width: 12px;
   height: 12px;
@@ -3557,7 +3576,10 @@ body.image-modal-open > *:not(.image-modal) {
   transform: rotate(180deg);
 }
 
-/* Options panel */
+/* ----------------------------------------------------------------------------
+   OPTIONS PANEL
+   ---------------------------------------------------------------------------- */
+
 .post-session-options {
   display: none;
   position: absolute;
@@ -3581,7 +3603,10 @@ body.image-modal-open > *:not(.image-modal) {
   display: block;
 }
 
-/* Calendar slot */
+/* ----------------------------------------------------------------------------
+   CALENDAR SLOT
+   ---------------------------------------------------------------------------- */
+
 .post-session-calendar-slot {
   width: 100%;
   padding: 10px;
@@ -3610,6 +3635,10 @@ body.image-modal-open > *:not(.image-modal) {
   position: relative;
 }
 
+/* ----------------------------------------------------------------------------
+   CALENDAR DATE STATES
+   ---------------------------------------------------------------------------- */
+
 /* Disabled dates */
 .post-session-calendar-slot .calendar-day.post-session-disabled {
   cursor: default;
@@ -3623,45 +3652,37 @@ body.image-modal-open > *:not(.image-modal) {
   color: inherit;
 }
 
-/* Available session dates: grey border only (no fill unless selected) */
+/* Available dates - Idle */
 .post-session-calendar-slot .calendar-day.available-day {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.35);
+  background: #222;
+  border-color: var(--ps-border-idle);
 }
 
-.post-session-calendar-slot .calendar-day.available-day.selected {
-  background: var(--ps-selected);
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
+/* Available dates - Hover */
 .post-session-calendar-slot .calendar-day.available-day:hover {
-  background: transparent;
+  background: #222;
   border-color: var(--ps-border-focus);
   color: #fff;
 }
 
-.post-session-calendar-slot .calendar-day.available-day:active {
-  background: transparent;
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
-/* Synced hover marker class */
-.post-session-calendar-slot .calendar-day.post-session-hover {
-  background: transparent;
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
-/* Synced highlighted class */
-.post-session-calendar-slot .calendar-day.post-session-highlighted {
+/* Available dates - Selected */
+.post-session-calendar-slot .calendar-day.available-day.post-session-date-selected {
   background: var(--ps-selected);
   border-color: var(--ps-border-focus);
   color: #fff;
 }
 
-/* Times list */
+/* Selected + Hover */
+.post-session-calendar-slot .calendar-day.available-day.post-session-date-selected:hover {
+  background: var(--ps-selected);
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+/* ----------------------------------------------------------------------------
+   OPTIONS LIST
+   ---------------------------------------------------------------------------- */
+
 .post-session-times {
   width: 100%;
 }
@@ -3671,15 +3692,15 @@ body.image-modal-open > *:not(.image-modal) {
   flex-direction: column;
 }
 
-/* Time option (36px row) */
-.post-session-time {
+/* Option row - Idle */
+.post-session-option {
   height: 36px;
   padding: 0 10px;
   cursor: pointer;
   color: var(--ps-text);
   font-size: 14px;
   line-height: 1;
-  background: transparent;
+  background: #222;
   border: none;
   border-bottom: 1px solid var(--ps-border);
   text-align: left;
@@ -3690,31 +3711,28 @@ body.image-modal-open > *:not(.image-modal) {
   box-sizing: border-box;
 }
 
-.post-session-time:last-child {
+.post-session-option:last-child {
   border-bottom: none;
 }
 
-/* Time hover: blue border, no fill */
-.post-session-time.post-session-hover {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ps-hover);
-}
-
-/* Time highlighted: blue fill */
-.post-session-time.post-session-highlighted {
-  background: var(--ps-selected);
-  box-shadow: none;
-}
-
-/* Time selected */
-.post-session-time--selected {
-  background: var(--ps-selected);
-}
-
+/* Option - Hover */
 @media (hover: hover) and (pointer: fine) {
-  .post-session-time:hover {
-    background: transparent;
+  .post-session-option:hover {
+    background: #222;
     box-shadow: inset 0 0 0 1px var(--ps-hover);
+  }
+}
+
+/* Option - Selected */
+.post-session-option.post-session-option-selected {
+  background: var(--ps-selected);
+}
+
+/* Selected + Hover */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-option.post-session-option-selected:hover {
+    background: var(--ps-selected);
+    box-shadow: none;
   }
 }
 
@@ -3729,12 +3747,15 @@ body.image-modal-open > *:not(.image-modal) {
   box-sizing: border-box;
 }
 
-/* Popover beside selected date (connects seamlessly with date cell) */
+/* ----------------------------------------------------------------------------
+   POPOVER
+   ---------------------------------------------------------------------------- */
+
 .post-session-popover {
   position: absolute;
   z-index: var(--layer-popover);
   width: fit-content;
-  background: var(--ps-selected);
+  background: #222;
   border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   box-shadow: none;
@@ -3758,26 +3779,37 @@ body.image-modal-open > *:not(.image-modal) {
   border-bottom-right-radius: 0;
 }
 
-/* Calendar cell joining with popover on its RIGHT */
+
+/* ----------------------------------------------------------------------------
+   CALENDAR CELL JOIN
+   ---------------------------------------------------------------------------- */
+
+/* Cell joining with popover on its RIGHT */
 .post-session-calendar-slot .calendar-day.post-session-cell--join-right {
   border-right-color: transparent;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-/* Calendar cell joining with popover on its LEFT */
+/* Cell joining with popover on its LEFT */
 .post-session-calendar-slot .calendar-day.post-session-cell--join-left {
   border-left-color: transparent;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
+
+/* ----------------------------------------------------------------------------
+   POPOVER TIME STATES
+   ---------------------------------------------------------------------------- */
+
+/* Popover time - Idle */
 .post-session-popover-time {
   height: var(--post-session-cell-h, 36px);
   padding: 0 10px;
   display: flex;
   align-items: center;
-  background: transparent;
+  background: #222;
   border: none;
   width: 100%;
   color: #fff;
@@ -3787,22 +3819,25 @@ body.image-modal-open > *:not(.image-modal) {
   white-space: nowrap;
 }
 
-/* Popover time hover: blue border */
-.post-session-popover-time.post-session-hover {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ps-hover);
+/* Popover time - Hover */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-popover-time:hover {
+    background: #222;
+    box-shadow: inset 0 0 0 1px var(--ps-hover);
+  }
 }
 
-/* Popover time highlighted: blue fill */
-.post-session-popover-time.post-session-highlighted {
+/* Popover time - Selected */
+.post-session-popover-time.post-session-time-selected {
   background: var(--ps-selected);
   box-shadow: none;
 }
 
+/* Selected + Hover */
 @media (hover: hover) and (pointer: fine) {
-  .post-session-popover-time:hover {
-    background: transparent;
-    box-shadow: inset 0 0 0 1px var(--ps-hover);
+  .post-session-popover-time.post-session-time-selected:hover {
+    background: var(--ps-selected);
+    box-shadow: none;
   }
 }
 
