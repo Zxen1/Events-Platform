@@ -1670,6 +1670,11 @@
   flex: 1 1 auto;
 }
 
+/* Needed so the times extension (absolute) can be positioned inside the scrolled month content */
+.post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-body {
+  position: relative;
+}
+
 /* Only session dates are interactive */
 .post-session-container .post-session-calendar-slot .calendar-day.post-session-disabled {
   cursor: default;
@@ -1688,6 +1693,13 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
+/* Selected available day must still use the filled selection styling */
+.post-session-container .post-session-calendar-slot .calendar-day.available-day.selected {
+  background: var(--blue-600);
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
 /* Keep hover feedback without filling the box */
 .post-session-container .post-session-calendar-slot .calendar-day.available-day:hover {
   background: transparent;
@@ -1698,6 +1710,20 @@
 .post-session-container .post-session-calendar-slot .calendar-day.available-day:active {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+}
+
+/* Synced hover marker class (used by JS): mirror-hover without filling */
+.post-session-container .post-session-calendar-slot .calendar-day.menu-option--hover {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+/* Synced click marker class (used by JS): a brief "active" flash */
+.post-session-container .post-session-calendar-slot .calendar-day.menu-option--highlighted {
+  background: var(--blue-600, #2563eb);
+  border-color: var(--blue-500);
   color: #fff;
 }
 
@@ -1748,11 +1774,12 @@
 .post-session-popover {
   position: absolute;
   z-index: var(--layer-popover);
+  /* Visual goal: looks like a continuous extension of the date box */
   width: fit-content;
-  background: rgba(0, 0, 0, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  background: #222; /* JS may override to match selected state */
+  border: 1px solid rgba(255, 255, 255, 0.35); /* JS may override to match cell border */
+  border-radius: 4px;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -1763,16 +1790,42 @@
   align-items: center;
   background: transparent;
   border: none;
-  width: auto;
+  width: 100%;
   color: #fff;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: none;
   white-space: nowrap;
 }
 .post-session-popover-time:last-child {
   border-bottom: none;
+}
+
+.post-session-popover-time:hover {
+  background: transparent;
+}
+
+.post-session-popover-time:active {
+  background: transparent;
+}
+
+/* When we keep it highlighted for 500ms before closing */
+.post-session-popover-time.menu-option--highlighted {
+  background: var(--blue-600, #2563eb);
+}
+
+/* Times list + extension: match calendar day hover (border/outline, no fill) */
+.post-session-container .post-session-time.menu-option--hover,
+.post-session-container .post-session-popover-time.menu-option--hover {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.post-session-container .post-session-time.menu-option--highlighted,
+.post-session-container .post-session-popover-time.menu-option--highlighted {
+  background: var(--blue-600, #2563eb);
+  box-shadow: none;
 }
 
 /* ============================================================================

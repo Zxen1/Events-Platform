@@ -3240,6 +3240,20 @@ const PostModule = (function() {
     var selectedSessionTime = '';
     var sessionsLoading = false;
     var sessionPopoverIso = '';
+    var sessionTimesSide = ''; // 'left' or 'right' - stable while menu is open
+    var defaultSessionButtonText = '';
+    var closeSessionTimer = null;
+    var SESSION_SELECT_CLOSE_DELAY_MS = 500; // user requirement: let click feedback show
+    var lastJoinedCell = null;
+    var lastJoinedCellStyles = null;
+    var hoverPreviewIso = '';
+    
+    // Store the initial "date range" label so the button only changes
+    // after a full date+time is selected.
+    try {
+      var _mainInit = wrap.querySelector('.post-session-text-main');
+      if (_mainInit) defaultSessionButtonText = String(_mainInit.textContent || '');
+    } catch (_eInit0) {}
 
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
@@ -3279,21 +3293,29 @@ const PostModule = (function() {
       var main = wrap.querySelector('.post-session-text-main');
       if (!main) return;
 
-      // Default (fast): keep the summary range until the user makes a choice.
-      if (!selectedSessionIso) return;
+      // Keep the summary range until the user selects a full date+time.
+      if (!selectedSessionIso || !selectedSessionTime) {
+        if (defaultSessionButtonText) main.textContent = defaultSessionButtonText;
+        return;
+      }
 
       var left = formatSessionDateLeft(selectedSessionIso);
       var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
       var text = timeText ? (left + ' ' + timeText) : left;
-      main.textContent = '📅 ' + text;
+      main.textContent = text;
     }
 
     function closeSessionDropdown() {
       if (!sessionBtn) return;
+      if (closeSessionTimer) {
+        try { clearTimeout(closeSessionTimer); } catch (_eT0) {}
+        closeSessionTimer = null;
+      }
       sessionBtn.classList.remove('menu-button--open');
       if (sessionArrow) sessionArrow.classList.remove('menu-arrow--open');
       try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
       hideSessionPopover();
+      sessionTimesSide = '';
     }
 
     function hideSessionPopover() {
@@ -3301,6 +3323,20 @@ const PostModule = (function() {
       sessionPopover.style.display = 'none';
       sessionPopover.innerHTML = '';
       sessionPopoverIso = '';
+      hoverPreviewIso = '';
+      // Restore any temporary join styling on the date cell.
+      try {
+        if (lastJoinedCell && lastJoinedCellStyles) {
+          lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
+          lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
+          lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
+          lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
+          lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
+          lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+        }
+      } catch (_eJoin0) {}
+      lastJoinedCell = null;
+      lastJoinedCellStyles = null;
     }
 
     function getActiveLocationForUi() {
@@ -3342,7 +3378,13 @@ const PostModule = (function() {
     }
 
     function setSelectedCalendarDay(iso) {
+      var prevIso = selectedSessionIso;
       selectedSessionIso = iso || '';
+      // If the user changes date, they must re-select a time so the button
+      // always matches a real option (date+time), not a partial.
+      if (selectedSessionIso && prevIso && selectedSessionIso !== prevIso) {
+        selectedSessionTime = '';
+      }
       if (!selectedSessionIso) {
         updateSessionButtonText();
       }
@@ -3361,30 +3403,111 @@ const PostModule = (function() {
       updateSessionButtonText();
     }
 
-    function positionPopoverNextToCell(cellEl) {
-      if (!sessionPopover || !cellEl) return;
-      var slot = wrap.querySelector('.post-session-calendar-slot');
-      if (!slot) return;
+    function ensureTimesSideChosen() {
+      if (sessionTimesSide === 'left' || sessionTimesSide === 'right') return;
+      // Stable per-open: choose based on which half of the post panel the calendar sits in.
+      try {
+        var slot = wrap && wrap.querySelector ? wrap.querySelector('.post-session-calendar-slot') : null;
+        if (!slot) { sessionTimesSide = 'right'; return; }
+        var wrapRect = wrap.getBoundingClientRect();
+        var slotRect = slot.getBoundingClientRect();
+        var wrapMid = wrapRect.left + (wrapRect.width / 2);
+        var slotMid = slotRect.left + (slotRect.width / 2);
+        sessionTimesSide = (slotMid < wrapMid) ? 'right' : 'left';
+      } catch (_eSide0) {
+        sessionTimesSide = 'right';
+      }
+    }
 
-      var slotRect = slot.getBoundingClientRect();
-      var cellRect = cellEl.getBoundingClientRect();
-      var left = (cellRect.right - slotRect.left) + 8;
-      var top = (cellRect.top - slotRect.top);
+    function applyJoinedCellStyles(cellEl, side) {
+      if (!cellEl) return;
+      // Restore previous join first (if any) without touching the popover content.
+      try {
+        if (lastJoinedCell && lastJoinedCellStyles && lastJoinedCell !== cellEl) {
+          lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
+          lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
+          lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
+          lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
+          lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
+          lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+          lastJoinedCell = null;
+          lastJoinedCellStyles = null;
+        }
+      } catch (_eJoinR0) {}
 
-      // First paint at the target, then clamp.
-      sessionPopover.style.left = left + 'px';
-      sessionPopover.style.top = top + 'px';
+      if (lastJoinedCell === cellEl && lastJoinedCellStyles) return;
 
-      // Clamp within slot bounds (keep a small inset)
-      var inset = 8;
+      lastJoinedCell = cellEl;
+      lastJoinedCellStyles = {
+        tl: cellEl.style.borderTopLeftRadius,
+        tr: cellEl.style.borderTopRightRadius,
+        bl: cellEl.style.borderBottomLeftRadius,
+        br: cellEl.style.borderBottomRightRadius,
+        blc: cellEl.style.borderLeftColor,
+        brc: cellEl.style.borderRightColor
+      };
+
+      // Remove the seam so date + times look like one continuous shape.
+      if (side === 'right') {
+        cellEl.style.borderTopRightRadius = '0';
+        cellEl.style.borderBottomRightRadius = '0';
+        cellEl.style.borderRightColor = 'transparent';
+      } else {
+        cellEl.style.borderTopLeftRadius = '0';
+        cellEl.style.borderBottomLeftRadius = '0';
+        cellEl.style.borderLeftColor = 'transparent';
+      }
+    }
+
+    function positionTimesExtension(cellEl, side) {
+      if (!sessionPopover || !cellEl || !sessionCalendarApi || !sessionCalendarApi.calendar || !sessionCalendarApi.scroll) return;
+
+      var bodyEl = sessionCalendarApi.calendar;
+      var scrollEl = sessionCalendarApi.scroll;
+
+      // Measure popover after it's been rendered + displayed.
+      sessionPopover.style.left = '0px';
+      sessionPopover.style.top = '0px';
       var popW = sessionPopover.offsetWidth || 180;
       var popH = sessionPopover.offsetHeight || 120;
-      var maxLeft = slotRect.width - popW - inset;
-      var maxTop = slotRect.height - popH - inset;
-      var clampedLeft = Math.max(inset, Math.min(left, maxLeft));
-      var clampedTop = Math.max(inset, Math.min(top, maxTop));
-      sessionPopover.style.left = clampedLeft + 'px';
-      sessionPopover.style.top = clampedTop + 'px';
+
+      var cellRect = cellEl.getBoundingClientRect();
+      var bodyRect = bodyEl.getBoundingClientRect();
+      var scrollRect = scrollEl.getBoundingClientRect();
+
+      var cellX = (cellRect.left - bodyRect.left);
+      var cellY = (cellRect.top - bodyRect.top);
+      var cellW = cellRect.width || 36;
+      var cellH = cellRect.height || 36;
+
+      // Horizontal: fixed side (no clamping). Slight overlap to avoid any seam.
+      var overlap = 1;
+      var left = (side === 'left')
+        ? (cellX - popW + overlap)
+        : (cellX + cellW - overlap);
+
+      // Vertical: L down if fits, else L up if fits, else T (centered) + clamp to viewport.
+      var inset = 2;
+      var viewTop = (scrollRect.top - bodyRect.top) + inset;
+      var viewBottom = (scrollRect.bottom - bodyRect.top) - inset;
+      var maxTop = viewBottom - popH;
+      var minTop = viewTop;
+
+      var fitsDown = (cellY + popH) <= viewBottom;
+      var fitsUp = (cellY - (popH - cellH)) >= viewTop;
+
+      var top = cellY;
+      if (fitsDown) {
+        top = cellY; // L down
+      } else if (fitsUp) {
+        top = cellY - (popH - cellH); // L up
+      } else {
+        top = cellY - Math.round((popH - cellH) / 2); // T
+      }
+      top = Math.max(minTop, Math.min(top, maxTop));
+
+      sessionPopover.style.left = left + 'px';
+      sessionPopover.style.top = top + 'px';
     }
 
     function showSessionPopoverForDate(cellEl, iso) {
@@ -3398,10 +3521,40 @@ const PostModule = (function() {
       sessionPopoverIso = iso;
       sessionPopover.innerHTML = times.map(function(t) {
         var timeText = normalizeTimeHHMM(t);
-        return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+        return '<button class="post-session-popover-time menu-option" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
       }).join('');
       sessionPopover.style.display = 'block';
-      positionPopoverNextToCell(cellEl);
+
+      // Make the times extension visually continuous with the date box.
+      ensureTimesSideChosen();
+      var side = sessionTimesSide || 'right';
+      applyJoinedCellStyles(cellEl, side);
+      try {
+        var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
+        var borderColor = cs ? cs.borderColor : '';
+        var bg = cs ? cs.backgroundColor : '';
+        // If cell background is transparent, use the calendar's base background.
+        if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
+        sessionPopover.style.background = bg;
+        if (borderColor) sessionPopover.style.borderColor = borderColor;
+        if (side === 'right') {
+          sessionPopover.style.borderTopLeftRadius = '0';
+          sessionPopover.style.borderBottomLeftRadius = '0';
+          sessionPopover.style.borderTopRightRadius = '4px';
+          sessionPopover.style.borderBottomRightRadius = '4px';
+          sessionPopover.style.borderLeftWidth = '0';
+          sessionPopover.style.borderRightWidth = '';
+        } else {
+          sessionPopover.style.borderTopRightRadius = '0';
+          sessionPopover.style.borderBottomRightRadius = '0';
+          sessionPopover.style.borderTopLeftRadius = '4px';
+          sessionPopover.style.borderBottomLeftRadius = '4px';
+          sessionPopover.style.borderRightWidth = '0';
+          sessionPopover.style.borderLeftWidth = '';
+        }
+      } catch (_eStyle0) {}
+
+      positionTimesExtension(cellEl, side);
     }
 
     function decorateCalendarAvailability() {
@@ -3436,6 +3589,15 @@ const PostModule = (function() {
         opts.maxMonth = maxMonth;
       }
       sessionCalendarApi = CalendarComponent.create(sessionCalendarMount, opts);
+      // Move the times element into the calendar body so it scrolls with the months.
+      try {
+        if (sessionPopover && sessionCalendarApi && sessionCalendarApi.calendar) {
+          sessionCalendarApi.calendar.appendChild(sessionPopover);
+          sessionPopover.style.display = 'none';
+        }
+      } catch (_eMovePop0) {}
+      // Choose a stable left/right side per-open.
+      try { ensureTimesSideChosen(); } catch (_eSide1) {}
     }
 
     function buildSessionMapsFromSessions(sessions) {
@@ -3556,6 +3718,89 @@ const PostModule = (function() {
     function bindSessionInteractions() {
       if (!sessionOptionsPanel) return;
 
+      function supportsHover() {
+        try {
+          return !!(window.matchMedia && window.matchMedia('(hover: hover)').matches);
+        } catch (_e0) {
+          return false;
+        }
+      }
+
+      function clearSyncedMarks() {
+        try {
+          if (sessionCalendarMount) {
+            var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
+            d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          }
+          if (sessionTimesList) {
+            var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
+            d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          }
+          if (sessionPopover) {
+            var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
+            d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          }
+        } catch (_eClear0) {}
+      }
+
+      function applySyncedHover(iso, timeText) {
+        if (!iso) return;
+        try {
+          // Calendar day
+          if (sessionCalendarMount) {
+            var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+            if (day) day.classList.add('menu-option--hover');
+          }
+          // Times list: highlight all rows on this date, and the exact time if provided.
+          if (sessionTimesList) {
+            var rows = sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]');
+            rows.forEach(function(r) { r.classList.add('menu-option--hover'); });
+            if (timeText) {
+              var exact = sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]');
+              if (exact) exact.classList.add('menu-option--hover');
+            }
+          }
+          // Times extension: exact time (if present)
+          if (sessionPopover && timeText) {
+            var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
+            if (b) b.classList.add('menu-option--hover');
+          }
+        } catch (_eApply0) {}
+      }
+
+      function applySyncedActivate(iso, timeText) {
+        if (!iso) return;
+        try {
+          if (sessionCalendarMount) {
+            var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+            if (day) day.classList.add('menu-option--highlighted');
+          }
+          if (sessionTimesList) {
+            var exact = timeText
+              ? sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]')
+              : null;
+            if (exact) exact.classList.add('menu-option--highlighted');
+          }
+          if (sessionPopover && timeText) {
+            var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
+            if (b) b.classList.add('menu-option--highlighted');
+          }
+        } catch (_eAct0) {}
+      }
+
+      function scrollCalendarToIso(iso) {
+        if (!iso) return;
+        try {
+          if (!sessionCalendarApi || !sessionCalendarApi.scroll || !sessionCalendarMount) return;
+          var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+          if (!day || !day.closest) return;
+          var monthEl = day.closest('.calendar-month');
+          if (!monthEl) return;
+          // Instant jump so it is visible before the close delay.
+          sessionCalendarApi.scroll.scrollLeft = monthEl.offsetLeft;
+        } catch (_eScroll0) {}
+      }
+
       // Calendar day clicks (delegate)
       sessionOptionsPanel.addEventListener('click', function(e) {
         var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
@@ -3564,22 +3809,92 @@ const PostModule = (function() {
         if (!iso) return;
         if (!sessionAvailableSet || !sessionAvailableSet[iso]) return; // only session dates
         e.stopPropagation();
+        clearSyncedMarks();
         setSelectedCalendarDay(iso);
         showSessionPopoverForDate(day, iso);
+        applySyncedHover(iso, '');
+      });
+
+      // Desktop hover preview (does not change selected date)
+      sessionOptionsPanel.addEventListener('mouseover', function(e) {
+        if (!supportsHover()) return;
+        var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
+        if (!day || !day.dataset || !day.dataset.iso) return;
+        var iso = String(day.dataset.iso || '').trim();
+        if (!iso) return;
+        if (!sessionAvailableSet || !sessionAvailableSet[iso]) return;
+        // Avoid re-render spam while moving within the same cell.
+        if (hoverPreviewIso === iso) return;
+        hoverPreviewIso = iso;
+        clearSyncedMarks();
+        showSessionPopoverForDate(day, iso);
+        applySyncedHover(iso, '');
+      });
+
+      sessionOptionsPanel.addEventListener('mouseout', function(e) {
+        if (!supportsHover()) return;
+        var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
+        if (!day) return;
+        var rel = e.relatedTarget;
+        // If moving into the times extension or another date cell, don't hide.
+        try {
+          if (rel && (rel.closest && (rel.closest('.post-session-popover') || rel.closest('.calendar-day')))) return;
+        } catch (_eRel0) {}
+        // If the user has clicked a date (pinned selection), keep that visible.
+        if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) {
+          hoverPreviewIso = '';
+          return;
+        }
+        hideSessionPopover();
+        clearSyncedMarks();
       });
 
       // Popover time clicks
       if (sessionPopover) {
+        // Hover over a time in the extension should sync-highlight the matching row + date.
+        sessionPopover.addEventListener('mouseover', function(e) {
+          if (!supportsHover()) return;
+          var btn = e.target && e.target.closest ? e.target.closest('.post-session-popover-time') : null;
+          if (!btn) return;
+          var timeText = String(btn.dataset.time || '').trim();
+          if (!timeText || !sessionPopoverIso) return;
+          clearSyncedMarks();
+          applySyncedHover(sessionPopoverIso, timeText);
+        });
+
         sessionPopover.addEventListener('click', function(e) {
           var btn = e.target && e.target.closest ? e.target.closest('.post-session-popover-time') : null;
           if (!btn) return;
           e.stopPropagation();
           var timeText = String(btn.dataset.time || '').trim();
           if (!timeText) return;
+          // Ensure the chosen time is tied to the date being previewed.
+          if (sessionPopoverIso) {
+            setSelectedCalendarDay(sessionPopoverIso);
+          }
           selectedSessionTime = timeText;
           updateSessionButtonText();
           renderSessionTimesList();
-          closeSessionDropdown();
+          
+          // Visual feedback: keep the clicked time highlighted briefly.
+          try {
+            var all = sessionPopover.querySelectorAll('.post-session-popover-time');
+            all.forEach(function(b) { b.classList.remove('menu-option--highlighted'); });
+            btn.classList.add('menu-option--highlighted');
+          } catch (_eHi0) {}
+
+          clearSyncedMarks();
+          applySyncedHover(sessionPopoverIso, timeText);
+          applySyncedActivate(sessionPopoverIso, timeText);
+          scrollCalendarToIso(sessionPopoverIso);
+          
+          if (closeSessionTimer) {
+            try { clearTimeout(closeSessionTimer); } catch (_eT1) {}
+          }
+          closeSessionTimer = setTimeout(function() {
+            closeSessionTimer = null;
+            closeSessionDropdown();
+          }, SESSION_SELECT_CLOSE_DELAY_MS);
         });
       }
 
@@ -3599,7 +3914,49 @@ const PostModule = (function() {
           selectedSessionTime = timeText;
           updateSessionButtonText();
           renderSessionTimesList();
-          closeSessionDropdown();
+          clearSyncedMarks();
+          applySyncedHover(iso, timeText);
+          applySyncedActivate(iso, timeText);
+          scrollCalendarToIso(iso);
+          if (closeSessionTimer) {
+            try { clearTimeout(closeSessionTimer); } catch (_eT2) {}
+          }
+          closeSessionTimer = setTimeout(function() {
+            closeSessionTimer = null;
+            closeSessionDropdown();
+          }, SESSION_SELECT_CLOSE_DELAY_MS);
+        });
+
+        // Hover list row -> hover calendar day + show extension
+        sessionTimesList.addEventListener('mouseover', function(e) {
+          if (!supportsHover()) return;
+          var row = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+          if (!row) return;
+          var iso = String(row.dataset.iso || '').trim();
+          var timeText = String(row.dataset.time || '').trim();
+          if (!iso) return;
+          clearSyncedMarks();
+          applySyncedHover(iso, timeText);
+          try {
+            if (sessionCalendarMount && sessionAvailableSet && sessionAvailableSet[iso]) {
+              var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+              if (day) {
+                hoverPreviewIso = iso;
+                showSessionPopoverForDate(day, iso);
+              }
+            }
+          } catch (_eHover0) {}
+        });
+
+        sessionTimesList.addEventListener('mouseout', function(e) {
+          if (!supportsHover()) return;
+          var rel = e.relatedTarget;
+          try {
+            if (rel && (rel.closest && (rel.closest('.post-session-popover') || rel.closest('.post-session-time')))) return;
+          } catch (_eRel1) {}
+          if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) return;
+          hideSessionPopover();
+          clearSyncedMarks();
         });
       }
     }

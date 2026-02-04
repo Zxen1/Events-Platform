@@ -10380,7 +10380,7 @@ const PostSessionComponent = (function() {
 
         html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-session-text menu-text">');
-        html.push('<div class="post-session-text-main">📅 ' + escapeHtml(datesText) + '</div>');
+        html.push('<div class="post-session-text-main">' + escapeHtml(datesText) + '</div>');
         html.push('</div>');
         html.push('<div class="post-session-arrow menu-arrow"></div>');
         html.push('</button>');
