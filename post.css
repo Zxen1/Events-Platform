@@ -1703,20 +1703,20 @@
 /* Keep hover feedback without filling the box */
 .post-session-container .post-session-calendar-slot .calendar-day.available-day:hover {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: var(--blue-500);
   color: #fff;
 }
 
 .post-session-container .post-session-calendar-slot .calendar-day.available-day:active {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.75);
+  border-color: var(--blue-500);
   color: #fff;
 }
 
 /* Synced hover marker class (used by JS): mirror-hover without filling */
 .post-session-container .post-session-calendar-slot .calendar-day.menu-option--hover {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: var(--blue-500);
   color: #fff;
 }
 
@@ -1784,7 +1784,7 @@
 }
 
 .post-session-popover-time {
-  height: 36px;
+  height: var(--post-session-cell-h, 36px);
   padding: 0 10px;
   display: flex;
   align-items: center;
@@ -1819,13 +1819,22 @@
 .post-session-container .post-session-time.menu-option--hover,
 .post-session-container .post-session-popover-time.menu-option--hover {
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 .post-session-container .post-session-time.menu-option--highlighted,
 .post-session-container .post-session-popover-time.menu-option--highlighted {
   background: var(--blue-600, #2563eb);
   box-shadow: none;
+}
+
+/* Override menu-class-5 default option hover fill for session times:
+   sessions use "border hover" like calendar date boxes. */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-container .post-session-time:hover {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--blue-500);
+  }
 }
 
 /* ============================================================================

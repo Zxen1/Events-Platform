@@ -3598,6 +3598,21 @@ const PostModule = (function() {
       } catch (_eMovePop0) {}
       // Choose a stable left/right side per-open.
       try { ensureTimesSideChosen(); } catch (_eSide1) {}
+
+      // Sync time-row height to the real calendar day height (whatever it is).
+      try {
+        requestAnimationFrame(function() {
+          try {
+            var anyDay = sessionCalendarMount.querySelector('.calendar-day[data-iso]');
+            if (!anyDay) return;
+            var r = anyDay.getBoundingClientRect();
+            var h = r && r.height ? Math.round(r.height) : 0;
+            if (h > 0) {
+              sessionCalendarMount.style.setProperty('--post-session-cell-h', h + 'px');
+            }
+          } catch (_eH0) {}
+        });
+      } catch (_eH1) {}
     }
 
     function buildSessionMapsFromSessions(sessions) {
@@ -3760,10 +3775,17 @@ const PostModule = (function() {
               if (exact) exact.classList.add('menu-option--hover');
             }
           }
-          // Times extension: exact time (if present)
-          if (sessionPopover && timeText) {
-            var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
-            if (b) b.classList.add('menu-option--hover');
+          // Times extension:
+          // - If a time is specified, highlight the exact time.
+          // - If only a date is specified, highlight ALL times currently shown for that date.
+          if (sessionPopover) {
+            if (timeText) {
+              var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
+              if (b) b.classList.add('menu-option--hover');
+            } else if (sessionPopoverIso && sessionPopoverIso === iso) {
+              var all = sessionPopover.querySelectorAll('.post-session-popover-time');
+              all.forEach(function(btn) { btn.classList.add('menu-option--hover'); });
+            }
           }
         } catch (_eApply0) {}
       }
