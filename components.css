@@ -3716,21 +3716,24 @@ body.image-modal-open > *:not(.image-modal) {
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border: 1px solid var(--ps-border-focus);
+  border-left: 1px solid var(--ps-border-focus);
+  border-right: 1px solid var(--ps-border-focus);
+  border-top: none;
+  border-bottom: none;
   border-radius: var(--ps-radius);
   box-shadow: none;
   overflow: hidden;
   display: none;
 }
 
-/* Popover on RIGHT of cell: joins on left edge, only top-left squared */
+/* Popover on RIGHT of cell: joins on left edge */
 .post-session-popover.post-session-popover--right {
   display: block;
   border-left: none;
   border-top-left-radius: 0;
 }
 
-/* Popover on LEFT of cell: joins on right edge, only top-right squared */
+/* Popover on LEFT of cell: joins on right edge */
 .post-session-popover.post-session-popover--left {
   display: block;
   border-right: none;
@@ -3750,12 +3753,21 @@ body.image-modal-open > *:not(.image-modal) {
   align-items: center;
   background: #222;
   border: none;
+  border-bottom: 1px solid var(--ps-border-focus);
   width: 100%;
   color: #fff;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
   white-space: nowrap;
+}
+
+.post-session-popover-time:first-child {
+  border-top: 1px solid var(--ps-border-focus);
+}
+
+.post-session-popover-time:last-child {
+  border-bottom: 1px solid var(--ps-border-focus);
 }
 
 /* Popover time - Hover: blue border, no fill */
