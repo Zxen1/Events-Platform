@@ -1673,6 +1673,8 @@
 }
 .post-session-container .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
+  /* The time extension must be able to render fully */
+  overflow-y: visible;
 }
 
 /* Needed so the times extension (absolute) can be positioned inside the scrolled month content */
@@ -1786,6 +1788,8 @@
   border-radius: 5px;
   box-shadow: none;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .post-session-popover-time {
@@ -1800,11 +1804,32 @@
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
-  border-bottom: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   white-space: nowrap;
 }
 .post-session-popover-time:last-child {
   border-bottom: none;
+}
+
+/* Many times: use a 2-column grid so nothing gets clipped */
+.post-session-popover.post-session-popover--grid2 {
+  display: grid;
+  /* columns/rows are set inline by JS to match times count */
+  grid-template-columns: unset;
+  grid-template-rows: unset;
+  grid-auto-flow: column;
+  justify-items: stretch;
+  align-items: stretch;
+}
+
+.post-session-popover.post-session-popover--grid2 .post-session-popover-time {
+  justify-content: center;
+  text-align: center;
+}
+
+/* If too tall for the visible calendar area, allow internal scroll */
+.post-session-popover.post-session-popover--scroll {
+  overflow-y: auto;
 }
 
 .post-session-popover-time:hover {
