@@ -10897,19 +10897,21 @@ const PostSessionComponent = (function() {
         }
 
         function getSideForCell(cellEl) {
-            // Determine which side the popover should appear based on cell position
-            // Cell on LEFT half of calendar → popover on RIGHT
-            // Cell on RIGHT half of calendar → popover on LEFT
-            if (!cellEl || !sessionCalendarApi || !sessionCalendarApi.scroll) return 'right';
+            // Default: popover on RIGHT
+            // Only switch to LEFT when popover would be cut off at the right edge
+            if (!cellEl || !sessionCalendarApi || !sessionCalendarApi.scroll || !sessionPopover) return 'right';
             try {
                 var scrollEl = sessionCalendarApi.scroll;
                 var scrollRect = scrollEl.getBoundingClientRect();
                 var cellRect = cellEl.getBoundingClientRect();
-                var visibleLeft = scrollRect.left;
                 var visibleRight = scrollRect.right;
-                var visibleMid = visibleLeft + ((visibleRight - visibleLeft) / 2);
-                var cellMid = cellRect.left + (cellRect.width / 2);
-                return (cellMid < visibleMid) ? 'right' : 'left';
+                // Estimate popover width (measure if visible, otherwise use reasonable default)
+                var popoverWidth = sessionPopover.offsetWidth || 80;
+                // Check if popover would overflow the right edge
+                if (cellRect.right + popoverWidth > visibleRight) {
+                    return 'left';
+                }
+                return 'right';
             } catch (_e) {
                 return 'right';
             }
