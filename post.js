@@ -3240,6 +3240,7 @@ const PostModule = (function() {
     var selectedSessionTime = '';
     var sessionsLoading = false;
     var sessionPopoverIso = '';
+    var sessionLockedIso = '';
 
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
@@ -3294,6 +3295,8 @@ const PostModule = (function() {
       if (sessionArrow) sessionArrow.classList.remove('menu-arrow--open');
       try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
       hideSessionPopover();
+      sessionLockedIso = '';
+      clearLinkedActive();
     }
 
     function hideSessionPopover() {
@@ -3333,12 +3336,57 @@ const PostModule = (function() {
         var dateLeft = formatSessionDateLeft(iso);
         var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
         return [
-          '<button class="post-session-time menu-option' + (isSelected ? ' menu-option--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
+          '<button class="post-session-time menu-option' + (isSelected ? ' menu-link--selected menu-link--active' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '">',
             '<span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span>',
             '<span class="post-session-time-right">' + escapeHtml(timeText) + '</span>',
           '</button>'
         ].join('');
       }).join('');
+    }
+
+    function clearLinkedActive() {
+      try {
+        if (!wrap) return;
+        wrap.querySelectorAll('.calendar-day.menu-link--active').forEach(function(el) { el.classList.remove('menu-link--active'); });
+        wrap.querySelectorAll('.post-session-time.menu-link--active').forEach(function(el) { el.classList.remove('menu-link--active'); });
+      } catch (_e0) {}
+    }
+
+    function applyLinkedActive(iso) {
+      clearLinkedActive();
+      if (!iso) return;
+      try {
+        // Calendar day
+        if (sessionCalendarMount) {
+          var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+          if (cell) cell.classList.add('menu-link--active');
+        }
+        // All rows for that date
+        if (sessionTimesList) {
+          sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]').forEach(function(row) {
+            row.classList.add('menu-link--active');
+          });
+        }
+      } catch (_e1) {}
+    }
+
+    function clearLinkedSelectedCalendar() {
+      try {
+        if (!sessionCalendarMount) return;
+        sessionCalendarMount.querySelectorAll('.calendar-day.menu-link--selected').forEach(function(el) {
+          el.classList.remove('menu-link--selected');
+        });
+      } catch (_e2) {}
+    }
+
+    function applyLinkedSelectedCalendar(iso) {
+      clearLinkedSelectedCalendar();
+      if (!iso) return;
+      try {
+        if (!sessionCalendarMount) return;
+        var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+        if (cell) cell.classList.add('menu-link--selected', 'menu-link--active');
+      } catch (_e3) {}
     }
 
     function setSelectedCalendarDay(iso) {
@@ -3551,6 +3599,27 @@ const PostModule = (function() {
     function bindSessionInteractions() {
       if (!sessionOptionsPanel) return;
 
+      // Hover on calendar day should light up BOTH day + linked rows and show times.
+      try {
+        sessionOptionsPanel.addEventListener('mouseover', function(e) {
+          var day = e.target && e.target.closest ? e.target.closest('.calendar-day.available-day') : null;
+          if (!day || !day.dataset) return;
+          var iso = String(day.dataset.iso || '').trim();
+          if (!iso) return;
+          if (sessionLockedIso && sessionLockedIso !== iso) return;
+          applyLinkedActive(iso);
+          showSessionPopoverForDate(day, iso);
+        });
+        sessionOptionsPanel.addEventListener('mouseout', function(e) {
+          if (sessionLockedIso) return;
+          // When leaving the calendar area, clear linked hover and hide popover.
+          var rel = e.relatedTarget;
+          if (rel && wrap && wrap.contains(rel)) return;
+          clearLinkedActive();
+          hideSessionPopover();
+        });
+      } catch (_eH0) {}
+
       // Calendar day clicks (delegate)
       sessionOptionsPanel.addEventListener('click', function(e) {
         var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
@@ -3560,6 +3629,15 @@ const PostModule = (function() {
         if (!sessionAvailableSet || !sessionAvailableSet[iso]) return; // only session dates
         e.stopPropagation();
         setSelectedCalendarDay(iso);
+        // Click locks the linked glow + keeps times visible for selection.
+        if (sessionLockedIso === iso) {
+          sessionLockedIso = '';
+          clearLinkedActive();
+          hideSessionPopover();
+          return;
+        }
+        sessionLockedIso = iso;
+        applyLinkedActive(iso);
         showSessionPopoverForDate(day, iso);
       });
 
@@ -3572,15 +3650,10 @@ const PostModule = (function() {
           var timeText = String(btn.dataset.time || '').trim();
           if (!timeText) return;
           selectedSessionTime = timeText;
+          selectedSessionIso = sessionPopoverIso || selectedSessionIso;
 
-          // Mark selected date box with solid blue background (menu-class-5 owns styling)
-          try {
-            if (sessionCalendarMount && sessionPopoverIso) {
-              sessionCalendarMount.querySelectorAll('.calendar-day.menu-day--selected').forEach(function(c) { c.classList.remove('menu-day--selected'); });
-              var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + sessionPopoverIso + '"]');
-              if (cell) cell.classList.add('menu-day--selected');
-            }
-          } catch (_eSel) {}
+          // Selected fill on BOTH day + linked rows (menu-class-5 owns all styling).
+          applyLinkedSelectedCalendar(selectedSessionIso);
 
           updateSessionButtonText();
           renderSessionTimesList();
@@ -3590,6 +3663,29 @@ const PostModule = (function() {
 
       // Times list clicks
       if (sessionTimesList) {
+        // Hover on row should light up BOTH row + linked day and show times.
+        try {
+          sessionTimesList.addEventListener('mouseover', function(e) {
+            var row = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+            if (!row || !row.dataset) return;
+            var iso = String(row.dataset.iso || '').trim();
+            if (!iso) return;
+            if (sessionLockedIso && sessionLockedIso !== iso) return;
+            applyLinkedActive(iso);
+            if (sessionCalendarMount) {
+              var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+              if (cell) showSessionPopoverForDate(cell, iso);
+            }
+          });
+          sessionTimesList.addEventListener('mouseout', function(e) {
+            if (sessionLockedIso) return;
+            var rel = e.relatedTarget;
+            if (rel && wrap && wrap.contains(rel)) return;
+            clearLinkedActive();
+            hideSessionPopover();
+          });
+        } catch (_eH1) {}
+
         sessionTimesList.addEventListener('click', function(e) {
           var btn = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
           if (!btn) return;
@@ -3602,6 +3698,8 @@ const PostModule = (function() {
             setSelectedCalendarDay(iso);
           }
           selectedSessionTime = timeText;
+          selectedSessionIso = iso || selectedSessionIso;
+          applyLinkedSelectedCalendar(selectedSessionIso);
           updateSessionButtonText();
           renderSessionTimesList();
           closeSessionDropdown();
@@ -3637,15 +3735,10 @@ const PostModule = (function() {
 
           // If user already has a selection, ensure the button text reflects it.
           updateSessionButtonText();
-
           // Persist selected date fill on reopen (if a time was selected).
-          try {
-            if (sessionCalendarMount && selectedSessionIso && selectedSessionTime) {
-              sessionCalendarMount.querySelectorAll('.calendar-day.menu-day--selected').forEach(function(c) { c.classList.remove('menu-day--selected'); });
-              var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + selectedSessionIso + '"]');
-              if (cell) cell.classList.add('menu-day--selected');
-            }
-          } catch (_ePersist0) {}
+          if (selectedSessionIso && selectedSessionTime) {
+            applyLinkedSelectedCalendar(selectedSessionIso);
+          }
         });
       });
     }
