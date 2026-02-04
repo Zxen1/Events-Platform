@@ -3716,10 +3716,7 @@ body.image-modal-open > *:not(.image-modal) {
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border-left: 1px solid var(--ps-border-focus);
-  border-right: 1px solid var(--ps-border-focus);
-  border-top: none;
-  border-bottom: none;
+  border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   box-shadow: none;
   overflow: hidden;
@@ -3731,6 +3728,7 @@ body.image-modal-open > *:not(.image-modal) {
   display: block;
   border-left: none;
   border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 /* Popover on LEFT of cell: joins on right edge */
@@ -3738,6 +3736,7 @@ body.image-modal-open > *:not(.image-modal) {
   display: block;
   border-right: none;
   border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 
@@ -3753,21 +3752,12 @@ body.image-modal-open > *:not(.image-modal) {
   align-items: center;
   background: #222;
   border: none;
-  border-bottom: 1px solid var(--ps-border-focus);
   width: 100%;
   color: #fff;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
   white-space: nowrap;
-}
-
-.post-session-popover-time:first-child {
-  border-top: 1px solid var(--ps-border-focus);
-}
-
-.post-session-popover-time:last-child {
-  border-bottom: 1px solid var(--ps-border-focus);
 }
 
 /* Popover time - Hover: blue border, no fill */

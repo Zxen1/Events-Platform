@@ -11112,6 +11112,8 @@ const PostSessionComponent = (function() {
 
             sessionOptionsPanel.addEventListener('mouseout', function(e) {
                 if (!supportsHover()) return;
+                // Don't hide if close timer is pending (user just selected, waiting 500ms)
+                if (closeSessionTimer) return;
                 var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
                 if (!day) return;
                 if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) {
