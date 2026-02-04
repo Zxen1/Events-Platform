@@ -255,7 +255,14 @@ const FilterModule = (function() {
             if (mapModule && typeof mapModule.getMapState === 'function') {
                 var state = mapModule.getMapState();
                 // Rule: Only persist map memory if zoom level is at or above postsLoadZoom threshold.
-                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                // postsLoadZoom is set by index.js from database settings (no hardcoded fallback)
+                if (!window.App || typeof App.getConfig !== 'function') {
+                    throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+                }
+                var threshold = App.getConfig('postsLoadZoom');
+                if (typeof threshold !== 'number' || !isFinite(threshold)) {
+                    throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+                }
                 if (state && state.zoom >= threshold) {
                     return state;
                 }
@@ -425,7 +432,14 @@ const FilterModule = (function() {
                 try {
                     if (window.MapModule && typeof MapModule.getMap === 'function') {
                         var m = MapModule.getMap();
-                        var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                        // postsLoadZoom from database settings (no hardcoded fallback)
+                        if (!window.App || typeof App.getConfig !== 'function') {
+                            throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+                        }
+                        var threshold = App.getConfig('postsLoadZoom');
+                        if (typeof threshold !== 'number' || !isFinite(threshold)) {
+                            throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+                        }
                         if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) areaActive = true;
                     }
                 } catch (_eArea) {}
@@ -1612,7 +1626,14 @@ const FilterModule = (function() {
                         try {
                             if (window.MapModule && typeof MapModule.getMap === 'function') {
                                 var m = MapModule.getMap();
-                                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                                // postsLoadZoom from database settings (no hardcoded fallback)
+                                if (!window.App || typeof App.getConfig !== 'function') {
+                                    throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+                                }
+                                var threshold = App.getConfig('postsLoadZoom');
+                                if (typeof threshold !== 'number' || !isFinite(threshold)) {
+                                    throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+                                }
                                 if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) scopeText = 'in this area';
                             }
                         } catch (_eScope) {}
@@ -1707,7 +1728,14 @@ const FilterModule = (function() {
         // Track whether we were above/below threshold to detect crossings
         var wasAboveThreshold = false;
         try {
-            var initThreshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+            // postsLoadZoom from database settings (no hardcoded fallback)
+            if (!window.App || typeof App.getConfig !== 'function') {
+                throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+            }
+            var initThreshold = App.getConfig('postsLoadZoom');
+            if (typeof initThreshold !== 'number' || !isFinite(initThreshold)) {
+                throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+            }
             if (window.MapModule && typeof MapModule.getMap === 'function') {
                 var initMap = MapModule.getMap();
                 if (initMap && typeof initMap.getZoom === 'function') {
@@ -1722,7 +1750,14 @@ const FilterModule = (function() {
         // - Skip if below threshold and didn't cross (worldwide, position irrelevant)
         App.on('map:boundsChanged', function() {
             try {
-                var threshold = (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+                // postsLoadZoom from database settings (no hardcoded fallback)
+                if (!window.App || typeof App.getConfig !== 'function') {
+                    throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+                }
+                var threshold = App.getConfig('postsLoadZoom');
+                if (typeof threshold !== 'number' || !isFinite(threshold)) {
+                    throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+                }
                 var currentZoom = 0;
                 if (window.MapModule && typeof MapModule.getMap === 'function') {
                     var m = MapModule.getMap();

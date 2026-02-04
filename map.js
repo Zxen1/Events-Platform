@@ -56,12 +56,26 @@ const MapModule = (function() {
   // Mapbox access token
   const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
   
-  // Zoom thresholds
+  // Zoom thresholds - postsLoadZoom from database settings (no hardcoded fallback)
   function getMarkerZoomThreshold() {
-    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+    if (!window.App || typeof App.getConfig !== 'function') {
+      throw new Error('[Map] App.getConfig is required for postsLoadZoom.');
+    }
+    var threshold = App.getConfig('postsLoadZoom');
+    if (typeof threshold !== 'number' || !isFinite(threshold)) {
+      throw new Error('[Map] postsLoadZoom config is missing or invalid.');
+    }
+    return threshold;
   }
   function getClusterZoomMax() {
-    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+    if (!window.App || typeof App.getConfig !== 'function') {
+      throw new Error('[Map] App.getConfig is required for postsLoadZoom.');
+    }
+    var threshold = App.getConfig('postsLoadZoom');
+    if (typeof threshold !== 'number' || !isFinite(threshold)) {
+      throw new Error('[Map] postsLoadZoom config is missing or invalid.');
+    }
+    return threshold;
   }
   
   // High-Density Layers

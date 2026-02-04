@@ -49,13 +49,14 @@ const HeaderModule = (function() {
     function isMapAreaFilterActive() {
         // In this app, "map area" is a filter at zoom >= postsLoadZoom (server queries use bounds).
         var z = getCurrentMapZoomSafe();
-        var threshold = 8;
-        try {
-            if (window.App && typeof window.App.getConfig === 'function') {
-                var t = window.App.getConfig('postsLoadZoom');
-                if (typeof t === 'number' && isFinite(t)) threshold = t;
-            }
-        } catch (_eCfg) {}
+        // postsLoadZoom is set by index.js from database settings (no hardcoded fallback here)
+        if (!window.App || typeof window.App.getConfig !== 'function') {
+            throw new Error('[Header] App.getConfig is required for postsLoadZoom.');
+        }
+        var threshold = window.App.getConfig('postsLoadZoom');
+        if (typeof threshold !== 'number' || !isFinite(threshold)) {
+            throw new Error('[Header] postsLoadZoom config is missing or invalid.');
+        }
         return (typeof z === 'number' && isFinite(z) && z >= threshold);
     }
     

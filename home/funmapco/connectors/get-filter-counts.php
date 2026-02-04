@@ -61,7 +61,21 @@ try {
   if (!isset($mysqli) || !($mysqli instanceof mysqli)) fail(500, 'Database connection unavailable.');
 
   $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 0.0;
-  $areaActive = ($zoom >= 8.0);
+
+  // Read map_card_breakpoint from database settings (no hardcoded fallback)
+  $thresholdSql = "SELECT setting_value FROM settings WHERE setting_key = 'map_card_breakpoint' LIMIT 1";
+  $thresholdResult = $mysqli->query($thresholdSql);
+  if (!$thresholdResult) {
+    fail(500, 'Failed to read map_card_breakpoint setting from database.');
+  }
+  $thresholdRow = $thresholdResult->fetch_assoc();
+  if (!$thresholdRow || !isset($thresholdRow['setting_value'])) {
+    fail(500, 'map_card_breakpoint setting not found in database.');
+  }
+  $mapCardBreakpoint = floatval($thresholdRow['setting_value']);
+  $thresholdResult->free();
+
+  $areaActive = ($zoom >= $mapCardBreakpoint);
 
   // bounds: sw_lng,sw_lat,ne_lng,ne_lat (only used when areaActive)
   $bounds = null;
