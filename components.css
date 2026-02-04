@@ -3762,22 +3762,44 @@ body.image-modal-open > *:not(.image-modal) {
   border-bottom: none;
   border-radius: var(--ps-radius);
   box-shadow: none;
-  overflow: hidden;
+  overflow: visible;
   display: none;
 }
 
-/* Popover on RIGHT of cell: joining edge flat, exposed edge rounded */
+/* Popover on RIGHT of cell: seamless join at top, border below with rounded corner */
 .post-session-popover.post-session-popover--right {
   display: block;
+  border-left: none;
   border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
 }
 
-/* Popover on LEFT of cell: joining edge flat, exposed edge rounded */
+.post-session-popover.post-session-popover--right::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: calc(var(--post-session-cell-h, 36px) - 1px);
+  bottom: -1px;
+  width: 1px;
+  background: var(--ps-border-focus);
+  border-bottom-left-radius: var(--ps-radius);
+}
+
+/* Popover on LEFT of cell: seamless join at top, border below with rounded corner */
 .post-session-popover.post-session-popover--left {
   display: block;
+  border-right: none;
   border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+}
+
+.post-session-popover.post-session-popover--left::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: calc(var(--post-session-cell-h, 36px) - 1px);
+  bottom: -1px;
+  width: 1px;
+  background: var(--ps-border-focus);
+  border-bottom-right-radius: var(--ps-radius);
 }
 
 
