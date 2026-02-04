@@ -10602,6 +10602,7 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-text-main">');
         html.push('<span class="post-session-date-left">' + escapeHtml(datesText) + '</span>');
         html.push('<span class="post-session-time-right"></span>');
+        html.push('<span class="post-session-age-ratings"></span>');
         html.push('</div>');
         html.push('</div>');
         html.push('<div class="post-session-arrow"></div>');
@@ -10667,6 +10668,54 @@ const PostSessionComponent = (function() {
             return post.map_cards || [];
         }
 
+        // Age rating sort order (all is lowest, 21 is highest)
+        var ageRatingSortOrder = { 'all': 1, '7': 2, '12': 3, '15': 4, '18': 5, '21': 6 };
+
+        function getAgeRatingImageUrl(value) {
+            if (!value) return '';
+            var filename = 'age-rating-' + value + '.svg';
+            if (window.App && typeof window.App.getImageUrl === 'function') {
+                return window.App.getImageUrl('ageRatings', filename, 'minithumb');
+            }
+            return '';
+        }
+
+        function getAllUniqueAgeRatings() {
+            var activeLoc = getActiveLocationForUi();
+            if (!activeLoc || !activeLoc.age_ratings) return [];
+            var ratings = [];
+            var seen = {};
+            Object.keys(activeLoc.age_ratings).forEach(function(key) {
+                var val = activeLoc.age_ratings[key];
+                if (val && !seen[val]) {
+                    seen[val] = true;
+                    ratings.push(val);
+                }
+            });
+            // Sort by age rating order (all < 7 < 12 < 15 < 18 < 21)
+            ratings.sort(function(a, b) {
+                var orderA = ageRatingSortOrder[a] || 99;
+                var orderB = ageRatingSortOrder[b] || 99;
+                return orderA - orderB;
+            });
+            return ratings;
+        }
+
+        function getAgeRatingForSession(ticketGroupKey) {
+            var activeLoc = getActiveLocationForUi();
+            if (!activeLoc || !activeLoc.age_ratings) return '';
+            return activeLoc.age_ratings[ticketGroupKey] || '';
+        }
+
+        function renderAgeRatingIcons(ratings) {
+            if (!ratings || !ratings.length) return '';
+            return ratings.map(function(val) {
+                var url = getAgeRatingImageUrl(val);
+                if (!url) return '';
+                return '<img class="post-session-age-rating-icon" src="' + escapeHtml(url) + '" alt="' + escapeHtml(val) + '" title="Age rating: ' + escapeHtml(val === 'all' ? 'All Ages' : val + '+') + '">';
+            }).join('');
+        }
+
         function getLocationSelectedIndex() {
             if (callbacks && callbacks.getLocationSelectedIndex) return callbacks.getLocationSelectedIndex();
             return 0;
@@ -10696,18 +10745,40 @@ const PostSessionComponent = (function() {
 
         function updateSessionButtonText() {
             if (!wrap) return;
-            var dateEl = wrap.querySelector('.post-session-date-left');
-            var timeEl = wrap.querySelector('.post-session-time-right');
+            var dateEl = wrap.querySelector('.post-session-button .post-session-date-left');
+            var timeEl = wrap.querySelector('.post-session-button .post-session-time-right');
+            var ageEl = wrap.querySelector('.post-session-button .post-session-age-ratings');
             if (!dateEl || !timeEl) return;
             if (!selectedSessionIso || !selectedSessionTime) {
+                // Date range mode - show all unique age ratings
                 if (defaultSessionButtonDateText) dateEl.textContent = defaultSessionButtonDateText;
                 timeEl.textContent = '';
+                if (ageEl) {
+                    var allRatings = getAllUniqueAgeRatings();
+                    ageEl.innerHTML = renderAgeRatingIcons(allRatings);
+                }
                 return;
             }
+            // Session selected - show that session's age rating
             var left = formatSessionDateLeft(selectedSessionIso);
             var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
             dateEl.textContent = left;
             timeEl.textContent = timeText;
+            if (ageEl) {
+                // Find the ticket_group_key for the selected session
+                var selectedItem = null;
+                if (sessionItems) {
+                    for (var i = 0; i < sessionItems.length; i++) {
+                        var it = sessionItems[i];
+                        if (it && it.iso === selectedSessionIso && normalizeTimeHHMM(it.time) === selectedSessionTime) {
+                            selectedItem = it;
+                            break;
+                        }
+                    }
+                }
+                var ageRating = selectedItem ? getAgeRatingForSession(selectedItem.ticket_group_key) : '';
+                ageEl.innerHTML = ageRating ? renderAgeRatingIcons([ageRating]) : '';
+            }
         }
 
         function closeSessionDropdown() {
@@ -10759,8 +10830,11 @@ const PostSessionComponent = (function() {
                 var iso = it ? String(it.iso || '').trim() : '';
                 var timeText = normalizeTimeHHMM(it ? it.time : '');
                 var dateLeft = formatSessionDateLeft(iso);
+                var ticketGroupKey = it ? String(it.ticket_group_key || '').trim() : '';
+                var ageRating = getAgeRatingForSession(ticketGroupKey);
+                var ageHtml = ageRating ? '<span class="post-session-age-ratings">' + renderAgeRatingIcons([ageRating]) + '</span>' : '';
                 var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
-                return '<button class="post-session-option' + (isSelected ? ' post-session-option-selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span></button>';
+                return '<button class="post-session-option' + (isSelected ? ' post-session-option-selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span>' + ageHtml + '</button>';
             }).join('');
         }
 

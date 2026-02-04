@@ -3562,6 +3562,28 @@ body.image-modal-open > *:not(.image-modal) {
   display: none;
 }
 
+/* Age rating icons container - right-aligned */
+.post-session-age-ratings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* Individual age rating icon */
+.post-session-age-rating-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  object-fit: contain;
+}
+
+/* Hide empty age ratings container */
+.post-session-age-ratings:empty {
+  display: none;
+}
+
 /* ----------------------------------------------------------------------------
    ARROW
    ---------------------------------------------------------------------------- */
