@@ -4485,7 +4485,7 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1')
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
