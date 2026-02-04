@@ -602,13 +602,45 @@ const CalendarComponent = (function(){
         var monthsPast = typeof options.monthsPast === 'number' ? options.monthsPast : 12;
         var monthsFuture = typeof options.monthsFuture === 'number' ? options.monthsFuture : 24;
         var allowPast = options.allowPast || false;
+        var minMonth = options.minMonth || '';
+        var maxMonth = options.maxMonth || '';
         
         var today = new Date();
         today.setHours(0,0,0,0);
         var todayIso = toISODate(today);
         
-        var minDate = new Date(today.getFullYear(), today.getMonth() - monthsPast, 1);
-        var maxDate = new Date(today.getFullYear(), today.getMonth() + monthsFuture, 1);
+        var minDate = null;
+        var maxDate = null;
+        
+        // Optional override: explicit month range (YYYY-MM)
+        // Used by the Post Session menu to show only the session months.
+        if (minMonth || maxMonth) {
+            if (!minMonth || !maxMonth) {
+                throw new Error('CalendarComponent: minMonth and maxMonth must be provided together');
+            }
+            var m1 = String(minMonth).trim();
+            var m2 = String(maxMonth).trim();
+            if (!/^\d{4}-\d{2}$/.test(m1) || !/^\d{4}-\d{2}$/.test(m2)) {
+                throw new Error('CalendarComponent: minMonth/maxMonth must be YYYY-MM');
+            }
+            var y1 = parseInt(m1.slice(0, 4), 10);
+            var mo1 = parseInt(m1.slice(5, 7), 10) - 1;
+            var y2 = parseInt(m2.slice(0, 4), 10);
+            var mo2 = parseInt(m2.slice(5, 7), 10) - 1;
+            if (!(mo1 >= 0 && mo1 <= 11) || !(mo2 >= 0 && mo2 <= 11)) {
+                throw new Error('CalendarComponent: minMonth/maxMonth month must be 01-12');
+            }
+            minDate = new Date(y1, mo1, 1);
+            maxDate = new Date(y2, mo2, 1);
+            minDate.setHours(0,0,0,0);
+            maxDate.setHours(0,0,0,0);
+            if (minDate > maxDate) {
+                throw new Error('CalendarComponent: minMonth cannot be after maxMonth');
+            }
+        } else {
+            minDate = new Date(today.getFullYear(), today.getMonth() - monthsPast, 1);
+            maxDate = new Date(today.getFullYear(), today.getMonth() + monthsFuture, 1);
+        }
         
         var todayMonthEl = null;
         var todayMonthIndex = 0;

@@ -3426,11 +3426,16 @@ const PostModule = (function() {
       } catch (_eDeco0) {}
     }
 
-    function ensureCalendarMounted() {
+    function ensureCalendarMounted(minMonth, maxMonth) {
       if (sessionCalendarApi || !sessionCalendarMount || !window.CalendarComponent) return;
       // Create calendar inside mount
       sessionCalendarMount.innerHTML = '';
-      sessionCalendarApi = CalendarComponent.create(sessionCalendarMount, {});
+      var opts = {};
+      if (minMonth && maxMonth) {
+        opts.minMonth = minMonth;
+        opts.maxMonth = maxMonth;
+      }
+      sessionCalendarApi = CalendarComponent.create(sessionCalendarMount, opts);
     }
 
     function buildSessionMapsFromSessions(sessions) {
@@ -3617,10 +3622,21 @@ const PostModule = (function() {
         if (sessionArrow) sessionArrow.classList.add('menu-arrow--open');
         try { sessionBtn.setAttribute('aria-expanded', 'true'); } catch (_eAr1) {}
 
-        // Mount calendar + load sessions + decorate availability
-        ensureCalendarMounted();
+        // Load sessions first so calendar can be month-bounded to the session range.
         if (sessionTimesList) sessionTimesList.innerHTML = '<div class="post-session-empty">Loading sessions…</div>';
         ensureSessionsLoaded().then(function() {
+          // Mount calendar with min/max month bounds derived from session dates.
+          var minMonth = '';
+          var maxMonth = '';
+          try {
+            if (sessionItems && sessionItems.length) {
+              var firstIso = sessionItems[0] && sessionItems[0].iso ? String(sessionItems[0].iso) : '';
+              var lastIso = sessionItems[sessionItems.length - 1] && sessionItems[sessionItems.length - 1].iso ? String(sessionItems[sessionItems.length - 1].iso) : '';
+              if (firstIso && firstIso.length >= 7) minMonth = firstIso.slice(0, 7);
+              if (lastIso && lastIso.length >= 7) maxMonth = lastIso.slice(0, 7);
+            }
+          } catch (_eBounds0) {}
+          ensureCalendarMounted(minMonth, maxMonth);
           decorateCalendarAvailability();
           // Always render full list of session options.
           renderSessionTimesList();
