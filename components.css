@@ -341,9 +341,6 @@
 
 /* Appearance */
 .calendar-container {
-    /* Core sizing (touch-friendly, consistent everywhere) */
-    --calendar-cell: 36px;
-    --calendar-month-width: 252px; /* 7 * 36 */
     width: 100%;
     overflow: hidden;
     background: #222;
@@ -353,6 +350,11 @@
 }
 
 .calendar-scroll-wrapper {
+    /* Core sizing (touch-friendly, consistent everywhere).
+       Applied here because every calendar instance creates this wrapper,
+       even when the mount element isn't `.calendar-container` (e.g. Filter). */
+    --calendar-cell: 36px;
+    --calendar-month-width: 252px; /* 7 * 36 */
     position: relative;
     width: 100%;
 }
@@ -386,7 +388,7 @@
 
 .calendar-month {
     flex: 0 0 auto;
-    width: var(--calendar-month-width);
+    width: var(--calendar-month-width, 252px);
     box-sizing: border-box; /* keep month separators from changing the math */
 }
 
@@ -403,17 +405,20 @@
     font-weight: bold;
     background: #111111;
     color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, var(--calendar-cell));
+    grid-template-columns: repeat(7, var(--calendar-cell, 36px));
 }
 
 .calendar-weekday,
 .calendar-day {
-    height: var(--calendar-cell);
-    width: var(--calendar-cell);
+    height: var(--calendar-cell, 36px);
+    width: var(--calendar-cell, 36px);
     display: flex;
     align-items: center;
     justify-content: center;

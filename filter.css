@@ -546,7 +546,8 @@
 .filter-calendar {
   position: relative;
   width: 100%;
-  overflow: hidden;
+  /* Let the calendar's own scroller work (don't clip internal layout) */
+  overflow: visible;
 }
 
 
