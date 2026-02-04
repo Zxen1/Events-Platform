@@ -1789,7 +1789,7 @@
 }
 
 .post-session-popover-time {
-  height: var(--post-session-cell-h, 36px);
+  height: var(--calendar-cell, 36px);
   padding: 0 10px;
   display: flex;
   align-items: center;
