@@ -3643,34 +3643,10 @@ const PostModule = (function() {
       ensureTimesSideChosen();
       var side = sessionTimesSide || 'right';
       applyJoinedCellStyles(cellEl, side);
-      try {
-        var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
-        var borderColor = cs ? cs.borderColor : '';
-        var bg = cs ? cs.backgroundColor : '';
-        var tl = cs ? cs.borderTopLeftRadius : '';
-        var tr = cs ? cs.borderTopRightRadius : '';
-        var bl = cs ? cs.borderBottomLeftRadius : '';
-        var br = cs ? cs.borderBottomRightRadius : '';
-        // If cell background is transparent, use the calendar's base background.
-        if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
-        sessionPopover.style.background = bg;
-        if (borderColor) sessionPopover.style.borderColor = borderColor;
-        if (side === 'right') {
-          sessionPopover.style.borderTopLeftRadius = '0px';
-          sessionPopover.style.borderBottomLeftRadius = '0px';
-          sessionPopover.style.borderTopRightRadius = tr || '0px';
-          sessionPopover.style.borderBottomRightRadius = br || '0px';
-          sessionPopover.style.borderLeftWidth = '0';
-          sessionPopover.style.borderRightWidth = '';
-        } else {
-          sessionPopover.style.borderTopRightRadius = '0px';
-          sessionPopover.style.borderBottomRightRadius = '0px';
-          sessionPopover.style.borderTopLeftRadius = tl || '0px';
-          sessionPopover.style.borderBottomLeftRadius = bl || '0px';
-          sessionPopover.style.borderRightWidth = '0';
-          sessionPopover.style.borderLeftWidth = '';
-        }
-      } catch (_eStyle0) {}
+      
+      // Add position class for CSS to handle connected side borders/radius
+      sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
+      sessionPopover.classList.add('post-session-popover--' + side);
 
       positionTimesExtension(cellEl, side);
     }
