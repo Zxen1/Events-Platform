@@ -3439,15 +3439,15 @@ const PostModule = (function() {
 
     function ensureTimesSideChosen() {
       if (sessionTimesSide === 'left' || sessionTimesSide === 'right') return;
-      // Stable per-open: choose based on which half of the viewport the calendar sits in.
-      // If the calendar is on the left side of the screen, extend to the RIGHT (more room).
+      // Stable per-open: choose based on which half of the post panel the calendar sits in.
       try {
         var slot = wrap && wrap.querySelector ? wrap.querySelector('.post-session-calendar-slot') : null;
         if (!slot) { sessionTimesSide = 'right'; return; }
+        var wrapRect = wrap.getBoundingClientRect();
         var slotRect = slot.getBoundingClientRect();
+        var wrapMid = wrapRect.left + (wrapRect.width / 2);
         var slotMid = slotRect.left + (slotRect.width / 2);
-        var viewportMid = (window && typeof window.innerWidth === 'number') ? (window.innerWidth / 2) : slotMid;
-        sessionTimesSide = (slotMid <= viewportMid) ? 'right' : 'left';
+        sessionTimesSide = (slotMid < wrapMid) ? 'right' : 'left';
       } catch (_eSide0) {
         sessionTimesSide = 'right';
       }
@@ -3577,63 +3577,23 @@ const PostModule = (function() {
         return;
       }
 
-      sessionPopoverIso = iso;
+      // Keep the time-row height exactly matching the real calendar day height.
       try {
-        // Switch to a 2-row grid at 8+ times:
-        // 8 -> 4+4, 9 -> 5+4, 10 -> 5+5 (left column fills first)
-        var useGrid = times.length >= 8;
-        sessionPopover.classList.toggle('post-session-popover--grid2', useGrid);
-        if (useGrid) {
-          var rows = Math.ceil(times.length / 2);
-          sessionPopover.style.gridTemplateColumns = 'repeat(2, max-content)';
-          sessionPopover.style.gridTemplateRows = 'repeat(' + rows + ', var(--calendar-cell, 36px))';
-          // Fill down the left column first, then the right.
-          sessionPopover.style.gridAutoFlow = 'column';
-          sessionPopover.style.justifyContent = 'start';
-          sessionPopover.style.alignContent = 'start';
-        } else {
-          sessionPopover.style.gridTemplateColumns = '';
-          sessionPopover.style.gridTemplateRows = '';
-          sessionPopover.style.gridAutoFlow = '';
-          sessionPopover.style.justifyContent = '';
-          sessionPopover.style.alignContent = '';
-        }
-      } catch (_eGrid0) {}
-      sessionPopover.innerHTML = (function() {
-        var html = times.map(function(t) {
-          var timeText = normalizeTimeHHMM(t);
-          return '<button class="post-session-popover-time menu-option" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
-        });
-        // Always a perfect rectangle in grid mode: pad one invisible cell for odd counts.
-        if (times.length >= 8 && (times.length % 2) === 1) {
-          html.push('<div class="post-session-popover-time" aria-hidden="true" style="visibility:hidden;pointer-events:none;"></div>');
-        }
-        return html.join('');
-      })();
-      sessionPopover.style.display = 'block';
-      
-      // Grid: keep columns perfectly aligned (same width) to avoid any stagger.
-      try {
-        if (times.length >= 8 && sessionPopover.classList.contains('post-session-popover--grid2')) {
-          var btns = sessionPopover.querySelectorAll('.post-session-popover-time');
-          var maxW = 0;
-          btns.forEach(function(b) {
-            try {
-              var w = b.getBoundingClientRect().width;
-              if (w > maxW) maxW = w;
-            } catch (_eW0) {}
-          });
-          if (maxW > 0) {
-            var px = Math.ceil(maxW) + 'px';
-            sessionPopover.style.gridAutoColumns = px;
-            sessionPopover.style.gridTemplateColumns = 'repeat(2, ' + px + ')';
-          } else {
-            sessionPopover.style.gridAutoColumns = '';
+        if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
+          var rr = cellEl.getBoundingClientRect();
+          var hh = rr && rr.height ? rr.height : 0;
+          if (hh > 0.5) {
+            sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
           }
-        } else {
-          sessionPopover.style.gridAutoColumns = '';
         }
-      } catch (_eGridW0) {}
+      } catch (_eCellH0) {}
+
+      sessionPopoverIso = iso;
+      sessionPopover.innerHTML = times.map(function(t) {
+        var timeText = normalizeTimeHHMM(t);
+        return '<button class="post-session-popover-time menu-option" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+      }).join('');
+      sessionPopover.style.display = 'block';
 
       // Make the times extension visually continuous with the date box.
       ensureTimesSideChosen();
@@ -3642,8 +3602,6 @@ const PostModule = (function() {
       try {
         var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
         var borderColor = cs ? cs.borderColor : '';
-        var borderWidth = cs ? cs.borderWidth : '';
-        var borderStyle = cs ? cs.borderStyle : '';
         var bg = cs ? cs.backgroundColor : '';
         var tl = cs ? cs.borderTopLeftRadius : '';
         var tr = cs ? cs.borderTopRightRadius : '';
@@ -3653,55 +3611,22 @@ const PostModule = (function() {
         if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
         sessionPopover.style.background = bg;
         if (borderColor) sessionPopover.style.borderColor = borderColor;
-        if (borderWidth) sessionPopover.style.borderWidth = borderWidth;
-        if (borderStyle) sessionPopover.style.borderStyle = borderStyle;
-        // Ensure all outer sides exist before we zero the join edge.
-        if (borderColor && borderWidth) {
-          sessionPopover.style.border = borderWidth + ' solid ' + borderColor;
-        }
         if (side === 'right') {
           sessionPopover.style.borderTopLeftRadius = '0px';
           sessionPopover.style.borderBottomLeftRadius = '0px';
           sessionPopover.style.borderTopRightRadius = tr || '0px';
           sessionPopover.style.borderBottomRightRadius = br || '0px';
-          sessionPopover.style.borderLeftWidth = '0px';
-          sessionPopover.style.borderRightWidth = borderWidth || '';
+          sessionPopover.style.borderLeftWidth = '0';
+          sessionPopover.style.borderRightWidth = '';
         } else {
           sessionPopover.style.borderTopRightRadius = '0px';
           sessionPopover.style.borderBottomRightRadius = '0px';
           sessionPopover.style.borderTopLeftRadius = tl || '0px';
           sessionPopover.style.borderBottomLeftRadius = bl || '0px';
-          sessionPopover.style.borderRightWidth = '0px';
-          sessionPopover.style.borderLeftWidth = borderWidth || '';
+          sessionPopover.style.borderRightWidth = '0';
+          sessionPopover.style.borderLeftWidth = '';
         }
       } catch (_eStyle0) {}
-
-      // If the time list is taller than the visible calendar scroll area, make it internally scrollable.
-      try {
-        var cell = 36;
-        try {
-          if (sessionCalendarMount) {
-            var v = getComputedStyle(sessionCalendarMount).getPropertyValue('--calendar-cell');
-            var n = parseFloat(String(v || '').trim());
-            if (isFinite(n) && n > 0) cell = n;
-          }
-        } catch (_eCell0) {}
-        var isGrid2 = false;
-        try { isGrid2 = sessionPopover.classList.contains('post-session-popover--grid2'); } catch (_eG2) { isGrid2 = false; }
-        var rows = isGrid2 ? Math.ceil(times.length / 2) : times.length;
-        var neededH = rows * cell;
-        var maxH = 0;
-        if (sessionCalendarApi && sessionCalendarApi.scroll) {
-          maxH = sessionCalendarApi.scroll.clientHeight ? (sessionCalendarApi.scroll.clientHeight - 6) : 0;
-        }
-        if (maxH > 0 && neededH > maxH) {
-          sessionPopover.classList.add('post-session-popover--scroll');
-          sessionPopover.style.maxHeight = maxH + 'px';
-        } else {
-          sessionPopover.classList.remove('post-session-popover--scroll');
-          sessionPopover.style.maxHeight = '';
-        }
-      } catch (_eScrollBox0) {}
 
       positionTimesExtension(cellEl, side);
     }
