@@ -3660,15 +3660,15 @@ body.image-modal-open > *:not(.image-modal) {
   color: inherit;
 }
 
-/* Available dates - Idle: grey border, no fill */
+/* Available dates - Idle: grey border, solid background */
 .post-session-calendar-slot .calendar-day.available-day {
-  background: transparent;
+  background: #222;
   border-color: var(--ps-border-idle);
 }
 
 /* Available dates - Hover: blue border, no fill */
 .post-session-calendar-slot .calendar-day.available-day:hover {
-  background: transparent;
+  background: #222;
   border-color: var(--ps-border-focus);
   color: #fff;
 }
@@ -3715,7 +3715,7 @@ body.image-modal-open > *:not(.image-modal) {
   position: absolute;
   z-index: var(--layer-popover);
   width: fit-content;
-  background: var(--ps-bg);
+  background: #222;
   border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   box-shadow: none;
@@ -3748,7 +3748,7 @@ body.image-modal-open > *:not(.image-modal) {
   padding: 0 10px;
   display: flex;
   align-items: center;
-  background: transparent;
+  background: #222;
   border: none;
   width: 100%;
   color: #fff;
@@ -3761,7 +3761,7 @@ body.image-modal-open > *:not(.image-modal) {
 /* Popover time - Hover: blue border, no fill */
 @media (hover: hover) and (pointer: fine) {
   .post-session-popover-time:hover {
-    background: transparent;
+    background: #222;
     box-shadow: inset 0 0 0 1px var(--ps-hover);
   }
 }
@@ -3807,7 +3807,7 @@ body.image-modal-open > *:not(.image-modal) {
   color: var(--ps-text);
   font-size: 14px;
   line-height: 1;
-  background: transparent;
+  background: #222;
   border: none;
   border-bottom: 1px solid var(--ps-border);
   text-align: left;
@@ -3825,7 +3825,7 @@ body.image-modal-open > *:not(.image-modal) {
 /* Option - Hover: blue border, no fill */
 @media (hover: hover) and (pointer: fine) {
   .post-session-option:hover {
-    background: transparent;
+    background: #222;
     box-shadow: inset 0 0 0 1px var(--ps-hover);
   }
 }
