@@ -3591,36 +3591,33 @@ const PostModule = (function() {
       try {
         var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
         var borderColor = cs ? cs.borderColor : '';
+        var borderWidth = cs ? cs.borderWidth : '';
+        var borderStyle = cs ? cs.borderStyle : '';
         var bg = cs ? cs.backgroundColor : '';
         var tl = cs ? cs.borderTopLeftRadius : '';
         var tr = cs ? cs.borderTopRightRadius : '';
         var bl = cs ? cs.borderBottomLeftRadius : '';
         var br = cs ? cs.borderBottomRightRadius : '';
-        var bwL = cs ? cs.borderLeftWidth : '';
-        var bwR = cs ? cs.borderRightWidth : '';
-        var bwT = cs ? cs.borderTopWidth : '';
-        var bwB = cs ? cs.borderBottomWidth : '';
         // If cell background is transparent, use the calendar's base background.
         if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
         sessionPopover.style.background = bg;
         if (borderColor) sessionPopover.style.borderColor = borderColor;
-        // Match date box border widths (outer edges) so the shape reads seamless.
-        if (bwT) sessionPopover.style.borderTopWidth = bwT;
-        if (bwB) sessionPopover.style.borderBottomWidth = bwB;
+        if (borderWidth) sessionPopover.style.borderWidth = borderWidth;
+        if (borderStyle) sessionPopover.style.borderStyle = borderStyle;
         if (side === 'right') {
           sessionPopover.style.borderTopLeftRadius = '0px';
           sessionPopover.style.borderBottomLeftRadius = '0px';
           sessionPopover.style.borderTopRightRadius = tr || '0px';
           sessionPopover.style.borderBottomRightRadius = br || '0px';
           sessionPopover.style.borderLeftWidth = '0px';
-          sessionPopover.style.borderRightWidth = bwR || '';
+          sessionPopover.style.borderRightWidth = borderWidth || '';
         } else {
           sessionPopover.style.borderTopRightRadius = '0px';
           sessionPopover.style.borderBottomRightRadius = '0px';
           sessionPopover.style.borderTopLeftRadius = tl || '0px';
           sessionPopover.style.borderBottomLeftRadius = bl || '0px';
           sessionPopover.style.borderRightWidth = '0px';
-          sessionPopover.style.borderLeftWidth = bwL || '';
+          sessionPopover.style.borderLeftWidth = borderWidth || '';
         }
       } catch (_eStyle0) {}
 
