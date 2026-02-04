@@ -10267,11 +10267,6 @@ const PostLocationComponent = (function() {
 
     /**
      * Render a single location option HTML
-     * @param {Object} loc - Location object
-     * @param {number} index - Index in location list
-     * @param {boolean} isSelected - Whether this is the currently selected location
-     * @param {Function} escapeHtml - HTML escape function
-     * @returns {string} HTML string
      */
     function renderLocationOption(loc, index, isSelected, escapeHtml) {
         var venueName = loc.venue_name || '';
@@ -10292,11 +10287,6 @@ const PostLocationComponent = (function() {
 
     /**
      * Render the location section HTML
-     * @param {Object} options
-     * @param {string} options.postId - Post ID
-     * @param {Array} options.locationList - Array of location objects
-     * @param {Function} options.escapeHtml - HTML escape function
-     * @returns {string} HTML string
      */
     function render(options) {
         var postId = options.postId || '';
@@ -10309,14 +10299,10 @@ const PostLocationComponent = (function() {
         var venueName = loc0.venue_name || '';
         var addressLine = loc0.address_line || '';
         var city = loc0.city || '';
-        var hasMultipleLocations = locationList.length > 1;
 
         var html = [];
 
-        // Container wrapper (self-contained, no base class dependencies)
         html.push('<div class="post-location-container" data-post-id="' + postId + '">');
-
-        // Button shows currently selected location info
         html.push('<button class="post-location-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-location-text">');
         html.push('<div class="post-location-text-main">' + escapeHtml(venueName) + '</div>');
@@ -10325,15 +10311,11 @@ const PostLocationComponent = (function() {
             html.push('<div class="post-location-text-secondary">' + escapeHtml(secondary) + '</div>');
         }
         html.push('</div>');
-        // Always show arrow - dropdown has map even for single location
         html.push('<div class="post-location-arrow"></div>');
         html.push('</button>');
 
-        // Dropdown with map (always) and location list
         html.push('<div class="post-location-options">');
-        // Mini-map at top (rendered by PostLocationMapComponent)
         html.push(PostLocationMapComponent.render({ postId: postId }));
-        // Location list below map (always render so marker click triggers re-center)
         for (var i = 0; i < locationList.length; i++) {
             html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
         }
@@ -10344,8 +10326,253 @@ const PostLocationComponent = (function() {
         return html.join('');
     }
 
+    /**
+     * Initialize location component behavior
+     * @param {HTMLElement} wrap - The post wrapper element
+     * @param {Object} post - The post data object
+     * @param {Object} callbacks - Callback functions from post.js
+     * @param {Function} callbacks.getLocationListForUi - Returns ordered location list
+     * @param {Function} callbacks.buildPostDetail - Builds post detail element
+     * @param {Function} callbacks.addToRecentHistory - Adds to recent history
+     * @param {Function} callbacks.getMapCardIndexById - Gets map card index by ID
+     * @param {Function} callbacks.openPost - Opens a post
+     * @param {Function} callbacks.loadPostById - Loads post by ID
+     * @param {Function} callbacks.getModeButton - Gets mode button
+     * @param {Function} callbacks.getCurrentMode - Gets current mode
+     * @param {Function} callbacks.isPostsEnabled - Returns if posts enabled
+     */
+    function init(wrap, post, callbacks) {
+        if (!wrap || !post) return null;
+
+        var locationBtn = wrap.querySelector('.post-location-button');
+        var locationArrow = wrap.querySelector('.post-location-arrow');
+        var locationMapContainer = wrap.querySelector('.post-location-map');
+        var locationOptions = wrap.querySelectorAll('.post-location-option');
+        var locationMapOwnerId = null;
+        var locationSelectedIndex = 0;
+
+        if (!locationBtn) return null;
+
+        function getLocationListForUi() {
+            if (callbacks && callbacks.getLocationListForUi) {
+                return callbacks.getLocationListForUi();
+            }
+            var list = null;
+            try { list = wrap.__postLocationList; } catch (_e) { list = null; }
+            if (Array.isArray(list) && list.length) return list;
+            return post.map_cards || [];
+        }
+
+        function getMapCardIndexById(postObj, mapCardId) {
+            if (callbacks && callbacks.getMapCardIndexById) {
+                return callbacks.getMapCardIndexById(postObj, mapCardId);
+            }
+            if (!postObj || !mapCardId || !postObj.map_cards) return 0;
+            for (var i = 0; i < postObj.map_cards.length; i++) {
+                if (String(postObj.map_cards[i].id) === String(mapCardId)) return i;
+            }
+            return 0;
+        }
+
+        function closeLocationDropdown() {
+            locationBtn.classList.remove('post-location-button--open');
+            if (locationArrow) locationArrow.classList.remove('post-location-arrow--open');
+            
+            if (locationMapContainer && locationMapOwnerId) {
+                PostLocationMapComponent.release(locationMapContainer);
+                locationMapOwnerId = null;
+            }
+        }
+
+        function highlightListItem(index) {
+            locationOptions.forEach(function(o, i) {
+                if (i === index) {
+                    o.classList.add('post-location-hover');
+                } else {
+                    o.classList.remove('post-location-hover');
+                }
+            });
+        }
+
+        // Button click handler
+        locationBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = locationBtn.classList.contains('post-location-button--open');
+            
+            if (isOpen) {
+                closeLocationDropdown();
+            } else {
+                locationBtn.classList.add('post-location-button--open');
+                if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
+                
+                if (locationMapContainer) {
+                    var locationList = getLocationListForUi();
+                    var iconUrl = post.subcategory_icon_url || '';
+                    
+                    locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
+                        postId: post.id,
+                        locations: locationList,
+                        iconUrl: iconUrl,
+                        activeIndex: locationSelectedIndex,
+                        onMarkerClick: function(index) {
+                            var opt = locationOptions[index];
+                            if (opt) opt.click();
+                        },
+                        onMarkerHover: function(index) {
+                            highlightListItem(index);
+                        },
+                        onDisconnect: function() {
+                            closeLocationDropdown();
+                        },
+                        onReady: function() {}
+                    });
+                }
+            }
+        });
+
+        // Location option hover
+        locationOptions.forEach(function(opt, index) {
+            opt.addEventListener('mouseenter', function() {
+                PostLocationMapComponent.highlightMarker(index);
+            });
+            opt.addEventListener('mouseleave', function() {
+                PostLocationMapComponent.highlightMarker(-1);
+            });
+        });
+
+        // Location option selection
+        locationOptions.forEach(function(opt) {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var index = parseInt(opt.dataset.index, 10);
+                var locationList = getLocationListForUi();
+                var loc = locationList[index];
+                if (!loc) return;
+
+                var isInMyPosts = !!(wrap.closest && wrap.closest('#member-tab-myposts'));
+                var isAlreadySelected = (index === locationSelectedIndex);
+
+                locationSelectedIndex = index;
+
+                // Update button content
+                var btnTextMain = wrap.querySelector('.post-location-text-main');
+                var btnTextSecondary = wrap.querySelector('.post-location-text-secondary');
+                if (btnTextMain) {
+                    btnTextMain.textContent = loc.venue_name || '';
+                }
+                if (btnTextSecondary) {
+                    var secondary = (loc.address_line || '') + ((loc.address_line && loc.city) ? ', ' : '') + (loc.city || '');
+                    btnTextSecondary.textContent = secondary;
+                }
+
+                // Update selected state
+                locationOptions.forEach(function(o) {
+                    o.classList.remove('post-location-highlighted');
+                });
+                opt.classList.add('post-location-highlighted');
+
+                closeLocationDropdown();
+
+                var originalIndex = getMapCardIndexById(post, loc.id);
+                if (callbacks && callbacks.addToRecentHistory) {
+                    callbacks.addToRecentHistory(post, originalIndex);
+                }
+
+                // My Posts tab: re-render in place
+                if (isInMyPosts && callbacks && callbacks.buildPostDetail) {
+                    var newWrap = callbacks.buildPostDetail(post, null, false, originalIndex);
+                    if (wrap.parentNode) {
+                        wrap.parentNode.replaceChild(newWrap, wrap);
+                    }
+                    var newDescEl = newWrap.querySelector('.post-description-text');
+                    if (newDescEl) {
+                        setTimeout(function() { newDescEl.click(); }, 0);
+                    }
+                    return;
+                }
+
+                // Get coordinates
+                var lat = Number(loc.latitude);
+                var lng = Number(loc.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                if (!window.MapModule || typeof MapModule.flyTo !== 'function') return;
+
+                // Get zoom threshold
+                if (!window.App || typeof App.getConfig !== 'function') {
+                    throw new Error('[PostLocationComponent] App.getConfig is required for postsLoadZoom.');
+                }
+                var postsLoadZoom = App.getConfig('postsLoadZoom');
+                if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
+                    throw new Error('[PostLocationComponent] postsLoadZoom config is missing or invalid.');
+                }
+
+                // Already-selected: just fly to center
+                if (isAlreadySelected) {
+                    MapModule.flyTo(lng, lat, postsLoadZoom);
+                    return;
+                }
+
+                // Different location: full fly + reload
+                var currentMode = callbacks && callbacks.getCurrentMode ? callbacks.getCurrentMode() : '';
+                var getModeButton = callbacks && callbacks.getModeButton;
+                var mapBtn = getModeButton ? getModeButton('map') : null;
+                if (mapBtn && currentMode !== 'map') {
+                    mapBtn.click();
+                }
+                
+                MapModule.flyTo(lng, lat, postsLoadZoom);
+                
+                var mainMap = MapModule.getMap();
+                if (mainMap) {
+                    mainMap.once('moveend', function() {
+                        var center = mainMap.getCenter();
+                        var latDiff = Math.abs(center.lat - lat);
+                        var lngDiff = Math.abs(center.lng - lng);
+                        if (latDiff > 0.01 || lngDiff > 0.01) return;
+                        
+                        var postsBtn = getModeButton ? getModeButton('posts') : null;
+                        var postsEnabled = callbacks && callbacks.isPostsEnabled ? callbacks.isPostsEnabled() : true;
+                        if (postsBtn && postsEnabled) {
+                            postsBtn.click();
+                            setTimeout(function() {
+                                if (callbacks && callbacks.loadPostById && callbacks.openPost) {
+                                    callbacks.loadPostById(post.id).then(function(freshPost) {
+                                        if (freshPost) {
+                                            callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
+                                        }
+                                    });
+                                }
+                            }, 50);
+                        }
+                    });
+                }
+            });
+        });
+
+        // Click-outside handler
+        var clickOutsideHandler = function(e) {
+            if (!locationBtn.classList.contains('post-location-button--open')) return;
+            var target = e.target;
+            if (!target) return;
+            var container = wrap.querySelector('.post-location-container');
+            if (container && container.contains(target)) return;
+            closeLocationDropdown();
+        };
+        document.addEventListener('click', clickOutsideHandler);
+
+        // Return API for cleanup
+        return {
+            close: closeLocationDropdown,
+            destroy: function() {
+                document.removeEventListener('click', clickOutsideHandler);
+                closeLocationDropdown();
+            }
+        };
+    }
+
     return {
-        render: render
+        render: render,
+        init: init
     };
 })();
 
@@ -10360,11 +10587,6 @@ const PostSessionComponent = (function() {
 
     /**
      * Render the session section HTML
-     * @param {Object} options
-     * @param {string} options.postId - Post ID
-     * @param {string} options.datesText - Session summary text
-     * @param {Function} options.escapeHtml - HTML escape function
-     * @returns {string} HTML string
      */
     function render(options) {
         var postId = options.postId || '';
@@ -10374,10 +10596,7 @@ const PostSessionComponent = (function() {
         if (!datesText) return '';
 
         var html = [];
-
-        // Container wrapper (self-contained, no base class dependencies)
         html.push('<div class="post-session-container" data-post-id="' + postId + '">');
-
         html.push('<button class="post-session-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-session-text">');
         html.push('<div class="post-session-text-main">');
@@ -10387,11 +10606,8 @@ const PostSessionComponent = (function() {
         html.push('</div>');
         html.push('<div class="post-session-arrow"></div>');
         html.push('</button>');
-
-        // Dropdown: square calendar viewport + time slots list (filled by PostModule on open)
         html.push('<div class="post-session-options" aria-label="Session picker">');
         html.push('<div class="post-session-calendar-slot">');
-        // IMPORTANT: CalendarComponent expects calendar-container for styling consistency.
         html.push('<div class="post-session-calendar-mount calendar-container" aria-label="Session calendar"></div>');
         html.push('<div class="post-session-popover" aria-hidden="true" style="display:none;"></div>');
         html.push('</div>');
@@ -10399,14 +10615,785 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-
         html.push('</div>');
 
         return html.join('');
     }
 
+    /**
+     * Initialize session component behavior
+     * @param {HTMLElement} wrap - The post wrapper element
+     * @param {Object} post - The post data object
+     * @param {Object} callbacks - Callback functions
+     * @param {Function} callbacks.escapeHtml - HTML escape function
+     * @param {Function} callbacks.getLocationListForUi - Returns ordered location list
+     * @param {Function} callbacks.getLocationSelectedIndex - Returns selected location index
+     * @param {Function} callbacks.closeLocationDropdown - Closes location dropdown
+     */
+    function init(wrap, post, callbacks) {
+        if (!wrap || !post) return null;
+
+        var sessionBtn = wrap.querySelector('.post-session-button');
+        var sessionArrow = wrap.querySelector('.post-session-arrow');
+        var sessionOptionsPanel = wrap.querySelector('.post-session-options');
+        var sessionCalendarMount = wrap.querySelector('.post-session-calendar-mount');
+        var sessionTimesList = wrap.querySelector('.post-session-times-list');
+        var sessionPopover = wrap.querySelector('.post-session-popover');
+
+        if (!sessionBtn) return null;
+
+        var escapeHtml = (callbacks && callbacks.escapeHtml) || function(s) { return String(s || ''); };
+
+        var sessionCalendarApi = null;
+        var sessionAvailableSet = null;
+        var sessionByDate = null;
+        var sessionItems = null;
+        var selectedSessionIso = '';
+        var selectedSessionTime = '';
+        var sessionsLoading = false;
+        var sessionPopoverIso = '';
+        var sessionTimesSide = '';
+        var defaultSessionButtonDateText = '';
+        var closeSessionTimer = null;
+        var SESSION_SELECT_CLOSE_DELAY_MS = 500;
+        var lastJoinedCell = null;
+        var lastJoinedCellStyles = null;
+        var hoverPreviewIso = '';
+
+        try {
+            var _dateInit = wrap.querySelector('.post-session-date-left');
+            if (_dateInit) defaultSessionButtonDateText = String(_dateInit.textContent || '');
+        } catch (_eInit0) {}
+
+        function getLocationListForUi() {
+            if (callbacks && callbacks.getLocationListForUi) return callbacks.getLocationListForUi();
+            return post.map_cards || [];
+        }
+
+        function getLocationSelectedIndex() {
+            if (callbacks && callbacks.getLocationSelectedIndex) return callbacks.getLocationSelectedIndex();
+            return 0;
+        }
+
+        function formatSessionDateLeft(iso) {
+            var d = null;
+            try { d = new Date(String(iso || '') + 'T00:00:00'); } catch (_e0) { d = null; }
+            if (!d || isNaN(d.getTime())) return String(iso || '');
+            var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+            var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+            var day = d.getDate();
+            var year = d.getFullYear();
+            var nowYear = (new Date()).getFullYear();
+            if (year !== nowYear) return dow + ' ' + day + ' ' + mon + ', ' + year;
+            return dow + ' ' + day + ' ' + mon;
+        }
+
+        function normalizeTimeHHMM(t) {
+            var s = String(t || '').trim();
+            if (!s) return '';
+            if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s.slice(0, 5);
+            var m = s.match(/^(\d{1,2}):(\d{2})$/);
+            if (m) return String(m[1]).padStart(2, '0') + ':' + m[2];
+            return s;
+        }
+
+        function updateSessionButtonText() {
+            if (!wrap) return;
+            var dateEl = wrap.querySelector('.post-session-date-left');
+            var timeEl = wrap.querySelector('.post-session-time-right');
+            if (!dateEl || !timeEl) return;
+            if (!selectedSessionIso || !selectedSessionTime) {
+                if (defaultSessionButtonDateText) dateEl.textContent = defaultSessionButtonDateText;
+                timeEl.textContent = '';
+                return;
+            }
+            var left = formatSessionDateLeft(selectedSessionIso);
+            var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
+            dateEl.textContent = left;
+            timeEl.textContent = timeText;
+        }
+
+        function closeSessionDropdown() {
+            if (!sessionBtn) return;
+            if (closeSessionTimer) {
+                try { clearTimeout(closeSessionTimer); } catch (_eT0) {}
+                closeSessionTimer = null;
+            }
+            sessionBtn.classList.remove('post-session-button--open');
+            if (sessionArrow) sessionArrow.classList.remove('post-session-arrow--open');
+            try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
+            hideSessionPopover();
+            sessionTimesSide = '';
+            try {
+                if (sessionCalendarMount) {
+                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+                if (sessionTimesList) {
+                    var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+                    d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+                if (sessionPopover) {
+                    var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+                    d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+            } catch (_eClrClose0) {}
+        }
+
+        function hideSessionPopover() {
+            if (!sessionPopover) return;
+            sessionPopover.style.display = 'none';
+            sessionPopover.innerHTML = '';
+            sessionPopoverIso = '';
+            hoverPreviewIso = '';
+            try {
+                if (sessionCalendarMount) {
+                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+                if (sessionTimesList) {
+                    var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+                    d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+                if (sessionPopover) {
+                    var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+                    d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                }
+            } catch (_eClrHide0) {}
+            try {
+                if (lastJoinedCell && lastJoinedCellStyles) {
+                    lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
+                    lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
+                    lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
+                    lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
+                    lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
+                    lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+                    lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
+                    lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
+                }
+            } catch (_eJoin0) {}
+            lastJoinedCell = null;
+            lastJoinedCellStyles = null;
+        }
+
+        function getActiveLocationForUi() {
+            var list = getLocationListForUi();
+            if (!Array.isArray(list) || !list.length) return null;
+            var idx = getLocationSelectedIndex();
+            if (typeof idx !== 'number' || !isFinite(idx) || idx < 0) idx = 0;
+            if (idx >= list.length) idx = 0;
+            return list[idx] || null;
+        }
+
+        function renderSessionTimesList() {
+            if (!sessionTimesList) return;
+            if (!sessionItems) {
+                sessionTimesList.innerHTML = '<div class="post-session-empty">Loading sessions…</div>';
+                return;
+            }
+            var items = sessionItems || [];
+            if (!items.length) {
+                sessionTimesList.innerHTML = '<div class="post-session-empty">No sessions</div>';
+                return;
+            }
+            sessionTimesList.innerHTML = items.map(function(it) {
+                var iso = it ? String(it.iso || '').trim() : '';
+                var timeText = normalizeTimeHHMM(it ? it.time : '');
+                var dateLeft = formatSessionDateLeft(iso);
+                var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
+                return '<button class="post-session-time' + (isSelected ? ' post-session-time--selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span></button>';
+            }).join('');
+        }
+
+        function setSelectedCalendarDay(iso) {
+            var prevIso = selectedSessionIso;
+            selectedSessionIso = iso || '';
+            if (selectedSessionIso && prevIso && selectedSessionIso !== prevIso) {
+                selectedSessionTime = '';
+            }
+            if (!selectedSessionIso) {
+                updateSessionButtonText();
+            }
+            if (sessionCalendarMount) {
+                try {
+                    var cells = sessionCalendarMount.querySelectorAll('.calendar-day.selected');
+                    cells.forEach(function(c) { c.classList.remove('selected'); });
+                    if (iso) {
+                        var cell = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+                        if (cell) cell.classList.add('selected');
+                    }
+                } catch (_eSel0) {}
+            }
+            renderSessionTimesList();
+            updateSessionButtonText();
+        }
+
+        function ensureTimesSideChosen() {
+            if (sessionTimesSide === 'left' || sessionTimesSide === 'right') return;
+            try {
+                var slot = wrap && wrap.querySelector ? wrap.querySelector('.post-session-calendar-slot') : null;
+                if (!slot) { sessionTimesSide = 'right'; return; }
+                var wrapRect = wrap.getBoundingClientRect();
+                var slotRect = slot.getBoundingClientRect();
+                var wrapMid = wrapRect.left + (wrapRect.width / 2);
+                var slotMid = slotRect.left + (slotRect.width / 2);
+                sessionTimesSide = (slotMid < wrapMid) ? 'right' : 'left';
+            } catch (_eSide0) {
+                sessionTimesSide = 'right';
+            }
+        }
+
+        function applyJoinedCellStyles(cellEl, side) {
+            if (!cellEl) return;
+            try {
+                if (lastJoinedCell && lastJoinedCellStyles && lastJoinedCell !== cellEl) {
+                    lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
+                    lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
+                    lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
+                    lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
+                    lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
+                    lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+                    lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
+                    lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
+                    lastJoinedCell = null;
+                    lastJoinedCellStyles = null;
+                }
+            } catch (_eJoinR0) {}
+            if (lastJoinedCell === cellEl && lastJoinedCellStyles) return;
+            lastJoinedCell = cellEl;
+            lastJoinedCellStyles = {
+                tl: cellEl.style.borderTopLeftRadius,
+                tr: cellEl.style.borderTopRightRadius,
+                bl: cellEl.style.borderBottomLeftRadius,
+                br: cellEl.style.borderBottomRightRadius,
+                blc: cellEl.style.borderLeftColor,
+                brc: cellEl.style.borderRightColor,
+                blw: cellEl.style.borderLeftWidth,
+                brw: cellEl.style.borderRightWidth
+            };
+            if (side === 'right') {
+                cellEl.style.borderTopRightRadius = '0px';
+                cellEl.style.borderBottomRightRadius = '0px';
+                cellEl.style.borderRightColor = 'transparent';
+                cellEl.style.borderRightWidth = '0px';
+            } else {
+                cellEl.style.borderTopLeftRadius = '0px';
+                cellEl.style.borderBottomLeftRadius = '0px';
+                cellEl.style.borderLeftColor = 'transparent';
+                cellEl.style.borderLeftWidth = '0px';
+            }
+        }
+
+        function positionTimesExtension(cellEl, side) {
+            if (!sessionPopover || !cellEl || !sessionCalendarApi || !sessionCalendarApi.calendar || !sessionCalendarApi.scroll) return;
+            var bodyEl = sessionCalendarApi.calendar;
+            var scrollEl = sessionCalendarApi.scroll;
+            sessionPopover.style.left = '0px';
+            sessionPopover.style.top = '0px';
+            var popW = sessionPopover.offsetWidth || 180;
+            var popH = sessionPopover.offsetHeight || 120;
+            try {
+                var bodyRect0 = bodyEl.getBoundingClientRect();
+                var cellRect0 = cellEl.getBoundingClientRect();
+                var cellX0 = (cellRect0.left - bodyRect0.left);
+                var cellW0 = cellRect0.width || 36;
+                var overlap0 = 1;
+                var extLeft0 = (side === 'left') ? (cellX0 - popW + overlap0) : (cellX0 + cellW0 - overlap0);
+                var extRight0 = extLeft0 + popW;
+                var viewLeft0 = scrollEl.scrollLeft;
+                var viewRight0 = scrollEl.scrollLeft + scrollEl.clientWidth;
+                var inset0 = 6;
+                if (extLeft0 < viewLeft0 + inset0) {
+                    scrollEl.scrollLeft = Math.max(0, extLeft0 - inset0);
+                } else if (extRight0 > viewRight0 - inset0) {
+                    scrollEl.scrollLeft = Math.max(0, scrollEl.scrollLeft + (extRight0 - (viewRight0 - inset0)));
+                }
+            } catch (_eScrollFit0) {}
+            var cellRect = cellEl.getBoundingClientRect();
+            var bodyRect = bodyEl.getBoundingClientRect();
+            var scrollRect = scrollEl.getBoundingClientRect();
+            var cellX = (cellRect.left - bodyRect.left);
+            var cellY = (cellRect.top - bodyRect.top);
+            var cellW = cellRect.width || 36;
+            var cellH = cellRect.height || 36;
+            var overlap = 1;
+            var left = (side === 'left') ? (cellX - popW + overlap) : (cellX + cellW - overlap);
+            var inset = 2;
+            var viewTop = (scrollRect.top - bodyRect.top) + inset;
+            var viewBottom = (scrollRect.bottom - bodyRect.top) - inset;
+            var maxTop = viewBottom - popH;
+            var minTop = viewTop;
+            var fitsDown = (cellY + popH) <= viewBottom;
+            var fitsUp = (cellY - (popH - cellH)) >= viewTop;
+            var top = cellY;
+            if (fitsDown) {
+                top = cellY;
+            } else if (fitsUp) {
+                top = cellY - (popH - cellH);
+            } else {
+                top = cellY - Math.round((popH - cellH) / 2);
+            }
+            top = Math.max(minTop, Math.min(top, maxTop));
+            sessionPopover.style.left = left + 'px';
+            sessionPopover.style.top = top + 'px';
+        }
+
+        function showSessionPopoverForDate(cellEl, iso) {
+            if (!sessionPopover || !iso || !sessionByDate) return;
+            var times = sessionByDate[iso] || [];
+            if (!times.length) {
+                hideSessionPopover();
+                return;
+            }
+            try {
+                if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
+                    var rr = cellEl.getBoundingClientRect();
+                    var hh = rr && rr.height ? rr.height : 0;
+                    if (hh > 0.5) {
+                        sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
+                    }
+                }
+            } catch (_eCellH0) {}
+            sessionPopoverIso = iso;
+            sessionPopover.innerHTML = times.map(function(t) {
+                var timeText = normalizeTimeHHMM(t);
+                return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
+            }).join('');
+            sessionPopover.style.display = 'block';
+            ensureTimesSideChosen();
+            var side = sessionTimesSide || 'right';
+            applyJoinedCellStyles(cellEl, side);
+            try {
+                var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
+                var borderColor = cs ? cs.borderColor : '';
+                var bg = cs ? cs.backgroundColor : '';
+                var outerRadius = '5px';
+                if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
+                sessionPopover.style.background = bg;
+                if (borderColor) sessionPopover.style.borderColor = borderColor;
+                if (side === 'right') {
+                    sessionPopover.style.borderTopLeftRadius = '0px';
+                    sessionPopover.style.borderBottomLeftRadius = '0px';
+                    sessionPopover.style.borderTopRightRadius = outerRadius;
+                    sessionPopover.style.borderBottomRightRadius = outerRadius;
+                    sessionPopover.style.borderLeftWidth = '0';
+                    sessionPopover.style.borderRightWidth = '1px';
+                } else {
+                    sessionPopover.style.borderTopRightRadius = '0px';
+                    sessionPopover.style.borderBottomRightRadius = '0px';
+                    sessionPopover.style.borderTopLeftRadius = outerRadius;
+                    sessionPopover.style.borderBottomLeftRadius = outerRadius;
+                    sessionPopover.style.borderRightWidth = '0';
+                    sessionPopover.style.borderLeftWidth = '1px';
+                }
+            } catch (_eStyle0) {}
+            positionTimesExtension(cellEl, side);
+        }
+
+        function decorateCalendarAvailability() {
+            if (!sessionCalendarMount || !sessionAvailableSet) return;
+            try {
+                var dayCells = sessionCalendarMount.querySelectorAll('.calendar-day');
+                dayCells.forEach(function(cell) {
+                    var iso = cell && cell.dataset ? cell.dataset.iso : '';
+                    if (!iso) return;
+                    cell.classList.remove('post-session-disabled');
+                    cell.classList.remove('available-day');
+                    if (sessionAvailableSet[iso]) {
+                        cell.classList.add('available-day');
+                    } else {
+                        cell.classList.add('post-session-disabled');
+                    }
+                });
+            } catch (_eDeco0) {}
+        }
+
+        function ensureCalendarMounted(minMonth, maxMonth) {
+            if (sessionCalendarApi || !sessionCalendarMount || !window.CalendarComponent) return;
+            sessionCalendarMount.innerHTML = '';
+            var opts = {};
+            if (minMonth && maxMonth) {
+                opts.minMonth = minMonth;
+                opts.maxMonth = maxMonth;
+            }
+            sessionCalendarApi = CalendarComponent.create(sessionCalendarMount, opts);
+            try {
+                if (sessionPopover && sessionCalendarApi && sessionCalendarApi.calendar) {
+                    sessionCalendarApi.calendar.appendChild(sessionPopover);
+                    sessionPopover.style.display = 'none';
+                }
+            } catch (_eMovePop0) {}
+            try { ensureTimesSideChosen(); } catch (_eSide1) {}
+            try {
+                requestAnimationFrame(function() {
+                    try {
+                        var anyDay = sessionCalendarMount.querySelector('.calendar-day[data-iso]');
+                        if (!anyDay) return;
+                        var r = anyDay.getBoundingClientRect();
+                        var h = r && r.height ? r.height : 0;
+                        if (h > 0.5) {
+                            sessionCalendarMount.style.setProperty('--post-session-cell-h', h + 'px');
+                        }
+                    } catch (_eH0) {}
+                });
+            } catch (_eH1) {}
+        }
+
+        function buildSessionMapsFromSessions(sessions) {
+            var byDate = {};
+            var set = {};
+            var flat = [];
+            (sessions || []).forEach(function(s) {
+                if (!s) return;
+                var iso = String(s.date || '').trim();
+                if (!iso) return;
+                set[iso] = true;
+                if (!byDate[iso]) byDate[iso] = [];
+                var times = Array.isArray(s.times) ? s.times : [];
+                times.forEach(function(t) {
+                    if (!t) return;
+                    var timeText = '';
+                    var ticketGroupKey = '';
+                    if (typeof t === 'string') {
+                        timeText = t;
+                    } else {
+                        if (t.time !== undefined && t.time !== null) timeText = String(t.time);
+                        if (t.ticket_group_key !== undefined && t.ticket_group_key !== null) ticketGroupKey = String(t.ticket_group_key);
+                    }
+                    timeText = normalizeTimeHHMM(timeText);
+                    if (!timeText) return;
+                    byDate[iso].push(timeText);
+                    flat.push({ iso: iso, time: timeText, ticket_group_key: ticketGroupKey });
+                });
+            });
+            Object.keys(byDate).forEach(function(iso) {
+                var arr = byDate[iso] || [];
+                var uniq = {};
+                var out = [];
+                arr.forEach(function(t) {
+                    if (uniq[t]) return;
+                    uniq[t] = true;
+                    out.push(t);
+                });
+                out.sort();
+                byDate[iso] = out;
+            });
+            sessionByDate = byDate;
+            sessionAvailableSet = set;
+            flat.sort(function(a, b) {
+                var da = a && a.iso ? String(a.iso) : '';
+                var db = b && b.iso ? String(b.iso) : '';
+                if (da < db) return -1;
+                if (da > db) return 1;
+                var ta = a && a.time ? String(a.time) : '';
+                var tb = b && b.time ? String(b.time) : '';
+                if (ta < tb) return -1;
+                if (ta > tb) return 1;
+                return 0;
+            });
+            sessionItems = flat;
+        }
+
+        function ensureSessionsLoaded() {
+            if (sessionItems && sessionByDate && sessionAvailableSet) {
+                return Promise.resolve(true);
+            }
+            if (sessionsLoading) {
+                return new Promise(function(resolve) {
+                    setTimeout(function() { resolve(!!(sessionItems && sessionByDate && sessionAvailableSet)); }, 50);
+                });
+            }
+            var activeLoc = getActiveLocationForUi();
+            if (activeLoc && Array.isArray(activeLoc.sessions) && activeLoc.sessions.length) {
+                buildSessionMapsFromSessions(activeLoc.sessions);
+                return Promise.resolve(true);
+            }
+            sessionsLoading = true;
+            return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + encodeURIComponent(String(post.id || '')) + '&full=1')
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (!data || !data.success || !data.posts || !data.posts.length) {
+                        throw new Error('No post data');
+                    }
+                    var fullPost = data.posts[0];
+                    var loc = getActiveLocationForUi();
+                    var locId = loc && loc.id !== undefined && loc.id !== null ? String(loc.id) : '';
+                    var sessions = [];
+                    if (fullPost && Array.isArray(fullPost.map_cards) && locId) {
+                        for (var i = 0; i < fullPost.map_cards.length; i++) {
+                            if (String(fullPost.map_cards[i].id) === locId) {
+                                sessions = fullPost.map_cards[i].sessions || [];
+                                break;
+                            }
+                        }
+                    }
+                    buildSessionMapsFromSessions(sessions);
+                    return true;
+                })
+                .catch(function(err) {
+                    console.error('[PostSessionComponent] Failed to load sessions:', err);
+                    sessionByDate = {};
+                    sessionAvailableSet = {};
+                    sessionItems = [];
+                    return false;
+                })
+                .finally(function() {
+                    sessionsLoading = false;
+                });
+        }
+
+        function bindSessionInteractions() {
+            if (!sessionOptionsPanel) return;
+
+            function supportsHover() {
+                try {
+                    return !!(window.matchMedia && window.matchMedia('(hover: hover)').matches);
+                } catch (_e0) {
+                    return false;
+                }
+            }
+
+            function clearSyncedMarks() {
+                try {
+                    if (sessionCalendarMount) {
+                        var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+                        d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                    }
+                    if (sessionTimesList) {
+                        var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+                        d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                    }
+                    if (sessionPopover) {
+                        var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+                        d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                    }
+                } catch (_eClear0) {}
+            }
+
+            function applySyncedHover(iso, timeText) {
+                if (!iso) return;
+                try {
+                    if (sessionTimesList) {
+                        var rows = sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]');
+                        rows.forEach(function(r) { r.classList.add('post-session-hover'); });
+                        if (timeText) {
+                            var exact = sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]');
+                            if (exact) exact.classList.add('post-session-hover');
+                        }
+                    }
+                } catch (_eApply0) {}
+            }
+
+            function applySyncedActivate(iso, timeText) {
+                if (!iso) return;
+                try {
+                    if (sessionCalendarMount) {
+                        var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+                        if (day) day.classList.add('post-session-highlighted');
+                    }
+                    if (sessionTimesList) {
+                        var exact = timeText ? sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]') : null;
+                        if (exact) exact.classList.add('post-session-highlighted');
+                    }
+                    if (sessionPopover && timeText) {
+                        var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
+                        if (b) b.classList.add('post-session-highlighted');
+                    }
+                } catch (_eAct0) {}
+                try {
+                    setTimeout(function() {
+                        try {
+                            if (sessionCalendarMount) {
+                                var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-highlighted');
+                                d1.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
+                            }
+                            if (sessionTimesList) {
+                                var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-highlighted');
+                                d2.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
+                            }
+                            if (sessionPopover) {
+                                var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-highlighted');
+                                d3.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
+                            }
+                        } catch (_eActClr1) {}
+                    }, 300);
+                } catch (_eActClr0) {}
+            }
+
+            function scrollCalendarToIso(iso) {
+                if (!iso) return;
+                try {
+                    if (!sessionCalendarApi || !sessionCalendarApi.scroll || !sessionCalendarMount) return;
+                    var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
+                    if (!day || !day.closest) return;
+                    var monthEl = day.closest('.calendar-month');
+                    if (!monthEl) return;
+                    sessionCalendarApi.scroll.scrollLeft = monthEl.offsetLeft;
+                } catch (_eScroll0) {}
+            }
+
+            sessionOptionsPanel.addEventListener('click', function(e) {
+                var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
+                if (!day || !day.dataset || !day.dataset.iso) return;
+                var iso = String(day.dataset.iso || '').trim();
+                if (!iso) return;
+                if (!sessionAvailableSet || !sessionAvailableSet[iso]) return;
+                e.stopPropagation();
+                clearSyncedMarks();
+                setSelectedCalendarDay(iso);
+                showSessionPopoverForDate(day, iso);
+            });
+
+            sessionOptionsPanel.addEventListener('mouseover', function(e) {
+                if (!supportsHover()) return;
+                var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
+                if (!day || !day.dataset || !day.dataset.iso) return;
+                var iso = String(day.dataset.iso || '').trim();
+                if (!iso) return;
+                if (!sessionAvailableSet || !sessionAvailableSet[iso]) return;
+                if (hoverPreviewIso === iso) return;
+                hoverPreviewIso = iso;
+                clearSyncedMarks();
+                showSessionPopoverForDate(day, iso);
+                applySyncedHover(iso, '');
+            });
+
+            sessionOptionsPanel.addEventListener('mouseout', function(e) {
+                if (!supportsHover()) return;
+                var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
+                if (!day) return;
+                if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) {
+                    hoverPreviewIso = '';
+                    return;
+                }
+                hideSessionPopover();
+                clearSyncedMarks();
+            });
+
+            if (sessionPopover) {
+                sessionPopover.addEventListener('click', function(e) {
+                    var btn = e.target && e.target.closest ? e.target.closest('.post-session-popover-time') : null;
+                    if (!btn) return;
+                    e.stopPropagation();
+                    var timeText = String(btn.dataset.time || '').trim();
+                    if (!timeText) return;
+                    if (sessionPopoverIso) {
+                        setSelectedCalendarDay(sessionPopoverIso);
+                    }
+                    selectedSessionTime = timeText;
+                    updateSessionButtonText();
+                    renderSessionTimesList();
+                    try {
+                        var all = sessionPopover.querySelectorAll('.post-session-popover-time');
+                        all.forEach(function(b) { b.classList.remove('post-session-highlighted'); });
+                        btn.classList.add('post-session-highlighted');
+                    } catch (_eHi0) {}
+                    clearSyncedMarks();
+                    applySyncedHover(sessionPopoverIso, timeText);
+                    applySyncedActivate(sessionPopoverIso, timeText);
+                    scrollCalendarToIso(sessionPopoverIso);
+                    if (closeSessionTimer) {
+                        try { clearTimeout(closeSessionTimer); } catch (_eT1) {}
+                    }
+                    closeSessionTimer = setTimeout(function() {
+                        closeSessionTimer = null;
+                        closeSessionDropdown();
+                    }, SESSION_SELECT_CLOSE_DELAY_MS);
+                });
+            }
+
+            if (sessionTimesList) {
+                sessionTimesList.addEventListener('click', function(e) {
+                    var btn = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
+                    if (!btn) return;
+                    e.stopPropagation();
+                    var timeText = String(btn.dataset.time || '').trim();
+                    var iso = String(btn.dataset.iso || '').trim();
+                    if (!timeText) return;
+                    if (iso) {
+                        setSelectedCalendarDay(iso);
+                    }
+                    selectedSessionTime = timeText;
+                    updateSessionButtonText();
+                    renderSessionTimesList();
+                    clearSyncedMarks();
+                    applySyncedHover(iso, timeText);
+                    applySyncedActivate(iso, timeText);
+                    scrollCalendarToIso(iso);
+                    if (closeSessionTimer) {
+                        try { clearTimeout(closeSessionTimer); } catch (_eT2) {}
+                    }
+                    closeSessionTimer = setTimeout(function() {
+                        closeSessionTimer = null;
+                        closeSessionDropdown();
+                    }, SESSION_SELECT_CLOSE_DELAY_MS);
+                });
+            }
+        }
+
+        // Bind interactions
+        try { bindSessionInteractions(); } catch (_eBindSess) {}
+
+        // Button click handler
+        sessionBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = sessionBtn.classList.contains('post-session-button--open');
+            if (isOpen) {
+                closeSessionDropdown();
+                return;
+            }
+            // Close location dropdown if open
+            if (callbacks && callbacks.closeLocationDropdown) {
+                try { callbacks.closeLocationDropdown(); } catch (_eCloseOther) {}
+            }
+            sessionBtn.classList.add('post-session-button--open');
+            if (sessionArrow) sessionArrow.classList.add('post-session-arrow--open');
+            try { sessionBtn.setAttribute('aria-expanded', 'true'); } catch (_eAr1) {}
+            if (sessionTimesList) sessionTimesList.innerHTML = '<div class="post-session-empty">Loading sessions…</div>';
+            ensureSessionsLoaded().then(function() {
+                var minMonth = '';
+                var maxMonth = '';
+                try {
+                    if (sessionItems && sessionItems.length) {
+                        var firstIso = sessionItems[0] && sessionItems[0].iso ? String(sessionItems[0].iso) : '';
+                        var lastIso = sessionItems[sessionItems.length - 1] && sessionItems[sessionItems.length - 1].iso ? String(sessionItems[sessionItems.length - 1].iso) : '';
+                        if (firstIso && firstIso.length >= 7) minMonth = firstIso.slice(0, 7);
+                        if (lastIso && lastIso.length >= 7) maxMonth = lastIso.slice(0, 7);
+                    }
+                } catch (_eBounds0) {}
+                ensureCalendarMounted(minMonth, maxMonth);
+                decorateCalendarAvailability();
+                renderSessionTimesList();
+                updateSessionButtonText();
+            });
+        });
+
+        // Click-outside handler
+        var clickOutsideHandler = function(e) {
+            if (!sessionBtn.classList.contains('post-session-button--open')) return;
+            var target = e.target;
+            if (!target) return;
+            var container = wrap.querySelector('.post-session-container');
+            if (container && container.contains(target)) return;
+            closeSessionDropdown();
+        };
+        document.addEventListener('click', clickOutsideHandler);
+
+        return {
+            close: closeSessionDropdown,
+            destroy: function() {
+                document.removeEventListener('click', clickOutsideHandler);
+                closeSessionDropdown();
+            }
+        };
+    }
+
     return {
-        render: render
+        render: render,
+        init: init
     };
 })();
 

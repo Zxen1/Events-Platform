@@ -2980,239 +2980,44 @@ const PostModule = (function() {
       });
     }
 
-    // Location dropdown toggle
-    // MiniMap is independent (3rd map) - no wallpaper coordination needed
-    var locationBtn = wrap.querySelector('.post-location-button');
-    var locationArrow = wrap.querySelector('.post-location-arrow');
-    var locationMapContainer = wrap.querySelector('.post-location-map');
-    var locationOptions = wrap.querySelectorAll('.post-location-option');
-    var locationMapOwnerId = null;
+    // Location component initialization
+    var locationApi = PostLocationComponent.init(wrap, post, {
+      getLocationListForUi: function() {
+        var list = null;
+        try { list = wrap.__postLocationList; } catch (_e) { list = null; }
+        if (Array.isArray(list) && list.length) return list;
+        return post.map_cards || [];
+      },
+      getMapCardIndexById: function(postObj, mapCardId) {
+        if (!postObj || !mapCardId || !postObj.map_cards) return 0;
+        for (var i = 0; i < postObj.map_cards.length; i++) {
+          if (String(postObj.map_cards[i].id) === String(mapCardId)) return i;
+        }
+        return 0;
+      },
+      buildPostDetail: buildPostDetail,
+      addToRecentHistory: addToRecentHistory,
+      openPost: openPost,
+      loadPostById: loadPostById,
+      getModeButton: getModeButton,
+      getCurrentMode: function() { return currentMode; },
+      isPostsEnabled: function() { return postsEnabled; }
+    });
+
+    // Session component initialization
     var locationSelectedIndex = 0;
-
-    // IMPORTANT: Use the same ordered location list used for rendering, not post.map_cards directly.
-    // Otherwise the UI index mapping breaks when the active location is moved to the top.
-    function getLocationListForUi() {
-      var list = null;
-      try { list = wrap.__postLocationList; } catch (_eL0) { list = null; }
-      if (Array.isArray(list) && list.length) return list;
-      return post.map_cards || [];
-    }
-
-    function getMapCardIndexById(postObj, mapCardId) {
-      if (!postObj || !mapCardId || !postObj.map_cards) return 0;
-      for (var i = 0; i < postObj.map_cards.length; i++) {
-        if (String(postObj.map_cards[i].id) === String(mapCardId)) return i;
+    var sessionApi = PostSessionComponent.init(wrap, post, {
+      escapeHtml: escapeHtml,
+      getLocationListForUi: function() {
+        var list = null;
+        try { list = wrap.__postLocationList; } catch (_e) { list = null; }
+        if (Array.isArray(list) && list.length) return list;
+        return post.map_cards || [];
+      },
+      getLocationSelectedIndex: function() { return locationSelectedIndex; },
+      closeLocationDropdown: function() {
+        if (locationApi && locationApi.close) locationApi.close();
       }
-      return 0;
-    }
-
-    // Helper: Close location dropdown and cleanup
-    function closeLocationDropdown() {
-      locationBtn.classList.remove('post-location-button--open');
-      if (locationArrow) locationArrow.classList.remove('post-location-arrow--open');
-      
-      // Release the mini map
-      if (locationMapContainer && locationMapOwnerId) {
-        PostLocationMapComponent.release(locationMapContainer);
-        locationMapOwnerId = null;
-      }
-    }
-
-    // Helper: Highlight list item by index
-    function highlightListItem(index) {
-      locationOptions.forEach(function(o, i) {
-        if (i === index) {
-          o.classList.add('post-location-hover');
-        } else {
-          o.classList.remove('post-location-hover');
-        }
-      });
-    }
-
-    if (locationBtn) {
-      locationBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var isOpen = locationBtn.classList.contains('post-location-button--open');
-        
-        if (isOpen) {
-          // Closing
-          closeLocationDropdown();
-        } else {
-          // Opening
-          locationBtn.classList.add('post-location-button--open');
-          if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
-          
-          // Init live map (MiniMap is independent - no wallpaper coordination needed)
-          if (locationMapContainer) {
-            var locationList = getLocationListForUi();
-            var iconUrl = post.subcategory_icon_url || '';
-            
-            locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
-              postId: post.id,
-              locations: locationList,
-              iconUrl: iconUrl,
-              activeIndex: locationSelectedIndex,
-              onMarkerClick: function(index) {
-                // Select this location
-                var opt = locationOptions[index];
-                if (opt) opt.click();
-              },
-              onMarkerHover: function(index) {
-                // Highlight corresponding list item
-                highlightListItem(index);
-              },
-              onDisconnect: function() {
-                // Another dropdown claimed MiniMap, close this one
-                closeLocationDropdown();
-              },
-              onReady: function() {}
-            });
-          }
-        }
-      });
-    }
-
-    // Location option hover (highlight marker)
-    locationOptions.forEach(function(opt, index) {
-      opt.addEventListener('mouseenter', function() {
-        PostLocationMapComponent.highlightMarker(index);
-      });
-      opt.addEventListener('mouseleave', function() {
-        PostLocationMapComponent.highlightMarker(-1);
-      });
-    });
-
-    // Location option selection
-    locationOptions.forEach(function(opt) {
-      opt.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var index = parseInt(opt.dataset.index, 10);
-        var locationList = getLocationListForUi();
-        var loc = locationList[index];
-        if (!loc) return;
-
-        // Detect context: is this inside the My Posts tab?
-        var isInMyPosts = !!(wrap.closest && wrap.closest('#member-tab-myposts'));
-        
-        // Detect if clicking the already-selected location
-        var isAlreadySelected = (index === locationSelectedIndex);
-
-        // Update selected index
-        locationSelectedIndex = index;
-
-        // Update button content with selected location
-        var btnTextMain = wrap.querySelector('.post-location-text-main');
-        var btnTextSecondary = wrap.querySelector('.post-location-text-secondary');
-        if (btnTextMain) {
-          btnTextMain.textContent = loc.venue_name || '';
-        }
-        if (btnTextSecondary) {
-          var secondary = (loc.address_line || '') + ((loc.address_line && loc.city) ? ', ' : '') + (loc.city || '');
-          btnTextSecondary.textContent = secondary;
-        }
-
-        // Update selected state in list
-        locationOptions.forEach(function(o) {
-          o.classList.remove('post-location-highlighted');
-        });
-        opt.classList.add('post-location-highlighted');
-
-        // Close dropdown (also releases map and resumes wallpaper)
-        closeLocationDropdown();
-
-        // Track this specific location in recent history (must be indexed against the post's true map_cards list)
-        var originalIndex = getMapCardIndexById(post, loc.id);
-        addToRecentHistory(post, originalIndex);
-
-        // My Posts tab: Don't fly, re-render post with new location data in place
-        if (isInMyPosts) {
-          // Build new post detail with the new active location
-          var newWrap = buildPostDetail(post, null, false, originalIndex);
-          
-          // Replace old wrap with new one
-          if (wrap.parentNode) {
-            wrap.parentNode.replaceChild(newWrap, wrap);
-          }
-          
-          // Re-expand the post (location menu is only visible when expanded)
-          var newDescEl = newWrap.querySelector('.post-description-text');
-          if (newDescEl) {
-            setTimeout(function() {
-              newDescEl.click();
-            }, 0);
-          }
-          return;
-        }
-
-        // Get coordinates for flying
-        var lat = Number(loc.latitude);
-        var lng = Number(loc.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng) || !window.MapModule || typeof MapModule.flyTo !== 'function') {
-          return;
-        }
-
-        // Get zoom threshold from config (no hardcoded fallback)
-        if (!window.App || typeof App.getConfig !== 'function') {
-          throw new Error('[Post] App.getConfig is required for postsLoadZoom.');
-        }
-        var postsLoadZoom = App.getConfig('postsLoadZoom');
-        if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
-          throw new Error('[Post] postsLoadZoom config is missing or invalid.');
-        }
-
-        // Already-selected location: Just fly to center it without reloading
-        if (isAlreadySelected) {
-          MapModule.flyTo(lng, lat, postsLoadZoom);
-          return;
-        }
-
-        // Different location selected: Full fly + reload behavior
-        // Close posts panel during flight (switch to map mode)
-        var mapBtn = getModeButton('map');
-        if (mapBtn && currentMode !== 'map') {
-          mapBtn.click();
-        }
-        
-        // Fly to location
-        MapModule.flyTo(lng, lat, postsLoadZoom);
-        
-        // When landed (moveend event): open posts panel and show the post
-        var mainMap = MapModule.getMap();
-        if (mainMap) {
-          mainMap.once('moveend', function() {
-            // Check if we landed near the target (user may have interrupted)
-            var center = mainMap.getCenter();
-            var latDiff = Math.abs(center.lat - lat);
-            var lngDiff = Math.abs(center.lng - lng);
-            if (latDiff > 0.01 || lngDiff > 0.01) return; // Interrupted, abort
-            
-            var postsBtn = getModeButton('posts');
-            if (postsBtn && postsEnabled) {
-              postsBtn.click();
-              // Wait for mode change then open (matches openPostById pattern)
-              setTimeout(function() {
-                loadPostById(post.id).then(function(freshPost) {
-                  if (freshPost) {
-                    openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
-                  }
-                });
-              }, 50);
-            }
-          });
-        }
-      });
-    });
-
-    // Click-outside handler for location dropdown
-    document.addEventListener('click', function(e) {
-      if (!locationBtn || !locationBtn.classList.contains('post-location-button--open')) return;
-      var target = e.target;
-      if (!target) return;
-      // If click is inside the dropdown or button, ignore
-      var container = wrap.querySelector('.post-location-container');
-      if (container && container.contains(target)) return;
-      // Close dropdown
-      closeLocationDropdown();
     });
 
     // IMPORTANT:
@@ -3229,16 +3034,12 @@ const PostModule = (function() {
 
       function safeCloseLocation() {
         try {
-          if (locationBtn && locationBtn.classList.contains('post-location-button--open')) {
-            closeLocationDropdown();
-          }
+          if (locationApi && locationApi.close) locationApi.close();
         } catch (_e0) {}
       }
       function safeCloseSession() {
         try {
-          if (sessionBtn && sessionBtn.classList.contains('post-session-button--open')) {
-            closeSessionDropdown();
-          }
+          if (sessionApi && sessionApi.close) sessionApi.close();
         } catch (_e1) {}
       }
 
@@ -3265,43 +3066,19 @@ const PostModule = (function() {
       }
     }, true); // capture
 
+    // Old session code removed - now handled by PostSessionComponent.init()
+
     /* ........................................................................
-       POST SESSION MENU (Calendar + time slots)
-       - Calendar uses CalendarComponent (touch-friendly 36px day cells)
-       - Only dates that have sessions are clickable
-       - Clicking a date shows an instant popover with times beside it
+       REMOVED: POST SESSION MENU
+       Now handled by PostSessionComponent in components.js
        ........................................................................ */
 
-    var sessionBtn = wrap.querySelector('.post-session-button');
-    var sessionArrow = wrap.querySelector('.post-session-arrow');
-    var sessionOptionsPanel = wrap.querySelector('.post-session-options');
-    var sessionCalendarMount = wrap.querySelector('.post-session-calendar-mount');
-    var sessionTimesList = wrap.querySelector('.post-session-times-list');
-    var sessionPopover = wrap.querySelector('.post-session-popover');
+    /* Session code moved to PostSessionComponent - see components.js
+       All session logic is now in PostSessionComponent.init() in components.js
+       Removed ~800 lines of dead code from here */
 
-    var sessionCalendarApi = null;
-    var sessionAvailableSet = null; // { [iso]: true }
-    var sessionByDate = null; // { [iso]: [times...] }
-    var sessionItems = null; // [{ iso, time, ticket_group_key }]
-    var selectedSessionIso = '';
-    var selectedSessionTime = '';
-    var sessionsLoading = false;
-    var sessionPopoverIso = '';
-    var sessionTimesSide = ''; // 'left' or 'right' - stable while menu is open
-    var defaultSessionButtonDateText = '';
-    var closeSessionTimer = null;
-    var SESSION_SELECT_CLOSE_DELAY_MS = 500; // user requirement: let click feedback show
-    var lastJoinedCell = null;
-    var lastJoinedCellStyles = null;
-    var hoverPreviewIso = '';
-    
-    // Store the initial "date range" label so the button only changes
-    // after a full date+time is selected.
-    try {
-      var _dateInit = wrap.querySelector('.post-session-date-left');
-      if (_dateInit) defaultSessionButtonDateText = String(_dateInit.textContent || '');
-    } catch (_eInit0) {}
-
+    /* TEMPORARY FIX - need to remove remaining dead session code manually */
+    if (false) { // Dead code block - to be removed
     function formatSessionDateLeft(iso) {
       // iso: YYYY-MM-DD
       var d = null;
@@ -4099,16 +3876,9 @@ const PostModule = (function() {
         });
       });
     }
+    } // END dead code block
 
-    // Click-outside handler for session dropdown
-    document.addEventListener('click', function(e) {
-      if (!sessionBtn || !sessionBtn.classList.contains('post-session-button--open')) return;
-      var target = e.target;
-      if (!target) return;
-      var container = wrap.querySelector('.post-session-container');
-      if (container && container.contains(target)) return;
-      closeSessionDropdown();
-    });
+    /* Session code END - all moved to PostSessionComponent */
 
     /* ........................................................................
        IMAGE GALLERY [COMPONENT PLACEHOLDER: ImageGalleryComponent]
