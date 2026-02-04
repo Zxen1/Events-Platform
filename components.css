@@ -3531,23 +3531,35 @@ body.image-modal-open > *:not(.image-modal) {
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   width: 100%;
 }
 
 .post-session-date-left {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 0 100px;
+  width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* When no time is present, let date expand */
+.post-session-date-left:only-child,
+.post-session-text-main:has(.post-session-time-right:empty) .post-session-date-left,
+.post-session-option:has(.post-session-time-right:empty) .post-session-date-left {
+  flex: 1 1 auto;
+  width: auto;
+}
+
 .post-session-time-right {
   flex: 0 0 auto;
-  margin-left: 10px;
-  text-align: right;
+  text-align: left;
   font-variant-numeric: tabular-nums;
+}
+
+/* When time is empty, hide it so date can expand */
+.post-session-time-right:empty {
+  display: none;
 }
 
 /* ----------------------------------------------------------------------------
