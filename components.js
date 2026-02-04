@@ -10812,16 +10812,15 @@ const PostSessionComponent = (function() {
 
         function getSideForCell(cellEl) {
             // Determine which side the popover should appear based on cell position
-            // Cell on LEFT half of calendar → popover on RIGHT
-            // Cell on RIGHT half of calendar → popover on LEFT
-            if (!cellEl || !sessionCalendarApi || !sessionCalendarApi.scroll) return 'right';
+            // Cell on LEFT half of visible area → popover on RIGHT
+            // Cell on RIGHT half of visible area → popover on LEFT
+            if (!cellEl) return 'right';
             try {
-                var scrollEl = sessionCalendarApi.scroll;
-                var scrollRect = scrollEl.getBoundingClientRect();
+                var slotEl = wrap.querySelector('.post-session-calendar-slot');
+                if (!slotEl) return 'right';
+                var slotRect = slotEl.getBoundingClientRect();
                 var cellRect = cellEl.getBoundingClientRect();
-                var visibleLeft = scrollRect.left;
-                var visibleRight = scrollRect.right;
-                var visibleMid = visibleLeft + ((visibleRight - visibleLeft) / 2);
+                var visibleMid = slotRect.left + (slotRect.width / 2);
                 var cellMid = cellRect.left + (cellRect.width / 2);
                 return (cellMid < visibleMid) ? 'right' : 'left';
             } catch (_e) {
@@ -10845,42 +10844,26 @@ const PostSessionComponent = (function() {
         }
 
         function positionPopover(cellEl, side) {
-            if (!sessionPopover || !cellEl || !sessionCalendarApi || !sessionCalendarApi.calendar || !sessionCalendarApi.scroll) return;
-            var bodyEl = sessionCalendarApi.calendar;
-            var scrollEl = sessionCalendarApi.scroll;
-            // Temporarily show popover to measure it
+            if (!sessionPopover || !cellEl) return;
+            var slotEl = wrap.querySelector('.post-session-calendar-slot');
+            if (!slotEl) return;
+            // Temporarily position to measure
             sessionPopover.style.left = '0px';
             sessionPopover.style.top = '0px';
             var popW = sessionPopover.offsetWidth || 80;
             var popH = sessionPopover.offsetHeight || 72;
-            // Get positions relative to calendar body
+            // Get positions relative to the slot (which has position: relative)
             var cellRect = cellEl.getBoundingClientRect();
-            var bodyRect = bodyEl.getBoundingClientRect();
-            var scrollRect = scrollEl.getBoundingClientRect();
-            var cellX = (cellRect.left - bodyRect.left);
-            var cellY = (cellRect.top - bodyRect.top);
+            var slotRect = slotEl.getBoundingClientRect();
+            var cellX = (cellRect.left - slotRect.left);
+            var cellY = (cellRect.top - slotRect.top);
             var cellW = cellRect.width || 36;
             var cellH = cellRect.height || 36;
             // Position horizontally: overlap by 1px to join seamlessly
             var overlap = 1;
             var left = (side === 'left') ? (cellX - popW + overlap) : (cellX + cellW - overlap);
-            // Position vertically: align with cell, clamp to visible area
-            var inset = 2;
-            var viewTop = (scrollRect.top - bodyRect.top) + inset;
-            var viewBottom = (scrollRect.bottom - bodyRect.top) - inset;
-            var maxTop = viewBottom - popH;
-            var minTop = viewTop;
+            // Position vertically: align with cell top
             var top = cellY;
-            var fitsDown = (cellY + popH) <= viewBottom;
-            var fitsUp = (cellY - (popH - cellH)) >= viewTop;
-            if (fitsDown) {
-                top = cellY;
-            } else if (fitsUp) {
-                top = cellY - (popH - cellH);
-            } else {
-                top = cellY - Math.round((popH - cellH) / 2);
-            }
-            top = Math.max(minTop, Math.min(top, maxTop));
             sessionPopover.style.left = left + 'px';
             sessionPopover.style.top = top + 'px';
         }
@@ -10894,11 +10877,11 @@ const PostSessionComponent = (function() {
             }
             // Set cell height CSS variable for popover time row sizing
             try {
-                if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
+                if (cellEl && cellEl.getBoundingClientRect && sessionPopover) {
                     var rr = cellEl.getBoundingClientRect();
                     var hh = rr && rr.height ? rr.height : 0;
                     if (hh > 0.5) {
-                        sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
+                        sessionPopover.style.setProperty('--post-session-cell-h', hh + 'px');
                     }
                 }
             } catch (_eCellH0) {}
@@ -10948,11 +10931,6 @@ const PostSessionComponent = (function() {
                 opts.maxMonth = maxMonth;
             }
             sessionCalendarApi = CalendarComponent.create(sessionCalendarMount, opts);
-            try {
-                if (sessionPopover && sessionCalendarApi && sessionCalendarApi.calendar) {
-                    sessionCalendarApi.calendar.appendChild(sessionPopover);
-                }
-            } catch (_eMovePop0) {}
             try {
                 requestAnimationFrame(function() {
                     try {
