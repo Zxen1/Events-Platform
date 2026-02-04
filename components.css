@@ -3756,47 +3756,21 @@ body.image-modal-open > *:not(.image-modal) {
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border-left: 1px solid var(--ps-border-focus);
-  border-right: 1px solid var(--ps-border-focus);
-  border-top: none;
-  border-bottom: none;
+  border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   display: none;
 }
 
-/* Popover on RIGHT of cell */
+/* Popover on RIGHT of cell - 10px gap, own container */
 .post-session-popover.post-session-popover--right {
   display: block;
-  border-left: none;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  margin-left: 10px;
 }
 
-/* Popover on LEFT of cell */
+/* Popover on LEFT of cell - 10px gap, own container */
 .post-session-popover.post-session-popover--left {
   display: block;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-
-/* ----------------------------------------------------------------------------
-   CALENDAR CELL JOIN
-   ---------------------------------------------------------------------------- */
-
-/* Cell joining with popover on its RIGHT */
-.post-session-calendar-slot .calendar-day.post-session-cell--join-right {
-  border-right-color: transparent;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Cell joining with popover on its LEFT */
-.post-session-calendar-slot .calendar-day.post-session-cell--join-left {
-  border-left-color: transparent;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  margin-right: 10px;
 }
 
 
@@ -3820,36 +3794,18 @@ body.image-modal-open > *:not(.image-modal) {
   white-space: nowrap;
 }
 
+/* First and last items get rounded corners to match container */
 .post-session-popover-time:first-child {
-  border-top: 1px solid var(--ps-border-focus);
-  border-top-right-radius: var(--ps-radius);
+  border-radius: 4px 4px 0 0;
 }
 
 .post-session-popover-time:last-child {
-  border-bottom: 1px solid var(--ps-border-focus);
-  border-bottom-right-radius: var(--ps-radius);
+  border-radius: 0 0 4px 4px;
 }
 
-/* When popover is on RIGHT of cell, exposed side is RIGHT */
-.post-session-popover--right .post-session-popover-time:first-child {
-  border-top-left-radius: 0;
-  border-top-right-radius: var(--ps-radius);
-}
-
-.post-session-popover--right .post-session-popover-time:last-child {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: var(--ps-radius);
-}
-
-/* When popover is on LEFT of cell, exposed side is LEFT */
-.post-session-popover--left .post-session-popover-time:first-child {
-  border-top-right-radius: 0;
-  border-top-left-radius: var(--ps-radius);
-}
-
-.post-session-popover--left .post-session-popover-time:last-child {
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: var(--ps-radius);
+/* Single item gets all corners */
+.post-session-popover-time:only-child {
+  border-radius: 4px;
 }
 
 /* Popover time - Hover */
