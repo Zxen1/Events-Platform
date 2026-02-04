@@ -3365,6 +3365,8 @@ const PostModule = (function() {
           lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
           lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
           lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+          lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
+          lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
         }
       } catch (_eJoin0) {}
       lastJoinedCell = null;
@@ -3462,6 +3464,8 @@ const PostModule = (function() {
           lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
           lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
           lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
+          lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
+          lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
           lastJoinedCell = null;
           lastJoinedCellStyles = null;
         }
@@ -3476,7 +3480,9 @@ const PostModule = (function() {
         bl: cellEl.style.borderBottomLeftRadius,
         br: cellEl.style.borderBottomRightRadius,
         blc: cellEl.style.borderLeftColor,
-        brc: cellEl.style.borderRightColor
+        brc: cellEl.style.borderRightColor,
+        blw: cellEl.style.borderLeftWidth,
+        brw: cellEl.style.borderRightWidth
       };
 
       // Remove the seam so date + times look like one continuous shape.
@@ -3484,10 +3490,12 @@ const PostModule = (function() {
         cellEl.style.borderTopRightRadius = '0px';
         cellEl.style.borderBottomRightRadius = '0px';
         cellEl.style.borderRightColor = 'transparent';
+        cellEl.style.borderRightWidth = '0px';
       } else {
         cellEl.style.borderTopLeftRadius = '0px';
         cellEl.style.borderBottomLeftRadius = '0px';
         cellEl.style.borderLeftColor = 'transparent';
+        cellEl.style.borderLeftWidth = '0px';
       }
     }
 
@@ -3857,6 +3865,26 @@ const PostModule = (function() {
             if (b) b.classList.add('menu-option--highlighted');
           }
         } catch (_eAct0) {}
+
+        // Never leave "active/highlight" looking like hover.
+        try {
+          setTimeout(function() {
+            try {
+              if (sessionCalendarMount) {
+                var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--highlighted');
+                d1.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+              }
+              if (sessionTimesList) {
+                var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--highlighted');
+                d2.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+              }
+              if (sessionPopover) {
+                var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--highlighted');
+                d3.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+              }
+            } catch (_eActClr1) {}
+          }, 300);
+        } catch (_eActClr0) {}
       }
 
       function scrollCalendarToIso(iso) {
