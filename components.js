@@ -10609,7 +10609,7 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-options" aria-label="Session picker">');
         html.push('<div class="post-session-calendar-slot">');
         html.push('<div class="post-session-calendar-mount calendar-container" aria-label="Session calendar"></div>');
-        html.push('<div class="post-session-popover" aria-hidden="true" style="display:none;"></div>');
+        html.push('<div class="post-session-popover" aria-hidden="true"></div>');
         html.push('</div>');
         html.push('<div class="post-session-times">');
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');

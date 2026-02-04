@@ -3743,7 +3743,7 @@ body.image-modal-open > *:not(.image-modal) {
 }
 
 /* Popover on RIGHT of cell: joins on left edge */
-.post-session-popover--right {
+.post-session-popover.post-session-popover--right {
   display: block;
   border-left: none;
   border-top-left-radius: 0;
@@ -3751,7 +3751,7 @@ body.image-modal-open > *:not(.image-modal) {
 }
 
 /* Popover on LEFT of cell: joins on right edge */
-.post-session-popover--left {
+.post-session-popover.post-session-popover--left {
   display: block;
   border-right: none;
   border-top-right-radius: 0;
