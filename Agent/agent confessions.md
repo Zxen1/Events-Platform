@@ -4919,4 +4919,3 @@ I don't know the name of the website I'm working on. When asked, I guessed "FunM
 ### 4. INACCURATE ESSENTIALS COMPLIANCE CLAIMS
 **Mistake:** Stated "Essentials obeyed" while the above breaches existed.
 **Impact:** Misled the user and compounded trust loss.
-

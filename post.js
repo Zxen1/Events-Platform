@@ -3650,10 +3650,8 @@ const PostModule = (function() {
         var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
         var borderColor = cs ? cs.borderColor : '';
         var bg = cs ? cs.backgroundColor : '';
-        var tl = cs ? cs.borderTopLeftRadius : '';
-        var tr = cs ? cs.borderTopRightRadius : '';
-        var bl = cs ? cs.borderBottomLeftRadius : '';
-        var br = cs ? cs.borderBottomRightRadius : '';
+        // Use fixed 5px radius for outer corners (cell's radii were already modified by applyJoinedCellStyles)
+        var outerRadius = '5px';
         // If cell background is transparent, use the calendar's base background.
         if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
         sessionPopover.style.background = bg;
@@ -3661,15 +3659,15 @@ const PostModule = (function() {
         if (side === 'right') {
           sessionPopover.style.borderTopLeftRadius = '0px';
           sessionPopover.style.borderBottomLeftRadius = '0px';
-          sessionPopover.style.borderTopRightRadius = tr || '0px';
-          sessionPopover.style.borderBottomRightRadius = br || '0px';
+          sessionPopover.style.borderTopRightRadius = outerRadius;
+          sessionPopover.style.borderBottomRightRadius = outerRadius;
           sessionPopover.style.borderLeftWidth = '0';
           sessionPopover.style.borderRightWidth = '';
         } else {
           sessionPopover.style.borderTopRightRadius = '0px';
           sessionPopover.style.borderBottomRightRadius = '0px';
-          sessionPopover.style.borderTopLeftRadius = tl || '0px';
-          sessionPopover.style.borderBottomLeftRadius = bl || '0px';
+          sessionPopover.style.borderTopLeftRadius = outerRadius;
+          sessionPopover.style.borderBottomLeftRadius = outerRadius;
           sessionPopover.style.borderRightWidth = '0';
           sessionPopover.style.borderLeftWidth = '';
         }

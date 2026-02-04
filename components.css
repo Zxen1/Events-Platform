@@ -3729,13 +3729,13 @@ body.image-modal-open > *:not(.image-modal) {
   box-sizing: border-box;
 }
 
-/* Popover beside selected date */
+/* Popover beside selected date (connects seamlessly with date cell) */
 .post-session-popover {
   position: absolute;
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   box-shadow: none;
   overflow: hidden;
