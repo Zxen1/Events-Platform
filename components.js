@@ -19,6 +19,7 @@
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - AVATAR CROPPER      - Standalone reusable avatar cropper (destructive, outputs blob)
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
+   - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
    
    ============================================================================ */
@@ -10278,11 +10279,11 @@ const PostLocationComponent = (function() {
         var city = loc.city || '';
 
         var html = [];
-        html.push('<div class="post-location-option menu-option' + (isSelected ? ' menu-option--highlighted' : '') + '" data-index="' + index + '">');
-        html.push('<div class="post-location-option-main menu-item-main">' + escapeHtml(venueName) + '</div>');
+        html.push('<div class="post-location-option' + (isSelected ? ' post-location-highlighted' : '') + '" data-index="' + index + '">');
+        html.push('<div class="post-location-option-main">' + escapeHtml(venueName) + '</div>');
         if (addressLine || city) {
             var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
-            html.push('<div class="post-location-option-secondary menu-item-secondary">' + escapeHtml(secondary) + '</div>');
+            html.push('<div class="post-location-option-secondary">' + escapeHtml(secondary) + '</div>');
         }
         html.push('</div>');
 
@@ -10312,12 +10313,12 @@ const PostLocationComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-4 for post info menu styling
-        html.push('<div class="post-location-container menu-class-4" data-post-id="' + postId + '">');
+        // Container wrapper (self-contained, no base class dependencies)
+        html.push('<div class="post-location-container" data-post-id="' + postId + '">');
 
         // Button shows currently selected location info
-        html.push('<button class="post-location-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
-        html.push('<div class="post-location-text menu-text">');
+        html.push('<button class="post-location-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-location-text">');
         html.push('<div class="post-location-text-main">' + escapeHtml(venueName) + '</div>');
         if (addressLine || city) {
             var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
@@ -10325,18 +10326,16 @@ const PostLocationComponent = (function() {
         }
         html.push('</div>');
         // Always show arrow - dropdown has map even for single location
-        html.push('<div class="post-location-arrow menu-arrow"></div>');
+        html.push('<div class="post-location-arrow"></div>');
         html.push('</button>');
 
-        // Dropdown with map (always) and location list (if multiple)
-        html.push('<div class="post-location-options menu-options">');
+        // Dropdown with map (always) and location list
+        html.push('<div class="post-location-options">');
         // Mini-map at top (rendered by PostLocationMapComponent)
         html.push(PostLocationMapComponent.render({ postId: postId }));
-        // Location list below map (only if multiple locations)
-        if (hasMultipleLocations) {
-            for (var i = 0; i < locationList.length; i++) {
-                html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
-            }
+        // Location list below map (always render so marker click triggers re-center)
+        for (var i = 0; i < locationList.length; i++) {
+            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
         }
         html.push('</div>');
 

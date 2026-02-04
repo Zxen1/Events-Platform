@@ -17,6 +17,7 @@
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - IMAGE MODAL         - Full-screen lightbox for images
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
+   - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
    
    ============================================================================ */
@@ -3205,6 +3206,234 @@ body.image-modal-open > *:not(.image-modal) {
   object-fit: contain;
   cursor: pointer;
   user-select: none;
+}
+
+
+/* ============================================================================
+   POST LOCATION COMPONENT
+   
+   Self-contained location picker with minimap and location list.
+   Used in post info container to display/select locations.
+   
+   STRUCTURE:
+   - .post-location-container    (root wrapper)
+   - .post-location-button       (trigger button)
+   - .post-location-text         (button text area)
+   - .post-location-arrow        (dropdown arrow icon)
+   - .post-location-options      (dropdown panel)
+   - .post-location-map          (minimap section)
+   - .post-location-option       (location list items)
+   ============================================================================ */
+
+/* Component variables */
+.post-location-container {
+  --pl-bg: rgba(0, 0, 0, 0.5);
+  --pl-bg-button: rgba(0, 0, 0, 0.35);
+  --pl-border: rgba(255, 255, 255, 0.12);
+  --pl-border-hover: rgba(255, 255, 255, 0.2);
+  --pl-border-focus: var(--blue-500);
+  --pl-text: #fff;
+  --pl-text-secondary: rgba(255, 255, 255, 0.7);
+  --pl-muted: rgba(255, 255, 255, 0.5);
+  --pl-hover: var(--blue-500);
+  --pl-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --pl-radius: 5px;
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button */
+.post-location-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+  background: var(--pl-bg-button);
+  border: 1px solid var(--pl-border);
+  border-radius: var(--pl-radius);
+  color: var(--pl-text);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-location-container:not(:focus-within) .post-location-button:not(.post-location-button--open):not(:active):hover {
+    border-color: var(--pl-border-hover);
+  }
+}
+
+.post-location-button--open {
+  border-color: var(--pl-border-focus);
+  border-radius: var(--pl-radius) var(--pl-radius) 0 0;
+  border-bottom: none;
+}
+
+/* Button text */
+.post-location-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  color: var(--pl-text);
+}
+
+.post-location-text-main {
+  font-weight: 600;
+}
+
+.post-location-text-secondary {
+  font-size: 12px;
+  color: var(--pl-text-secondary);
+  margin-top: 2px;
+}
+
+/* Arrow */
+.post-location-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+  background-color: var(--pl-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.post-location-arrow--open {
+  transform: rotate(180deg);
+}
+
+/* Options panel */
+.post-location-options {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  background: var(--pl-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--pl-border-focus);
+  border-top: none;
+  border-radius: 0 0 var(--pl-radius) var(--pl-radius);
+  box-shadow: var(--pl-shadow);
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.post-location-button--open + .post-location-options {
+  display: block;
+}
+
+/* Minimap */
+.post-location-map {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-bottom: 1px solid var(--pl-border);
+  background: var(--pl-bg);
+  position: relative;
+}
+
+.post-location-map-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post-location-map-loading,
+.post-location-map-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--pl-text-secondary);
+  font-size: 14px;
+}
+
+/* Map markers */
+.post-location-map-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+.post-location-map-marker--hover,
+.post-location-map-marker--active {
+  box-shadow: 0 0 0 2px var(--pl-border-focus);
+}
+
+.post-location-map-marker--current {
+  border-color: #fff;
+}
+
+.post-location-map-marker--current.post-location-map-marker--hover,
+.post-location-map-marker--current.post-location-map-marker--active {
+  box-shadow: 0 0 0 2px var(--pl-border-focus);
+}
+
+/* Location option (70px row) */
+.post-location-option {
+  min-height: 70px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--pl-text);
+  font-size: 14px;
+  line-height: 1.4;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--pl-border);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.post-location-option:last-child {
+  border-bottom: none;
+}
+
+/* Hide single location option (exists for click handling but not needed visually) */
+.post-location-map + .post-location-option:last-child {
+  display: none;
+}
+
+.post-location-option-main {
+  font-weight: 600;
+  text-align: left;
+}
+
+.post-location-option-secondary {
+  font-size: 12px;
+  color: var(--pl-text-secondary);
+  margin-top: 2px;
+  text-align: left;
+}
+
+/* Option hover/highlighted states */
+.post-location-option.post-location-hover,
+.post-location-option.post-location-highlighted {
+  background: var(--pl-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-location-option:hover {
+    background: var(--pl-hover);
+  }
 }
 
 

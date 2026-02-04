@@ -4,11 +4,14 @@
    
    Controls the Post panel and Recent panel.
    
-   FUTURE COMPONENTS (to be extracted):
-   - ImageGalleryComponent - Hero image + thumbnails + swipe
+   USES COMPONENTS (from components.js):
+   - PostLocationComponent - Location picker with minimap
+   - PostSessionComponent - Session/dates picker with calendar
+   - PostPriceComponent - Price display
    
    DEPENDENCIES:
    - index.js (backbone)
+   - components.js (PostLocationComponent, PostSessionComponent, PostPriceComponent)
    
    COMMUNICATES WITH:
    - map.js (clicking cards highlights markers)
@@ -3005,8 +3008,8 @@ const PostModule = (function() {
 
     // Helper: Close location dropdown and cleanup
     function closeLocationDropdown() {
-      locationBtn.classList.remove('menu-button--open');
-      if (locationArrow) locationArrow.classList.remove('menu-arrow--open');
+      locationBtn.classList.remove('post-location-button--open');
+      if (locationArrow) locationArrow.classList.remove('post-location-arrow--open');
       
       // Release the mini map
       if (locationMapContainer && locationMapOwnerId) {
@@ -3019,9 +3022,9 @@ const PostModule = (function() {
     function highlightListItem(index) {
       locationOptions.forEach(function(o, i) {
         if (i === index) {
-          o.classList.add('menu-option--hover');
+          o.classList.add('post-location-hover');
         } else {
-          o.classList.remove('menu-option--hover');
+          o.classList.remove('post-location-hover');
         }
       });
     }
@@ -3029,15 +3032,15 @@ const PostModule = (function() {
     if (locationBtn) {
       locationBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var isOpen = locationBtn.classList.contains('menu-button--open');
+        var isOpen = locationBtn.classList.contains('post-location-button--open');
         
         if (isOpen) {
           // Closing
           closeLocationDropdown();
         } else {
           // Opening
-          locationBtn.classList.add('menu-button--open');
-          if (locationArrow) locationArrow.classList.add('menu-arrow--open');
+          locationBtn.classList.add('post-location-button--open');
+          if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
           
           // Init live map (MiniMap is independent - no wallpaper coordination needed)
           if (locationMapContainer) {
@@ -3110,9 +3113,9 @@ const PostModule = (function() {
 
         // Update selected state in list
         locationOptions.forEach(function(o) {
-          o.classList.remove('menu-option--highlighted');
+          o.classList.remove('post-location-highlighted');
         });
-        opt.classList.add('menu-option--highlighted');
+        opt.classList.add('post-location-highlighted');
 
         // Close dropdown (also releases map and resumes wallpaper)
         closeLocationDropdown();
@@ -3202,7 +3205,7 @@ const PostModule = (function() {
 
     // Click-outside handler for location dropdown
     document.addEventListener('click', function(e) {
-      if (!locationBtn || !locationBtn.classList.contains('menu-button--open')) return;
+      if (!locationBtn || !locationBtn.classList.contains('post-location-button--open')) return;
       var target = e.target;
       if (!target) return;
       // If click is inside the dropdown or button, ignore
@@ -3226,7 +3229,7 @@ const PostModule = (function() {
 
       function safeCloseLocation() {
         try {
-          if (locationBtn && locationBtn.classList.contains('menu-button--open')) {
+          if (locationBtn && locationBtn.classList.contains('post-location-button--open')) {
             closeLocationDropdown();
           }
         } catch (_e0) {}

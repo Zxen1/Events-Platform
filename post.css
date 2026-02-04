@@ -4,10 +4,10 @@
    
    Post cards, recent cards, open post view.
    
-   FUTURE COMPONENTS (will have separate CSS):
-   - ImageGalleryComponent - Hero + thumbnails + swipe + zoom
-   - VenueMenuComponent - Map + venue list dropdown
-   - SessionMenuComponent - Calendar + session list dropdown
+   COMPONENTS (self-contained in components.css/js):
+   - PostLocationComponent - Minimap + location list dropdown
+   - PostSessionComponent - Calendar + session list dropdown
+   - PostPriceComponent - Price display (TODO: make self-contained)
    
    ============================================================================ */
 
@@ -1478,127 +1478,8 @@
 }
 
 /* ============================================================================
-   POST LOCATION COMPONENT
-   Uses menu-class-4 for base styling
-   ============================================================================ */
-
-.post-location-container {
-  position: relative;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
-}
-
-/* Button layout: text + arrow */
-.post-location-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 70px;
-  padding: 10px;
-}
-
-/* Text container */
-.post-location-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: left;
-}
-
-.post-location-text-main {
-  font-weight: 600;
-}
-
-.post-location-text-secondary {
-  font-size: 12px;
-  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
-  margin-top: 2px;
-}
-
-/* Arrow sizing */
-.post-location-arrow {
-  width: 12px;
-  height: 12px;
-  flex: 0 0 auto;
-  margin-left: 10px;
-}
-
-/* Options panel visibility */
-.post-location-options {
-  display: none;
-}
-
-.post-location-button.menu-button--open + .post-location-options {
-  display: block;
-}
-
-/* Option text */
-.post-location-option-main {
-  font-weight: 600;
-  text-align: left;
-}
-
-.post-location-option-secondary {
-  font-size: 12px;
-  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
-  margin-top: 2px;
-  text-align: left;
-}
-
-/* Mini-map container - full width, no padding, 2:1 ratio */
-.post-location-map {
-  width: 100%;
-  aspect-ratio: 2 / 1;
-  border-bottom: 1px solid var(--menu-border, rgba(255, 255, 255, 0.12));
-  background: rgba(0, 0, 0, 0.5);
-  position: relative;
-}
-
-.post-location-map-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.post-location-map-loading,
-.post-location-map-error {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--menu-text-secondary, rgba(255, 255, 255, 0.7));
-  font-size: 14px;
-}
-
-/* Map markers - 24px round subcategory icons (matches header avatar pattern) */
-.post-location-map-marker {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  box-sizing: border-box;
-}
-
-/* Hover/active: blue ring 2px outside the icon */
-.post-location-map-marker--hover,
-.post-location-map-marker--active {
-  box-shadow: 0 0 0 2px var(--blue-500);
-}
-
-/* Current location: solid white border (always visible) */
-.post-location-map-marker--current {
-  border-color: #fff;
-}
-
-/* Current + hover: white border stays, blue ring outside */
-.post-location-map-marker--current.post-location-map-marker--hover,
-.post-location-map-marker--current.post-location-map-marker--active {
-  box-shadow: 0 0 0 2px var(--blue-500);
-}
-
-/* ============================================================================
    POST PRICE COMPONENT
-   Uses menu-class-4 for base styling
+   TODO: Make self-contained in components.css like PostLocationComponent
    ============================================================================ */
 
 .post-price-container {
