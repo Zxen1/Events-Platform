@@ -1337,7 +1337,11 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        // Always fetch full post data before opening (includes age_ratings)
+        loadPostById(post.id).then(function(fullPost) {
+          if (!fullPost) return;
+          openPost(fullPost, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        });
       }
     });
 
@@ -1348,7 +1352,11 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      // Always fetch full post data before opening (includes age_ratings)
+      loadPostById(post.id).then(function(fullPost) {
+        if (!fullPost) return;
+        openPost(fullPost, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      });
     });
 
     // Favorite toggle handler

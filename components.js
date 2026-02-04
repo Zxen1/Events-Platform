@@ -10595,7 +10595,7 @@ const PostSessionComponent = (function() {
         if (!value) return '';
         var filename = 'age-rating-' + value + '.svg';
         if (window.App && typeof window.App.getImageUrl === 'function') {
-            return window.App.getImageUrl('ageRatings', filename, 'minithumb');
+            return window.App.getImageUrl('ageRatings', filename);
         }
         return '';
     }
@@ -10710,7 +10710,7 @@ const PostSessionComponent = (function() {
             if (!value) return '';
             var filename = 'age-rating-' + value + '.svg';
             if (window.App && typeof window.App.getImageUrl === 'function') {
-                return window.App.getImageUrl('ageRatings', filename, 'minithumb');
+                return window.App.getImageUrl('ageRatings', filename);
             }
             return '';
         }
