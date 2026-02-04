@@ -3452,13 +3452,24 @@ body.image-modal-open > *:not(.image-modal) {
    - .post-session-calendar-*   (calendar section)
    - .post-session-times        (times list section)
    - .post-session-popover      (times popover beside date)
+   
+   STATES:
+   - Idle: grey border, no fill
+   - Hover: blue border, no fill
+   - Selected (date or time chosen): blue fill, persists until changed
+   
    ============================================================================ */
 
-/* Component variables */
+
+/* ----------------------------------------------------------------------------
+   COMPONENT VARIABLES
+   ---------------------------------------------------------------------------- */
+
 .post-session-container {
   --ps-bg: rgba(0, 0, 0, 0.5);
   --ps-bg-button: rgba(0, 0, 0, 0.35);
   --ps-border: rgba(255, 255, 255, 0.12);
+  --ps-border-idle: rgba(255, 255, 255, 0.35);
   --ps-border-hover: rgba(255, 255, 255, 0.2);
   --ps-border-focus: var(--blue-500);
   --ps-text: #fff;
@@ -3472,7 +3483,11 @@ body.image-modal-open > *:not(.image-modal) {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
-/* Button */
+
+/* ----------------------------------------------------------------------------
+   BUTTON (trigger)
+   ---------------------------------------------------------------------------- */
+
 .post-session-button {
   display: flex;
   align-items: center;
@@ -3500,7 +3515,11 @@ body.image-modal-open > *:not(.image-modal) {
   border-bottom: none;
 }
 
-/* Button text */
+
+/* ----------------------------------------------------------------------------
+   BUTTON TEXT
+   ---------------------------------------------------------------------------- */
+
 .post-session-text {
   flex: 1 1 auto;
   min-width: 0;
@@ -3534,7 +3553,11 @@ body.image-modal-open > *:not(.image-modal) {
   font-variant-numeric: tabular-nums;
 }
 
-/* Arrow */
+
+/* ----------------------------------------------------------------------------
+   ARROW
+   ---------------------------------------------------------------------------- */
+
 .post-session-arrow {
   width: 12px;
   height: 12px;
@@ -3557,7 +3580,11 @@ body.image-modal-open > *:not(.image-modal) {
   transform: rotate(180deg);
 }
 
-/* Options panel */
+
+/* ----------------------------------------------------------------------------
+   OPTIONS PANEL (dropdown)
+   ---------------------------------------------------------------------------- */
+
 .post-session-options {
   display: none;
   position: absolute;
@@ -3581,7 +3608,11 @@ body.image-modal-open > *:not(.image-modal) {
   display: block;
 }
 
-/* Calendar slot */
+
+/* ----------------------------------------------------------------------------
+   CALENDAR SLOT
+   ---------------------------------------------------------------------------- */
+
 .post-session-calendar-slot {
   width: 100%;
   padding: 10px;
@@ -3610,7 +3641,13 @@ body.image-modal-open > *:not(.image-modal) {
   position: relative;
 }
 
-/* Disabled dates */
+
+/* ----------------------------------------------------------------------------
+   CALENDAR DATE STATES
+   Idle: grey border | Hover: blue border | Selected: blue fill
+   ---------------------------------------------------------------------------- */
+
+/* Disabled dates (no sessions) */
 .post-session-calendar-slot .calendar-day.post-session-disabled {
   cursor: default;
   opacity: 0.55;
@@ -3623,45 +3660,131 @@ body.image-modal-open > *:not(.image-modal) {
   color: inherit;
 }
 
-/* Available session dates: grey border only (no fill unless selected) */
+/* Available dates - Idle: grey border, no fill */
 .post-session-calendar-slot .calendar-day.available-day {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: var(--ps-border-idle);
 }
 
-.post-session-calendar-slot .calendar-day.available-day.selected {
-  background: var(--ps-selected);
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
+/* Available dates - Hover: blue border, no fill */
 .post-session-calendar-slot .calendar-day.available-day:hover {
   background: transparent;
   border-color: var(--ps-border-focus);
   color: #fff;
 }
 
-.post-session-calendar-slot .calendar-day.available-day:active {
-  background: transparent;
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
-/* Synced hover marker class */
-.post-session-calendar-slot .calendar-day.post-session-hover {
-  background: transparent;
-  border-color: var(--ps-border-focus);
-  color: #fff;
-}
-
-/* Synced highlighted class */
-.post-session-calendar-slot .calendar-day.post-session-highlighted {
+/* Available dates - Selected: blue fill (persists) */
+.post-session-calendar-slot .calendar-day.available-day.post-session-date-selected {
   background: var(--ps-selected);
   border-color: var(--ps-border-focus);
   color: #fff;
 }
 
-/* Times list */
+/* Selected + Hover: stays filled */
+.post-session-calendar-slot .calendar-day.available-day.post-session-date-selected:hover {
+  background: var(--ps-selected);
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+
+/* ----------------------------------------------------------------------------
+   CALENDAR CELL JOIN (connects to popover)
+   ---------------------------------------------------------------------------- */
+
+/* Cell joining with popover on its RIGHT */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-right {
+  border-right-color: transparent;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Cell joining with popover on its LEFT */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-left {
+  border-left-color: transparent;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+
+/* ----------------------------------------------------------------------------
+   POPOVER (times beside date cell)
+   ---------------------------------------------------------------------------- */
+
+.post-session-popover {
+  position: absolute;
+  z-index: var(--layer-popover);
+  width: fit-content;
+  background: var(--ps-bg);
+  border: 1px solid var(--ps-border-focus);
+  border-radius: var(--ps-radius);
+  box-shadow: none;
+  overflow: hidden;
+  display: none;
+}
+
+/* Popover on RIGHT of cell: joins on left edge, only top-left squared */
+.post-session-popover.post-session-popover--right {
+  display: block;
+  border-left: none;
+  border-top-left-radius: 0;
+}
+
+/* Popover on LEFT of cell: joins on right edge, only top-right squared */
+.post-session-popover.post-session-popover--left {
+  display: block;
+  border-right: none;
+  border-top-right-radius: 0;
+}
+
+
+/* ----------------------------------------------------------------------------
+   POPOVER TIME STATES
+   Idle: no border | Hover: blue border | Selected: blue fill
+   ---------------------------------------------------------------------------- */
+
+.post-session-popover-time {
+  height: var(--post-session-cell-h, 36px);
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* Popover time - Hover: blue border, no fill */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-popover-time:hover {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ps-hover);
+  }
+}
+
+/* Popover time - Selected: blue fill (persists) */
+.post-session-popover-time.post-session-time-selected {
+  background: var(--ps-selected);
+  box-shadow: none;
+}
+
+/* Selected + Hover: stays filled */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-popover-time.post-session-time-selected:hover {
+    background: var(--ps-selected);
+    box-shadow: none;
+  }
+}
+
+
+/* ----------------------------------------------------------------------------
+   TIMES LIST (below calendar)
+   ---------------------------------------------------------------------------- */
+
 .post-session-times {
   width: 100%;
 }
@@ -3671,8 +3794,13 @@ body.image-modal-open > *:not(.image-modal) {
   flex-direction: column;
 }
 
-/* Time option (36px row) */
-.post-session-time {
+
+/* ----------------------------------------------------------------------------
+   OPTIONS LIST STATES
+   Idle: no fill | Hover: blue border | Selected: blue fill
+   ---------------------------------------------------------------------------- */
+
+.post-session-option {
   height: 36px;
   padding: 0 10px;
   cursor: pointer;
@@ -3690,35 +3818,36 @@ body.image-modal-open > *:not(.image-modal) {
   box-sizing: border-box;
 }
 
-.post-session-time:last-child {
+.post-session-option:last-child {
   border-bottom: none;
 }
 
-/* Time hover: blue border, no fill */
-.post-session-time.post-session-hover {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ps-hover);
-}
-
-/* Time highlighted: blue fill */
-.post-session-time.post-session-highlighted {
-  background: var(--ps-selected);
-  box-shadow: none;
-}
-
-/* Time selected */
-.post-session-time--selected {
-  background: var(--ps-selected);
-}
-
+/* Option - Hover: blue border, no fill */
 @media (hover: hover) and (pointer: fine) {
-  .post-session-time:hover {
+  .post-session-option:hover {
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--ps-hover);
   }
 }
 
-/* Empty state */
+/* Option - Selected: blue fill (persists) */
+.post-session-option.post-session-option-selected {
+  background: var(--ps-selected);
+}
+
+/* Selected + Hover: stays filled */
+@media (hover: hover) and (pointer: fine) {
+  .post-session-option.post-session-option-selected:hover {
+    background: var(--ps-selected);
+    box-shadow: none;
+  }
+}
+
+
+/* ----------------------------------------------------------------------------
+   EMPTY STATE
+   ---------------------------------------------------------------------------- */
+
 .post-session-empty {
   height: 36px;
   padding: 0 10px;
@@ -3727,82 +3856,5 @@ body.image-modal-open > *:not(.image-modal) {
   color: var(--ps-text-secondary);
   border-bottom: 1px solid var(--ps-border);
   box-sizing: border-box;
-}
-
-/* Popover beside selected date (connects seamlessly with date cell) */
-.post-session-popover {
-  position: absolute;
-  z-index: var(--layer-popover);
-  width: fit-content;
-  background: var(--ps-selected);
-  border: 1px solid var(--ps-border-focus);
-  border-radius: var(--ps-radius);
-  box-shadow: none;
-  overflow: hidden;
-  display: none;
-}
-
-/* Popover on RIGHT of cell: joins on left edge */
-.post-session-popover.post-session-popover--right {
-  display: block;
-  border-left: none;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-/* Popover on LEFT of cell: joins on right edge */
-.post-session-popover.post-session-popover--left {
-  display: block;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Calendar cell joining with popover on its RIGHT */
-.post-session-calendar-slot .calendar-day.post-session-cell--join-right {
-  border-right-color: transparent;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Calendar cell joining with popover on its LEFT */
-.post-session-calendar-slot .calendar-day.post-session-cell--join-left {
-  border-left-color: transparent;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.post-session-popover-time {
-  height: var(--post-session-cell-h, 36px);
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  background: transparent;
-  border: none;
-  width: 100%;
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
-  box-sizing: border-box;
-  white-space: nowrap;
-}
-
-/* Popover time hover: blue border */
-.post-session-popover-time.post-session-hover {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--ps-hover);
-}
-
-/* Popover time highlighted: blue fill */
-.post-session-popover-time.post-session-highlighted {
-  background: var(--ps-selected);
-  box-shadow: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .post-session-popover-time:hover {
-    background: transparent;
-    box-shadow: inset 0 0 0 1px var(--ps-hover);
-  }
 }
 
