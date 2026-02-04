@@ -3573,9 +3573,9 @@ body.image-modal-open > *:not(.image-modal) {
 
 /* Individual age rating icon */
 .post-session-age-rating-icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   object-fit: contain;
 }
 
