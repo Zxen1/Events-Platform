@@ -10652,12 +10652,9 @@ const PostSessionComponent = (function() {
         var selectedSessionTime = '';
         var sessionsLoading = false;
         var sessionPopoverIso = '';
-        var sessionTimesSide = '';
         var defaultSessionButtonDateText = '';
         var closeSessionTimer = null;
         var SESSION_SELECT_CLOSE_DELAY_MS = 500;
-        var lastJoinedCell = null;
-        var lastJoinedCellStyles = null;
         var hoverPreviewIso = '';
 
         try {
@@ -10723,11 +10720,10 @@ const PostSessionComponent = (function() {
             if (sessionArrow) sessionArrow.classList.remove('post-session-arrow--open');
             try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
             hideSessionPopover();
-            sessionTimesSide = '';
             try {
                 if (sessionCalendarMount) {
-                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
-                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted, .calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
+                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted', 'post-session-cell--join-left', 'post-session-cell--join-right'); });
                 }
                 if (sessionTimesList) {
                     var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
@@ -10742,14 +10738,14 @@ const PostSessionComponent = (function() {
 
         function hideSessionPopover() {
             if (!sessionPopover) return;
-            sessionPopover.style.display = 'none';
+            sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
             sessionPopover.innerHTML = '';
             sessionPopoverIso = '';
             hoverPreviewIso = '';
             try {
                 if (sessionCalendarMount) {
-                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
-                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
+                    var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted, .calendar-day.post-session-cell--join-left, .calendar-day.post-session-cell--join-right');
+                    d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted', 'post-session-cell--join-left', 'post-session-cell--join-right'); });
                 }
                 if (sessionTimesList) {
                     var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
@@ -10760,20 +10756,6 @@ const PostSessionComponent = (function() {
                     d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
                 }
             } catch (_eClrHide0) {}
-            try {
-                if (lastJoinedCell && lastJoinedCellStyles) {
-                    lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
-                    lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
-                    lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
-                    lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
-                    lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
-                    lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
-                    lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
-                    lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
-                }
-            } catch (_eJoin0) {}
-            lastJoinedCell = null;
-            lastJoinedCellStyles = null;
         }
 
         function getActiveLocationForUi() {
@@ -10828,87 +10810,50 @@ const PostSessionComponent = (function() {
             updateSessionButtonText();
         }
 
-        function ensureTimesSideChosen() {
-            if (sessionTimesSide === 'left' || sessionTimesSide === 'right') return;
+        function getSideForCell(cellEl) {
+            // Determine which side the popover should appear based on cell position
+            // Cell on LEFT half of calendar → popover on RIGHT
+            // Cell on RIGHT half of calendar → popover on LEFT
+            if (!cellEl || !sessionCalendarApi || !sessionCalendarApi.scroll) return 'right';
             try {
-                var slot = wrap && wrap.querySelector ? wrap.querySelector('.post-session-calendar-slot') : null;
-                if (!slot) { sessionTimesSide = 'right'; return; }
-                var wrapRect = wrap.getBoundingClientRect();
-                var slotRect = slot.getBoundingClientRect();
-                var wrapMid = wrapRect.left + (wrapRect.width / 2);
-                var slotMid = slotRect.left + (slotRect.width / 2);
-                sessionTimesSide = (slotMid < wrapMid) ? 'right' : 'left';
-            } catch (_eSide0) {
-                sessionTimesSide = 'right';
+                var scrollEl = sessionCalendarApi.scroll;
+                var scrollRect = scrollEl.getBoundingClientRect();
+                var cellRect = cellEl.getBoundingClientRect();
+                var visibleLeft = scrollRect.left;
+                var visibleRight = scrollRect.right;
+                var visibleMid = visibleLeft + ((visibleRight - visibleLeft) / 2);
+                var cellMid = cellRect.left + (cellRect.width / 2);
+                return (cellMid < visibleMid) ? 'right' : 'left';
+            } catch (_e) {
+                return 'right';
             }
         }
 
-        function applyJoinedCellStyles(cellEl, side) {
-            if (!cellEl) return;
-            try {
-                if (lastJoinedCell && lastJoinedCellStyles && lastJoinedCell !== cellEl) {
-                    lastJoinedCell.style.borderTopLeftRadius = lastJoinedCellStyles.tl || '';
-                    lastJoinedCell.style.borderTopRightRadius = lastJoinedCellStyles.tr || '';
-                    lastJoinedCell.style.borderBottomLeftRadius = lastJoinedCellStyles.bl || '';
-                    lastJoinedCell.style.borderBottomRightRadius = lastJoinedCellStyles.br || '';
-                    lastJoinedCell.style.borderLeftColor = lastJoinedCellStyles.blc || '';
-                    lastJoinedCell.style.borderRightColor = lastJoinedCellStyles.brc || '';
-                    lastJoinedCell.style.borderLeftWidth = lastJoinedCellStyles.blw || '';
-                    lastJoinedCell.style.borderRightWidth = lastJoinedCellStyles.brw || '';
-                    lastJoinedCell = null;
-                    lastJoinedCellStyles = null;
-                }
-            } catch (_eJoinR0) {}
-            if (lastJoinedCell === cellEl && lastJoinedCellStyles) return;
-            lastJoinedCell = cellEl;
-            lastJoinedCellStyles = {
-                tl: cellEl.style.borderTopLeftRadius,
-                tr: cellEl.style.borderTopRightRadius,
-                bl: cellEl.style.borderBottomLeftRadius,
-                br: cellEl.style.borderBottomRightRadius,
-                blc: cellEl.style.borderLeftColor,
-                brc: cellEl.style.borderRightColor,
-                blw: cellEl.style.borderLeftWidth,
-                brw: cellEl.style.borderRightWidth
-            };
+        function applyJoinedCellClass(cellEl, side) {
+            if (!cellEl || !sessionCalendarMount) return;
+            // Remove join classes from all cells
+            var joinedCells = sessionCalendarMount.querySelectorAll('.post-session-cell--join-left, .post-session-cell--join-right');
+            joinedCells.forEach(function(el) {
+                el.classList.remove('post-session-cell--join-left', 'post-session-cell--join-right');
+            });
+            // Apply join class to current cell
             if (side === 'right') {
-                cellEl.style.borderTopRightRadius = '0px';
-                cellEl.style.borderBottomRightRadius = '0px';
-                cellEl.style.borderRightColor = 'transparent';
-                cellEl.style.borderRightWidth = '0px';
+                cellEl.classList.add('post-session-cell--join-right');
             } else {
-                cellEl.style.borderTopLeftRadius = '0px';
-                cellEl.style.borderBottomLeftRadius = '0px';
-                cellEl.style.borderLeftColor = 'transparent';
-                cellEl.style.borderLeftWidth = '0px';
+                cellEl.classList.add('post-session-cell--join-left');
             }
         }
 
-        function positionTimesExtension(cellEl, side) {
+        function positionPopover(cellEl, side) {
             if (!sessionPopover || !cellEl || !sessionCalendarApi || !sessionCalendarApi.calendar || !sessionCalendarApi.scroll) return;
             var bodyEl = sessionCalendarApi.calendar;
             var scrollEl = sessionCalendarApi.scroll;
+            // Temporarily show popover to measure it
             sessionPopover.style.left = '0px';
             sessionPopover.style.top = '0px';
-            var popW = sessionPopover.offsetWidth || 180;
-            var popH = sessionPopover.offsetHeight || 120;
-            try {
-                var bodyRect0 = bodyEl.getBoundingClientRect();
-                var cellRect0 = cellEl.getBoundingClientRect();
-                var cellX0 = (cellRect0.left - bodyRect0.left);
-                var cellW0 = cellRect0.width || 36;
-                var overlap0 = 1;
-                var extLeft0 = (side === 'left') ? (cellX0 - popW + overlap0) : (cellX0 + cellW0 - overlap0);
-                var extRight0 = extLeft0 + popW;
-                var viewLeft0 = scrollEl.scrollLeft;
-                var viewRight0 = scrollEl.scrollLeft + scrollEl.clientWidth;
-                var inset0 = 6;
-                if (extLeft0 < viewLeft0 + inset0) {
-                    scrollEl.scrollLeft = Math.max(0, extLeft0 - inset0);
-                } else if (extRight0 > viewRight0 - inset0) {
-                    scrollEl.scrollLeft = Math.max(0, scrollEl.scrollLeft + (extRight0 - (viewRight0 - inset0)));
-                }
-            } catch (_eScrollFit0) {}
+            var popW = sessionPopover.offsetWidth || 80;
+            var popH = sessionPopover.offsetHeight || 72;
+            // Get positions relative to calendar body
             var cellRect = cellEl.getBoundingClientRect();
             var bodyRect = bodyEl.getBoundingClientRect();
             var scrollRect = scrollEl.getBoundingClientRect();
@@ -10916,16 +10861,18 @@ const PostSessionComponent = (function() {
             var cellY = (cellRect.top - bodyRect.top);
             var cellW = cellRect.width || 36;
             var cellH = cellRect.height || 36;
+            // Position horizontally: overlap by 1px to join seamlessly
             var overlap = 1;
             var left = (side === 'left') ? (cellX - popW + overlap) : (cellX + cellW - overlap);
+            // Position vertically: align with cell, clamp to visible area
             var inset = 2;
             var viewTop = (scrollRect.top - bodyRect.top) + inset;
             var viewBottom = (scrollRect.bottom - bodyRect.top) - inset;
             var maxTop = viewBottom - popH;
             var minTop = viewTop;
+            var top = cellY;
             var fitsDown = (cellY + popH) <= viewBottom;
             var fitsUp = (cellY - (popH - cellH)) >= viewTop;
-            var top = cellY;
             if (fitsDown) {
                 top = cellY;
             } else if (fitsUp) {
@@ -10945,6 +10892,7 @@ const PostSessionComponent = (function() {
                 hideSessionPopover();
                 return;
             }
+            // Set cell height CSS variable for popover time row sizing
             try {
                 if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
                     var rr = cellEl.getBoundingClientRect();
@@ -10955,39 +10903,22 @@ const PostSessionComponent = (function() {
                 }
             } catch (_eCellH0) {}
             sessionPopoverIso = iso;
+            // Build popover content
             sessionPopover.innerHTML = times.map(function(t) {
                 var timeText = normalizeTimeHHMM(t);
                 return '<button class="post-session-popover-time" type="button" data-time="' + escapeHtml(timeText) + '">' + escapeHtml(timeText) + '</button>';
             }).join('');
-            sessionPopover.style.display = 'block';
-            ensureTimesSideChosen();
-            var side = sessionTimesSide || 'right';
-            applyJoinedCellStyles(cellEl, side);
-            try {
-                var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
-                var borderColor = cs ? cs.borderColor : '';
-                var bg = cs ? cs.backgroundColor : '';
-                var outerRadius = '5px';
-                if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
-                sessionPopover.style.background = bg;
-                if (borderColor) sessionPopover.style.borderColor = borderColor;
-                if (side === 'right') {
-                    sessionPopover.style.borderTopLeftRadius = '0px';
-                    sessionPopover.style.borderBottomLeftRadius = '0px';
-                    sessionPopover.style.borderTopRightRadius = outerRadius;
-                    sessionPopover.style.borderBottomRightRadius = outerRadius;
-                    sessionPopover.style.borderLeftWidth = '0';
-                    sessionPopover.style.borderRightWidth = '1px';
-                } else {
-                    sessionPopover.style.borderTopRightRadius = '0px';
-                    sessionPopover.style.borderBottomRightRadius = '0px';
-                    sessionPopover.style.borderTopLeftRadius = outerRadius;
-                    sessionPopover.style.borderBottomLeftRadius = outerRadius;
-                    sessionPopover.style.borderRightWidth = '0';
-                    sessionPopover.style.borderLeftWidth = '1px';
-                }
-            } catch (_eStyle0) {}
-            positionTimesExtension(cellEl, side);
+            // Determine side based on this cell's position
+            var side = getSideForCell(cellEl);
+            // Apply CSS classes (no inline styles)
+            sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
+            if (side === 'right') {
+                sessionPopover.classList.add('post-session-popover--right');
+            } else {
+                sessionPopover.classList.add('post-session-popover--left');
+            }
+            applyJoinedCellClass(cellEl, side);
+            positionPopover(cellEl, side);
         }
 
         function decorateCalendarAvailability() {
@@ -11020,10 +10951,8 @@ const PostSessionComponent = (function() {
             try {
                 if (sessionPopover && sessionCalendarApi && sessionCalendarApi.calendar) {
                     sessionCalendarApi.calendar.appendChild(sessionPopover);
-                    sessionPopover.style.display = 'none';
                 }
             } catch (_eMovePop0) {}
-            try { ensureTimesSideChosen(); } catch (_eSide1) {}
             try {
                 requestAnimationFrame(function() {
                     try {

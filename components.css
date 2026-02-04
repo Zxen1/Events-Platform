@@ -3734,11 +3734,42 @@ body.image-modal-open > *:not(.image-modal) {
   position: absolute;
   z-index: var(--layer-popover);
   width: fit-content;
-  background: #222;
+  background: var(--ps-selected);
   border: 1px solid var(--ps-border-focus);
   border-radius: var(--ps-radius);
   box-shadow: none;
   overflow: hidden;
+  display: none;
+}
+
+/* Popover on RIGHT of cell: joins on left edge */
+.post-session-popover--right {
+  display: block;
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Popover on LEFT of cell: joins on right edge */
+.post-session-popover--left {
+  display: block;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Calendar cell joining with popover on its RIGHT */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-right {
+  border-right-color: transparent;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Calendar cell joining with popover on its LEFT */
+.post-session-calendar-slot .calendar-day.post-session-cell--join-left {
+  border-left-color: transparent;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .post-session-popover-time {
