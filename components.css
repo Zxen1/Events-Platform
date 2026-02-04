@@ -3756,19 +3756,26 @@ body.image-modal-open > *:not(.image-modal) {
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border: 1px solid var(--ps-border-focus);
+  border-left: 1px solid var(--ps-border-focus);
+  border-right: 1px solid var(--ps-border-focus);
+  border-top: none;
+  border-bottom: none;
   border-radius: var(--ps-radius);
   display: none;
 }
 
-/* Popover on RIGHT of cell */
+/* Popover on RIGHT of cell - left side faces cell, flatten left corners */
 .post-session-popover.post-session-popover--right {
   display: block;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
-/* Popover on LEFT of cell */
+/* Popover on LEFT of cell - right side faces cell, flatten right corners */
 .post-session-popover.post-session-popover--left {
   display: block;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 
@@ -3809,18 +3816,32 @@ body.image-modal-open > *:not(.image-modal) {
   white-space: nowrap;
 }
 
-/* First and last items get rounded corners to match container */
+/* First item gets top border */
 .post-session-popover-time:first-child {
-  border-radius: 4px 4px 0 0;
+  border-top: 1px solid var(--ps-border-focus);
 }
 
+/* Last item gets bottom border */
 .post-session-popover-time:last-child {
-  border-radius: 0 0 4px 4px;
+  border-bottom: 1px solid var(--ps-border-focus);
 }
 
-/* Single item gets all corners */
-.post-session-popover-time:only-child {
-  border-radius: 4px;
+/* Corner radius for popover on RIGHT (left corners flat, right corners rounded) */
+.post-session-popover--right .post-session-popover-time:first-child {
+  border-top-right-radius: 4px;
+}
+
+.post-session-popover--right .post-session-popover-time:last-child {
+  border-bottom-right-radius: 4px;
+}
+
+/* Corner radius for popover on LEFT (right corners flat, left corners rounded) */
+.post-session-popover--left .post-session-popover-time:first-child {
+  border-top-left-radius: 4px;
+}
+
+.post-session-popover--left .post-session-popover-time:last-child {
+  border-bottom-left-radius: 4px;
 }
 
 /* Popover time - Hover */
