@@ -19,6 +19,7 @@
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - AVATAR CROPPER      - Standalone reusable avatar cropper (destructive, outputs blob)
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
+   - POST SESSION        - Session picker with calendar and time slots
    
    ============================================================================ */
 
@@ -10375,21 +10376,21 @@ const PostSessionComponent = (function() {
 
         var html = [];
 
-        // Container wrapper - uses menu-class-5 for post sessions menu styling (36px rows + calendar)
-        html.push('<div class="post-session-container menu-class-5" data-post-id="' + postId + '">');
+        // Container wrapper (self-contained, no base class dependencies)
+        html.push('<div class="post-session-container" data-post-id="' + postId + '">');
 
-        html.push('<button class="post-session-button menu-button" type="button" aria-haspopup="true" aria-expanded="false">');
-        html.push('<div class="post-session-text menu-text">');
+        html.push('<button class="post-session-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-session-text">');
         html.push('<div class="post-session-text-main">');
         html.push('<span class="post-session-date-left">' + escapeHtml(datesText) + '</span>');
         html.push('<span class="post-session-time-right"></span>');
         html.push('</div>');
         html.push('</div>');
-        html.push('<div class="post-session-arrow menu-arrow"></div>');
+        html.push('<div class="post-session-arrow"></div>');
         html.push('</button>');
 
         // Dropdown: square calendar viewport + time slots list (filled by PostModule on open)
-        html.push('<div class="post-session-options menu-options" aria-label="Session picker">');
+        html.push('<div class="post-session-options" aria-label="Session picker">');
         html.push('<div class="post-session-calendar-slot">');
         // IMPORTANT: CalendarComponent expects calendar-container for styling consistency.
         html.push('<div class="post-session-calendar-mount calendar-container" aria-label="Session calendar"></div>');

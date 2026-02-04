@@ -3233,7 +3233,7 @@ const PostModule = (function() {
       }
       function safeCloseSession() {
         try {
-          if (sessionBtn && sessionBtn.classList.contains('menu-button--open')) {
+          if (sessionBtn && sessionBtn.classList.contains('post-session-button--open')) {
             closeSessionDropdown();
           }
         } catch (_e1) {}
@@ -3357,24 +3357,24 @@ const PostModule = (function() {
         try { clearTimeout(closeSessionTimer); } catch (_eT0) {}
         closeSessionTimer = null;
       }
-      sessionBtn.classList.remove('menu-button--open');
-      if (sessionArrow) sessionArrow.classList.remove('menu-arrow--open');
+      sessionBtn.classList.remove('post-session-button--open');
+      if (sessionArrow) sessionArrow.classList.remove('post-session-arrow--open');
       try { sessionBtn.setAttribute('aria-expanded', 'false'); } catch (_eAr0) {}
       hideSessionPopover();
       sessionTimesSide = '';
       // Never leave "hover" markers stuck on close.
       try {
         if (sessionCalendarMount) {
-          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
-          d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+          d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
         if (sessionTimesList) {
-          var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
-          d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+          d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
         if (sessionPopover) {
-          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
-          d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+          d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
       } catch (_eClrClose0) {}
     }
@@ -3388,16 +3388,16 @@ const PostModule = (function() {
       // Clear synced hover markers when the extension hides.
       try {
         if (sessionCalendarMount) {
-          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
-          d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+          d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
         if (sessionTimesList) {
-          var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
-          d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+          d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
         if (sessionPopover) {
-          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
-          d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+          var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+          d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
         }
       } catch (_eClrHide0) {}
       // Restore any temporary join styling on the date cell.
@@ -3862,16 +3862,16 @@ const PostModule = (function() {
       function clearSyncedMarks() {
         try {
           if (sessionCalendarMount) {
-            var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--hover, .calendar-day.menu-option--highlighted');
-            d1.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+            var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-hover, .calendar-day.post-session-highlighted');
+            d1.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
           }
           if (sessionTimesList) {
-            var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--hover, .post-session-time.menu-option--highlighted');
-            d2.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+            var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-hover, .post-session-time.post-session-highlighted');
+            d2.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
           }
           if (sessionPopover) {
-            var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--hover, .post-session-popover-time.menu-option--highlighted');
-            d3.forEach(function(el) { el.classList.remove('menu-option--hover', 'menu-option--highlighted'); });
+            var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-hover, .post-session-popover-time.post-session-highlighted');
+            d3.forEach(function(el) { el.classList.remove('post-session-hover', 'post-session-highlighted'); });
           }
         } catch (_eClear0) {}
       }
@@ -3882,10 +3882,10 @@ const PostModule = (function() {
           // Times list: highlight all rows on this date, and the exact time if provided.
           if (sessionTimesList) {
             var rows = sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]');
-            rows.forEach(function(r) { r.classList.add('menu-option--hover'); });
+            rows.forEach(function(r) { r.classList.add('post-session-hover'); });
             if (timeText) {
               var exact = sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]');
-              if (exact) exact.classList.add('menu-option--hover');
+              if (exact) exact.classList.add('post-session-hover');
             }
           }
         } catch (_eApply0) {}
@@ -3896,17 +3896,17 @@ const PostModule = (function() {
         try {
           if (sessionCalendarMount) {
             var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
-            if (day) day.classList.add('menu-option--highlighted');
+            if (day) day.classList.add('post-session-highlighted');
           }
           if (sessionTimesList) {
             var exact = timeText
               ? sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]')
               : null;
-            if (exact) exact.classList.add('menu-option--highlighted');
+            if (exact) exact.classList.add('post-session-highlighted');
           }
           if (sessionPopover && timeText) {
             var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
-            if (b) b.classList.add('menu-option--highlighted');
+            if (b) b.classList.add('post-session-highlighted');
           }
         } catch (_eAct0) {}
 
@@ -3915,16 +3915,16 @@ const PostModule = (function() {
           setTimeout(function() {
             try {
               if (sessionCalendarMount) {
-                var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.menu-option--highlighted');
-                d1.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+                var d1 = sessionCalendarMount.querySelectorAll('.calendar-day.post-session-highlighted');
+                d1.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
               }
               if (sessionTimesList) {
-                var d2 = sessionTimesList.querySelectorAll('.post-session-time.menu-option--highlighted');
-                d2.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+                var d2 = sessionTimesList.querySelectorAll('.post-session-time.post-session-highlighted');
+                d2.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
               }
               if (sessionPopover) {
-                var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.menu-option--highlighted');
-                d3.forEach(function(el) { el.classList.remove('menu-option--highlighted'); });
+                var d3 = sessionPopover.querySelectorAll('.post-session-popover-time.post-session-highlighted');
+                d3.forEach(function(el) { el.classList.remove('post-session-highlighted'); });
               }
             } catch (_eActClr1) {}
           }, 300);
@@ -4006,8 +4006,8 @@ const PostModule = (function() {
           // Visual feedback: keep the clicked time highlighted briefly.
           try {
             var all = sessionPopover.querySelectorAll('.post-session-popover-time');
-            all.forEach(function(b) { b.classList.remove('menu-option--highlighted'); });
-            btn.classList.add('menu-option--highlighted');
+            all.forEach(function(b) { b.classList.remove('post-session-highlighted'); });
+            btn.classList.add('post-session-highlighted');
           } catch (_eHi0) {}
 
           clearSyncedMarks();
@@ -4062,7 +4062,7 @@ const PostModule = (function() {
 
       sessionBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var isOpen = sessionBtn.classList.contains('menu-button--open');
+        var isOpen = sessionBtn.classList.contains('post-session-button--open');
         if (isOpen) {
           closeSessionDropdown();
           return;
@@ -4070,8 +4070,8 @@ const PostModule = (function() {
 
         // Opening: close other menus
         try { closeLocationDropdown(); } catch (_eCloseOther) {}
-        sessionBtn.classList.add('menu-button--open');
-        if (sessionArrow) sessionArrow.classList.add('menu-arrow--open');
+        sessionBtn.classList.add('post-session-button--open');
+        if (sessionArrow) sessionArrow.classList.add('post-session-arrow--open');
         try { sessionBtn.setAttribute('aria-expanded', 'true'); } catch (_eAr1) {}
 
         // Load sessions first so calendar can be month-bounded to the session range.
@@ -4101,7 +4101,7 @@ const PostModule = (function() {
 
     // Click-outside handler for session dropdown
     document.addEventListener('click', function(e) {
-      if (!sessionBtn || !sessionBtn.classList.contains('menu-button--open')) return;
+      if (!sessionBtn || !sessionBtn.classList.contains('post-session-button--open')) return;
       var target = e.target;
       if (!target) return;
       var container = wrap.querySelector('.post-session-container');

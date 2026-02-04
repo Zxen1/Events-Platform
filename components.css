@@ -17,6 +17,7 @@
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    - IMAGE MODAL         - Full-screen lightbox for images
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
+   - POST SESSION        - Session picker with calendar and time slots
    
    ============================================================================ */
 
@@ -3204,5 +3205,344 @@ body.image-modal-open > *:not(.image-modal) {
   object-fit: contain;
   cursor: pointer;
   user-select: none;
+}
+
+
+/* ============================================================================
+   POST SESSION COMPONENT
+   
+   Self-contained session picker with calendar and time slots.
+   Used in post info container to display session/dates.
+   
+   STRUCTURE:
+   - .post-session-container    (root wrapper)
+   - .post-session-button       (trigger button)
+   - .post-session-text         (button text area)
+   - .post-session-arrow        (dropdown arrow icon)
+   - .post-session-options      (dropdown panel)
+   - .post-session-calendar-*   (calendar section)
+   - .post-session-times        (times list section)
+   - .post-session-popover      (times popover beside date)
+   ============================================================================ */
+
+/* Component variables */
+.post-session-container {
+  --ps-bg: rgba(0, 0, 0, 0.5);
+  --ps-bg-button: rgba(0, 0, 0, 0.35);
+  --ps-border: rgba(255, 255, 255, 0.12);
+  --ps-border-hover: rgba(255, 255, 255, 0.2);
+  --ps-border-focus: var(--blue-500);
+  --ps-text: #fff;
+  --ps-text-secondary: rgba(255, 255, 255, 0.7);
+  --ps-muted: rgba(255, 255, 255, 0.5);
+  --ps-hover: var(--blue-500);
+  --ps-selected: var(--blue-600);
+  --ps-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --ps-radius: 5px;
+  position: relative;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+/* Button */
+.post-session-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--ps-bg-button);
+  border: 1px solid var(--ps-border);
+  border-radius: var(--ps-radius);
+  color: var(--ps-text);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-session-container:not(:focus-within) .post-session-button:not(.post-session-button--open):not(:active):hover {
+    border-color: var(--ps-border-hover);
+  }
+}
+
+.post-session-button--open {
+  border-color: var(--ps-border-focus);
+  border-radius: var(--ps-radius) var(--ps-radius) 0 0;
+  border-bottom: none;
+}
+
+/* Button text */
+.post-session-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  color: var(--ps-text);
+}
+
+.post-session-text-main {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.post-session-date-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-session-time-right {
+  flex: 0 0 auto;
+  margin-left: 10px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Arrow */
+.post-session-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+  background-color: var(--ps-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.post-session-arrow--open {
+  transform: rotate(180deg);
+}
+
+/* Options panel */
+.post-session-options {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  background: var(--ps-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--ps-border-focus);
+  border-top: none;
+  border-radius: 0 0 var(--ps-radius) var(--ps-radius);
+  box-shadow: var(--ps-shadow);
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.post-session-button--open + .post-session-options {
+  display: block;
+}
+
+/* Calendar slot */
+.post-session-calendar-slot {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  position: relative;
+  border-bottom: 1px solid var(--ps-border);
+}
+
+/* Make CalendarComponent fill the slot */
+.post-session-calendar-slot .post-session-calendar-mount.calendar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
+  flex: 1 1 auto;
+}
+
+.post-session-calendar-slot .post-session-calendar-mount .calendar-body {
+  position: relative;
+}
+
+/* Disabled dates */
+.post-session-calendar-slot .calendar-day.post-session-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.post-session-calendar-slot .calendar-day.post-session-disabled:hover,
+.post-session-calendar-slot .calendar-day.post-session-disabled:active {
+  background: #222;
+  border-color: transparent;
+  color: inherit;
+}
+
+/* Available session dates: grey border only (no fill unless selected) */
+.post-session-calendar-slot .calendar-day.available-day {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.post-session-calendar-slot .calendar-day.available-day.selected {
+  background: var(--ps-selected);
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+.post-session-calendar-slot .calendar-day.available-day:hover {
+  background: transparent;
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+.post-session-calendar-slot .calendar-day.available-day:active {
+  background: transparent;
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+/* Synced hover marker class */
+.post-session-calendar-slot .calendar-day.post-session-hover {
+  background: transparent;
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+/* Synced highlighted class */
+.post-session-calendar-slot .calendar-day.post-session-highlighted {
+  background: var(--ps-selected);
+  border-color: var(--ps-border-focus);
+  color: #fff;
+}
+
+/* Times list */
+.post-session-times {
+  width: 100%;
+}
+
+.post-session-times-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Time option (36px row) */
+.post-session-time {
+  height: 36px;
+  padding: 0 10px;
+  cursor: pointer;
+  color: var(--ps-text);
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ps-border);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.post-session-time:last-child {
+  border-bottom: none;
+}
+
+/* Time hover: blue border, no fill */
+.post-session-time.post-session-hover {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ps-hover);
+}
+
+/* Time highlighted: blue fill */
+.post-session-time.post-session-highlighted {
+  background: var(--ps-selected);
+  box-shadow: none;
+}
+
+/* Time selected */
+.post-session-time--selected {
+  background: var(--ps-selected);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-session-time:hover {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ps-hover);
+  }
+}
+
+/* Empty state */
+.post-session-empty {
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  color: var(--ps-text-secondary);
+  border-bottom: 1px solid var(--ps-border);
+  box-sizing: border-box;
+}
+
+/* Popover beside selected date */
+.post-session-popover {
+  position: absolute;
+  z-index: var(--layer-popover);
+  width: fit-content;
+  background: #222;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--ps-radius);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.post-session-popover-time {
+  height: var(--post-session-cell-h, 36px);
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* Popover time hover: blue border */
+.post-session-popover-time.post-session-hover {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ps-hover);
+}
+
+/* Popover time highlighted: blue fill */
+.post-session-popover-time.post-session-highlighted {
+  background: var(--ps-selected);
+  box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-session-popover-time:hover {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ps-hover);
+  }
 }
 
