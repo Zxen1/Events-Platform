@@ -3756,7 +3756,10 @@ body.image-modal-open > *:not(.image-modal) {
   z-index: var(--layer-popover);
   width: fit-content;
   background: #222;
-  border: 1px solid var(--ps-border-focus);
+  border-left: 1px solid var(--ps-border-focus);
+  border-right: 1px solid var(--ps-border-focus);
+  border-top: none;
+  border-bottom: none;
   border-radius: var(--ps-radius);
   box-shadow: none;
   overflow: hidden;
@@ -3817,6 +3820,14 @@ body.image-modal-open > *:not(.image-modal) {
   cursor: pointer;
   box-sizing: border-box;
   white-space: nowrap;
+}
+
+.post-session-popover-time:first-child {
+  border-top: 1px solid var(--ps-border-focus);
+}
+
+.post-session-popover-time:last-child {
+  border-bottom: 1px solid var(--ps-border-focus);
 }
 
 /* Popover time - Hover */
