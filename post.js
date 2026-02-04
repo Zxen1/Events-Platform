@@ -3479,12 +3479,12 @@ const PostModule = (function() {
 
       // Remove the seam so date + times look like one continuous shape.
       if (side === 'right') {
-        cellEl.style.borderTopRightRadius = '0';
-        cellEl.style.borderBottomRightRadius = '0';
+        cellEl.style.borderTopRightRadius = '0px';
+        cellEl.style.borderBottomRightRadius = '0px';
         cellEl.style.borderRightColor = 'transparent';
       } else {
-        cellEl.style.borderTopLeftRadius = '0';
-        cellEl.style.borderBottomLeftRadius = '0';
+        cellEl.style.borderTopLeftRadius = '0px';
+        cellEl.style.borderBottomLeftRadius = '0px';
         cellEl.style.borderLeftColor = 'transparent';
       }
     }
@@ -3552,8 +3552,8 @@ const PostModule = (function() {
       try {
         if (cellEl && cellEl.getBoundingClientRect && sessionCalendarMount) {
           var rr = cellEl.getBoundingClientRect();
-          var hh = rr && rr.height ? Math.round(rr.height) : 0;
-          if (hh > 0) {
+          var hh = rr && rr.height ? rr.height : 0;
+          if (hh > 0.5) {
             sessionCalendarMount.style.setProperty('--post-session-cell-h', hh + 'px');
           }
         }
@@ -3574,22 +3574,26 @@ const PostModule = (function() {
         var cs = window.getComputedStyle ? window.getComputedStyle(cellEl) : null;
         var borderColor = cs ? cs.borderColor : '';
         var bg = cs ? cs.backgroundColor : '';
+        var tl = cs ? cs.borderTopLeftRadius : '';
+        var tr = cs ? cs.borderTopRightRadius : '';
+        var bl = cs ? cs.borderBottomLeftRadius : '';
+        var br = cs ? cs.borderBottomRightRadius : '';
         // If cell background is transparent, use the calendar's base background.
         if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') bg = '#222';
         sessionPopover.style.background = bg;
         if (borderColor) sessionPopover.style.borderColor = borderColor;
         if (side === 'right') {
-          sessionPopover.style.borderTopLeftRadius = '0';
-          sessionPopover.style.borderBottomLeftRadius = '0';
-          sessionPopover.style.borderTopRightRadius = '4px';
-          sessionPopover.style.borderBottomRightRadius = '4px';
+          sessionPopover.style.borderTopLeftRadius = '0px';
+          sessionPopover.style.borderBottomLeftRadius = '0px';
+          sessionPopover.style.borderTopRightRadius = tr || '0px';
+          sessionPopover.style.borderBottomRightRadius = br || '0px';
           sessionPopover.style.borderLeftWidth = '0';
           sessionPopover.style.borderRightWidth = '';
         } else {
-          sessionPopover.style.borderTopRightRadius = '0';
-          sessionPopover.style.borderBottomRightRadius = '0';
-          sessionPopover.style.borderTopLeftRadius = '4px';
-          sessionPopover.style.borderBottomLeftRadius = '4px';
+          sessionPopover.style.borderTopRightRadius = '0px';
+          sessionPopover.style.borderBottomRightRadius = '0px';
+          sessionPopover.style.borderTopLeftRadius = tl || '0px';
+          sessionPopover.style.borderBottomLeftRadius = bl || '0px';
           sessionPopover.style.borderRightWidth = '0';
           sessionPopover.style.borderLeftWidth = '';
         }
@@ -3647,8 +3651,8 @@ const PostModule = (function() {
             var anyDay = sessionCalendarMount.querySelector('.calendar-day[data-iso]');
             if (!anyDay) return;
             var r = anyDay.getBoundingClientRect();
-            var h = r && r.height ? Math.round(r.height) : 0;
-            if (h > 0) {
+            var h = r && r.height ? r.height : 0;
+            if (h > 0.5) {
               sessionCalendarMount.style.setProperty('--post-session-cell-h', h + 'px');
             }
           } catch (_eH0) {}
@@ -3802,11 +3806,6 @@ const PostModule = (function() {
       function applySyncedHover(iso, timeText) {
         if (!iso) return;
         try {
-          // Calendar day
-          if (sessionCalendarMount) {
-            var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
-            if (day) day.classList.add('menu-option--hover');
-          }
           // Times list: highlight all rows on this date, and the exact time if provided.
           if (sessionTimesList) {
             var rows = sessionTimesList.querySelectorAll('.post-session-time[data-iso="' + iso + '"]');
@@ -3814,18 +3813,6 @@ const PostModule = (function() {
             if (timeText) {
               var exact = sessionTimesList.querySelector('.post-session-time[data-iso="' + iso + '"][data-time="' + timeText + '"]');
               if (exact) exact.classList.add('menu-option--hover');
-            }
-          }
-          // Times extension:
-          // - If a time is specified, highlight the exact time.
-          // - If only a date is specified, highlight ALL times currently shown for that date.
-          if (sessionPopover) {
-            if (timeText) {
-              var b = sessionPopover.querySelector('.post-session-popover-time[data-time="' + timeText + '"]');
-              if (b) b.classList.add('menu-option--hover');
-            } else if (sessionPopoverIso && sessionPopoverIso === iso) {
-              var all = sessionPopover.querySelectorAll('.post-session-popover-time');
-              all.forEach(function(btn) { btn.classList.add('menu-option--hover'); });
             }
           }
         } catch (_eApply0) {}
@@ -3898,11 +3885,6 @@ const PostModule = (function() {
         if (!supportsHover()) return;
         var day = e.target && e.target.closest ? e.target.closest('.calendar-day') : null;
         if (!day) return;
-        var rel = e.relatedTarget;
-        // If moving into the times extension or another date cell, don't hide.
-        try {
-          if (rel && (rel.closest && (rel.closest('.post-session-popover') || rel.closest('.calendar-day')))) return;
-        } catch (_eRel0) {}
         // If the user has clicked a date (pinned selection), keep that visible.
         if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) {
           hoverPreviewIso = '';
@@ -3914,17 +3896,6 @@ const PostModule = (function() {
 
       // Popover time clicks
       if (sessionPopover) {
-        // Hover over a time in the extension should sync-highlight the matching row + date.
-        sessionPopover.addEventListener('mouseover', function(e) {
-          if (!supportsHover()) return;
-          var btn = e.target && e.target.closest ? e.target.closest('.post-session-popover-time') : null;
-          if (!btn) return;
-          var timeText = String(btn.dataset.time || '').trim();
-          if (!timeText || !sessionPopoverIso) return;
-          clearSyncedMarks();
-          applySyncedHover(sessionPopoverIso, timeText);
-        });
-
         sessionPopover.addEventListener('click', function(e) {
           var btn = e.target && e.target.closest ? e.target.closest('.post-session-popover-time') : null;
           if (!btn) return;
@@ -3988,38 +3959,6 @@ const PostModule = (function() {
             closeSessionTimer = null;
             closeSessionDropdown();
           }, SESSION_SELECT_CLOSE_DELAY_MS);
-        });
-
-        // Hover list row -> hover calendar day + show extension
-        sessionTimesList.addEventListener('mouseover', function(e) {
-          if (!supportsHover()) return;
-          var row = e.target && e.target.closest ? e.target.closest('.post-session-time') : null;
-          if (!row) return;
-          var iso = String(row.dataset.iso || '').trim();
-          var timeText = String(row.dataset.time || '').trim();
-          if (!iso) return;
-          clearSyncedMarks();
-          applySyncedHover(iso, timeText);
-          try {
-            if (sessionCalendarMount && sessionAvailableSet && sessionAvailableSet[iso]) {
-              var day = sessionCalendarMount.querySelector('.calendar-day[data-iso="' + iso + '"]');
-              if (day) {
-                hoverPreviewIso = iso;
-                showSessionPopoverForDate(day, iso);
-              }
-            }
-          } catch (_eHover0) {}
-        });
-
-        sessionTimesList.addEventListener('mouseout', function(e) {
-          if (!supportsHover()) return;
-          var rel = e.relatedTarget;
-          try {
-            if (rel && (rel.closest && (rel.closest('.post-session-popover') || rel.closest('.post-session-time')))) return;
-          } catch (_eRel1) {}
-          if (selectedSessionIso && sessionPopoverIso === selectedSessionIso) return;
-          hideSessionPopover();
-          clearSyncedMarks();
         });
       }
     }
