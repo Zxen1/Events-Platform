@@ -3599,6 +3599,7 @@ const FieldsetBuilder = (function(){
                         var promoTipBox = document.createElement('div');
                         promoTipBox.className = 'fieldset-label-tooltipbox';
                         promoTipBox.textContent = promoOptionTooltip;
+                        promoTipBox.style.top = 'calc(100% + 5px)';
                         promoOptionLabel.appendChild(promoTipBox);
                     }
                     
