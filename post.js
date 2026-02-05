@@ -2692,26 +2692,7 @@ const PostModule = (function() {
     var cardEl = existingCard;
     var isValidCard = cardEl && (cardEl.classList.contains('post-card') || cardEl.classList.contains('recent-card'));
     if (!isValidCard) {
-      if (fromRecent) {
-        // Create a recent-card so the click handler uses fromRecent: true
-        var recentEntry = {
-          id: post.id,
-          post_key: post.post_key || '',
-          title: title,
-          thumb_url: getPostThumbnailUrl(post),
-          location_text: activeLoc.city || '',
-          subcategory_name: post.subcategory_name || '',
-          subcategory_icon_url: post.subcategory_icon_url || '',
-          post_map_card_id: activeLoc.id || ''
-        };
-        var recentWrapper = renderRecentCard(recentEntry);
-        cardEl = recentWrapper ? recentWrapper.querySelector('.recent-card') : null;
-        if (!cardEl) {
-          cardEl = renderPostCard(post);
-        }
-      } else {
-        cardEl = renderPostCard(post);
-      }
+      cardEl = renderPostCard(post);
     }
 
     // Remove hover highlight - CSS handles the open post background
