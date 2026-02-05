@@ -1387,6 +1387,7 @@
                     case 'item-pricing':
                         val = {
                             item_name: mapCard.item_name,
+                            age_rating: mapCard.age_rating || 'all',
                             item_price: mapCard.item_price,
                             currency: mapCard.currency,
                             item_variants: mapCard.item_variants || [],

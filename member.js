@@ -4297,7 +4297,14 @@ const MemberModule = (function() {
                         }
                     }
 
-                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants, price_summary: priceSummary, promo_option: promo_option, promo_code: promo_code, promo_type: promo_type, promo_value: promo_value, promo_price: promo_price };
+                    // Extract age rating
+                    var age_rating = '';
+                    var ageRatingMenu = el.querySelector('.component-ageratingpicker-menu');
+                    if (ageRatingMenu) {
+                        age_rating = String(ageRatingMenu.dataset.value || '').trim();
+                    }
+
+                    return { item_name: item_name, age_rating: age_rating, currency: currency, item_price: item_price, item_variants: item_variants, price_summary: priceSummary, promo_option: promo_option, promo_code: promo_code, promo_type: promo_type, promo_value: promo_value, promo_price: promo_price };
                 } catch (e5) {
                     throw e5; // Do not swallow errors
                 }

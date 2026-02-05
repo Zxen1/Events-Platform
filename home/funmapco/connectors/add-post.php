@@ -897,8 +897,8 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write pricing rows for each pricing group
     if (is_array($pricingGroupsToWrite)) {
-      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtPrice) {
         abort_with_error($mysqli, 500, 'Prepare post_ticket_pricing', $transactionActive);
       }
@@ -923,7 +923,14 @@ foreach ($byLoc as $locNum => $entries) {
             if ($detectedCurrency === null && $curr !== '') {
               $detectedCurrency = $curr;
             }
-            $stmtPrice->bind_param('ississss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
+            // Promo fields from tier
+            $tpPromoOption = isset($tier['promo_option']) ? trim((string)$tier['promo_option']) : 'none';
+            $tpPromoCode = isset($tier['promo_code']) ? trim((string)$tier['promo_code']) : '';
+            $tpPromoType = isset($tier['promo_type']) ? trim((string)$tier['promo_type']) : 'percent';
+            $tpPromoValue = isset($tier['promo_value']) ? trim((string)$tier['promo_value']) : '';
+            $tpPromoPrice = isset($tier['promo_price']) ? trim((string)$tier['promo_price']) : '';
+            
+            $stmtPrice->bind_param('isissssssssss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr, $tpPromoOption, $tpPromoCode, $tpPromoType, $tpPromoValue, $tpPromoPrice);
             if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
           }
         }
@@ -937,12 +944,13 @@ foreach ($byLoc as $locNum => $entries) {
     if (!table_exists($mysqli, 'post_item_pricing')) {
       abort_with_error($mysqli, 500, 'Missing post_item_pricing', $transactionActive);
     }
-    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, age_rating, item_variants, item_price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
     if (!$stmtItem) {
       abort_with_error($mysqli, 500, 'Prepare post_item_pricing', $transactionActive);
     }
     $itemName = trim((string)$itemPricing['item_name']);
+    $ageRating = isset($itemPricing['age_rating']) ? trim((string)$itemPricing['age_rating']) : '';
     $variants = isset($itemPricing['item_variants']) ? $itemPricing['item_variants'] : [];
     $variantsJson = json_encode($variants, JSON_UNESCAPED_UNICODE);
     $price = normalize_price_amount($itemPricing['item_price'] ?? null);
@@ -952,7 +960,14 @@ foreach ($byLoc as $locNum => $entries) {
       $detectedCurrency = $curr;
     }
     
-    $stmtItem->bind_param('issss', $mapCardId, $itemName, $variantsJson, $price, $curr);
+    // Promo fields
+    $promoOption = isset($itemPricing['promo_option']) ? trim((string)$itemPricing['promo_option']) : 'none';
+    $promoCode = isset($itemPricing['promo_code']) ? trim((string)$itemPricing['promo_code']) : '';
+    $promoType = isset($itemPricing['promo_type']) ? trim((string)$itemPricing['promo_type']) : 'percent';
+    $promoValue = isset($itemPricing['promo_value']) ? trim((string)$itemPricing['promo_value']) : '';
+    $promoPrice = isset($itemPricing['promo_price']) ? trim((string)$itemPricing['promo_price']) : '';
+    
+    $stmtItem->bind_param('issssssssss', $mapCardId, $itemName, $ageRating, $variantsJson, $price, $curr, $promoOption, $promoCode, $promoType, $promoValue, $promoPrice);
     if (!$stmtItem->execute()) { 
       $stmtItem->close(); 
       abort_with_error($mysqli, 500, 'Insert item pricing', $transactionActive); 

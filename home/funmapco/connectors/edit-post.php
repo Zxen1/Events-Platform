@@ -755,7 +755,7 @@ foreach ($byLoc as $locNum => $entries) {
       }
 
       if (is_array($pricingGroupsToWrite)) {
-        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
         foreach ($pricingGroupsToWrite as $gkRaw => $seats) {
           $gk = trim((string)$gkRaw);
           if ($gk === '' || !is_array($seats)) continue;
@@ -774,7 +774,14 @@ foreach ($byLoc as $locNum => $entries) {
               if ($detectedCurrency === null && $curr !== '') {
                 $detectedCurrency = $curr;
               }
-              $stmtPrice->bind_param('ississss', $mapCardId, $gk, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
+              // Promo fields from tier
+              $tpPromoOption = isset($tier['promo_option']) ? trim((string)$tier['promo_option']) : 'none';
+              $tpPromoCode = isset($tier['promo_code']) ? trim((string)$tier['promo_code']) : '';
+              $tpPromoType = isset($tier['promo_type']) ? trim((string)$tier['promo_type']) : 'percent';
+              $tpPromoValue = isset($tier['promo_value']) ? trim((string)$tier['promo_value']) : '';
+              $tpPromoPrice = isset($tier['promo_price']) ? trim((string)$tier['promo_price']) : '';
+              
+              $stmtPrice->bind_param('isissssssssss', $mapCardId, $gk, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr, $tpPromoOption, $tpPromoCode, $tpPromoType, $tpPromoValue, $tpPromoPrice);
               $stmtPrice->execute();
             }
           }
@@ -785,8 +792,9 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Item Pricing
     if (is_array($itemPricing) && !empty($itemPricing['item_name'])) {
-      $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, age_rating, item_variants, item_price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if ($stmtItem) {
+        $ageRating = isset($itemPricing['age_rating']) ? trim((string)$itemPricing['age_rating']) : '';
         $variants = json_encode($itemPricing['item_variants'] ?? [], JSON_UNESCAPED_UNICODE);
         $price = normalize_price_amount($itemPricing['item_price'] ?? null);
         $curr = normalize_currency($itemPricing['currency'] ?? '');
@@ -794,7 +802,15 @@ foreach ($byLoc as $locNum => $entries) {
         if ($detectedCurrency === null && $curr !== '') {
           $detectedCurrency = $curr;
         }
-        $stmtItem->bind_param('issss', $mapCardId, $itemPricing['item_name'], $variants, $price, $curr);
+        
+        // Promo fields
+        $promoOption = isset($itemPricing['promo_option']) ? trim((string)$itemPricing['promo_option']) : 'none';
+        $promoCode = isset($itemPricing['promo_code']) ? trim((string)$itemPricing['promo_code']) : '';
+        $promoType = isset($itemPricing['promo_type']) ? trim((string)$itemPricing['promo_type']) : 'percent';
+        $promoValue = isset($itemPricing['promo_value']) ? trim((string)$itemPricing['promo_value']) : '';
+        $promoPrice = isset($itemPricing['promo_price']) ? trim((string)$itemPricing['promo_price']) : '';
+        
+        $stmtItem->bind_param('issssssssss', $mapCardId, $itemPricing['item_name'], $ageRating, $variants, $price, $curr, $promoOption, $promoCode, $promoType, $promoValue, $promoPrice);
         $stmtItem->execute();
         $stmtItem->close();
       }

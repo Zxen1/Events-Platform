@@ -4288,15 +4288,17 @@ const FieldsetBuilder = (function(){
 
                     // Row 5 & 6: Promo Code Section
                     // Determine initial promo values from pricing data
+                    // Promo data is stored per-tier, so look in tiers[0] of the first seat
                     var initialPromoOption = 'none';
                     var initialPromoCode = '';
                     var initialPromoType = 'percent';
                     var initialPromoValue = '';
-                    if (pricingArr && pricingArr[0]) {
-                        if (pricingArr[0].promo_option) initialPromoOption = pricingArr[0].promo_option;
-                        if (pricingArr[0].promo_code) initialPromoCode = pricingArr[0].promo_code;
-                        if (pricingArr[0].promo_type) initialPromoType = pricingArr[0].promo_type;
-                        if (pricingArr[0].promo_value) initialPromoValue = String(pricingArr[0].promo_value);
+                    if (pricingArr && pricingArr[0] && pricingArr[0].tiers && pricingArr[0].tiers[0]) {
+                        var firstTier = pricingArr[0].tiers[0];
+                        if (firstTier.promo_option) initialPromoOption = firstTier.promo_option;
+                        if (firstTier.promo_code) initialPromoCode = firstTier.promo_code;
+                        if (firstTier.promo_type) initialPromoType = firstTier.promo_type;
+                        if (firstTier.promo_value) initialPromoValue = String(firstTier.promo_value);
                     }
                     
                     // Promo Option Row (None / Personal / Funmap)

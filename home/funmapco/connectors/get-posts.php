@@ -672,7 +672,7 @@ try {
         }
 
         // Ticket Pricing
-        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
+        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($priceRes) {
             while ($pRow = $priceRes->fetch_assoc()) {
                 $cid = (int)$pRow['post_map_card_id'];
@@ -687,7 +687,12 @@ try {
                 $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
                     'pricing_tier' => $pRow['pricing_tier'],
                     'price' => $pRow['price'],
-                    'currency' => $pRow['currency']
+                    'currency' => $pRow['currency'],
+                    'promo_option' => $pRow['promo_option'],
+                    'promo_code' => $pRow['promo_code'],
+                    'promo_type' => $pRow['promo_type'],
+                    'promo_value' => $pRow['promo_value'],
+                    'promo_price' => $pRow['promo_price']
                 ];
                 
                 if (!isset($ageRatingsByCard[$cid])) $ageRatingsByCard[$cid] = [];
@@ -696,15 +701,21 @@ try {
         }
 
         // Item Pricing
-        $itemRes = $mysqli->query("SELECT post_map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
+        $itemRes = $mysqli->query("SELECT post_map_card_id, item_name, age_rating, item_variants, item_price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_item_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($itemRes) {
             while ($iRow = $itemRes->fetch_assoc()) {
                 $cid = (int)$iRow['post_map_card_id'];
                 $itemsByCard[$cid] = [
                     'item_name' => $iRow['item_name'],
+                    'age_rating' => $iRow['age_rating'],
                     'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
                     'item_price' => $iRow['item_price'],
-                    'currency' => $iRow['currency']
+                    'currency' => $iRow['currency'],
+                    'promo_option' => $iRow['promo_option'],
+                    'promo_code' => $iRow['promo_code'],
+                    'promo_type' => $iRow['promo_type'],
+                    'promo_value' => $iRow['promo_value'],
+                    'promo_price' => $iRow['promo_price']
                 ];
             }
         }
@@ -787,6 +798,12 @@ try {
                     $mapCard['item_price'] = $item['item_price'];
                     $mapCard['currency'] = $item['currency'];
                     $mapCard['item_variants'] = $item['item_variants'];
+                    $mapCard['age_rating'] = $item['age_rating'];
+                    $mapCard['promo_option'] = $item['promo_option'];
+                    $mapCard['promo_code'] = $item['promo_code'];
+                    $mapCard['promo_type'] = $item['promo_type'];
+                    $mapCard['promo_value'] = $item['promo_value'];
+                    $mapCard['promo_price'] = $item['promo_price'];
                 }
 
                 // Attach Amenities (from subtable, overrides amenity_summary)
