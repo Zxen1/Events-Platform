@@ -774,12 +774,18 @@ foreach ($byLoc as $locNum => $entries) {
               if ($detectedCurrency === null && $curr !== '') {
                 $detectedCurrency = $curr;
               }
-              // Promo fields from tier
+              // Promo fields from tier - only populate if promo is enabled
               $tpPromoOption = isset($tier['promo_option']) ? trim((string)$tier['promo_option']) : 'none';
-              $tpPromoCode = isset($tier['promo_code']) ? trim((string)$tier['promo_code']) : '';
-              $tpPromoType = isset($tier['promo_type']) ? trim((string)$tier['promo_type']) : 'percent';
-              $tpPromoValue = isset($tier['promo_value']) ? trim((string)$tier['promo_value']) : '';
-              $tpPromoPrice = isset($tier['promo_price']) ? trim((string)$tier['promo_price']) : '';
+              $tpPromoCode = null;
+              $tpPromoType = null;
+              $tpPromoValue = null;
+              $tpPromoPrice = null;
+              if ($tpPromoOption !== 'none') {
+                $tpPromoCode = isset($tier['promo_code']) ? trim((string)$tier['promo_code']) : '';
+                $tpPromoType = isset($tier['promo_type']) ? trim((string)$tier['promo_type']) : 'percent';
+                $tpPromoValue = isset($tier['promo_value']) ? trim((string)$tier['promo_value']) : '';
+                $tpPromoPrice = isset($tier['promo_price']) ? trim((string)$tier['promo_price']) : '';
+              }
               
               $stmtPrice->bind_param('isissssssssss', $mapCardId, $gk, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr, $tpPromoOption, $tpPromoCode, $tpPromoType, $tpPromoValue, $tpPromoPrice);
               $stmtPrice->execute();
@@ -803,12 +809,18 @@ foreach ($byLoc as $locNum => $entries) {
           $detectedCurrency = $curr;
         }
         
-        // Promo fields
+        // Promo fields - only populate if promo is enabled
         $promoOption = isset($itemPricing['promo_option']) ? trim((string)$itemPricing['promo_option']) : 'none';
-        $promoCode = isset($itemPricing['promo_code']) ? trim((string)$itemPricing['promo_code']) : '';
-        $promoType = isset($itemPricing['promo_type']) ? trim((string)$itemPricing['promo_type']) : 'percent';
-        $promoValue = isset($itemPricing['promo_value']) ? trim((string)$itemPricing['promo_value']) : '';
-        $promoPrice = isset($itemPricing['promo_price']) ? trim((string)$itemPricing['promo_price']) : '';
+        $promoCode = null;
+        $promoType = null;
+        $promoValue = null;
+        $promoPrice = null;
+        if ($promoOption !== 'none') {
+          $promoCode = isset($itemPricing['promo_code']) ? trim((string)$itemPricing['promo_code']) : '';
+          $promoType = isset($itemPricing['promo_type']) ? trim((string)$itemPricing['promo_type']) : 'percent';
+          $promoValue = isset($itemPricing['promo_value']) ? trim((string)$itemPricing['promo_value']) : '';
+          $promoPrice = isset($itemPricing['promo_price']) ? trim((string)$itemPricing['promo_price']) : '';
+        }
         
         $stmtItem->bind_param('issssssssss', $mapCardId, $itemPricing['item_name'], $ageRating, $variants, $price, $curr, $promoOption, $promoCode, $promoType, $promoValue, $promoPrice);
         $stmtItem->execute();
