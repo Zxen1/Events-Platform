@@ -6159,7 +6159,7 @@ const FieldsetBuilder = (function(){
                         var el = els[i];
                         if (!el) continue;
                         // Completeness check: skip promo fields when promo is "none" (ticket-pricing)
-                        if (key === 'ticket-pricing' && el.closest('.fieldset-ticketpricing-promo-content-container') && fieldset.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]:checked')) continue;
+                        if (key === 'ticket-pricing' && el.closest('.fieldset-ticketpricing-promo-content') && fieldset.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]:checked')) continue;
                         if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
                         var val = (el.type === 'checkbox') ? (el.checked ? '1' : '') : String(el.value || '').trim();
                         if (!val) return false;
