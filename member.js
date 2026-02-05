@@ -4163,6 +4163,60 @@ const MemberModule = (function() {
                         item_variants.push(variantName);
                     });
 
+                    // Extract promo fields
+                    var promo_option = 'none';
+                    var promo_code = '';
+                    var promo_type = 'percent';
+                    var promo_value = '';
+                    var promo_price = '';
+                    
+                    var promoNoneRadio = el.querySelector('.fieldset-itempricing-promo-option-row input[value="none"]');
+                    var promoPersonalRadio = el.querySelector('.fieldset-itempricing-promo-option-row input[value="personal"]');
+                    var promoFunmapRadio = el.querySelector('.fieldset-itempricing-promo-option-row input[value="funmap"]');
+                    
+                    if (promoNoneRadio && promoNoneRadio.checked) promo_option = 'none';
+                    else if (promoPersonalRadio && promoPersonalRadio.checked) promo_option = 'personal';
+                    else if (promoFunmapRadio && promoFunmapRadio.checked) promo_option = 'funmap';
+                    
+                    if (promo_option !== 'none') {
+                        var promoCodeInput = el.querySelector('.fieldset-itempricing-promo-code-input');
+                        if (promoCodeInput) {
+                            promo_code = String(promoCodeInput.value || '').trim();
+                            // Prepend FUNMAP for funmap option
+                            if (promo_option === 'funmap' && promo_code) {
+                                promo_code = 'FUNMAP' + promo_code;
+                            }
+                        }
+                        
+                        // Get promo type
+                        var promoTypePercentBtn = el.querySelector('.fieldset-itempricing-promo-type-btn--active');
+                        if (promoTypePercentBtn) {
+                            promo_type = promoTypePercentBtn.textContent === '%' ? 'percent' : 'fixed';
+                        }
+                        
+                        // Get promo value
+                        var promoValueInput = el.querySelector('.fieldset-itempricing-promo-value-input');
+                        if (promoValueInput) {
+                            promo_value = String(promoValueInput.value || '').trim();
+                        }
+                        
+                        // Calculate promo_price
+                        if (item_price && promo_value) {
+                            var numericItemPrice = parseFloat(item_price);
+                            var numericPromoValue = parseFloat(promo_value);
+                            if (Number.isFinite(numericItemPrice) && Number.isFinite(numericPromoValue) && numericPromoValue > 0) {
+                                var discounted;
+                                if (promo_type === 'percent') {
+                                    discounted = numericItemPrice - (numericItemPrice * numericPromoValue / 100);
+                                } else {
+                                    discounted = numericItemPrice - numericPromoValue;
+                                }
+                                discounted = Math.max(0, Math.round(discounted * 100) / 100);
+                                promo_price = discounted.toString();
+                            }
+                        }
+                    }
+
                     // Generate pre-formatted price_summary for fast display
                     var priceSummary = '';
                     if (item_price && currency) {
@@ -4180,7 +4234,7 @@ const MemberModule = (function() {
                         }
                     }
 
-                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants, price_summary: priceSummary };
+                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants, price_summary: priceSummary, promo_option: promo_option, promo_code: promo_code, promo_type: promo_type, promo_value: promo_value, promo_price: promo_price };
                 } catch (e5) {
                     throw e5; // Do not swallow errors
                 }

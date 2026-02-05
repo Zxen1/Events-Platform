@@ -1389,7 +1389,11 @@
                             item_name: mapCard.item_name,
                             item_price: mapCard.item_price,
                             currency: mapCard.currency,
-                            item_variants: mapCard.item_variants || []
+                            item_variants: mapCard.item_variants || [],
+                            promo_option: mapCard.promo_option || 'none',
+                            promo_code: mapCard.promo_code || '',
+                            promo_type: mapCard.promo_type || 'percent',
+                            promo_value: mapCard.promo_value || ''
                         };
                         break;
                         

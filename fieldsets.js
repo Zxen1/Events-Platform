@@ -2623,6 +2623,10 @@ const FieldsetBuilder = (function(){
                                     }
                                 }
                             }
+                            // Update promo currency symbol
+                            if (typeof fieldset._ipPromoUpdateCurrencySymbol === 'function') {
+                                fieldset._ipPromoUpdateCurrencySymbol();
+                            }
                         }
                     });
                     ipCurrencyMenu = result;
@@ -2654,6 +2658,430 @@ const FieldsetBuilder = (function(){
                 
                 fieldset.appendChild(itemPriceRow);
 
+                // === PROMO CODE SECTION (copied from ticket-pricing) ===
+                
+                // Initialize promo values (for edit mode)
+                var ipInitialPromoOption = 'none';
+                var ipInitialPromoCode = '';
+                var ipInitialPromoType = 'percent';
+                var ipInitialPromoValue = '';
+                
+                // Promo Option Row (None / Personal / Funmap)
+                var ipPromoOptionRow = document.createElement('div');
+                ipPromoOptionRow.className = 'fieldset-row fieldset-itempricing-promo-option-row';
+                ipPromoOptionRow.style.position = 'relative';
+                ipPromoOptionRow.style.marginBottom = '0';
+                ipPromoOptionRow.style.height = '36px';
+                
+                // Radio buttons positioned absolutely on the right
+                var ipPromoRadioWrapper = document.createElement('div');
+                ipPromoRadioWrapper.className = 'fieldset-radio-wrapper';
+                ipPromoRadioWrapper.style.position = 'absolute';
+                ipPromoRadioWrapper.style.right = '0';
+                ipPromoRadioWrapper.style.top = '0';
+                ipPromoRadioWrapper.style.display = 'flex';
+                ipPromoRadioWrapper.style.gap = '20px';
+                ipPromoRadioWrapper.style.height = '36px';
+                ipPromoRadioWrapper.style.alignItems = 'center';
+                ipPromoOptionRow.appendChild(ipPromoRadioWrapper);
+                
+                // Label must be full width so tooltip positioning works (left/right: 10px in CSS)
+                var ipPromoOptionLabel = document.createElement('div');
+                ipPromoOptionLabel.className = 'fieldset-label';
+                ipPromoOptionLabel.style.marginBottom = '0';
+                ipPromoOptionLabel.style.lineHeight = '36px';
+                ipPromoOptionLabel.style.width = '100%';
+                ipPromoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
+                
+                // Add tooltip from promo-option field (exact buildLabel pattern)
+                var ipPromoOptionTooltip = fields && fields['promo-option'] && fields['promo-option'].tooltip ? fields['promo-option'].tooltip : '';
+                if (ipPromoOptionTooltip) {
+                    var ipPromoTip = document.createElement('span');
+                    ipPromoTip.className = 'fieldset-label-tooltip';
+                    var ipPromoTipIcon = document.createElement('span');
+                    ipPromoTipIcon.className = 'fieldset-label-tooltip-icon';
+                    ipPromoTip.appendChild(ipPromoTipIcon);
+                    ipPromoOptionLabel.appendChild(ipPromoTip);
+                    
+                    var ipPromoTipBox = document.createElement('div');
+                    ipPromoTipBox.className = 'fieldset-label-tooltipbox';
+                    ipPromoTipBox.textContent = ipPromoOptionTooltip;
+                    ipPromoTipBox.style.top = 'calc(100% + 5px)';
+                    ipPromoOptionLabel.appendChild(ipPromoTipBox);
+                }
+                
+                ipPromoOptionRow.appendChild(ipPromoOptionLabel);
+                
+                var ipPromoRadioName = 'ip_promo_option_' + Math.random().toString(36).substr(2, 9);
+                
+                // None radio
+                var ipPromoNoneLabel = document.createElement('label');
+                ipPromoNoneLabel.style.display = 'flex';
+                ipPromoNoneLabel.style.alignItems = 'center';
+                ipPromoNoneLabel.style.gap = '5px';
+                ipPromoNoneLabel.style.cursor = 'pointer';
+                ipPromoNoneLabel.style.color = '#fff';
+                ipPromoNoneLabel.style.fontSize = '13px';
+                ipPromoNoneLabel.style.height = '36px';
+                
+                var ipPromoNoneRadio = document.createElement('input');
+                ipPromoNoneRadio.type = 'radio';
+                ipPromoNoneRadio.name = ipPromoRadioName;
+                ipPromoNoneRadio.value = 'none';
+                ipPromoNoneRadio.checked = ipInitialPromoOption === 'none';
+                ipPromoNoneLabel.appendChild(ipPromoNoneRadio);
+                ipPromoNoneLabel.appendChild(document.createTextNode('None'));
+                
+                // Personal Promo radio
+                var ipPromoPersonalLabel = document.createElement('label');
+                ipPromoPersonalLabel.style.display = 'flex';
+                ipPromoPersonalLabel.style.alignItems = 'center';
+                ipPromoPersonalLabel.style.gap = '5px';
+                ipPromoPersonalLabel.style.cursor = 'pointer';
+                ipPromoPersonalLabel.style.color = '#fff';
+                ipPromoPersonalLabel.style.fontSize = '13px';
+                ipPromoPersonalLabel.style.height = '36px';
+                
+                var ipPromoPersonalRadio = document.createElement('input');
+                ipPromoPersonalRadio.type = 'radio';
+                ipPromoPersonalRadio.name = ipPromoRadioName;
+                ipPromoPersonalRadio.value = 'personal';
+                ipPromoPersonalRadio.checked = ipInitialPromoOption === 'personal';
+                ipPromoPersonalLabel.appendChild(ipPromoPersonalRadio);
+                ipPromoPersonalLabel.appendChild(document.createTextNode('Personal'));
+                
+                // Funmap Promo radio
+                var ipPromoFunmapLabel = document.createElement('label');
+                ipPromoFunmapLabel.style.display = 'flex';
+                ipPromoFunmapLabel.style.alignItems = 'center';
+                ipPromoFunmapLabel.style.gap = '5px';
+                ipPromoFunmapLabel.style.cursor = 'pointer';
+                ipPromoFunmapLabel.style.color = '#fff';
+                ipPromoFunmapLabel.style.fontSize = '13px';
+                ipPromoFunmapLabel.style.height = '36px';
+                
+                var ipPromoFunmapRadio = document.createElement('input');
+                ipPromoFunmapRadio.type = 'radio';
+                ipPromoFunmapRadio.name = ipPromoRadioName;
+                ipPromoFunmapRadio.value = 'funmap';
+                ipPromoFunmapRadio.checked = ipInitialPromoOption === 'funmap';
+                ipPromoFunmapLabel.appendChild(ipPromoFunmapRadio);
+                ipPromoFunmapLabel.appendChild(document.createTextNode('Funmap'));
+                
+                ipPromoRadioWrapper.appendChild(ipPromoNoneLabel);
+                ipPromoRadioWrapper.appendChild(ipPromoPersonalLabel);
+                ipPromoRadioWrapper.appendChild(ipPromoFunmapLabel);
+                ipPromoOptionRow.appendChild(ipPromoRadioWrapper);
+                fieldset.appendChild(ipPromoOptionRow);
+                
+                // Promo Content Container (hidden when "none")
+                var ipPromoContentContainer = document.createElement('div');
+                ipPromoContentContainer.className = 'fieldset-itempricing-promo-content';
+                ipPromoContentContainer.style.display = ipInitialPromoOption === 'none' ? 'none' : 'block';
+                
+                // Code Label Row
+                var ipPromoCodeLabelRow = document.createElement('div');
+                ipPromoCodeLabelRow.className = 'fieldset-row fieldset-itempricing-promo-code-label-row';
+                ipPromoCodeLabelRow.style.marginBottom = '6px';
+                ipPromoCodeLabelRow.style.display = 'flex';
+                ipPromoCodeLabelRow.style.gap = '8px';
+                
+                var ipPromoCodeSub = document.createElement('div');
+                ipPromoCodeSub.className = 'fieldset-sublabel';
+                ipPromoCodeSub.textContent = 'Code';
+                ipPromoCodeSub.style.marginBottom = '0';
+                ipPromoCodeSub.style.flex = '1';
+                
+                var ipPromoCodeReq = document.createElement('span');
+                ipPromoCodeReq.className = 'fieldset-label-required fieldset-label-required-code';
+                ipPromoCodeReq.textContent = '●';
+                ipPromoCodeSub.appendChild(ipPromoCodeReq);
+                ipPromoCodeLabelRow.appendChild(ipPromoCodeSub);
+                ipPromoContentContainer.appendChild(ipPromoCodeLabelRow);
+                
+                // Promo Code Input Row
+                var ipPromoCodeRow = document.createElement('div');
+                ipPromoCodeRow.className = 'fieldset-row fieldset-itempricing-promo-code-row';
+                ipPromoCodeRow.style.display = 'flex';
+                ipPromoCodeRow.style.alignItems = 'center';
+                ipPromoCodeRow.style.marginBottom = '10px';
+                ipPromoCodeRow.style.height = '36px';
+                ipPromoCodeRow.style.gap = '0';
+                
+                // FUNMAP prefix (shown only for funmap option)
+                var ipPromoFunmapPrefix = document.createElement('div');
+                ipPromoFunmapPrefix.className = 'fieldset-itempricing-promo-funmap-prefix';
+                ipPromoFunmapPrefix.textContent = 'FUNMAP';
+                ipPromoFunmapPrefix.style.height = '36px';
+                ipPromoFunmapPrefix.style.lineHeight = '34px';
+                ipPromoFunmapPrefix.style.padding = '0 12px';
+                ipPromoFunmapPrefix.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                ipPromoFunmapPrefix.style.border = '1px solid var(--ps-border, #444)';
+                ipPromoFunmapPrefix.style.borderRight = 'none';
+                ipPromoFunmapPrefix.style.borderRadius = '5px 0 0 5px';
+                ipPromoFunmapPrefix.style.color = 'var(--ps-muted, #888)';
+                ipPromoFunmapPrefix.style.fontSize = '13px';
+                ipPromoFunmapPrefix.style.fontWeight = '600';
+                ipPromoFunmapPrefix.style.letterSpacing = '0.5px';
+                ipPromoFunmapPrefix.style.display = ipInitialPromoOption === 'funmap' ? 'block' : 'none';
+                ipPromoCodeRow.appendChild(ipPromoFunmapPrefix);
+                
+                // Promo code input
+                var ipPromoCodeInput = document.createElement('input');
+                ipPromoCodeInput.type = 'text';
+                ipPromoCodeInput.className = 'fieldset-itempricing-promo-code-input fieldset-input input-class-1';
+                ipPromoCodeInput.placeholder = 'eg. FUNMAP10';
+                ipPromoCodeInput.style.flex = '1';
+                ipPromoCodeInput.style.height = '36px';
+                ipPromoCodeInput.style.padding = '0 12px';
+                ipPromoCodeInput.style.borderRadius = ipInitialPromoOption === 'funmap' ? '0 5px 5px 0' : '5px';
+                ipPromoCodeInput.value = ipInitialPromoCode;
+                
+                // Completeness tracking for code input
+                ipPromoCodeInput.addEventListener('input', function() {
+                    var hasVal = !!String(this.value || '').trim();
+                    ipPromoCodeReq.classList.toggle('fieldset-label-required--complete', hasVal);
+                });
+                // Set initial completeness state
+                ipPromoCodeReq.classList.toggle('fieldset-label-required--complete', !!String(ipPromoCodeInput.value || '').trim());
+                
+                ipPromoCodeRow.appendChild(ipPromoCodeInput);
+                ipPromoContentContainer.appendChild(ipPromoCodeRow);
+                
+                // Discount Label Row
+                var ipPromoDiscountLabelRow = document.createElement('div');
+                ipPromoDiscountLabelRow.className = 'fieldset-row fieldset-itempricing-promo-discount-label-row';
+                ipPromoDiscountLabelRow.style.marginBottom = '6px';
+                ipPromoDiscountLabelRow.style.display = 'flex';
+                ipPromoDiscountLabelRow.style.gap = '8px';
+                
+                var ipPromoDiscountSub = document.createElement('div');
+                ipPromoDiscountSub.className = 'fieldset-sublabel';
+                ipPromoDiscountSub.textContent = 'Discount';
+                ipPromoDiscountSub.style.marginBottom = '0';
+                ipPromoDiscountSub.style.flex = '1';
+                
+                var ipPromoDiscountReq = document.createElement('span');
+                ipPromoDiscountReq.className = 'fieldset-label-required fieldset-label-required-discount';
+                ipPromoDiscountReq.textContent = '●';
+                ipPromoDiscountSub.appendChild(ipPromoDiscountReq);
+                ipPromoDiscountLabelRow.appendChild(ipPromoDiscountSub);
+                ipPromoContentContainer.appendChild(ipPromoDiscountLabelRow);
+                
+                // Promo Type/Value/Preview Row
+                var ipPromoTypeValueRow = document.createElement('div');
+                ipPromoTypeValueRow.className = 'fieldset-row fieldset-itempricing-promo-typevalue-row';
+                ipPromoTypeValueRow.style.display = 'flex';
+                ipPromoTypeValueRow.style.alignItems = 'center';
+                ipPromoTypeValueRow.style.marginBottom = '10px';
+                ipPromoTypeValueRow.style.height = '36px';
+                ipPromoTypeValueRow.style.gap = '10px';
+                
+                // Promo Type Toggle (% / currency symbol)
+                var ipPromoTypeToggle = document.createElement('div');
+                ipPromoTypeToggle.className = 'fieldset-itempricing-promo-type-toggle';
+                ipPromoTypeToggle.style.display = 'flex';
+                ipPromoTypeToggle.style.height = '36px';
+                ipPromoTypeToggle.style.borderRadius = '5px';
+                ipPromoTypeToggle.style.overflow = 'hidden';
+                ipPromoTypeToggle.style.border = '1px solid var(--ps-border, #444)';
+                
+                // Get current currency symbol for the fixed option
+                function ipGetPromoCurrentCurrencySymbol() {
+                    var currencyCode = ipGetSelectedCurrencyCode();
+                    if (!currencyCode) return '$';
+                    if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
+                        var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
+                        if (curr && curr.symbol) return curr.symbol;
+                    }
+                    return '$';
+                }
+                
+                var ipPromoTypePercent = document.createElement('button');
+                ipPromoTypePercent.type = 'button';
+                ipPromoTypePercent.className = 'fieldset-itempricing-promo-type-btn';
+                ipPromoTypePercent.textContent = '%';
+                ipPromoTypePercent.style.width = '40px';
+                ipPromoTypePercent.style.height = '34px';
+                ipPromoTypePercent.style.border = 'none';
+                ipPromoTypePercent.style.cursor = 'pointer';
+                ipPromoTypePercent.style.fontSize = '14px';
+                ipPromoTypePercent.style.fontWeight = '600';
+                ipPromoTypePercent.style.transition = 'background 0.15s, color 0.15s';
+                
+                var ipPromoTypeFixed = document.createElement('button');
+                ipPromoTypeFixed.type = 'button';
+                ipPromoTypeFixed.className = 'fieldset-itempricing-promo-type-btn';
+                ipPromoTypeFixed.textContent = ipGetPromoCurrentCurrencySymbol();
+                ipPromoTypeFixed.style.minWidth = '40px';
+                ipPromoTypeFixed.style.padding = '0 8px';
+                ipPromoTypeFixed.style.height = '34px';
+                ipPromoTypeFixed.style.border = 'none';
+                ipPromoTypeFixed.style.cursor = 'pointer';
+                ipPromoTypeFixed.style.fontSize = '14px';
+                ipPromoTypeFixed.style.fontWeight = '600';
+                ipPromoTypeFixed.style.transition = 'background 0.15s, color 0.15s';
+                
+                function ipUpdatePromoTypeStyles() {
+                    var isPercent = ipPromoTypePercent.classList.contains('fieldset-itempricing-promo-type-btn--active');
+                    ipPromoTypePercent.style.background = isPercent ? 'var(--blue-900, #1e3a8a)' : 'var(--ps-input-bg, #2a2a2a)';
+                    ipPromoTypePercent.style.color = isPercent ? '#fff' : 'var(--ps-muted, #888)';
+                    ipPromoTypeFixed.style.background = !isPercent ? 'var(--blue-900, #1e3a8a)' : 'var(--ps-input-bg, #2a2a2a)';
+                    ipPromoTypeFixed.style.color = !isPercent ? '#fff' : 'var(--ps-muted, #888)';
+                }
+                
+                // Set initial type
+                if (ipInitialPromoType === 'percent') {
+                    ipPromoTypePercent.classList.add('fieldset-itempricing-promo-type-btn--active');
+                } else {
+                    ipPromoTypeFixed.classList.add('fieldset-itempricing-promo-type-btn--active');
+                }
+                ipUpdatePromoTypeStyles();
+                
+                ipPromoTypePercent.addEventListener('click', function() {
+                    ipPromoTypePercent.classList.add('fieldset-itempricing-promo-type-btn--active');
+                    ipPromoTypeFixed.classList.remove('fieldset-itempricing-promo-type-btn--active');
+                    ipUpdatePromoTypeStyles();
+                });
+                
+                ipPromoTypeFixed.addEventListener('click', function() {
+                    ipPromoTypeFixed.classList.add('fieldset-itempricing-promo-type-btn--active');
+                    ipPromoTypePercent.classList.remove('fieldset-itempricing-promo-type-btn--active');
+                    ipUpdatePromoTypeStyles();
+                });
+                
+                ipPromoTypeToggle.appendChild(ipPromoTypePercent);
+                ipPromoTypeToggle.appendChild(ipPromoTypeFixed);
+                ipPromoTypeValueRow.appendChild(ipPromoTypeToggle);
+                
+                // Promo Value Input
+                var ipPromoValueInput = document.createElement('input');
+                ipPromoValueInput.type = 'text';
+                ipPromoValueInput.className = 'fieldset-itempricing-promo-value-input fieldset-input input-class-1';
+                ipPromoValueInput.placeholder = '0';
+                ipPromoValueInput.value = ipInitialPromoValue;
+                ipPromoValueInput.style.flex = '1';
+                ipPromoValueInput.style.height = '36px';
+                ipPromoValueInput.style.padding = '0 12px';
+                ipPromoValueInput.style.borderRadius = '5px';
+                // Only allow numbers and decimal, track completeness
+                ipPromoValueInput.addEventListener('input', function() {
+                    var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                    var parts = raw.split('.');
+                    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                    this.value = raw;
+                    ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!raw);
+                });
+                // Set initial completeness state for discount
+                ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!String(ipInitialPromoValue || '').trim());
+                
+                ipPromoTypeValueRow.appendChild(ipPromoValueInput);
+                
+                // Preview Button
+                var ipPromoPreviewBtn = document.createElement('button');
+                ipPromoPreviewBtn.type = 'button';
+                ipPromoPreviewBtn.className = 'fieldset-itempricing-promo-preview-btn';
+                ipPromoPreviewBtn.textContent = 'Preview';
+                ipPromoPreviewBtn.style.height = '36px';
+                ipPromoPreviewBtn.style.padding = '0 16px';
+                ipPromoPreviewBtn.style.borderRadius = '5px';
+                ipPromoPreviewBtn.style.border = '1px solid var(--ps-border, #444)';
+                ipPromoPreviewBtn.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                ipPromoPreviewBtn.style.color = '#fff';
+                ipPromoPreviewBtn.style.cursor = 'pointer';
+                ipPromoPreviewBtn.style.fontSize = '13px';
+                ipPromoPreviewBtn.style.fontWeight = '500';
+                ipPromoPreviewBtn.style.transition = 'background 0.15s, border-color 0.15s';
+                
+                // Preview functionality
+                var ipIsPreviewActive = false;
+                var ipOriginalPriceValue = null;
+                
+                function ipActivatePromoPreview() {
+                    ipIsPreviewActive = true;
+                    fieldset.classList.add('fieldset-itempricing-promo-preview-active');
+                    ipPromoPreviewBtn.style.background = '#22c55e';
+                    ipPromoPreviewBtn.style.borderColor = '#22c55e';
+                    
+                    // Get promo settings
+                    var pType = ipPromoTypePercent.classList.contains('fieldset-itempricing-promo-type-btn--active') ? 'percent' : 'fixed';
+                    var pValue = parseFloat(ipPromoValueInput.value) || 0;
+                    
+                    // Calculate and show discounted price
+                    ipOriginalPriceValue = itemPriceInput.value;
+                    
+                    if (ipOriginalPriceValue && pValue > 0) {
+                        var numericPrice = parseFloat(ipOriginalPriceValue.replace(/[^0-9.-]/g, ''));
+                        if (Number.isFinite(numericPrice)) {
+                            var discounted;
+                            if (pType === 'percent') {
+                                discounted = numericPrice - (numericPrice * pValue / 100);
+                            } else {
+                                discounted = numericPrice - pValue;
+                            }
+                            discounted = Math.max(0, Math.round(discounted * 100) / 100);
+                            itemPriceInput.value = discounted.toFixed(2);
+                        }
+                    }
+                }
+                
+                function ipDeactivatePromoPreview() {
+                    ipIsPreviewActive = false;
+                    fieldset.classList.remove('fieldset-itempricing-promo-preview-active');
+                    ipPromoPreviewBtn.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                    ipPromoPreviewBtn.style.borderColor = 'var(--ps-border, #444)';
+                    
+                    // Restore original price value
+                    if (ipOriginalPriceValue !== null) {
+                        itemPriceInput.value = ipOriginalPriceValue;
+                        ipOriginalPriceValue = null;
+                    }
+                }
+                
+                ipPromoPreviewBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (ipIsPreviewActive) {
+                        ipDeactivatePromoPreview();
+                    } else {
+                        ipActivatePromoPreview();
+                    }
+                });
+                
+                // Click anywhere else to deactivate preview
+                document.addEventListener('click', function(e) {
+                    if (ipIsPreviewActive && !ipPromoPreviewBtn.contains(e.target)) {
+                        ipDeactivatePromoPreview();
+                    }
+                });
+                
+                ipPromoTypeValueRow.appendChild(ipPromoPreviewBtn);
+                ipPromoContentContainer.appendChild(ipPromoTypeValueRow);
+                fieldset.appendChild(ipPromoContentContainer);
+                
+                // Handle promo option changes
+                function ipUpdatePromoVisibility() {
+                    var selectedOption = ipPromoNoneRadio.checked ? 'none' : (ipPromoPersonalRadio.checked ? 'personal' : 'funmap');
+                    ipPromoContentContainer.style.display = selectedOption === 'none' ? 'none' : 'block';
+                    ipPromoFunmapPrefix.style.display = selectedOption === 'funmap' ? 'block' : 'none';
+                    ipPromoCodeInput.style.borderRadius = selectedOption === 'funmap' ? '0 5px 5px 0' : '5px';
+                    ipPromoCodeInput.placeholder = selectedOption === 'funmap' ? 'eg. 10' : 'eg. SUMMER20';
+                    // Deactivate preview when switching options
+                    if (ipIsPreviewActive) ipDeactivatePromoPreview();
+                }
+                
+                ipPromoNoneRadio.addEventListener('change', ipUpdatePromoVisibility);
+                ipPromoPersonalRadio.addEventListener('change', ipUpdatePromoVisibility);
+                ipPromoFunmapRadio.addEventListener('change', ipUpdatePromoVisibility);
+                
+                // Update currency symbol when currency changes (hook into currency menu callback)
+                var ipPromoUpdateCurrencySymbol = function() {
+                    ipPromoTypeFixed.textContent = ipGetPromoCurrentCurrencySymbol();
+                };
+                // Store reference on fieldset for currency change callback
+                fieldset._ipPromoUpdateCurrencySymbol = ipPromoUpdateCurrencySymbol;
+                
+                // === END PROMO CODE SECTION ===
+
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
                     
@@ -2680,7 +3108,52 @@ const FieldsetBuilder = (function(){
                                 }
                             }
                         }
+                        
+                        // Update promo currency symbol
+                        if (typeof ipPromoUpdateCurrencySymbol === 'function') {
+                            ipPromoUpdateCurrencySymbol();
+                        }
                     }
+                    
+                    // Set promo fields
+                    var loadedPromoOption = val.promo_option || 'none';
+                    var loadedPromoCode = val.promo_code || '';
+                    var loadedPromoType = val.promo_type || 'percent';
+                    var loadedPromoValue = val.promo_value ? String(val.promo_value) : '';
+                    
+                    // Set promo option radio
+                    if (loadedPromoOption === 'none') {
+                        ipPromoNoneRadio.checked = true;
+                    } else if (loadedPromoOption === 'personal') {
+                        ipPromoPersonalRadio.checked = true;
+                    } else if (loadedPromoOption === 'funmap') {
+                        ipPromoFunmapRadio.checked = true;
+                    }
+                    
+                    // Set promo code (strip FUNMAP prefix if funmap option)
+                    if (loadedPromoOption === 'funmap' && loadedPromoCode.toUpperCase().startsWith('FUNMAP')) {
+                        ipPromoCodeInput.value = loadedPromoCode.substring(6);
+                    } else {
+                        ipPromoCodeInput.value = loadedPromoCode;
+                    }
+                    
+                    // Set promo type
+                    if (loadedPromoType === 'percent') {
+                        ipPromoTypePercent.classList.add('fieldset-itempricing-promo-type-btn--active');
+                        ipPromoTypeFixed.classList.remove('fieldset-itempricing-promo-type-btn--active');
+                    } else {
+                        ipPromoTypeFixed.classList.add('fieldset-itempricing-promo-type-btn--active');
+                        ipPromoTypePercent.classList.remove('fieldset-itempricing-promo-type-btn--active');
+                    }
+                    ipUpdatePromoTypeStyles();
+                    
+                    // Set promo value
+                    ipPromoValueInput.value = loadedPromoValue;
+                    
+                    // Update visibility and completeness indicators
+                    ipUpdatePromoVisibility();
+                    ipPromoCodeReq.classList.toggle('fieldset-label-required--complete', !!String(ipPromoCodeInput.value || '').trim());
+                    ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!String(ipPromoValueInput.value || '').trim());
                     
                     // Variants
                     if (itemVariantsContainer) {
@@ -6148,8 +6621,29 @@ const FieldsetBuilder = (function(){
                 }
                 case 'item-pricing': {
                     // Rule: all visible boxes in this pricing UI must be filled out.
-                    // Covers item name + each variant's name/currency/price.
-                    return allVisibleControlsFilled(fieldset);
+                    // Covers item name + currency + price + variants.
+                    // Skip promo fields when promo option is "none".
+                    var ipEls = fieldset.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
+                    if (!ipEls || ipEls.length === 0) return false;
+                    var ipCheckedCount = 0;
+                    var ipPromoIsNone = fieldset.querySelector('.fieldset-itempricing-promo-option-row input[value="none"]:checked');
+                    for (var ipIdx = 0; ipIdx < ipEls.length; ipIdx++) {
+                        var ipEl = ipEls[ipIdx];
+                        if (!isVisibleControl(ipEl)) continue;
+                        // Skip promo content fields when promo is "none"
+                        if (ipPromoIsNone && ipEl.closest('.fieldset-itempricing-promo-content')) continue;
+                        ipCheckedCount++;
+                        if (typeof ipEl.checkValidity === 'function' && !ipEl.checkValidity()) return false;
+                        if (ipEl.type === 'checkbox' || ipEl.type === 'radio') {
+                            // Radios in promo-option-row don't need all to be checked, just one
+                            if (ipEl.closest('.fieldset-itempricing-promo-option-row')) continue;
+                            if (!ipEl.checked) return false;
+                            continue;
+                        }
+                        var ipVal = String(ipEl.value || '').trim();
+                        if (!ipVal) return false;
+                    }
+                    return ipCheckedCount > 0;
                 }
                 default: {
                     // Fallback: require at least one non-hidden input to have a value and to be natively valid.
