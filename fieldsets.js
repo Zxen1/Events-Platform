@@ -3627,6 +3627,26 @@ const FieldsetBuilder = (function(){
                     promoContentContainer.className = 'fieldset-ticketpricing-promo-content';
                     promoContentContainer.style.display = initialPromoOption === 'none' ? 'none' : 'block';
                     
+                    // Code Label Row (following Ticket Area pattern)
+                    var promoCodeLabelRow = document.createElement('div');
+                    promoCodeLabelRow.className = 'fieldset-row fieldset-ticketpricing-promo-code-label-row';
+                    promoCodeLabelRow.style.marginBottom = '6px';
+                    promoCodeLabelRow.style.display = 'flex';
+                    promoCodeLabelRow.style.gap = '8px';
+                    
+                    var promoCodeSub = document.createElement('div');
+                    promoCodeSub.className = 'fieldset-sublabel';
+                    promoCodeSub.textContent = 'Code';
+                    promoCodeSub.style.marginBottom = '0';
+                    promoCodeSub.style.flex = '1';
+                    
+                    var promoCodeReq = document.createElement('span');
+                    promoCodeReq.className = 'fieldset-label-required fieldset-label-required-code';
+                    promoCodeReq.textContent = '●';
+                    promoCodeSub.appendChild(promoCodeReq);
+                    promoCodeLabelRow.appendChild(promoCodeSub);
+                    promoContentContainer.appendChild(promoCodeLabelRow);
+                    
                     // Promo Code Input Row
                     var promoCodeRow = document.createElement('div');
                     promoCodeRow.className = 'fieldset-row fieldset-ticketpricing-promo-code-row';
@@ -3670,8 +3690,36 @@ const FieldsetBuilder = (function(){
                     } else {
                         promoCodeInput.value = initialPromoCode;
                     }
+                    // Completeness tracking for code input
+                    promoCodeInput.addEventListener('input', function() {
+                        var hasVal = !!String(this.value || '').trim();
+                        promoCodeReq.classList.toggle('fieldset-label-required--complete', hasVal);
+                    });
+                    // Set initial completeness state
+                    promoCodeReq.classList.toggle('fieldset-label-required--complete', !!String(promoCodeInput.value || '').trim());
+                    
                     promoCodeRow.appendChild(promoCodeInput);
                     promoContentContainer.appendChild(promoCodeRow);
+                    
+                    // Discount Label Row (following Pricing Tier pattern)
+                    var promoDiscountLabelRow = document.createElement('div');
+                    promoDiscountLabelRow.className = 'fieldset-row fieldset-ticketpricing-promo-discount-label-row';
+                    promoDiscountLabelRow.style.marginBottom = '6px';
+                    promoDiscountLabelRow.style.display = 'flex';
+                    promoDiscountLabelRow.style.gap = '8px';
+                    
+                    var promoDiscountSub = document.createElement('div');
+                    promoDiscountSub.className = 'fieldset-sublabel';
+                    promoDiscountSub.textContent = 'Discount';
+                    promoDiscountSub.style.marginBottom = '0';
+                    promoDiscountSub.style.flex = '1';
+                    
+                    var promoDiscountReq = document.createElement('span');
+                    promoDiscountReq.className = 'fieldset-label-required fieldset-label-required-discount';
+                    promoDiscountReq.textContent = '●';
+                    promoDiscountSub.appendChild(promoDiscountReq);
+                    promoDiscountLabelRow.appendChild(promoDiscountSub);
+                    promoContentContainer.appendChild(promoDiscountLabelRow);
                     
                     // Promo Type/Value/Preview Row
                     var promoTypeValueRow = document.createElement('div');
@@ -3769,13 +3817,17 @@ const FieldsetBuilder = (function(){
                     promoValueInput.style.height = '36px';
                     promoValueInput.style.padding = '0 12px';
                     promoValueInput.style.borderRadius = '5px';
-                    // Only allow numbers and decimal
+                    // Only allow numbers and decimal, track completeness
                     promoValueInput.addEventListener('input', function() {
                         var raw = String(this.value || '').replace(/[^0-9.]/g, '');
                         var parts = raw.split('.');
                         if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
                         this.value = raw;
+                        promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!raw);
                     });
+                    // Set initial completeness state for discount
+                    promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!String(initialPromoValue || '').trim());
+                    
                     promoTypeValueRow.appendChild(promoValueInput);
                     
                     // Preview Button
