@@ -3986,6 +3986,43 @@ const MemberModule = (function() {
                                 tpAgeRatings[gk] = String(ageRatingMenu.dataset.value || '').trim();
                             }
                             
+                            // Extract promo fields for this ticket group
+                            var tpPromoOption = 'none';
+                            var tpPromoCode = '';
+                            var tpPromoType = 'percent';
+                            var tpPromoValue = '';
+                            
+                            var tpPromoNoneRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]');
+                            var tpPromoPersonalRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="personal"]');
+                            var tpPromoFunmapRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="funmap"]');
+                            
+                            if (tpPromoNoneRadio && tpPromoNoneRadio.checked) tpPromoOption = 'none';
+                            else if (tpPromoPersonalRadio && tpPromoPersonalRadio.checked) tpPromoOption = 'personal';
+                            else if (tpPromoFunmapRadio && tpPromoFunmapRadio.checked) tpPromoOption = 'funmap';
+                            
+                            if (tpPromoOption !== 'none') {
+                                var tpPromoCodeInput = editorEl.querySelector('.fieldset-ticketpricing-promo-code-input');
+                                if (tpPromoCodeInput) {
+                                    tpPromoCode = String(tpPromoCodeInput.value || '').trim();
+                                    // Prepend FUNMAP for funmap option
+                                    if (tpPromoOption === 'funmap' && tpPromoCode) {
+                                        tpPromoCode = 'FUNMAP' + tpPromoCode;
+                                    }
+                                }
+                                
+                                // Get promo type
+                                var tpPromoTypeActiveBtn = editorEl.querySelector('.fieldset-ticketpricing-promo-type-btn--active');
+                                if (tpPromoTypeActiveBtn) {
+                                    tpPromoType = tpPromoTypeActiveBtn.textContent === '%' ? 'percent' : 'fixed';
+                                }
+                                
+                                // Get promo value
+                                var tpPromoValueInput = editorEl.querySelector('.fieldset-ticketpricing-promo-value-input');
+                                if (tpPromoValueInput) {
+                                    tpPromoValue = String(tpPromoValueInput.value || '').trim();
+                                }
+                            }
+                            
                             var allocatedVal = 1;
                             var yesRadio = editorEl.querySelector('input[type="radio"][value="1"]');
                             if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
@@ -4036,7 +4073,33 @@ const MemberModule = (function() {
                                         }
                                     }
                                     
-                                    tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                    // Calculate promo_price if promo is active and we have price + promo_value
+                                    var tierPromoPrice = '';
+                                    if (tpPromoOption !== 'none' && price && tpPromoValue) {
+                                        var numericTierPrice = parseFloat(price);
+                                        var numericPromoVal = parseFloat(tpPromoValue);
+                                        if (Number.isFinite(numericTierPrice) && Number.isFinite(numericPromoVal) && numericPromoVal > 0) {
+                                            var discounted;
+                                            if (tpPromoType === 'percent') {
+                                                discounted = numericTierPrice - (numericTierPrice * numericPromoVal / 100);
+                                            } else {
+                                                discounted = numericTierPrice - numericPromoVal;
+                                            }
+                                            discounted = Math.max(0, Math.round(discounted * 100) / 100);
+                                            tierPromoPrice = discounted.toString();
+                                        }
+                                    }
+                                    
+                                    tiers.push({ 
+                                        pricing_tier: tierName, 
+                                        currency: curr, 
+                                        price: price,
+                                        promo_option: tpPromoOption,
+                                        promo_code: tpPromoCode,
+                                        promo_type: tpPromoType,
+                                        promo_value: tpPromoValue,
+                                        promo_price: tierPromoPrice
+                                    });
                                 });
                                 tpSeatOut.push({ 
                                     allocated_areas: allocatedVal,

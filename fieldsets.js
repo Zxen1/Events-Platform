@@ -6619,46 +6619,30 @@ const FieldsetBuilder = (function(){
                     var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                     return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                 }
-                case 'item-pricing': {
-                    // Rule: all visible boxes in this pricing UI must be filled out.
-                    // Covers item name + currency + price + variants.
-                    // Skip promo fields when promo option is "none".
-                    var ipEls = fieldset.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
-                    if (!ipEls || ipEls.length === 0) return false;
-                    var ipCheckedCount = 0;
-                    var ipPromoIsNone = fieldset.querySelector('.fieldset-itempricing-promo-option-row input[value="none"]:checked');
-                    for (var ipIdx = 0; ipIdx < ipEls.length; ipIdx++) {
-                        var ipEl = ipEls[ipIdx];
-                        if (!isVisibleControl(ipEl)) continue;
-                        // Skip promo content fields when promo is "none"
-                        if (ipPromoIsNone && ipEl.closest('.fieldset-itempricing-promo-content')) continue;
-                        ipCheckedCount++;
-                        if (typeof ipEl.checkValidity === 'function' && !ipEl.checkValidity()) return false;
-                        if (ipEl.type === 'checkbox' || ipEl.type === 'radio') {
-                            // Radios in promo-option-row don't need all to be checked, just one
-                            if (ipEl.closest('.fieldset-itempricing-promo-option-row')) continue;
-                            if (!ipEl.checked) return false;
-                            continue;
-                        }
-                        var ipVal = String(ipEl.value || '').trim();
-                        if (!ipVal) return false;
-                    }
-                    return ipCheckedCount > 0;
-                }
                 default: {
-                    // Fallback: require at least one non-hidden input to have a value and to be natively valid.
-                    var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                    // Universal completeness check for all fieldsets without special handling above.
+                    // Covers: ticket-pricing, item-pricing, sessions, and simple text/select fieldsets.
+                    var els = fieldset.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
                     if (!els || els.length === 0) return false;
+                    var checkedCount = 0;
+                    
+                    // Promo skip: check if promo is "none" for ticket-pricing or item-pricing
+                    var tpPromoIsNone = (key === 'ticket-pricing') && fieldset.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]:checked');
+                    var ipPromoIsNone = (key === 'item-pricing') && fieldset.querySelector('.fieldset-itempricing-promo-option-row input[value="none"]:checked');
+                    
                     for (var i = 0; i < els.length; i++) {
                         var el = els[i];
-                        if (!el) continue;
-                        // Completeness check: skip promo fields when promo is "none" (ticket-pricing)
-                        if (key === 'ticket-pricing' && el.closest('.fieldset-ticketpricing-promo-content') && fieldset.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]:checked')) continue;
+                        if (!isVisibleControl(el)) continue;
+                        // Skip promo content fields when promo is "none"
+                        if (tpPromoIsNone && el.closest('.fieldset-ticketpricing-promo-content')) continue;
+                        if (ipPromoIsNone && el.closest('.fieldset-itempricing-promo-content')) continue;
+                        checkedCount++;
                         if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                        // Checkbox: requires checked. Radio: always has value, so passes.
                         var val = (el.type === 'checkbox') ? (el.checked ? '1' : '') : String(el.value || '').trim();
                         if (!val) return false;
                     }
-                    return true;
+                    return checkedCount > 0;
                 }
             }
         }
