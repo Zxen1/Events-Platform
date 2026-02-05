@@ -2135,7 +2135,7 @@ const MapModule = (function() {
     
     // Below 7.5: stop at 7.5 to show finest cluster breakdown
     // At 7.5+: go straight to zoom 12 (map cards)
-    var FINEST_CLUSTER_ZOOM = 7.5;
+    var FINEST_CLUSTER_ZOOM = 7.6;
     var MAP_CARD_ZOOM = 12;
     var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM ? FINEST_CLUSTER_ZOOM : MAP_CARD_ZOOM;
     
