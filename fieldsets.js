@@ -4849,8 +4849,17 @@ const FieldsetBuilder = (function(){
                     
                     draftKeys.forEach(function(k) {
                         if (!sessSessionData[k]) {
-                            var autofillVal = sessGetAutofillForSlot(k, 0);
-                            sessSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
+                            // Copy all times from master date (first date in sorted list)
+                            var sortedDates = Object.keys(sessSessionData).sort();
+                            if (sortedDates.length > 0 && sortedDates[0] !== k) {
+                                var masterData = sessSessionData[sortedDates[0]];
+                                var copiedTimes = masterData.times.map(function(t) { return t || ''; });
+                                var editedFlags = copiedTimes.map(function() { return false; });
+                                var groups = masterData.groups ? masterData.groups.slice() : ['A'];
+                                sessSessionData[k] = { times: copiedTimes, edited: editedFlags, groups: groups };
+                            } else {
+                                sessSessionData[k] = { times: [''], edited: [false], groups: ['A'] };
+                            }
                         }
                     });
                     
@@ -5002,42 +5011,50 @@ const FieldsetBuilder = (function(){
                 sessPickerTicketBtn.appendChild(sessPLetter);
                 sessDatePickerRow.appendChild(sessPickerTicketBtn);
 
-                var sessGodSetForSlot = {};
-                function sessAutofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                // --- Session time duplication system ---
+                // Master: First date in the list (earliest date)
+                // Time slots broadcast from master to all followers until edited
+                
+                // Check if a date is the master (first/earliest date)
+                function sessIsMasterDate(dateStr) {
                     var sortedDates = Object.keys(sessSessionData).sort();
-                    var changedDow = sessGetDayOfWeek(changedDateStr);
-                    if (!sessGodSetForSlot[changedSlotIdx]) {
-                        sessGodSetForSlot[changedSlotIdx] = true;
-                        for (var i = 0; i < sortedDates.length; i++) {
-                            var dateStr = sortedDates[i];
-                            if (dateStr === changedDateStr) continue;
-                            var data = sessSessionData[dateStr];
-                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
-                        }
-                    } else {
-                        for (var i = 0; i < sortedDates.length; i++) {
-                            var dateStr = sortedDates[i];
-                            if (dateStr === changedDateStr) continue;
-                            if (sessGetDayOfWeek(dateStr) !== changedDow) continue;
-                            var data = sessSessionData[dateStr];
-                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
+                    return sortedDates.length > 0 && sortedDates[0] === dateStr;
+                }
+                
+                // Get the master date's time for a given slot
+                function sessGetMasterTimeForSlot(slotIdx) {
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    if (sortedDates.length === 0) return '';
+                    var masterDate = sortedDates[0];
+                    var masterData = sessSessionData[masterDate];
+                    if (!masterData || !masterData.times || slotIdx >= masterData.times.length) return '';
+                    return masterData.times[slotIdx] || '';
+                }
+                
+                // Broadcast time from master to all follower dates at the same slot
+                function sessBroadcastTime(slotIdx, value) {
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    if (sortedDates.length <= 1) return;
+                    
+                    // Skip master date (first date)
+                    for (var i = 1; i < sortedDates.length; i++) {
+                        var dateStr = sortedDates[i];
+                        var data = sessSessionData[dateStr];
+                        if (!data) continue;
+                        
+                        // Only update if slot exists and is not marked as edited (independent)
+                        if (data.times.length > slotIdx && !data.edited[slotIdx]) {
+                            data.times[slotIdx] = value;
                         }
                     }
                 }
+                
+                // Get autofill value for a new slot (from master date)
                 function sessGetAutofillForSlot(dateStr, slotIdx) {
-                    var dow = sessGetDayOfWeek(dateStr);
-                    var sortedDates = Object.keys(sessSessionData).sort();
-                    for (var i = 0; i < sortedDates.length; i++) {
-                        var d = sortedDates[i];
-                        if (d === dateStr) continue;
-                        if (sessGetDayOfWeek(d) === dow && sessSessionData[d].times.length > slotIdx && sessSessionData[d].times[slotIdx]) return sessSessionData[d].times[slotIdx];
-                    }
-                    for (var i = 0; i < sortedDates.length; i++) {
-                        var d = sortedDates[i];
-                        if (d === dateStr) continue;
-                        if (sessSessionData[d].times.length > slotIdx && sessSessionData[d].times[slotIdx]) return sessSessionData[d].times[slotIdx];
-                    }
-                    return '';
+                    // If this is the master date, no autofill
+                    if (sessIsMasterDate(dateStr)) return '';
+                    // Otherwise get from master
+                    return sessGetMasterTimeForSlot(slotIdx);
                 }
 
                 function sessApplyDraftToCalendar() {
@@ -5222,70 +5239,11 @@ const FieldsetBuilder = (function(){
                                     lastValue = this.value;
                                 });
                             })(timeInput);
-                            function sessTimeToMinutes(timeStr) {
-                                var t = String(timeStr || '').trim();
-                                if (!t) return null;
-                                var m = t.match(/^(\d{1,2}):(\d{2})$/);
-                                if (!m) return null;
-                                var hh = parseInt(m[1], 10);
-                                var mm = parseInt(m[2], 10);
-                                if (isNaN(hh) || isNaN(mm)) return null;
-                                if (hh < 0 || hh > 23) return null;
-                                if (mm < 0 || mm > 59) return null;
-                                return (hh * 60) + mm;
-                            }
-                            function sessSortTimesForDate(dateKey) {
-                                try {
-                                    var ds = String(dateKey || '');
-                                    var d = sessSessionData[ds];
-                                    if (!d || !Array.isArray(d.times)) return false;
-                                    if (!Array.isArray(d.edited)) d.edited = [];
-                                    if (!Array.isArray(d.groups)) d.groups = [];
-
-                                    var items = d.times.map(function(tv, i) {
-                                        return {
-                                            i: i,
-                                            time: String(tv || ''),
-                                            edited: !!d.edited[i],
-                                            group: String(d.groups[i] || 'A')
-                                        };
-                                    });
-
-                                    items.sort(function(a, b) {
-                                        var am = sessTimeToMinutes(a.time);
-                                        var bm = sessTimeToMinutes(b.time);
-                                        var aValid = (am !== null);
-                                        var bValid = (bm !== null);
-                                        if (aValid && bValid) {
-                                            if (am < bm) return -1;
-                                            if (am > bm) return 1;
-                                            return a.i - b.i;
-                                        }
-                                        if (aValid && !bValid) return -1;
-                                        if (!aValid && bValid) return 1;
-                                        return a.i - b.i;
-                                    });
-
-                                    var changed = false;
-                                    for (var k = 0; k < items.length; k++) {
-                                        if (items[k].i !== k) { changed = true; break; }
-                                    }
-                                    if (!changed) return false;
-
-                                    d.times = items.map(function(it) { return it.time; });
-                                    d.edited = items.map(function(it) { return it.edited; });
-                                    d.groups = items.map(function(it) { return it.group; });
-                                    return true;
-                                } catch (eSort) {
-                                    return false;
-                                }
-                            }
                             (function(dateStr, idx) {
                                 timeInput.addEventListener('blur', function() {
                                     var raw = String(this.value || '').replace(/[^0-9]/g, '');
                                     if (raw === '') {
                                         sessSessionData[dateStr].times[idx] = '';
-                                        if (sessSortTimesForDate(dateStr)) sessRenderSessions();
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                                         return;
                                     }
@@ -5298,24 +5256,36 @@ const FieldsetBuilder = (function(){
                                     var hours = parseInt(hh, 10);
                                     var mins = parseInt(mm, 10);
                                     if (hours <= 23 && mins <= 59) {
+                                        // Check for duplicate time on same date
+                                        var isDuplicate = sessSessionData[dateStr].times.some(function(existingTime, existingIdx) {
+                                            return existingIdx !== idx && existingTime === newTime;
+                                        });
+                                        if (isDuplicate) {
+                                            // Reject duplicate - clear the input
+                                            this.value = '';
+                                            sessSessionData[dateStr].times[idx] = '';
+                                            try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                                            return;
+                                        }
                                         this.value = newTime;
                                         sessSessionData[dateStr].times[idx] = newTime;
                                         sessSessionData[dateStr].edited[idx] = true;
-                                        sessAutofillTimes(dateStr, idx, newTime);
-                                        if (sessSortTimesForDate(dateStr)) {
-                                            sessRenderSessions();
-                                        } else {
-                                            sessSessionsContainer.querySelectorAll('.fieldset-sessions-session-field-time-input').forEach(function(input) {
-                                                var d0 = input.dataset.date;
-                                                var i0 = parseInt(input.dataset.idx, 10);
-                                                if (d0 && sessSessionData[d0] && sessSessionData[d0].times[i0] !== undefined) input.value = sessSessionData[d0].times[i0];
-                                            });
+                                        
+                                        // If this is the master date (first date), broadcast to all followers
+                                        if (sessIsMasterDate(dateStr)) {
+                                            sessBroadcastTime(idx, newTime);
                                         }
+                                        
+                                        // Update all time inputs to reflect current state
+                                        sessSessionsContainer.querySelectorAll('.fieldset-sessions-session-field-time-input').forEach(function(input) {
+                                            var d0 = input.dataset.date;
+                                            var i0 = parseInt(input.dataset.idx, 10);
+                                            if (d0 && sessSessionData[d0] && sessSessionData[d0].times[i0] !== undefined) input.value = sessSessionData[d0].times[i0];
+                                        });
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                     } else {
                                         this.value = '';
                                         sessSessionData[dateStr].times[idx] = '';
-                                        if (sessSortTimesForDate(dateStr)) sessRenderSessions();
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                     }
                                 });
