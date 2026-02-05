@@ -4282,9 +4282,21 @@ const FieldsetBuilder = (function(){
                     var ticketAreasContainer = document.createElement('div');
                     ticketAreasContainer.className = 'fieldset-ticketpricing-pricing-ticketareas-container';
                     editorEl.appendChild(ticketAreasContainer);
+                    
+                    // General Admission header (shown when allocated = No)
+                    var generalAdmissionHeader = document.createElement('div');
+                    generalAdmissionHeader.className = 'fieldset-sublabel';
+                    generalAdmissionHeader.textContent = 'General Admission';
+                    generalAdmissionHeader.style.marginBottom = '6px';
+                    generalAdmissionHeader.style.display = 'none';
+                    ticketAreasContainer.appendChild(generalAdmissionHeader);
 
                     function updateAllVisibility() {
                         var isYes = yesRadio.checked;
+                        
+                        // Show/hide General Admission header
+                        generalAdmissionHeader.style.display = isYes ? 'none' : 'block';
+                        
                         var blocks = ticketAreasContainer.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
                         blocks.forEach(function(block, idx) {
                             var labelRow = block.querySelector('.fieldset-ticketpricing-ticketarea-label-row');
@@ -4293,8 +4305,11 @@ const FieldsetBuilder = (function(){
                             if (labelRow) labelRow.style.display = isYes ? 'flex' : 'none';
                             if (inputRow) inputRow.style.display = isYes ? 'flex' : 'none';
                             
+                            // Hide extra areas instead of removing (preserve data in case they switch back)
                             if (!isYes && idx > 0) {
-                                block.remove();
+                                block.style.display = 'none';
+                            } else {
+                                block.style.display = '';
                             }
                         });
                         tpUpdateTicketAreaButtons(ticketAreasContainer, isYes);

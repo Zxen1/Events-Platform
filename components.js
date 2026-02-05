@@ -10854,7 +10854,9 @@ const PostSessionComponent = (function() {
 
                 // Ticket area header
                 html.push('<div class="post-session-ticket-area">');
-                html.push('<div class="post-session-ticket-area-name">' + escapeHtml(area.ticket_area || areaKey) + '</div>');
+                // Show "General Admission" when allocated_areas is 0/false
+                var areaDisplayName = (area.allocated_areas === 0 || area.allocated_areas === '0') ? 'General Admission' : (area.ticket_area || areaKey);
+                html.push('<div class="post-session-ticket-area-name">' + escapeHtml(areaDisplayName) + '</div>');
 
                 // Pricing tiers
                 area.tiers.forEach(function(tier) {
