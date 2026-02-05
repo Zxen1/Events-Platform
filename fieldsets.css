@@ -1344,6 +1344,19 @@
     flex-shrink: 0;
 }
 
+/* Promo Preview Active State */
+.fieldset-ticketpricing-promo-preview-active .fieldset-ticketpricing-input-ticketarea,
+.fieldset-ticketpricing-promo-preview-active .fieldset-ticketpricing-tier-input-row input.fieldset-input,
+.fieldset-ticketpricing-promo-preview-active .fieldset-ticketpricing-input-price {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+.fieldset-ticketpricing-promo-preview-active .fieldset-ticketpricing-ticketarea-label-row .fieldset-label-text,
+.fieldset-ticketpricing-promo-preview-active .fieldset-ticketpricing-tier-label-row .fieldset-label-text {
+    color: #22c55e;
+}
+
 /* ============================================================================
    SESSIONS FIELDSET
    ============================================================================ */

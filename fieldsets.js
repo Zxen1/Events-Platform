@@ -2894,6 +2894,11 @@ const FieldsetBuilder = (function(){
                         } catch (e0) {}
                     });
                     tpUpdateAllPricePlaceholders();
+                    // Update promo currency symbols in all editors
+                    var editors = fieldset.querySelectorAll('.fieldset-ticketpricing-pricing-editor');
+                    editors.forEach(function(ed) {
+                        if (ed._promoUpdateCurrencySymbol) ed._promoUpdateCurrencySymbol();
+                    });
                 }
                 
                 function tpUpdateAllPricePlaceholders() {
@@ -3369,6 +3374,39 @@ const FieldsetBuilder = (function(){
                         var allocatedVal = 1;
                         var yesRadio = editorEl.querySelector('input[type="radio"][value="1"]');
                         if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+                        
+                        // Extract promo data from editor
+                        var promoOption = 'none';
+                        var promoCode = '';
+                        var promoType = 'percent';
+                        var promoValue = '';
+                        
+                        var promoNoneRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="none"]');
+                        var promoPersonalRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="personal"]');
+                        var promoFunmapRadio = editorEl.querySelector('.fieldset-ticketpricing-promo-option-row input[value="funmap"]');
+                        
+                        if (promoNoneRadio && promoNoneRadio.checked) promoOption = 'none';
+                        else if (promoPersonalRadio && promoPersonalRadio.checked) promoOption = 'personal';
+                        else if (promoFunmapRadio && promoFunmapRadio.checked) promoOption = 'funmap';
+                        
+                        if (promoOption !== 'none') {
+                            var promoCodeInput = editorEl.querySelector('.fieldset-ticketpricing-promo-code-input');
+                            if (promoCodeInput) {
+                                promoCode = String(promoCodeInput.value || '').trim();
+                                // Prepend FUNMAP for funmap option
+                                if (promoOption === 'funmap' && promoCode) {
+                                    promoCode = 'FUNMAP' + promoCode;
+                                }
+                            }
+                            
+                            var promoTypePercentBtn = editorEl.querySelector('.fieldset-ticketpricing-promo-type-btn.fieldset-ticketpricing-promo-type-btn--active');
+                            if (promoTypePercentBtn) {
+                                promoType = promoTypePercentBtn.textContent === '%' ? 'percent' : 'fixed';
+                            }
+                            
+                            var promoValueInput = editorEl.querySelector('.fieldset-ticketpricing-promo-value-input');
+                            if (promoValueInput) promoValue = String(promoValueInput.value || '').trim();
+                        }
 
                         var ticketAreaBlocks = editorEl.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
                         var seatOut = [];
@@ -3392,7 +3430,16 @@ const FieldsetBuilder = (function(){
                                 var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
                                 var price = priceInput ? String(priceInput.value || '').trim() : '';
                                 
-                                tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                // Include promo data in each tier
+                                tiers.push({ 
+                                    pricing_tier: tierName, 
+                                    currency: curr, 
+                                    price: price,
+                                    promo_option: promoOption,
+                                    promo_code: promoOption !== 'none' ? promoCode : '',
+                                    promo_type: promoOption !== 'none' ? promoType : null,
+                                    promo_value: promoOption !== 'none' ? promoValue : ''
+                                });
                             });
                             
                             seatOut.push({ 
@@ -3479,7 +3526,332 @@ const FieldsetBuilder = (function(){
                         currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurrValue || '').trim());
                     }
 
-                    // Row 5: Allocated Ticket Areas
+                    // Row 5 & 6: Promo Code Section
+                    // Determine initial promo values from pricing data
+                    var initialPromoOption = 'none';
+                    var initialPromoCode = '';
+                    var initialPromoType = 'percent';
+                    var initialPromoValue = '';
+                    if (pricingArr && pricingArr[0]) {
+                        if (pricingArr[0].promo_option) initialPromoOption = pricingArr[0].promo_option;
+                        if (pricingArr[0].promo_code) initialPromoCode = pricingArr[0].promo_code;
+                        if (pricingArr[0].promo_type) initialPromoType = pricingArr[0].promo_type;
+                        if (pricingArr[0].promo_value) initialPromoValue = String(pricingArr[0].promo_value);
+                    }
+                    
+                    // Promo Option Row (None / Personal Promo / Funmap Promo)
+                    var promoOptionRow = document.createElement('div');
+                    promoOptionRow.className = 'fieldset-row fieldset-ticketpricing-promo-option-row';
+                    promoOptionRow.style.display = 'flex';
+                    promoOptionRow.style.alignItems = 'center';
+                    promoOptionRow.style.justifyContent = 'space-between';
+                    promoOptionRow.style.marginBottom = '10px';
+                    promoOptionRow.style.height = '36px';
+                    
+                    var promoOptionLabel = document.createElement('div');
+                    promoOptionLabel.className = 'fieldset-label';
+                    promoOptionLabel.style.marginBottom = '0';
+                    promoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
+                    promoOptionRow.appendChild(promoOptionLabel);
+                    
+                    var promoRadioWrapper = document.createElement('div');
+                    promoRadioWrapper.className = 'fieldset-radio-wrapper';
+                    promoRadioWrapper.style.display = 'flex';
+                    promoRadioWrapper.style.gap = '20px';
+                    promoRadioWrapper.style.height = '36px';
+                    
+                    var promoRadioName = 'promo_option_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // None radio
+                    var promoNoneLabel = document.createElement('label');
+                    promoNoneLabel.style.display = 'flex';
+                    promoNoneLabel.style.alignItems = 'center';
+                    promoNoneLabel.style.gap = '5px';
+                    promoNoneLabel.style.cursor = 'pointer';
+                    promoNoneLabel.style.color = '#fff';
+                    promoNoneLabel.style.fontSize = '13px';
+                    promoNoneLabel.style.height = '36px';
+                    
+                    var promoNoneRadio = document.createElement('input');
+                    promoNoneRadio.type = 'radio';
+                    promoNoneRadio.name = promoRadioName;
+                    promoNoneRadio.value = 'none';
+                    promoNoneRadio.checked = initialPromoOption === 'none';
+                    promoNoneLabel.appendChild(promoNoneRadio);
+                    promoNoneLabel.appendChild(document.createTextNode('None'));
+                    
+                    // Personal Promo radio
+                    var promoPersonalLabel = document.createElement('label');
+                    promoPersonalLabel.style.display = 'flex';
+                    promoPersonalLabel.style.alignItems = 'center';
+                    promoPersonalLabel.style.gap = '5px';
+                    promoPersonalLabel.style.cursor = 'pointer';
+                    promoPersonalLabel.style.color = '#fff';
+                    promoPersonalLabel.style.fontSize = '13px';
+                    promoPersonalLabel.style.height = '36px';
+                    
+                    var promoPersonalRadio = document.createElement('input');
+                    promoPersonalRadio.type = 'radio';
+                    promoPersonalRadio.name = promoRadioName;
+                    promoPersonalRadio.value = 'personal';
+                    promoPersonalRadio.checked = initialPromoOption === 'personal';
+                    promoPersonalLabel.appendChild(promoPersonalRadio);
+                    promoPersonalLabel.appendChild(document.createTextNode('Personal'));
+                    
+                    // Funmap Promo radio
+                    var promoFunmapLabel = document.createElement('label');
+                    promoFunmapLabel.style.display = 'flex';
+                    promoFunmapLabel.style.alignItems = 'center';
+                    promoFunmapLabel.style.gap = '5px';
+                    promoFunmapLabel.style.cursor = 'pointer';
+                    promoFunmapLabel.style.color = '#fff';
+                    promoFunmapLabel.style.fontSize = '13px';
+                    promoFunmapLabel.style.height = '36px';
+                    
+                    var promoFunmapRadio = document.createElement('input');
+                    promoFunmapRadio.type = 'radio';
+                    promoFunmapRadio.name = promoRadioName;
+                    promoFunmapRadio.value = 'funmap';
+                    promoFunmapRadio.checked = initialPromoOption === 'funmap';
+                    promoFunmapLabel.appendChild(promoFunmapRadio);
+                    promoFunmapLabel.appendChild(document.createTextNode('Funmap'));
+                    
+                    promoRadioWrapper.appendChild(promoNoneLabel);
+                    promoRadioWrapper.appendChild(promoPersonalLabel);
+                    promoRadioWrapper.appendChild(promoFunmapLabel);
+                    promoOptionRow.appendChild(promoRadioWrapper);
+                    editorEl.appendChild(promoOptionRow);
+                    
+                    // Promo Content Container (hidden when "none")
+                    var promoContentContainer = document.createElement('div');
+                    promoContentContainer.className = 'fieldset-ticketpricing-promo-content';
+                    promoContentContainer.style.display = initialPromoOption === 'none' ? 'none' : 'block';
+                    
+                    // Promo Code Input Row
+                    var promoCodeRow = document.createElement('div');
+                    promoCodeRow.className = 'fieldset-row fieldset-ticketpricing-promo-code-row';
+                    promoCodeRow.style.display = 'flex';
+                    promoCodeRow.style.alignItems = 'center';
+                    promoCodeRow.style.marginBottom = '10px';
+                    promoCodeRow.style.height = '36px';
+                    promoCodeRow.style.gap = '0';
+                    
+                    // FUNMAP prefix (shown only for funmap option)
+                    var promoFunmapPrefix = document.createElement('div');
+                    promoFunmapPrefix.className = 'fieldset-ticketpricing-promo-funmap-prefix';
+                    promoFunmapPrefix.textContent = 'FUNMAP';
+                    promoFunmapPrefix.style.height = '36px';
+                    promoFunmapPrefix.style.lineHeight = '34px';
+                    promoFunmapPrefix.style.padding = '0 12px';
+                    promoFunmapPrefix.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                    promoFunmapPrefix.style.border = '1px solid var(--ps-border, #444)';
+                    promoFunmapPrefix.style.borderRight = 'none';
+                    promoFunmapPrefix.style.borderRadius = '5px 0 0 5px';
+                    promoFunmapPrefix.style.color = 'var(--ps-muted, #888)';
+                    promoFunmapPrefix.style.fontSize = '13px';
+                    promoFunmapPrefix.style.fontWeight = '600';
+                    promoFunmapPrefix.style.letterSpacing = '0.5px';
+                    promoFunmapPrefix.style.display = initialPromoOption === 'funmap' ? 'block' : 'none';
+                    promoCodeRow.appendChild(promoFunmapPrefix);
+                    
+                    // Promo code input
+                    var promoCodeInput = document.createElement('input');
+                    promoCodeInput.type = 'text';
+                    promoCodeInput.className = 'fieldset-ticketpricing-promo-code-input fieldset-input input-class-1';
+                    promoCodeInput.placeholder = 'eg. FUNMAP10';
+                    promoCodeInput.style.flex = '1';
+                    promoCodeInput.style.height = '36px';
+                    promoCodeInput.style.padding = '0 12px';
+                    // Adjust border radius based on funmap prefix visibility
+                    promoCodeInput.style.borderRadius = initialPromoOption === 'funmap' ? '0 5px 5px 0' : '5px';
+                    // Set initial value (strip FUNMAP prefix if funmap option)
+                    if (initialPromoOption === 'funmap' && initialPromoCode.toUpperCase().startsWith('FUNMAP')) {
+                        promoCodeInput.value = initialPromoCode.substring(6);
+                    } else {
+                        promoCodeInput.value = initialPromoCode;
+                    }
+                    promoCodeRow.appendChild(promoCodeInput);
+                    promoContentContainer.appendChild(promoCodeRow);
+                    
+                    // Promo Type/Value/Preview Row
+                    var promoTypeValueRow = document.createElement('div');
+                    promoTypeValueRow.className = 'fieldset-row fieldset-ticketpricing-promo-typevalue-row';
+                    promoTypeValueRow.style.display = 'flex';
+                    promoTypeValueRow.style.alignItems = 'center';
+                    promoTypeValueRow.style.marginBottom = '10px';
+                    promoTypeValueRow.style.height = '36px';
+                    promoTypeValueRow.style.gap = '10px';
+                    
+                    // Promo Type Toggle (% / currency symbol)
+                    var promoTypeToggle = document.createElement('div');
+                    promoTypeToggle.className = 'fieldset-ticketpricing-promo-type-toggle';
+                    promoTypeToggle.style.display = 'flex';
+                    promoTypeToggle.style.height = '36px';
+                    promoTypeToggle.style.borderRadius = '5px';
+                    promoTypeToggle.style.overflow = 'hidden';
+                    promoTypeToggle.style.border = '1px solid var(--ps-border, #444)';
+                    
+                    // Get current currency symbol for the fixed option
+                    function getPromoCurrentCurrencySymbol() {
+                        var currencyCode = tpGetTicketCurrencyCode();
+                        if (!currencyCode) return '$';
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
+                            var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
+                            if (curr && curr.symbol) return curr.symbol;
+                        }
+                        return '$';
+                    }
+                    
+                    var promoTypePercent = document.createElement('button');
+                    promoTypePercent.type = 'button';
+                    promoTypePercent.className = 'fieldset-ticketpricing-promo-type-btn';
+                    promoTypePercent.textContent = '%';
+                    promoTypePercent.style.width = '40px';
+                    promoTypePercent.style.height = '34px';
+                    promoTypePercent.style.border = 'none';
+                    promoTypePercent.style.cursor = 'pointer';
+                    promoTypePercent.style.fontSize = '14px';
+                    promoTypePercent.style.fontWeight = '600';
+                    promoTypePercent.style.transition = 'background 0.15s, color 0.15s';
+                    
+                    var promoTypeFixed = document.createElement('button');
+                    promoTypeFixed.type = 'button';
+                    promoTypeFixed.className = 'fieldset-ticketpricing-promo-type-btn';
+                    promoTypeFixed.textContent = getPromoCurrentCurrencySymbol();
+                    promoTypeFixed.style.minWidth = '40px';
+                    promoTypeFixed.style.padding = '0 8px';
+                    promoTypeFixed.style.height = '34px';
+                    promoTypeFixed.style.border = 'none';
+                    promoTypeFixed.style.cursor = 'pointer';
+                    promoTypeFixed.style.fontSize = '14px';
+                    promoTypeFixed.style.fontWeight = '600';
+                    promoTypeFixed.style.transition = 'background 0.15s, color 0.15s';
+                    
+                    function updatePromoTypeStyles() {
+                        var isPercent = promoTypePercent.classList.contains('fieldset-ticketpricing-promo-type-btn--active');
+                        promoTypePercent.style.background = isPercent ? 'var(--ps-accent, #4a9eff)' : 'var(--ps-input-bg, #2a2a2a)';
+                        promoTypePercent.style.color = isPercent ? '#fff' : 'var(--ps-muted, #888)';
+                        promoTypeFixed.style.background = !isPercent ? 'var(--ps-accent, #4a9eff)' : 'var(--ps-input-bg, #2a2a2a)';
+                        promoTypeFixed.style.color = !isPercent ? '#fff' : 'var(--ps-muted, #888)';
+                    }
+                    
+                    // Set initial type
+                    if (initialPromoType === 'percent') {
+                        promoTypePercent.classList.add('fieldset-ticketpricing-promo-type-btn--active');
+                    } else {
+                        promoTypeFixed.classList.add('fieldset-ticketpricing-promo-type-btn--active');
+                    }
+                    updatePromoTypeStyles();
+                    
+                    promoTypePercent.addEventListener('click', function() {
+                        promoTypePercent.classList.add('fieldset-ticketpricing-promo-type-btn--active');
+                        promoTypeFixed.classList.remove('fieldset-ticketpricing-promo-type-btn--active');
+                        updatePromoTypeStyles();
+                    });
+                    
+                    promoTypeFixed.addEventListener('click', function() {
+                        promoTypeFixed.classList.add('fieldset-ticketpricing-promo-type-btn--active');
+                        promoTypePercent.classList.remove('fieldset-ticketpricing-promo-type-btn--active');
+                        updatePromoTypeStyles();
+                    });
+                    
+                    promoTypeToggle.appendChild(promoTypePercent);
+                    promoTypeToggle.appendChild(promoTypeFixed);
+                    promoTypeValueRow.appendChild(promoTypeToggle);
+                    
+                    // Promo Value Input
+                    var promoValueInput = document.createElement('input');
+                    promoValueInput.type = 'text';
+                    promoValueInput.className = 'fieldset-ticketpricing-promo-value-input fieldset-input input-class-1';
+                    promoValueInput.placeholder = '0';
+                    promoValueInput.value = initialPromoValue;
+                    promoValueInput.style.flex = '1';
+                    promoValueInput.style.height = '36px';
+                    promoValueInput.style.padding = '0 12px';
+                    promoValueInput.style.borderRadius = '5px';
+                    // Only allow numbers and decimal
+                    promoValueInput.addEventListener('input', function() {
+                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                        var parts = raw.split('.');
+                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                        this.value = raw;
+                    });
+                    promoTypeValueRow.appendChild(promoValueInput);
+                    
+                    // Preview Button
+                    var promoPreviewBtn = document.createElement('button');
+                    promoPreviewBtn.type = 'button';
+                    promoPreviewBtn.className = 'fieldset-ticketpricing-promo-preview-btn';
+                    promoPreviewBtn.textContent = 'Preview';
+                    promoPreviewBtn.style.height = '36px';
+                    promoPreviewBtn.style.padding = '0 16px';
+                    promoPreviewBtn.style.borderRadius = '5px';
+                    promoPreviewBtn.style.border = '1px solid var(--ps-border, #444)';
+                    promoPreviewBtn.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                    promoPreviewBtn.style.color = '#fff';
+                    promoPreviewBtn.style.cursor = 'pointer';
+                    promoPreviewBtn.style.fontSize = '13px';
+                    promoPreviewBtn.style.fontWeight = '500';
+                    promoPreviewBtn.style.transition = 'background 0.15s, border-color 0.15s';
+                    
+                    // Preview functionality
+                    var isPreviewActive = false;
+                    function activatePromoPreview() {
+                        isPreviewActive = true;
+                        editorEl.classList.add('fieldset-ticketpricing-promo-preview-active');
+                        promoPreviewBtn.style.background = '#22c55e';
+                        promoPreviewBtn.style.borderColor = '#22c55e';
+                    }
+                    function deactivatePromoPreview() {
+                        isPreviewActive = false;
+                        editorEl.classList.remove('fieldset-ticketpricing-promo-preview-active');
+                        promoPreviewBtn.style.background = 'var(--ps-input-bg, #2a2a2a)';
+                        promoPreviewBtn.style.borderColor = 'var(--ps-border, #444)';
+                    }
+                    
+                    promoPreviewBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (isPreviewActive) {
+                            deactivatePromoPreview();
+                        } else {
+                            activatePromoPreview();
+                        }
+                    });
+                    
+                    // Click anywhere else to deactivate preview
+                    document.addEventListener('click', function(e) {
+                        if (isPreviewActive && !promoPreviewBtn.contains(e.target)) {
+                            deactivatePromoPreview();
+                        }
+                    });
+                    
+                    promoTypeValueRow.appendChild(promoPreviewBtn);
+                    promoContentContainer.appendChild(promoTypeValueRow);
+                    editorEl.appendChild(promoContentContainer);
+                    
+                    // Handle promo option changes
+                    function updatePromoVisibility() {
+                        var selectedOption = promoNoneRadio.checked ? 'none' : (promoPersonalRadio.checked ? 'personal' : 'funmap');
+                        promoContentContainer.style.display = selectedOption === 'none' ? 'none' : 'block';
+                        promoFunmapPrefix.style.display = selectedOption === 'funmap' ? 'block' : 'none';
+                        promoCodeInput.style.borderRadius = selectedOption === 'funmap' ? '0 5px 5px 0' : '5px';
+                        promoCodeInput.placeholder = selectedOption === 'funmap' ? 'eg. 10' : 'eg. SUMMER20';
+                        // Deactivate preview when switching options
+                        if (isPreviewActive) deactivatePromoPreview();
+                    }
+                    
+                    promoNoneRadio.addEventListener('change', updatePromoVisibility);
+                    promoPersonalRadio.addEventListener('change', updatePromoVisibility);
+                    promoFunmapRadio.addEventListener('change', updatePromoVisibility);
+                    
+                    // Update currency symbol when currency changes
+                    var promoUpdateCurrencySymbol = function() {
+                        promoTypeFixed.textContent = getPromoCurrentCurrencySymbol();
+                    };
+                    // Store reference on editor for currency change callback
+                    editorEl._promoUpdateCurrencySymbol = promoUpdateCurrencySymbol;
+
+                    // Row 7: Allocated Ticket Areas
                     var allocatedRow = document.createElement('div');
                     allocatedRow.className = 'fieldset-row';
                     allocatedRow.style.display = 'flex';
