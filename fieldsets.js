@@ -3578,11 +3578,12 @@ const FieldsetBuilder = (function(){
                     promoRadioWrapper.style.alignItems = 'center';
                     promoOptionRow.appendChild(promoRadioWrapper);
                     
-                    // Label is full width (block), so tooltip positioning works normally
+                    // Label must be full width so tooltip positioning works (left/right: 10px in CSS)
                     var promoOptionLabel = document.createElement('div');
                     promoOptionLabel.className = 'fieldset-label';
                     promoOptionLabel.style.marginBottom = '0';
                     promoOptionLabel.style.lineHeight = '36px';
+                    promoOptionLabel.style.width = '100%';
                     promoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
                     
                     // Add tooltip from promo-option field (exact buildLabel pattern)
