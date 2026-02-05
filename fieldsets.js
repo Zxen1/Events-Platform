@@ -3572,6 +3572,23 @@ const FieldsetBuilder = (function(){
                     promoOptionLabel.className = 'fieldset-label';
                     promoOptionLabel.style.marginBottom = '0';
                     promoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
+                    
+                    // Add tooltip from promo-option field (following buildLabel pattern)
+                    var promoOptionTooltip = fields && fields['promo-option'] && fields['promo-option'].tooltip ? fields['promo-option'].tooltip : '';
+                    if (promoOptionTooltip) {
+                        var promoTip = document.createElement('span');
+                        promoTip.className = 'fieldset-label-tooltip';
+                        var promoTipIcon = document.createElement('span');
+                        promoTipIcon.className = 'fieldset-label-tooltip-icon';
+                        promoTip.appendChild(promoTipIcon);
+                        promoOptionLabel.appendChild(promoTip);
+                        
+                        var promoTipBox = document.createElement('div');
+                        promoTipBox.className = 'fieldset-label-tooltipbox';
+                        promoTipBox.textContent = promoOptionTooltip;
+                        promoOptionLabel.appendChild(promoTipBox);
+                    }
+                    
                     promoOptionRow.appendChild(promoOptionLabel);
                     
                     var promoRadioWrapper = document.createElement('div');
