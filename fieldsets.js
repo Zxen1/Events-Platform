@@ -3559,21 +3559,21 @@ const FieldsetBuilder = (function(){
                         if (pricingArr[0].promo_value) initialPromoValue = String(pricingArr[0].promo_value);
                     }
                     
-                    // Promo Option Row (None / Personal Promo / Funmap Promo)
+                    // Promo Option Row (None / Personal / Funmap)
                     var promoOptionRow = document.createElement('div');
                     promoOptionRow.className = 'fieldset-row fieldset-ticketpricing-promo-option-row';
-                    promoOptionRow.style.display = 'flex';
-                    promoOptionRow.style.alignItems = 'center';
-                    promoOptionRow.style.justifyContent = 'space-between';
                     promoOptionRow.style.marginBottom = '10px';
                     promoOptionRow.style.height = '36px';
+                    promoOptionRow.style.lineHeight = '36px';
                     
                     var promoOptionLabel = document.createElement('div');
                     promoOptionLabel.className = 'fieldset-label';
                     promoOptionLabel.style.marginBottom = '0';
+                    promoOptionLabel.style.display = 'inline-flex';
+                    promoOptionLabel.style.alignItems = 'center';
                     promoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
                     
-                    // Add tooltip from promo-option field (following buildLabel pattern)
+                    // Add tooltip from promo-option field (exact buildLabel pattern)
                     var promoOptionTooltip = fields && fields['promo-option'] && fields['promo-option'].tooltip ? fields['promo-option'].tooltip : '';
                     if (promoOptionTooltip) {
                         var promoTip = document.createElement('span');
@@ -3596,8 +3596,7 @@ const FieldsetBuilder = (function(){
                     promoRadioWrapper.style.display = 'flex';
                     promoRadioWrapper.style.gap = '20px';
                     promoRadioWrapper.style.height = '36px';
-                    promoRadioWrapper.style.flexShrink = '1';
-                    promoRadioWrapper.style.minWidth = '0';
+                    promoRadioWrapper.style.alignItems = 'center';
                     
                     var promoRadioName = 'promo_option_' + Math.random().toString(36).substr(2, 9);
                     
@@ -3658,7 +3657,8 @@ const FieldsetBuilder = (function(){
                     promoRadioWrapper.appendChild(promoNoneLabel);
                     promoRadioWrapper.appendChild(promoPersonalLabel);
                     promoRadioWrapper.appendChild(promoFunmapLabel);
-                    promoOptionRow.appendChild(promoRadioWrapper);
+                    promoRadioWrapper.style.float = 'right';
+                    promoOptionRow.insertBefore(promoRadioWrapper, promoOptionRow.firstChild);
                     editorEl.appendChild(promoOptionRow);
                     
                     // Promo Content Container (hidden when "none")
