@@ -3155,6 +3155,67 @@ const FieldsetBuilder = (function(){
                     tpUpdateTierButtons(tiersContainer);
                 }
 
+                // --- Ticket area name duplication system ---
+                // Master: Group A
+                // Area names broadcast from Group A to all other groups until edited
+                
+                // Check if an area input is in the master group (Group A)
+                function tpIsMasterAreaInput(areaInput) {
+                    var editor = areaInput.closest('.fieldset-ticketpricing-pricing-editor');
+                    if (!editor) return false;
+                    return editor.dataset.groupKey === 'A';
+                }
+                
+                // Get the slot index of an area input within its group
+                function tpGetAreaSlotIndex(areaInput) {
+                    var areaBlock = areaInput.closest('.fieldset-ticketpricing-pricing-ticketarea-block');
+                    if (!areaBlock) return -1;
+                    var container = areaBlock.parentElement;
+                    if (!container) return -1;
+                    var allAreaBlocks = container.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                    for (var i = 0; i < allAreaBlocks.length; i++) {
+                        if (allAreaBlocks[i] === areaBlock) return i;
+                    }
+                    return -1;
+                }
+                
+                // Get master area names from Group A
+                function tpGetMasterAreaNames() {
+                    var groupA = tpTicketGroups['A'];
+                    if (!groupA) return [];
+                    var editor = groupA.querySelector('.fieldset-ticketpricing-pricing-editor');
+                    if (!editor) return [];
+                    var areaBlocks = editor.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                    var names = [];
+                    areaBlocks.forEach(function(ab) {
+                        var input = ab.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                        names.push(input ? (input.value || '') : '');
+                    });
+                    return names;
+                }
+                
+                // Broadcast master area name at a given slot to all follower groups
+                function tpBroadcastAreaName(slotIndex, value) {
+                    Object.keys(tpTicketGroups).forEach(function(gKey) {
+                        // Skip master group (Group A)
+                        if (gKey === 'A') return;
+                        var groupEl = tpTicketGroups[gKey];
+                        if (!groupEl) return;
+                        var editor = groupEl.querySelector('.fieldset-ticketpricing-pricing-editor');
+                        if (!editor) return;
+                        var areaBlocks = editor.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                        if (slotIndex >= areaBlocks.length) return;
+                        var areaBlock = areaBlocks[slotIndex];
+                        var input = areaBlock.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                        if (!input) return;
+                        // Skip if this input has been marked independent
+                        if (input.dataset.areaIndependent === 'true') return;
+                        // Update value
+                        input.value = value;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                }
+
                 // --- Pricing editor builders ---
                 function tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey) {
                     var block = document.createElement('div');
@@ -3370,10 +3431,24 @@ const FieldsetBuilder = (function(){
                         this.setSelectionRange(cursor, cursor);
                         var hasVal = !!String(this.value || '').trim();
                         seatReq.classList.toggle('fieldset-label-required--complete', hasVal);
+                        
+                        // If this is a master area input (Group A), broadcast to all followers
+                        if (tpIsMasterAreaInput(this)) {
+                            var slotIndex = tpGetAreaSlotIndex(this);
+                            if (slotIndex >= 0) {
+                                tpBroadcastAreaName(slotIndex, this.value);
+                            }
+                        }
                     });
 
                     seatInput.addEventListener('change', function() {
                         this.dataset.manuallyEdited = 'true';
+                        
+                        // If this is NOT a master area input, mark as independent (stops receiving broadcasts)
+                        if (!tpIsMasterAreaInput(this)) {
+                            this.dataset.areaIndependent = 'true';
+                        }
+                        
                         // Track manual edit for ticket areas
                         if (groupKey && groupKey !== 'A') {
                             tpMarkAsManuallyEdited(groupKey, 'ticketAreas');
@@ -3396,6 +3471,19 @@ const FieldsetBuilder = (function(){
                     addBtn.addEventListener('click', function() {
                         var newBlock = tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio, groupKey);
                         ticketAreasContainer.appendChild(newBlock);
+                        
+                        // Copy area name from master (Group A) at this slot if not in Group A
+                        if (groupKey !== 'A') {
+                            var newAreaInput = newBlock.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                            if (newAreaInput) {
+                                var slotIndex = tpGetAreaSlotIndex(newAreaInput);
+                                var masterAreaNames = tpGetMasterAreaNames();
+                                if (slotIndex >= 0 && slotIndex < masterAreaNames.length && masterAreaNames[slotIndex]) {
+                                    newAreaInput.value = masterAreaNames[slotIndex];
+                                    newAreaInput.dispatchEvent(new Event('input', { bubbles: true }));
+                                }
+                            }
+                        }
                         
                         // Copy tier names from master (Group A, first area) to new area
                         var newTiersContainer = newBlock.querySelector('.fieldset-ticketpricing-pricing-tiers-container');
