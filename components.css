@@ -3562,14 +3562,14 @@ body.image-modal-open > *:not(.image-modal) {
   display: none;
 }
 
-/* Age rating icons container - right-aligned */
+/* Age rating icons container - positioned from container edge */
 .post-session-age-ratings {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  margin-left: auto;
-  flex: 0 0 auto;
-  padding-right: 15px;
+  position: absolute;
+  right: 20px;
 }
 
 /* Individual age rating icon */
