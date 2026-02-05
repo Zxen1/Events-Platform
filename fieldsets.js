@@ -2567,6 +2567,32 @@ const FieldsetBuilder = (function(){
                 itemNameInput.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 fieldset.appendChild(itemNameInput);
                 
+                // Age Rating sublabel
+                var ipAgeRatingSub = document.createElement('div');
+                ipAgeRatingSub.className = 'fieldset-sublabel fieldset-itempricing-sublabel-agerating';
+                ipAgeRatingSub.textContent = 'Age Rating';
+                ipAgeRatingSub.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
+                
+                var ipAgeRatingDot = document.createElement('span');
+                ipAgeRatingDot.className = 'fieldset-label-required fieldset-label-required-agerating';
+                ipAgeRatingDot.textContent = '●';
+                ipAgeRatingSub.appendChild(ipAgeRatingDot);
+                fieldset.appendChild(ipAgeRatingSub);
+                
+                // Age Rating menu - default to 'all'
+                var ipAgeRatingMenu = buildAgeRatingMenu(fieldset, {
+                    initialValue: 'all',
+                    onSelect: function(val) {
+                        ipAgeRatingDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                    }
+                });
+                ipAgeRatingMenu.style.width = '100%';
+                ipAgeRatingMenu.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
+                fieldset.appendChild(ipAgeRatingMenu);
+                
+                // Set initial completeness (default 'all' means complete)
+                ipAgeRatingDot.classList.add('fieldset-label-required--complete');
+                
                 // Currency + Item Price row
                 var itemPriceRow = document.createElement('div');
                 itemPriceRow.className = 'fieldset-row fieldset-itempricing-row-itemprice';
@@ -3086,6 +3112,12 @@ const FieldsetBuilder = (function(){
                     if (!val || typeof val !== 'object') return;
                     
                     if (itemNameInput) itemNameInput.value = val.item_name || '';
+                    
+                    // Set age rating (default to 'all' if not provided)
+                    if (ipAgeRatingMenu && typeof ipAgeRatingMenu._ageRatingSetValue === 'function') {
+                        ipAgeRatingMenu._ageRatingSetValue(val.age_rating || 'all');
+                        ipAgeRatingDot.classList.toggle('fieldset-label-required--complete', !!String(val.age_rating || 'all').trim());
+                    }
                     
                     // Set raw price first (same as Create Post form)
                     if (itemPriceInput) {

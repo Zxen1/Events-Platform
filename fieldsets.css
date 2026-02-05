@@ -1359,6 +1359,7 @@
 
 /* Item Pricing Promo Preview Active State */
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemname,
+.fieldset-itempricing-promo-preview-active .fieldset-itempricing-menu-currency,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemprice,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemvariantname {
     border-color: #22c55e;
@@ -1366,6 +1367,7 @@
 }
 
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemname,
+.fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-currency,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemprice,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemvariants {
     color: #22c55e;
