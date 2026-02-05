@@ -2815,7 +2815,8 @@ const FieldsetBuilder = (function(){
                 // This fieldset exists ONCE in the primary container (above the line).
                 // Sessions fieldset reads ticket group keys from this fieldset.
                 
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
+                // Don't show character count for this fieldset - it has multiple sub-fields with different limits
+                fieldset.appendChild(buildLabel(name, tooltip, null, null, instruction));
 
                 // Ticket group state
                 var tpTicketGroups = {}; // { A: itemEl, B: itemEl, ... }
