@@ -4288,6 +4288,7 @@ const FieldsetBuilder = (function(){
                     generalAdmissionHeader.className = 'fieldset-sublabel';
                     generalAdmissionHeader.textContent = 'General Admission';
                     generalAdmissionHeader.style.fontSize = '14px';
+                    generalAdmissionHeader.style.marginTop = '20px';
                     generalAdmissionHeader.style.marginBottom = '6px';
                     generalAdmissionHeader.style.display = 'none';
                     ticketAreasContainer.appendChild(generalAdmissionHeader);
