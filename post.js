@@ -2739,11 +2739,6 @@ const PostModule = (function() {
       ? '<span class="post-info-icon"><img class="post-info-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
     
-    // Icon HTML for header (subcategory icon)
-    var headerIconHtml = iconUrl
-      ? '<span class="post-header-icon-sub"><img class="post-header-image-sub" src="' + iconUrl + '" alt="" /></span>'
-      : '';
-    
     // Price badge for info section
     var infoPriceBadgeHtml = priceParts.flagUrl 
       ? '<img class="post-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
@@ -2754,9 +2749,9 @@ const PostModule = (function() {
       thumbHtml,
       '<div class="post-header-meta">',
         '<div class="post-header-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="post-header-row-cat">',
-          headerIconHtml,
-          '<span class="post-header-text-cat">' + escapeHtml(displayName) + '</span>',
+        '<div class="post-info-row post-info-row-cat">',
+          infoIconHtml,
+          '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
         '</div>',
       '</div>',
       '<div class="post-header-actions">',
