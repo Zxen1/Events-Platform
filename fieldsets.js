@@ -3798,7 +3798,7 @@ const FieldsetBuilder = (function(){
                     var promoOptionRow = document.createElement('div');
                     promoOptionRow.className = 'fieldset-row fieldset-ticketpricing-promo-option-row';
                     promoOptionRow.style.position = 'relative';
-                    promoOptionRow.style.marginBottom = '10px';
+                    promoOptionRow.style.marginBottom = '0';
                     promoOptionRow.style.height = '36px';
                     
                     // Radio buttons positioned absolutely on the right
@@ -4224,7 +4224,7 @@ const FieldsetBuilder = (function(){
                     allocatedRow.style.display = 'flex';
                     allocatedRow.style.alignItems = 'center';
                     allocatedRow.style.justifyContent = 'space-between';
-                    allocatedRow.style.marginBottom = '10px';
+                    allocatedRow.style.marginBottom = '0';
                     allocatedRow.style.height = '36px';
                     
                     var allocatedLabel = document.createElement('div');
@@ -4287,6 +4287,7 @@ const FieldsetBuilder = (function(){
                     var generalAdmissionHeader = document.createElement('div');
                     generalAdmissionHeader.className = 'fieldset-sublabel';
                     generalAdmissionHeader.textContent = 'General Admission';
+                    generalAdmissionHeader.style.fontSize = '14px';
                     generalAdmissionHeader.style.marginBottom = '6px';
                     generalAdmissionHeader.style.display = 'none';
                     ticketAreasContainer.appendChild(generalAdmissionHeader);
