@@ -2670,7 +2670,7 @@ const FieldsetBuilder = (function(){
                 var ipPromoOptionRow = document.createElement('div');
                 ipPromoOptionRow.className = 'fieldset-row fieldset-itempricing-promo-option-row';
                 ipPromoOptionRow.style.position = 'relative';
-                ipPromoOptionRow.style.marginBottom = '0';
+                ipPromoOptionRow.style.marginBottom = '10px';
                 ipPromoOptionRow.style.height = '36px';
                 
                 // Radio buttons positioned absolutely on the right
