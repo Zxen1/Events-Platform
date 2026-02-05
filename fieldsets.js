@@ -3562,15 +3562,27 @@ const FieldsetBuilder = (function(){
                     // Promo Option Row (None / Personal / Funmap)
                     var promoOptionRow = document.createElement('div');
                     promoOptionRow.className = 'fieldset-row fieldset-ticketpricing-promo-option-row';
-                    promoOptionRow.style.display = 'flex';
-                    promoOptionRow.style.alignItems = 'center';
-                    promoOptionRow.style.justifyContent = 'space-between';
+                    promoOptionRow.style.position = 'relative';
                     promoOptionRow.style.marginBottom = '10px';
                     promoOptionRow.style.height = '36px';
                     
+                    // Radio buttons positioned absolutely on the right
+                    var promoRadioWrapper = document.createElement('div');
+                    promoRadioWrapper.className = 'fieldset-radio-wrapper';
+                    promoRadioWrapper.style.position = 'absolute';
+                    promoRadioWrapper.style.right = '0';
+                    promoRadioWrapper.style.top = '0';
+                    promoRadioWrapper.style.display = 'flex';
+                    promoRadioWrapper.style.gap = '20px';
+                    promoRadioWrapper.style.height = '36px';
+                    promoRadioWrapper.style.alignItems = 'center';
+                    promoOptionRow.appendChild(promoRadioWrapper);
+                    
+                    // Label is full width (block), so tooltip positioning works normally
                     var promoOptionLabel = document.createElement('div');
                     promoOptionLabel.className = 'fieldset-label';
                     promoOptionLabel.style.marginBottom = '0';
+                    promoOptionLabel.style.lineHeight = '36px';
                     promoOptionLabel.innerHTML = '<span class="fieldset-label-text">Promo Code</span>';
                     
                     // Add tooltip from promo-option field (exact buildLabel pattern)
@@ -3590,13 +3602,6 @@ const FieldsetBuilder = (function(){
                     }
                     
                     promoOptionRow.appendChild(promoOptionLabel);
-                    
-                    var promoRadioWrapper = document.createElement('div');
-                    promoRadioWrapper.className = 'fieldset-radio-wrapper';
-                    promoRadioWrapper.style.display = 'flex';
-                    promoRadioWrapper.style.gap = '20px';
-                    promoRadioWrapper.style.height = '36px';
-                    promoRadioWrapper.style.alignItems = 'center';
                     
                     var promoRadioName = 'promo_option_' + Math.random().toString(36).substr(2, 9);
                     
