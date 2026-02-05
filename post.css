@@ -1125,6 +1125,20 @@
 }
 
 /* ============================================================================
+   POST DETAILS (wrapper for info + description, excludes images)
+   ============================================================================ */
+
+.post-details {
+  padding-left: 10px;
+}
+
+.post-details .post-location-container,
+.post-details .post-session-container {
+  margin-left: -10px;
+  width: calc(100% + 10px);
+}
+
+/* ============================================================================
    POST BODY - collapsed/expanded visibility
    ============================================================================ */
 

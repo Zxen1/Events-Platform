@@ -2764,6 +2764,7 @@ const PostModule = (function() {
     var postBody = document.createElement('div');
     postBody.className = 'post-body';
     postBody.innerHTML = [
+      '<div class="post-details">',
       '<div class="post-info-container">',
         // Subcategory row (static)
         '<div class="post-info-row post-info-row-cat">',
@@ -2825,6 +2826,7 @@ const PostModule = (function() {
           (avatarSrc ? '<img class="post-description-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
           '<span class="post-description-postedby">' + escapeHtml(postedMeta) + '</span>',
         '</div>',
+      '</div>',
       '</div>',
       '<div class="post-images-container">',
         '<div class="post-hero">',
