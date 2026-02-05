@@ -3430,6 +3430,25 @@ const FieldsetBuilder = (function(){
                                 var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
                                 var price = priceInput ? String(priceInput.value || '').trim() : '';
                                 
+                                // Calculate promo_price if promo is enabled
+                                var promoPrice = '';
+                                if (promoOption !== 'none' && price && promoValue) {
+                                    // Parse numeric price (remove currency symbols)
+                                    var numericPrice = parseFloat(price.replace(/[^0-9.-]/g, ''));
+                                    var numericPromoValue = parseFloat(promoValue);
+                                    if (Number.isFinite(numericPrice) && Number.isFinite(numericPromoValue)) {
+                                        var calculatedPrice;
+                                        if (promoType === 'percent') {
+                                            calculatedPrice = numericPrice - (numericPrice * numericPromoValue / 100);
+                                        } else {
+                                            calculatedPrice = numericPrice - numericPromoValue;
+                                        }
+                                        // Ensure non-negative and round to 2 decimal places
+                                        calculatedPrice = Math.max(0, Math.round(calculatedPrice * 100) / 100);
+                                        promoPrice = calculatedPrice.toFixed(2);
+                                    }
+                                }
+                                
                                 // Include promo data in each tier
                                 tiers.push({ 
                                     pricing_tier: tierName, 
@@ -3438,7 +3457,8 @@ const FieldsetBuilder = (function(){
                                     promo_option: promoOption,
                                     promo_code: promoOption !== 'none' ? promoCode : '',
                                     promo_type: promoOption !== 'none' ? promoType : null,
-                                    promo_value: promoOption !== 'none' ? promoValue : ''
+                                    promo_value: promoOption !== 'none' ? promoValue : '',
+                                    promo_price: promoPrice
                                 });
                             });
                             
@@ -3559,6 +3579,8 @@ const FieldsetBuilder = (function(){
                     promoRadioWrapper.style.display = 'flex';
                     promoRadioWrapper.style.gap = '20px';
                     promoRadioWrapper.style.height = '36px';
+                    promoRadioWrapper.style.flexShrink = '1';
+                    promoRadioWrapper.style.minWidth = '0';
                     
                     var promoRadioName = 'promo_option_' + Math.random().toString(36).substr(2, 9);
                     
@@ -3777,9 +3799,9 @@ const FieldsetBuilder = (function(){
                     
                     function updatePromoTypeStyles() {
                         var isPercent = promoTypePercent.classList.contains('fieldset-ticketpricing-promo-type-btn--active');
-                        promoTypePercent.style.background = isPercent ? 'var(--ps-accent, #4a9eff)' : 'var(--ps-input-bg, #2a2a2a)';
+                        promoTypePercent.style.background = isPercent ? 'var(--blue-900, #1e3a8a)' : 'var(--ps-input-bg, #2a2a2a)';
                         promoTypePercent.style.color = isPercent ? '#fff' : 'var(--ps-muted, #888)';
-                        promoTypeFixed.style.background = !isPercent ? 'var(--ps-accent, #4a9eff)' : 'var(--ps-input-bg, #2a2a2a)';
+                        promoTypeFixed.style.background = !isPercent ? 'var(--blue-900, #1e3a8a)' : 'var(--ps-input-bg, #2a2a2a)';
                         promoTypeFixed.style.color = !isPercent ? '#fff' : 'var(--ps-muted, #888)';
                     }
                     
@@ -3848,17 +3870,52 @@ const FieldsetBuilder = (function(){
                     
                     // Preview functionality
                     var isPreviewActive = false;
+                    var originalPriceValues = []; // Store original values for restore
+                    
                     function activatePromoPreview() {
                         isPreviewActive = true;
                         editorEl.classList.add('fieldset-ticketpricing-promo-preview-active');
                         promoPreviewBtn.style.background = '#22c55e';
                         promoPreviewBtn.style.borderColor = '#22c55e';
+                        
+                        // Get promo settings
+                        var pType = promoTypePercent.classList.contains('fieldset-ticketpricing-promo-type-btn--active') ? 'percent' : 'fixed';
+                        var pValue = parseFloat(promoValueInput.value) || 0;
+                        
+                        // Calculate and show discounted prices
+                        originalPriceValues = [];
+                        var priceInputs = editorEl.querySelectorAll('.fieldset-ticketpricing-input-price');
+                        priceInputs.forEach(function(inp) {
+                            var originalVal = inp.value;
+                            originalPriceValues.push({ el: inp, val: originalVal });
+                            
+                            if (originalVal && pValue > 0) {
+                                var numericPrice = parseFloat(originalVal.replace(/[^0-9.-]/g, ''));
+                                if (Number.isFinite(numericPrice)) {
+                                    var discounted;
+                                    if (pType === 'percent') {
+                                        discounted = numericPrice - (numericPrice * pValue / 100);
+                                    } else {
+                                        discounted = numericPrice - pValue;
+                                    }
+                                    discounted = Math.max(0, Math.round(discounted * 100) / 100);
+                                    inp.value = discounted.toFixed(2);
+                                }
+                            }
+                        });
                     }
+                    
                     function deactivatePromoPreview() {
                         isPreviewActive = false;
                         editorEl.classList.remove('fieldset-ticketpricing-promo-preview-active');
                         promoPreviewBtn.style.background = 'var(--ps-input-bg, #2a2a2a)';
                         promoPreviewBtn.style.borderColor = 'var(--ps-border, #444)';
+                        
+                        // Restore original price values
+                        originalPriceValues.forEach(function(item) {
+                            item.el.value = item.val;
+                        });
+                        originalPriceValues = [];
                     }
                     
                     promoPreviewBtn.addEventListener('click', function(e) {
