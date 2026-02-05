@@ -1359,17 +1359,17 @@
 
 /* Item Pricing Promo Preview Active State */
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemname,
+.fieldset-itempricing-promo-preview-active .component-ageratingpicker-menu-button,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-menu-currency .menu-button,
-.fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemprice,
-.fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemvariantname {
+.fieldset-itempricing-promo-preview-active .fieldset-itempricing-input-itemprice {
     border-color: #22c55e;
     color: #22c55e;
 }
 
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemname,
+.fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-agerating,
 .fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-currency,
-.fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemprice,
-.fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemvariants {
+.fieldset-itempricing-promo-preview-active .fieldset-itempricing-sublabel-itemprice {
     color: #22c55e;
 }
 
