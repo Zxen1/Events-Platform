@@ -406,7 +406,7 @@ const MarqueeModule = (function() {
       info.appendChild(locLine);
     }
     
-    // 4. Date line (Prioritize dates over price to keep to 3 info lines total)
+    // 4. Date line
     if (datesText) {
       const dateLine = document.createElement('div');
       dateLine.className = 'marquee-slide-info-date';
@@ -415,8 +415,10 @@ const MarqueeModule = (function() {
       dateText.textContent = datesText;
       dateLine.appendChild(dateText);
       info.appendChild(dateLine);
-    } else if (priceParts.text) {
-      // 5. Price line (only if no dates)
+    }
+    
+    // 5. Price line
+    if (priceParts.text) {
       const priceLine = document.createElement('div');
       priceLine.className = 'marquee-slide-info-price';
       

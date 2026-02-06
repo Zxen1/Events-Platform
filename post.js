@@ -1251,10 +1251,13 @@ const PostModule = (function() {
       html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">📍</span><span>' + escapeHtml(data.locationText) + '</span></div>');
     }
     
-    // Dates OR Price row (dates take priority)
+    // Dates row
     if (data.datesText) {
       html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">📅</span><span>' + escapeHtml(data.datesText) + '</span></div>');
-    } else if (data.priceParts && data.priceParts.text) {
+    }
+    
+    // Price row
+    if (data.priceParts && data.priceParts.text) {
       var badgeHtml = data.priceParts.flagUrl 
         ? '<img class="' + classPrefix + '-image-badge" src="' + data.priceParts.flagUrl + '" alt="' + data.priceParts.countryCode + '" title="Currency: ' + data.priceParts.countryCode.toUpperCase() + '">'
         : '💰';
