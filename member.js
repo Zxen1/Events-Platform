@@ -716,27 +716,6 @@ const MemberModule = (function() {
         var lightingButtons = panel.querySelectorAll('.member-lighting-button');
         if (!lightingButtons.length) return;
         
-        // Apply lighting icons from system_images (admin_settings keys)
-        (function applyLightingIcons() {
-            try {
-                if (!window.App || typeof App.getImageUrl !== 'function' || typeof App.getState !== 'function') return;
-                var sys = App.getState('system_images') || {};
-                lightingButtons.forEach(function(btn) {
-                    var preset = btn.dataset.lighting || '';
-                    var key = preset ? ('icon_lighting_' + preset) : '';
-                    var filename = key && sys[key] ? sys[key] : '';
-                    var iconEl = btn.querySelector('.member-lighting-button-icon');
-                    if (iconEl && filename) {
-                        var url = App.getImageUrl('systemImages', filename);
-                        iconEl.style.webkitMaskImage = 'url(' + url + ')';
-                        iconEl.style.maskImage = 'url(' + url + ')';
-                    }
-                });
-            } catch (e) {
-                // ignore
-            }
-        })();
-        
         // Load from member data (logged in) or localStorage (guest) or admin settings (fresh visitor)
         var currentLighting = 'day';
         if (currentUser) {

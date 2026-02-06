@@ -2138,29 +2138,6 @@ const AdminModule = (function() {
         // Map Lighting buttons
         var lightingButtons = mapTabContainer.querySelectorAll('.admin-lighting-button');
         if (lightingButtons.length) {
-            // Apply lighting icons from system_images (admin_settings keys)
-            (function applyLightingIcons() {
-                try {
-                    if (!window.App || typeof App.getImageUrl !== 'function') return;
-                    var sys = mapTabData && mapTabData.system_images ? mapTabData.system_images : null;
-                    if (!sys) return;
-                    
-                    lightingButtons.forEach(function(btn) {
-                        var preset = btn.dataset.lighting || '';
-                        var key = preset ? ('icon_lighting_' + preset) : '';
-                        var filename = key && sys[key] ? sys[key] : '';
-                        var iconEl = btn.querySelector('.admin-lighting-button-icon');
-                        if (iconEl && filename) {
-                            var url = App.getImageUrl('systemImages', filename);
-                            iconEl.style.webkitMaskImage = 'url(' + url + ')';
-                            iconEl.style.maskImage = 'url(' + url + ')';
-                        }
-                    });
-                } catch (e) {
-                    // ignore
-                }
-            })();
-            
             var initialLighting = mapTabData.map_lighting || 'day';
             lightingButtons.forEach(function(btn) {
                 var lighting = btn.dataset.lighting;

@@ -981,19 +981,15 @@ if (empty($ogTitle)) {
               <label class="admin-settings-field-label">Map Lighting</label>
               <div class="admin-lighting-buttons">
                 <button type="button" class="admin-lighting-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
                   <span class="admin-lighting-button-text">Sunrise</span>
                 </button>
                 <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
                   <span class="admin-lighting-button-text">Day</span>
                 </button>
                 <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
                   <span class="admin-lighting-button-text">Sunset</span>
                 </button>
                 <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
                   <span class="admin-lighting-button-text">Night</span>
                 </button>
               </div>
@@ -1222,19 +1218,15 @@ if (empty($ogTitle)) {
               <label class="member-settings-field-label">Map Lighting</label>
               <div class="member-lighting-buttons">
                 <button type="button" class="member-lighting-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
                   <span class="member-lighting-button-text">Sunrise</span>
                 </button>
                 <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
                   <span class="member-lighting-button-text">Day</span>
                 </button>
                 <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
                   <span class="member-lighting-button-text">Sunset</span>
                 </button>
                 <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
                   <span class="member-lighting-button-text">Night</span>
                 </button>
               </div>
