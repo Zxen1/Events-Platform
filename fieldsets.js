@@ -5546,34 +5546,6 @@ const FieldsetBuilder = (function(){
                 // Master: First date in the list (earliest date)
                 // Time slots broadcast from master to all followers until edited
                 
-                // Sort times chronologically for a date (keeps edited/groups aligned)
-                function sessSortTimesForDate(dateStr) {
-                    var data = sessSessionData[dateStr];
-                    if (!data || !data.times || data.times.length <= 1) return;
-                    
-                    // Create array of {time, edited, group} objects for sorting
-                    var items = data.times.map(function(t, i) {
-                        return {
-                            time: t || '',
-                            edited: data.edited[i] || false,
-                            group: (data.groups && data.groups[i]) || 'A'
-                        };
-                    });
-                    
-                    // Sort by time (empty strings go to end)
-                    items.sort(function(a, b) {
-                        if (a.time === '' && b.time === '') return 0;
-                        if (a.time === '') return 1;
-                        if (b.time === '') return -1;
-                        return a.time.localeCompare(b.time);
-                    });
-                    
-                    // Write back to data
-                    data.times = items.map(function(x) { return x.time; });
-                    data.edited = items.map(function(x) { return x.edited; });
-                    data.groups = items.map(function(x) { return x.group; });
-                }
-                
                 // Check if a date is the master (first/earliest date)
                 function sessIsMasterDate(dateStr) {
                     var sortedDates = Object.keys(sessSessionData).sort();
@@ -5866,12 +5838,13 @@ const FieldsetBuilder = (function(){
                                             sessBroadcastTime(idx, newTime);
                                         }
                                         
-                                        // Sort times chronologically and re-render
-                                        Object.keys(sessSessionData).forEach(function(d) {
-                                            sessSortTimesForDate(d);
+                                        // Update all time inputs to reflect current state
+                                        sessSessionsContainer.querySelectorAll('.fieldset-sessions-session-field-time-input').forEach(function(input) {
+                                            var d0 = input.dataset.date;
+                                            var i0 = parseInt(input.dataset.idx, 10);
+                                            if (d0 && sessSessionData[d0] && sessSessionData[d0].times[i0] !== undefined) input.value = sessSessionData[d0].times[i0];
                                         });
-                                        sessRenderSessions();
-                                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                     } else {
                                         this.value = '';
                                         sessSessionData[dateStr].times[idx] = '';
@@ -5909,7 +5882,6 @@ const FieldsetBuilder = (function(){
                                         var inheritKey = String(sessSessionData[dateStr].groups[idx] || '').trim();
                                         if (!inheritKey) inheritKey = 'A';
                                         sessSessionData[dateStr].groups.splice(newSlotIdx, 0, inheritKey);
-                                        sessSortTimesForDate(dateStr);
                                         sessRenderSessions();
                                     });
                                 })(dateStr, idx);
