@@ -5552,6 +5552,7 @@ const FieldsetBuilder = (function(){
                 }
                 
                 // Broadcast time from master to all follower dates at the same slot
+                // Avoids duplicates: skip if the value already exists elsewhere on the follower date
                 function sessBroadcastTime(slotIdx, value) {
                     var sortedDates = Object.keys(sessSessionData).sort();
                     if (sortedDates.length <= 1) return;
@@ -5564,17 +5565,47 @@ const FieldsetBuilder = (function(){
                         
                         // Only update if slot exists and is not marked as edited (independent)
                         if (data.times.length > slotIdx && !data.edited[slotIdx]) {
+                            // Check if this value would create a duplicate on this date
+                            if (value !== '') {
+                                var isDuplicate = data.times.some(function(t, idx) {
+                                    return idx !== slotIdx && t === value;
+                                });
+                                if (isDuplicate) {
+                                    // Clear this slot instead of creating a duplicate
+                                    data.times[slotIdx] = '';
+                                    continue;
+                                }
+                            }
                             data.times[slotIdx] = value;
                         }
                     }
                 }
                 
                 // Get autofill value for a new slot (from master date)
+                // Avoids duplicates: if the time already exists on this date, try the next slot
                 function sessGetAutofillForSlot(dateStr, slotIdx) {
                     // If this is the master date, no autofill
                     if (sessIsMasterDate(dateStr)) return '';
-                    // Otherwise get from master
-                    return sessGetMasterTimeForSlot(slotIdx);
+                    
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    if (sortedDates.length === 0) return '';
+                    var masterDate = sortedDates[0];
+                    var masterData = sessSessionData[masterDate];
+                    if (!masterData || !masterData.times) return '';
+                    
+                    var targetData = sessSessionData[dateStr];
+                    var existingTimes = (targetData && targetData.times) ? targetData.times : [];
+                    
+                    // Try slots starting from slotIdx, looking for a time that doesn't already exist
+                    for (var i = slotIdx; i < masterData.times.length; i++) {
+                        var candidateTime = masterData.times[i] || '';
+                        if (candidateTime === '') continue;
+                        var isDuplicate = existingTimes.some(function(t) { return t === candidateTime; });
+                        if (!isDuplicate) return candidateTime;
+                    }
+                    
+                    // No available time found - return empty
+                    return '';
                 }
 
                 function sessApplyDraftToCalendar() {
@@ -5905,10 +5936,12 @@ const FieldsetBuilder = (function(){
                                 var keys = sessGetTicketGroupKeys();
                                 if (keys.length === 0) keys = ['A'];
                                 var optIconUrl = sessGetSystemTicketIconUrl();
+                                var currentValue = letterEl.textContent.trim();
                                 keys.forEach(function(gk) {
                                     var opt = document.createElement('button');
                                     opt.type = 'button';
-                                    opt.className = 'fieldset-sessions-ticketgroup-menu-option menu-option';
+                                    var isSelected = (gk === currentValue);
+                                    opt.className = 'fieldset-sessions-ticketgroup-menu-option menu-option' + (isSelected ? ' menu-option--selected' : '');
                                     if (optIconUrl) {
                                         var optImg = document.createElement('img');
                                         optImg.className = 'fieldset-sessions-ticketgroup-menu-option-icon';
@@ -5930,9 +5963,7 @@ const FieldsetBuilder = (function(){
                                         }
                                         timeInput.dataset.ticketGroupKey = gk;
                                         letterEl.textContent = gk;
-                                        ticketMenu.classList.remove('fieldset-sessions-ticketgroup-menu--open');
-                                        ticketBtn.classList.remove('menu-button--open');
-                                        ticketOpts.classList.remove('menu-options--open');
+                                        ticketMenu.__menuApplyOpenState(false);
                                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                     });
                                     optsEl.appendChild(opt);
@@ -5940,21 +5971,32 @@ const FieldsetBuilder = (function(){
                             }
                             
                             (function(dateStr, idx, timeInput, ticketBtn, ticketMenu, ticketOpts, letter) {
-                                ticketBtn.addEventListener('click', function(e) {
-                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                                    var isOpen = ticketMenu.classList.contains('fieldset-sessions-ticketgroup-menu--open');
-                                    fieldset.querySelectorAll('.fieldset-sessions-ticketgroup-menu--open').forEach(function(m) {
-                                        m.classList.remove('fieldset-sessions-ticketgroup-menu--open');
-                                        var b = m.querySelector('.menu-button');
-                                        var o = m.querySelector('.menu-options');
-                                        if (b) b.classList.remove('menu-button--open');
-                                        if (o) o.classList.remove('menu-options--open');
-                                    });
-                                    if (!isOpen) {
-                                        sessRebuildTicketDropdown(ticketOpts, dateStr, idx, timeInput, letter);
+                                // MenuManager integration
+                                ticketMenu.__menuIsOpen = function() {
+                                    return ticketMenu.classList.contains('fieldset-sessions-ticketgroup-menu--open');
+                                };
+                                ticketMenu.__menuApplyOpenState = function(isOpen) {
+                                    if (isOpen) {
                                         ticketMenu.classList.add('fieldset-sessions-ticketgroup-menu--open');
                                         ticketBtn.classList.add('menu-button--open');
                                         ticketOpts.classList.add('menu-options--open');
+                                    } else {
+                                        ticketMenu.classList.remove('fieldset-sessions-ticketgroup-menu--open');
+                                        ticketBtn.classList.remove('menu-button--open');
+                                        ticketOpts.classList.remove('menu-options--open');
+                                    }
+                                };
+                                if (typeof MenuManager !== 'undefined') MenuManager.register(ticketMenu);
+                                
+                                ticketBtn.addEventListener('click', function(e) {
+                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    var isOpen = ticketMenu.__menuIsOpen();
+                                    if (typeof MenuManager !== 'undefined') MenuManager.closeAll(ticketMenu);
+                                    if (!isOpen) {
+                                        sessRebuildTicketDropdown(ticketOpts, dateStr, idx, timeInput, letter);
+                                        ticketMenu.__menuApplyOpenState(true);
+                                    } else {
+                                        ticketMenu.__menuApplyOpenState(false);
                                     }
                                 });
                             })(dateStr, idx, timeInput, ticketBtn, ticketMenu, ticketOpts, letter);

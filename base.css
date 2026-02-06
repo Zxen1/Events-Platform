@@ -714,6 +714,9 @@
     background-color: var(--menu-hover);
   }
 }
+.menu-class-1 .menu-option.menu-option--selected {
+  background-color: rgba(59, 130, 246, 0.3);
+}
 
 /* ============================================================================
    MENU CLASS 2 (Standalone dropdown - no button trigger)
@@ -898,6 +901,9 @@
   .menu-class-3 .menu-option:hover {
     background: var(--menu-hover);
   }
+}
+.menu-class-3 .menu-option.menu-option--selected {
+  background: rgba(59, 130, 246, 0.3);
 }
 
 .menu-class-3 .menu-option-text {
