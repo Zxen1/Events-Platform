@@ -394,9 +394,9 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: var(--website-white);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #F59E0B;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -404,9 +404,9 @@
 }
 .button-class-6[aria-selected="true"],
 .button-class-6.button--selected {
-  background: #F59E0B;
+  background: rgba(245, 158, 11, 0.15);
   border-color: #F59E0B;
-  color: var(--website-white);
+  color: #F59E0B;
 }
 
 /* ============================================================================
@@ -467,9 +467,9 @@
   }
 
   .button-class-6:hover {
-    background: #F59E0B;
+    background: rgba(245, 158, 11, 0.15);
     border-color: #F59E0B;
-    color: var(--website-white);
+    color: #F59E0B;
   }
 
   .input-class-1:hover {
