@@ -3611,6 +3611,18 @@ body.image-modal-open > *:not(.image-modal) {
   font-variant-numeric: tabular-nums;
 }
 
+/* Session select prompt (shown when no session selected) */
+.post-session-ticket-prompt {
+  font-size: 13px;
+  color: var(--ps-muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.post-session-ticket-prompt:empty {
+  display: none;
+}
+
 /* Ticket details (areas and tiers) */
 .post-session-ticket-details {
   display: flex;
@@ -3651,6 +3663,78 @@ body.image-modal-open > *:not(.image-modal) {
   align-items: center;
   gap: 6px;
   font-variant-numeric: tabular-nums;
+}
+
+/* Promo pricing display */
+.post-session-ticket-price-original {
+  text-decoration: line-through;
+  color: var(--ps-muted);
+  font-size: 0.9em;
+}
+
+.post-session-ticket-price-promo {
+  color: var(--green-600);
+  font-weight: 600;
+}
+
+.post-session-ticket-tier--has-promo .post-session-ticket-tier-price {
+  gap: 8px;
+}
+
+/* Promo section (badge + message) */
+.post-session-promo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--green-50);
+  border-radius: 8px;
+  border: 1px solid var(--green-200);
+}
+
+.post-session-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--green-600);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  width: fit-content;
+  letter-spacing: 0.02em;
+}
+
+.post-session-promo-message {
+  font-size: 13px;
+  color: var(--green-800);
+  line-height: 1.4;
+}
+
+.post-session-promo-message:empty {
+  display: none;
+}
+
+/* Dark mode adjustments for promo */
+@media (prefers-color-scheme: dark) {
+  .post-session-promo-section {
+    background: var(--green-900);
+    border-color: var(--green-700);
+  }
+  
+  .post-session-promo-badge {
+    background: var(--green-500);
+  }
+  
+  .post-session-promo-message {
+    color: var(--green-200);
+  }
+  
+  .post-session-ticket-price-promo {
+    color: var(--green-400);
+  }
 }
 
 /* ----------------------------------------------------------------------------

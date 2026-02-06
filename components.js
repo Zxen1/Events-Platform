@@ -10674,6 +10674,7 @@ const PostSessionComponent = (function() {
         // Ticket container (separate from session menu, underneath it)
         html.push('<div class="post-session-ticket-container">');
         html.push('<div class="post-session-ticket-summary">' + ticketSummaryHtml + '</div>');
+        html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         html.push('<div class="post-session-ticket-details"></div>');
         html.push('</div>');
 
@@ -10701,9 +10702,22 @@ const PostSessionComponent = (function() {
         var sessionPopover = wrap.querySelector('.post-session-popover');
         var ticketContainer = wrap.querySelector('.post-session-ticket-container');
         var ticketSummary = wrap.querySelector('.post-session-ticket-summary');
+        var ticketPrompt = wrap.querySelector('.post-session-ticket-prompt');
         var ticketDetails = wrap.querySelector('.post-session-ticket-details');
 
         if (!sessionBtn) return null;
+        
+        // Load session select prompt message
+        if (ticketPrompt && typeof window.getMessage === 'function') {
+            var promptKey = ticketPrompt.getAttribute('data-message-key');
+            if (promptKey) {
+                window.getMessage(promptKey, {}, false).then(function(message) {
+                    if (message && ticketPrompt) {
+                        ticketPrompt.textContent = message;
+                    }
+                }).catch(function() {});
+            }
+        }
 
         var escapeHtml = (callbacks && callbacks.escapeHtml) || function(s) { return String(s || ''); };
 
@@ -10804,8 +10818,9 @@ const PostSessionComponent = (function() {
             if (!activeLoc) return;
 
             if (!selectedSessionIso || !selectedSessionTime) {
-                // No session selected - show price summary
+                // No session selected - show price summary and prompt
                 ticketSummary.style.display = '';
+                if (ticketPrompt) ticketPrompt.style.display = '';
                 ticketDetails.style.display = 'none';
                 ticketDetails.innerHTML = '';
                 return;
@@ -10841,13 +10856,60 @@ const PostSessionComponent = (function() {
                 return;
             }
 
-            // Hide summary, show details
+            // Hide summary and prompt, show details
             ticketSummary.style.display = 'none';
+            if (ticketPrompt) ticketPrompt.style.display = 'none';
             ticketDetails.style.display = '';
+
+            // Scan for promo info across all tiers
+            var promoInfo = null; // { code, option } - first promo found wins
+            var ticketAreas = Object.keys(groupPricing);
+            ticketAreas.forEach(function(areaKey) {
+                var area = groupPricing[areaKey];
+                if (!area || !area.tiers) return;
+                area.tiers.forEach(function(tier) {
+                    if (!promoInfo && tier.promo_option && tier.promo_option !== 'none') {
+                        promoInfo = {
+                            option: tier.promo_option,
+                            code: tier.promo_code || ''
+                        };
+                    }
+                });
+            });
 
             // Build detailed pricing HTML
             var html = [];
-            var ticketAreas = Object.keys(groupPricing);
+
+            // Promo section (if any promo exists)
+            if (promoInfo) {
+                html.push('<div class="post-session-promo-section">');
+                
+                // Promo badge with code or "Members Only"
+                var isLoggedIn = window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn();
+                var badgeText = '';
+                var messageKey = '';
+                
+                if (promoInfo.option === 'funmap') {
+                    // Public promo - show code to everyone
+                    badgeText = promoInfo.code;
+                    messageKey = 'msg_promo_code_reminder';
+                } else if (promoInfo.option === 'personal') {
+                    if (isLoggedIn) {
+                        // Member promo - show code to logged-in users
+                        badgeText = promoInfo.code;
+                        messageKey = 'msg_promo_code_reminder';
+                    } else {
+                        // Member promo - show teaser to non-logged-in users (code hidden)
+                        badgeText = 'Members Only';
+                        messageKey = 'msg_promo_code_member_teaser';
+                    }
+                }
+                
+                html.push('<div class="post-session-promo-badge">' + escapeHtml(badgeText) + '</div>');
+                html.push('<div class="post-session-promo-message" data-message-key="' + escapeHtml(messageKey) + '"></div>');
+                html.push('</div>');
+            }
+
             ticketAreas.forEach(function(areaKey) {
                 var area = groupPricing[areaKey];
                 if (!area || !area.tiers || !area.tiers.length) return;
@@ -10862,13 +10924,35 @@ const PostSessionComponent = (function() {
                 area.tiers.forEach(function(tier) {
                     var flagUrl = getCurrencyFlagUrl(tier.currency);
                     var priceFormatted = formatPriceWithSymbol(tier.price, tier.currency);
-                    html.push('<div class="post-session-ticket-tier">');
+                    var hasPromo = tier.promo_option && tier.promo_option !== 'none' && tier.promo_price;
+                    
+                    // Determine if promo price should be shown
+                    var showPromoPrice = false;
+                    if (hasPromo) {
+                        var isLoggedIn = window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn();
+                        if (tier.promo_option === 'funmap') {
+                            showPromoPrice = true;
+                        } else if (tier.promo_option === 'personal' && isLoggedIn) {
+                            showPromoPrice = true;
+                        }
+                    }
+                    
+                    html.push('<div class="post-session-ticket-tier' + (showPromoPrice ? ' post-session-ticket-tier--has-promo' : '') + '">');
                     html.push('<span class="post-session-ticket-tier-name">' + escapeHtml(tier.pricing_tier || '') + '</span>');
                     html.push('<span class="post-session-ticket-tier-price">');
                     if (flagUrl) {
                         html.push('<img class="post-session-ticket-flag" src="' + escapeHtml(flagUrl) + '" alt="">');
                     }
-                    html.push(escapeHtml(priceFormatted));
+                    
+                    if (showPromoPrice) {
+                        // Show original price crossed out + promo price highlighted
+                        var promoPriceFormatted = formatPriceWithSymbol(tier.promo_price, tier.currency);
+                        html.push('<span class="post-session-ticket-price-original">' + escapeHtml(priceFormatted) + '</span>');
+                        html.push('<span class="post-session-ticket-price-promo">' + escapeHtml(promoPriceFormatted) + '</span>');
+                    } else {
+                        html.push(escapeHtml(priceFormatted));
+                    }
+                    
                     html.push('</span>');
                     html.push('</div>');
                 });
@@ -10877,6 +10961,21 @@ const PostSessionComponent = (function() {
             });
 
             ticketDetails.innerHTML = html.join('');
+            
+            // Load promo message asynchronously
+            if (promoInfo) {
+                var msgEl = ticketDetails.querySelector('.post-session-promo-message');
+                if (msgEl && typeof window.getMessage === 'function') {
+                    var key = msgEl.getAttribute('data-message-key');
+                    if (key) {
+                        window.getMessage(key, {}, false).then(function(message) {
+                            if (message && msgEl) {
+                                msgEl.textContent = message;
+                            }
+                        }).catch(function() {});
+                    }
+                }
+            }
         }
 
         function getLocationSelectedIndex() {

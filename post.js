@@ -1225,6 +1225,47 @@ const PostModule = (function() {
    * @returns {Object} { category, subcategory }
    */
   /**
+   * Build card info rows HTML (shared by postcards and recent cards)
+   * Single source of truth for what info to display and how.
+   * @param {Object} data - Display data
+   * @param {string} data.subcategoryName - Subcategory display name
+   * @param {string} data.subcategoryIconUrl - Subcategory icon URL
+   * @param {string} data.locationText - Location display text (venue or city)
+   * @param {string} data.datesText - Formatted dates text
+   * @param {Object} data.priceParts - From parsePriceSummary: { flagUrl, countryCode, text }
+   * @param {boolean} data.hasPromo - Whether this card has a promo
+   * @param {string} classPrefix - CSS class prefix ('post-card' or 'recent-card')
+   * @returns {string} HTML string for the info rows
+   */
+  function buildCardInfoRowsHtml(data, classPrefix) {
+    var html = [];
+    
+    // Category row
+    var iconHtml = data.subcategoryIconUrl
+      ? '<span class="' + classPrefix + '-icon-sub"><img class="' + classPrefix + '-image-sub" src="' + data.subcategoryIconUrl + '" alt="" /></span>'
+      : '';
+    html.push('<div class="' + classPrefix + '-row-cat">' + iconHtml + ' ' + (data.subcategoryName || '') + '</div>');
+    
+    // Location row
+    if (data.locationText) {
+      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">📍</span><span>' + escapeHtml(data.locationText) + '</span></div>');
+    }
+    
+    // Dates OR Price row (dates take priority)
+    if (data.datesText) {
+      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">📅</span><span>' + escapeHtml(data.datesText) + '</span></div>');
+    } else if (data.priceParts && data.priceParts.text) {
+      var badgeHtml = data.priceParts.flagUrl 
+        ? '<img class="' + classPrefix + '-image-badge" src="' + data.priceParts.flagUrl + '" alt="' + data.priceParts.countryCode + '" title="Currency: ' + data.priceParts.countryCode.toUpperCase() + '">'
+        : '💰';
+      var promoTagHtml = data.hasPromo ? '<span class="' + classPrefix + '-tag-promo">Promo</span>' : '';
+      html.push('<div class="' + classPrefix + '-row-price"><span class="' + classPrefix + '-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(data.priceParts.text) + '</span>' + promoTagHtml + '</div>');
+    }
+    
+    return html.join('');
+  }
+
+  /**
    * Render a single post card
    * Structure: .post-card-image, .post-card-meta, .post-card-text-title, .post-card-container-info
    * @param {Object} post - Post data from API
@@ -1293,11 +1334,17 @@ const PostModule = (function() {
       ? '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
 
-    var iconHtml = iconUrl
-      ? '<span class="post-card-icon-sub"><img class="post-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
-      : '';
-
     var isFav = isFavorite(post.id);
+
+    // Build info rows using shared function (single source of truth)
+    var infoRowsHtml = buildCardInfoRowsHtml({
+      subcategoryName: displayName,
+      subcategoryIconUrl: iconUrl,
+      locationText: locationDisplay,
+      datesText: datesText,
+      priceParts: priceParts,
+      hasPromo: mapCardHasPromo(mapCard)
+    }, 'post-card');
 
     // Standard Design
     el.innerHTML = [
@@ -1305,15 +1352,7 @@ const PostModule = (function() {
       '<div class="post-card-meta">',
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
-          '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
-          (priceParts.text ? (function() {
-            var badgeHtml = priceParts.flagUrl 
-              ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
-              : '💰';
-            return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
-          })() : ''),
+          infoRowsHtml,
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
@@ -2288,6 +2327,44 @@ const PostModule = (function() {
     }
 
     return { flagUrl: flagUrl, countryCode: countryCode, text: displayText };
+  }
+  
+  /**
+   * Check if a mapCard has any promo pricing available.
+   * Checks both ticket pricing (pricing_groups) and item pricing (promo_option field).
+   * @param {Object} mapCard - The map card object
+   * @returns {boolean} True if any promo exists
+   */
+  function mapCardHasPromo(mapCard) {
+    if (!mapCard) return false;
+    
+    // Check ticket pricing (pricing_groups)
+    var pricingGroups = mapCard.pricing_groups;
+    if (pricingGroups && typeof pricingGroups === 'object') {
+      var groupKeys = Object.keys(pricingGroups);
+      for (var i = 0; i < groupKeys.length; i++) {
+        var areas = pricingGroups[groupKeys[i]];
+        if (!areas || typeof areas !== 'object') continue;
+        var areaKeys = Object.keys(areas);
+        for (var j = 0; j < areaKeys.length; j++) {
+          var area = areas[areaKeys[j]];
+          if (!area || !area.tiers) continue;
+          for (var k = 0; k < area.tiers.length; k++) {
+            var tier = area.tiers[k];
+            if (tier && tier.promo_option && tier.promo_option !== 'none') {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    
+    // Check item pricing (promo_option field directly on mapCard)
+    if (mapCard.promo_option && mapCard.promo_option !== 'none') {
+      return true;
+    }
+    
+    return false;
   }
   
   function getMapCenter() {
@@ -3774,6 +3851,11 @@ const PostModule = (function() {
       var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
       if (title === 'Array') title = 'Post #' + postId;
 
+      // Get dates and price info (same as postcards)
+      var datesText = formatPostDates(post);
+      var priceSummary = (mapCard && mapCard.price_summary) ? mapCard.price_summary : (post.price_summary || '');
+      var hasPromo = mapCardHasPromo(mapCard);
+
       next.push({
         id: postId,
         post_map_card_id: postMapCardId,
@@ -3784,6 +3866,9 @@ const PostModule = (function() {
         subcategory_name: subName,
         subcategory_icon_url: iconUrl,
         location_text: locText || '',
+        dates_text: datesText || '',
+        price_summary: priceSummary || '',
+        has_promo: hasPromo,
         timestamp: now
       });
       seen[dedupeKey] = true;
@@ -4237,21 +4322,26 @@ const PostModule = (function() {
       ? '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="recent-card-image recent-card-image--empty" aria-hidden="true"></div>';
 
-    var iconHtml = iconUrl
-      ? '<span class="recent-card-icon-sub"><img class="recent-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
-      : '';
-
     // Check favorite status (unavailable posts are always unfavorited)
     var isFav = entry.unavailable ? false : isFavorite(entry.id);
 
-    // Standard Design (no date row - timestamp is above the card)
+    // Build info rows using shared function (single source of truth)
+    var infoRowsHtml = buildCardInfoRowsHtml({
+      subcategoryName: displayName,
+      subcategoryIconUrl: iconUrl,
+      locationText: city,
+      datesText: entry.dates_text || '',
+      priceParts: parsePriceSummary(entry.price_summary || ''),
+      hasPromo: entry.has_promo || false
+    }, 'recent-card');
+
+    // Standard Design (uses same info rows as postcards)
     el.innerHTML = [
       thumbHtml,
       '<div class="recent-card-meta">',
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
-          '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
+          infoRowsHtml,
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',
@@ -4768,7 +4858,8 @@ const PostModule = (function() {
     getRawImageUrl: getRawImageUrl,
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
-    parsePriceSummary: parsePriceSummary
+    parsePriceSummary: parsePriceSummary,
+    mapCardHasPromo: mapCardHasPromo
   };
 
 })();

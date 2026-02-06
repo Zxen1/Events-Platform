@@ -431,6 +431,18 @@ const MarqueeModule = (function() {
       const priceTextEl = document.createElement('span');
       priceTextEl.textContent = priceParts.text;
       priceLine.appendChild(priceTextEl);
+      
+      // Check for promo and add badge
+      const hasPromo = (postModule && typeof postModule.mapCardHasPromo === 'function') 
+        ? postModule.mapCardHasPromo(mapCard) 
+        : false;
+      if (hasPromo) {
+        const promoTag = document.createElement('span');
+        promoTag.className = 'marquee-tag-promo';
+        promoTag.textContent = 'Promo';
+        priceLine.appendChild(promoTag);
+      }
+      
       info.appendChild(priceLine);
     }
     
