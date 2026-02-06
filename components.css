@@ -3611,11 +3611,12 @@ body.image-modal-open > *:not(.image-modal) {
   font-variant-numeric: tabular-nums;
 }
 
-/* Session select prompt (shown when no session selected) */
+/* Session select prompt (shown when no session selected, directly below session menu) */
 .post-session-ticket-prompt {
   font-size: 13px;
   color: var(--ps-muted);
-  margin-top: 6px;
+  margin-top: 8px;
+  margin-bottom: 4px;
   font-style: italic;
 }
 

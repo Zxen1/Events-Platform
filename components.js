@@ -10671,10 +10671,11 @@ const PostSessionComponent = (function() {
         html.push('</div>');
         html.push('</div>');
         html.push('</div>');
-        // Ticket container (separate from session menu, underneath it)
+        // Prompt (directly below session menu, above price summary)
+        html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
+        // Ticket container (separate from session menu, underneath prompt)
         html.push('<div class="post-session-ticket-container">');
         html.push('<div class="post-session-ticket-summary">' + ticketSummaryHtml + '</div>');
-        html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         html.push('<div class="post-session-ticket-details"></div>');
         html.push('</div>');
 
@@ -10801,11 +10802,11 @@ const PostSessionComponent = (function() {
             return '';
         }
 
-        // Format price with symbol using CurrencyComponent
+        // Format price with symbol using CurrencyComponent (always show decimal places)
         function formatPriceWithSymbol(price, currencyCode) {
             if (!currencyCode || !window.CurrencyComponent) return String(price || '');
             try {
-                return CurrencyComponent.formatWithSymbol(price, currencyCode);
+                return CurrencyComponent.formatWithSymbol(price, currencyCode, { trimZeroDecimals: false });
             } catch (_e) {
                 return String(price || '');
             }

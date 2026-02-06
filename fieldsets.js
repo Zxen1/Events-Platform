@@ -764,12 +764,12 @@ const FieldsetBuilder = (function(){
             
             var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
             
-            // If currency is selected, format WITH symbol
+            // If currency is selected, format WITH symbol (always show decimal places)
             if (currencyCode) {
                 if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
                     throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
                 }
-                var formatted = CurrencyComponent.formatWithSymbol(cleaned, currencyCode);
+                var formatted = CurrencyComponent.formatWithSymbol(cleaned, currencyCode, { trimZeroDecimals: false });
                 if (formatted !== '') {
                     this.value = formatted;
                     return;
@@ -2643,9 +2643,9 @@ const FieldsetBuilder = (function(){
                                     } else {
                                         numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
                                     }
-                                    // Format with new currency
+                                    // Format with new currency (always show decimal places)
                                     if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
-                                        priceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), value);
+                                        priceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), value, { trimZeroDecimals: false });
                                     }
                                 }
                             }
@@ -3136,7 +3136,7 @@ const FieldsetBuilder = (function(){
                             if (priceStr) {
                                 var numericValue = parseFloat(priceStr.replace(/[^0-9.-]/g, ''));
                                 if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
-                                    itemPriceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), val.currency);
+                                    itemPriceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), val.currency, { trimZeroDecimals: false });
                                 }
                             }
                         }
@@ -3448,7 +3448,7 @@ const FieldsetBuilder = (function(){
                         if (!Number.isFinite(numericValue)) return;
                         
                         if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode);
+                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode, { trimZeroDecimals: false });
                         }
                     });
                 }
@@ -3541,7 +3541,7 @@ const FieldsetBuilder = (function(){
                             if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
                                 throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
                             }
-                            var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode);
+                            var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode, { trimZeroDecimals: false });
                             if (formatted !== '') {
                                 this.value = formatted;
                                 return;
@@ -4163,13 +4163,22 @@ const FieldsetBuilder = (function(){
                                 if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
                                 
                                 var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
-                                var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                var priceRaw = priceInput ? String(priceInput.value || '').trim() : '';
+                                
+                                // Format price with correct decimal places/separator for currency (no trimming zeros)
+                                var price = priceRaw;
+                                if (priceRaw && curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatForDisplay) {
+                                    var formatted = CurrencyComponent.formatForDisplay(priceRaw, curr, { trimZeroDecimals: false });
+                                    if (formatted !== '') price = formatted;
+                                }
                                 
                                 // Calculate promo_price if promo is enabled
                                 var promoPrice = '';
-                                if (promoOption !== 'none' && price && promoValue) {
-                                    // Parse numeric price (remove currency symbols)
-                                    var numericPrice = parseFloat(price.replace(/[^0-9.-]/g, ''));
+                                if (promoOption !== 'none' && priceRaw && promoValue) {
+                                    // Parse numeric price
+                                    var numericPrice = typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput && curr
+                                        ? CurrencyComponent.parseInput(priceRaw, curr)
+                                        : parseFloat(priceRaw.replace(/[^0-9.-]/g, ''));
                                     var numericPromoValue = parseFloat(promoValue);
                                     if (Number.isFinite(numericPrice) && Number.isFinite(numericPromoValue)) {
                                         var calculatedPrice;
@@ -4178,9 +4187,13 @@ const FieldsetBuilder = (function(){
                                         } else {
                                             calculatedPrice = numericPrice - numericPromoValue;
                                         }
-                                        // Ensure non-negative and round to 2 decimal places
-                                        calculatedPrice = Math.max(0, Math.round(calculatedPrice * 100) / 100);
-                                        promoPrice = calculatedPrice.toFixed(2);
+                                        // Ensure non-negative and format with currency rules (no trimming zeros)
+                                        calculatedPrice = Math.max(0, calculatedPrice);
+                                        if (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatForDisplay) {
+                                            promoPrice = CurrencyComponent.formatForDisplay(calculatedPrice.toString(), curr, { trimZeroDecimals: false });
+                                        } else {
+                                            promoPrice = calculatedPrice.toFixed(2);
+                                        }
                                     }
                                 }
                                 
@@ -4914,7 +4927,7 @@ const FieldsetBuilder = (function(){
                             var numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
                             if (!Number.isFinite(numericValue)) return;
                             if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                                inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), initialCurrValue);
+                                inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), initialCurrValue, { trimZeroDecimals: false });
                             }
                         });
                     }
