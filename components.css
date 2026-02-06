@@ -3665,20 +3665,17 @@ body.image-modal-open > *:not(.image-modal) {
   font-variant-numeric: tabular-nums;
 }
 
-/* Promo pricing display */
+/* Promo pricing display - original and promo prices in aligned columns */
 .post-session-ticket-price-original {
-  text-decoration: line-through;
-  color: var(--ps-muted);
-  font-size: 0.9em;
+  min-width: 80px;
+  text-align: right;
 }
 
 .post-session-ticket-price-promo {
+  min-width: 80px;
+  text-align: right;
   color: var(--green-600);
   font-weight: 600;
-}
-
-.post-session-ticket-tier--has-promo .post-session-ticket-tier-price {
-  gap: 8px;
 }
 
 /* Promo section (badge + message) */
@@ -3687,6 +3684,7 @@ body.image-modal-open > *:not(.image-modal) {
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
+  margin-left: -10px;
   margin-bottom: 12px;
   background: var(--green-50);
   border-radius: 8px;
