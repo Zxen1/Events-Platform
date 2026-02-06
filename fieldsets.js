@@ -5542,81 +5542,29 @@ const FieldsetBuilder = (function(){
                 sessPickerTicketBtn.appendChild(sessPLetter);
                 sessDatePickerRow.appendChild(sessPickerTicketBtn);
 
-                // --- Session time duplication system ---
-                // Master: First date in the list (earliest date)
-                // Time slots broadcast from master to all followers until edited
-                
-                // Check if a date is the master (first/earliest date)
-                function sessIsMasterDate(dateStr) {
-                    var sortedDates = Object.keys(sessSessionData).sort();
-                    return sortedDates.length > 0 && sortedDates[0] === dateStr;
-                }
-                
-                // Get the master date's time for a given slot
-                function sessGetMasterTimeForSlot(slotIdx) {
-                    var sortedDates = Object.keys(sessSessionData).sort();
-                    if (sortedDates.length === 0) return '';
-                    var masterDate = sortedDates[0];
-                    var masterData = sessSessionData[masterDate];
-                    if (!masterData || !masterData.times || slotIdx >= masterData.times.length) return '';
-                    return masterData.times[slotIdx] || '';
-                }
-                
-                // Broadcast time from master to all follower dates at the same slot
-                // Avoids duplicates: skip if the value already exists elsewhere on the follower date
-                function sessBroadcastTime(slotIdx, value) {
-                    var sortedDates = Object.keys(sessSessionData).sort();
-                    if (sortedDates.length <= 1) return;
+                // Sort times chronologically for a date (keeps edited/groups aligned)
+                function sessSortTimesForDate(dateStr) {
+                    var data = sessSessionData[dateStr];
+                    if (!data || !data.times || data.times.length <= 1) return;
                     
-                    // Skip master date (first date)
-                    for (var i = 1; i < sortedDates.length; i++) {
-                        var dateStr = sortedDates[i];
-                        var data = sessSessionData[dateStr];
-                        if (!data) continue;
-                        
-                        // Only update if slot exists and is not marked as edited (independent)
-                        if (data.times.length > slotIdx && !data.edited[slotIdx]) {
-                            // Check if this value would create a duplicate on this date
-                            if (value !== '') {
-                                var isDuplicate = data.times.some(function(t, idx) {
-                                    return idx !== slotIdx && t === value;
-                                });
-                                if (isDuplicate) {
-                                    // Clear this slot instead of creating a duplicate
-                                    data.times[slotIdx] = '';
-                                    continue;
-                                }
-                            }
-                            data.times[slotIdx] = value;
-                        }
-                    }
-                }
-                
-                // Get autofill value for a new slot (from master date)
-                // Avoids duplicates: if the time already exists on this date, try the next slot
-                function sessGetAutofillForSlot(dateStr, slotIdx) {
-                    // If this is the master date, no autofill
-                    if (sessIsMasterDate(dateStr)) return '';
+                    var items = data.times.map(function(t, i) {
+                        return {
+                            time: t || '',
+                            edited: data.edited[i] || false,
+                            group: (data.groups && data.groups[i]) || 'A'
+                        };
+                    });
                     
-                    var sortedDates = Object.keys(sessSessionData).sort();
-                    if (sortedDates.length === 0) return '';
-                    var masterDate = sortedDates[0];
-                    var masterData = sessSessionData[masterDate];
-                    if (!masterData || !masterData.times) return '';
+                    items.sort(function(a, b) {
+                        if (a.time === '' && b.time === '') return 0;
+                        if (a.time === '') return 1;
+                        if (b.time === '') return -1;
+                        return a.time.localeCompare(b.time);
+                    });
                     
-                    var targetData = sessSessionData[dateStr];
-                    var existingTimes = (targetData && targetData.times) ? targetData.times : [];
-                    
-                    // Try slots starting from slotIdx, looking for a time that doesn't already exist
-                    for (var i = slotIdx; i < masterData.times.length; i++) {
-                        var candidateTime = masterData.times[i] || '';
-                        if (candidateTime === '') continue;
-                        var isDuplicate = existingTimes.some(function(t) { return t === candidateTime; });
-                        if (!isDuplicate) return candidateTime;
-                    }
-                    
-                    // No available time found - return empty
-                    return '';
+                    data.times = items.map(function(x) { return x.time; });
+                    data.edited = items.map(function(x) { return x.edited; });
+                    data.groups = items.map(function(x) { return x.group; });
                 }
 
                 function sessApplyDraftToCalendar() {
@@ -5832,19 +5780,8 @@ const FieldsetBuilder = (function(){
                                         this.value = newTime;
                                         sessSessionData[dateStr].times[idx] = newTime;
                                         sessSessionData[dateStr].edited[idx] = true;
-                                        
-                                        // If this is the master date (first date), broadcast to all followers
-                                        if (sessIsMasterDate(dateStr)) {
-                                            sessBroadcastTime(idx, newTime);
-                                        }
-                                        
-                                        // Update all time inputs to reflect current state
-                                        sessSessionsContainer.querySelectorAll('.fieldset-sessions-session-field-time-input').forEach(function(input) {
-                                            var d0 = input.dataset.date;
-                                            var i0 = parseInt(input.dataset.idx, 10);
-                                            if (d0 && sessSessionData[d0] && sessSessionData[d0].times[i0] !== undefined) input.value = sessSessionData[d0].times[i0];
-                                        });
-                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                        sessSortTimesForDate(dateStr);
+                                        sessRenderSessions();
                                     } else {
                                         this.value = '';
                                         sessSessionData[dateStr].times[idx] = '';
@@ -5875,8 +5812,7 @@ const FieldsetBuilder = (function(){
                                 (function(dateStr, idx) {
                                     addBtn.addEventListener('click', function() {
                                         var newSlotIdx = idx + 1;
-                                        var autofillVal = sessGetAutofillForSlot(dateStr, newSlotIdx);
-                                        sessSessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        sessSessionData[dateStr].times.splice(newSlotIdx, 0, '');
                                         sessSessionData[dateStr].edited.splice(newSlotIdx, 0, false);
                                         if (!Array.isArray(sessSessionData[dateStr].groups)) sessSessionData[dateStr].groups = [];
                                         var inheritKey = String(sessSessionData[dateStr].groups[idx] || '').trim();
@@ -6016,6 +5952,45 @@ const FieldsetBuilder = (function(){
                             group.appendChild(row);
                         });
                         sessSessionsContainer.appendChild(group);
+                        
+                        // Add "Copy Times" button after first date if there are multiple dates
+                        if (dateIdx === 0 && sortedDates.length > 1) {
+                            var copyBtn = document.createElement('button');
+                            copyBtn.type = 'button';
+                            copyBtn.className = 'fieldset-sessions-copy-button button-class-6';
+                            copyBtn.textContent = 'Copy Times';
+                            copyBtn.style.marginTop = '8px';
+                            copyBtn.style.marginBottom = '8px';
+                            copyBtn.addEventListener('click', function() {
+                                var masterDate = sortedDates[0];
+                                var masterData = sessSessionData[masterDate];
+                                if (!masterData || !masterData.times) return;
+                                
+                                // Copy master times to all other dates (skip duplicates)
+                                for (var i = 1; i < sortedDates.length; i++) {
+                                    var targetDate = sortedDates[i];
+                                    var targetData = sessSessionData[targetDate];
+                                    if (!targetData) continue;
+                                    
+                                    masterData.times.forEach(function(masterTime, masterIdx) {
+                                        if (!masterTime || masterTime === '') return;
+                                        var exists = targetData.times.some(function(t) { return t === masterTime; });
+                                        if (!exists) {
+                                            targetData.times.push(masterTime);
+                                            targetData.edited.push(false);
+                                            var groupKey = (masterData.groups && masterData.groups[masterIdx]) || 'A';
+                                            if (!Array.isArray(targetData.groups)) targetData.groups = [];
+                                            targetData.groups.push(groupKey);
+                                        }
+                                    });
+                                    
+                                    sessSortTimesForDate(targetDate);
+                                }
+                                
+                                sessRenderSessions();
+                            });
+                            sessSessionsContainer.appendChild(copyBtn);
+                        }
                     });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
