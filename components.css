@@ -3805,15 +3805,18 @@ body.image-modal-open > *:not(.image-modal) {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
   flex: 1 1 auto;
   min-height: 0;
+  overflow: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
+  overflow: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-body {
