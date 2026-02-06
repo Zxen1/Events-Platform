@@ -635,13 +635,13 @@
   margin-right: 5px;
 }
 
-/* Promo tag for postcards (shown in price row) */
+/* Promo tag for postcards (shown in price row, right-aligned) */
 .post-card-tag-promo,
 .recent-card-tag-promo {
   display: inline-flex;
   align-items: center;
   padding: 2px 6px;
-  margin-left: 8px;
+  margin-left: auto;
   background: var(--green-600);
   color: #fff;
   font-size: 10px;
