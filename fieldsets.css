@@ -1564,7 +1564,7 @@
     border: 1px solid var(--blue-500);
     border-radius: 4px;
     display: none;
-    overflow: hidden;
+    overflow: visible;
     z-index: var(--layer-menu, 85);
 }
 
