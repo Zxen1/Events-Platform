@@ -1564,7 +1564,7 @@
     border: 1px solid var(--blue-500);
     border-radius: 4px;
     display: none;
-    overflow: visible;
+    overflow: hidden;
     z-index: var(--layer-menu, 85);
 }
 
@@ -1574,10 +1574,4 @@
 
 .fieldset-sessions-calendar-popover-body {
     padding: 10px;
-}
-
-.fieldset-sessions-calendar-popover .calendar-container,
-.fieldset-sessions-calendar-popover .calendar-scroll-wrapper,
-.fieldset-sessions-calendar-popover .calendar-scroll {
-    overflow: visible;
 }

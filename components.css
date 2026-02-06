@@ -3781,8 +3781,7 @@ body.image-modal-open > *:not(.image-modal) {
   border-radius: 0 0 var(--ps-radius) var(--ps-radius);
   box-shadow: var(--ps-shadow);
   max-height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 .post-session-button--open + .post-session-options {
