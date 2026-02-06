@@ -4893,7 +4893,18 @@ const FieldsetBuilder = (function(){
                             existingTierBlocks.forEach(function(tb) { tb.remove(); });
                             
                             var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
-                            if (tiers.length === 0) tiers = [{}];
+                            if (tiers.length === 0) {
+                                // Default tiers for Group A (first group) - other groups will copy via autofill
+                                if (groupKey === 'A' && seatIdx === 0) {
+                                    tiers = [
+                                        { pricing_tier: 'Adult' },
+                                        { pricing_tier: 'Concession' },
+                                        { pricing_tier: 'Child' }
+                                    ];
+                                } else {
+                                    tiers = [{}];
+                                }
+                            }
                             tiers.forEach(function(tierObj) {
                                 var tierBlock = tpCreatePricingTierBlock(tiersContainer, yesRadio, groupKey);
                                 tiersContainer.appendChild(tierBlock);
