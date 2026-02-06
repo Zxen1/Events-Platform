@@ -10670,13 +10670,13 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-        html.push('</div>');
         // Prompt (directly below session menu, above price summary)
         html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
-        // Ticket container (separate from session menu, underneath prompt)
+        // Ticket container (underneath prompt)
         html.push('<div class="post-session-ticket-container">');
         html.push('<div class="post-session-ticket-summary">' + ticketSummaryHtml + '</div>');
         html.push('<div class="post-session-ticket-details"></div>');
+        html.push('</div>');
         html.push('</div>');
 
         return html.join('');
