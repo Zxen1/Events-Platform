@@ -367,6 +367,16 @@ See `Agent/venue-seeding-plan.md` for full instructions, pre-flight checklist, a
 
 ---
 
+## API: `get-posts` AND `full=1`
+
+`get-posts.php` has two modes controlled by the `full` query parameter:
+- **Without `full=1`:** Returns lightweight post/map card data (titles, locations, prices, `has_promo` flag). No sessions, pricing_groups, age_ratings, or item details.
+- **With `full=1`:** Joins extra tables to include sessions, `pricing_groups`, `age_ratings`, item pricing, and amenities.
+
+Any feature that depends on `pricing_groups`, sessions, or item details will silently fail (return empty/false) if the fetch doesn't include `&full=1`. This has caused bugs where data appeared missing until a post was opened (which uses `full=1`).
+
+---
+
 ## EVENT HANDLING
 
 ### Avoid stopPropagation

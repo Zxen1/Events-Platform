@@ -2341,6 +2341,9 @@ const PostModule = (function() {
   function mapCardHasPromo(mapCard) {
     if (!mapCard) return false;
     
+    // Check lightweight flag from API (available without full=1)
+    if (mapCard.has_promo) return true;
+    
     // Check ticket pricing (pricing_groups)
     var pricingGroups = mapCard.pricing_groups;
     if (pricingGroups && typeof pricingGroups === 'object') {

@@ -3566,7 +3566,9 @@ body.image-modal-open > *:not(.image-modal) {
 .post-session-promo-tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
+  justify-content: center;
+  height: 24px;
+  padding: 0 6px;
   margin-left: auto;
   margin-right: 10px;
   background: var(--green-600);
@@ -3582,6 +3584,11 @@ body.image-modal-open > *:not(.image-modal) {
 /* Hide empty promo tag so margin-left: auto falls through to age ratings */
 .post-session-promo-tag:empty {
   display: none;
+}
+
+/* When promo tag is visible, it owns margin-left: auto; age ratings just follow */
+.post-session-promo-tag:not(:empty) + .post-session-age-ratings {
+  margin-left: 0;
 }
 
 /* Age rating icons container - right-aligned */

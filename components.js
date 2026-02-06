@@ -11604,6 +11604,24 @@ const PostSessionComponent = (function() {
         };
         document.addEventListener('click', clickOutsideHandler);
 
+        // Initial promo check (before sessions are loaded, use pricing_groups directly)
+        try {
+            var initPromoEl = wrap.querySelector('.post-session-button .post-session-promo-tag');
+            if (initPromoEl) {
+                var initLoc = getActiveLocationForUi();
+                if (initLoc) {
+                    var pg = initLoc.pricing_groups || {};
+                    var pgKeys = Object.keys(pg);
+                    for (var pi = 0; pi < pgKeys.length; pi++) {
+                        if (ticketGroupHasPromo(pgKeys[pi])) {
+                            initPromoEl.textContent = 'Promo';
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (_eInitPromo) {}
+
         return {
             close: closeSessionDropdown,
             destroy: function() {

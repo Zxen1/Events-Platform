@@ -635,6 +635,12 @@
   margin-right: 5px;
 }
 
+/* Price row must stretch full width so promo tag can right-align via margin-left: auto */
+.post-card-row-price,
+.recent-card-row-price {
+  align-self: stretch;
+}
+
 /* Promo tag for postcards (shown in price row, right-aligned) */
 .post-card-tag-promo,
 .recent-card-tag-promo {

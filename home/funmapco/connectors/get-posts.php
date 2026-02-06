@@ -442,7 +442,11 @@ try {
             mc.tickets_url,
             mc.coupon_code,
             mc.session_summary,
-            mc.price_summary
+            mc.price_summary,
+            (
+                EXISTS (SELECT 1 FROM post_ticket_pricing ptp WHERE ptp.post_map_card_id = mc.id AND ptp.promo_option IS NOT NULL AND ptp.promo_option != 'none')
+                OR EXISTS (SELECT 1 FROM post_item_pricing pip WHERE pip.post_map_card_id = mc.id AND pip.promo_option IS NOT NULL AND pip.promo_option != 'none')
+            ) AS has_promo
         FROM `posts` p
         LEFT JOIN `admins` a ON a.id = p.member_id AND a.username = p.member_name
         LEFT JOIN `members` m ON m.id = p.member_id AND m.username = p.member_name
@@ -544,6 +548,7 @@ try {
                 'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
+                'has_promo' => !empty($row['has_promo']),
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below
