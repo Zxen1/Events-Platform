@@ -3781,7 +3781,8 @@ body.image-modal-open > *:not(.image-modal) {
   border-radius: 0 0 var(--ps-radius) var(--ps-radius);
   box-shadow: var(--ps-shadow);
   max-height: 600px;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .post-session-button--open + .post-session-options {
@@ -3805,20 +3806,15 @@ body.image-modal-open > *:not(.image-modal) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
-  overflow-x: auto;
-  overflow-y: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-body {
