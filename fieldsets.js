@@ -5868,6 +5868,9 @@ const FieldsetBuilder = (function(){
                                         if (!inheritKey) inheritKey = 'A';
                                         sessSessionData[dateStr].groups.splice(newSlotIdx, 0, inheritKey);
                                         sessRenderSessions();
+                                        // Focus the new time input
+                                        var newInput = sessSessionsContainer.querySelector('.fieldset-sessions-session-field-time-input[data-date="' + dateStr + '"][data-idx="' + newSlotIdx + '"]');
+                                        if (newInput) newInput.focus();
                                     });
                                 })(dateStr, idx);
                             }
