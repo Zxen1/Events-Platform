@@ -5708,6 +5708,55 @@ const FieldsetBuilder = (function(){
                                     });
                                 } catch (ePick) {}
                                 row.appendChild(dateDisplay);
+                            } else if (dateIdx === 0 && idx === 1 && sortedDates.length > 1) {
+                                // Copy Times button in place of spacer for first date's second row
+                                var copyBtn = document.createElement('button');
+                                copyBtn.type = 'button';
+                                copyBtn.className = 'fieldset-sessions-copy-button button-class-6';
+                                copyBtn.textContent = 'Copy Times';
+                                copyBtn.addEventListener('click', function() {
+                                    var masterDate = sortedDates[0];
+                                    var masterData = sessSessionData[masterDate];
+                                    if (!masterData || !masterData.times) return;
+                                    
+                                    for (var i = 1; i < sortedDates.length; i++) {
+                                        var targetDate = sortedDates[i];
+                                        var targetData = sessSessionData[targetDate];
+                                        if (!targetData) continue;
+                                        
+                                        masterData.times.forEach(function(masterTime, masterIdx) {
+                                            if (!masterTime || masterTime === '') return;
+                                            var exists = targetData.times.some(function(t) { return t === masterTime; });
+                                            if (!exists) {
+                                                targetData.times.push(masterTime);
+                                                targetData.edited.push(false);
+                                                var groupKey = (masterData.groups && masterData.groups[masterIdx]) || 'A';
+                                                if (!Array.isArray(targetData.groups)) targetData.groups = [];
+                                                targetData.groups.push(groupKey);
+                                            }
+                                        });
+                                        
+                                        // Remove empty slots from target
+                                        var nonEmpty = [];
+                                        for (var j = 0; j < targetData.times.length; j++) {
+                                            if (targetData.times[j] && targetData.times[j] !== '') {
+                                                nonEmpty.push({
+                                                    time: targetData.times[j],
+                                                    edited: targetData.edited[j] || false,
+                                                    group: (targetData.groups && targetData.groups[j]) || 'A'
+                                                });
+                                            }
+                                        }
+                                        targetData.times = nonEmpty.map(function(x) { return x.time; });
+                                        targetData.edited = nonEmpty.map(function(x) { return x.edited; });
+                                        targetData.groups = nonEmpty.map(function(x) { return x.group; });
+                                        
+                                        sessSortTimesForDate(targetDate);
+                                    }
+                                    
+                                    sessRenderSessions();
+                                });
+                                row.appendChild(copyBtn);
                             } else {
                                 var spacer = document.createElement('div');
                                 spacer.className = 'fieldset-sessions-session-field-label-spacer';
@@ -5952,45 +6001,6 @@ const FieldsetBuilder = (function(){
                             group.appendChild(row);
                         });
                         sessSessionsContainer.appendChild(group);
-                        
-                        // Add "Copy Times" button after first date if there are multiple dates
-                        if (dateIdx === 0 && sortedDates.length > 1) {
-                            var copyBtn = document.createElement('button');
-                            copyBtn.type = 'button';
-                            copyBtn.className = 'fieldset-sessions-copy-button button-class-6';
-                            copyBtn.textContent = 'Copy Times';
-                            copyBtn.style.marginTop = '8px';
-                            copyBtn.style.marginBottom = '8px';
-                            copyBtn.addEventListener('click', function() {
-                                var masterDate = sortedDates[0];
-                                var masterData = sessSessionData[masterDate];
-                                if (!masterData || !masterData.times) return;
-                                
-                                // Copy master times to all other dates (skip duplicates)
-                                for (var i = 1; i < sortedDates.length; i++) {
-                                    var targetDate = sortedDates[i];
-                                    var targetData = sessSessionData[targetDate];
-                                    if (!targetData) continue;
-                                    
-                                    masterData.times.forEach(function(masterTime, masterIdx) {
-                                        if (!masterTime || masterTime === '') return;
-                                        var exists = targetData.times.some(function(t) { return t === masterTime; });
-                                        if (!exists) {
-                                            targetData.times.push(masterTime);
-                                            targetData.edited.push(false);
-                                            var groupKey = (masterData.groups && masterData.groups[masterIdx]) || 'A';
-                                            if (!Array.isArray(targetData.groups)) targetData.groups = [];
-                                            targetData.groups.push(groupKey);
-                                        }
-                                    });
-                                    
-                                    sessSortTimesForDate(targetDate);
-                                }
-                                
-                                sessRenderSessions();
-                            });
-                            sessSessionsContainer.appendChild(copyBtn);
-                        }
                     });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }

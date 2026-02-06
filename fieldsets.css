@@ -1417,6 +1417,12 @@
     height: 36px;
 }
 
+.fieldset-sessions-copy-button {
+    flex: 1;
+    height: 36px;
+    font-size: 13px;
+}
+
 .fieldset-sessions-session-field-time {
     flex: 0 0 70px;
 }
