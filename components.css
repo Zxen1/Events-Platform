@@ -3811,12 +3811,14 @@ body.image-modal-open > *:not(.image-modal) {
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll-wrapper {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-scroll {
   flex: 1 1 auto;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .post-session-calendar-slot .post-session-calendar-mount .calendar-body {
