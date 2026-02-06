@@ -10656,6 +10656,7 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-text-main">');
         html.push('<span class="post-session-date-left">' + escapeHtml(datesText) + '</span>');
         html.push('<span class="post-session-time-right"></span>');
+        html.push('<span class="post-session-promo-tag"></span>');
         html.push('<span class="post-session-age-ratings">' + ageRatingsHtml + '</span>');
         html.push('</div>');
         html.push('</div>');
@@ -10788,6 +10789,39 @@ const PostSessionComponent = (function() {
                 if (!url) return '';
                 return '<img class="post-session-age-rating-icon" src="' + escapeHtml(url) + '" alt="' + escapeHtml(val) + '" title="Age rating: ' + escapeHtml(val === 'all' ? 'All Ages' : val + '+') + '">';
             }).join('');
+        }
+
+        // Check if a specific ticket group has any promo
+        function ticketGroupHasPromo(ticketGroupKey) {
+            if (!ticketGroupKey) return false;
+            var activeLoc = getActiveLocationForUi();
+            if (!activeLoc) return false;
+            var pricingGroups = activeLoc.pricing_groups || {};
+            var groupPricing = pricingGroups[ticketGroupKey];
+            if (!groupPricing || typeof groupPricing !== 'object') return false;
+            var areaKeys = Object.keys(groupPricing);
+            for (var i = 0; i < areaKeys.length; i++) {
+                var area = groupPricing[areaKeys[i]];
+                if (!area || !area.tiers) continue;
+                for (var j = 0; j < area.tiers.length; j++) {
+                    var tier = area.tiers[j];
+                    if (tier.promo_option && tier.promo_option !== 'none') return true;
+                }
+            }
+            return false;
+        }
+
+        // Check if any session in the current list has a promo
+        function anySessionHasPromo() {
+            if (!sessionItems || !sessionItems.length) return false;
+            var checked = {};
+            for (var i = 0; i < sessionItems.length; i++) {
+                var key = sessionItems[i] ? String(sessionItems[i].ticket_group_key || '').trim() : '';
+                if (!key || checked[key]) continue;
+                checked[key] = true;
+                if (ticketGroupHasPromo(key)) return true;
+            }
+            return false;
         }
 
         // Get currency flag URL from currency code
@@ -11010,12 +11044,15 @@ const PostSessionComponent = (function() {
             if (!wrap) return;
             var dateEl = wrap.querySelector('.post-session-button .post-session-date-left');
             var timeEl = wrap.querySelector('.post-session-button .post-session-time-right');
+            var promoEl = wrap.querySelector('.post-session-button .post-session-promo-tag');
             var ageEl = wrap.querySelector('.post-session-button .post-session-age-ratings');
             if (!dateEl || !timeEl) return;
             if (!selectedSessionIso || !selectedSessionTime) {
                 // Date range mode - show all unique age ratings
                 if (defaultSessionButtonDateText) dateEl.textContent = defaultSessionButtonDateText;
                 timeEl.textContent = '';
+                // Summary mode: show promo tag if any session has a promo
+                if (promoEl) promoEl.textContent = anySessionHasPromo() ? 'Promo' : '';
                 if (ageEl) {
                     var allRatings = getAllUniqueAgeRatings();
                     ageEl.innerHTML = renderAgeRatingIcons(allRatings);
@@ -11027,18 +11064,23 @@ const PostSessionComponent = (function() {
             var timeText = selectedSessionTime ? normalizeTimeHHMM(selectedSessionTime) : '';
             dateEl.textContent = left;
             timeEl.textContent = timeText;
-            if (ageEl) {
-                // Find the ticket_group_key for the selected session
-                var selectedItem = null;
-                if (sessionItems) {
-                    for (var i = 0; i < sessionItems.length; i++) {
-                        var it = sessionItems[i];
-                        if (it && it.iso === selectedSessionIso && normalizeTimeHHMM(it.time) === selectedSessionTime) {
-                            selectedItem = it;
-                            break;
-                        }
+            // Find the selected session item
+            var selectedItem = null;
+            if (sessionItems) {
+                for (var i = 0; i < sessionItems.length; i++) {
+                    var it = sessionItems[i];
+                    if (it && it.iso === selectedSessionIso && normalizeTimeHHMM(it.time) === selectedSessionTime) {
+                        selectedItem = it;
+                        break;
                     }
                 }
+            }
+            // Show promo tag if selected session has a promo
+            if (promoEl) {
+                var groupKey = selectedItem ? String(selectedItem.ticket_group_key || '').trim() : '';
+                promoEl.textContent = ticketGroupHasPromo(groupKey) ? 'Promo' : '';
+            }
+            if (ageEl) {
                 var ageRating = selectedItem ? getAgeRatingForSession(selectedItem.ticket_group_key) : '';
                 ageEl.innerHTML = ageRating ? renderAgeRatingIcons([ageRating]) : '';
             }
@@ -11094,10 +11136,11 @@ const PostSessionComponent = (function() {
                 var timeText = normalizeTimeHHMM(it ? it.time : '');
                 var dateLeft = formatSessionDateLeft(iso);
                 var ticketGroupKey = it ? String(it.ticket_group_key || '').trim() : '';
+                var promoHtml = ticketGroupHasPromo(ticketGroupKey) ? '<span class="post-session-promo-tag">Promo</span>' : '';
                 var ageRating = getAgeRatingForSession(ticketGroupKey);
                 var ageHtml = ageRating ? '<span class="post-session-age-ratings">' + renderAgeRatingIcons([ageRating]) + '</span>' : '';
                 var isSelected = (iso && timeText && selectedSessionIso === iso && selectedSessionTime && selectedSessionTime === timeText);
-                return '<button class="post-session-option' + (isSelected ? ' post-session-option-selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span>' + ageHtml + '</button>';
+                return '<button class="post-session-option' + (isSelected ? ' post-session-option-selected' : '') + '" type="button" data-iso="' + escapeHtml(iso) + '" data-time="' + escapeHtml(timeText) + '"><span class="post-session-date-left">' + escapeHtml(dateLeft) + '</span><span class="post-session-time-right">' + escapeHtml(timeText) + '</span>' + promoHtml + ageHtml + '</button>';
             }).join('');
         }
 
