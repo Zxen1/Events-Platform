@@ -302,6 +302,43 @@ const HeaderModule = (function() {
     var modeSwitchButtons = null;
     var currentMode = 'map'; // Default mode
     
+    // Close all open panels (filter, member, admin)
+    function closePanels() {
+        try {
+            var filterPanel = document.querySelector('.filter-panel');
+            if (filterPanel && filterPanel.classList.contains('show')) {
+                if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
+                    window.FilterModule.closePanel();
+                } else {
+                    var filterClose = document.querySelector('.filter-panel-actions-icon-btn--close');
+                    if (filterClose) filterClose.click();
+                }
+            }
+            
+            var memberPanel = document.querySelector('.member-panel');
+            if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
+                if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
+                    window.MemberModule.closePanel();
+                } else {
+                    var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
+                    if (memberClose) memberClose.click();
+                }
+            }
+            
+            var adminPanel = document.querySelector('.admin-panel');
+            if (adminPanel && adminPanel.classList.contains('admin-panel--show')) {
+                if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
+                    window.AdminModule.closePanel();
+                } else {
+                    var adminClose = document.querySelector('.admin-panel-actions-icon-btn--close');
+                    if (adminClose) adminClose.click();
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
     function initModeSwitch() {
         modeSwitchButtons = document.querySelectorAll('.header-modeswitch > .button-class-1');
         if (!modeSwitchButtons.length) return;
@@ -312,40 +349,7 @@ const HeaderModule = (function() {
                 if (!mode) return;
                 
                 // Close any open panels (always - cleans screen on small devices)
-                try {
-                    var filterPanel = document.querySelector('.filter-panel');
-                    if (filterPanel && filterPanel.classList.contains('show')) {
-                        // Use module if available, fallback to click
-                        if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
-                            window.FilterModule.closePanel();
-                        } else {
-                            var filterClose = document.querySelector('.filter-panel-actions-icon-btn--close');
-                            if (filterClose) filterClose.click();
-                        }
-                    }
-                    
-                    var memberPanel = document.querySelector('.member-panel');
-                    if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
-                        if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
-                            window.MemberModule.closePanel();
-                        } else {
-                            var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
-                            if (memberClose) memberClose.click();
-                        }
-                    }
-                    
-                    var adminPanel = document.querySelector('.admin-panel');
-                    if (adminPanel && adminPanel.classList.contains('admin-panel--show')) {
-                        if (window.AdminModule && typeof window.AdminModule.closePanel === 'function') {
-                            window.AdminModule.closePanel();
-                        } else {
-                            var adminClose = document.querySelector('.admin-panel-actions-icon-btn--close');
-                            if (adminClose) adminClose.click();
-                        }
-                    }
-                } catch (e) {
-                    // ignore
-                }
+                closePanels();
                 
                 // Skip mode change if already in this mode
                 if (mode === currentMode) return;
@@ -714,7 +718,8 @@ const HeaderModule = (function() {
     
     return {
         init: init,
-        setLogo: setLogo
+        setLogo: setLogo,
+        closePanels: closePanels
     };
 
 })();

@@ -1348,6 +1348,11 @@ const MapModule = (function() {
     const lng = result.center[0];
     const lat = result.center[1];
 
+    // Close panels (same as post location change)
+    if (window.HeaderModule && typeof HeaderModule.closePanels === 'function') {
+      HeaderModule.closePanels();
+    }
+
     // Close welcome modal on search
     if (window.WelcomeModalComponent) {
       WelcomeModalComponent.close();
