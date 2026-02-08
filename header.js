@@ -448,9 +448,10 @@ const HeaderModule = (function() {
         App.on('filter:changed', function(state) {
             if (state && state.categories && hasAnyCategoryOrSubcategoryTogglesOff(state.categories)) {
                 setHeaderFilterIconActive(true);
-                return;
+            } else {
+                refreshHeaderFilterActiveVisual();
             }
-            refreshHeaderFilterActiveVisual();
+            requestEarlyFilterCount();
         });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
