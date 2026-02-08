@@ -793,7 +793,11 @@ const HeaderModule = (function() {
     return {
         init: init,
         setLogo: setLogo,
-        closePanels: closePanels
+        closePanels: closePanels,
+        refreshFilterButton: function() {
+            refreshHeaderFilterActiveVisual();
+            requestEarlyFilterCount();
+        }
     };
 
 })();
