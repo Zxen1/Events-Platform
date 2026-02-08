@@ -921,13 +921,13 @@ const MemberModule = (function() {
                         FilterModule.refreshFromStorage();
                     }
                 } catch (_eSync) {}
-                // Direct header update (localStorage is already correct)
-                try {
-                    if (window.HeaderModule && typeof HeaderModule.refreshFilterButton === 'function') {
-                        HeaderModule.refreshFilterButton();
-                    }
-                } catch (_eHeader) {}
             }
+            // Direct header update — always runs after login, reads from localStorage
+            try {
+                if (window.HeaderModule && typeof HeaderModule.refreshFilterButton === 'function') {
+                    HeaderModule.refreshFilterButton();
+                }
+            } catch (_eHeader) {}
             // Favorites: DB overwrites localStorage on login (no merging).
             // DB format may be array [123,456] or object {"123":ts}; normalize to object for localStorage.
             if (user.favorites !== null && user.favorites !== undefined) {
