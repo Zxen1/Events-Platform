@@ -1,8 +1,6 @@
 /* ============================================================================
    FILTER.JS - FILTER PANEL
    ============================================================================ */
-console.log('[Filter] filter.js loaded');
-
 const FilterModule = (function() {
     'use strict';
 
@@ -83,7 +81,6 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function saveFilters(immediate) {
-        console.log('[Filter] saveFilters called, immediate:', !!immediate);
         // Debounce saves to avoid excessive writes (e.g. typing in keyword).
         // Immediate mode skips the debounce (e.g. reset buttons).
         if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
@@ -95,7 +92,6 @@ const FilterModule = (function() {
     }
     
     function doSaveFilters() {
-        console.log('[Filter] doSaveFilters called');
         try {
             var state = {
                 keyword:         keywordInput  ? keywordInput.value.trim()  : '',
@@ -116,17 +112,11 @@ const FilterModule = (function() {
             try {
                 if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function' && typeof MemberModule.saveSetting === 'function') {
                     var u = MemberModule.getCurrentUser();
-                    console.log('[Filter] DB save check — user:', u ? ('id=' + u.id + ' email=' + u.account_email) : 'NULL');
                     if (u && u.id && u.account_email) {
-                        console.log('[Filter] Calling saveSetting, keyword:', state.keyword);
                         MemberModule.saveSetting('filters_json', JSON.stringify(state));
                     }
-                } else {
-                    console.log('[Filter] MemberModule not available for DB save');
                 }
-            } catch (_eSaveDb) {
-                console.error('[Filter] DB save threw:', _eSaveDb);
-            }
+            } catch (_eSaveDb) {}
         } catch (e) {
             console.warn('[Filter] Failed to save filters:', e);
         }
@@ -1057,7 +1047,6 @@ const FilterModule = (function() {
     }
     
     function applyFilters() {
-        console.log('[Filter] applyFilters called');
         var state = getFilterState();
         // Write localStorage BEFORE emitting so every handler reads the correct state.
         try {
@@ -1619,10 +1608,10 @@ const FilterModule = (function() {
             }
         });
         
-        // Save filters when map moves (debounced via saveFilters)
-        App.on('map:boundsChanged', function() {
-            saveFilters();
-        });
+        // Map viewport is persisted by scheduleSaveMapView() in map.js
+        // and included via getMapState() when doSaveFilters() runs.
+        // Do NOT call saveFilters() on boundsChanged — it resets the
+        // debounce timer on every map movement, preventing DB saves.
         
         // Listen for filter count updates from PostModule (legacy). Keep, but server-side counts override it.
         App.on('filter:countsUpdated', function(data) {
