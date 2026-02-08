@@ -1,6 +1,7 @@
 /* ============================================================================
    FILTER.JS - FILTER PANEL
    ============================================================================ */
+console.log('[Filter] filter.js loaded');
 
 const FilterModule = (function() {
     'use strict';
@@ -82,6 +83,7 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function saveFilters(immediate) {
+        console.log('[Filter] saveFilters called, immediate:', !!immediate);
         // Debounce saves to avoid excessive writes (e.g. typing in keyword).
         // Immediate mode skips the debounce (e.g. reset buttons).
         if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
@@ -1055,6 +1057,7 @@ const FilterModule = (function() {
     }
     
     function applyFilters() {
+        console.log('[Filter] applyFilters called');
         var state = getFilterState();
         // Write localStorage BEFORE emitting so every handler reads the correct state.
         try {
