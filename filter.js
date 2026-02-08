@@ -1786,60 +1786,61 @@ const FilterModule = (function() {
      * Safe to call whether the panel has been initialized or not.
      */
     function refreshFromStorage() {
-        // If panel not initialized yet, nothing to update — the panel will
-        // read from localStorage when it eventually inits.
-        if (!panelEl) return;
-
         var saved = loadFilters();
         if (!saved) return;
 
-        // Restore basic inputs
-        if (keywordInput) keywordInput.value = saved.keyword || '';
-        if (priceMinInput) priceMinInput.value = saved.minPrice || '';
-        if (priceMaxInput) priceMaxInput.value = saved.maxPrice || '';
-        dateStart = saved.dateStart || null;
-        dateEnd = saved.dateEnd || null;
-        if (daterangeInput) {
-            var parts = [];
-            if (dateStart) parts.push(dateStart);
-            if (dateEnd && dateEnd !== dateStart) parts.push(dateEnd);
-            daterangeInput.value = parts.join(' – ');
-        }
-        if (expiredInput) {
-            expiredInput.checked = !!saved.expired;
-            syncExpiredToggleUi();
-        }
-        if (saved.favourites !== undefined) {
-            favouritesOn = !!saved.favourites;
-            if (favouritesBtn) favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
-            syncFavouritesButtonUi();
-        }
-        if (saved.sort) {
-            currentSort = saved.sort;
-            try {
-                var opt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + currentSort + '"]') : null;
-                if (opt && sortButtonText) sortButtonText.textContent = opt.textContent;
-                if (sortMenuEl) {
-                    sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
-                        o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === currentSort);
-                    });
-                }
-            } catch (_eSort) {}
+        // Update panel UI only if the panel has been initialized.
+        // If not, the panel will read from localStorage when it eventually inits.
+        if (panelEl) {
+            // Restore basic inputs
+            if (keywordInput) keywordInput.value = saved.keyword || '';
+            if (priceMinInput) priceMinInput.value = saved.minPrice || '';
+            if (priceMaxInput) priceMaxInput.value = saved.maxPrice || '';
+            dateStart = saved.dateStart || null;
+            dateEnd = saved.dateEnd || null;
+            if (daterangeInput) {
+                var parts = [];
+                if (dateStart) parts.push(dateStart);
+                if (dateEnd && dateEnd !== dateStart) parts.push(dateEnd);
+                daterangeInput.value = parts.join(' – ');
+            }
+            if (expiredInput) {
+                expiredInput.checked = !!saved.expired;
+                syncExpiredToggleUi();
+            }
+            if (saved.favourites !== undefined) {
+                favouritesOn = !!saved.favourites;
+                if (favouritesBtn) favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+                syncFavouritesButtonUi();
+            }
+            if (saved.sort) {
+                currentSort = saved.sort;
+                try {
+                    var opt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + currentSort + '"]') : null;
+                    if (opt && sortButtonText) sortButtonText.textContent = opt.textContent;
+                    if (sortMenuEl) {
+                        sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
+                            o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === currentSort);
+                        });
+                    }
+                } catch (_eSort) {}
+            }
+
+            // Restore category toggles (if DOM exists)
+            if (saved.categories) {
+                applyCategoryState(saved.categories);
+            }
+
+            // Update reset/clear button states
+            updateClearButtons();
+
+            // Refresh server counts (badge + summary)
+            try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
         }
 
-        // Restore category toggles (if DOM exists)
-        if (saved.categories) {
-            applyCategoryState(saved.categories);
-        }
-
-        // Update reset/clear button states
-        updateClearButtons();
-
-        // Emit so header, map clusters, and other listeners sync
+        // Always emit so header badge/colour and map clusters sync,
+        // even if the filter panel hasn't been opened yet.
         App.emit('filter:changed', saved);
-
-        // Refresh server counts (badge + summary)
-        try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
     }
 
     return {
