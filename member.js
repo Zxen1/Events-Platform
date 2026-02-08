@@ -915,14 +915,12 @@ const MemberModule = (function() {
             // Filters: DB-first snapshot mirrored to localStorage so map can load correctly before filter panel opens.
             if (user.filters_json && typeof user.filters_json === 'string') {
                 localStorage.setItem('funmap_filters', String(user.filters_json));
-                // Ensure clusters immediately reflect DB filters without waiting for filter panel open.
+                // Sync filter panel UI, header, counts, and map from localStorage
                 try {
-                    if (window.App && typeof App.emit === 'function') {
-                        var parsed = null;
-                        try { parsed = JSON.parse(String(user.filters_json)); } catch (_eParse) { parsed = null; }
-                        App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                    if (window.FilterModule && typeof FilterModule.refreshFromStorage === 'function') {
+                        FilterModule.refreshFromStorage();
                     }
-                } catch (_eEmit) {}
+                } catch (_eSync) {}
             }
             // Favorites: DB overwrites localStorage on login (no merging).
             // DB format may be array [123,456] or object {"123":ts}; normalize to object for localStorage.
@@ -988,7 +986,7 @@ const MemberModule = (function() {
         }).then(function(result) {
             if (!result || !result.success) throw new Error(result && result.message ? result.message : 'Unknown error');
 
-            // Overwrite localStorage with DB data (same logic as syncLocalProfilePrefsFromUser)
+            // Overwrite localStorage with DB data, then sync the full filter UI
             // Filters
             if (result.filters_json && typeof result.filters_json === 'string') {
                 localStorage.setItem('funmap_filters', result.filters_json);
@@ -997,11 +995,10 @@ const MemberModule = (function() {
                 currentUser.filters_hash = result.filters_hash || null;
                 currentUser.filters_version = result.filters_version || null;
                 currentUser.filters_updated_at = result.filters_updated_at || null;
-                // Notify filter module
+                // Sync filter panel UI, header, counts, and map from localStorage
                 try {
-                    if (window.App && typeof App.emit === 'function') {
-                        var parsed = JSON.parse(result.filters_json);
-                        App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                    if (window.FilterModule && typeof FilterModule.refreshFromStorage === 'function') {
+                        FilterModule.refreshFromStorage();
                     }
                 } catch (_e) {}
             }
@@ -1050,7 +1047,7 @@ const MemberModule = (function() {
             // Re-enable button
             if (refreshPreferencesBtn) {
                 refreshPreferencesBtn.disabled = false;
-                refreshPreferencesBtn.textContent = 'Refresh';
+                refreshPreferencesBtn.textContent = 'Refresh Preferences';
             }
         }).catch(function(err) {
             console.error('[Member] Refresh preferences failed:', err);
@@ -1061,7 +1058,7 @@ const MemberModule = (function() {
             } catch (_eToast) {}
             if (refreshPreferencesBtn) {
                 refreshPreferencesBtn.disabled = false;
-                refreshPreferencesBtn.textContent = 'Refresh';
+                refreshPreferencesBtn.textContent = 'Refresh Preferences';
             }
         });
     }
@@ -1118,11 +1115,10 @@ const MemberModule = (function() {
                         currentUser.filters_version = result.filters_version || null;
                         currentUser.filters_updated_at = result.filters_updated_at || null;
                     }
-                    // Notify filter module so UI and clusters update
+                    // Sync filter panel UI, header, counts, and map from localStorage
                     try {
-                        if (window.App && typeof App.emit === 'function') {
-                            var parsed = JSON.parse(result.filters_json);
-                            App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                        if (window.FilterModule && typeof FilterModule.refreshFromStorage === 'function') {
+                            FilterModule.refreshFromStorage();
                         }
                     } catch (_e) {}
                     changed = true;
