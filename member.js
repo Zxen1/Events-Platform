@@ -1041,9 +1041,11 @@ const MemberModule = (function() {
             storeCurrent(currentUser);
 
             // Show success toast
-            if (window.ToastComponent) {
-                ToastComponent.showSuccess('Preferences refreshed');
-            }
+            try {
+                getMessage('msg_member_preferences_refreshed', {}, false).then(function(message) {
+                    if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                });
+            } catch (_eToast) {}
 
             // Re-enable button
             if (refreshPreferencesBtn) {
@@ -5818,9 +5820,13 @@ const MemberModule = (function() {
                     if (message && window.ToastComponent) ToastComponent.showSuccess(message);
                 });
                 // Brief follow-up: let user know their preferences were loaded from their account
-                if (window.ToastComponent) {
-                    setTimeout(function() { ToastComponent.showSuccess('Your saved preferences have been restored.'); }, 1200);
-                }
+                setTimeout(function() {
+                    try {
+                        getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
+                            if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                        });
+                    } catch (_e) {}
+                }, 1200);
             } catch (e0) {}
 
             if (shouldSubmit) {
@@ -6072,11 +6078,13 @@ const MemberModule = (function() {
                 });
             }
             // Brief follow-up: let user know their preferences were loaded from their account
-            try {
-                if (window.ToastComponent) {
-                    setTimeout(function() { ToastComponent.showSuccess('Your saved preferences have been restored.'); }, 1200);
-                }
-            } catch (_ePrefsToast) {}
+            setTimeout(function() {
+                try {
+                    getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
+                        if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                    });
+                } catch (_e) {}
+            }, 1200);
             
         }).catch(function(err) {
             console.error('Login failed', err);
