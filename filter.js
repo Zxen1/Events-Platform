@@ -718,18 +718,31 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.disabled = !active;
         }
-        // Update summary background color
-        if (summaryEl) {
-            summaryEl.classList.toggle('filter-panel-summary--active', !!active);
-        }
-        // Notify header to update filter icon color
-        App.emit('filter:activeState', { active: active });
+        // Summary and header reflect ANY active filtering (filters OR categories).
+        updateFilterActiveVisual();
     }
     
     function setResetCategoriesActive(active) {
         if (resetCategoriesBtn) {
             resetCategoriesBtn.disabled = !active;
         }
+        // Summary and header reflect ANY active filtering (filters OR categories).
+        updateFilterActiveVisual();
+    }
+
+    /**
+     * Update the summary bar color and header icon based on whether ANY
+     * filtering is active (filters OR categories). Called whenever either
+     * the filter reset button or category reset button state changes.
+     */
+    function updateFilterActiveVisual() {
+        var hasFilters = resetFiltersBtn && !resetFiltersBtn.disabled;
+        var hasCategories = resetCategoriesBtn && !resetCategoriesBtn.disabled;
+        var anyActive = hasFilters || hasCategories;
+        if (summaryEl) {
+            summaryEl.classList.toggle('filter-panel-summary--active', anyActive);
+        }
+        App.emit('filter:activeState', { active: anyActive });
     }
     
     function updateResetCategoriesButton() {
