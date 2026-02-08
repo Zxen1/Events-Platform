@@ -1054,9 +1054,11 @@ const MemberModule = (function() {
             }
         }).catch(function(err) {
             console.error('[Member] Refresh preferences failed:', err);
-            if (window.ToastComponent) {
-                ToastComponent.showError('Failed to refresh preferences');
-            }
+            try {
+                getMessage('msg_member_preferences_refresh_failed', {}, false).then(function(message) {
+                    if (message && window.ToastComponent) ToastComponent.showError(message);
+                });
+            } catch (_eToast) {}
             if (refreshPreferencesBtn) {
                 refreshPreferencesBtn.disabled = false;
                 refreshPreferencesBtn.textContent = 'Refresh';
