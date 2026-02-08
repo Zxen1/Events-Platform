@@ -93,6 +93,7 @@ const FilterModule = (function() {
     }
     
     function doSaveFilters() {
+        console.log('[Filter] doSaveFilters called');
         try {
             var state = {
                 keyword:         keywordInput  ? keywordInput.value.trim()  : '',
@@ -113,11 +114,17 @@ const FilterModule = (function() {
             try {
                 if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function' && typeof MemberModule.saveSetting === 'function') {
                     var u = MemberModule.getCurrentUser();
+                    console.log('[Filter] DB save check — user:', u ? ('id=' + u.id + ' email=' + u.account_email) : 'NULL');
                     if (u && u.id && u.account_email) {
+                        console.log('[Filter] Calling saveSetting, keyword:', state.keyword);
                         MemberModule.saveSetting('filters_json', JSON.stringify(state));
                     }
+                } else {
+                    console.log('[Filter] MemberModule not available for DB save');
                 }
-            } catch (_eSaveDb) {}
+            } catch (_eSaveDb) {
+                console.error('[Filter] DB save threw:', _eSaveDb);
+            }
         } catch (e) {
             console.warn('[Filter] Failed to save filters:', e);
         }
