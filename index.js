@@ -154,7 +154,6 @@ const App = (function() {
         callback(data);
       } catch (err) {
         console.error(`[App] Event handler error for "${event}":`, err);
-        throw err;
       }
     });
   }
