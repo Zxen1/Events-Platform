@@ -1301,8 +1301,13 @@ if (empty($ogTitle)) {
                 </form>
               </div>
               
-              <!-- Logout Button (outside drawer) -->
+              <!-- Profile Actions: Refresh Preferences + Logout -->
               <div class="member-profile-actions">
+                <div class="member-refresh-preferences">
+                  <button type="button" class="member-refresh-preferences-btn button-class-2" id="member-refresh-preferences-btn">Refresh Preferences</button>
+                  <span class="member-refresh-tooltip"><svg class="member-refresh-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span>
+                  <div class="member-refresh-tooltip-text" id="member-refresh-tooltip-text"></div>
+                </div>
                 <button type="button" class="member-logout button-class-3" id="member-logout-btn">Log Out</button>
               </div>
             </section>

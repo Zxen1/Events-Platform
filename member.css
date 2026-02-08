@@ -1326,13 +1326,79 @@
 /* Note: AvatarPickerComponent styles live in components.css (.component-avatarpicker-*) */
 /* Note: AvatarCropperComponent styles live in components.css (.component-avatarcropper-tool-*) */
 
+/* ============================================================================
+   PROFILE ACTIONS (Refresh Preferences + Logout)
+   ============================================================================ */
+
 .member-profile-actions {
   position: static;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 10px;
   padding: 0;
   background: transparent;
+}
+
+/* Refresh Preferences: button + tooltip icon inline */
+.member-refresh-preferences {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.member-refresh-preferences-btn {
+  white-space: nowrap;
+}
+
+.member-refresh-tooltip {
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  display: none; /* Hidden for now; tooltip infrastructure preserved if needed later */
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.member-refresh-tooltip-icon {
+  width: 16px;
+  height: 16px;
+  stroke: #888;
+}
+
+.member-refresh-tooltip:hover .member-refresh-tooltip-icon {
+  stroke: #fff;
+}
+
+.member-refresh-tooltip-text {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -60px;
+  width: 260px;
+  background: #000;
+  border: 1px solid #777;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 13px;
+  font-style: normal;
+  color: #fff;
+  white-space: pre-line;
+  z-index: var(--layer-dialog, 86);
+  line-height: 1.4;
+}
+
+.member-refresh-tooltip:hover + .member-refresh-tooltip-text,
+.member-refresh-tooltip-text:hover {
+  display: block;
+}
+
+/* Push logout button to the right */
+.member-profile-actions > .member-logout {
+  margin-left: auto;
 }
 
 .member-profile-actions-btn {

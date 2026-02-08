@@ -136,6 +136,8 @@ const MemberModule = (function() {
     var profileMoreMenu = null;
     var profileHideSwitch = null;
     var profileDeleteBtn = null;
+    var refreshPreferencesBtn = null;
+    var refreshTooltipText = null;
     var profileOriginalAvatarUrl = '';
     var pendingAvatarUrl = '';
     var pendingRegisterAvatarBlob = null;
@@ -367,6 +369,8 @@ const MemberModule = (function() {
         profileName = document.getElementById('member-profile-name');
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
+        refreshPreferencesBtn = document.getElementById('member-refresh-preferences-btn');
+        refreshTooltipText = document.getElementById('member-refresh-tooltip-text');
         profileTabBtn = document.getElementById('member-tab-profile-btn');
         profileTabPanel = document.getElementById('member-tab-profile');
 
@@ -631,6 +635,17 @@ const MemberModule = (function() {
                 requestLogout();
             });
         }
+        
+        // Refresh Preferences button (cross-device sync)
+        if (refreshPreferencesBtn) {
+            refreshPreferencesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                refreshPreferencesFromDb();
+            });
+        }
+        
+        // Load Refresh Preferences tooltip text from admin_messages
+        loadRefreshPreferencesTooltip();
         
         // Inline save removed; profile save is via header buttons
         // Profile edit inputs are rendered from DB fieldsets at runtime; listeners are attached after renderProfileFieldsets().
@@ -909,9 +924,256 @@ const MemberModule = (function() {
                     }
                 } catch (_eEmit) {}
             }
+            // Favorites: DB overwrites localStorage on login (no merging).
+            // DB format may be array [123,456] or object {"123":ts}; normalize to object for localStorage.
+            if (user.favorites !== null && user.favorites !== undefined) {
+                try {
+                    var favRaw = typeof user.favorites === 'string' ? user.favorites : JSON.stringify(user.favorites);
+                    var favParsed = JSON.parse(favRaw);
+                    if (Array.isArray(favParsed)) {
+                        // Legacy array format → convert to {id: timestamp} object
+                        var favObj = {};
+                        var now = Date.now();
+                        for (var fi = 0; fi < favParsed.length; fi++) {
+                            favObj[String(favParsed[fi])] = now;
+                        }
+                        localStorage.setItem('postFavorites', JSON.stringify(favObj));
+                    } else if (favParsed && typeof favParsed === 'object') {
+                        // Already in {id: timestamp} format
+                        localStorage.setItem('postFavorites', favRaw);
+                    }
+                } catch (_eFav) {}
+            }
+            // Recent history: DB overwrites localStorage on login (no merging).
+            if (user.recent !== null && user.recent !== undefined) {
+                try {
+                    var recentRaw = typeof user.recent === 'string' ? user.recent : JSON.stringify(user.recent);
+                    var recentParsed = JSON.parse(recentRaw);
+                    if (Array.isArray(recentParsed)) {
+                        localStorage.setItem('recentPosts', recentRaw);
+                    }
+                } catch (_eRecent) {}
+            }
         } catch (e) {
             // ignore
         }
+    }
+
+    /**
+     * Refresh Preferences: pull latest favorites, recents, and filters from DB.
+     * Used by the "Refresh Preferences" button for cross-device sync.
+     */
+    function refreshPreferencesFromDb() {
+        if (!currentUser) return;
+        var memberId = parseInt(currentUser.id, 10);
+        if (!memberId || memberId <= 0 || !currentUser.account_email) return;
+
+        // Disable button during fetch
+        if (refreshPreferencesBtn) {
+            refreshPreferencesBtn.disabled = true;
+            refreshPreferencesBtn.textContent = 'Refreshing…';
+        }
+
+        fetch('/gateway.php?action=' + getEditUserAction(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: currentUser.id,
+                'account-email': currentUser.account_email,
+                return_preferences: true
+            })
+        }).then(function(response) {
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+            return response.json();
+        }).then(function(result) {
+            if (!result || !result.success) throw new Error(result && result.message ? result.message : 'Unknown error');
+
+            // Overwrite localStorage with DB data (same logic as syncLocalProfilePrefsFromUser)
+            // Filters
+            if (result.filters_json && typeof result.filters_json === 'string') {
+                localStorage.setItem('funmap_filters', result.filters_json);
+                // Update in-memory user object
+                currentUser.filters_json = result.filters_json;
+                currentUser.filters_hash = result.filters_hash || null;
+                currentUser.filters_version = result.filters_version || null;
+                currentUser.filters_updated_at = result.filters_updated_at || null;
+                // Notify filter module
+                try {
+                    if (window.App && typeof App.emit === 'function') {
+                        var parsed = JSON.parse(result.filters_json);
+                        App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                    }
+                } catch (_e) {}
+            }
+
+            // Favorites
+            if (result.favorites !== null && result.favorites !== undefined) {
+                try {
+                    var favRaw = typeof result.favorites === 'string' ? result.favorites : JSON.stringify(result.favorites);
+                    var favParsed = JSON.parse(favRaw);
+                    if (Array.isArray(favParsed)) {
+                        var favObj = {};
+                        var now = Date.now();
+                        for (var fi = 0; fi < favParsed.length; fi++) {
+                            favObj[String(favParsed[fi])] = now;
+                        }
+                        localStorage.setItem('postFavorites', JSON.stringify(favObj));
+                    } else if (favParsed && typeof favParsed === 'object') {
+                        localStorage.setItem('postFavorites', favRaw);
+                    }
+                } catch (_e) {}
+                currentUser.favorites = result.favorites;
+            }
+
+            // Recents
+            if (result.recent !== null && result.recent !== undefined) {
+                try {
+                    var recentRaw = typeof result.recent === 'string' ? result.recent : JSON.stringify(result.recent);
+                    var recentParsed = JSON.parse(recentRaw);
+                    if (Array.isArray(recentParsed)) {
+                        localStorage.setItem('recentPosts', recentRaw);
+                    }
+                } catch (_e) {}
+                currentUser.recent = result.recent;
+            }
+
+            // Update stored session
+            storeCurrent(currentUser);
+
+            // Show success toast
+            if (window.ToastComponent) {
+                ToastComponent.showSuccess('Preferences refreshed');
+            }
+
+            // Re-enable button
+            if (refreshPreferencesBtn) {
+                refreshPreferencesBtn.disabled = false;
+                refreshPreferencesBtn.textContent = 'Refresh';
+            }
+        }).catch(function(err) {
+            console.error('[Member] Refresh preferences failed:', err);
+            if (window.ToastComponent) {
+                ToastComponent.showError('Failed to refresh preferences');
+            }
+            if (refreshPreferencesBtn) {
+                refreshPreferencesBtn.disabled = false;
+                refreshPreferencesBtn.textContent = 'Refresh';
+            }
+        });
+    }
+
+    /**
+     * Load the Refresh Preferences tooltip text from admin_messages.
+     */
+    function loadRefreshPreferencesTooltip() {
+        if (!refreshTooltipText) return;
+        try {
+            if (typeof getMessage === 'function') {
+                getMessage('msg_member_refresh_preferences_info', {}, false).then(function(message) {
+                    if (message && refreshTooltipText) {
+                        refreshTooltipText.textContent = message;
+                    }
+                });
+            }
+        } catch (_e) {}
+    }
+
+    /**
+     * Background sync: non-blocking fetch of preferences from DB on page load.
+     * Compares DB data with what's in localStorage and updates only if different.
+     * Called once in loadStoredSession() — never blocks rendering.
+     */
+    function backgroundSyncPreferences(user) {
+        if (!user || !user.id || !user.account_email) return;
+        var editAction = (user.isAdmin === true) ? 'edit-admin' : 'edit-member';
+
+        fetch('/gateway.php?action=' + editAction, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: user.id,
+                'account-email': user.account_email,
+                return_preferences: true
+            })
+        }).then(function(response) {
+            if (!response.ok) return;
+            return response.json();
+        }).then(function(result) {
+            if (!result || !result.success) return;
+
+            var changed = false;
+
+            // Filters
+            if (result.filters_json && typeof result.filters_json === 'string') {
+                var localFilters = localStorage.getItem('funmap_filters');
+                if (localFilters !== result.filters_json) {
+                    localStorage.setItem('funmap_filters', result.filters_json);
+                    if (currentUser) {
+                        currentUser.filters_json = result.filters_json;
+                        currentUser.filters_hash = result.filters_hash || null;
+                        currentUser.filters_version = result.filters_version || null;
+                        currentUser.filters_updated_at = result.filters_updated_at || null;
+                    }
+                    // Notify filter module so UI and clusters update
+                    try {
+                        if (window.App && typeof App.emit === 'function') {
+                            var parsed = JSON.parse(result.filters_json);
+                            App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                        }
+                    } catch (_e) {}
+                    changed = true;
+                }
+            }
+
+            // Favorites
+            if (result.favorites !== null && result.favorites !== undefined) {
+                try {
+                    var favRaw = typeof result.favorites === 'string' ? result.favorites : JSON.stringify(result.favorites);
+                    var localFavs = localStorage.getItem('postFavorites');
+                    // Normalize DB format for comparison
+                    var favParsed = JSON.parse(favRaw);
+                    var normalizedFavJson;
+                    if (Array.isArray(favParsed)) {
+                        var favObj = {};
+                        var now = Date.now();
+                        for (var fi = 0; fi < favParsed.length; fi++) {
+                            favObj[String(favParsed[fi])] = now;
+                        }
+                        normalizedFavJson = JSON.stringify(favObj);
+                    } else {
+                        normalizedFavJson = favRaw;
+                    }
+                    if (localFavs !== normalizedFavJson) {
+                        localStorage.setItem('postFavorites', normalizedFavJson);
+                        if (currentUser) currentUser.favorites = result.favorites;
+                        changed = true;
+                    }
+                } catch (_e) {}
+            }
+
+            // Recents
+            if (result.recent !== null && result.recent !== undefined) {
+                try {
+                    var recentRaw = typeof result.recent === 'string' ? result.recent : JSON.stringify(result.recent);
+                    var localRecent = localStorage.getItem('recentPosts');
+                    if (localRecent !== recentRaw) {
+                        var recentParsed = JSON.parse(recentRaw);
+                        if (Array.isArray(recentParsed)) {
+                            localStorage.setItem('recentPosts', recentRaw);
+                            if (currentUser) currentUser.recent = result.recent;
+                            changed = true;
+                        }
+                    }
+                } catch (_e) {}
+            }
+
+            // Persist updated user object if anything changed
+            if (changed && currentUser) {
+                storeCurrent(currentUser);
+            }
+        }).catch(function(_err) {
+            // Silent fail — background sync should never disrupt the user
+        });
     }
 
     function getDefaultCurrencyForForms() {
@@ -5555,6 +5817,10 @@ const MemberModule = (function() {
                 getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
                     if (message && window.ToastComponent) ToastComponent.showSuccess(message);
                 });
+                // Brief follow-up: let user know their preferences were loaded from their account
+                if (window.ToastComponent) {
+                    setTimeout(function() { ToastComponent.showSuccess('Your saved preferences have been restored.'); }, 1200);
+                }
             } catch (e0) {}
 
             if (shouldSubmit) {
@@ -5805,6 +6071,12 @@ const MemberModule = (function() {
                     }
                 });
             }
+            // Brief follow-up: let user know their preferences were loaded from their account
+            try {
+                if (window.ToastComponent) {
+                    setTimeout(function() { ToastComponent.showSuccess('Your saved preferences have been restored.'); }, 1200);
+                }
+            } catch (_ePrefsToast) {}
             
         }).catch(function(err) {
             console.error('Login failed', err);
@@ -6205,7 +6477,10 @@ const MemberModule = (function() {
             filters_json: (payload.filters_json !== undefined) ? payload.filters_json : null,
             filters_hash: (payload.filters_hash !== undefined) ? payload.filters_hash : null,
             filters_version: (payload.filters_version !== undefined) ? payload.filters_version : null,
-            filters_updated_at: (payload.filters_updated_at !== undefined) ? payload.filters_updated_at : null
+            filters_updated_at: (payload.filters_updated_at !== undefined) ? payload.filters_updated_at : null,
+            // Favorites & recent history (DB → localStorage on login)
+            favorites: (payload.favorites !== undefined) ? payload.favorites : null,
+            recent: (payload.recent !== undefined) ? payload.recent : null
         };
     }
 
@@ -6246,6 +6521,11 @@ const MemberModule = (function() {
                 // Issue auth token cookie for API authentication (used by get-posts privacy)
                 // This renews the cookie on each session load to keep it valid
                 fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
+                
+                // Background sync: pull latest preferences from DB (non-blocking).
+                // Page already loaded instantly from localStorage; this silently updates if anything changed
+                // (e.g. cross-device edits). No visible delay — only updates localStorage if DB differs.
+                backgroundSyncPreferences(parsed);
                 
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {

@@ -550,6 +550,18 @@ const PostModule = (function() {
       sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'recommended') : 'recommended');
     });
 
+    // Initialize favToTop from restored filter state (persisted in filters_json).
+    // restoreFilters() sets the UI button but doesn't emit an event, so post.js must read it.
+    try {
+      if (window.FilterModule && typeof FilterModule.getFilterState === 'function') {
+        var restoredFs = FilterModule.getFilterState();
+        if (restoredFs && restoredFs.favourites) {
+          favToTop = true;
+          favSortDirty = false;
+        }
+      }
+    } catch (_eInitFavToTop) {}
+
     // Update post panel summary background when filters are active
     App.on('filter:activeState', function(data) {
       var isActive = !!(data && data.active);
@@ -3783,7 +3795,14 @@ const PostModule = (function() {
       } else {
         delete favs[postId];
       }
-      localStorage.setItem('postFavorites', JSON.stringify(favs));
+      var favJson = JSON.stringify(favs);
+      localStorage.setItem('postFavorites', favJson);
+      // Background DB save for logged-in users (non-blocking)
+      try {
+        if (window.MemberModule && typeof MemberModule.saveSetting === 'function' && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+          MemberModule.saveSetting('favorites', favJson);
+        }
+      } catch (_eDbFav) {}
     } catch (e) {
       // ignore
     }
@@ -3892,7 +3911,14 @@ const PostModule = (function() {
 
       // Keep only last 50
       next = next.slice(0, 50);
-      localStorage.setItem('recentPosts', JSON.stringify(next));
+      var recentJson = JSON.stringify(next);
+      localStorage.setItem('recentPosts', recentJson);
+      // Background DB save for logged-in users (non-blocking)
+      try {
+        if (window.MemberModule && typeof MemberModule.saveSetting === 'function' && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+          MemberModule.saveSetting('recent', recentJson);
+        }
+      } catch (_eDbRecent) {}
     } catch (e) {
       // ignore
     }
