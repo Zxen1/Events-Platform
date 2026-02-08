@@ -6506,15 +6506,19 @@ const MemberModule = (function() {
         }
     }
 
-    function loadStoredSession() {
+    /**
+     * Lightweight session check — runs at page load (before panel opens).
+     * Sets currentUser from localStorage and issues the auth token cookie.
+     * No database reads, no UI work, no background sync. This ensures
+     * saveSetting() works immediately for filters, favourites, and recents.
+     */
+    function loadEarlySession() {
         try {
             var raw = localStorage.getItem(CURRENT_KEY);
             if (!raw) return;
             
             var parsed = JSON.parse(raw);
             if (parsed && typeof parsed === 'object' && parsed.account_email) {
-                // Session must include a usable numeric user id; otherwise treat as logged-out.
-                // This prevents "looks logged in" states that can't submit posts (member_id missing).
                 var idNum = parseInt(parsed.id, 10);
                 if (!isFinite(idNum) || idNum <= 0) {
                     currentUser = null;
@@ -6525,13 +6529,7 @@ const MemberModule = (function() {
                 currentUser = parsed;
                 
                 // Issue auth token cookie for API authentication (used by get-posts privacy)
-                // This renews the cookie on each session load to keep it valid
                 fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
-                
-                // Background sync: pull latest preferences from DB (non-blocking).
-                // Page already loaded instantly from localStorage; this silently updates if anything changed
-                // (e.g. cross-device edits). No visible delay — only updates localStorage if DB differs.
-                backgroundSyncPreferences(parsed);
                 
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {
@@ -6539,8 +6537,23 @@ const MemberModule = (function() {
                 }
             }
         } catch (e) {
-            console.warn('Failed to load session', e);
+            console.warn('Failed to load early session', e);
         }
+    }
+
+    /**
+     * Full session load — runs when member panel first opens.
+     * currentUser is already set by loadEarlySession(). This adds the
+     * background sync for cross-device preference updates.
+     */
+    function loadStoredSession() {
+        // Early session already set currentUser; if not logged in, nothing to do.
+        if (!currentUser) return;
+        
+        // Background sync: pull latest preferences from DB (non-blocking).
+        // Page already loaded instantly from localStorage; this silently updates if anything changed
+        // (e.g. cross-device edits). No visible delay — only updates localStorage if DB differs.
+        backgroundSyncPreferences(currentUser);
     }
 
     /* --------------------------------------------------------------------------
@@ -6854,6 +6867,7 @@ const MemberModule = (function() {
     
     return {
         init: init,
+        loadEarlySession: loadEarlySession,
         openPanel: openPanel,
         closePanel: closePanel,
         getCurrentUser: function() { return currentUser; },
@@ -7025,6 +7039,11 @@ window.MemberModule = MemberModule;
         runOnDOMReady();
     }
 })();
+
+// Early session: set currentUser from localStorage immediately so saveSetting()
+// works for filters/favourites/recents before the member panel is ever opened.
+// No database reads, no UI work — just one localStorage read + auth token fetch.
+MemberModule.loadEarlySession();
 
 // Lazy initialization - only init when panel is first opened
 (function() {
