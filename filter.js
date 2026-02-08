@@ -81,39 +81,46 @@ const FilterModule = (function() {
        PERSISTENCE - Save/Load filter state to localStorage
        -------------------------------------------------------------------------- */
     
-    function saveFilters() {
-        // Debounce saves to avoid excessive writes
+    function saveFilters(immediate) {
+        // Debounce saves to avoid excessive writes (e.g. typing in keyword).
+        // Immediate mode skips the debounce (e.g. reset buttons).
         if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
-        saveDebounceTimer = setTimeout(function() {
+        if (immediate) {
+            doSaveFilters();
+        } else {
+            saveDebounceTimer = setTimeout(doSaveFilters, 300);
+        }
+    }
+    
+    function doSaveFilters() {
+        try {
+            var state = {
+                keyword:         keywordInput  ? keywordInput.value.trim()  : '',
+                minPrice:        priceMinInput ? priceMinInput.value.trim() : '',
+                maxPrice:        priceMaxInput ? priceMaxInput.value.trim() : '',
+                dateStart:       dateStart,
+                dateEnd:         dateEnd,
+                expired:         expiredInput ? expiredInput.checked : false,
+                favourites:      favouritesOn,
+                sort:            currentSort,
+                categories:      getCategoryState(),
+                map:             getMapState(),
+                subcategoryKeys: getSelectedSubcategoryKeys()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            
+            // DB-first persistence (member/admin row), localStorage is secondary.
             try {
-                var state = {
-                    keyword: keywordInput ? keywordInput.value.trim() : '',
-                    minPrice: priceMinInput ? priceMinInput.value.trim() : '',
-                    maxPrice: priceMaxInput ? priceMaxInput.value.trim() : '',
-                    dateStart: dateStart,
-                    dateEnd: dateEnd,
-                    expired: expiredInput ? expiredInput.checked : false,
-                    favourites: favouritesOn,
-                    sort: currentSort,
-                    categories: getCategoryState(),
-                    map: getMapState(),
-                    subcategoryKeys: getSelectedSubcategoryKeys()
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                
-                // DB-first persistence (member/admin row), localStorage is secondary.
-                try {
-                    if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function' && typeof MemberModule.saveSetting === 'function') {
-                        var u = MemberModule.getCurrentUser();
-                        if (u && u.id && u.account_email) {
-                            MemberModule.saveSetting('filters_json', JSON.stringify(state));
-                        }
+                if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function' && typeof MemberModule.saveSetting === 'function') {
+                    var u = MemberModule.getCurrentUser();
+                    if (u && u.id && u.account_email) {
+                        MemberModule.saveSetting('filters_json', JSON.stringify(state));
                     }
-                } catch (_eSaveDb) {}
-            } catch (e) {
-                console.warn('[Filter] Failed to save filters:', e);
-            }
-        }, 300);
+                }
+            } catch (_eSaveDb) {}
+        } catch (e) {
+            console.warn('[Filter] Failed to save filters:', e);
+        }
     }
     
     function loadFilters() {
@@ -711,6 +718,9 @@ const FilterModule = (function() {
         });
         
         applyFilters();
+        // Reset is a one-shot action — save to DB immediately (skip debounce)
+        // so the state survives a fast page refresh.
+        saveFilters(true);
         setResetCategoriesActive(false);
     }
     
@@ -1272,6 +1282,9 @@ const FilterModule = (function() {
         // No need to remove localStorage first — that creates a window where
         // other listeners (clusters) read empty state and show unfiltered results.
         applyFilters();
+        // Reset is a one-shot action — save to DB immediately (skip debounce)
+        // so the state survives a fast page refresh.
+        saveFilters(true);
     }
     
     function syncExpiredToggleUi() {
