@@ -455,6 +455,10 @@ const HeaderModule = (function() {
         });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('member:stateChanged', function() {
+            refreshHeaderFilterActiveVisual();
+            requestEarlyFilterCount();
+        });
         
         filterBtn.addEventListener('click', function() {
             // Close other panels if on mobile
