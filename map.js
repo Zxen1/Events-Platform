@@ -264,8 +264,10 @@ const MapModule = (function() {
             const rawUser = localStorage.getItem('member-auth-current');
             if (rawUser) {
               const u = JSON.parse(rawUser);
-              if (u && u.filters_json && typeof u.filters_json === 'string') {
-                const filters = JSON.parse(u.filters_json);
+              if (u && u.id && u.account_email) {
+                // Read canonical filter state (updated immediately by applyFilters)
+                const rawFilters = localStorage.getItem('funmap_filters');
+                let filters = rawFilters ? JSON.parse(rawFilters) : null;
                 if (filters && filters.map) {
                   delete filters.map;
                   const nextFiltersJson = JSON.stringify(filters);
@@ -297,10 +299,13 @@ const MapModule = (function() {
           if (rawUser) {
             const u = JSON.parse(rawUser);
             if (u && u.id && u.account_email) {
-              // Ensure filters_json exists as an object
+              // Read canonical filter state (updated immediately by applyFilters)
+              // instead of member-auth-current.filters_json which may be stale
+              // during the filter save debounce window.
+              const rawFilters = localStorage.getItem('funmap_filters');
               let filters = {};
-              if (typeof u.filters_json === 'string' && u.filters_json) {
-                try { filters = JSON.parse(u.filters_json); } catch(_e) { filters = {}; }
+              if (rawFilters) {
+                try { filters = JSON.parse(rawFilters); } catch(_e) { filters = {}; }
               }
               
               if (filters && typeof filters === 'object') {
