@@ -1088,6 +1088,11 @@ const MemberModule = (function() {
         if (!user || !user.id || !user.account_email) return;
         var editAction = (user.isAdmin === true) ? 'edit-admin' : 'edit-member';
 
+        // Snapshot local filter state BEFORE the request. If the user changes
+        // filters while the request is in flight, we must NOT overwrite their
+        // changes with stale DB data when the response arrives.
+        var filtersAtRequest = localStorage.getItem('funmap_filters') || '';
+
         fetch('/gateway.php?action=' + editAction, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1107,7 +1112,10 @@ const MemberModule = (function() {
             // Filters
             if (result.filters_json && typeof result.filters_json === 'string') {
                 var localFilters = localStorage.getItem('funmap_filters');
-                if (localFilters !== result.filters_json) {
+                // Only overwrite if local state has NOT changed since the request
+                // was sent. If the user modified filters while the request was in
+                // flight, the local state is newer than the DB response.
+                if (localFilters === filtersAtRequest && localFilters !== result.filters_json) {
                     localStorage.setItem('funmap_filters', result.filters_json);
                     if (currentUser) {
                         currentUser.filters_json = result.filters_json;
