@@ -448,11 +448,9 @@ const HeaderModule = (function() {
         App.on('filter:changed', function(state) {
             if (state && state.categories && hasAnyCategoryOrSubcategoryTogglesOff(state.categories)) {
                 setHeaderFilterIconActive(true);
-            } else {
-                refreshHeaderFilterActiveVisual();
+                return;
             }
-            // Refresh the count badge (e.g. after login restores filters from DB)
-            requestEarlyFilterCount();
+            refreshHeaderFilterActiveVisual();
         });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
