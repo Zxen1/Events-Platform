@@ -1362,7 +1362,7 @@
         }
 
         // Determine location count from the edit form
-        var locationContainers = accordion.querySelectorAll('.member-location-container[data-location-number]');
+        var locationContainers = formContainer.querySelectorAll('.member-location-container[data-location-number]');
         var locQty = locationContainers.length > 0 ? locationContainers.length : 1;
         
         var payload = {
