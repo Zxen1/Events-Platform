@@ -30,7 +30,7 @@
     var container = null;  // #member-tab-myposts
     var isLoaded = false;
     var editingPostsData = {};      // { [postId]: { original: postObj, current: {}, original_extracted_fields: [] } }
-    var expandedPostAccordions = {}; // { [postId]: boolean }
+    var activeModal = null;         // { backdrop: HTMLElement, close: Function }
 
     /* --------------------------------------------------------------------------
        HELPERS
@@ -376,18 +376,6 @@
                         newCard.textContent = fallbackTitle;
                     }
                     
-                    // Prevent postcard from opening when edit/manage accordion is active
-                    newCard.addEventListener('click', function(e) {
-                        var editAcc = postContainer.querySelector('.posteditor-edit-accordion');
-                        var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
-                        var editActive = editAcc && !editAcc.hidden;
-                        var manageActive = manageAcc && manageAcc.dataset.expanded === 'true';
-                        if (editActive || manageActive) {
-                            e.stopPropagation();
-                            e.preventDefault();
-                        }
-                    }, true);
-                    
                     // Replace old card with new one
                     oldCard.parentNode.replaceChild(newCard, oldCard);
                     
@@ -424,40 +412,7 @@
             cardEl.textContent = fallbackTitle;
         }
 
-        // Prevent postcard from opening into a post when edit/manage accordion is active
-        cardEl.addEventListener('click', function(e) {
-            var editAcc = postContainer.querySelector('.posteditor-edit-accordion');
-            var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
-            var editActive = editAcc && !editAcc.hidden;
-            var manageActive = manageAcc && manageAcc.dataset.expanded === 'true';
-            if (editActive || manageActive) {
-                e.stopPropagation();
-                e.preventDefault();
-            }
-        }, true); // Use capture phase to intercept before PostModule's handler
-
         editHeader.appendChild(cardEl);
-        
-        // Add edit header buttons (Save/Close) - hidden by default, shown when editing
-        var editHeaderButtons = document.createElement('div');
-        editHeaderButtons.className = 'posteditor-edit-header-buttons';
-        editHeaderButtons.hidden = true;
-        
-        var headerSaveBtn = document.createElement('button');
-        headerSaveBtn.type = 'button';
-        headerSaveBtn.className = 'posteditor-edit-button-save button-class-2c';
-        headerSaveBtn.textContent = 'Save';
-        headerSaveBtn.disabled = true;
-        
-        var headerCloseBtn = document.createElement('button');
-        headerCloseBtn.type = 'button';
-        headerCloseBtn.className = 'posteditor-edit-button-close button-class-2b';
-        headerCloseBtn.textContent = 'Close';
-        
-        editHeaderButtons.appendChild(headerSaveBtn);
-        editHeaderButtons.appendChild(headerCloseBtn);
-        editHeader.appendChild(editHeaderButtons);
-        
         postContainer.appendChild(editHeader);
 
         // Create button row underneath the header (Edit/Manage buttons)
@@ -473,11 +428,10 @@
         editBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // Collapse post to postcard if expanded
             if (window.PostModule && typeof PostModule.closePost === 'function') {
                 PostModule.closePost(post.id);
             }
-            togglePostEdit(post.id, postContainer);
+            openEditModal(post.id);
         });
 
         // Manage Button
@@ -489,102 +443,152 @@
         manageBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // Collapse post to postcard if expanded
             if (window.PostModule && typeof PostModule.closePost === 'function') {
                 PostModule.closePost(post.id);
             }
-            togglePostManage(post.id, postContainer);
+            openManageModal(post.id);
         });
 
         buttonRow.appendChild(editBtn);
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
 
-        // Add accordion container for editing content
-        var editAccordion = document.createElement('div');
-        editAccordion.className = 'posteditor-edit-accordion posteditor-edit-accordion--hidden';
-        editAccordion.hidden = true;
-        postContainer.appendChild(editAccordion);
-
-        // Add accordion container for management (plans, time, etc.)
-        var manageAccordion = document.createElement('div');
-        manageAccordion.className = 'posteditor-manage-accordion posteditor-manage-accordion--hidden';
-        manageAccordion.hidden = true;
-        postContainer.appendChild(manageAccordion);
-
         return postContainer;
     }
 
     /* --------------------------------------------------------------------------
-       MANAGE ACCORDION
+       MODALS (Edit / Manage) — copies formbuilder-formpreview-modal pattern
        -------------------------------------------------------------------------- */
-    
-    function togglePostManage(postId, postContainer) {
-        if (!postId || !postContainer) return;
-        
-        var accordion = postContainer.querySelector('.posteditor-manage-accordion');
-        if (!accordion) return;
 
-        var editBtn = postContainer.querySelector('.posteditor-button-edit');
-        var manageBtn = postContainer.querySelector('.posteditor-button-manage');
-
-        // Close all other posts' accordions first and reset their button states
-        document.querySelectorAll('.posteditor-item').forEach(function(item) {
-            if (item === postContainer) return;
-            var otherEdit = item.querySelector('.posteditor-edit-accordion');
-            var otherManage = item.querySelector('.posteditor-manage-accordion');
-            var otherEditBtn = item.querySelector('.posteditor-button-edit');
-            var otherManageBtn = item.querySelector('.posteditor-button-manage');
-            if (otherEdit && !otherEdit.hidden) {
-                otherEdit.hidden = true;
-                otherEdit.classList.add('posteditor-edit-accordion--hidden');
-                item.classList.remove('posteditor-item--editing');
-                if (otherEditBtn) otherEditBtn.setAttribute('aria-selected', 'false');
-                var otherId = item.dataset.postId;
-                if (otherId) expandedPostAccordions[otherId] = false;
-            }
-            if (otherManage && !otherManage.hidden) {
-                otherManage.hidden = true;
-                otherManage.classList.add('posteditor-manage-accordion--hidden');
-                otherManage.dataset.expanded = 'false';
-                item.classList.remove('posteditor-item--managing');
-                if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
-            }
-        });
-
-        // If edit accordion is open, close it and reset edit button
-        var editAcc = postContainer.querySelector('.posteditor-edit-accordion');
-        if (editAcc && !editAcc.hidden) {
-            editAcc.hidden = true;
-            editAcc.classList.add('posteditor-edit-accordion--hidden');
-            postContainer.classList.remove('posteditor-item--editing');
-            expandedPostAccordions[postId] = false;
-            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-        }
-
-        var isExpanded = accordion.dataset.expanded === 'true';
-        
-        if (isExpanded) {
-            accordion.hidden = true;
-            accordion.classList.add('posteditor-manage-accordion--hidden');
-            accordion.dataset.expanded = 'false';
-            postContainer.classList.remove('posteditor-item--managing');
-            if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
-        } else {
-            // Render placeholder management UI if empty
-            if (accordion.innerHTML === '') {
-                renderManagePlaceholder(postId, accordion);
-            }
-            accordion.hidden = false;
-            accordion.classList.remove('posteditor-manage-accordion--hidden');
-            accordion.dataset.expanded = 'true';
-            postContainer.classList.add('posteditor-item--managing');
-            if (manageBtn) manageBtn.setAttribute('aria-selected', 'true');
+    function closeActiveModal() {
+        if (activeModal) {
+            activeModal.close();
+            activeModal = null;
         }
     }
 
-    function renderManagePlaceholder(postId, accordionContainer) {
-        accordionContainer.innerHTML = [
+    function openEditModal(postId) {
+        closeActiveModal();
+        var panelContents = document.querySelector('.member-panel-contents');
+        if (!panelContents) {
+            throw new Error('[PostEditor] Expected .member-panel-contents not found (cannot mount edit modal).');
+        }
+
+        var backdrop = document.createElement('div');
+        backdrop.className = 'posteditor-modal';
+        var modalContainer = document.createElement('div');
+        modalContainer.className = 'posteditor-modal-container';
+        var header = document.createElement('div');
+        header.className = 'posteditor-modal-header';
+        var titleEl = document.createElement('span');
+        titleEl.className = 'posteditor-modal-title';
+        titleEl.textContent = 'Edit Post';
+        var closeBtn = ClearButtonComponent.create({
+            className: 'posteditor-modal-close',
+            ariaLabel: 'Close',
+            onClick: function() { handleClose(); }
+        });
+        header.appendChild(titleEl);
+        header.appendChild(closeBtn);
+        var body = document.createElement('div');
+        body.className = 'posteditor-modal-body';
+        modalContainer.appendChild(header);
+        modalContainer.appendChild(body);
+        backdrop.appendChild(modalContainer);
+
+        // Close on backdrop click
+        backdrop.addEventListener('click', function(e) {
+            if (e.target === backdrop) { handleClose(); }
+        });
+
+        // Close on Escape key
+        var escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                handleClose();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+
+        function closeModal() {
+            document.removeEventListener('keydown', escapeHandler);
+            if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+            activeModal = null;
+        }
+        function handleClose() {
+            if (!isPostDirty(postId)) { discardEdits(postId); closeModal(); return; }
+            if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') { discardEdits(postId); closeModal(); return; }
+            ThreeButtonDialogComponent.show({
+                titleText: 'Unsaved Changes',
+                messageText: 'You have unsaved changes. What would you like to do?',
+                cancelLabel: 'Cancel', saveLabel: 'Save', discardLabel: 'Discard', focusCancel: true
+            }).then(function(choice) {
+                if (choice === 'save') {
+                    savePost(postId).then(function() {
+                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') ToastComponent.showSuccess('Saved');
+                        discardEdits(postId); closeModal(); refreshPostCard(postId);
+                    }).catch(function(err) {
+                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') ToastComponent.showError('Failed to save: ' + err.message);
+                    });
+                } else if (choice === 'discard') {
+                    discardEdits(postId); closeModal();
+                    if (window.ToastComponent && typeof ToastComponent.show === 'function') ToastComponent.show('Changes discarded');
+                }
+            });
+        }
+
+        activeModal = { backdrop: backdrop, close: closeModal };
+        panelContents.appendChild(backdrop);
+
+        if (editingPostsData[postId]) {
+            renderEditForm(editingPostsData[postId].original, body, closeModal);
+        } else {
+            body.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
+            var user = getCurrentUser();
+            var memberId = user ? parseInt(user.id, 10) : 0;
+            ensureCategoriesLoaded().then(function() {
+                return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (res && res.success && res.posts && res.posts.length > 0) {
+                    var post = res.posts[0];
+                    editingPostsData[postId] = { original: post, current: {} };
+                    body.innerHTML = '';
+                    renderEditForm(post, body, closeModal);
+                } else {
+                    body.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
+                }
+            }).catch(function() {
+                body.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
+            });
+        }
+    }
+
+    function openManageModal(postId) {
+        closeActiveModal();
+        var panelContents = document.querySelector('.member-panel-contents');
+        if (!panelContents) {
+            throw new Error('[PostEditor] Expected .member-panel-contents not found (cannot mount manage modal).');
+        }
+
+        var backdrop = document.createElement('div');
+        backdrop.className = 'posteditor-modal';
+        var modalContainer = document.createElement('div');
+        modalContainer.className = 'posteditor-modal-container';
+        var header = document.createElement('div');
+        header.className = 'posteditor-modal-header';
+        var titleEl = document.createElement('span');
+        titleEl.className = 'posteditor-modal-title';
+        titleEl.textContent = 'Manage Post';
+        var closeBtn = ClearButtonComponent.create({
+            className: 'posteditor-modal-close',
+            ariaLabel: 'Close',
+            onClick: function() { closeModal(); }
+        });
+        header.appendChild(titleEl);
+        header.appendChild(closeBtn);
+        var body = document.createElement('div');
+        body.className = 'posteditor-modal-body';
+        body.innerHTML = [
             '<div class="posteditor-manage-content">',
                 '<div class="posteditor-manage-section">',
                     '<div class="member-panel-label">Extend Listing Time</div>',
@@ -602,239 +606,38 @@
                 '</div>',
             '</div>'
         ].join('');
+        modalContainer.appendChild(header);
+        modalContainer.appendChild(body);
+        backdrop.appendChild(modalContainer);
+
+        // Close on backdrop click
+        backdrop.addEventListener('click', function(e) {
+            if (e.target === backdrop) { closeModal(); }
+        });
+
+        // Close on Escape key
+        var escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+
+        function closeModal() {
+            document.removeEventListener('keydown', escapeHandler);
+            if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+            activeModal = null;
+        }
+
+        activeModal = { backdrop: backdrop, close: closeModal };
+        panelContents.appendChild(backdrop);
     }
 
-    /* --------------------------------------------------------------------------
-       EDIT ACCORDION
-       -------------------------------------------------------------------------- */
-    
-    // Collapse edit accordion and restore UI state
-    function collapseEditAccordion(postId, postContainer) {
-        if (!postId || !postContainer) return;
-        
-        var accordion = postContainer.querySelector('.posteditor-edit-accordion');
-        var buttonRow = postContainer.querySelector('.posteditor-buttons');
-        var headerButtons = postContainer.querySelector('.posteditor-edit-header-buttons');
-        var editBtn = postContainer.querySelector('.posteditor-button-edit');
-        
-        if (accordion) {
-            accordion.hidden = true;
-            accordion.classList.add('posteditor-edit-accordion--hidden');
-        }
-        postContainer.classList.remove('posteditor-item--editing');
-        expandedPostAccordions[postId] = false;
-        
-        // Show Edit/Manage buttons, hide header Save/Close buttons
-        if (buttonRow) buttonRow.hidden = false;
-        if (headerButtons) headerButtons.hidden = true;
-        if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-    }
-    
-    // Expand edit accordion and update UI state
-    function expandEditAccordion(postId, postContainer) {
-        if (!postId || !postContainer) return;
-        
-        var accordion = postContainer.querySelector('.posteditor-edit-accordion');
-        var buttonRow = postContainer.querySelector('.posteditor-buttons');
-        var headerButtons = postContainer.querySelector('.posteditor-edit-header-buttons');
-        var editBtn = postContainer.querySelector('.posteditor-button-edit');
-        
-        if (accordion) {
-            accordion.hidden = false;
-            accordion.classList.remove('posteditor-edit-accordion--hidden');
-        }
-        postContainer.classList.add('posteditor-item--editing');
-        expandedPostAccordions[postId] = true;
-        
-        // Hide Edit/Manage buttons, show header Save/Close buttons
-        if (buttonRow) buttonRow.hidden = true;
-        if (headerButtons) headerButtons.hidden = false;
-        if (editBtn) editBtn.setAttribute('aria-selected', 'true');
-    }
-    
-    function togglePostEdit(postId, postContainer) {
-        if (!postId || !postContainer) return;
-        
-        var accordion = postContainer.querySelector('.posteditor-edit-accordion');
-        if (!accordion) return;
 
-        var manageBtn = postContainer.querySelector('.posteditor-button-manage');
-        
-        var isExpanded = expandedPostAccordions[postId];
-        
-        // Helper to close other posts' accordions
-        function closeOtherAccordions() {
-            document.querySelectorAll('.posteditor-item').forEach(function(item) {
-                if (item === postContainer) return;
-                var otherId = item.dataset.postId;
-                if (otherId && expandedPostAccordions[otherId]) {
-                    discardEdits(otherId);
-                    collapseEditAccordion(otherId, item);
-                }
-                var otherManage = item.querySelector('.posteditor-manage-accordion');
-                var otherManageBtn = item.querySelector('.posteditor-button-manage');
-                if (otherManage && !otherManage.hidden) {
-                    otherManage.hidden = true;
-                    otherManage.classList.add('posteditor-manage-accordion--hidden');
-                    otherManage.dataset.expanded = 'false';
-                    item.classList.remove('posteditor-item--managing');
-                    if (otherManageBtn) otherManageBtn.setAttribute('aria-selected', 'false');
-                }
-            });
-        }
-        
-        // Helper to close manage accordion
-        function closeManageAccordion() {
-            var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
-            if (manageAcc && !manageAcc.hidden) {
-                manageAcc.hidden = true;
-                manageAcc.classList.add('posteditor-manage-accordion--hidden');
-                manageAcc.dataset.expanded = 'false';
-                postContainer.classList.remove('posteditor-item--managing');
-                if (manageBtn) manageBtn.setAttribute('aria-selected', 'false');
-            }
-        }
-        
-        // Check if any other post has unsaved changes before closing them
-        function checkOtherDirtyPosts() {
-            var dirtyOtherPost = null;
-            document.querySelectorAll('.posteditor-item').forEach(function(item) {
-                if (item === postContainer) return;
-                var otherId = item.dataset.postId;
-                if (otherId && isPostDirty(otherId)) {
-                    dirtyOtherPost = otherId;
-                }
-            });
-            return dirtyOtherPost;
-        }
-        
-        // Handle close with ThreeButtonDialog if dirty
-        function handleCloseWithDialog(onComplete) {
-            if (!isPostDirty(postId)) {
-                discardEdits(postId);
-                collapseEditAccordion(postId, postContainer);
-                if (onComplete) onComplete();
-                return;
-            }
-            if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
-                discardEdits(postId);
-                collapseEditAccordion(postId, postContainer);
-                if (onComplete) onComplete();
-                return;
-            }
-            ThreeButtonDialogComponent.show({
-                titleText: 'Unsaved Changes',
-                messageText: 'You have unsaved changes. What would you like to do?',
-                cancelLabel: 'Cancel',
-                saveLabel: 'Save',
-                discardLabel: 'Discard',
-                focusCancel: true
-            }).then(function(choice) {
-                if (choice === 'save') {
-                    savePost(postId).then(function() {
-                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                            ToastComponent.showSuccess('Saved');
-                        }
-                        discardEdits(postId);
-                        collapseEditAccordion(postId, postContainer);
-                        if (onComplete) onComplete();
-                    }).catch(function(err) {
-                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                            ToastComponent.showError('Failed to save: ' + err.message);
-                        }
-                    });
-                } else if (choice === 'discard') {
-                    discardEdits(postId);
-                    collapseEditAccordion(postId, postContainer);
-                    if (window.ToastComponent && typeof ToastComponent.show === 'function') {
-                        ToastComponent.show('Changes discarded');
-                    }
-                    if (onComplete) onComplete();
-                }
-            });
-        }
-        
-        if (isExpanded) {
-            // Collapsing via Edit button click - use dialog if dirty
-            handleCloseWithDialog();
-        } else {
-            // Expanding - check if any other post has unsaved changes first
-            var dirtyOther = checkOtherDirtyPosts();
-            
-            function proceedWithExpand() {
-                closeOtherAccordions();
-                closeManageAccordion();
-                
-                // Check if we need to load data first
-                if (editingPostsData[postId]) {
-                    expandEditAccordion(postId, postContainer);
-                } else {
-                    showStatus('Loading post data...', { success: true });
-                    
-                    // Get member_id to bypass contact security filtering
-                    var user = getCurrentUser();
-                    var memberId = user ? parseInt(user.id, 10) : 0;
-                    
-                    // Ensure categories are loaded before fetching post data
-                    ensureCategoriesLoaded().then(function() {
-                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
-                    })
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        if (res && res.success && res.posts && res.posts.length > 0) {
-                            var post = res.posts[0];
-                            editingPostsData[postId] = { original: post, current: {} };
-                            renderEditForm(post, accordion);
-                            expandEditAccordion(postId, postContainer);
-                            showStatus('Post data loaded.', { success: true });
-                        } else {
-                            showStatus('Failed to load post data.', { error: true });
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('[PostEditor] Failed to fetch post for edit:', err);
-                        showStatus('Failed to load post data.', { error: true });
-                    });
-                }
-            }
-            
-            if (dirtyOther) {
-                // Another post has unsaved changes - use ThreeButtonDialog
-                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
-                    proceedWithExpand();
-                    return;
-                }
-                ThreeButtonDialogComponent.show({
-                    titleText: 'Unsaved Changes',
-                    messageText: 'Another post has unsaved changes. What would you like to do?',
-                    cancelLabel: 'Cancel',
-                    saveLabel: 'Save',
-                    discardLabel: 'Discard',
-                    focusCancel: true
-                }).then(function(choice) {
-                    if (choice === 'save') {
-                        savePost(dirtyOther).then(function() {
-                            if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                                ToastComponent.showSuccess('Saved');
-                            }
-                            proceedWithExpand();
-                        }).catch(function(err) {
-                            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                                ToastComponent.showError('Failed to save: ' + err.message);
-                            }
-                        });
-                    } else if (choice === 'discard') {
-                        proceedWithExpand();
-                    }
-                });
-            } else {
-                proceedWithExpand();
-            }
-        }
-    }
 
-    function renderEditForm(post, accordionContainer) {
-        if (!post || !accordionContainer) return;
+    function renderEditForm(post, formContainer, closeModalFn) {
+        if (!post || !formContainer) return;
         
         var memberCategories = getMemberCategories();
         
@@ -861,16 +664,16 @@
         }
         
         if (!categoryName || !subcategoryName) {
-            accordionContainer.innerHTML = '<p class="posteditor-status--error">This post uses a category that is no longer available.</p>';
+            formContainer.innerHTML = '<p class="posteditor-status--error">This post uses a category that is no longer available.</p>';
             return;
         }
 
         // 2. Render fields into container
         var fields = getFieldsForSelection(categoryName, subcategoryName);
-        accordionContainer.innerHTML = '';
+        formContainer.innerHTML = '';
         
         if (fields.length === 0) {
-            accordionContainer.innerHTML = '<p class="posteditor-status">No fields configured for this subcategory yet.</p>';
+            formContainer.innerHTML = '<p class="posteditor-status">No fields configured for this subcategory yet.</p>';
             return;
         }
 
@@ -894,7 +697,7 @@
             
             var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
                 fields: fields,
-                container: accordionContainer,
+                container: formContainer,
                 buildFieldset: function(fieldData, options) {
                     var field = ensureFieldDefaults(fieldData);
                     return FieldsetBuilder.buildFieldset(field, {
@@ -913,98 +716,66 @@
             });
             
             // Populate with post data
-            populateWithPostData(post, accordionContainer);
+            populateWithPostData(post, formContainer);
             
-            // Renumber location containers and update headers (scoped to this post's accordion)
-            renumberLocationContainersInAccordion(accordionContainer);
+            // Renumber location containers and update headers
+            renumberLocationContainersInAccordion(formContainer);
             
             // Store initial extracted fields for dirty checking (must happen after populate)
-            editingPostsData[post.id].original_extracted_fields = collectFormData(accordionContainer, post);
+            editingPostsData[post.id].original_extracted_fields = collectFormData(formContainer, post);
 
-            // 4. Add Save and Close buttons at the bottom of the accordion
+            // 4. Add Save and Close buttons at the bottom
             var footer = document.createElement('div');
             footer.className = 'posteditor-edit-footer';
             
-            var postContainer = accordionContainer.closest('.posteditor-item');
-            var headerSaveBtn = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons .posteditor-edit-button-save') : null;
-            var headerCloseBtn = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons .posteditor-edit-button-close') : null;
-            
-            // Close editor function (used by Close button and forced close)
+            // Close editor — delegates to the modal close callback
             function closeEditor() {
                 discardEdits(post.id);
-                collapseEditAccordion(post.id, postContainer);
+                if (closeModalFn) closeModalFn();
             }
             
             // Handle close with unsaved changes check
             function handleClose() {
-                if (!isPostDirty(post.id)) {
-                    closeEditor();
-                    return;
-                }
-                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
-                    closeEditor();
-                    return;
-                }
+                if (!isPostDirty(post.id)) { closeEditor(); return; }
+                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') { closeEditor(); return; }
                 ThreeButtonDialogComponent.show({
                     titleText: 'Unsaved Changes',
                     messageText: 'You have unsaved changes. What would you like to do?',
-                    cancelLabel: 'Cancel',
-                    saveLabel: 'Save',
-                    discardLabel: 'Discard',
-                    focusCancel: true
+                    cancelLabel: 'Cancel', saveLabel: 'Save', discardLabel: 'Discard', focusCancel: true
                 }).then(function(choice) {
                     if (choice === 'save') {
-                        handleSave().then(function() {
-                            closeEditor();
-                        });
+                        handleSave().then(function() { closeEditor(); });
                     } else if (choice === 'discard') {
                         closeEditor();
-                        if (window.ToastComponent && typeof ToastComponent.show === 'function') {
-                            ToastComponent.show('Changes discarded');
-                        }
+                        if (window.ToastComponent && typeof ToastComponent.show === 'function') ToastComponent.show('Changes discarded');
                     }
                 });
             }
             
-            // Handle save (returns promise)
-            // Same visual flow as create: close form, show overlay, show result.
+            // Handle save — overlay inside the modal body, close on success
             function handleSave() {
-                // Close the edit form
-                collapseEditAccordion(post.id, postContainer);
-
-                // Add saving overlay to the post card area
-                var editHeader = postContainer.querySelector('.posteditor-edit-header');
                 var overlay = document.createElement('div');
                 overlay.className = 'posteditor-saving-overlay';
                 overlay.innerHTML =
                     '<div class="posteditor-placeholder-spinner"></div>' +
                     '<div class="posteditor-placeholder-text">Saving...</div>';
-                if (editHeader) editHeader.appendChild(overlay);
+                formContainer.appendChild(overlay);
 
                 return savePost(post.id).then(function() {
-                    // Show success state briefly
                     overlay.innerHTML =
                         '<div class="posteditor-placeholder-check">✓</div>' +
                         '<div class="posteditor-placeholder-text">Saved!</div>';
-
                     setTimeout(function() {
                         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                        discardEdits(post.id);
+                        if (closeModalFn) closeModalFn();
                         refreshPostCard(post.id);
                     }, 2000);
-
                     updateHeaderSaveDiscardState();
                 }).catch(function(err) {
-                    // Show error state, then re-open editor so user can retry
-                    overlay.innerHTML =
-                        '<div class="posteditor-placeholder-error">✕</div>' +
-                        '<div class="posteditor-placeholder-text">Failed</div>';
-
-                    setTimeout(function() {
-                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                        expandEditAccordion(post.id, postContainer);
-                        updateFooterButtonState();
-                    }, 3000);
-
+                    // Remove overlay — form is still visible so user can retry
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    updateFooterButtonState();
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         ToastComponent.showError('Failed to save: ' + err.message);
                     }
@@ -1029,20 +800,9 @@
             closeBtn.textContent = 'Close';
             closeBtn.addEventListener('click', handleClose);
             
-            // Wire up header buttons to same handlers
-            if (headerSaveBtn) {
-                headerSaveBtn.addEventListener('click', function() {
-                    if (headerSaveBtn.disabled) return;
-                    handleSave();
-                });
-            }
-            if (headerCloseBtn) {
-                headerCloseBtn.addEventListener('click', handleClose);
-            }
-            
             // Function to check if all fieldsets are complete
             function isFormComplete() {
-                var fieldsetEls = accordionContainer.querySelectorAll('.fieldset[data-complete]');
+                var fieldsetEls = formContainer.querySelectorAll('.fieldset[data-complete]');
                 for (var i = 0; i < fieldsetEls.length; i++) {
                     var fs = fieldsetEls[i];
                     if (!fs || !fs.dataset) continue;
@@ -1056,7 +816,7 @@
             // Function to get incomplete fieldset names
             function getIncompleteFieldsetNamesList() {
                 var out = [];
-                var fieldsetEls = accordionContainer.querySelectorAll('.fieldset[data-complete="false"]');
+                var fieldsetEls = formContainer.querySelectorAll('.fieldset[data-complete="false"]');
                 for (var i = 0; i < fieldsetEls.length; i++) {
                     var fs = fieldsetEls[i];
                     if (!fs || !fs.dataset) continue;
@@ -1093,7 +853,6 @@
                 var isComplete = isFormComplete();
                 var canSave = isDirty && isComplete;
                 saveBtn.disabled = !canSave;
-                if (headerSaveBtn) headerSaveBtn.disabled = !canSave;
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
@@ -1153,35 +912,29 @@
             
             // Attach popover to footer Save button (above, left-aligned)
             attachPopoverToButton(saveBtn, getSavePopoverContent, footer, 'above', 'left');
-            
-            // Attach popover to header Save button (below, left-aligned)
-            var headerButtonsContainer = postContainer ? postContainer.querySelector('.posteditor-edit-header-buttons') : null;
-            if (headerSaveBtn && headerButtonsContainer) {
-                attachPopoverToButton(headerSaveBtn, getSavePopoverContent, headerButtonsContainer, 'below', 'left');
-            }
 
             // Attach change listener to mark global save state as dirty and update footer buttons
-            accordionContainer.addEventListener('input', function() {
+            formContainer.addEventListener('input', function() {
                 updateHeaderSaveDiscardState();
                 updateFooterButtonState();
             });
-            accordionContainer.addEventListener('change', function() {
+            formContainer.addEventListener('change', function() {
                 updateHeaderSaveDiscardState();
                 updateFooterButtonState();
             });
             // Also custom events from fieldsets
-            accordionContainer.addEventListener('fieldset:sessions-change', function() {
+            formContainer.addEventListener('fieldset:sessions-change', function() {
                 updateHeaderSaveDiscardState();
                 updateFooterButtonState();
             });
             // Fieldset validity changes (completeness)
-            accordionContainer.addEventListener('fieldset:validity-change', function() {
+            formContainer.addEventListener('fieldset:validity-change', function() {
                 updateFooterButtonState();
             });
             
             footer.appendChild(saveBtn);
             footer.appendChild(closeBtn);
-            accordionContainer.appendChild(footer);
+            formContainer.appendChild(footer);
         });
     }
 
@@ -1485,11 +1238,9 @@
     
     function isAnyPostDirty() {
         var anyDirty = false;
-        Object.keys(expandedPostAccordions).forEach(function(postId) {
-            if (expandedPostAccordions[postId] === true) {
-                if (isPostDirty(postId)) {
-                    anyDirty = true;
-                }
+        Object.keys(editingPostsData).forEach(function(postId) {
+            if (isPostDirty(postId)) {
+                anyDirty = true;
             }
         });
         return anyDirty;
@@ -1502,11 +1253,12 @@
         // Guard: if original_extracted_fields not set yet, can't be dirty
         if (!data.original_extracted_fields) return false;
         
-        var accordion = document.querySelector('.posteditor-item[data-post-id="' + postId + '"] .posteditor-edit-accordion');
-        if (!accordion) return false;
+        // Find form container — inside the active modal body
+        var formContainer = activeModal ? activeModal.backdrop.querySelector('.posteditor-modal-body') : null;
+        if (!formContainer) return false;
 
         // Collect current form data and compare with original
-        var current = collectFormData(accordion, data.original);
+        var current = collectFormData(formContainer, data.original);
         return JSON.stringify(current) !== JSON.stringify(data.original_extracted_fields);
     }
 
@@ -1544,18 +1296,18 @@
 
     function savePost(postId) {
         var data = editingPostsData[postId];
-        var accordion = document.querySelector('.posteditor-item[data-post-id="' + postId + '"] .posteditor-edit-accordion');
-        if (!data || !accordion) return Promise.resolve();
+        var formContainer = activeModal ? activeModal.backdrop.querySelector('.posteditor-modal-body') : null;
+        if (!data || !formContainer) return Promise.resolve();
 
         var memberCategories = getMemberCategories();
         
         // Collect current fields from form
-        var fields = collectFormData(accordion, data.original);
+        var fields = collectFormData(formContainer, data.original);
         
-        // Collect image files from the accordion
+        // Collect image files from the form
         var imageFiles = [];
         var imagesMeta = '[]';
-        var imagesFs = accordion.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]');
+        var imagesFs = formContainer.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]');
         if (imagesFs) {
             var fileInput = imagesFs.querySelector('input[type="file"]');
             var metaInput = imagesFs.querySelector('input.fieldset-images-meta');
@@ -1613,43 +1365,23 @@
     }
 
     function discardEdits(postId) {
-        var data = editingPostsData[postId];
-        var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
-        var accordion = postContainer ? postContainer.querySelector('.posteditor-edit-accordion') : null;
-        var editBtn = postContainer ? postContainer.querySelector('.posteditor-button-edit') : null;
-        
-        if (accordion) {
-            // Close accordion and reset to original
-            accordion.hidden = true;
-            accordion.classList.add('posteditor-edit-accordion--hidden');
-            if (postContainer) postContainer.classList.remove('posteditor-item--editing');
-            if (editBtn) editBtn.setAttribute('aria-selected', 'false');
-            expandedPostAccordions[postId] = false;
-            
-            // Clear data so it's re-loaded if opened again
-            accordion.innerHTML = '';
-        }
-        
-        // Clear cached data
-        if (data) {
+        // Clear cached data so it's re-loaded if opened again
+        if (editingPostsData[postId]) {
             delete editingPostsData[postId];
         }
-        
         updateHeaderSaveDiscardState();
     }
 
     function discardAllEdits() {
-        Object.keys(expandedPostAccordions).forEach(function(postId) {
-            if (expandedPostAccordions[postId] === true) {
-                discardEdits(postId);
-            }
+        Object.keys(editingPostsData).forEach(function(postId) {
+            discardEdits(postId);
         });
     }
 
     function getDirtyPostIds() {
         var dirtyIds = [];
-        Object.keys(expandedPostAccordions).forEach(function(postId) {
-            if (expandedPostAccordions[postId] === true && isPostDirty(postId)) {
+        Object.keys(editingPostsData).forEach(function(postId) {
+            if (isPostDirty(postId)) {
                 dirtyIds.push(postId);
             }
         });
