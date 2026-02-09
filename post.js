@@ -2573,10 +2573,11 @@ const PostModule = (function() {
     var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
     if (slot) {
-      // Expand in place: hide all existing children, append detail inside the slot.
+      // Expand in place: hide only the card, append detail inside the slot.
       // The slot stays in the DOM — TopSlack anchor remains connected.
-      var slotChildren = Array.prototype.slice.call(slot.children);
-      slotChildren.forEach(function(child) { child.style.display = 'none'; });
+      // Other slot children (status bars, Edit/Manage buttons) remain visible.
+      var cardToHide = slot.querySelector('.post-card, .recent-card');
+      if (cardToHide) cardToHide.style.display = 'none';
       slot.appendChild(detail);
     } else {
       // No slot found (e.g. opened from map, card not in the list): create a temp slot.
@@ -2635,10 +2636,9 @@ const PostModule = (function() {
     if (slot) {
       // Remove the detail view from the slot
       openPostEl.remove();
-      // Restore hidden children (original card, status bar, buttons, etc.)
-      Array.prototype.slice.call(slot.children).forEach(function(child) {
-        if (child.style.display === 'none') child.style.display = '';
-      });
+      // Restore the hidden card
+      var hiddenCard = slot.querySelector('.post-card, .recent-card');
+      if (hiddenCard) hiddenCard.style.display = '';
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -3678,10 +3678,9 @@ const PostModule = (function() {
 
     if (slot) {
       openPostEl.remove();
-      // Restore hidden children (original card, status bar, buttons, etc.)
-      Array.prototype.slice.call(slot.children).forEach(function(child) {
-        if (child.style.display === 'none') child.style.display = '';
-      });
+      // Restore the hidden card
+      var hiddenCard = slot.querySelector('.post-card, .recent-card');
+      if (hiddenCard) hiddenCard.style.display = '';
       // If slot is now empty (was a temp slot), remove it
       if (!slot.children.length) slot.remove();
     } else {
