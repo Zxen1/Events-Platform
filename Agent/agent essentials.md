@@ -382,6 +382,9 @@ Any feature that depends on `pricing_groups`, sessions, or item details will sil
 ### Avoid stopPropagation
 Be very careful with `stopPropagation()` as it can interfere with the **Top Slack** and **Bottom Slack** system. This destroys the entire layout of the panel.
 
+### No Debounced Saves on map:boundsChanged
+Never call debounced save functions (e.g. `saveFilters()`) from `map:boundsChanged` — the map fires this event continuously during movement/spin, which resets the debounce timer and prevents saves from ever completing.
+
 ### Modal Click-Through Prevention
 When closing modals, prevent the click/tap from activating elements behind:
 - Use `setTimeout(close, 50)` for touch events (delays close until after synthetic click fires)
