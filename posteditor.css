@@ -155,11 +155,31 @@
    ============================================================================ */
 
 .posteditor-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  overflow: hidden; /* Clip status bar corners to border-radius */
 }
 
 .posteditor-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Border color matches status bar color */
+.posteditor-item--green {
+  border-color: var(--green-900);
+}
+
+.posteditor-item--yellow {
+  border-color: var(--yellow-900);
+}
+
+.posteditor-item--red {
+  border-color: var(--red-900);
+}
+
+.posteditor-item--gray {
+  border-color: var(--gray-700);
 }
 
 /* Edit header (contains postcard + Save/Close buttons) - sticky when editing */
@@ -232,8 +252,7 @@
 .posteditor-buttons {
   display: flex;
   gap: 10px;
-  padding: 0 10px;
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  padding: 0 10px 10px; /* 10-12-6 Rule: 10px padding inside container */
 }
 
 .posteditor-buttons[hidden] {
