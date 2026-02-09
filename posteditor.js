@@ -782,6 +782,9 @@
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res && res.success && res.posts && res.posts.length > 0) {
+                            // Close any accordion that opened while this fetch was in flight
+                            closeOtherAccordions();
+                            closeManageAccordion();
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             renderEditForm(post, accordion);
