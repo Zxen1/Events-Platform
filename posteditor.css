@@ -102,6 +102,55 @@
 }
 
 /* ============================================================================
+   STATUS BAR (above post cards and inside manage modal)
+   ============================================================================ */
+
+.posteditor-status-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  margin: 0;
+  padding: 2px 4px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.posteditor-status-bar-date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.posteditor-status-bar-countdown {
+  position: absolute;
+  left: 150px;
+}
+
+.posteditor-status-bar-status {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Color states */
+.posteditor-status-bar--green {
+  background: var(--green-500, #22c55e);
+}
+
+.posteditor-status-bar--yellow {
+  background: var(--yellow-500, #eab308);
+}
+
+.posteditor-status-bar--red {
+  background: var(--red-500, #ef4444);
+}
+
+.posteditor-status-bar--gray {
+  background: var(--gray-500, #6b7280);
+}
+
+/* ============================================================================
    POST ITEM
    ============================================================================ */
 

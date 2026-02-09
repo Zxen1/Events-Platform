@@ -47,6 +47,110 @@
     }
 
     /**
+     * Build a status bar element for a post.
+     * Shows countdown (or expired date) on the left, status word on the right.
+     * Color: green (7+ days), yellow (3-7 days), red (<3 days), gray (not visible).
+     * @param {Object} post - Post object with visibility, expires_at, deleted_at
+     * @returns {HTMLElement} Status bar div
+     */
+    function buildStatusBar(post) {
+        var bar = document.createElement('div');
+        bar.className = 'posteditor-status-bar';
+
+        var dateSpan = document.createElement('span');
+        dateSpan.className = 'posteditor-status-bar-date';
+        var countdownSpan = document.createElement('span');
+        countdownSpan.className = 'posteditor-status-bar-countdown';
+        var statusSpan = document.createElement('span');
+        statusSpan.className = 'posteditor-status-bar-status';
+
+        // Determine status and color
+        var status = '';
+        var colorClass = '';
+        var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
+        var visibility = post.visibility || 'active';
+        var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var now = new Date();
+
+        if (isDeleted) {
+            status = 'DELETED';
+            colorClass = 'posteditor-status-bar--gray';
+            dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
+        } else if (visibility === 'expired') {
+            status = 'EXPIRED';
+            colorClass = 'posteditor-status-bar--gray';
+            if (expiresAt) {
+                dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
+            }
+        } else if (visibility === 'paused') {
+            status = 'PAUSED';
+            colorClass = 'posteditor-status-bar--gray';
+            if (expiresAt) {
+                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                countdownSpan.textContent = formatCountdown(expiresAt, now);
+            }
+        } else {
+            // Active
+            status = 'ACTIVE';
+            if (expiresAt) {
+                var msRemaining = expiresAt.getTime() - now.getTime();
+                var daysRemaining = msRemaining / (1000 * 60 * 60 * 24);
+                if (daysRemaining >= 7) {
+                    colorClass = 'posteditor-status-bar--green';
+                } else if (daysRemaining >= 3) {
+                    colorClass = 'posteditor-status-bar--yellow';
+                } else {
+                    colorClass = 'posteditor-status-bar--red';
+                }
+                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                countdownSpan.textContent = formatCountdown(expiresAt, now);
+            } else {
+                colorClass = 'posteditor-status-bar--green';
+            }
+        }
+
+        bar.classList.add(colorClass);
+        statusSpan.textContent = status;
+        bar.appendChild(dateSpan);
+        bar.appendChild(countdownSpan);
+        bar.appendChild(statusSpan);
+        return bar;
+    }
+
+    /**
+     * Format date for status bar: "Wed 3 Mar 14:30" (omit year if current year)
+     */
+    function formatStatusDate(date) {
+        var weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var weekday = weekdays[date.getDay()];
+        var day = date.getDate();
+        var month = months[date.getMonth()];
+        var year = date.getFullYear();
+        var hour = String(date.getHours()).padStart(2, '0');
+        var minute = String(date.getMinutes()).padStart(2, '0');
+        var thisYear = new Date().getFullYear();
+        if (year !== thisYear) {
+            return weekday + ' ' + day + ' ' + month + ' ' + year + ' ' + hour + ':' + minute;
+        }
+        return weekday + ' ' + day + ' ' + month + ' ' + hour + ':' + minute;
+    }
+
+    /**
+     * Format countdown: "30d 2h 15m"
+     */
+    function formatCountdown(expiresAt, now) {
+        var ms = expiresAt.getTime() - now.getTime();
+        if (ms <= 0) return '0d 0h 0m';
+        var totalMinutes = Math.floor(ms / (1000 * 60));
+        var minutes = totalMinutes % 60;
+        var totalHours = Math.floor(totalMinutes / 60);
+        var hours = totalHours % 24;
+        var days = Math.floor(totalHours / 24);
+        return days + 'd ' + hours + 'h ' + minutes + 'm';
+    }
+
+    /**
      * Strip label prefix from custom field values.
      * Database stores "Label: value" for display, but editor needs just "value".
      * Returns the portion after the first ": " or the original string if no prefix.
@@ -412,6 +516,10 @@
             cardEl.textContent = fallbackTitle;
         }
 
+        // Status bar above the post card
+        var statusBar = buildStatusBar(post);
+        postContainer.appendChild(statusBar);
+
         editHeader.appendChild(cardEl);
         postContainer.appendChild(editHeader);
 
@@ -532,6 +640,12 @@
             onClick: function() { handleClose(); }
         });
         header.appendChild(closeBtn);
+
+        // Status bar above the header, inside the modal container
+        var modalStatusBar = buildStatusBar(post);
+        modalContainer.appendChild(modalStatusBar);
+
+        modalContainer.appendChild(header);
         var body = document.createElement('div');
         body.className = 'posteditor-modal-body';
 
@@ -656,7 +770,6 @@
         ].join('');
         body.appendChild(manageContent);
 
-        modalContainer.appendChild(header);
         modalContainer.appendChild(body);
         backdrop.appendChild(modalContainer);
 
