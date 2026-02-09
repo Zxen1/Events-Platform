@@ -293,8 +293,9 @@ $postColumns = fetch_table_columns($mysqli, 'posts');
 $hasPaymentStatus = in_array('payment_status', $postColumns, true);
 $hasModerationStatus = in_array('moderation_status', $postColumns, true);
 
-// Extract checkout_key from fields (post-level, not location-specific)
+// Extract checkout_key and days from fields (post-level, not location-specific)
 $checkoutKey = null;
+$checkoutDays = null;
 $fieldsArr = $data['fields'] ?? [];
 if (is_array($fieldsArr)) {
   foreach ($fieldsArr as $fld) {
@@ -331,22 +332,34 @@ if (is_array($fieldsArr)) {
           $coStmt->close();
         }
       }
+
+      // Extract days from checkout value for expires_at calculation
+      if (is_array($val) && !empty($val['days'])) {
+        $checkoutDays = (int)$val['days'];
+      }
+
       break;
     }
   }
 }
 
+// Calculate expires_at from checkout days
+$expiresAt = null;
+if (!empty($checkoutDays) && $checkoutDays > 0) {
+  $expiresAt = (new DateTime('now', new DateTimeZone('UTC')))->modify('+' . $checkoutDays . ' days')->format('Y-m-d H:i:s');
+}
+
 if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } elseif ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_key) VALUES (?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
   );
 }
 
@@ -355,20 +368,20 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus && $hasModerationStatus) {
-  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s)
-  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey)) {
+  // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'ississsss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
-  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutKey(s)
-  if (!bind_statement_params($stmt, 'ississs', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutKey)) {
+  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  // 6 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutKey(s)
-  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutKey)) {
+  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isissss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
