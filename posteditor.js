@@ -90,21 +90,29 @@
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
             }
         } else {
-            // Active
-            status = 'ACTIVE';
+            // Active (or expired but database not yet updated)
             if (expiresAt) {
                 var msRemaining = expiresAt.getTime() - now.getTime();
                 var daysRemaining = msRemaining / (1000 * 60 * 60 * 24);
-                if (daysRemaining >= 7) {
-                    colorClass = 'posteditor-status-bar--green';
-                } else if (daysRemaining >= 3) {
-                    colorClass = 'posteditor-status-bar--yellow';
+                if (msRemaining <= 0) {
+                    // Expiry time has passed even though visibility still says active
+                    status = 'EXPIRED';
+                    colorClass = 'posteditor-status-bar--gray';
+                    dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
                 } else {
-                    colorClass = 'posteditor-status-bar--red';
+                    status = 'ACTIVE';
+                    if (daysRemaining >= 7) {
+                        colorClass = 'posteditor-status-bar--green';
+                    } else if (daysRemaining >= 3) {
+                        colorClass = 'posteditor-status-bar--yellow';
+                    } else {
+                        colorClass = 'posteditor-status-bar--red';
+                    }
+                    dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                    countdownSpan.textContent = formatCountdown(expiresAt, now);
                 }
-                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
-                countdownSpan.textContent = formatCountdown(expiresAt, now);
             } else {
+                status = 'ACTIVE';
                 colorClass = 'posteditor-status-bar--green';
             }
         }

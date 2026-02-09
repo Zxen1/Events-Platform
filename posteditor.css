@@ -139,11 +139,11 @@
 }
 
 .posteditor-status-bar--yellow {
-  background: var(--yellow-500, #eab308);
+  background: var(--yellow-900);
 }
 
 .posteditor-status-bar--red {
-  background: var(--red-500, #ef4444);
+  background: var(--red-900);
 }
 
 .posteditor-status-bar--gray {
