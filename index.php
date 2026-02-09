@@ -867,6 +867,48 @@ if (empty($ogTitle)) {
               <div class="admin-settings-color-swatch" style="background: var(--green-900);"><span>900</span></div>
               <div class="admin-settings-color-swatch" style="background: var(--green-950);"><span>950</span></div>
             </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Yellow Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-950);"><span>950</span></div>
+            </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Red Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--red-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-950);"><span>950</span></div>
+            </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Gray Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--gray-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-950);"><span>950</span></div>
+            </div>
           </div>
           
           </form>
