@@ -968,13 +968,26 @@
             
             // Handle save (returns promise)
             function handleSave() {
+                // Show saving state and prevent double-clicks
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                if (headerSaveBtn) {
+                    headerSaveBtn.disabled = true;
+                    headerSaveBtn.textContent = 'Saving...';
+                }
+
                 return savePost(post.id).then(function() {
+                    saveBtn.textContent = 'Save';
+                    if (headerSaveBtn) headerSaveBtn.textContent = 'Save';
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                         ToastComponent.showSuccess('Saved');
                     }
                     updateHeaderSaveDiscardState();
                     updateFooterButtonState();
                 }).catch(function(err) {
+                    saveBtn.textContent = 'Save';
+                    if (headerSaveBtn) headerSaveBtn.textContent = 'Save';
+                    updateFooterButtonState();
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         ToastComponent.showError('Failed to save: ' + err.message);
                     }

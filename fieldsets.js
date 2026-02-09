@@ -1672,9 +1672,8 @@ const FieldsetBuilder = (function(){
                     if (isLocalEntryInSlots(localEntry._imageEntryId)) return;
                     
                     imageEntries.push(localEntry);
-                    // Remove from localBasketEntries
-                    var idx = localBasketEntries.indexOf(localEntry);
-                    if (idx !== -1) localBasketEntries.splice(idx, 1);
+                    // Keep in localBasketEntries (same as server media stays in basketMedia).
+                    // renderBasket shows it with active state (blue border) via isLocalEntryInSlots.
                     
                     updateImagesMeta();
                     renderImages();
@@ -2013,7 +2012,7 @@ const FieldsetBuilder = (function(){
                                 var removed = imageEntries[idx];
                                 if (removed) {
                                     // If it's a local file (no server id), keep in basket for re-adding
-                                    if (removed.file && !removed.id) {
+                                    if (removed.file && !removed.id && localBasketEntries.indexOf(removed) === -1) {
                                         localBasketEntries.unshift(removed); // Add to front (newest)
                                     }
                                     // Don't revoke URLs for items going to basket
