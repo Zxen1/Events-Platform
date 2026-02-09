@@ -296,6 +296,10 @@ const PostModule = (function() {
     // The filter/admin/member panels are where the anti-jank spacer is actually needed.
     try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
     try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
+
+    // iOS: nudge scroll position off boundaries to prevent scroll lock.
+    try { fixIOSScrollBoundary(postListEl); } catch (_eIOSFix0) {}
+    try { fixIOSScrollBoundary(recentPanelContentEl); } catch (_eIOSFix1) {}
   }
 
   function bindAppEvents() {

@@ -657,6 +657,9 @@ const App = (function() {
           if (topSlack && topSlack.parentNode) topSlack.parentNode.removeChild(topSlack);
         } catch (e) {}
 
+        // iOS: nudge scroll position off boundaries to prevent scroll lock.
+        try { fixIOSScrollBoundary(el); } catch (_eIOSFix) {}
+
         // Mobile: DO NOT attach slack systems.
         // They can block scroll direction at edges (the exact bug Paul described).
         if (isMobile) return;

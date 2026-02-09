@@ -11689,6 +11689,27 @@ const PostPriceComponent = (function() {
 })();
 
 
+/* ---------------------------------------------------------------------------
+   iOS SCROLL BOUNDARY FIX
+   On iOS, when a scrollable container is at exactly scrollTop 0 or at the max,
+   the touch gesture passes through to the parent instead of scrolling the
+   container. Nudging scrollTop by 1px on touchstart keeps iOS from locking out
+   downward (or upward) scroll.
+--------------------------------------------------------------------------- */
+function fixIOSScrollBoundary(el) {
+    if (!el) return;
+    el.addEventListener('touchstart', function() {
+        if (el.scrollHeight <= el.clientHeight) return;
+        var st = el.scrollTop;
+        if (st === 0) {
+            el.scrollTop = 1;
+        } else if (st >= el.scrollHeight - el.clientHeight) {
+            el.scrollTop = el.scrollHeight - el.clientHeight - 1;
+        }
+    }, { passive: true });
+}
+
+
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
@@ -11715,6 +11736,7 @@ window.ImageModalComponent = ImageModalComponent;
 window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
+window.fixIOSScrollBoundary = fixIOSScrollBoundary;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
 window.MiniMap = MiniMap;
 window.PostLocationMapComponent = PostLocationMapComponent;
