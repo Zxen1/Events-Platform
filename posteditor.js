@@ -564,7 +564,6 @@
         editAccordionContent.className = 'posteditor-manage-edit-content posteditor-manage-edit-content--hidden';
         var editFormLoaded = false;
         var accordionExpanded = false;
-        var bottomSaveObserver = null;
 
         // Delegate top Save to bottom Save button
         editTopSaveBtn.addEventListener('click', function() {
@@ -594,39 +593,13 @@
         }
 
         // Collapse accordion (used as closeModalFn for renderEditForm)
+        // Collapse accordion (used as closeModalFn for renderEditForm)
         function collapseAccordion() {
             setAccordionExpanded(false);
-            // Disconnect observers when collapsed
-            if (bottomSaveObserver) { bottomSaveObserver.disconnect(); bottomSaveObserver = null; }
-            if (footerObserver) { footerObserver.disconnect(); footerObserver = null; }
-        }
-
-        // Mirror bottom Save button disabled state to top Save button
-        var footerObserver = null;
-        function syncTopSaveState() {
-            var bottomSave = editAccordionContent.querySelector('.posteditor-edit-button-save');
-            if (bottomSave) {
-                editTopSaveBtn.disabled = bottomSave.disabled;
-                // Observe future changes to the bottom Save disabled attribute
-                if (!bottomSaveObserver) {
-                    bottomSaveObserver = new MutationObserver(function() {
-                        editTopSaveBtn.disabled = bottomSave.disabled;
-                    });
-                    bottomSaveObserver.observe(bottomSave, { attributes: true, attributeFilter: ['disabled'] });
-                }
-                // Stop watching for footer appearance
-                if (footerObserver) { footerObserver.disconnect(); footerObserver = null; }
-                return;
-            }
-            // Bottom save not yet rendered (async form load) — watch for it
-            if (!footerObserver) {
-                footerObserver = new MutationObserver(function() {
-                    if (editAccordionContent.querySelector('.posteditor-edit-button-save')) {
-                        syncTopSaveState();
-                    }
-                });
-                footerObserver.observe(editAccordionContent, { childList: true, subtree: true });
-            }
+            // Reset so the form reloads with fresh data on next expand
+            // (discardEdits wipes editingPostsData, so the stale form would be broken)
+            editFormLoaded = false;
+            editAccordionContent.innerHTML = '';
         }
 
         editToggleBtn.addEventListener('click', function() {
@@ -636,8 +609,7 @@
             if (!editFormLoaded) {
                 editFormLoaded = true;
                 if (editingPostsData[postId]) {
-                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion);
-                    syncTopSaveState();
+                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn);
                 } else {
                     editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
                     var user = getCurrentUser();
@@ -649,8 +621,7 @@
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             editAccordionContent.innerHTML = '';
-                            renderEditForm(post, editAccordionContent, collapseAccordion);
-                            syncTopSaveState();
+                            renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn);
                         } else {
                             editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
                         }
@@ -658,8 +629,6 @@
                         editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
                     });
                 }
-            } else {
-                syncTopSaveState();
             }
         });
 
@@ -738,7 +707,7 @@
 
 
 
-    function renderEditForm(post, formContainer, closeModalFn) {
+    function renderEditForm(post, formContainer, closeModalFn, topSaveBtn) {
         if (!post || !formContainer) return;
         
         var memberCategories = getMemberCategories();
@@ -955,6 +924,7 @@
                 var isComplete = isFormComplete();
                 var canSave = isDirty && isComplete;
                 saveBtn.disabled = !canSave;
+                if (topSaveBtn) topSaveBtn.disabled = !canSave;
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
@@ -1014,6 +984,11 @@
             
             // Attach popover to footer Save button (above, left-aligned)
             attachPopoverToButton(saveBtn, getSavePopoverContent, footer, 'above', 'left');
+
+            // Attach identical popover to top Save button (below, left-aligned)
+            if (topSaveBtn && topSaveBtn.parentNode) {
+                attachPopoverToButton(topSaveBtn, getSavePopoverContent, topSaveBtn.parentNode, 'below', 'left');
+            }
 
             // Attach change listener to mark global save state as dirty and update footer buttons
             formContainer.addEventListener('input', function() {
