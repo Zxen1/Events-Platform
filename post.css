@@ -111,8 +111,16 @@
     width: 100%;
     max-width: 100%;
     height: auto;
+    max-height: none;
+    overflow: visible;
     /* Fill the screen even with short content */
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+
+  .post-list {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
@@ -200,6 +208,8 @@
     width: 100%;
     max-width: 100%;
     height: auto;
+    max-height: none;
+    overflow-y: visible;
     /* Fill the screen even with short content */
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
   }
