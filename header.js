@@ -382,12 +382,37 @@ const HeaderModule = (function() {
        FILTER BUTTON (Lazy Loading)
        -------------------------------------------------------------------------- */
     
+    // Load filter.js eagerly so the counting system runs from page load.
+    // The panel UI (CSS + init) stays lazy until the user opens the panel.
+    var filterScriptLoaded = false;
+    var filterScriptLoading = null;
+
+    function loadFilterScript() {
+        if (filterScriptLoaded) return Promise.resolve();
+        if (filterScriptLoading) return filterScriptLoading;
+
+        filterScriptLoading = new Promise(function(resolve, reject) {
+            var script = document.createElement('script');
+            script.src = 'filter.js?v=' + (window.APP_VERSION || Date.now());
+            script.onload = function() {
+                filterScriptLoaded = true;
+                filterScriptLoading = null;
+                resolve();
+            };
+            script.onerror = function() {
+                console.error('[Header] Failed to load filter JS');
+                reject(new Error('Failed to load filter module'));
+            };
+            document.body.appendChild(script);
+        });
+        return filterScriptLoading;
+    }
+
     function loadFilterModule() {
         if (filterModuleLoaded) return Promise.resolve();
         if (filterModuleLoading) return filterModuleLoading;
         
         filterModuleLoading = new Promise(function(resolve, reject) {
-            // Load CSS
             var cssLoaded = false;
             var jsLoaded = false;
             
@@ -405,7 +430,7 @@ const HeaderModule = (function() {
                 }
             }
             
-            // Load CSS
+            // Load CSS (panel styling)
             var link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'filter.css?v=' + (window.APP_VERSION || Date.now());
@@ -420,18 +445,11 @@ const HeaderModule = (function() {
             };
             document.head.appendChild(link);
             
-            // Load JS
-            var script = document.createElement('script');
-            script.src = 'filter.js?v=' + (window.APP_VERSION || Date.now());
-            script.onload = function() {
+            // JS may already be loaded (eager load in initFilterButton)
+            loadFilterScript().then(function() {
                 jsLoaded = true;
                 checkDone();
-            };
-            script.onerror = function() {
-                console.error('[Header] Failed to load filter JS');
-                reject(new Error('Failed to load filter module'));
-            };
-            document.body.appendChild(script);
+            }).catch(reject);
         });
         
         return filterModuleLoading;
@@ -526,8 +544,10 @@ const HeaderModule = (function() {
             }
         });
 
-        // Badge count and map threshold tracking are handled by the unified
-        // counting system in filter.js (runs from page load).
+        // Load filter.js eagerly so the unified counting system runs from
+        // page load (badge count + map threshold tracking). The panel CSS
+        // and init() remain lazy until the user opens the panel.
+        loadFilterScript();
     }
 
     /* --------------------------------------------------------------------------
