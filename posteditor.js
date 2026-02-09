@@ -415,29 +415,14 @@
         editHeader.appendChild(cardEl);
         postContainer.appendChild(editHeader);
 
-        // Create button row underneath the header (Edit/Manage buttons)
+        // Create button row underneath the header (Manage button)
         var buttonRow = document.createElement('div');
         buttonRow.className = 'posteditor-buttons';
 
-        // Edit Button
-        var editBtn = document.createElement('button');
-        editBtn.className = 'posteditor-button-edit button-class-2';
-        editBtn.title = 'Edit Post Content';
-        editBtn.textContent = 'Edit';
-        editBtn.setAttribute('aria-selected', 'false');
-        editBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (window.PostModule && typeof PostModule.closePost === 'function') {
-                PostModule.closePost(post.id);
-            }
-            openEditModal(post.id);
-        });
-
-        // Manage Button
+        // Manage Button (opens combined Edit + Manage modal)
         var manageBtn = document.createElement('button');
         manageBtn.className = 'posteditor-button-manage button-class-2';
-        manageBtn.title = 'Manage Plan & Time';
+        manageBtn.title = 'Manage Post';
         manageBtn.textContent = 'Manage';
         manageBtn.setAttribute('aria-selected', 'false');
         manageBtn.addEventListener('click', function(e) {
@@ -446,10 +431,9 @@
             if (window.PostModule && typeof PostModule.closePost === 'function') {
                 PostModule.closePost(post.id);
             }
-            openManageModal(post.id);
+            openManageModal(post);
         });
 
-        buttonRow.appendChild(editBtn);
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
 
@@ -467,31 +451,163 @@
         }
     }
 
-    function openEditModal(postId) {
+    /* openEditModal removed — edit form now lives inside the Manage modal accordion */
+
+    function openManageModal(post) {
+        var postId = post.id;
         closeActiveModal();
         var panelContents = document.querySelector('.member-panel-contents');
         if (!panelContents) {
-            throw new Error('[PostEditor] Expected .member-panel-contents not found (cannot mount edit modal).');
+            throw new Error('[PostEditor] Expected .member-panel-contents not found (cannot mount manage modal).');
         }
 
         var backdrop = document.createElement('div');
         backdrop.className = 'posteditor-modal';
         var modalContainer = document.createElement('div');
         modalContainer.className = 'posteditor-modal-container';
+
+        // Build 70px post header (matches post-header pattern)
         var header = document.createElement('div');
         header.className = 'posteditor-modal-header';
-        var titleEl = document.createElement('span');
-        titleEl.className = 'posteditor-modal-title';
-        titleEl.textContent = 'Edit Post';
+
+        // Thumbnail (50x50 minithumb)
+        var mapCards = post.map_cards || [];
+        var firstCard = mapCards[0] || {};
+        var mediaUrls = firstCard.media_urls || [];
+        var rawThumbUrl = mediaUrls.length > 0 ? mediaUrls[0] : '';
+        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + 'class=minithumb') : '';
+
+        if (miniThumbUrl) {
+            var thumbImg = document.createElement('img');
+            thumbImg.className = 'posteditor-modal-header-image';
+            thumbImg.src = miniThumbUrl;
+            thumbImg.alt = '';
+            thumbImg.loading = 'lazy';
+            thumbImg.referrerPolicy = 'no-referrer';
+            header.appendChild(thumbImg);
+        } else {
+            var thumbEmpty = document.createElement('div');
+            thumbEmpty.className = 'posteditor-modal-header-image posteditor-modal-header-image--empty';
+            thumbEmpty.setAttribute('aria-hidden', 'true');
+            header.appendChild(thumbEmpty);
+        }
+
+        // Meta (title + subcategory)
+        var meta = document.createElement('div');
+        meta.className = 'posteditor-modal-header-meta';
+
+        var titleEl = document.createElement('div');
+        titleEl.className = 'posteditor-modal-header-text-title';
+        titleEl.textContent = firstCard.title || 'Post #' + postId;
+        meta.appendChild(titleEl);
+
+        // Subcategory row
+        var catRow = document.createElement('div');
+        catRow.className = 'posteditor-modal-header-row-cat';
+        var iconUrl = post.subcategory_icon_url || '';
+        if (iconUrl) {
+            var iconWrap = document.createElement('span');
+            iconWrap.className = 'posteditor-modal-header-icon-sub';
+            var iconImg = document.createElement('img');
+            iconImg.className = 'posteditor-modal-header-image-sub';
+            iconImg.src = iconUrl;
+            iconImg.alt = '';
+            iconImg.width = 18;
+            iconImg.height = 18;
+            iconWrap.appendChild(iconImg);
+            catRow.appendChild(iconWrap);
+        }
+        var catText = document.createElement('span');
+        catText.className = 'posteditor-modal-header-text-cat';
+        catText.textContent = post.subcategory_name || '';
+        catRow.appendChild(catText);
+        meta.appendChild(catRow);
+
+        header.appendChild(meta);
+
+        // Close button (X)
         var closeBtn = ClearButtonComponent.create({
             className: 'posteditor-modal-close',
             ariaLabel: 'Close',
             onClick: function() { handleClose(); }
         });
-        header.appendChild(titleEl);
         header.appendChild(closeBtn);
         var body = document.createElement('div');
         body.className = 'posteditor-modal-body';
+
+        // --- Edit Accordion (collapsed by default) ---
+        var editAccordionToggle = document.createElement('button');
+        editAccordionToggle.className = 'posteditor-manage-edit-toggle button-class-2';
+        editAccordionToggle.textContent = 'Edit Post';
+        editAccordionToggle.setAttribute('aria-expanded', 'false');
+
+        var editAccordionContent = document.createElement('div');
+        editAccordionContent.className = 'posteditor-manage-edit-content posteditor-manage-edit-content--hidden';
+        var editFormLoaded = false;
+
+        editAccordionToggle.addEventListener('click', function() {
+            var isExpanded = editAccordionToggle.getAttribute('aria-expanded') === 'true';
+            if (isExpanded) {
+                // Collapse
+                editAccordionToggle.setAttribute('aria-expanded', 'false');
+                editAccordionContent.classList.add('posteditor-manage-edit-content--hidden');
+            } else {
+                // Expand
+                editAccordionToggle.setAttribute('aria-expanded', 'true');
+                editAccordionContent.classList.remove('posteditor-manage-edit-content--hidden');
+
+                // Load edit form on first expand
+                if (!editFormLoaded) {
+                    editFormLoaded = true;
+                    if (editingPostsData[postId]) {
+                        renderEditForm(editingPostsData[postId].original, editAccordionContent, closeModal);
+                    } else {
+                        editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
+                        var user = getCurrentUser();
+                        var memberId = user ? parseInt(user.id, 10) : 0;
+                        ensureCategoriesLoaded().then(function() {
+                            return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
+                        }).then(function(r) { return r.json(); }).then(function(res) {
+                            if (res && res.success && res.posts && res.posts.length > 0) {
+                                var post = res.posts[0];
+                                editingPostsData[postId] = { original: post, current: {} };
+                                editAccordionContent.innerHTML = '';
+                                renderEditForm(post, editAccordionContent, closeModal);
+                            } else {
+                                editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
+                            }
+                        }).catch(function() {
+                            editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
+                        });
+                    }
+                }
+            }
+        });
+
+        body.appendChild(editAccordionToggle);
+        body.appendChild(editAccordionContent);
+
+        // --- Manage Content (always visible) ---
+        var manageContent = document.createElement('div');
+        manageContent.className = 'posteditor-manage-content';
+        manageContent.innerHTML = [
+            '<div class="posteditor-manage-section">',
+                '<div class="member-panel-label">Extend Listing Time</div>',
+                '<div class="posteditor-manage-row">',
+                    '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
+                    '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
+                '</div>',
+            '</div>',
+            '<div class="posteditor-manage-section">',
+                '<div class="member-panel-label">Change Plan</div>',
+                '<div class="posteditor-manage-row">',
+                    '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
+                    '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
+                '</div>',
+            '</div>'
+        ].join('');
+        body.appendChild(manageContent);
+
         modalContainer.appendChild(header);
         modalContainer.appendChild(body);
         backdrop.appendChild(modalContainer);
@@ -535,99 +651,6 @@
                     if (window.ToastComponent && typeof ToastComponent.show === 'function') ToastComponent.show('Changes discarded');
                 }
             });
-        }
-
-        activeModal = { backdrop: backdrop, close: closeModal };
-        panelContents.appendChild(backdrop);
-
-        if (editingPostsData[postId]) {
-            renderEditForm(editingPostsData[postId].original, body, closeModal);
-        } else {
-            body.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
-            var user = getCurrentUser();
-            var memberId = user ? parseInt(user.id, 10) : 0;
-            ensureCategoriesLoaded().then(function() {
-                return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
-            }).then(function(r) { return r.json(); }).then(function(res) {
-                if (res && res.success && res.posts && res.posts.length > 0) {
-                    var post = res.posts[0];
-                    editingPostsData[postId] = { original: post, current: {} };
-                    body.innerHTML = '';
-                    renderEditForm(post, body, closeModal);
-                } else {
-                    body.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
-                }
-            }).catch(function() {
-                body.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
-            });
-        }
-    }
-
-    function openManageModal(postId) {
-        closeActiveModal();
-        var panelContents = document.querySelector('.member-panel-contents');
-        if (!panelContents) {
-            throw new Error('[PostEditor] Expected .member-panel-contents not found (cannot mount manage modal).');
-        }
-
-        var backdrop = document.createElement('div');
-        backdrop.className = 'posteditor-modal';
-        var modalContainer = document.createElement('div');
-        modalContainer.className = 'posteditor-modal-container';
-        var header = document.createElement('div');
-        header.className = 'posteditor-modal-header';
-        var titleEl = document.createElement('span');
-        titleEl.className = 'posteditor-modal-title';
-        titleEl.textContent = 'Manage Post';
-        var closeBtn = ClearButtonComponent.create({
-            className: 'posteditor-modal-close',
-            ariaLabel: 'Close',
-            onClick: function() { closeModal(); }
-        });
-        header.appendChild(titleEl);
-        header.appendChild(closeBtn);
-        var body = document.createElement('div');
-        body.className = 'posteditor-modal-body';
-        body.innerHTML = [
-            '<div class="posteditor-manage-content">',
-                '<div class="posteditor-manage-section">',
-                    '<div class="member-panel-label">Extend Listing Time</div>',
-                    '<div class="posteditor-manage-row">',
-                        '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
-                        '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
-                    '</div>',
-                '</div>',
-                '<div class="posteditor-manage-section" style="margin-top:15px">',
-                    '<div class="member-panel-label">Change Plan</div>',
-                    '<div class="posteditor-manage-row">',
-                        '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
-                        '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
-                    '</div>',
-                '</div>',
-            '</div>'
-        ].join('');
-        modalContainer.appendChild(header);
-        modalContainer.appendChild(body);
-        backdrop.appendChild(modalContainer);
-
-        // Close on backdrop click
-        backdrop.addEventListener('click', function(e) {
-            if (e.target === backdrop) { closeModal(); }
-        });
-
-        // Close on Escape key
-        var escapeHandler = function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                document.removeEventListener('keydown', escapeHandler);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
-
-        function closeModal() {
-            document.removeEventListener('keydown', escapeHandler);
-            if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
-            activeModal = null;
         }
 
         activeModal = { backdrop: backdrop, close: closeModal };

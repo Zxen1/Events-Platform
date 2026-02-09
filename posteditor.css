@@ -191,7 +191,6 @@
   display: none;
 }
 
-.posteditor-button-edit,
 .posteditor-button-manage {
   flex: 1;
 }
@@ -241,6 +240,27 @@
   opacity: 0;
   padding: 0;
   margin: 0;
+}
+
+/* ============================================================================
+   MANAGE MODAL — EDIT ACCORDION
+   ============================================================================ */
+
+/* Edit Post toggle button — full width at top of manage modal body */
+.posteditor-manage-edit-toggle {
+  width: 100%;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+/* Edit accordion content area */
+.posteditor-manage-edit-content {
+  overflow: hidden;
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+/* Collapsed state */
+.posteditor-manage-edit-content--hidden {
+  display: none;
 }
 
 /* ============================================================================
@@ -368,25 +388,93 @@
   overflow: hidden;
 }
 
+/* Modal header — 70px post header pattern (thumbnail + title + close) */
 .posteditor-modal-header {
-  height: 36px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 10px;
   align-items: center;
-  padding: 0 10px;
-  background: var(--blue-500);
-  border-bottom: 1px solid var(--blue-500);
+  min-height: 70px;
+  padding: 10px;
+  background: transparent;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
   position: sticky;
   top: 0;
+  z-index: var(--layer-sticky);
+  box-sizing: border-box;
 }
 
-.posteditor-modal-title {
-  flex: 1;
+/* Thumbnail — 50x50 minithumb */
+.posteditor-modal-header-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  background: var(--panel-bg);
+  flex: 0 0 50px;
+}
+
+.posteditor-modal-header-image--empty {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Meta container */
+.posteditor-modal-header-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
+
+/* Title */
+.posteditor-modal-header-text-title {
+  font-weight: bold;
   font-size: 16px;
-  font-weight: 600;
-  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Subcategory row */
+.posteditor-modal-header-row-cat {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.posteditor-modal-header-icon-sub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-right: 5px;
+}
+
+.posteditor-modal-header-icon-sub:empty {
+  display: none;
+  padding-right: 0;
+}
+
+.posteditor-modal-header-image-sub {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Close button */
 .posteditor-modal-close {
   width: 36px;
   height: 36px;
