@@ -1204,6 +1204,11 @@ const FilterModule = (function() {
             calendarEl.innerHTML = '';
         }
         
+        var oldActions = calendarContainer.querySelector('.calendar-actions');
+        if (oldActions) {
+            oldActions.parentNode.removeChild(oldActions);
+        }
+        
         buildCalendar();
     }
     
