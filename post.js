@@ -2542,8 +2542,11 @@ const PostModule = (function() {
     // Add to recent history
     addToRecentHistory(post, mapCardIndex);
 
-    // Determine container
+    // Determine container — use originEl's parent when the card lives outside the post/recent panels (e.g. My Posts tab)
     var container = fromRecent ? recentPanelContentEl : postListEl;
+    if (originEl && originEl.parentElement && originEl.parentElement !== container) {
+      container = originEl.parentElement;
+    }
     if (!container) return;
 
     // Close any existing open post
