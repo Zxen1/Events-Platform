@@ -1471,12 +1471,13 @@ const PostModule = (function() {
       postListEl.style.pointerEvents = 'none';
     }
     
-    // Preserve an open post across re-renders (map moves trigger filter refreshes).
+    // Preserve an open post's slot across re-renders (map moves trigger filter refreshes).
     // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
-    var preservedOpenPost = postListEl.querySelector('.post');
-    var preservedOpenPostId = preservedOpenPost && preservedOpenPost.dataset ? String(preservedOpenPost.dataset.id || '') : '';
-    if (preservedOpenPost && preservedOpenPost.parentElement === postListEl) {
-      try { postListEl.removeChild(preservedOpenPost); } catch (_eDetach) {}
+    var preservedOpenPostEl = postListEl.querySelector('.post');
+    var preservedOpenSlot = preservedOpenPostEl ? preservedOpenPostEl.closest('.post-slot') : null;
+    var preservedOpenPostId = preservedOpenSlot && preservedOpenSlot.dataset ? String(preservedOpenSlot.dataset.id || '') : '';
+    if (preservedOpenSlot && preservedOpenSlot.parentElement === postListEl) {
+      try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
     // Clear existing list content (cards + summary)
@@ -1551,17 +1552,20 @@ const PostModule = (function() {
       postListEl.appendChild(summaryEl);
     }
 
-    // Render each post card
+    // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
-      // If this post is currently open, reinsert the existing .post wrapper instead of recreating.
-      if (preservedOpenPost && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
-        // Ensure it stays visible (if it was previously hidden)
-        preservedOpenPost.style.display = '';
-        postListEl.appendChild(preservedOpenPost);
+      // If this post is currently open, reinsert the preserved slot instead of recreating.
+      if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
+        preservedOpenSlot.style.display = '';
+        postListEl.appendChild(preservedOpenSlot);
         return;
       }
       var card = renderPostCard(post);
-      postListEl.appendChild(card);
+      var slot = document.createElement('div');
+      slot.className = 'post-slot';
+      slot.dataset.id = String(post.id);
+      slot.appendChild(card);
+      postListEl.appendChild(slot);
     });
     
     // If there was an open post but it is no longer in the filtered list, do not reinsert it.
@@ -2212,28 +2216,22 @@ const PostModule = (function() {
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
 
-    // Preserve summary + .post wrapper positions.
+    // Preserve summary position.
     var summaryEl = postListEl.querySelector('.post-panel-summary');
-    var openWrap = postListEl.querySelector('.post');
 
-    var cards = [];
+    // Sort .post-slot wrappers (each contains a .post-card with sort metadata).
+    var slots = [];
     try {
-      // Direct children only (avoid grabbing the embedded .post header card).
-      cards = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-card'));
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-slot'));
     } catch (_eScope) {
-      cards = Array.prototype.slice.call(postListEl.querySelectorAll('.post-card'));
-      // Filter out cards that live inside a .post wrapper.
-      cards = cards.filter(function(el) {
-        var p = el && el.parentElement;
-        while (p) {
-          if (p.classList && p.classList.contains('post')) return false;
-          if (p === postListEl) break;
-          p = p.parentElement;
-        }
-        return true;
-      });
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll('.post-slot'));
+      slots = slots.filter(function(s) { return s.parentElement === postListEl; });
     }
-    if (!cards.length) return;
+    if (!slots.length) return;
+
+    // Find the slot with an open post (to keep it at the top after sort).
+    var openPostEl = postListEl.querySelector('.post');
+    var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
 
     var center = getMapCenter();
     function distanceToCenterKm(cardEl) {
@@ -2244,7 +2242,11 @@ const PostModule = (function() {
       return distKm({ lng: lng, lat: lat }, { lng: Number(center.lng), lat: Number(center.lat) });
     }
 
-    cards.sort(function(aEl, bEl) {
+    slots.sort(function(slotA, slotB) {
+      var aEl = slotA.querySelector('.post-card');
+      var bEl = slotB.querySelector('.post-card');
+      if (!aEl || !bEl) return 0;
+
       // Live-site behavior: "Favourites on top" only applies when not dirty.
       if (favToTop && !favSortDirty) {
         var favA = isFavorite(aEl && aEl.dataset ? aEl.dataset.id : '');
@@ -2257,7 +2259,6 @@ const PostModule = (function() {
 
       switch (sortKey) {
         case 'recommended':
-          // Recommended: Featured first (1 before 0), then by created_at DESC
           var featA = Number(a.sortFeatured) || 0;
           var featB = Number(b.sortFeatured) || 0;
           if (featA !== featB) return featB - featA;
@@ -2283,18 +2284,18 @@ const PostModule = (function() {
       }
     });
 
-    // Re-append in sorted order (DOM is the source of truth).
-    cards.forEach(function(card) {
-      try { postListEl.appendChild(card); } catch (_eAppend) {}
+    // Re-append slots in sorted order (DOM is the source of truth).
+    slots.forEach(function(slot) {
+      try { postListEl.appendChild(slot); } catch (_eAppend) {}
     });
 
     // Keep summary at the top if present.
     if (summaryEl) {
       try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
     }
-    // Keep open post at the top if present.
-    if (openWrap) {
-      try { postListEl.insertBefore(openWrap, postListEl.firstChild); } catch (_eOpen) {}
+    // Keep open post's slot at the top if present.
+    if (openSlot) {
+      try { postListEl.insertBefore(openSlot, summaryEl ? summaryEl.nextSibling : postListEl.firstChild); } catch (_eOpen) {}
     }
   }
 
@@ -2542,44 +2543,51 @@ const PostModule = (function() {
     // Add to recent history
     addToRecentHistory(post, mapCardIndex);
 
-    // Determine container — use originEl's parent when the card lives outside the post/recent panels (e.g. My Posts tab)
+    // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
-    if (originEl && originEl.parentElement && originEl.parentElement !== container) {
-      container = originEl.parentElement;
+    // When originEl is outside the standard panels (e.g. My Posts tab), use its list ancestor
+    if (originEl && (!container || !container.contains(originEl))) {
+      var posteditorItem = originEl.closest('.posteditor-item');
+      if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
 
-    // Close any existing open post
+    // Close any existing open post in this container
     closeOpenPost(container);
 
-    // Find or create the target element
-    var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
-
-    // Store parent reference and remove target from DOM before building detail
-    var targetParent = target ? target.parentElement : null;
-    var targetNextSibling = target ? target.nextSibling : null;
-    if (target && targetParent) {
-      targetParent.removeChild(target);
+    // Find the slot wrapper that holds the clicked card.
+    // Post panel: .post-slot | Recent panel: .recent-card-wrapper | My Posts: .posteditor-item
+    var slot = null;
+    if (originEl) {
+      slot = originEl.closest('.post-slot') || originEl.closest('.recent-card-wrapper') || originEl.closest('.posteditor-item');
+    }
+    if (!slot) {
+      // Fallback: find slot by post ID in the container
+      var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
+      if (cardInContainer) {
+        slot = cardInContainer.closest('.post-slot') || cardInContainer.closest('.recent-card-wrapper') || cardInContainer.closest('.posteditor-item');
+      }
     }
 
-    // Build the detail view with a FRESH card (do not reuse the clicked element).
-    // TopSlack anchors to the clicked element; if we reuse it inside the detail wrapper,
-    // TopSlack sees it moved and adjusts scrollTop (causes jumping). Passing null ensures
-    // the clicked element stays disconnected, so TopSlack's anchor check bails out.
-    // IMPORTANT: pass mapCardIndex so the open post reflects the correct active location context.
+    // Build the detail view with a fresh card (original stays hidden in the slot).
     var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
-    // Insert detail at original position, or at top of container
-    if (targetParent && targetNextSibling) {
-      targetParent.insertBefore(detail, targetNextSibling);
-    } else if (targetParent) {
-      targetParent.appendChild(detail);
+    if (slot) {
+      // Expand in place: hide all existing children, append detail inside the slot.
+      // The slot stays in the DOM — TopSlack anchor remains connected.
+      var slotChildren = Array.prototype.slice.call(slot.children);
+      slotChildren.forEach(function(child) { child.style.display = 'none'; });
+      slot.appendChild(detail);
     } else {
-      // Insert at top, but never ahead of `.topSlack` (TopSlack requires it as the first child).
+      // No slot found (e.g. opened from map, card not in the list): create a temp slot.
+      slot = document.createElement('div');
+      slot.className = 'post-slot';
+      slot.dataset.id = String(post.id);
+      slot.appendChild(detail);
       var topSlack = null;
       try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
       var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
-      container.insertBefore(detail, insertBeforeNode);
+      container.insertBefore(slot, insertBeforeNode);
     }
 
 
@@ -2611,30 +2619,30 @@ const PostModule = (function() {
   }
 
   /**
-   * Close any open post in a container
+   * Close any open post in a container.
+   * Removes the detail view from the slot and restores hidden children (card, status bar, etc.).
    * @param {HTMLElement} container - Container element
    */
   function closeOpenPost(container) {
-    var openPost = container.querySelector('.post');
-    if (!openPost) return;
+    var openPostEl = container.querySelector('.post');
+    if (!openPostEl) return;
 
-    var postId = openPost.dataset.id;
+    var postId = openPostEl.dataset.id;
 
-    // Restore the original card element (recent-card stays recent-card).
-    // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
-    try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
-      if (cardEl) {
-        if (openPost.parentElement) {
-          openPost.parentElement.replaceChild(cardEl, openPost);
-        } else {
-          openPost.remove();
-        }
-      } else {
-        openPost.remove();
-      }
-    } catch (_eRestore) {
-      try { openPost.remove(); } catch (_eRemove) {}
+    // Find the slot wrapper (post-slot, recent-card-wrapper, or posteditor-item)
+    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
+
+    if (slot) {
+      // Remove the detail view from the slot
+      openPostEl.remove();
+      // Restore hidden children (original card, status bar, buttons, etc.)
+      Array.prototype.slice.call(slot.children).forEach(function(child) {
+        if (child.style.display === 'none') child.style.display = '';
+      });
+      // If slot is now empty (was a temp slot for map-opened posts), remove it
+      if (!slot.children.length) slot.remove();
+    } else {
+      try { openPostEl.remove(); } catch (_eRemove) {}
     }
 
     // Emit close event
@@ -3657,25 +3665,27 @@ const PostModule = (function() {
   }
 
   /**
-   * Close a post by ID
+   * Close a post by ID.
+   * Removes the detail view from its slot and restores hidden children.
    * @param {string|number} postId - Post ID
    */
   function closePost(postId) {
-    var openPost = document.querySelector('.post[data-id="' + postId + '"]');
-    if (!openPost) return;
+    var openPostEl = document.querySelector('.post[data-id="' + postId + '"]');
+    if (!openPostEl) return;
 
-    var container = openPost.parentElement;
+    // Find the slot wrapper
+    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
-    // Restore the original card element (recent-card stays recent-card).
-    try {
-      var cardEl = openPost.querySelector('.post-card, .recent-card');
-      if (cardEl && openPost.parentElement) {
-        openPost.parentElement.replaceChild(cardEl, openPost);
-      } else {
-        openPost.remove();
-      }
-    } catch (_eRestore) {
-      try { openPost.remove(); } catch (_eRemove) {}
+    if (slot) {
+      openPostEl.remove();
+      // Restore hidden children (original card, status bar, buttons, etc.)
+      Array.prototype.slice.call(slot.children).forEach(function(child) {
+        if (child.style.display === 'none') child.style.display = '';
+      });
+      // If slot is now empty (was a temp slot), remove it
+      if (!slot.children.length) slot.remove();
+    } else {
+      try { openPostEl.remove(); } catch (_eRemove) {}
     }
 
     // Emit close event
