@@ -238,6 +238,16 @@
     background: #fff;
 }
 
+/* Partial state: orange instead of blue (filters partially active) */
+.component-big-switch-slider--partial {
+    background: #cc6600;
+}
+
+.component-big-switch-slider--partial::before {
+    transform: translateX(16px);
+    background: #fff;
+}
+
 /* Size: Big Orange (orange when on, 36x20) */
 .component-bigorange-switch {
     position: relative;

@@ -253,6 +253,19 @@ const FilterModule = (function() {
                     }
                 });
             }
+
+            // Update partial state on category switch
+            if (headerToggleSlider && catState.enabled) {
+                var anySubOff = false;
+                if (catState.subs) {
+                    Object.keys(catState.subs).forEach(function(k) {
+                        if (!catState.subs[k]) anySubOff = true;
+                    });
+                }
+                headerToggleSlider.classList.toggle('component-big-switch-slider--partial', anySubOff);
+            } else if (headerToggleSlider) {
+                headerToggleSlider.classList.remove('component-big-switch-slider--partial');
+            }
         });
         
         updateResetCategoriesButton();
@@ -712,6 +725,7 @@ const FilterModule = (function() {
                 // Project rule: category filter uses BIG switches (no small switches).
                 slider.classList.remove('component-big-switch-slider--on');
                 slider.classList.add('component-big-switch-slider--on');
+                slider.classList.remove('component-big-switch-slider--partial');
             }
         });
         
@@ -723,6 +737,7 @@ const FilterModule = (function() {
             if (header) header.classList.remove('filter-categoryfilter-accordion-header--disabled');
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                 opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
+                opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
             });
         });
         
@@ -1484,6 +1499,7 @@ const FilterModule = (function() {
                                 try {
                                     option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
                                 } catch (_eSubOff) {}
+                                updateCategoryPartialState();
                                 applyFilters();
                                 updateResetCategoriesButton();
                                 updateClearButtons();
@@ -1522,6 +1538,21 @@ const FilterModule = (function() {
                             opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !!isDisabled);
                         });
                     }
+
+                    // Orange partial state: category is ON but some subs are OFF
+                    function updateCategoryPartialState() {
+                        var slider = headerSwitch.element.querySelector('span');
+                        if (!slider) return;
+                        if (!headerSwitch.isChecked()) {
+                            slider.classList.remove('component-big-switch-slider--partial');
+                            return;
+                        }
+                        var anySubOff = false;
+                        body.querySelectorAll('.filter-categoryfilter-toggle input').forEach(function(inp) {
+                            if (!inp.checked) anySubOff = true;
+                        });
+                        slider.classList.toggle('component-big-switch-slider--partial', anySubOff);
+                    }
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
@@ -1539,6 +1570,7 @@ const FilterModule = (function() {
                             setAccordionDisabled(true);
                             setAccordionOpen(false);
                         }
+                        updateCategoryPartialState();
                         applyFilters();
                         updateResetCategoriesButton();
                         updateClearButtons();
