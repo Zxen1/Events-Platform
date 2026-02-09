@@ -2573,12 +2573,26 @@ const PostModule = (function() {
     var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
     if (slot) {
-      // Expand in place: hide only the card, append detail inside the slot.
+      // Expand in place: hide only the card, insert detail at the card's position.
       // The slot stays in the DOM — TopSlack anchor remains connected.
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
-      if (cardToHide) cardToHide.style.display = 'none';
-      slot.appendChild(detail);
+      if (cardToHide) {
+        cardToHide.style.display = 'none';
+        // Walk up to find the direct child of slot that contains the card
+        var insertAfterEl = cardToHide;
+        while (insertAfterEl && insertAfterEl.parentElement !== slot) {
+          insertAfterEl = insertAfterEl.parentElement;
+        }
+        // Insert detail right after the card's slot-level parent
+        if (insertAfterEl) {
+          slot.insertBefore(detail, insertAfterEl.nextSibling);
+        } else {
+          slot.appendChild(detail);
+        }
+      } else {
+        slot.appendChild(detail);
+      }
     } else {
       // No slot found (e.g. opened from map, card not in the list): create a temp slot.
       slot = document.createElement('div');
