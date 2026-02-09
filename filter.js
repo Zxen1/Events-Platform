@@ -1400,7 +1400,7 @@ const FilterModule = (function() {
                 
                 categories.forEach(function(cat) {
                     var accordion = document.createElement('div');
-                    accordion.className = 'filter-categoryfilter-accordion accordion-class-1';
+                    accordion.className = 'filter-categoryfilter-accordion accordion-class-2';
                     
                     // Header
                     var header = document.createElement('div');
@@ -1505,7 +1505,7 @@ const FilterModule = (function() {
 
                     function setAccordionOpen(isOpen) {
                         accordion.classList.toggle('filter-categoryfilter-accordion--open', !!isOpen);
-                        accordion.classList.toggle('accordion-class-1--open', !!isOpen);
+                        accordion.classList.toggle('accordion-class-2--open', !!isOpen);
                         headerArrow.classList.toggle('filter-categoryfilter-accordion-header-arrow--open', !!isOpen);
                         body.classList.toggle('filter-categoryfilter-accordion-body--open', !!isOpen);
                     }

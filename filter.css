@@ -561,7 +561,7 @@
   margin: 0 auto 12px auto;
 }
 
-/* Accordion uses container-class-2 for appearance */
+/* Accordion uses accordion-class-2 for appearance */
 .filter-categoryfilter-accordion {
   width: 100%;
   margin-bottom: 12px;

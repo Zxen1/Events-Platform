@@ -610,6 +610,42 @@
   border-radius: 0 0 var(--accordion-radius) var(--accordion-radius);
 }
 
+/* Accordion Class 2: Grey header + input-dark body (category filters) */
+.accordion-class-2 {
+  --accordion-header-bg: rgba(0, 0, 0, 0.2);
+  --accordion-header-bg-hover: rgba(0, 0, 0, 0.2);
+  --accordion-header-border: rgba(255, 255, 255, 0.1);
+  --accordion-header-text: #fff;
+  --accordion-body-bg: rgba(0, 0, 0, 0.35);
+  --accordion-body-border: #333;
+  --accordion-radius: 5px;
+}
+
+.accordion-class-2 .accordion-header {
+  background: var(--accordion-header-bg);
+  border: 1px solid var(--accordion-header-border);
+  border-radius: var(--accordion-radius);
+  color: var(--accordion-header-text);
+  cursor: pointer;
+}
+
+.accordion-class-2 .accordion-header:hover {
+  background: var(--accordion-header-bg-hover);
+}
+
+/* When open: square bottom corners on header, transparent bottom border to prevent 1px shift */
+.accordion-class-2.accordion-class-2--open .accordion-header {
+  border-radius: var(--accordion-radius) var(--accordion-radius) 0 0;
+  border-bottom-color: transparent;
+}
+
+.accordion-class-2 .accordion-body {
+  background: var(--accordion-body-bg);
+  border: 1px solid var(--accordion-body-border);
+  border-top: none;
+  border-radius: 0 0 var(--accordion-radius) var(--accordion-radius);
+}
+
 /* ============================================================================
    MENU CLASSES
    
