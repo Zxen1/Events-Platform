@@ -541,6 +541,7 @@
 
 .filter-calendar-container--open {
   display: block;
+  border-color: var(--blue-500);
 }
 
 .filter-calendar {
