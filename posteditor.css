@@ -246,10 +246,17 @@
    MANAGE MODAL — EDIT ACCORDION
    ============================================================================ */
 
-/* Edit Post toggle button — full width at top of manage modal body */
-.posteditor-manage-edit-toggle {
-  width: 100%;
+/* Edit accordion row — holds Edit button (collapsed) or Save+Close (expanded) */
+.posteditor-manage-edit-row {
+  display: flex;
+  gap: 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+}
+
+.posteditor-manage-edit-toggle,
+.posteditor-manage-edit-save,
+.posteditor-manage-edit-close {
+  flex: 1;
 }
 
 /* Edit accordion content area */

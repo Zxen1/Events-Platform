@@ -536,55 +536,90 @@
         body.className = 'posteditor-modal-body';
 
         // --- Edit Accordion (collapsed by default) ---
-        var editAccordionToggle = document.createElement('button');
-        editAccordionToggle.className = 'posteditor-manage-edit-toggle button-class-2';
-        editAccordionToggle.textContent = 'Edit Post';
-        editAccordionToggle.setAttribute('aria-expanded', 'false');
+        var editAccordionRow = document.createElement('div');
+        editAccordionRow.className = 'posteditor-manage-edit-row';
+
+        // "Edit" button (visible when collapsed)
+        var editToggleBtn = document.createElement('button');
+        editToggleBtn.className = 'posteditor-manage-edit-toggle button-class-2';
+        editToggleBtn.textContent = 'Edit';
+        editAccordionRow.appendChild(editToggleBtn);
+
+        // Save + Close buttons (visible when expanded)
+        var editTopSaveBtn = document.createElement('button');
+        editTopSaveBtn.className = 'posteditor-manage-edit-save button-class-2c';
+        editTopSaveBtn.textContent = 'Save';
+        editTopSaveBtn.style.display = 'none';
+
+        var editTopCloseBtn = document.createElement('button');
+        editTopCloseBtn.className = 'posteditor-manage-edit-close button-class-2b';
+        editTopCloseBtn.textContent = 'Close';
+        editTopCloseBtn.style.display = 'none';
+
+        editAccordionRow.appendChild(editTopSaveBtn);
+        editAccordionRow.appendChild(editTopCloseBtn);
 
         var editAccordionContent = document.createElement('div');
         editAccordionContent.className = 'posteditor-manage-edit-content posteditor-manage-edit-content--hidden';
         var editFormLoaded = false;
+        var accordionExpanded = false;
 
-        editAccordionToggle.addEventListener('click', function() {
-            var isExpanded = editAccordionToggle.getAttribute('aria-expanded') === 'true';
-            if (isExpanded) {
-                // Collapse
-                editAccordionToggle.setAttribute('aria-expanded', 'false');
-                editAccordionContent.classList.add('posteditor-manage-edit-content--hidden');
-            } else {
-                // Expand
-                editAccordionToggle.setAttribute('aria-expanded', 'true');
+        // Delegate top Save/Close to bottom buttons inside the edit form
+        editTopSaveBtn.addEventListener('click', function() {
+            var bottomSave = editAccordionContent.querySelector('.posteditor-edit-button-save');
+            if (bottomSave) bottomSave.click();
+        });
+        editTopCloseBtn.addEventListener('click', function() {
+            var bottomClose = editAccordionContent.querySelector('.posteditor-edit-button-close');
+            if (bottomClose) bottomClose.click();
+        });
+
+        function setAccordionExpanded(expand) {
+            accordionExpanded = expand;
+            if (expand) {
+                editToggleBtn.style.display = 'none';
+                editTopSaveBtn.style.display = '';
+                editTopCloseBtn.style.display = '';
                 editAccordionContent.classList.remove('posteditor-manage-edit-content--hidden');
+            } else {
+                editToggleBtn.style.display = '';
+                editTopSaveBtn.style.display = 'none';
+                editTopCloseBtn.style.display = 'none';
+                editAccordionContent.classList.add('posteditor-manage-edit-content--hidden');
+            }
+        }
 
-                // Load edit form on first expand
-                if (!editFormLoaded) {
-                    editFormLoaded = true;
-                    if (editingPostsData[postId]) {
-                        renderEditForm(editingPostsData[postId].original, editAccordionContent, closeModal);
-                    } else {
-                        editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
-                        var user = getCurrentUser();
-                        var memberId = user ? parseInt(user.id, 10) : 0;
-                        ensureCategoriesLoaded().then(function() {
-                            return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
-                        }).then(function(r) { return r.json(); }).then(function(res) {
-                            if (res && res.success && res.posts && res.posts.length > 0) {
-                                var post = res.posts[0];
-                                editingPostsData[postId] = { original: post, current: {} };
-                                editAccordionContent.innerHTML = '';
-                                renderEditForm(post, editAccordionContent, closeModal);
-                            } else {
-                                editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
-                            }
-                        }).catch(function() {
+        editToggleBtn.addEventListener('click', function() {
+            setAccordionExpanded(true);
+
+            // Load edit form on first expand
+            if (!editFormLoaded) {
+                editFormLoaded = true;
+                if (editingPostsData[postId]) {
+                    renderEditForm(editingPostsData[postId].original, editAccordionContent, closeModal);
+                } else {
+                    editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
+                    var user = getCurrentUser();
+                    var memberId = user ? parseInt(user.id, 10) : 0;
+                    ensureCategoriesLoaded().then(function() {
+                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
+                    }).then(function(r) { return r.json(); }).then(function(res) {
+                        if (res && res.success && res.posts && res.posts.length > 0) {
+                            var post = res.posts[0];
+                            editingPostsData[postId] = { original: post, current: {} };
+                            editAccordionContent.innerHTML = '';
+                            renderEditForm(post, editAccordionContent, closeModal);
+                        } else {
                             editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
-                        });
-                    }
+                        }
+                    }).catch(function() {
+                        editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
+                    });
                 }
             }
         });
 
-        body.appendChild(editAccordionToggle);
+        body.appendChild(editAccordionRow);
         body.appendChild(editAccordionContent);
 
         // --- Manage Content (always visible) ---
