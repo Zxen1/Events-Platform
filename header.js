@@ -451,13 +451,11 @@ const HeaderModule = (function() {
             } else {
                 refreshHeaderFilterActiveVisual();
             }
-            requestEarlyFilterCount();
         });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
         App.on('member:stateChanged', function() {
             refreshHeaderFilterActiveVisual();
-            requestEarlyFilterCount();
         });
         
         filterBtn.addEventListener('click', function() {
@@ -528,78 +526,8 @@ const HeaderModule = (function() {
             }
         });
 
-        // Early badge count: single async GET so the filter button shows the
-        // total immediately, without waiting for the filter panel to lazy-load.
-        // When FilterModule eventually loads it overwrites with authoritative counts.
-        requestEarlyFilterCount();
-    }
-
-    /**
-     * Fire a single get-filter-counts request on page load so the header filter
-     * badge shows the post total immediately.  Reads saved filters from
-     * localStorage and zoom/bounds from the map (if ready).  Non-blocking.
-     */
-    function requestEarlyFilterCount() {
-        try {
-            var st = {};
-            try {
-                var raw = localStorage.getItem('funmap_filters');
-                if (raw) {
-                    var parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object') st = parsed;
-                }
-            } catch (_e) {}
-
-            var zoom = 0;
-            var boundsParam = '';
-            try {
-                if (window.MapModule && typeof MapModule.getMap === 'function') {
-                    var map = MapModule.getMap();
-                    if (map && typeof map.getZoom === 'function') zoom = map.getZoom();
-                    if (map && typeof map.getBounds === 'function') {
-                        var b = map.getBounds();
-                        if (b && typeof b.getWest === 'function') {
-                            boundsParam = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-                        }
-                    }
-                }
-            } catch (_e2) {}
-
-            var qs = new URLSearchParams();
-            qs.set('action', 'get-filter-counts');
-            qs.set('zoom', String(zoom));
-            if (boundsParam) qs.set('bounds', boundsParam);
-            if (st.keyword) qs.set('keyword', String(st.keyword));
-            if (st.minPrice) qs.set('min_price', String(st.minPrice));
-            if (st.maxPrice) qs.set('max_price', String(st.maxPrice));
-            if (st.dateStart) qs.set('date_start', String(st.dateStart));
-            if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
-            if (st.expired) qs.set('expired', '1');
-            if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
-                qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
-            }
-
-            fetch('/gateway.php?' + qs.toString())
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (!res || res.success !== true) return;
-                    var count = Number(res.total_showing || 0);
-                    if (!filterBtn) return;
-                    var badge = filterBtn.querySelector('.header-filter-badge');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'header-filter-badge';
-                        filterBtn.appendChild(badge);
-                    }
-                    if (count > 0) {
-                        badge.textContent = count > 999 ? '999+' : String(count);
-                        badge.style.display = '';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                })
-                .catch(function() { /* silent — early badge is best-effort */ });
-        } catch (_eEarly) {}
+        // Badge count and map threshold tracking are handled by the unified
+        // counting system in filter.js (runs from page load).
     }
 
     /* --------------------------------------------------------------------------
@@ -800,7 +728,6 @@ const HeaderModule = (function() {
         closePanels: closePanels,
         refreshFilterButton: function() {
             refreshHeaderFilterActiveVisual();
-            requestEarlyFilterCount();
         }
     };
 

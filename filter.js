@@ -1612,179 +1612,159 @@ const FilterModule = (function() {
         // and included via getMapState() when doSaveFilters() runs.
         // Do NOT call saveFilters() on boundsChanged — it resets the
         // debounce timer on every map movement, preventing DB saves.
-        
-        // Listen for filter count updates from PostModule (legacy). Keep, but server-side counts override it.
-        App.on('filter:countsUpdated', function(data) {
-            if (serverCountsOk) return;
-            if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
-                updateFilterCounts(data.filtered, data.total, !!data.areaActive);
+    }
+
+
+    /* --------------------------------------------------------------------------
+       COUNTING SYSTEM — runs from page load, independent of panel open state.
+       Reads filter state from localStorage + map state. Updates header badge,
+       summary bar (if panel open), and facet counts (if panel open).
+       -------------------------------------------------------------------------- */
+    
+    var countsToken = 0;
+    var countsAbort = null;
+    
+    function requestCounts() {
+        countsToken++;
+        var myToken = countsToken;
+
+        var st = {};
+        try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') st = parsed;
             }
-        });
-        
-        // Listen for cluster count updates from MapModule (fast, before posts loaded)
-        // This provides an early count for the header badge on initial load
-        App.on('clusters:countUpdated', function(data) {
-            if (data && typeof data.total === 'number') {
-                // Only update badge if we don't have detailed counts yet
-                if (lastTotalCount === 0 && lastFilteredCount === 0) {
-                    updateHeaderBadge(data.total);
-                    // Also update summary with cluster count
-                    if (summaryEl) {
-                        var scopeText = 'worldwide';
-                        try {
-                            if (window.MapModule && typeof MapModule.getMap === 'function') {
-                                var m = MapModule.getMap();
-                                // postsLoadZoom from database settings (no hardcoded fallback)
-                                if (!window.App || typeof App.getConfig !== 'function') {
-                                    throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
-                                }
-                                var threshold = App.getConfig('postsLoadZoom');
-                                if (typeof threshold !== 'number' || !isFinite(threshold)) {
-                                    throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
-                                }
-                                if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) scopeText = 'in this area';
-                            }
-                        } catch (_eScope) {}
-                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText;
+        } catch (_e) {}
+
+        var zoom = 0;
+        var boundsParam = '';
+        try {
+            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                var map = MapModule.getMap();
+                if (map && typeof map.getZoom === 'function') zoom = map.getZoom();
+                if (map && typeof map.getBounds === 'function') {
+                    var b = map.getBounds();
+                    if (b && typeof b.getWest === 'function') {
+                        boundsParam = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
                     }
                 }
             }
-        });
+        } catch (_e2) {}
 
-        // Authoritative counts (worldwide + in-area) from server.
-        var countsToken = 0;
-        var countsAbort = null;
-        function requestCounts() {
-            countsToken++;
-            var myToken = countsToken;
-
-            var st = {};
-            try {
-                var raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    var parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object') st = parsed;
-                }
-            } catch (_e) {}
-
-            var zoom = 0;
-            var boundsParam = '';
-            try {
-                if (window.MapModule && typeof MapModule.getMap === 'function') {
-                    var map = MapModule.getMap();
-                    if (map && typeof map.getZoom === 'function') zoom = map.getZoom();
-                    if (map && typeof map.getBounds === 'function') {
-                        var b = map.getBounds();
-                        if (b && typeof b.getWest === 'function') {
-                            boundsParam = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-                        }
-                    }
-                }
-            } catch (_e2) {}
-
-            var qs = new URLSearchParams();
-            qs.set('action', 'get-filter-counts');
-            qs.set('zoom', String(zoom));
-            if (boundsParam) qs.set('bounds', boundsParam);
-            if (st.keyword) qs.set('keyword', String(st.keyword));
-            if (st.minPrice) qs.set('min_price', String(st.minPrice));
-            if (st.maxPrice) qs.set('max_price', String(st.maxPrice));
-            if (st.dateStart) qs.set('date_start', String(st.dateStart));
-            if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
-            if (st.expired) qs.set('expired', '1');
-            if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
-                qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
-            }
-
-            // Only show "loading" state if request is not instant (prevents flicker).
-            var loadingTimer = setTimeout(function() {
-                setCategoryCountsLoading(true);
-            }, 120);
-
-            // Cancel any in-flight count request (counters must be cancellable).
-            try { if (countsAbort) countsAbort.abort(); } catch (_eAbort) {}
-            countsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-
-            fetch('/gateway.php?' + qs.toString(), countsAbort ? { signal: countsAbort.signal } : undefined)
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (myToken !== countsToken) return;
-                    clearTimeout(loadingTimer);
-                    if (!res || res.success !== true) {
-                        setCategoryCountsLoading(false);
-                        return;
-                    }
-                    setCategoryCountsLoading(false);
-                    serverCountsOk = true;
-                    updateFilterCounts(Number(res.total_showing || 0), Number(res.total_available || 0), !!res.area_active);
-                    if (res.facet_subcategories && typeof res.facet_subcategories === 'object') {
-                        applyFacetCounts(res.facet_subcategories);
-                    }
-                })
-                .catch(function() {
-                    clearTimeout(loadingTimer);
-                    setCategoryCountsLoading(false);
-                });
+        var qs = new URLSearchParams();
+        qs.set('action', 'get-filter-counts');
+        qs.set('zoom', String(zoom));
+        if (boundsParam) qs.set('bounds', boundsParam);
+        if (st.keyword) qs.set('keyword', String(st.keyword));
+        if (st.minPrice) qs.set('min_price', String(st.minPrice));
+        if (st.maxPrice) qs.set('max_price', String(st.maxPrice));
+        if (st.dateStart) qs.set('date_start', String(st.dateStart));
+        if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
+        if (st.expired) qs.set('expired', '1');
+        if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
+            qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
         }
 
-        requestCountsFn = requestCounts;
-        requestCounts();
+        // Only show "loading" state if request is not instant (prevents flicker).
+        var loadingTimer = setTimeout(function() {
+            setCategoryCountsLoading(true);
+        }, 120);
 
-        // Recompute counts when filters change
-        App.on('filter:changed', function() { requestCounts(); });
-        
-        // Track whether we were above/below threshold to detect crossings
-        var wasAboveThreshold = false;
-        try {
-            // postsLoadZoom from database settings (no hardcoded fallback)
-            if (!window.App || typeof App.getConfig !== 'function') {
-                throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
-            }
-            var initThreshold = App.getConfig('postsLoadZoom');
-            if (typeof initThreshold !== 'number' || !isFinite(initThreshold)) {
-                throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
-            }
-            if (window.MapModule && typeof MapModule.getMap === 'function') {
-                var initMap = MapModule.getMap();
-                if (initMap && typeof initMap.getZoom === 'function') {
-                    wasAboveThreshold = initMap.getZoom() >= initThreshold;
-                }
-            }
-        } catch (_eInitZoom) {}
-        
-        // Recompute counts when map moves:
-        // - Always refresh if zoom crosses threshold (scope changes between worldwide/area)
-        // - Refresh if at/above threshold (area changed)
-        // - Skip if below threshold and didn't cross (worldwide, position irrelevant)
-        App.on('map:boundsChanged', function() {
-            try {
-                // postsLoadZoom from database settings (no hardcoded fallback)
-                if (!window.App || typeof App.getConfig !== 'function') {
-                    throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
-                }
-                var threshold = App.getConfig('postsLoadZoom');
-                if (typeof threshold !== 'number' || !isFinite(threshold)) {
-                    throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
-                }
-                var currentZoom = 0;
-                if (window.MapModule && typeof MapModule.getMap === 'function') {
-                    var m = MapModule.getMap();
-                    if (m && typeof m.getZoom === 'function') {
-                        currentZoom = m.getZoom();
-                    }
-                }
-                var isAboveThreshold = currentZoom >= threshold;
-                var crossedThreshold = isAboveThreshold !== wasAboveThreshold;
-                wasAboveThreshold = isAboveThreshold;
-                
-                // Refresh if crossed threshold OR if above threshold (area matters)
-                if (!crossedThreshold && !isAboveThreshold) {
+        // Cancel any in-flight count request (counters must be cancellable).
+        try { if (countsAbort) countsAbort.abort(); } catch (_eAbort) {}
+        countsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+
+        fetch('/gateway.php?' + qs.toString(), countsAbort ? { signal: countsAbort.signal } : undefined)
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (myToken !== countsToken) return;
+                clearTimeout(loadingTimer);
+                if (!res || res.success !== true) {
+                    setCategoryCountsLoading(false);
                     return;
                 }
-            } catch (_eZoomCheck) {}
-            requestCounts();
-        });
+                setCategoryCountsLoading(false);
+                serverCountsOk = true;
+                updateFilterCounts(Number(res.total_showing || 0), Number(res.total_available || 0), !!res.area_active);
+                if (res.facet_subcategories && typeof res.facet_subcategories === 'object') {
+                    applyFacetCounts(res.facet_subcategories);
+                }
+            })
+            .catch(function() {
+                clearTimeout(loadingTimer);
+                setCategoryCountsLoading(false);
+            });
     }
+
+    requestCountsFn = requestCounts;
+
+    // Register counting listeners immediately (no panel dependency).
+    
+    // Legacy post-module counts (server-side counts override once available)
+    App.on('filter:countsUpdated', function(data) {
+        if (serverCountsOk) return;
+        if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
+            updateFilterCounts(data.filtered, data.total, !!data.areaActive);
+        }
+    });
+    
+    // Early cluster counts (before detailed counts arrive)
+    App.on('clusters:countUpdated', function(data) {
+        if (data && typeof data.total === 'number') {
+            if (lastTotalCount === 0 && lastFilteredCount === 0) {
+                updateHeaderBadge(data.total);
+                if (summaryEl) {
+                    var scopeText = 'worldwide';
+                    try {
+                        if (window.MapModule && typeof MapModule.getMap === 'function') {
+                            var m = MapModule.getMap();
+                            if (!window.App || typeof App.getConfig !== 'function') {
+                                throw new Error('[Filter] App.getConfig is required for postsLoadZoom.');
+                            }
+                            var threshold = App.getConfig('postsLoadZoom');
+                            if (typeof threshold !== 'number' || !isFinite(threshold)) {
+                                throw new Error('[Filter] postsLoadZoom config is missing or invalid.');
+                            }
+                            if (m && typeof m.getZoom === 'function' && m.getZoom() >= threshold) scopeText = 'in this area';
+                        }
+                    } catch (_eScope) {}
+                    summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText;
+                }
+            }
+        }
+    });
+
+    // Recompute counts when filters change
+    App.on('filter:changed', function() { requestCounts(); });
+
+    // Recompute counts on login/logout
+    App.on('member:stateChanged', function() { requestCounts(); });
+
+    // Recompute counts when map crosses the breakpoint threshold or moves above it
+    var wasAboveThreshold = false;
+    App.on('map:boundsChanged', function() {
+        try {
+            if (!window.App || typeof App.getConfig !== 'function') return;
+            var threshold = App.getConfig('postsLoadZoom');
+            if (typeof threshold !== 'number' || !isFinite(threshold)) return;
+            var currentZoom = 0;
+            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                var m = MapModule.getMap();
+                if (m && typeof m.getZoom === 'function') {
+                    currentZoom = m.getZoom();
+                }
+            }
+            var isAboveThreshold = currentZoom >= threshold;
+            var crossedThreshold = isAboveThreshold !== wasAboveThreshold;
+            wasAboveThreshold = isAboveThreshold;
+            if (!crossedThreshold && !isAboveThreshold) return;
+        } catch (_e) { return; }
+        requestCounts();
+    });
+
+    // Fire initial count request
+    requestCounts();
 
 
     /* --------------------------------------------------------------------------
