@@ -967,31 +967,47 @@
             }
             
             // Handle save (returns promise)
+            // Same visual flow as create: close form, show overlay, show result.
             function handleSave() {
-                // Show saving state and prevent double-clicks
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'Saving...';
-                if (headerSaveBtn) {
-                    headerSaveBtn.disabled = true;
-                    headerSaveBtn.textContent = 'Saving...';
-                }
+                // Close the edit form
+                collapseEditAccordion(post.id, postContainer);
+
+                // Add saving overlay to the post card area
+                var editHeader = postContainer.querySelector('.posteditor-edit-header');
+                var overlay = document.createElement('div');
+                overlay.className = 'posteditor-saving-overlay';
+                overlay.innerHTML =
+                    '<div class="posteditor-placeholder-spinner"></div>' +
+                    '<div class="posteditor-placeholder-text">Saving...</div>';
+                if (editHeader) editHeader.appendChild(overlay);
 
                 return savePost(post.id).then(function() {
-                    saveBtn.textContent = 'Save';
-                    if (headerSaveBtn) headerSaveBtn.textContent = 'Save';
-                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        ToastComponent.showSuccess('Saved');
-                    }
+                    // Show success state briefly
+                    overlay.innerHTML =
+                        '<div class="posteditor-placeholder-check">✓</div>' +
+                        '<div class="posteditor-placeholder-text">Saved!</div>';
+
+                    setTimeout(function() {
+                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                        refreshPostCard(post.id);
+                    }, 2000);
+
                     updateHeaderSaveDiscardState();
-                    updateFooterButtonState();
                 }).catch(function(err) {
-                    saveBtn.textContent = 'Save';
-                    if (headerSaveBtn) headerSaveBtn.textContent = 'Save';
-                    updateFooterButtonState();
+                    // Show error state, then re-open editor so user can retry
+                    overlay.innerHTML =
+                        '<div class="posteditor-placeholder-error">✕</div>' +
+                        '<div class="posteditor-placeholder-text">Failed</div>';
+
+                    setTimeout(function() {
+                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                        expandEditAccordion(post.id, postContainer);
+                        updateFooterButtonState();
+                    }, 3000);
+
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         ToastComponent.showError('Failed to save: ' + err.message);
                     }
-                    throw err;
                 });
             }
             
