@@ -733,14 +733,16 @@ foreach ($byLoc as $locNum => $entries) {
       continue;
     }
     if (($baseType === 'address' || $baseType === 'city') && is_array($val)) {
-      $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : $card['address_line'];
+      $addrVal = isset($val['address_line']) ? trim((string)$val['address_line']) : '';
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
       $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
       $cc = preg_replace('/[^A-Z]/', '', $cc);
       $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
       if ($baseType === 'city') {
-        $card['city'] = $card['address_line'];
+        $card['city'] = $addrVal !== '' ? $addrVal : $card['city'];
+      } else {
+        $card['address_line'] = $addrVal !== '' ? $addrVal : $card['address_line'];
       }
       continue;
     }
