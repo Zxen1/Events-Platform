@@ -29,11 +29,9 @@ const HeaderModule = (function() {
     var adminBtn = null;
     var fullscreenBtn = null;
     var logoBtn = null;
-    var filterModuleLoaded = false;
-    var filterModuleLoading = false;
 
     /* --------------------------------------------------------------------------
-       FILTER ACTIVE VISUAL (no lazy-load required)
+       FILTER ACTIVE VISUAL
        -------------------------------------------------------------------------- */
     
     function getCurrentMapZoomSafe() {
@@ -379,87 +377,14 @@ const HeaderModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       FILTER BUTTON (Lazy Loading)
+       FILTER BUTTON
        -------------------------------------------------------------------------- */
-    
-    // Load filter.js eagerly so the counting system runs from page load.
-    // The panel UI (CSS + init) stays lazy until the user opens the panel.
-    var filterScriptLoaded = false;
-    var filterScriptLoading = null;
-
-    function loadFilterScript() {
-        if (filterScriptLoaded) return Promise.resolve();
-        if (filterScriptLoading) return filterScriptLoading;
-
-        filterScriptLoading = new Promise(function(resolve, reject) {
-            var script = document.createElement('script');
-            script.src = 'filter.js?v=' + (window.APP_VERSION || Date.now());
-            script.onload = function() {
-                filterScriptLoaded = true;
-                filterScriptLoading = null;
-                resolve();
-            };
-            script.onerror = function() {
-                console.error('[Header] Failed to load filter JS');
-                reject(new Error('Failed to load filter module'));
-            };
-            document.body.appendChild(script);
-        });
-        return filterScriptLoading;
-    }
-
-    function loadFilterModule() {
-        if (filterModuleLoaded) return Promise.resolve();
-        if (filterModuleLoading) return filterModuleLoading;
-        
-        filterModuleLoading = new Promise(function(resolve, reject) {
-            var cssLoaded = false;
-            var jsLoaded = false;
-            
-            function checkDone() {
-                if (cssLoaded && jsLoaded) {
-                    filterModuleLoaded = true;
-                    filterModuleLoading = false;
-                    // Small delay to ensure script has executed
-                    setTimeout(function() {
-                        if (window.FilterModule && typeof window.FilterModule.init === 'function') {
-                            window.FilterModule.init();
-                        }
-                        resolve();
-                    }, 10);
-                }
-            }
-            
-            // Load CSS (panel styling)
-            var link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'filter.css?v=' + (window.APP_VERSION || Date.now());
-            link.onload = function() {
-                cssLoaded = true;
-                checkDone();
-            };
-            link.onerror = function() {
-                console.error('[Header] Failed to load filter CSS');
-                cssLoaded = true; // Continue anyway
-                checkDone();
-            };
-            document.head.appendChild(link);
-            
-            // JS may already be loaded (eager load in initFilterButton)
-            loadFilterScript().then(function() {
-                jsLoaded = true;
-                checkDone();
-            }).catch(reject);
-        });
-        
-        return filterModuleLoading;
-    }
     
     function initFilterButton() {
         filterBtn = document.querySelector('.header-filter');
         if (!filterBtn) return;
         
-        // Set the correct visual state on boot without loading filter.js.
+        // Set the correct visual state on boot.
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.
@@ -489,9 +414,7 @@ const HeaderModule = (function() {
                 } catch (e) {}
             }
 
-            // Never rely on a stale boolean for open/closed state.
-            // If the panel was closed by another module, `filterPanelOpen` can desync and require
-            // a "dead click" to re-sync. Always read from the DOM.
+            // Read open/closed state from the DOM to avoid stale booleans.
             try {
                 var filterPanelEl = document.querySelector('.filter-panel');
                 var isOpenNow = !!(filterPanelEl && filterPanelEl.classList.contains('show'));
@@ -500,28 +423,12 @@ const HeaderModule = (function() {
                 filterPanelOpen = !filterPanelOpen;
             }
             
-            // Update aria state
             filterBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
             
-            if (!filterModuleLoaded) {
-                // First click - load the module then toggle
-                loadFilterModule().then(function() {
-                    App.emit('panel:toggle', {
-                        panel: 'filter',
-                        show: filterPanelOpen
-                    });
-                }).catch(function(err) {
-                    console.error('[Header] Filter load failed:', err);
-                    filterPanelOpen = false;
-                    filterBtn.setAttribute('aria-expanded', 'false');
-                });
-            } else {
-                // Module already loaded - just toggle
-                App.emit('panel:toggle', {
-                    panel: 'filter',
-                    show: filterPanelOpen
-                });
-            }
+            App.emit('panel:toggle', {
+                panel: 'filter',
+                show: filterPanelOpen
+            });
         });
         
         // Listen for filter panel close events
@@ -534,9 +441,6 @@ const HeaderModule = (function() {
         
         // Listen for filter active state changes (show orange icon when filters active)
         App.on('filter:activeState', function(data) {
-            // Keep this hook for the FilterModule (when loaded), but also allow HeaderModule
-            // to compute active state without lazy-loading the filter panel.
-            // Always check localStorage for categories too (they load async after panel opens).
             if (data && data.active === true) {
                 setHeaderFilterIconActive(true);
             } else {
@@ -544,10 +448,6 @@ const HeaderModule = (function() {
             }
         });
 
-        // Load filter.js eagerly so the unified counting system runs from
-        // page load (badge count + map threshold tracking). The panel CSS
-        // and init() remain lazy until the user opens the panel.
-        loadFilterScript();
     }
 
     /* --------------------------------------------------------------------------

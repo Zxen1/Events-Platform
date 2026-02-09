@@ -74,6 +74,10 @@ const FilterModule = (function() {
     var saveDebounceTimer = null;
     var requestCountsFn = null;
     var serverCountsOk = false;
+    
+    // Latest formatted summary text (updated by updateFilterCounts, readable
+    // by any module via getFilterSummaryText without depending on panel DOM).
+    var lastSummaryText = '';
 
 
     /* --------------------------------------------------------------------------
@@ -391,6 +395,9 @@ const FilterModule = (function() {
         
         // Restore saved filters (except categories, handled in initCategoryFilter)
         restoreFilters();
+
+        // Panel DOM now exists — refresh counts so summary bar + facets populate.
+        requestCounts();
     }
     
     function initBackdropClose() {
@@ -541,13 +548,16 @@ const FilterModule = (function() {
         lastFilteredCount = filtered;
         lastTotalCount = total;
         
-        // Update summary message in filter panel
+        // Build summary text (stored for any module to read, not panel-dependent)
+        var scopeText = areaActive ? 'in this map area' : 'worldwide';
+        lastSummaryText =
+            String(filtered) + ' result' + (filtered !== 1 ? 's' : '') +
+            ' showing out of ' + String(total) +
+            ' ' + scopeText;
+        
+        // Update summary message in filter panel (if open)
         if (summaryEl) {
-            var scopeText = areaActive ? 'in this map area' : 'worldwide';
-            summaryEl.textContent =
-                String(filtered) + ' result' + (filtered !== 1 ? 's' : '') +
-                ' showing out of ' + String(total) +
-                ' ' + scopeText;
+            summaryEl.textContent = lastSummaryText;
         }
         
         // Update header filter button badge
@@ -1763,10 +1773,6 @@ const FilterModule = (function() {
         requestCounts();
     });
 
-    // Fire initial count request
-    requestCounts();
-
-
     /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
@@ -1843,6 +1849,7 @@ const FilterModule = (function() {
         setFavouritesOn: setFavouritesOn,
         setSort: setSort,
         getFilterState: getFilterState,
+        getFilterSummaryText: function() { return lastSummaryText; },
         setDateRange: setDateRange,
         openCalendar: openCalendar,
         closeCalendar: closeCalendar,

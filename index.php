@@ -249,8 +249,8 @@ if (empty($ogTitle)) {
   <!-- CSS Files (10 total) -->
   <link rel="stylesheet" href="base.css?v=20251228i">
   <link rel="stylesheet" href="header.css?v=20251228i">
-  <!-- filter.css loaded lazily on first use -->
-  <link rel="stylesheet" href="map.css?v=20251228i">
+<link rel="stylesheet" href="filter.css?v=20251228i">
+<link rel="stylesheet" href="map.css?v=20251228i">
   <link rel="stylesheet" href="post.css?v=20251228i">
   <link rel="stylesheet" href="components.css?v=20251228i">
   <link rel="stylesheet" href="fieldsets.css?v=20251228i">
@@ -1420,8 +1420,8 @@ if (empty($ogTitle)) {
   <script src="components.js?v=20251228w"></script>
   <script src="index.js?v=20251228w"></script>
   <script src="header.js?v=20251228w"></script>
-  <!-- filter.js loaded lazily on first use -->
-  <script src="map.js?v=20251228w"></script>
+<script src="filter.js?v=20251228w"></script>
+<script src="map.js?v=20251228w"></script>
   <script src="post.js?v=20251228w"></script>
   <script src="admin.js?v=20251228w"></script>
   <script src="formbuilder.js?v=20251228w"></script>

@@ -681,6 +681,7 @@ const App = (function() {
     const initOrder = [
       'map',     // First - start tile loading immediately
       'header',
+      'filter',  // After header (filter button DOM exists), before post (needs count data)
       'post'
     ];
 

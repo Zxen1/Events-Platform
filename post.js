@@ -4734,9 +4734,12 @@ const PostModule = (function() {
 
   function getFilterSummaryText() {
     try {
-      var el = document.querySelector('.filter-panel-summary');
-      var text = el ? String(el.textContent || '').trim() : '';
-      return text;
+      // Read from FilterModule's counting system (no filter panel DOM dependency).
+      if (window.FilterModule && typeof FilterModule.getFilterSummaryText === 'function') {
+        var moduleText = FilterModule.getFilterSummaryText();
+        if (moduleText) return moduleText;
+      }
+      return '';
     } catch (e) {
       return '';
     }
