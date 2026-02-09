@@ -424,9 +424,8 @@
             cardEl.textContent = fallbackTitle;
         }
 
-        // Capture phase: runs before PostModule's click handler
+        // Prevent postcard from opening into a post when edit/manage accordion is active
         cardEl.addEventListener('click', function(e) {
-            // Block clicks when edit/manage accordion is active
             var editAcc = postContainer.querySelector('.posteditor-edit-accordion');
             var manageAcc = postContainer.querySelector('.posteditor-manage-accordion');
             var editActive = editAcc && !editAcc.hidden;
@@ -434,17 +433,6 @@
             if (editActive || manageActive) {
                 e.stopPropagation();
                 e.preventDefault();
-                return;
-            }
-            // Close any other open post in My Posts before this one opens
-            if (container && window.PostModule && typeof PostModule.closePost === 'function') {
-                var openPosts = container.querySelectorAll('.post');
-                openPosts.forEach(function(openEl) {
-                    var openId = openEl.dataset.id;
-                    if (openId && String(openId) !== String(post.id)) {
-                        PostModule.closePost(openId);
-                    }
-                });
             }
         }, true); // Use capture phase to intercept before PostModule's handler
 
@@ -794,9 +782,6 @@
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res && res.success && res.posts && res.posts.length > 0) {
-                            // Close any accordion that opened while this fetch was in flight
-                            closeOtherAccordions();
-                            closeManageAccordion();
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             renderEditForm(post, accordion);

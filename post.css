@@ -111,16 +111,8 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: none;
-    overflow: visible;
     /* Fill the screen even with short content */
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
-  }
-
-  .post-list {
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
   }
 }
 
@@ -162,7 +154,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   pointer-events: auto;
@@ -208,8 +199,6 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: none;
-    overflow-y: visible;
     /* Fill the screen even with short content */
     min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
   }
@@ -237,7 +226,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   padding: 0;
   margin: 0;
   scrollbar-width: thin;
