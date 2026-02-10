@@ -746,7 +746,7 @@
             if (!editFormLoaded) {
                 editFormLoaded = true;
                 if (editingPostsData[postId]) {
-                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn);
+                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn);
                 } else {
                     editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
                     var user = getCurrentUser();
@@ -758,7 +758,7 @@
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             editAccordionContent.innerHTML = '';
-                            renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn);
+                            renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn);
                         } else {
                             editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
                         }
@@ -843,7 +843,7 @@
 
 
 
-    function renderEditForm(post, formContainer, closeModalFn, topSaveBtn) {
+    function renderEditForm(post, formContainer, closeModalFn, topSaveBtn, topCloseBtn) {
         if (!post || !formContainer) return;
         
         var memberCategories = getMemberCategories();
@@ -984,30 +984,6 @@
             var footer = document.createElement('div');
             footer.className = 'posteditor-edit-footer';
             
-            // Close editor — delegates to the modal close callback
-            function closeEditor() {
-                discardEdits(post.id);
-                if (closeModalFn) closeModalFn();
-            }
-            
-            // Handle close with unsaved changes check
-            function handleClose() {
-                if (!isPostDirty(post.id)) { closeEditor(); return; }
-                if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') { closeEditor(); return; }
-                ThreeButtonDialogComponent.show({
-                    titleText: 'Unsaved Changes',
-                    messageText: 'You have unsaved changes. What would you like to do?',
-                    cancelLabel: 'Cancel', saveLabel: 'Save', discardLabel: 'Discard', focusCancel: true
-                }).then(function(choice) {
-                    if (choice === 'save') {
-                        handleSave().then(function() { closeEditor(); });
-                    } else if (choice === 'discard') {
-                        closeEditor();
-                        if (window.ToastComponent && typeof ToastComponent.show === 'function') ToastComponent.show('Changes discarded');
-                    }
-                });
-            }
-            
             // Handle save — overlay inside the modal body, close on success
             function handleSave() {
                 var overlay = document.createElement('div');
@@ -1049,12 +1025,37 @@
                 handleSave();
             });
             
-            // Close button (blue) - right - always enabled
+            // Close/Discard button - right - swaps based on dirty state
             var closeBtn = document.createElement('button');
             closeBtn.type = 'button';
             closeBtn.className = 'posteditor-edit-button-close button-class-2b';
             closeBtn.textContent = 'Close';
-            closeBtn.addEventListener('click', handleClose);
+            closeBtn.addEventListener('click', function() {
+                if (isPostDirty(post.id)) {
+                    // Dirty: confirm before discarding
+                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Discard Changes',
+                            messageText: 'Are you sure you want to discard your changes?',
+                            confirmLabel: 'Discard',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                discardEdits(post.id);
+                                if (closeModalFn) closeModalFn();
+                            }
+                        });
+                    } else {
+                        discardEdits(post.id);
+                        if (closeModalFn) closeModalFn();
+                    }
+                } else {
+                    // Clean: just collapse
+                    if (closeModalFn) closeModalFn();
+                }
+            });
             
             // Function to check if all fieldsets are complete
             function isFormComplete() {
@@ -1110,6 +1111,25 @@
                 var canSave = isDirty && isComplete;
                 saveBtn.disabled = !canSave;
                 if (topSaveBtn) topSaveBtn.disabled = !canSave;
+
+                // Swap Close/Discard on bottom button
+                if (isDirty) {
+                    closeBtn.textContent = 'Discard';
+                    closeBtn.className = 'posteditor-edit-button-close button-class-2d';
+                } else {
+                    closeBtn.textContent = 'Close';
+                    closeBtn.className = 'posteditor-edit-button-close button-class-2b';
+                }
+                // Mirror on top button
+                if (topCloseBtn) {
+                    if (isDirty) {
+                        topCloseBtn.textContent = 'Discard';
+                        topCloseBtn.className = 'posteditor-manage-edit-close button-class-2d';
+                    } else {
+                        topCloseBtn.textContent = 'Close';
+                        topCloseBtn.className = 'posteditor-manage-edit-close button-class-2b';
+                    }
+                }
             }
             
             // Attach popover to a button (posteditor-specific, not shared)
