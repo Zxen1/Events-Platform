@@ -5541,6 +5541,29 @@ const FieldsetBuilder = (function(){
                 sessPickerTicketBtn.appendChild(sessPLetter);
                 sessDatePickerRow.appendChild(sessPickerTicketBtn);
 
+                // Copy times and groups from first date to all other dates
+                function sessCopyTimesFromMaster() {
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    if (sortedDates.length < 2) return;
+                    var masterDate = sortedDates[0];
+                    var masterData = sessSessionData[masterDate];
+                    if (!masterData || !masterData.times) return;
+                    
+                    for (var i = 1; i < sortedDates.length; i++) {
+                        var targetDate = sortedDates[i];
+                        var targetData = sessSessionData[targetDate];
+                        if (!targetData) continue;
+                        
+                        targetData.times = masterData.times.map(function(t) { return t || ''; });
+                        targetData.edited = masterData.edited.map(function() { return false; });
+                        targetData.groups = masterData.groups ? masterData.groups.slice() : masterData.times.map(function() { return 'A'; });
+                        
+                        sessSortTimesForDate(targetDate);
+                    }
+                    
+                    sessRenderSessions();
+                }
+
                 // Sort times chronologically for a date (keeps edited/groups aligned)
                 function sessSortTimesForDate(dateStr) {
                     var data = sessSessionData[dateStr];
@@ -5672,6 +5695,16 @@ const FieldsetBuilder = (function(){
                             sessPickerTicketBtn.style.opacity = '0.3';
                         } catch (e0) {}
                     } else {
+                        // Ensure first date has at least 2 time slots when 2+ dates (so Copy Times row exists)
+                        if (sortedDates.length > 1) {
+                            var firstData = sessSessionData[sortedDates[0]];
+                            if (firstData && firstData.times.length < 2) {
+                                firstData.times.push('');
+                                firstData.edited.push(false);
+                                if (!Array.isArray(firstData.groups)) firstData.groups = [];
+                                firstData.groups.push(firstData.groups[0] || 'A');
+                            }
+                        }
                         try {
                             sessDatePickerBox.textContent = App.formatDateShort(sortedDates[0]);
                         } catch (eFmt0) {
@@ -5708,52 +5741,12 @@ const FieldsetBuilder = (function(){
                                 } catch (ePick) {}
                                 row.appendChild(dateDisplay);
                             } else if (dateIdx === 0 && idx === 1 && sortedDates.length > 1) {
-                                // Copy Times button in place of spacer for first date's second row
                                 var copyBtn = document.createElement('button');
                                 copyBtn.type = 'button';
                                 copyBtn.className = 'fieldset-sessions-copy-button button-class-6';
                                 copyBtn.textContent = 'Copy Times';
                                 copyBtn.addEventListener('click', function() {
-                                    var masterDate = sortedDates[0];
-                                    var masterData = sessSessionData[masterDate];
-                                    if (!masterData || !masterData.times) return;
-                                    
-                                    for (var i = 1; i < sortedDates.length; i++) {
-                                        var targetDate = sortedDates[i];
-                                        var targetData = sessSessionData[targetDate];
-                                        if (!targetData) continue;
-                                        
-                                        masterData.times.forEach(function(masterTime, masterIdx) {
-                                            if (!masterTime || masterTime === '') return;
-                                            var exists = targetData.times.some(function(t) { return t === masterTime; });
-                                            if (!exists) {
-                                                targetData.times.push(masterTime);
-                                                targetData.edited.push(false);
-                                                var groupKey = (masterData.groups && masterData.groups[masterIdx]) || 'A';
-                                                if (!Array.isArray(targetData.groups)) targetData.groups = [];
-                                                targetData.groups.push(groupKey);
-                                            }
-                                        });
-                                        
-                                        // Remove empty slots from target
-                                        var nonEmpty = [];
-                                        for (var j = 0; j < targetData.times.length; j++) {
-                                            if (targetData.times[j] && targetData.times[j] !== '') {
-                                                nonEmpty.push({
-                                                    time: targetData.times[j],
-                                                    edited: targetData.edited[j] || false,
-                                                    group: (targetData.groups && targetData.groups[j]) || 'A'
-                                                });
-                                            }
-                                        }
-                                        targetData.times = nonEmpty.map(function(x) { return x.time; });
-                                        targetData.edited = nonEmpty.map(function(x) { return x.edited; });
-                                        targetData.groups = nonEmpty.map(function(x) { return x.group; });
-                                        
-                                        sessSortTimesForDate(targetDate);
-                                    }
-                                    
-                                    sessRenderSessions();
+                                    sessCopyTimesFromMaster();
                                 });
                                 row.appendChild(copyBtn);
                             } else {
@@ -6003,6 +5996,7 @@ const FieldsetBuilder = (function(){
                             group.appendChild(row);
                         });
                         sessSessionsContainer.appendChild(group);
+
                     });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
