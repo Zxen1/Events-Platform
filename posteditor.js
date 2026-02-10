@@ -991,14 +991,15 @@
             var footer = document.createElement('div');
             footer.className = 'posteditor-edit-footer';
             
-            // Handle save — overlay inside the modal body, close on success
+            // Handle save — overlay covers entire modal container
             function handleSave() {
                 var overlay = document.createElement('div');
                 overlay.className = 'posteditor-saving-overlay';
                 overlay.innerHTML =
                     '<div class="posteditor-placeholder-spinner"></div>' +
                     '<div class="posteditor-placeholder-text">Saving...</div>';
-                formContainer.appendChild(overlay);
+                var modalEl = formContainer.closest('.posteditor-modal-container') || formContainer;
+                modalEl.appendChild(overlay);
 
                 return savePost(post.id).then(function() {
                     overlay.innerHTML =
