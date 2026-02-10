@@ -5695,16 +5695,6 @@ const FieldsetBuilder = (function(){
                             sessPickerTicketBtn.style.opacity = '0.3';
                         } catch (e0) {}
                     } else {
-                        // Ensure first date has at least 2 time slots when 2+ dates (so Copy Times row exists)
-                        if (sortedDates.length > 1) {
-                            var firstData = sessSessionData[sortedDates[0]];
-                            if (firstData && firstData.times.length < 2) {
-                                firstData.times.push('');
-                                firstData.edited.push(false);
-                                if (!Array.isArray(firstData.groups)) firstData.groups = [];
-                                firstData.groups.push(firstData.groups[0] || 'A');
-                            }
-                        }
                         try {
                             sessDatePickerBox.textContent = App.formatDateShort(sortedDates[0]);
                         } catch (eFmt0) {
@@ -5995,7 +5985,31 @@ const FieldsetBuilder = (function(){
 
                             group.appendChild(row);
                         });
+                        // Standalone Copy Times button when first date has only 1 time and 2+ dates
+                        if (dateIdx === 0 && data.times.length === 1 && sortedDates.length > 1) {
+                            var copyRow = document.createElement('div');
+                            copyRow.className = 'fieldset-row fieldset-sessions-session-row';
+                            copyRow.style.marginBottom = '8px';
+                            var copyBtn = document.createElement('button');
+                            copyBtn.type = 'button';
+                            copyBtn.className = 'fieldset-sessions-copy-button button-class-6';
+                            copyBtn.textContent = 'Copy Times';
+                            copyBtn.addEventListener('click', function() {
+                                sessCopyTimesFromMaster();
+                            });
+                            copyRow.appendChild(copyBtn);
+                            group.appendChild(copyRow);
+                        }
                         sessSessionsContainer.appendChild(group);
+                        // Match standalone Copy Times button width to the date box
+                        if (dateIdx === 0 && data.times.length === 1 && sortedDates.length > 1) {
+                            var dateBox = group.querySelector('.fieldset-sessions-session-field-label');
+                            var standaloneCopyBtn = group.querySelector('.fieldset-sessions-copy-button');
+                            if (dateBox && standaloneCopyBtn) {
+                                standaloneCopyBtn.style.width = dateBox.offsetWidth + 'px';
+                                standaloneCopyBtn.style.flex = 'none';
+                            }
+                        }
 
                     });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
