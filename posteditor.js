@@ -946,6 +946,11 @@
                         });
                     }
                     container.setAttribute('data-active', 'true');
+                    try {
+                        if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                            LocationWallpaperComponent.handleActiveContainerChange(formContainer, container);
+                        }
+                    } catch (_eLW) {}
                 }
             });
             
