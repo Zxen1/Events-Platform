@@ -413,7 +413,7 @@
 }
 
 .posteditor-popover--below {
-  top: 100%;
+  top: calc(100% + 6px);
 }
 
 /* Horizontal alignment */
