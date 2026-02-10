@@ -959,6 +959,11 @@
             var firstLocContainer = formContainer.querySelector('.member-location-container');
             if (firstLocContainer) {
                 firstLocContainer.setAttribute('data-active', 'true');
+                try {
+                    if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                        LocationWallpaperComponent.handleActiveContainerChange(formContainer, firstLocContainer);
+                    }
+                } catch (_eLW) {}
             }
             
             // Store initial extracted fields for dirty checking (must happen after populate)
