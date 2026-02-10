@@ -9881,9 +9881,8 @@ const LocationWallpaperComponent = (function() {
         // PUBLIC API
         // ============================================================
         function refresh() {
-            // Called when container becomes active or lat/lng changes
-            if (locationContainerEl.getAttribute('data-active') !== 'true') return;
-
+            // Called when container becomes active or lat/lng changes.
+            // Activation is controlled by activeCtrl/activeContainerEl — no data-active gate needed.
             var mode = getWallpaperMode();
             st.mode = mode;
 

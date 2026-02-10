@@ -946,11 +946,6 @@
                         });
                     }
                     container.setAttribute('data-active', 'true');
-                    try {
-                        if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-                            LocationWallpaperComponent.handleActiveContainerChange(formContainer, container);
-                        }
-                    } catch (_eLW) {}
                 }
             });
             
@@ -964,6 +959,7 @@
             var firstLocContainer = formContainer.querySelector('.member-location-container');
             if (firstLocContainer) {
                 firstLocContainer.setAttribute('data-active', 'true');
+                // Explicitly activate wallpaper since no click event fires on form load
                 try {
                     if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
                         LocationWallpaperComponent.handleActiveContainerChange(formContainer, firstLocContainer);
