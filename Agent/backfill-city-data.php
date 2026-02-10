@@ -1,13 +1,13 @@
 <?php
 /**
- * Backfill city (and country_code) for post_map_cards using Google Maps JS Geocoder.
+ * Backfill city (and country_code) for post_map_cards using OpenStreetMap Nominatim.
  *
  * Usage: Visit this page in your browser at funmap.com/Agent/backfill-city-data.php
  *
  * This script:
  *   1. PHP queries the DB for post_map_cards where city is NULL or empty
  *   2. Groups by unique lat/lng to minimise API calls
- *   3. Renders an HTML page that uses google.maps.Geocoder (client-side, already authorised)
+ *   3. Renders an HTML page that uses Nominatim (free, no API key needed)
  *   4. Displays SQL UPDATE statements for you to copy and execute
  *
  * Delete this file after use.
@@ -98,6 +98,7 @@ $mysqli->close();
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 30px; line-height: 1.6; }
     h1 { color: #fff; margin-bottom: 10px; font-size: 18px; }
+    h2 { color: #fff; margin-bottom: 8px; font-size: 15px; }
     .summary { color: #aaa; margin-bottom: 20px; }
     #log { background: #0f0f23; border: 1px solid #333; border-radius: 6px; padding: 16px; margin-bottom: 20px; max-height: 400px; overflow-y: auto; font-size: 13px; }
     .log-ok { color: #6bcf6b; }
@@ -111,7 +112,7 @@ $mysqli->close();
 </head>
 <body>
 
-<h1>Backfill City Data — post_map_cards</h1>
+<h1>Backfill City Data &mdash; post_map_cards</h1>
 
 <?php if ($totalRows === 0): ?>
 <p class="summary">All post_map_cards already have city data. Nothing to do.</p>
@@ -119,13 +120,13 @@ $mysqli->close();
 
 <p class="summary">
     Found <strong><?= $totalRows ?></strong> post_map_cards with missing city data.<br>
-    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode.
+    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode via OpenStreetMap Nominatim.
 </p>
 
-<div id="progress">Waiting for Google Maps API to load...</div>
+<div id="progress">Starting...</div>
 <div id="log"></div>
 
-<h2 style="color:#fff; margin-bottom:8px; font-size:15px;">SQL to execute:</h2>
+<h2>SQL to execute:</h2>
 <div id="sql-output">Processing...</div>
 <button class="btn" id="copy-btn" style="display:none;" onclick="copySQL()">Copy SQL to Clipboard</button>
 
@@ -150,32 +151,14 @@ function escapeSQL(str) {
     return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-function extractCity(results) {
-    var city = '';
-    var countryCode = '';
-
-    for (var r = 0; r < results.length; r++) {
-        var comps = results[r].address_components || [];
-        for (var c = 0; c < comps.length; c++) {
-            var types = comps[c].types || [];
-
-            if (!city && types.indexOf('locality') !== -1) {
-                city = comps[c].long_name;
-            }
-            if (!city && types.indexOf('administrative_area_level_3') !== -1) {
-                city = comps[c].long_name;
-            }
-            if (!city && types.indexOf('administrative_area_level_2') !== -1) {
-                city = comps[c].long_name;
-            }
-            if (!countryCode && types.indexOf('country') !== -1) {
-                countryCode = comps[c].short_name.toUpperCase();
-            }
-        }
-        if (city && countryCode) break;
-    }
-
-    return { city: city, countryCode: countryCode };
+function extractCity(address) {
+    // Nominatim returns city under various keys depending on the location
+    return address.city
+        || address.town
+        || address.village
+        || address.municipality
+        || address.county
+        || '';
 }
 
 function geocodeNext(index) {
@@ -187,32 +170,46 @@ function geocodeNext(index) {
     var loc = locations[index];
     progressEl.textContent = 'Geocoding ' + (index + 1) + ' of ' + locations.length + '...';
 
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ location: { lat: loc.lat, lng: loc.lng } }, function(results, status) {
-        if (status === 'OK' && results && results.length > 0) {
-            var extracted = extractCity(results);
+    var url = 'https://nominatim.openstreetmap.org/reverse?lat=' + loc.lat
+            + '&lon=' + loc.lng
+            + '&format=json&addressdetails=1&accept-language=en';
 
-            if (extracted.city) {
+    fetch(url, {
+        headers: { 'User-Agent': 'FunMapBackfillScript/1.0' }
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+        if (data && data.address) {
+            var city = extractCity(data.address);
+            var countryCode = (data.address.country_code || '').toUpperCase();
+
+            if (city) {
                 var idList = loc.ids.join(',');
-                sqlStatements.push("UPDATE `post_map_cards` SET `city` = '" + escapeSQL(extracted.city) + "' WHERE `id` IN (" + idList + ");");
+                sqlStatements.push("UPDATE `post_map_cards` SET `city` = '" + escapeSQL(city) + "' WHERE `id` IN (" + idList + ");");
 
-                if (extracted.countryCode && loc.ids_missing_country.length > 0) {
+                if (countryCode && loc.ids_missing_country.length > 0) {
                     var ccIdList = loc.ids_missing_country.join(',');
-                    sqlStatements.push("UPDATE `post_map_cards` SET `country_code` = '" + escapeSQL(extracted.countryCode) + "' WHERE `id` IN (" + ccIdList + ");");
+                    sqlStatements.push("UPDATE `post_map_cards` SET `country_code` = '" + escapeSQL(countryCode) + "' WHERE `id` IN (" + ccIdList + ");");
                 }
 
-                logLine(loc.lat + ', ' + loc.lng + '  =>  city: ' + extracted.city + (extracted.countryCode ? ', country: ' + extracted.countryCode : '') + '  (IDs: ' + idList + ')', 'log-ok');
+                logLine(loc.lat + ', ' + loc.lng + '  =>  city: ' + city + (countryCode ? ', country: ' + countryCode : '') + '  (IDs: ' + idList + ')', 'log-ok');
             } else {
                 errors.push('Could not extract city for ' + loc.lat + ',' + loc.lng);
-                logLine('Could not extract city for ' + loc.lat + ', ' + loc.lng, 'log-err');
+                logLine('Could not extract city for ' + loc.lat + ', ' + loc.lng + ' — raw: ' + JSON.stringify(data.address), 'log-err');
             }
         } else {
-            errors.push('Geocode failed for ' + loc.lat + ',' + loc.lng + ' (status: ' + status + ')');
-            logLine('Geocode failed for ' + loc.lat + ', ' + loc.lng + ' — status: ' + status, 'log-err');
+            var errMsg = data && data.error ? data.error : 'unknown error';
+            errors.push('Nominatim error for ' + loc.lat + ',' + loc.lng + ': ' + errMsg);
+            logLine('Nominatim error for ' + loc.lat + ', ' + loc.lng + ' — ' + errMsg, 'log-err');
         }
 
-        // 250ms delay between requests to be polite
-        setTimeout(function() { geocodeNext(index + 1); }, 250);
+        // Nominatim requires max 1 request per second
+        setTimeout(function() { geocodeNext(index + 1); }, 1100);
+    })
+    .catch(function(err) {
+        errors.push('Network error for ' + loc.lat + ',' + loc.lng + ': ' + err.message);
+        logLine('Network error for ' + loc.lat + ', ' + loc.lng + ' — ' + err.message, 'log-err');
+        setTimeout(function() { geocodeNext(index + 1); }, 1100);
     });
 }
 
@@ -243,19 +240,16 @@ function copySQL() {
     });
 }
 
-function initBackfill() {
-    if (locations.length === 0) {
-        progressEl.textContent = 'Nothing to process.';
-        sqlEl.textContent = 'No SQL generated.';
-        return;
-    }
-    logLine('Starting geocode for ' + locations.length + ' unique locations...', 'log-info');
+// Start immediately
+if (locations.length === 0) {
+    progressEl.textContent = 'Nothing to process.';
+    sqlEl.textContent = 'No SQL generated.';
+} else {
+    logLine('Starting geocode for ' + locations.length + ' unique locations via Nominatim...', 'log-info');
+    logLine('(1 request per second to respect rate limits — will take ~' + locations.length + ' seconds)', 'log-info');
     geocodeNext(0);
 }
 </script>
-
-<!-- Google Maps JS API — same key already authorised on this domain -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&callback=initBackfill" async defer></script>
 
 <?php endif; ?>
 
