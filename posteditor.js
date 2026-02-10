@@ -658,6 +658,16 @@
         var body = document.createElement('div');
         body.className = 'posteditor-modal-body';
 
+        // Manage intro message (from database)
+        var introEl = document.createElement('p');
+        introEl.className = 'posteditor-manage-intro';
+        body.appendChild(introEl);
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_member_manage_intro', {}, false).then(function(msg) {
+                if (msg) introEl.textContent = msg;
+            });
+        }
+
         // --- Edit Accordion (collapsed by default) ---
         var editAccordionRow = document.createElement('div');
         editAccordionRow.className = 'posteditor-manage-edit-row';

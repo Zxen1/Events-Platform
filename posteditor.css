@@ -624,6 +624,13 @@
   border-radius: 5px;
 }
 
+.posteditor-manage-intro {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Hide empty checkout container in edit modal */
 .posteditor-modal-body .member-checkout-container:empty {
   display: none;
