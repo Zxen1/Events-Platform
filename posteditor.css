@@ -155,7 +155,7 @@
    ============================================================================ */
 
 .posteditor-item {
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   border-radius: 5px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   overflow: hidden; /* Clip status bar corners to border-radius */
