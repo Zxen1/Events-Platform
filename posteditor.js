@@ -674,7 +674,7 @@
 
         // "Edit" button (visible when collapsed)
         var editToggleBtn = document.createElement('button');
-        editToggleBtn.className = 'posteditor-manage-edit-toggle button-class-2';
+        editToggleBtn.className = 'posteditor-manage-edit-toggle button-class-2b';
         editToggleBtn.textContent = 'Edit';
         editAccordionRow.appendChild(editToggleBtn);
 
