@@ -147,7 +147,7 @@
 }
 
 .posteditor-status-bar--gray {
-  background: var(--gray-500, #6b7280);
+  background: var(--gray-500);
 }
 
 /* ============================================================================
@@ -178,7 +178,7 @@
 }
 
 .posteditor-item:has(.posteditor-status-bar--gray):hover {
-  box-shadow: inset 0 0 0 1px var(--gray-700);
+  box-shadow: inset 0 0 0 1px var(--gray-500);
 }
 
 /* Edit header (contains postcard + Save/Close buttons) - sticky when editing */
