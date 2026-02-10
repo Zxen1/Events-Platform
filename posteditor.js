@@ -119,8 +119,17 @@
 
         bar.classList.add(colorClass);
         statusSpan.textContent = status;
+
+        // Location fraction (active / paid)
+        var locSpan = document.createElement('span');
+        locSpan.className = 'posteditor-status-bar-locations';
+        var activeLocations = post.loc_qty || 1;
+        var paidLocations = post.loc_paid || 1;
+        locSpan.textContent = activeLocations + '/' + paidLocations;
+
         bar.appendChild(dateSpan);
         bar.appendChild(countdownSpan);
+        bar.appendChild(locSpan);
         bar.appendChild(statusSpan);
 
         return bar;
@@ -943,10 +952,10 @@
                             if (confirmed) {
                                 container.remove();
                                 renumberLocationContainersInAccordion(formContainer);
-                                // Update quantity display
+                                // Update quantity display as fraction (active / paid)
                                 var allContainers = formContainer.querySelectorAll('.member-location-container');
                                 var qtyDisplay = formContainer.querySelector('.member-postform-location-quantity-display');
-                                if (qtyDisplay) qtyDisplay.textContent = allContainers.length;
+                                if (qtyDisplay) qtyDisplay.textContent = allContainers.length + '/' + (post.loc_paid || 1);
                                 // Update delete button visibility
                                 if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
                                     FormbuilderModule.updateVenueDeleteButtons();
@@ -971,6 +980,14 @@
             
             // Renumber location containers and update headers
             renumberLocationContainersInAccordion(formContainer);
+
+            // Show location fraction in quantity display (edit mode only)
+            var qtyDisplay = formContainer.querySelector('.member-postform-location-quantity-display');
+            if (qtyDisplay) {
+                var activeCount = formContainer.querySelectorAll('.member-location-container').length;
+                var paidCount = post.loc_paid || 1;
+                qtyDisplay.textContent = activeCount + '/' + paidCount;
+            }
             
             // Activate first location container for wallpaper
             var firstLocContainer = formContainer.querySelector('.member-location-container');

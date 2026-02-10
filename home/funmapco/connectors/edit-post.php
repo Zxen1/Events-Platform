@@ -436,9 +436,11 @@ $mediaString = !empty($allMediaIds) ? implode(',', $allMediaIds) : null;
 
 // Note: checkout_key is NOT updated during edits - the post's plan was set at creation.
 // Editing only updates content fields, not the billing/plan information.
-$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, updated_at = NOW() WHERE id = ?");
+// loc_qty = actual current location count (goes up and down)
+// loc_paid = highest paid-for location count (only goes up, never down)
+$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, loc_paid = GREATEST(loc_paid, ?), updated_at = NOW() WHERE id = ?");
 if ($stmt) {
-  $stmt->bind_param('ii', $locQty, $postId);
+  $stmt->bind_param('iii', $locQty, $locQty, $postId);
   $stmt->execute();
   $stmt->close();
 }

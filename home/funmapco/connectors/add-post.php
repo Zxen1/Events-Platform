@@ -351,15 +351,15 @@ if (!empty($checkoutDays) && $checkoutDays > 0) {
 
 if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, moderation_status, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } elseif ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   );
 }
 
@@ -368,20 +368,20 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus && $hasModerationStatus) {
-  // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'ississsss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 10 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isiissssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
-  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isiisssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'isissss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutKey, $expiresAt)) {
+  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), checkoutKey(s), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isiissss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }

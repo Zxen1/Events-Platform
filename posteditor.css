@@ -126,8 +126,14 @@
   left: 200px;
 }
 
-.posteditor-status-bar-status {
+.posteditor-status-bar-locations {
   margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.posteditor-status-bar-status {
+  margin-left: 10px;
   flex-shrink: 0;
   font-weight: 600;
   letter-spacing: 0.5px;
