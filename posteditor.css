@@ -282,7 +282,42 @@
   position: relative;
 }
 
-/* Editing/managing frame removed — outer .posteditor-item border handles visual grouping */
+/* Expanded post frame in My Posts — color matches status bar */
+.posteditor-item:has(.posteditor-status-bar--green) .post::after {
+  border-left-color: var(--green-900);
+  border-right-color: var(--green-900);
+  border-bottom-color: var(--green-900);
+}
+.posteditor-item:has(.posteditor-status-bar--green) .post-header {
+  border-top-color: var(--green-900);
+}
+
+.posteditor-item:has(.posteditor-status-bar--yellow) .post::after {
+  border-left-color: var(--yellow-900);
+  border-right-color: var(--yellow-900);
+  border-bottom-color: var(--yellow-900);
+}
+.posteditor-item:has(.posteditor-status-bar--yellow) .post-header {
+  border-top-color: var(--yellow-900);
+}
+
+.posteditor-item:has(.posteditor-status-bar--red) .post::after {
+  border-left-color: var(--red-900);
+  border-right-color: var(--red-900);
+  border-bottom-color: var(--red-900);
+}
+.posteditor-item:has(.posteditor-status-bar--red) .post-header {
+  border-top-color: var(--red-900);
+}
+
+.posteditor-item:has(.posteditor-status-bar--gray) .post::after {
+  border-left-color: var(--gray-500);
+  border-right-color: var(--gray-500);
+  border-bottom-color: var(--gray-500);
+}
+.posteditor-item:has(.posteditor-status-bar--gray) .post-header {
+  border-top-color: var(--gray-500);
+}
 
 .posteditor-edit-accordion--hidden,
 .posteditor-manage-accordion--hidden {
