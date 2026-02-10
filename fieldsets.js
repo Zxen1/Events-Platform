@@ -5541,7 +5541,7 @@ const FieldsetBuilder = (function(){
                 sessPickerTicketBtn.appendChild(sessPLetter);
                 sessDatePickerRow.appendChild(sessPickerTicketBtn);
 
-                // Copy times and groups from first date to all other dates
+                // Copy filled times and groups from first date to all other dates
                 function sessCopyTimesFromMaster() {
                     var sortedDates = Object.keys(sessSessionData).sort();
                     if (sortedDates.length < 2) return;
@@ -5549,14 +5549,26 @@ const FieldsetBuilder = (function(){
                     var masterData = sessSessionData[masterDate];
                     if (!masterData || !masterData.times) return;
                     
+                    // Only copy filled time slots (skip empty ones)
+                    var filledTimes = [];
+                    var filledGroups = [];
+                    for (var f = 0; f < masterData.times.length; f++) {
+                        var t = String(masterData.times[f] || '').trim();
+                        if (t) {
+                            filledTimes.push(t);
+                            filledGroups.push(masterData.groups && masterData.groups[f] ? masterData.groups[f] : 'A');
+                        }
+                    }
+                    if (filledTimes.length === 0) return;
+                    
                     for (var i = 1; i < sortedDates.length; i++) {
                         var targetDate = sortedDates[i];
                         var targetData = sessSessionData[targetDate];
                         if (!targetData) continue;
                         
-                        targetData.times = masterData.times.map(function(t) { return t || ''; });
-                        targetData.edited = masterData.edited.map(function() { return false; });
-                        targetData.groups = masterData.groups ? masterData.groups.slice() : masterData.times.map(function() { return 'A'; });
+                        targetData.times = filledTimes.slice();
+                        targetData.edited = filledTimes.map(function() { return false; });
+                        targetData.groups = filledGroups.slice();
                         
                         sessSortTimesForDate(targetDate);
                     }
