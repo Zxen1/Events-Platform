@@ -716,13 +716,17 @@
         }
 
         // Collapse accordion (used as closeModalFn for renderEditForm)
-        // Collapse accordion (used as closeModalFn for renderEditForm)
         function collapseAccordion() {
             setAccordionExpanded(false);
             // Reset so the form reloads with fresh data on next expand
             // (discardEdits wipes editingPostsData, so the stale form would be broken)
             editFormLoaded = false;
             editAccordionContent.innerHTML = '';
+            // Clear popover flag so it re-attaches with fresh closure on next expand
+            try { editTopSaveBtn._popoverAttached = false; } catch (e) {}
+            // Remove stale popover element from the accordion row
+            var stalePopover = editAccordionRow.querySelector('.posteditor-popover');
+            if (stalePopover) stalePopover.remove();
         }
 
         editToggleBtn.addEventListener('click', function() {
