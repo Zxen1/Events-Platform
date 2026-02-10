@@ -907,11 +907,41 @@
                 },
                 setupHeaderRenaming: true,
                 onDelete: function(container, locationNumber) {
-                    // Remove the location container from the DOM
-                    if (container && container.parentNode) {
-                        container.parentNode.removeChild(container);
+                    var headerText = container.querySelector('.member-postform-location-header-text');
+                    var venueName = headerText ? headerText.textContent.trim() : ('Location ' + locationNumber);
+                    var deletedNum = parseInt(container.dataset.locationNumber || '0', 10);
+                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete ' + venueName,
+                            messageText: 'This cannot be undone.',
+                            confirmLabel: 'Delete',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                container.remove();
+                                renumberLocationContainersInAccordion(formContainer);
+                                // Update quantity display
+                                var allContainers = formContainer.querySelectorAll('.member-location-container');
+                                var qtyDisplay = formContainer.querySelector('.member-postform-location-quantity-display');
+                                if (qtyDisplay) qtyDisplay.textContent = allContainers.length;
+                                // Update delete button visibility
+                                if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
+                                    FormbuilderModule.updateVenueDeleteButtons();
+                                }
+                            }
+                        });
                     }
-                    renumberLocationContainersInAccordion(formContainer);
+                },
+                onActivate: function(container, locationNumber) {
+                    var parent = container.parentNode;
+                    if (parent) {
+                        parent.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                            c.removeAttribute('data-active');
+                        });
+                    }
+                    container.setAttribute('data-active', 'true');
                 }
             });
             
