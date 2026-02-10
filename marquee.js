@@ -347,8 +347,24 @@ const MarqueeModule = (function() {
     let title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
     if (title === 'Array') title = 'Post #' + post.id;
     const venueName = (mapCard && mapCard.venue_name) || '';
+    const suburb = (mapCard && mapCard.suburb) || '';
     const city = (mapCard && mapCard.city) || '';
-    const locationDisplay = venueName || city || post.location || post.venue || '';
+    const state = (mapCard && mapCard.state) || '';
+    const countryName = (mapCard && mapCard.country_name) || '';
+    const locationType = (mapCard && mapCard.location_type) || '';
+    let locationDisplay = '';
+    if (locationType === 'venue') {
+      // Venue: "Venue Name, Suburb"
+      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
+    } else if (locationType === 'city') {
+      // City: "City, State" (fallback to Country)
+      const citySecond = state || countryName || '';
+      locationDisplay = (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
+    } else {
+      // Address: "Suburb, State" (fallback to Country)
+      const addrSecond = state || countryName || '';
+      locationDisplay = (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || city || '');
+    }
 
     // Get subcategory info
     var displayName = post.subcategory_name || '';

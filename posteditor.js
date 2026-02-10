@@ -1393,28 +1393,34 @@
                         val = {
                             venue_name: mapCard.venue_name,
                             address_line: mapCard.address_line,
+                            suburb: mapCard.suburb,
                             city: mapCard.city,
+                            country_name: mapCard.country_name,
+                            country_code: mapCard.country_code,
                             latitude: mapCard.latitude,
-                            longitude: mapCard.longitude,
-                            country_code: mapCard.country_code
+                            longitude: mapCard.longitude
                         };
                         break;
                     case 'city':
                         val = {
+                            suburb: mapCard.suburb,
                             city: mapCard.city,
+                            country_name: mapCard.country_name,
+                            country_code: mapCard.country_code,
                             latitude: mapCard.latitude,
-                            longitude: mapCard.longitude,
-                            country_code: mapCard.country_code
+                            longitude: mapCard.longitude
                         };
                         break;
                     case 'address':
                     case 'location':
                         val = {
                             address_line: mapCard.address_line,
+                            suburb: mapCard.suburb,
                             city: mapCard.city,
+                            country_name: mapCard.country_name,
+                            country_code: mapCard.country_code,
                             latitude: mapCard.latitude,
-                            longitude: mapCard.longitude,
-                            country_code: mapCard.country_code
+                            longitude: mapCard.longitude
                         };
                         break;
                     case 'public-email': val = mapCard.public_email; break;

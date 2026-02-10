@@ -1,14 +1,15 @@
 <?php
 /**
- * Backfill city (and country_code) for post_map_cards using OpenStreetMap Nominatim.
+ * Backfill suburb, state, and postcode for ALL post_map_cards using OpenStreetMap Nominatim.
  *
  * Usage: Visit this page in your browser at funmap.com/Agent/backfill-city-data.php
  *
  * This script:
- *   1. PHP queries the DB for post_map_cards where city is NULL or empty
+ *   1. PHP queries the DB for ALL post_map_cards with valid lat/lng
  *   2. Groups by unique lat/lng to minimise API calls
  *   3. Renders an HTML page that uses Nominatim (free, no API key needed)
- *   4. Displays SQL UPDATE statements for you to copy and execute
+ *   4. Extracts suburb (falling back to city name for towns — no NULLs), state, postcode
+ *   5. Displays SQL UPDATE statements for you to copy and execute
  *
  * Delete this file after use.
  */
@@ -43,11 +44,13 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     die("ERROR: Database connection not available after loading config.");
 }
 
-// ── Query post_map_cards with missing city ────────────────────────────────────
+// ── Query ALL post_map_cards that need suburb, state, or postcode ────────────
 
-$sql = "SELECT id, latitude, longitude, city, country_code
+$sql = "SELECT id, latitude, longitude, city, suburb, state, postcode
         FROM post_map_cards
-        WHERE (city IS NULL OR city = '')
+        WHERE ((suburb IS NULL OR suburb = '')
+            OR (state IS NULL OR state = '')
+            OR (postcode IS NULL OR postcode = ''))
           AND latitude != 0
           AND longitude != 0
         ORDER BY id ASC";
@@ -72,14 +75,14 @@ foreach ($rows as $row) {
         $uniqueLocations[$key] = [
             'lat' => (float)$row['latitude'],
             'lng' => (float)$row['longitude'],
+            'city' => $row['city'] ?: '',
+            'existingSuburb' => $row['suburb'] ?: '',
+            'existingState' => $row['state'] ?: '',
+            'existingPostcode' => $row['postcode'] ?: '',
             'ids' => [],
-            'ids_missing_country' => [],
         ];
     }
     $uniqueLocations[$key]['ids'][] = (int)$row['id'];
-    if (empty($row['country_code'])) {
-        $uniqueLocations[$key]['ids_missing_country'][] = (int)$row['id'];
-    }
 }
 
 $locationsJson = json_encode(array_values($uniqueLocations));
@@ -93,17 +96,18 @@ $mysqli->close();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Backfill City Data</title>
+<title>Backfill Suburb Data</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 30px; line-height: 1.6; }
     h1 { color: #fff; margin-bottom: 10px; font-size: 18px; }
     h2 { color: #fff; margin-bottom: 8px; font-size: 15px; }
     .summary { color: #aaa; margin-bottom: 20px; }
-    #log { background: #0f0f23; border: 1px solid #333; border-radius: 6px; padding: 16px; margin-bottom: 20px; max-height: 400px; overflow-y: auto; font-size: 13px; }
+    #log { background: #0f0f23; border: 1px solid #333; border-radius: 6px; padding: 16px; margin-bottom: 20px; max-height: 500px; overflow-y: auto; font-size: 13px; }
     .log-ok { color: #6bcf6b; }
     .log-err { color: #ff6b6b; }
     .log-info { color: #6bb3ff; }
+    .log-warn { color: #f0c040; }
     #sql-output { background: #0f0f23; border: 1px solid #333; border-radius: 6px; padding: 16px; font-size: 13px; white-space: pre-wrap; word-break: break-all; max-height: 600px; overflow-y: auto; }
     .btn { display: inline-block; margin-top: 12px; padding: 8px 20px; background: #2a5298; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 13px; }
     .btn:hover { background: #3a6ab8; }
@@ -112,15 +116,16 @@ $mysqli->close();
 </head>
 <body>
 
-<h1>Backfill City Data &mdash; post_map_cards</h1>
+<h1>Backfill Suburb / State / Postcode &mdash; post_map_cards</h1>
 
 <?php if ($totalRows === 0): ?>
-<p class="summary">All post_map_cards already have city data. Nothing to do.</p>
+<p class="summary">All post_map_cards already have suburb, state, and postcode data. Nothing to do.</p>
 <?php else: ?>
 
 <p class="summary">
-    Found <strong><?= $totalRows ?></strong> post_map_cards with missing city data.<br>
-    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode via OpenStreetMap Nominatim.
+    Found <strong><?= $totalRows ?></strong> post_map_cards needing suburb/state/postcode data.<br>
+    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode via Nominatim.<br>
+    Estimated time: ~<?= $totalUnique ?> seconds (1 request per second).
 </p>
 
 <div id="progress">Starting...</div>
@@ -151,14 +156,33 @@ function escapeSQL(str) {
     return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-function extractCity(address) {
-    // Nominatim returns city under various keys depending on the location
-    return address.city
-        || address.town
-        || address.village
-        || address.municipality
-        || address.county
-        || '';
+function extractSuburb(address, fallbackCity) {
+    // Try suburb-level fields first (most specific)
+    var suburb = address.suburb
+              || address.neighbourhood
+              || address.quarter
+              || address.city_district
+              || '';
+
+    // If no suburb found, fall back to city/town (no NULLs allowed)
+    if (!suburb) {
+        suburb = address.city
+              || address.town
+              || address.village
+              || address.municipality
+              || fallbackCity
+              || '';
+    }
+
+    return suburb;
+}
+
+function extractState(address) {
+    return address.state || address.province || address.region || '';
+}
+
+function extractPostcode(address) {
+    return address.postcode || address.postal_code || '';
 }
 
 function geocodeNext(index) {
@@ -180,23 +204,30 @@ function geocodeNext(index) {
     .then(function(resp) { return resp.json(); })
     .then(function(data) {
         if (data && data.address) {
-            var city = extractCity(data.address);
-            var countryCode = (data.address.country_code || '').toUpperCase();
+            var suburb = extractSuburb(data.address, loc.city);
+            var state = extractState(data.address);
+            var postcode = extractPostcode(data.address);
+            var idList = loc.ids.join(',');
 
-            if (city) {
-                var idList = loc.ids.join(',');
-                sqlStatements.push("UPDATE `post_map_cards` SET `city` = '" + escapeSQL(city) + "' WHERE `id` IN (" + idList + ");");
-
-                if (countryCode && loc.ids_missing_country.length > 0) {
-                    var ccIdList = loc.ids_missing_country.join(',');
-                    sqlStatements.push("UPDATE `post_map_cards` SET `country_code` = '" + escapeSQL(countryCode) + "' WHERE `id` IN (" + ccIdList + ");");
-                }
-
-                logLine(loc.lat + ', ' + loc.lng + '  =>  city: ' + city + (countryCode ? ', country: ' + countryCode : '') + '  (IDs: ' + idList + ')', 'log-ok');
-            } else {
-                errors.push('Could not extract city for ' + loc.lat + ',' + loc.lng);
-                logLine('Could not extract city for ' + loc.lat + ', ' + loc.lng + ' — raw: ' + JSON.stringify(data.address), 'log-err');
+            // Build SET clauses only for fields that need filling
+            var setClauses = [];
+            if (!loc.existingSuburb && suburb) {
+                setClauses.push("`suburb` = '" + escapeSQL(suburb) + "'");
             }
+            if (!loc.existingState && state) {
+                setClauses.push("`state` = '" + escapeSQL(state) + "'");
+            }
+            if (!loc.existingPostcode && postcode) {
+                setClauses.push("`postcode` = '" + escapeSQL(postcode) + "'");
+            }
+
+            if (setClauses.length > 0) {
+                sqlStatements.push("UPDATE `post_map_cards` SET " + setClauses.join(', ') + " WHERE `id` IN (" + idList + ");");
+            }
+
+            var isTown = (suburb === (data.address.city || data.address.town || data.address.village || ''));
+            var tag = isTown ? ' (town)' : '';
+            logLine(loc.lat + ', ' + loc.lng + '  =>  suburb: ' + (suburb || '—') + tag + ', state: ' + (state || '—') + ', postcode: ' + (postcode || '—') + '  (IDs: ' + idList + ')', 'log-ok');
         } else {
             var errMsg = data && data.error ? data.error : 'unknown error';
             errors.push('Nominatim error for ' + loc.lat + ',' + loc.lng + ': ' + errMsg);
@@ -245,8 +276,9 @@ if (locations.length === 0) {
     progressEl.textContent = 'Nothing to process.';
     sqlEl.textContent = 'No SQL generated.';
 } else {
-    logLine('Starting geocode for ' + locations.length + ' unique locations via Nominatim...', 'log-info');
-    logLine('(1 request per second to respect rate limits — will take ~' + locations.length + ' seconds)', 'log-info');
+    logLine('Starting suburb/state/postcode geocode for ' + locations.length + ' unique locations via Nominatim...', 'log-info');
+    logLine('(1 request per second — estimated ~' + locations.length + ' seconds)', 'log-info');
+    logLine('', '');
     geocodeNext(0);
 }
 </script>

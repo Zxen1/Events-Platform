@@ -487,7 +487,20 @@ const MapModule = (function() {
     const maxWidth = isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL;
     
     const venueName = post.venue || '';
+    const suburb = post.suburb || '';
     const cityName = post.city || '';
+    const state = post.state || '';
+    const countryName = post.country_name || '';
+    
+    // Big map card bottom line: always "Suburb, State" (fallback to Country)
+    const bottomSecond = state || countryName || '';
+    const bottomFirst = suburb || cityName || '';
+    let cityLine = '';
+    if (bottomFirst && bottomSecond) {
+      cityLine = bottomFirst + ', ' + bottomSecond;
+    } else {
+      cityLine = bottomFirst || bottomSecond || '';
+    }
     
     // For big cards: if venue exists, title gets 1 line; if no venue, title gets 2 lines
     const titleMaxLines = (isActive && venueName) ? 1 : 2;
@@ -496,13 +509,13 @@ const MapModule = (function() {
     while (titleLines.length < 2) titleLines.push('');
     
     const venueLine = venueName ? shortenText(venueName, maxWidth) : '';
-    const cityLine = cityName ? shortenText(cityName, maxWidth) : '';
+    const cityLineShort = cityLine ? shortenText(cityLine, maxWidth) : '';
     
     return {
       line1: titleLines[0] || '',
       line2: titleLines[1] || '',
       venueLine,
-      cityLine
+      cityLine: cityLineShort
     };
   }
 

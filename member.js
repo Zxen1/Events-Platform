@@ -4018,15 +4018,23 @@ const MemberModule = (function() {
                     var lng = el.querySelector('input.fieldset-lng');
                     var cc = el.querySelector('input.fieldset-country');
                     var addrCity = el.querySelector('input.fieldset-city');
+                    var addrSuburb = el.querySelector('input.fieldset-suburb');
+                    var addrCN = el.querySelector('input.fieldset-country-name');
+                    var addrState = el.querySelector('input.fieldset-state');
+                    var addrPC = el.querySelector('input.fieldset-postcode');
                     return {
                         address_line: addr ? String(addr.value || '').trim() : '',
+                        suburb: addrSuburb ? String(addrSuburb.value || '').trim() : '',
                         city: addrCity ? String(addrCity.value || '').trim() : '',
+                        state: addrState ? String(addrState.value || '').trim() : '',
+                        postcode: addrPC ? String(addrPC.value || '').trim() : '',
+                        country_name: addrCN ? String(addrCN.value || '').trim() : '',
+                        country_code: cc ? String(cc.value || '').trim() : '',
                         latitude: lat ? String(lat.value || '').trim() : '',
-                        longitude: lng ? String(lng.value || '').trim() : '',
-                        country_code: cc ? String(cc.value || '').trim() : ''
+                        longitude: lng ? String(lng.value || '').trim() : ''
                     };
                 } catch (e1) {
-                    return { address_line: '', city: '', latitude: '', longitude: '', country_code: '' };
+                    return { address_line: '', suburb: '', city: '', state: '', postcode: '', country_name: '', country_code: '', latitude: '', longitude: '' };
                 }
 
             case 'city':
@@ -4035,14 +4043,22 @@ const MemberModule = (function() {
                     var cityLat = el.querySelector('input.fieldset-lat');
                     var cityLng = el.querySelector('input.fieldset-lng');
                     var cityCc = el.querySelector('input.fieldset-country');
+                    var citySub = el.querySelector('input.fieldset-suburb');
+                    var cityCN = el.querySelector('input.fieldset-country-name');
+                    var citySt = el.querySelector('input.fieldset-state');
+                    var cityPC = el.querySelector('input.fieldset-postcode');
                     return {
+                        suburb: citySub ? String(citySub.value || '').trim() : '',
                         city: cityIn ? String(cityIn.value || '').trim() : '',
+                        state: citySt ? String(citySt.value || '').trim() : '',
+                        postcode: cityPC ? String(cityPC.value || '').trim() : '',
+                        country_name: cityCN ? String(cityCN.value || '').trim() : '',
+                        country_code: cityCc ? String(cityCc.value || '').trim() : '',
                         latitude: cityLat ? String(cityLat.value || '').trim() : '',
-                        longitude: cityLng ? String(cityLng.value || '').trim() : '',
-                        country_code: cityCc ? String(cityCc.value || '').trim() : ''
+                        longitude: cityLng ? String(cityLng.value || '').trim() : ''
                     };
                 } catch (e1c) {
-                    return { city: '', latitude: '', longitude: '', country_code: '' };
+                    return { suburb: '', city: '', state: '', postcode: '', country_name: '', country_code: '', latitude: '', longitude: '' };
                 }
 
             case 'venue':
@@ -4054,16 +4070,24 @@ const MemberModule = (function() {
                     var vLng = el.querySelector('input.fieldset-lng');
                     var vCc = el.querySelector('input.fieldset-country');
                     var vCity = el.querySelector('input.fieldset-city');
+                    var vSuburb = el.querySelector('input.fieldset-suburb');
+                    var vCN = el.querySelector('input.fieldset-country-name');
+                    var vState = el.querySelector('input.fieldset-state');
+                    var vPC = el.querySelector('input.fieldset-postcode');
                     return {
                         venue_name: venueName,
                         address_line: venueAddr,
+                        suburb: vSuburb ? String(vSuburb.value || '').trim() : '',
                         city: vCity ? String(vCity.value || '').trim() : '',
+                        state: vState ? String(vState.value || '').trim() : '',
+                        postcode: vPC ? String(vPC.value || '').trim() : '',
+                        country_name: vCN ? String(vCN.value || '').trim() : '',
+                        country_code: vCc ? String(vCc.value || '').trim() : '',
                         latitude: vLat ? String(vLat.value || '').trim() : '',
-                        longitude: vLng ? String(vLng.value || '').trim() : '',
-                        country_code: vCc ? String(vCc.value || '').trim() : ''
+                        longitude: vLng ? String(vLng.value || '').trim() : ''
                     };
                 } catch (e2) {
-                    return { venue_name: '', address_line: '', city: '', latitude: '', longitude: '', country_code: '' };
+                    return { venue_name: '', address_line: '', suburb: '', city: '', state: '', postcode: '', country_name: '', country_code: '', latitude: '', longitude: '' };
                 }
 
                 case 'session_pricing':

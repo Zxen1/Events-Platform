@@ -1308,8 +1308,24 @@ const PostModule = (function() {
     var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
     if (title === 'Array') title = 'Post #' + post.id;
     var venueName = (mapCard && mapCard.venue_name) || '';
+    var suburb = (mapCard && mapCard.suburb) || '';
     var city = (mapCard && mapCard.city) || '';
-    var locationDisplay = venueName || city || '';
+    var state = (mapCard && mapCard.state) || '';
+    var countryName = (mapCard && mapCard.country_name) || '';
+    var locationType = (mapCard && mapCard.location_type) || '';
+    var locationDisplay = '';
+    if (locationType === 'venue') {
+      // Venue posts: "Venue Name, Suburb"
+      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
+    } else if (locationType === 'city') {
+      // City posts: "City, State" (fallback to Country)
+      var citySecond = state || countryName || '';
+      locationDisplay = (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
+    } else {
+      // Address posts: "Suburb, State" (fallback to Country)
+      var addrSecond = state || countryName || '';
+      locationDisplay = (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || city || '');
+    }
 
     // Get subcategory info
     var displayName = post.subcategory_name || '';
@@ -1631,7 +1647,10 @@ const PostModule = (function() {
       map_card_index: mapCardIndex,
       title: title,
       venue: venueName,
+      suburb: mapCard.suburb || '',
       city: mapCard.city || '',
+      state: mapCard.state || '',
+      country_name: mapCard.country_name || '',
       sub: subcategoryKey,
       iconUrl: iconUrl,
       thumbnailUrl: thumbnailUrl,
@@ -2836,8 +2855,21 @@ const PostModule = (function() {
       ? '<img class="post-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
     
-    // Location display
-    var locationDisplay = venueName || city || '';
+    // Location display (expanded post header — same rules as postcards)
+    var locType = (activeLoc && activeLoc.location_type) || '';
+    var suburb = (activeLoc && activeLoc.suburb) || '';
+    var state = (activeLoc && activeLoc.state) || '';
+    var countryName = (activeLoc && activeLoc.country_name) || '';
+    var locationDisplay = '';
+    if (locType === 'venue') {
+      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
+    } else if (locType === 'city') {
+      var citySecond = state || countryName || '';
+      locationDisplay = (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
+    } else {
+      var addrSecond = state || countryName || '';
+      locationDisplay = (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || city || '');
+    }
     
     // Icon HTML for info section (subcategory icon)
     var infoIconHtml = iconUrl
