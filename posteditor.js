@@ -905,7 +905,14 @@
                 getMessage: function(key, params, fallback) {
                     return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
                 },
-                setupHeaderRenaming: true
+                setupHeaderRenaming: true,
+                onDelete: function(container, locationNumber) {
+                    // Remove the location container from the DOM
+                    if (container && container.parentNode) {
+                        container.parentNode.removeChild(container);
+                    }
+                    renumberLocationContainersInAccordion(formContainer);
+                }
             });
             
             // Populate with post data
@@ -913,6 +920,12 @@
             
             // Renumber location containers and update headers
             renumberLocationContainersInAccordion(formContainer);
+            
+            // Activate first location container for wallpaper
+            var firstLocContainer = formContainer.querySelector('.member-location-container');
+            if (firstLocContainer) {
+                firstLocContainer.setAttribute('data-active', 'true');
+            }
             
             // Store initial extracted fields for dirty checking (must happen after populate)
             editingPostsData[post.id].original_extracted_fields = collectFormData(formContainer, post);
