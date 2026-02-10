@@ -51,7 +51,7 @@
      * Shows countdown (or expired date) on the left, status word on the right.
      * Color: green (7+ days), yellow (3-7 days), red (<3 days), gray (not visible).
      * @param {Object} post - Post object with visibility, expires_at, deleted_at
-     * @returns {{ element: HTMLElement, colorKey: string }} Status bar div and color key
+     * @returns {HTMLElement} Status bar div
      */
     function buildStatusBar(post) {
         var bar = document.createElement('div');
@@ -123,9 +123,7 @@
         bar.appendChild(countdownSpan);
         bar.appendChild(statusSpan);
 
-        // Extract color key (green/yellow/red/gray) from class name
-        var colorKey = colorClass.replace('posteditor-status-bar--', '');
-        return { element: bar, colorKey: colorKey };
+        return bar;
     }
 
     /**
@@ -528,9 +526,8 @@
         }
 
         // Status bar above the post card
-        var statusResult = buildStatusBar(post);
-        postContainer.appendChild(statusResult.element);
-        postContainer.classList.add('posteditor-item--' + statusResult.colorKey);
+        var statusBar = buildStatusBar(post);
+        postContainer.appendChild(statusBar);
 
         editHeader.appendChild(cardEl);
         postContainer.appendChild(editHeader);
@@ -654,8 +651,8 @@
         header.appendChild(closeBtn);
 
         // Status bar above the header, inside the modal container
-        var modalStatusResult = buildStatusBar(post);
-        modalContainer.appendChild(modalStatusResult.element);
+        var modalStatusBar = buildStatusBar(post);
+        modalContainer.appendChild(modalStatusBar);
 
         modalContainer.appendChild(header);
         var body = document.createElement('div');

@@ -155,7 +155,7 @@
    ============================================================================ */
 
 .posteditor-item {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid transparent;
   border-radius: 5px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   overflow: hidden; /* Clip status bar corners to border-radius */
@@ -165,20 +165,20 @@
   margin-bottom: 0;
 }
 
-/* Border color matches status bar color */
-.posteditor-item--green {
+/* Hover border color matches status bar color */
+.posteditor-item:has(.posteditor-status-bar--green):hover {
   border-color: var(--green-900);
 }
 
-.posteditor-item--yellow {
+.posteditor-item:has(.posteditor-status-bar--yellow):hover {
   border-color: var(--yellow-900);
 }
 
-.posteditor-item--red {
+.posteditor-item:has(.posteditor-status-bar--red):hover {
   border-color: var(--red-900);
 }
 
-.posteditor-item--gray {
+.posteditor-item:has(.posteditor-status-bar--gray):hover {
   border-color: var(--gray-700);
 }
 
@@ -235,9 +235,9 @@
   background-color: transparent;
 }
 
-/* Hover state - subtle highlight within the color-coded border */
+/* Hover state - disabled on individual card, handled by .posteditor-item:hover */
 .posteditor-item .post-card:hover {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  box-shadow: none;
 }
 
 /* Expanded post inside My Posts - same margin as card */
