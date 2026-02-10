@@ -235,14 +235,27 @@
   background-color: transparent;
 }
 
-/* Hover state - identical to post panel */
+/* Hover state - subtle highlight within the color-coded border */
 .posteditor-item .post-card:hover {
-  box-shadow: inset 0 0 0 1px var(--blue-500);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 /* Expanded post inside My Posts - same margin as card */
 .posteditor-item .post {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+}
+
+/* Override blue borders on expanded post within My Posts — outer item border handles grouping */
+.posteditor-item .post::after {
+  border-color: transparent;
+}
+
+.posteditor-item .post-header {
+  border-top-color: transparent;
+}
+
+.posteditor-item .post-card.post-card--map-highlight {
+  box-shadow: none;
 }
 
 /* ============================================================================
@@ -282,25 +295,7 @@
   position: relative;
 }
 
-.posteditor-item--editing::after,
-.posteditor-item--managing::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* 3-sided frame: lid is owned by the sticky header so it doesn't scroll away */
-  border-left: 1px solid var(--blue-500);
-  border-right: 1px solid var(--blue-500);
-  border-bottom: 1px solid var(--blue-500);
-  border-top: 0;
-  box-sizing: border-box;
-  pointer-events: none;
-  z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
-}
-
-.posteditor-item--editing .post-card,
-.posteditor-item--managing .post-card {
-  border-top: 1px solid var(--blue-500);
-}
+/* Editing/managing frame removed — outer .posteditor-item border handles visual grouping */
 
 .posteditor-edit-accordion--hidden,
 .posteditor-manage-accordion--hidden {
