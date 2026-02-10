@@ -725,6 +725,7 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'venue' && is_array($val)) {
       $card['venue_name'] = isset($val['venue_name']) ? trim((string)$val['venue_name']) : null;
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : null;
+      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : null;
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : null;
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : null;
       $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
@@ -732,18 +733,23 @@ foreach ($byLoc as $locNum => $entries) {
       $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : null;
       continue;
     }
-    if (($baseType === 'address' || $baseType === 'city') && is_array($val)) {
-      $addrVal = isset($val['address_line']) ? trim((string)$val['address_line']) : '';
+    if ($baseType === 'address' && is_array($val)) {
+      $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : $card['address_line'];
+      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
       $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
       $cc = preg_replace('/[^A-Z]/', '', $cc);
       $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
-      if ($baseType === 'city') {
-        $card['city'] = $addrVal !== '' ? $addrVal : $card['city'];
-      } else {
-        $card['address_line'] = $addrVal !== '' ? $addrVal : $card['address_line'];
-      }
+      continue;
+    }
+    if ($baseType === 'city' && is_array($val)) {
+      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
+      $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
+      $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
+      $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
+      $cc = preg_replace('/[^A-Z]/', '', $cc);
+      $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
       continue;
     }
   }

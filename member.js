@@ -4012,20 +4012,37 @@ const MemberModule = (function() {
                 }
 
             case 'address':
-            case 'city':
                 try {
                     var addr = el.querySelector('input.fieldset-input');
                     var lat = el.querySelector('input.fieldset-lat');
                     var lng = el.querySelector('input.fieldset-lng');
                     var cc = el.querySelector('input.fieldset-country');
+                    var addrCity = el.querySelector('input.fieldset-city');
                     return {
                         address_line: addr ? String(addr.value || '').trim() : '',
+                        city: addrCity ? String(addrCity.value || '').trim() : '',
                         latitude: lat ? String(lat.value || '').trim() : '',
                         longitude: lng ? String(lng.value || '').trim() : '',
                         country_code: cc ? String(cc.value || '').trim() : ''
                     };
                 } catch (e1) {
-                    return { address_line: '', latitude: '', longitude: '', country_code: '' };
+                    return { address_line: '', city: '', latitude: '', longitude: '', country_code: '' };
+                }
+
+            case 'city':
+                try {
+                    var cityIn = el.querySelector('input.fieldset-input');
+                    var cityLat = el.querySelector('input.fieldset-lat');
+                    var cityLng = el.querySelector('input.fieldset-lng');
+                    var cityCc = el.querySelector('input.fieldset-country');
+                    return {
+                        city: cityIn ? String(cityIn.value || '').trim() : '',
+                        latitude: cityLat ? String(cityLat.value || '').trim() : '',
+                        longitude: cityLng ? String(cityLng.value || '').trim() : '',
+                        country_code: cityCc ? String(cityCc.value || '').trim() : ''
+                    };
+                } catch (e1c) {
+                    return { city: '', latitude: '', longitude: '', country_code: '' };
                 }
 
             case 'venue':
@@ -4036,15 +4053,17 @@ const MemberModule = (function() {
                     var vLat = el.querySelector('input.fieldset-lat');
                     var vLng = el.querySelector('input.fieldset-lng');
                     var vCc = el.querySelector('input.fieldset-country');
+                    var vCity = el.querySelector('input.fieldset-city');
                     return {
                         venue_name: venueName,
                         address_line: venueAddr,
+                        city: vCity ? String(vCity.value || '').trim() : '',
                         latitude: vLat ? String(vLat.value || '').trim() : '',
                         longitude: vLng ? String(vLng.value || '').trim() : '',
                         country_code: vCc ? String(vCc.value || '').trim() : ''
                     };
                 } catch (e2) {
-                    return { venue_name: '', address_line: '', latitude: '', longitude: '', country_code: '' };
+                    return { venue_name: '', address_line: '', city: '', latitude: '', longitude: '', country_code: '' };
                 }
 
                 case 'session_pricing':

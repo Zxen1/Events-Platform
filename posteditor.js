@@ -1393,16 +1393,25 @@
                         val = {
                             venue_name: mapCard.venue_name,
                             address_line: mapCard.address_line,
+                            city: mapCard.city,
+                            latitude: mapCard.latitude,
+                            longitude: mapCard.longitude,
+                            country_code: mapCard.country_code
+                        };
+                        break;
+                    case 'city':
+                        val = {
+                            city: mapCard.city,
                             latitude: mapCard.latitude,
                             longitude: mapCard.longitude,
                             country_code: mapCard.country_code
                         };
                         break;
                     case 'address':
-                    case 'city':
                     case 'location':
                         val = {
                             address_line: mapCard.address_line,
+                            city: mapCard.city,
                             latitude: mapCard.latitude,
                             longitude: mapCard.longitude,
                             country_code: mapCard.country_code

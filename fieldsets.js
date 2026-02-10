@@ -177,7 +177,7 @@ const FieldsetBuilder = (function(){
     // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
     // type: 'address' | 'establishment' | '(cities)'
     // countryInput: hidden <input> to receive 2-letter country code (e.g. "AU")
-    function initGooglePlaces(inputElement, type, latInput, lngInput, countryInput, statusElement) {
+    function initGooglePlaces(inputElement, type, latInput, lngInput, countryInput, statusElement, cityInput) {
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
             console.warn('Google Places API not loaded');
             if (statusElement) {
@@ -243,6 +243,34 @@ const FieldsetBuilder = (function(){
                     var raw = (c.shortText || c.short_name || c.short || c.longText || c.long_name || '');
                     var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
                     if (code.length === 2) return code;
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        function extractCity(place) {
+            // Extract city from addressComponents (locality or administrative_area_level_3)
+            try {
+                var comps = place && place.addressComponents ? place.addressComponents : null;
+                if (!Array.isArray(comps)) return '';
+                for (var i = 0; i < comps.length; i++) {
+                    var c = comps[i];
+                    if (!c) continue;
+                    var types = c.types;
+                    if (!Array.isArray(types)) continue;
+                    if (types.indexOf('locality') !== -1) {
+                        return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                    }
+                }
+                // Fallback to administrative_area_level_3 (smaller municipalities)
+                for (var j = 0; j < comps.length; j++) {
+                    var c2 = comps[j];
+                    if (!c2) continue;
+                    var types2 = c2.types;
+                    if (!Array.isArray(types2)) continue;
+                    if (types2.indexOf('administrative_area_level_3') !== -1) {
+                        return String(c2.longText || c2.long_name || c2.shortText || c2.short_name || '').trim();
+                    }
                 }
             } catch (e) {}
             return '';
@@ -316,6 +344,7 @@ const FieldsetBuilder = (function(){
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
                                 if (countryInput) countryInput.value = cc;
+                                if (cityInput) cityInput.value = extractCity(place);
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
                                 // Dispatch change event (not input) to avoid triggering the input handler
                                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e5) {}
@@ -1480,15 +1509,19 @@ const FieldsetBuilder = (function(){
                 var addrCountryInput = document.createElement('input');
                 addrCountryInput.type = 'hidden';
                 addrCountryInput.className = 'fieldset-country';
+                var addrCityInput = document.createElement('input');
+                addrCityInput.type = 'hidden';
+                addrCityInput.className = 'fieldset-city';
                 fieldset.appendChild(addrLatInput);
                 fieldset.appendChild(addrLngInput);
                 fieldset.appendChild(addrCountryInput);
+                fieldset.appendChild(addrCityInput);
                 // Status indicator
                 var addrStatus = document.createElement('div');
                 addrStatus.className = 'fieldset-location-status';
                 fieldset.appendChild(addrStatus);
                 // Init Google Places
-                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
+                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus, addrCityInput);
 
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
@@ -1501,6 +1534,7 @@ const FieldsetBuilder = (function(){
                     if (addrLatInput) addrLatInput.value = val.latitude || '';
                     if (addrLngInput) addrLngInput.value = val.longitude || '';
                     if (addrCountryInput) addrCountryInput.value = val.country_code || '';
+                    if (addrCityInput) addrCityInput.value = val.city || '';
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
                 break;
@@ -1538,7 +1572,7 @@ const FieldsetBuilder = (function(){
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
                     if (cityInputEl) {
-                        cityInputEl.value = val.address_line || '';
+                        cityInputEl.value = val.city || '';
                         if (val.latitude && val.longitude) {
                             cityInputEl.dataset.placesConfirmed = 'true';
                         }
@@ -6102,6 +6136,9 @@ const FieldsetBuilder = (function(){
                 var smartCountryInput = document.createElement('input');
                 smartCountryInput.type = 'hidden';
                 smartCountryInput.className = 'fieldset-country';
+                var smartCityInput = document.createElement('input');
+                smartCityInput.type = 'hidden';
+                smartCityInput.className = 'fieldset-city';
                 
                 // Venue name row
                 var smartVenueSub = document.createElement('div');
@@ -6152,6 +6189,7 @@ const FieldsetBuilder = (function(){
                     smartLatInput.value = val.latitude || '';
                     smartLngInput.value = val.longitude || '';
                     smartCountryInput.value = val.country_code || '';
+                    smartCityInput.value = val.city || '';
                     
                     // Mark as confirmed if we have coordinates
                     if (val.latitude && val.longitude) {
@@ -6187,6 +6225,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(smartLatInput);
                 fieldset.appendChild(smartLngInput);
                 fieldset.appendChild(smartCountryInput);
+                fieldset.appendChild(smartCityInput);
                 
                 // Smart autofill function - only fills empty boxes - Uses new API
                 function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
@@ -6286,6 +6325,9 @@ const FieldsetBuilder = (function(){
                                             }
                                             smartCountryInput.value = cc;
                                         } catch (eCC) {}
+                                        
+                                        // Extract city from address components
+                                        smartCityInput.value = extractCity(place);
                                         
                                         if (isVenueBox) {
                                             // User searched in venue box
