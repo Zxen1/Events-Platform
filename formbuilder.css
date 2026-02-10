@@ -1818,13 +1818,18 @@
    LOCATION QUANTITY PICKER
    ============================================================================ */
 
-.member-postform-location-quantity-row {
+.member-postform-location-quantity-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin: 0 0 10px 0;
-  padding: 0;
+  padding: 0 10px;
+  height: 36px;
+  background: var(--blue-950);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  box-sizing: border-box;
 }
 
 .member-postform-location-quantity-label {

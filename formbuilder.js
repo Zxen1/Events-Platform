@@ -3707,7 +3707,7 @@
         
         // Create quantity selector row
         var quantityRow = document.createElement('div');
-        quantityRow.className = 'member-postform-location-quantity-row';
+        quantityRow.className = 'member-postform-location-quantity-container';
         
         var quantityLabel = document.createElement('span');
         quantityLabel.className = 'member-postform-location-quantity-label';
