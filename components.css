@@ -3501,7 +3501,7 @@ body.image-modal-open > *:not(.image-modal) {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 36px;
+  min-height: 70px;
   padding: 0 10px;
   background: var(--ps-bg-button);
   border: 1px solid var(--ps-border);
