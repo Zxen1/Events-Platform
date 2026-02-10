@@ -16,10 +16,16 @@
 // ── Database connection (same pattern as connectors) ──────────────────────────
 
 $configCandidates = [
+    // Development (Agent/ is inside project root, config is at home/funmapco/config/)
     __DIR__ . '/../home/funmapco/config/config-db.php',
     dirname(__DIR__) . '/home/funmapco/config/config-db.php',
+    // Production (Agent/ is inside docroot, config is one level above docroot)
+    dirname(__DIR__, 2) . '/config/config-db.php',
+    dirname(__DIR__) . '/../config/config-db.php',
+    // Other common locations
     dirname(__DIR__) . '/config/config-db.php',
     __DIR__ . '/../config/config-db.php',
+    __DIR__ . '/config-db.php',
 ];
 
 $configPath = null;
