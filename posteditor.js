@@ -825,14 +825,21 @@
             }).then(function(choice) {
                 if (choice === 'save') {
                     savePost(postId).then(function() {
-                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') ToastComponent.showSuccess('Saved');
+                        if (typeof window.getMessage === 'function') {
+                            window.getMessage('msg_member_saved', {}, false).then(function(msg) {
+                                if (msg && window.ToastComponent && typeof ToastComponent.showSuccess === 'function') ToastComponent.showSuccess(msg);
+                            });
+                        }
                         discardEdits(postId); closeModal(); refreshPostCard(postId);
                     }).catch(function(err) {
-                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') ToastComponent.showError('Failed to save: ' + err.message);
+                        if (typeof window.getMessage === 'function') {
+                            window.getMessage('msg_admin_save_error_response', {}, false).then(function(msg) {
+                                if (msg && window.ToastComponent && typeof ToastComponent.showError === 'function') ToastComponent.showError(msg);
+                            });
+                        }
                     });
                 } else if (choice === 'discard') {
                     discardEdits(postId); closeModal();
-                    if (window.ToastComponent && typeof ToastComponent.show === 'function') ToastComponent.show('Changes discarded');
                 }
             });
         }
@@ -1004,12 +1011,24 @@
                         refreshPostCard(post.id);
                     }, 2000);
                     updateHeaderSaveDiscardState();
+                    // Success toast (message system)
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_member_saved', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                                ToastComponent.showSuccess(msg);
+                            }
+                        });
+                    }
                 }).catch(function(err) {
                     // Remove overlay — form is still visible so user can retry
                     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                     updateFooterButtonState();
-                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        ToastComponent.showError('Failed to save: ' + err.message);
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_admin_save_error_response', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                ToastComponent.showError(msg);
+                            }
+                        });
                     }
                 });
             }
