@@ -189,19 +189,17 @@ function extractState(address) {
     // Nominatim field names for state-level admin areas vary by country:
     //   - Most countries: address.state (e.g. "New South Wales", "California")
     //   - Australian territories: address.territory (e.g. "Northern Territory")
-    //   - Some countries: address.province, address.region
+    //   - Some countries: address.province
     //
-    // IMPORTANT: Do NOT fall back to county/city/town — those return
-    // local government names like "Town of Alice Springs", "City of Westminster"
-    // which are not state-level values.
+    // DO NOT use address.region — returns "Metropolitan France" for Paris
+    // DO NOT use address.county — returns "Town of Alice Springs", "Bath and North East Somerset"
+    // DO NOT use address.city/town — returns local authority names
     //
-    // UK returns "England"/"Scotland" as state — these are constituent countries.
-    // We keep them here because the alternative (county/city) is worse.
-    // They get fixed via targeted SQL afterwards.
+    // UK returns "England"/"Scotland" as state — constituent countries.
+    // Not ideal but the only state-level value Nominatim provides for the UK.
     return address.state
         || address.territory
         || address.province
-        || address.region
         || '';
 }
 
