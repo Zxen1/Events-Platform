@@ -324,17 +324,36 @@ const FieldsetBuilder = (function(){
         }
 
         function extractState(place) {
-            // Extract state/province from addressComponents (administrative_area_level_1)
+            // Extract state/province from addressComponents.
+            // Uses longText/long_name first for consistency with database
+            // (e.g. "New South Wales" not "NSW", "California" not "CA").
+            //
+            // UK exception: administrative_area_level_1 returns constituent
+            // countries ("England", "Scotland", "Wales", "Northern Ireland")
+            // which aren't useful. Use administrative_area_level_2 instead
+            // to get counties like "Greater London", "West Yorkshire", etc.
             try {
                 var comps = place && place.addressComponents ? place.addressComponents : null;
                 if (!Array.isArray(comps)) return '';
+                var level1 = '';
+                var level2 = '';
                 for (var i = 0; i < comps.length; i++) {
                     var c = comps[i];
                     if (!c) continue;
                     var types = c.types;
-                    if (!Array.isArray(types) || types.indexOf('administrative_area_level_1') === -1) continue;
-                    return String(c.shortText || c.short_name || c.longText || c.long_name || '').trim();
+                    if (!Array.isArray(types)) continue;
+                    if (types.indexOf('administrative_area_level_1') !== -1) {
+                        level1 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                    }
+                    if (types.indexOf('administrative_area_level_2') !== -1) {
+                        level2 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                    }
                 }
+                // UK constituent countries — use level_2 (county) instead
+                if (level1 === 'England' || level1 === 'Scotland' || level1 === 'Wales' || level1 === 'Northern Ireland') {
+                    return level2 || level1;
+                }
+                return level1;
             } catch (e) {}
             return '';
         }
