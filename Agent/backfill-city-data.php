@@ -222,6 +222,49 @@ function geocodeNext(index) {
     doGeocode(loc, index, 0);
 }
 
+function doGeocode(loc, index, attempt) {
+    var maxRetries = 3;
+    var latlng = { lat: loc.lat, lng: loc.lng };
+
+    geocoder.geocode({ location: latlng }, function(results, status) {
+        if (status === 'OK' && results && results.length > 0) {
+            var state = extractState(results);
+            var suburb = extractSuburb(results, loc.city);
+            var postcode = extractPostcode(results);
+            var idList = loc.ids.join(',');
+
+            var setClauses = [];
+            if (!loc.existingState && state) {
+                setClauses.push("`state` = '" + escapeSQL(state) + "'");
+            }
+            if (!loc.existingSuburb && suburb) {
+                setClauses.push("`suburb` = '" + escapeSQL(suburb) + "'");
+            }
+            if (!loc.existingPostcode && postcode) {
+                setClauses.push("`postcode` = '" + escapeSQL(postcode) + "'");
+            }
+
+            if (setClauses.length > 0) {
+                sqlStatements.push("UPDATE `post_map_cards` SET " + setClauses.join(', ') + " WHERE `id` IN (" + idList + ");");
+            }
+
+            var retryTag = attempt > 0 ? ' (retry ' + attempt + ')' : '';
+            logLine(loc.lat + ', ' + loc.lng + '  =>  state: ' + (state || '—') + ', suburb: ' + (suburb || '—') + ', postcode: ' + (postcode || '—') + '  (IDs: ' + idList + ')' + retryTag, 'log-ok');
+
+            setTimeout(function() { geocodeNext(index + 1); }, 500);
+        } else if (attempt < maxRetries) {
+            // Rate limited — retry after a longer delay
+            var retryDelay = 2000 * (attempt + 1);
+            logLine('Rate limited for ' + loc.lat + ', ' + loc.lng + ' — retrying in ' + (retryDelay / 1000) + 's (attempt ' + (attempt + 1) + '/' + maxRetries + ')', 'log-warn');
+            setTimeout(function() { doGeocode(loc, index, attempt + 1); }, retryDelay);
+        } else {
+            errors.push('Google error for ' + loc.lat + ',' + loc.lng + ': ' + status + ' (after ' + maxRetries + ' retries)');
+            logLine('FAILED for ' + loc.lat + ', ' + loc.lng + ' — ' + status + ' (after ' + maxRetries + ' retries)', 'log-err');
+            setTimeout(function() { geocodeNext(index + 1); }, 500);
+        }
+    });
+}
+
 function finish() {
     progressEl.textContent = 'Done. ' + sqlStatements.length + ' SQL statements generated, ' + errors.length + ' errors.';
 
