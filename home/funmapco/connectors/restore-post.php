@@ -85,8 +85,8 @@ if (!empty($_GET['post_id']) && (empty($data) || empty($data['revision_id']))) {
     exit;
   }
 
-  // Fetch revisions — only restorable types, newest first
-  $stmt = $mysqli->prepare("SELECT id, post_title, editor_name, change_type, change_summary, created_at FROM post_revisions WHERE post_id = ? AND change_type IN ('create', 'pre-edit') ORDER BY id DESC");
+  // Fetch revisions — only restorable types (database row snapshots), newest first
+  $stmt = $mysqli->prepare("SELECT id, post_title, editor_name, change_type, change_summary, created_at FROM post_revisions WHERE post_id = ? AND change_type IN ('create', 'edit') ORDER BY id DESC");
   if (!$stmt) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Query failed']);
@@ -170,11 +170,11 @@ if (!$isAdmin && (int)$postOwnerId !== $memberId) {
   exit;
 }
 
-// 3. Decode the snapshot
+// 3. Decode the snapshot and verify it contains restorable data
 $snapshot = json_decode($dataJson, true);
-if (!is_array($snapshot)) {
+if (!is_array($snapshot) || !isset($snapshot['post_map_cards']) || !is_array($snapshot['post_map_cards'])) {
   http_response_code(400);
-  echo json_encode(['success' => false, 'message' => 'Revision data is invalid or corrupt']);
+  echo json_encode(['success' => false, 'message' => 'This revision is not in a restorable format.']);
   exit;
 }
 
