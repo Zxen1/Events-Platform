@@ -1310,13 +1310,40 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
   }
 }
 
-// Insert revision snapshot
-$revJson = json_encode($data, JSON_UNESCAPED_UNICODE);
+// Insert creation snapshot with actual database rows (for one-click restoration)
+$creationSnapshot = [
+  'post_map_cards' => [],
+  'post_sessions' => [],
+  'post_ticket_pricing' => [],
+  'post_item_pricing' => [],
+  'post_amenities' => []
+];
+$creationMapCardIds = [];
+$crMcResult = $mysqli->query("SELECT * FROM post_map_cards WHERE post_id = $insertId");
+if ($crMcResult) {
+  while ($crRow = $crMcResult->fetch_assoc()) {
+    $creationMapCardIds[] = (int)$crRow['id'];
+    $creationSnapshot['post_map_cards'][] = $crRow;
+  }
+  $crMcResult->free();
+}
+if (!empty($creationMapCardIds)) {
+  $crIdList = implode(',', $creationMapCardIds);
+  $r = $mysqli->query("SELECT * FROM post_sessions WHERE post_map_card_id IN ($crIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_sessions'][] = $row; $r->free(); }
+  $r = $mysqli->query("SELECT * FROM post_ticket_pricing WHERE post_map_card_id IN ($crIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_ticket_pricing'][] = $row; $r->free(); }
+  $r = $mysqli->query("SELECT * FROM post_item_pricing WHERE post_map_card_id IN ($crIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_item_pricing'][] = $row; $r->free(); }
+  $r = $mysqli->query("SELECT * FROM post_amenities WHERE post_map_card_id IN ($crIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_amenities'][] = $row; $r->free(); }
+}
+$creationJson = json_encode($creationSnapshot, JSON_UNESCAPED_UNICODE);
 $stmtRev = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at)
   VALUES (?, ?, ?, ?, 'create', 'Created', ?, NOW(), NOW())");
 if ($stmtRev) {
   $title0 = $primaryTitle;
-  $stmtRev->bind_param('isiss', $insertId, $title0, $memberId, $memberName, $revJson);
+  $stmtRev->bind_param('isiss', $insertId, $title0, $memberId, $memberName, $creationJson);
   $stmtRev->execute();
   $stmtRev->close();
 }

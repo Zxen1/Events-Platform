@@ -445,24 +445,75 @@ if ($stmt) {
   $stmt->close();
 }
 
-// 2. Clear old sub-data for this post
-// IMPORTANT: We clear sub-data because we'll re-insert it from the updated payload.
+// 2. Snapshot existing data BEFORE deleting, then clear old sub-data
 // Fetch post_map_card_ids first to avoid subquery conflicts with triggers that update post_map_cards
 $oldMapCardIds = [];
-$mcResult = $mysqli->query("SELECT id FROM post_map_cards WHERE post_id = $postId");
+$oldMapCards = [];
+$mcResult = $mysqli->query("SELECT * FROM post_map_cards WHERE post_id = $postId");
 if ($mcResult) {
   while ($mcRow = $mcResult->fetch_assoc()) {
     $oldMapCardIds[] = (int)$mcRow['id'];
+    $oldMapCards[] = $mcRow;
   }
   $mcResult->free();
 }
 
+// Snapshot all child tables for restoration capability
+$snapshot = [
+  'post_map_cards' => $oldMapCards,
+  'post_sessions' => [],
+  'post_ticket_pricing' => [],
+  'post_item_pricing' => [],
+  'post_amenities' => []
+];
+if (!empty($oldMapCardIds)) {
+  $mcIdList = implode(',', $oldMapCardIds);
+  
+  $r = $mysqli->query("SELECT * FROM post_sessions WHERE post_map_card_id IN ($mcIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $snapshot['post_sessions'][] = $row; $r->free(); }
+  
+  $r = $mysqli->query("SELECT * FROM post_ticket_pricing WHERE post_map_card_id IN ($mcIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $snapshot['post_ticket_pricing'][] = $row; $r->free(); }
+  
+  $r = $mysqli->query("SELECT * FROM post_item_pricing WHERE post_map_card_id IN ($mcIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $snapshot['post_item_pricing'][] = $row; $r->free(); }
+  
+  $r = $mysqli->query("SELECT * FROM post_amenities WHERE post_map_card_id IN ($mcIdList)");
+  if ($r) { while ($row = $r->fetch_assoc()) $snapshot['post_amenities'][] = $row; $r->free(); }
+}
+
+// Save pre-edit snapshot to post_revisions
+$snapshotJson = json_encode($snapshot, JSON_UNESCAPED_UNICODE);
+$snapshotTitle = !empty($oldMapCards) ? ($oldMapCards[0]['title'] ?? '') : '';
+$stmtSnap = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at) VALUES (?, ?, ?, ?, 'pre-edit', 'Pre-edit snapshot', ?, NOW(), NOW())");
+if ($stmtSnap) {
+  $stmtSnap->bind_param('isiss', $postId, $snapshotTitle, $memberId, $memberName, $snapshotJson);
+  $stmtSnap->execute();
+  $stmtSnap->close();
+}
+
+// Prune old pre-edit snapshots: keep only the 5 most recent per post (never touch 'create' entries)
+$pruneResult = $mysqli->query("SELECT id FROM post_revisions WHERE post_id = $postId AND change_type = 'pre-edit' ORDER BY id DESC LIMIT 5, 999999");
+if ($pruneResult && $pruneResult->num_rows > 0) {
+  $pruneIds = [];
+  while ($pruneRow = $pruneResult->fetch_assoc()) {
+    $pruneIds[] = (int)$pruneRow['id'];
+  }
+  $pruneResult->free();
+  if (!empty($pruneIds)) {
+    $pruneIdList = implode(',', $pruneIds);
+    $mysqli->query("DELETE FROM post_revisions WHERE id IN ($pruneIdList)");
+  }
+} elseif ($pruneResult) {
+  $pruneResult->free();
+}
+
+// Now delete old sub-data
 if (!empty($oldMapCardIds)) {
   $mcIdList = implode(',', $oldMapCardIds);
   $mysqli->query("DELETE FROM post_ticket_pricing WHERE post_map_card_id IN ($mcIdList)");
   $mysqli->query("DELETE FROM post_item_pricing WHERE post_map_card_id IN ($mcIdList)");
   $mysqli->query("DELETE FROM post_sessions WHERE post_map_card_id IN ($mcIdList)");
-  // Delete amenities last - triggers will fire but post_map_cards is not in a subquery
   $mysqli->query("DELETE FROM post_amenities WHERE post_map_card_id IN ($mcIdList)");
 }
 // Now delete the map cards themselves

@@ -789,7 +789,9 @@
                 '<div class="member-panel-label">Extend Listing Time</div>',
                 '<div class="posteditor-manage-row">',
                     '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
-                    '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
+                    '<div class="posteditor-manage-button-row">',
+                        '<button class="button-class-2c" style="flex:1">Add 30 Days (Placeholder)</button>',
+                    '</div>',
                 '</div>',
             '</div>',
             '<div class="posteditor-manage-section">',
@@ -801,6 +803,234 @@
             '</div>'
         ].join('');
         body.appendChild(manageContent);
+
+        // --- Three-dot More button (Hide / Restore / Delete) ---
+        var buttonRow = manageContent.querySelector('.posteditor-manage-button-row');
+        var moreBtn = document.createElement('div');
+        moreBtn.className = 'posteditor-manage-more';
+        moreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
+
+        var moreMenu = document.createElement('div');
+        moreMenu.className = 'posteditor-manage-more-menu';
+
+        // Hide row (toggle switch)
+        var hideRow = document.createElement('div');
+        hideRow.className = 'posteditor-manage-more-item';
+        hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
+        var hideSwitch = document.createElement('div');
+        hideSwitch.className = 'posteditor-manage-more-switch' + (post.hidden ? ' on' : '');
+        hideRow.appendChild(hideSwitch);
+        moreMenu.appendChild(hideRow);
+
+        // Divider before restore
+        var restoreDivider = document.createElement('div');
+        restoreDivider.className = 'posteditor-manage-more-divider';
+        moreMenu.appendChild(restoreDivider);
+
+        // Restore heading
+        var restoreHeading = document.createElement('div');
+        restoreHeading.className = 'posteditor-manage-more-heading';
+        restoreHeading.textContent = 'Restore';
+        moreMenu.appendChild(restoreHeading);
+
+        // Placeholder for restore items (populated async)
+        var restoreContainer = document.createElement('div');
+        restoreContainer.className = 'posteditor-manage-more-restore-list';
+        restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
+        moreMenu.appendChild(restoreContainer);
+
+        // Divider before delete
+        var deleteDivider = document.createElement('div');
+        deleteDivider.className = 'posteditor-manage-more-divider';
+        moreMenu.appendChild(deleteDivider);
+
+        // Delete row (always last)
+        var deleteRow = document.createElement('div');
+        deleteRow.className = 'posteditor-manage-more-item posteditor-manage-more-delete';
+        deleteRow.innerHTML = '<span class="posteditor-manage-more-item-text">Delete Post</span>';
+        moreMenu.appendChild(deleteRow);
+
+        moreBtn.appendChild(moreMenu);
+        buttonRow.appendChild(moreBtn);
+
+        // Toggle menu open/close
+        var moreMenuOpen = false;
+        function setMoreMenuOpen(open) {
+            moreMenuOpen = open;
+            if (open) {
+                moreMenu.classList.add('posteditor-manage-more-menu--open');
+            } else {
+                moreMenu.classList.remove('posteditor-manage-more-menu--open');
+            }
+        }
+
+        moreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (e.target.closest('.posteditor-manage-more-item') || e.target.closest('.posteditor-manage-more-switch')) return;
+            setMoreMenuOpen(!moreMenuOpen);
+        });
+
+        // Close menu when clicking outside (self-cleans when modal is removed from DOM)
+        var outsideClickHandler = function(e) {
+            if (!backdrop.parentNode) {
+                document.removeEventListener('click', outsideClickHandler);
+                return;
+            }
+            if (moreMenuOpen && !moreBtn.contains(e.target)) {
+                setMoreMenuOpen(false);
+            }
+        };
+        document.addEventListener('click', outsideClickHandler);
+
+        // Hide toggle handler
+        hideRow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var willHide = !hideSwitch.classList.contains('on');
+            var titleText = willHide ? 'Hide Post' : 'Show Post';
+            var msg = willHide
+                ? 'Hide this post? It will no longer be visible on the website, but you can unhide it at any time.'
+                : 'Make this post visible again on the website?';
+            setMoreMenuOpen(false);
+            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
+                ThreeButtonDialogComponent.show({
+                    titleText: titleText,
+                    messageText: msg,
+                    cancelLabel: 'Cancel',
+                    saveLabel: willHide ? 'Hide' : 'Show',
+                    discardLabel: null,
+                    focusCancel: true
+                }).then(function(choice) {
+                    if (choice === 'save') {
+                        hideSwitch.classList.toggle('on');
+                        // TODO: call backend to toggle post visibility
+                    }
+                });
+            }
+        });
+
+        // Delete handler
+        deleteRow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            setMoreMenuOpen(false);
+            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
+                ThreeButtonDialogComponent.show({
+                    titleText: 'Delete Post',
+                    messageText: 'Delete this post? It will be moved to the recycle bin and permanently removed after 30 days. This cannot be undone after that period.',
+                    cancelLabel: 'Cancel',
+                    saveLabel: 'Delete',
+                    discardLabel: null,
+                    focusCancel: true
+                }).then(function(choice) {
+                    if (choice === 'save') {
+                        // TODO: call backend to soft-delete post
+                    }
+                });
+            }
+        });
+
+        // Fetch and populate restore items
+        (function loadRevisions() {
+            var user = getCurrentUser();
+            var mId = user ? parseInt(user.id, 10) : 0;
+            var mType = user ? (user.type || 'member') : 'member';
+            fetch('/gateway.php?action=restore-post&post_id=' + postId + '&member_id=' + mId + '&member_type=' + encodeURIComponent(mType))
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    restoreContainer.innerHTML = '';
+                    if (!res || !res.success || !res.revisions || res.revisions.length === 0) {
+                        var emptyRow = document.createElement('div');
+                        emptyRow.className = 'posteditor-manage-more-item posteditor-manage-more-item--disabled';
+                        emptyRow.innerHTML = '<span class="posteditor-manage-more-item-text">No restore points</span>';
+                        restoreContainer.appendChild(emptyRow);
+                        return;
+                    }
+                    res.revisions.forEach(function(rev) {
+                        var typeLabel = rev.change_type === 'create' ? 'Original' : 'Snapshot';
+                        var dateStr = rev.created_at || '';
+                        try {
+                            var d = new Date(dateStr.replace(' ', 'T') + 'Z');
+                            dateStr = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                        } catch (e) { /* keep raw */ }
+
+                        var revRow = document.createElement('div');
+                        revRow.className = 'posteditor-manage-more-item posteditor-manage-more-restore';
+                        revRow.innerHTML = '<span class="posteditor-manage-more-item-text">' + typeLabel + ' — ' + dateStr + '</span>';
+                        revRow.addEventListener('click', (function(revData, revDateStr) {
+                            return function(e) {
+                                e.stopPropagation();
+                                var confirmMsg = revData.change_type === 'create'
+                                    ? 'Restore this post to its original state when it was first created? This will replace all current content immediately on the live site.'
+                                    : 'Restore this post to the snapshot from ' + revDateStr + '? This will replace all current content immediately on the live site.';
+                                setMoreMenuOpen(false);
+                                if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
+                                    ThreeButtonDialogComponent.show({
+                                        titleText: 'Restore Post',
+                                        messageText: confirmMsg,
+                                        cancelLabel: 'Cancel',
+                                        saveLabel: 'Restore',
+                                        discardLabel: null,
+                                        focusCancel: true
+                                    }).then(function(choice) {
+                                        if (choice === 'save') {
+                                            performRestore(revData.id);
+                                        }
+                                    });
+                                }
+                            };
+                        })(rev, dateStr));
+                        restoreContainer.appendChild(revRow);
+                    });
+                })
+                .catch(function() {
+                    restoreContainer.innerHTML = '';
+                    var errRow = document.createElement('div');
+                    errRow.className = 'posteditor-manage-more-item posteditor-manage-more-item--disabled';
+                    errRow.innerHTML = '<span class="posteditor-manage-more-item-text">Failed to load</span>';
+                    restoreContainer.appendChild(errRow);
+                });
+        })();
+
+        function performRestore(revisionId) {
+            var user = getCurrentUser();
+            var mId = user ? parseInt(user.id, 10) : 0;
+            var mType = user ? (user.type || 'member') : 'member';
+            setMoreMenuOpen(false);
+            fetch('/gateway.php?action=restore-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ revision_id: revisionId, member_id: mId, member_type: mType })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success) {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        var msg = res.message || 'Post restored successfully.';
+                        if (res.skipped_columns && res.skipped_columns.length > 0) {
+                            msg += ' (' + res.skipped_columns.length + ' column(s) skipped)';
+                        }
+                        ToastComponent.showSuccess(msg);
+                    }
+                    refreshPostCard(postId);
+                    editFormLoaded = false;
+                    editAccordionContent.innerHTML = '';
+                    setAccordionExpanded(false);
+                } else {
+                    var errMsg = (res && res.message) ? res.message : 'Restore failed.';
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(errMsg);
+                    } else {
+                        alert(errMsg);
+                    }
+                }
+            })
+            .catch(function() {
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError('Network error during restore.');
+                } else {
+                    alert('Network error during restore.');
+                }
+            });
+        }
 
         modalContainer.appendChild(body);
         backdrop.appendChild(modalContainer);
