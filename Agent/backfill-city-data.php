@@ -1,14 +1,14 @@
 <?php
 /**
- * Backfill suburb, state, and postcode for ALL post_map_cards using OpenStreetMap Nominatim.
+ * Backfill state for post_map_cards using Google Maps Geocoder.
  *
  * Usage: Visit this page in your browser at funmap.com/Agent/backfill-city-data.php
  *
  * This script:
- *   1. PHP queries the DB for ALL post_map_cards with valid lat/lng
+ *   1. PHP queries the DB for post_map_cards with NULL/empty state
  *   2. Groups by unique lat/lng to minimise API calls
- *   3. Renders an HTML page that uses Nominatim (free, no API key needed)
- *   4. Extracts suburb (falling back to city name for towns — no NULLs), state, postcode
+ *   3. Uses Google Maps JavaScript Geocoder (same API key as the site)
+ *   4. Extracts state using the same logic as fieldsets.js (including UK exception)
  *   5. Displays SQL UPDATE statements for you to copy and execute
  *
  * Delete this file after use.
@@ -44,13 +44,11 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     die("ERROR: Database connection not available after loading config.");
 }
 
-// ── Query ALL post_map_cards that need suburb, state, or postcode ────────────
+// ── Query post_map_cards that need state ─────────────────────────────────────
 
 $sql = "SELECT id, latitude, longitude, city, suburb, state, postcode
         FROM post_map_cards
-        WHERE ((suburb IS NULL OR suburb = '')
-            OR (state IS NULL OR state = '')
-            OR (postcode IS NULL OR postcode = ''))
+        WHERE (state IS NULL OR state = '')
           AND latitude != 0
           AND longitude != 0
         ORDER BY id ASC";
@@ -96,7 +94,7 @@ $mysqli->close();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Backfill Suburb Data</title>
+<title>Backfill State Data (Google)</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 30px; line-height: 1.6; }
@@ -116,23 +114,23 @@ $mysqli->close();
 </head>
 <body>
 
-<h1>Backfill Suburb / State / Postcode &mdash; post_map_cards</h1>
+<h1>Backfill State &mdash; Google Maps Geocoder</h1>
 
 <?php if ($totalRows === 0): ?>
-<p class="summary">All post_map_cards already have suburb, state, and postcode data. Nothing to do.</p>
+<p class="summary">All post_map_cards already have state data. Nothing to do.</p>
 <?php else: ?>
 
 <p class="summary">
-    Found <strong><?= $totalRows ?></strong> post_map_cards needing suburb/state/postcode data.<br>
-    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode via Nominatim.<br>
-    Estimated time: ~<?= $totalUnique ?> seconds (1 request per second).
+    Found <strong><?= $totalRows ?></strong> post_map_cards needing state data.<br>
+    <strong><?= $totalUnique ?></strong> unique lat/lng pairs to geocode via Google.<br>
+    Estimated time: a few seconds.
 </p>
 
-<div id="progress">Starting...</div>
+<div id="progress">Loading Google Maps API...</div>
 <div id="log"></div>
 
 <h2>SQL to execute:</h2>
-<div id="sql-output">Processing...</div>
+<div id="sql-output">Waiting for Google Maps API...</div>
 <button class="btn" id="copy-btn" style="display:none;" onclick="copySQL()">Copy SQL to Clipboard</button>
 
 <script>
@@ -143,6 +141,7 @@ var logEl = document.getElementById('log');
 var sqlEl = document.getElementById('sql-output');
 var progressEl = document.getElementById('progress');
 var copyBtn = document.getElementById('copy-btn');
+var geocoder = null;
 
 function logLine(text, cls) {
     var div = document.createElement('div');
@@ -156,56 +155,58 @@ function escapeSQL(str) {
     return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-function hasNonLatin(str) {
-    // Returns true if string contains non-Latin characters (CJK, Arabic, etc.)
-    return /[^\u0000-\u024F\u1E00-\u1EFF]/.test(str);
-}
+// ── Extraction functions (same logic as fieldsets.js) ─────────────────────────
 
-function extractSuburb(address, fallbackCity) {
-    // Only use Nominatim's actual 'suburb' field.
-    // neighbourhood/quarter/city_district return generic names like
-    // "Downtown", "City Center", "Civic District" — not real suburbs.
-    var suburb = address.suburb || '';
-
-    // Reject non-Latin results (Chinese, Arabic, etc. when English was requested)
-    if (suburb && hasNonLatin(suburb)) {
-        suburb = '';
+function getComponent(results, type) {
+    // Search through all results for a component with the given type
+    for (var r = 0; r < results.length; r++) {
+        var comps = results[r].address_components || [];
+        for (var i = 0; i < comps.length; i++) {
+            var c = comps[i];
+            if (c && c.types && c.types.indexOf(type) !== -1) {
+                return c;
+            }
+        }
     }
+    return null;
+}
 
-    // If no suburb found, fall back to city/town (no NULLs allowed)
-    if (!suburb) {
-        suburb = address.city
-              || address.town
-              || address.village
-              || address.municipality
-              || fallbackCity
-              || '';
+function extractState(results) {
+    // Same logic as fieldsets.js extractState — including UK exception.
+    // administrative_area_level_1 = state/province/territory
+    // For UK: level_1 returns "England"/"Scotland" — use level_2 (county) instead
+    var level1Comp = getComponent(results, 'administrative_area_level_1');
+    var level2Comp = getComponent(results, 'administrative_area_level_2');
+    var level1 = level1Comp ? (level1Comp.long_name || level1Comp.short_name || '') : '';
+    var level2 = level2Comp ? (level2Comp.long_name || level2Comp.short_name || '') : '';
+
+    // UK constituent countries — use level_2 (county) instead
+    if (level1 === 'England' || level1 === 'Scotland' || level1 === 'Wales' || level1 === 'Northern Ireland') {
+        return level2 || level1;
     }
-
-    return suburb;
+    return level1;
 }
 
-function extractState(address) {
-    // Nominatim field names for state-level admin areas vary by country:
-    //   - Most countries: address.state (e.g. "New South Wales", "California")
-    //   - Australian territories: address.territory (e.g. "Northern Territory")
-    //   - Some countries: address.province
-    //
-    // DO NOT use address.region — returns "Metropolitan France" for Paris
-    // DO NOT use address.county — returns "Town of Alice Springs", "Bath and North East Somerset"
-    // DO NOT use address.city/town — returns local authority names
-    //
-    // UK returns "England"/"Scotland" as state — constituent countries.
-    // Not ideal but the only state-level value Nominatim provides for the UK.
-    return address.state
-        || address.territory
-        || address.province
-        || '';
+function extractSuburb(results, fallbackCity) {
+    // sublocality_level_1 → sublocality → neighborhood → city fallback
+    var sub1 = getComponent(results, 'sublocality_level_1');
+    if (sub1) return (sub1.long_name || sub1.short_name || '').trim();
+    var sub = getComponent(results, 'sublocality');
+    if (sub) return (sub.long_name || sub.short_name || '').trim();
+    var neigh = getComponent(results, 'neighborhood');
+    if (neigh) return (neigh.long_name || neigh.short_name || '').trim();
+    // Fall back to city (town scenario)
+    var loc = getComponent(results, 'locality');
+    if (loc) return (loc.long_name || loc.short_name || '').trim();
+    return fallbackCity || '';
 }
 
-function extractPostcode(address) {
-    return address.postcode || address.postal_code || '';
+function extractPostcode(results) {
+    var pc = getComponent(results, 'postal_code');
+    return pc ? (pc.long_name || pc.short_name || '') : '';
 }
+
+// ── Geocoding loop ────────────────────────────────────────────────────────────
 
 function geocodeNext(index) {
     if (index >= locations.length) {
@@ -216,28 +217,22 @@ function geocodeNext(index) {
     var loc = locations[index];
     progressEl.textContent = 'Geocoding ' + (index + 1) + ' of ' + locations.length + '...';
 
-    var url = 'https://nominatim.openstreetmap.org/reverse?lat=' + loc.lat
-            + '&lon=' + loc.lng
-            + '&format=json&addressdetails=1&accept-language=en';
+    var latlng = { lat: loc.lat, lng: loc.lng };
 
-    fetch(url, {
-        headers: { 'User-Agent': 'FunMapBackfillScript/1.0' }
-    })
-    .then(function(resp) { return resp.json(); })
-    .then(function(data) {
-        if (data && data.address) {
-            var suburb = extractSuburb(data.address, loc.city);
-            var state = extractState(data.address);
-            var postcode = extractPostcode(data.address);
+    geocoder.geocode({ location: latlng }, function(results, status) {
+        if (status === 'OK' && results && results.length > 0) {
+            var state = extractState(results);
+            var suburb = extractSuburb(results, loc.city);
+            var postcode = extractPostcode(results);
             var idList = loc.ids.join(',');
 
             // Build SET clauses only for fields that need filling
             var setClauses = [];
-            if (!loc.existingSuburb && suburb) {
-                setClauses.push("`suburb` = '" + escapeSQL(suburb) + "'");
-            }
             if (!loc.existingState && state) {
                 setClauses.push("`state` = '" + escapeSQL(state) + "'");
+            }
+            if (!loc.existingSuburb && suburb) {
+                setClauses.push("`suburb` = '" + escapeSQL(suburb) + "'");
             }
             if (!loc.existingPostcode && postcode) {
                 setClauses.push("`postcode` = '" + escapeSQL(postcode) + "'");
@@ -247,22 +242,14 @@ function geocodeNext(index) {
                 sqlStatements.push("UPDATE `post_map_cards` SET " + setClauses.join(', ') + " WHERE `id` IN (" + idList + ");");
             }
 
-            var isTown = (suburb === (data.address.city || data.address.town || data.address.village || ''));
-            var tag = isTown ? ' (town)' : '';
-            logLine(loc.lat + ', ' + loc.lng + '  =>  suburb: ' + (suburb || '—') + tag + ', state: ' + (state || '—') + ', postcode: ' + (postcode || '—') + '  (IDs: ' + idList + ')', 'log-ok');
+            logLine(loc.lat + ', ' + loc.lng + '  =>  state: ' + (state || '—') + ', suburb: ' + (suburb || '—') + ', postcode: ' + (postcode || '—') + '  (IDs: ' + idList + ')', 'log-ok');
         } else {
-            var errMsg = data && data.error ? data.error : 'unknown error';
-            errors.push('Nominatim error for ' + loc.lat + ',' + loc.lng + ': ' + errMsg);
-            logLine('Nominatim error for ' + loc.lat + ', ' + loc.lng + ' — ' + errMsg, 'log-err');
+            errors.push('Google error for ' + loc.lat + ',' + loc.lng + ': ' + status);
+            logLine('Google error for ' + loc.lat + ', ' + loc.lng + ' — ' + status, 'log-err');
         }
 
-        // Nominatim requires max 1 request per second
-        setTimeout(function() { geocodeNext(index + 1); }, 1100);
-    })
-    .catch(function(err) {
-        errors.push('Network error for ' + loc.lat + ',' + loc.lng + ': ' + err.message);
-        logLine('Network error for ' + loc.lat + ', ' + loc.lng + ' — ' + err.message, 'log-err');
-        setTimeout(function() { geocodeNext(index + 1); }, 1100);
+        // Small delay to avoid hitting rate limits (Google allows ~50 QPS)
+        setTimeout(function() { geocodeNext(index + 1); }, 100);
     });
 }
 
@@ -293,17 +280,24 @@ function copySQL() {
     });
 }
 
-// Start immediately
-if (locations.length === 0) {
-    progressEl.textContent = 'Nothing to process.';
-    sqlEl.textContent = 'No SQL generated.';
-} else {
-    logLine('Starting suburb/state/postcode geocode for ' + locations.length + ' unique locations via Nominatim...', 'log-info');
-    logLine('(1 request per second — estimated ~' + locations.length + ' seconds)', 'log-info');
-    logLine('', '');
-    geocodeNext(0);
+// ── Google Maps callback ──────────────────────────────────────────────────────
+
+function initBackfill() {
+    geocoder = new google.maps.Geocoder();
+    progressEl.textContent = 'Google Maps API loaded. Starting...';
+
+    if (locations.length === 0) {
+        progressEl.textContent = 'Nothing to process.';
+        sqlEl.textContent = 'No SQL generated.';
+    } else {
+        logLine('Starting state geocode for ' + locations.length + ' unique locations via Google...', 'log-info');
+        logLine('', '');
+        geocodeNext(0);
+    }
 }
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&callback=initBackfill" async defer></script>
 
 <?php endif; ?>
 
