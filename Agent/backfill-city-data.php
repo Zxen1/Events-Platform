@@ -219,38 +219,7 @@ function geocodeNext(index) {
 
     var latlng = { lat: loc.lat, lng: loc.lng };
 
-    geocoder.geocode({ location: latlng }, function(results, status) {
-        if (status === 'OK' && results && results.length > 0) {
-            var state = extractState(results);
-            var suburb = extractSuburb(results, loc.city);
-            var postcode = extractPostcode(results);
-            var idList = loc.ids.join(',');
-
-            // Build SET clauses only for fields that need filling
-            var setClauses = [];
-            if (!loc.existingState && state) {
-                setClauses.push("`state` = '" + escapeSQL(state) + "'");
-            }
-            if (!loc.existingSuburb && suburb) {
-                setClauses.push("`suburb` = '" + escapeSQL(suburb) + "'");
-            }
-            if (!loc.existingPostcode && postcode) {
-                setClauses.push("`postcode` = '" + escapeSQL(postcode) + "'");
-            }
-
-            if (setClauses.length > 0) {
-                sqlStatements.push("UPDATE `post_map_cards` SET " + setClauses.join(', ') + " WHERE `id` IN (" + idList + ");");
-            }
-
-            logLine(loc.lat + ', ' + loc.lng + '  =>  state: ' + (state || '—') + ', suburb: ' + (suburb || '—') + ', postcode: ' + (postcode || '—') + '  (IDs: ' + idList + ')', 'log-ok');
-        } else {
-            errors.push('Google error for ' + loc.lat + ',' + loc.lng + ': ' + status);
-            logLine('Google error for ' + loc.lat + ', ' + loc.lng + ' — ' + status, 'log-err');
-        }
-
-        // Delay between requests to avoid rate limit denials
-        setTimeout(function() { geocodeNext(index + 1); }, 500);
-    });
+    doGeocode(loc, index, 0);
 }
 
 function finish() {
