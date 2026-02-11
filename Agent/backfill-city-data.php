@@ -185,42 +185,23 @@ function extractSuburb(address, fallbackCity) {
     return suburb;
 }
 
-// Constituent countries / territories that Nominatim returns as "state"
-// but are not useful as a state-level display value. When these appear,
-// we want the next admin level down (county, city_district, etc.).
-var CONSTITUENT_COUNTRY_STATES = [
-    'England', 'Scotland', 'Wales', 'Northern Ireland'
-];
-
 function extractState(address) {
-    // Nominatim uses 'state' for most countries, but:
-    // - UK: returns "England"/"Scotland" (constituent countries, not useful)
-    // - City-states (Berlin, Beijing, Shanghai, Singapore): omit it entirely
+    // Nominatim field names for state-level admin areas vary by country:
+    //   - Most countries: address.state (e.g. "New South Wales", "California")
+    //   - Australian territories: address.territory (e.g. "Northern Territory")
+    //   - Some countries: address.province, address.region
     //
-    // Strategy:
-    // 1. If state is a constituent country, skip it and use county or city
-    // 2. If state is missing entirely, fall through to city (city IS the state)
-    var raw = address.state || '';
-    var isConstituentCountry = false;
-    for (var i = 0; i < CONSTITUENT_COUNTRY_STATES.length; i++) {
-        if (raw === CONSTITUENT_COUNTRY_STATES[i]) {
-            isConstituentCountry = true;
-            break;
-        }
-    }
-
-    if (raw && !isConstituentCountry) {
-        return raw;
-    }
-
-    // For constituent countries (UK) or missing state (city-states),
-    // fall back through deeper admin levels
-    return address.province
+    // IMPORTANT: Do NOT fall back to county/city/town — those return
+    // local government names like "Town of Alice Springs", "City of Westminster"
+    // which are not state-level values.
+    //
+    // UK returns "England"/"Scotland" as state — these are constituent countries.
+    // We keep them here because the alternative (county/city) is worse.
+    // They get fixed via targeted SQL afterwards.
+    return address.state
+        || address.territory
+        || address.province
         || address.region
-        || address.county
-        || address.state_district
-        || address.city
-        || address.town
         || '';
 }
 
