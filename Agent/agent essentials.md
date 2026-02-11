@@ -215,6 +215,17 @@ ALWAYS search the database dump for exact table structure before writing any SQL
 ### Database Charset
 Database and tables MUST be utf8mb4 before bulk inserts with international characters. See venue-seeding-plan.md for details.
 
+### ID Hundreds System
+Some tables use a hundreds-based system to organize rows by audience. For example, `admin_messages` uses `container_key` to separate audiences:
+
+| Range | Audience | container_key |
+|-------|----------|---------------|
+| 100–199 | Users | `msg_user` |
+| 200–299 | Members | `msg_member` |
+| 300–399 | Admins | `msg_admin` |
+
+When inserting new rows, first determine the audience, then find the next available ID within that range.
+
 ### Foreign Key Cascades
 Posts use CASCADE DELETE. When a post is deleted, all child records are automatically removed.
 
