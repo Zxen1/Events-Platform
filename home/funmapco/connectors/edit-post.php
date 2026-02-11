@@ -537,7 +537,7 @@ foreach ($byLoc as $locNum => $entries) {
     'title' => '', 'description' => null, 'custom_text' => null, 'custom_textarea' => null,
     'custom_dropdown' => null, 'custom_checklist' => null, 'custom_radio' => null,
     'public_email' => null, 'phone_prefix' => null, 'public_phone' => null,
-    'venue_name' => null, 'address_line' => null, 'city' => null,
+    'location_type' => 'venue', 'venue_name' => null, 'address_line' => null, 'city' => null,
     'latitude' => null, 'longitude' => null, 'country_code' => null,
     'website_url' => null, 'tickets_url' => null, 'coupon_code' => null,
     'amenity_summary' => null, 'amenities_data' => null, 'age_rating' => null,
@@ -641,6 +641,7 @@ foreach ($byLoc as $locNum => $entries) {
       continue;
     }
     if ($baseType === 'venue' && is_array($val)) {
+      $card['location_type'] = 'venue';
       $card['venue_name'] = isset($val['venue_name']) ? trim((string)$val['venue_name']) : null;
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : null;
       $card['city'] = isset($val['city']) ? trim((string)$val['city']) : null;
@@ -656,6 +657,7 @@ foreach ($byLoc as $locNum => $entries) {
       continue;
     }
     if ($baseType === 'address' && is_array($val)) {
+      $card['location_type'] = 'address';
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : $card['address_line'];
       $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
       $card['suburb'] = isset($val['suburb']) ? trim((string)$val['suburb']) : ($card['city'] ?? $card['suburb']);
@@ -670,6 +672,7 @@ foreach ($byLoc as $locNum => $entries) {
       continue;
     }
     if ($baseType === 'city' && is_array($val)) {
+      $card['location_type'] = 'city';
       $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
       $card['suburb'] = isset($val['suburb']) ? trim((string)$val['suburb']) : ($card['city'] ?? $card['suburb']);
       $card['state'] = isset($val['state']) ? trim((string)$val['state']) : ($card['state'] ?? null);
@@ -687,8 +690,8 @@ foreach ($byLoc as $locNum => $entries) {
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
 
   // Insert map card
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   
   if ($stmtCard) {
     $lat = (float)($card['latitude'] ?? 0);
@@ -696,11 +699,11 @@ foreach ($byLoc as $locNum => $entries) {
     $timezone = null;
     
     $stmtCard->bind_param(
-      'issssssssssssssssssssddssssssss',
+      'isssssssssssssssssssssddssssssss',
       $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
       $card['public_email'], $card['phone_prefix'], $card['public_phone'],
-      $card['venue_name'], $card['address_line'], $card['suburb'], $card['city'],
+      $card['location_type'], $card['venue_name'], $card['address_line'], $card['suburb'], $card['city'],
       $card['state'], $card['postcode'],
       $card['country_name'], $card['country_code'],
       $lat, $lng, $timezone,
