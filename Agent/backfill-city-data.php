@@ -248,8 +248,8 @@ function geocodeNext(index) {
             logLine('Google error for ' + loc.lat + ', ' + loc.lng + ' — ' + status, 'log-err');
         }
 
-        // Small delay to avoid hitting rate limits (Google allows ~50 QPS)
-        setTimeout(function() { geocodeNext(index + 1); }, 100);
+        // Delay between requests to avoid rate limit denials
+        setTimeout(function() { geocodeNext(index + 1); }, 500);
     });
 }
 
