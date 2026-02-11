@@ -174,6 +174,152 @@ const FieldsetBuilder = (function(){
         };
     }
     
+    // ---- Shared address component extractors ----
+    // Used by initGooglePlaces (address/city fieldsets) and initSmartVenueAutocomplete (venue fieldset)
+
+    function extractCountryCode(place) {
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return '';
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
+                var raw = (c.shortText || c.short_name || c.short || c.longText || c.long_name || '');
+                var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+                if (code.length === 2) return code;
+            }
+        } catch (e) {}
+        return '';
+    }
+
+    function extractCity(place) {
+        // Extract city from addressComponents (locality or administrative_area_level_3)
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return '';
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types)) continue;
+                if (types.indexOf('locality') !== -1) {
+                    return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                }
+            }
+            // Fallback to administrative_area_level_3 (smaller municipalities)
+            for (var j = 0; j < comps.length; j++) {
+                var c2 = comps[j];
+                if (!c2) continue;
+                var types2 = c2.types;
+                if (!Array.isArray(types2)) continue;
+                if (types2.indexOf('administrative_area_level_3') !== -1) {
+                    return String(c2.longText || c2.long_name || c2.shortText || c2.short_name || '').trim();
+                }
+            }
+        } catch (e) {}
+        return '';
+    }
+
+    function extractSuburb(place) {
+        // Extract suburb/neighbourhood from addressComponents (sublocality or neighbourhood)
+        // Falls back to city name for towns (no NULLs — always returns a value)
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return extractCity(place);
+            // Try sublocality first (suburb in most countries)
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types)) continue;
+                if (types.indexOf('sublocality_level_1') !== -1 || types.indexOf('sublocality') !== -1) {
+                    return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                }
+            }
+            // Try neighbourhood
+            for (var j = 0; j < comps.length; j++) {
+                var c2 = comps[j];
+                if (!c2) continue;
+                var types2 = c2.types;
+                if (!Array.isArray(types2)) continue;
+                if (types2.indexOf('neighborhood') !== -1 || types2.indexOf('neighbourhood') !== -1) {
+                    return String(c2.longText || c2.long_name || c2.shortText || c2.short_name || '').trim();
+                }
+            }
+        } catch (e) {}
+        // No suburb found — fall back to city (town scenario)
+        return extractCity(place);
+    }
+
+    function extractCountryName(place) {
+        // Extract full country name from addressComponents
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return '';
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
+                return String(c.longText || c.long_name || '').trim();
+            }
+        } catch (e) {}
+        return '';
+    }
+
+    function extractState(place) {
+        // Extract state/province from addressComponents.
+        // Uses longText/long_name first for consistency with database
+        // (e.g. "New South Wales" not "NSW", "California" not "CA").
+        //
+        // UK exception: administrative_area_level_1 returns constituent
+        // countries ("England", "Scotland", "Wales", "Northern Ireland")
+        // which aren't useful. Use administrative_area_level_2 instead
+        // to get counties like "Greater London", "West Yorkshire", etc.
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return '';
+            var level1 = '';
+            var level2 = '';
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types)) continue;
+                if (types.indexOf('administrative_area_level_1') !== -1) {
+                    level1 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                }
+                if (types.indexOf('administrative_area_level_2') !== -1) {
+                    level2 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+                }
+            }
+            // UK constituent countries — use level_2 (county) instead
+            if (level1 === 'England' || level1 === 'Scotland' || level1 === 'Wales' || level1 === 'Northern Ireland') {
+                return level2 || level1;
+            }
+            return level1;
+        } catch (e) {}
+        return '';
+    }
+
+    function extractPostcode(place) {
+        // Extract postal code from addressComponents
+        try {
+            var comps = place && place.addressComponents ? place.addressComponents : null;
+            if (!Array.isArray(comps)) return '';
+            for (var i = 0; i < comps.length; i++) {
+                var c = comps[i];
+                if (!c) continue;
+                var types = c.types;
+                if (!Array.isArray(types) || types.indexOf('postal_code') === -1) continue;
+                return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
+            }
+        } catch (e) {}
+        return '';
+    }
+
     // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
     // type: 'address' | 'establishment' | '(cities)'
     // countryInput: hidden <input> to receive 2-letter country code (e.g. "AU")
@@ -227,151 +373,6 @@ const FieldsetBuilder = (function(){
                 // Use a non-input event to avoid recursion with the input handler.
                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
             }
-        }
-
-        function extractCountryCode(place) {
-            // New Places API may expose `addressComponents` entries like:
-            // { shortText, longText, types: [...] }
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return '';
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
-                    var raw = (c.shortText || c.short_name || c.short || c.longText || c.long_name || '');
-                    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
-                    if (code.length === 2) return code;
-                }
-            } catch (e) {}
-            return '';
-        }
-
-        function extractCity(place) {
-            // Extract city from addressComponents (locality or administrative_area_level_3)
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return '';
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types)) continue;
-                    if (types.indexOf('locality') !== -1) {
-                        return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
-                    }
-                }
-                // Fallback to administrative_area_level_3 (smaller municipalities)
-                for (var j = 0; j < comps.length; j++) {
-                    var c2 = comps[j];
-                    if (!c2) continue;
-                    var types2 = c2.types;
-                    if (!Array.isArray(types2)) continue;
-                    if (types2.indexOf('administrative_area_level_3') !== -1) {
-                        return String(c2.longText || c2.long_name || c2.shortText || c2.short_name || '').trim();
-                    }
-                }
-            } catch (e) {}
-            return '';
-        }
-
-        function extractSuburb(place) {
-            // Extract suburb/neighbourhood from addressComponents (sublocality or neighbourhood)
-            // Falls back to city name for towns (no NULLs — always returns a value)
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return extractCity(place);
-                // Try sublocality first (suburb in most countries)
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types)) continue;
-                    if (types.indexOf('sublocality_level_1') !== -1 || types.indexOf('sublocality') !== -1) {
-                        return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
-                    }
-                }
-                // Try neighbourhood
-                for (var j = 0; j < comps.length; j++) {
-                    var c2 = comps[j];
-                    if (!c2) continue;
-                    var types2 = c2.types;
-                    if (!Array.isArray(types2)) continue;
-                    if (types2.indexOf('neighborhood') !== -1 || types2.indexOf('neighbourhood') !== -1) {
-                        return String(c2.longText || c2.long_name || c2.shortText || c2.short_name || '').trim();
-                    }
-                }
-            } catch (e) {}
-            // No suburb found — fall back to city (town scenario)
-            return extractCity(place);
-        }
-
-        function extractCountryName(place) {
-            // Extract full country name from addressComponents
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return '';
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
-                    return String(c.longText || c.long_name || '').trim();
-                }
-            } catch (e) {}
-            return '';
-        }
-
-        function extractState(place) {
-            // Extract state/province from addressComponents.
-            // Uses longText/long_name first for consistency with database
-            // (e.g. "New South Wales" not "NSW", "California" not "CA").
-            //
-            // UK exception: administrative_area_level_1 returns constituent
-            // countries ("England", "Scotland", "Wales", "Northern Ireland")
-            // which aren't useful. Use administrative_area_level_2 instead
-            // to get counties like "Greater London", "West Yorkshire", etc.
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return '';
-                var level1 = '';
-                var level2 = '';
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types)) continue;
-                    if (types.indexOf('administrative_area_level_1') !== -1) {
-                        level1 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
-                    }
-                    if (types.indexOf('administrative_area_level_2') !== -1) {
-                        level2 = String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
-                    }
-                }
-                // UK constituent countries — use level_2 (county) instead
-                if (level1 === 'England' || level1 === 'Scotland' || level1 === 'Wales' || level1 === 'Northern Ireland') {
-                    return level2 || level1;
-                }
-                return level1;
-            } catch (e) {}
-            return '';
-        }
-
-        function extractPostcode(place) {
-            // Extract postal code from addressComponents
-            try {
-                var comps = place && place.addressComponents ? place.addressComponents : null;
-                if (!Array.isArray(comps)) return '';
-                for (var i = 0; i < comps.length; i++) {
-                    var c = comps[i];
-                    if (!c) continue;
-                    var types = c.types;
-                    if (!Array.isArray(types) || types.indexOf('postal_code') === -1) continue;
-                    return String(c.longText || c.long_name || c.shortText || c.short_name || '').trim();
-                }
-            } catch (e) {}
-            return '';
         }
 
         // Fetch suggestions using new API with type filtering
