@@ -157,12 +157,10 @@ function escapeSQL(str) {
 }
 
 function extractSuburb(address, fallbackCity) {
-    // Try suburb-level fields first (most specific)
-    var suburb = address.suburb
-              || address.neighbourhood
-              || address.quarter
-              || address.city_district
-              || '';
+    // Only use Nominatim's actual 'suburb' field.
+    // neighbourhood/quarter/city_district return generic names like
+    // "Downtown", "City Center", "Civic District" — not real suburbs.
+    var suburb = address.suburb || '';
 
     // If no suburb found, fall back to city/town (no NULLs allowed)
     if (!suburb) {
