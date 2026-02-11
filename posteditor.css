@@ -400,7 +400,6 @@
   border: 1px solid #222222;
   border-radius: 5px;
   cursor: pointer;
-  position: relative;
 }
 
 .posteditor-manage-more:hover {
