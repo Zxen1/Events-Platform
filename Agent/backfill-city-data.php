@@ -156,11 +156,21 @@ function escapeSQL(str) {
     return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+function hasNonLatin(str) {
+    // Returns true if string contains non-Latin characters (CJK, Arabic, etc.)
+    return /[^\u0000-\u024F\u1E00-\u1EFF]/.test(str);
+}
+
 function extractSuburb(address, fallbackCity) {
     // Only use Nominatim's actual 'suburb' field.
     // neighbourhood/quarter/city_district return generic names like
     // "Downtown", "City Center", "Civic District" — not real suburbs.
     var suburb = address.suburb || '';
+
+    // Reject non-Latin results (Chinese, Arabic, etc. when English was requested)
+    if (suburb && hasNonLatin(suburb)) {
+        suburb = '';
+    }
 
     // If no suburb found, fall back to city/town (no NULLs allowed)
     if (!suburb) {
@@ -175,8 +185,43 @@ function extractSuburb(address, fallbackCity) {
     return suburb;
 }
 
+// Constituent countries / territories that Nominatim returns as "state"
+// but are not useful as a state-level display value. When these appear,
+// we want the next admin level down (county, city_district, etc.).
+var CONSTITUENT_COUNTRY_STATES = [
+    'England', 'Scotland', 'Wales', 'Northern Ireland'
+];
+
 function extractState(address) {
-    return address.state || address.province || address.region || '';
+    // Nominatim uses 'state' for most countries, but:
+    // - UK: returns "England"/"Scotland" (constituent countries, not useful)
+    // - City-states (Berlin, Beijing, Shanghai, Singapore): omit it entirely
+    //
+    // Strategy:
+    // 1. If state is a constituent country, skip it and use county or city
+    // 2. If state is missing entirely, fall through to city (city IS the state)
+    var raw = address.state || '';
+    var isConstituentCountry = false;
+    for (var i = 0; i < CONSTITUENT_COUNTRY_STATES.length; i++) {
+        if (raw === CONSTITUENT_COUNTRY_STATES[i]) {
+            isConstituentCountry = true;
+            break;
+        }
+    }
+
+    if (raw && !isConstituentCountry) {
+        return raw;
+    }
+
+    // For constituent countries (UK) or missing state (city-states),
+    // fall back through deeper admin levels
+    return address.province
+        || address.region
+        || address.county
+        || address.state_district
+        || address.city
+        || address.town
+        || '';
 }
 
 function extractPostcode(address) {
