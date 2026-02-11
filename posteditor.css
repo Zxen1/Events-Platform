@@ -459,7 +459,8 @@
 
 .posteditor-manage-more-item--disabled {
   cursor: default;
-  color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  opacity: 0.5;
 }
 
 .posteditor-manage-more-item--disabled:hover {
@@ -468,7 +469,8 @@
 
 .posteditor-manage-more-item--loading {
   cursor: default;
-  color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  opacity: 0.5;
 }
 
 .posteditor-manage-more-item--loading:hover {
@@ -515,7 +517,7 @@
 
 /* Restore items */
 .posteditor-manage-more-restore {
-  color: rgba(255, 255, 255, 0.8);
+  color: #fff;
 }
 
 /* Delete — always last, danger color */
@@ -530,7 +532,7 @@
 /* Section divider */
 .posteditor-manage-more-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #222;
   margin: 4px 0;
 }
 
@@ -544,7 +546,8 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+  opacity: 0.5;
 }
 
 /* ============================================================================

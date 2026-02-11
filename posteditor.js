@@ -746,6 +746,8 @@
             // Remove stale popover element from the accordion row
             var stalePopover = editAccordionRow.querySelector('.posteditor-popover');
             if (stalePopover) stalePopover.remove();
+            // Refresh revision list (a save may have created a new snapshot)
+            loadRevisions();
         }
 
         editToggleBtn.addEventListener('click', function() {
@@ -929,7 +931,7 @@
         });
 
         // Fetch and populate restore items
-        (function loadRevisions() {
+        function loadRevisions() {
             var user = getCurrentUser();
             var mId = user ? parseInt(user.id, 10) : 0;
             var mType = user ? (user.type || 'member') : 'member';
@@ -988,7 +990,8 @@
                     errRow.innerHTML = '<span class="posteditor-manage-more-item-text">Failed to load</span>';
                     restoreContainer.appendChild(errRow);
                 });
-        })();
+        }
+        loadRevisions();
 
         function performRestore(revisionId) {
             var user = getCurrentUser();
