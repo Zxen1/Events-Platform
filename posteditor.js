@@ -889,23 +889,24 @@
             e.stopPropagation();
             var willHide = !hideSwitch.classList.contains('on');
             var titleText = willHide ? 'Hide Post' : 'Show Post';
-            var msg = willHide
-                ? 'Hide this post? It will no longer be visible on the website, but you can unhide it at any time.'
-                : 'Make this post visible again on the website?';
+            var msgKey = willHide ? 'msg_posteditor_confirm_hide' : 'msg_posteditor_confirm_show';
             setMoreMenuOpen(false);
-            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
-                ThreeButtonDialogComponent.show({
-                    titleText: titleText,
-                    messageText: msg,
-                    cancelLabel: 'Cancel',
-                    saveLabel: willHide ? 'Hide' : 'Show',
-                    discardLabel: null,
-                    focusCancel: true
-                }).then(function(choice) {
-                    if (choice === 'save') {
-                        hideSwitch.classList.toggle('on');
-                        // TODO: call backend to toggle post visibility
-                    }
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                window.getMessage(msgKey, {}, false).then(function(msg) {
+                    if (!msg) return;
+                    ConfirmDialogComponent.show({
+                        titleText: titleText,
+                        messageText: msg,
+                        confirmLabel: willHide ? 'Hide' : 'Show',
+                        cancelLabel: 'Cancel',
+                        confirmClass: 'danger',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) {
+                            hideSwitch.classList.toggle('on');
+                            // TODO: call backend to toggle post visibility
+                        }
+                    });
                 });
             }
         });
@@ -914,18 +915,21 @@
         deleteRow.addEventListener('click', function(e) {
             e.stopPropagation();
             setMoreMenuOpen(false);
-            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
-                ThreeButtonDialogComponent.show({
-                    titleText: 'Delete Post',
-                    messageText: 'Delete this post? It will be moved to the recycle bin and permanently removed after 30 days. This cannot be undone after that period.',
-                    cancelLabel: 'Cancel',
-                    saveLabel: 'Delete',
-                    discardLabel: null,
-                    focusCancel: true
-                }).then(function(choice) {
-                    if (choice === 'save') {
-                        // TODO: call backend to soft-delete post
-                    }
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
+                    if (!msg) return;
+                    ConfirmDialogComponent.show({
+                        titleText: 'Delete Post',
+                        messageText: msg,
+                        confirmLabel: 'Delete',
+                        cancelLabel: 'Cancel',
+                        confirmClass: 'danger',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) {
+                            // TODO: call backend to soft-delete post
+                        }
+                    });
                 });
             }
         });
@@ -960,22 +964,24 @@
                         revRow.addEventListener('click', (function(revData, revDateStr) {
                             return function(e) {
                                 e.stopPropagation();
-                                var confirmMsg = revData.change_type === 'create'
-                                    ? 'Restore this post to its original state when it was first created? This will replace all current content immediately on the live site.'
-                                    : 'Restore this post to the snapshot from ' + revDateStr + '? This will replace all current content immediately on the live site.';
+                                var msgKey = revData.change_type === 'create' ? 'msg_posteditor_confirm_restore_original' : 'msg_posteditor_confirm_restore_snapshot';
+                                var msgParams = revData.change_type === 'create' ? {} : { date: revDateStr };
                                 setMoreMenuOpen(false);
-                                if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
-                                    ThreeButtonDialogComponent.show({
-                                        titleText: 'Restore Post',
-                                        messageText: confirmMsg,
-                                        cancelLabel: 'Cancel',
-                                        saveLabel: 'Restore',
-                                        discardLabel: null,
-                                        focusCancel: true
-                                    }).then(function(choice) {
-                                        if (choice === 'save') {
-                                            performRestore(revData.id);
-                                        }
+                                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                                    window.getMessage(msgKey, msgParams, false).then(function(msg) {
+                                        if (!msg) return;
+                                        ConfirmDialogComponent.show({
+                                            titleText: 'Restore Post',
+                                            messageText: msg,
+                                            confirmLabel: 'Restore',
+                                            cancelLabel: 'Cancel',
+                                            confirmClass: 'danger',
+                                            focusCancel: true
+                                        }).then(function(confirmed) {
+                                            if (confirmed) {
+                                                performRestore(revData.id);
+                                            }
+                                        });
                                     });
                                 }
                             };
