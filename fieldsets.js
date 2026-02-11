@@ -6415,7 +6415,9 @@ const FieldsetBuilder = (function(){
                     
                     var kb = installLocationDropdownKeyboard(inputEl, dropdown, parent);
                     
-                    // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
+                    // Fetch suggestions using new API
+                    // Venue box: restricted to establishments (businesses, POIs)
+                    // Address box: unrestricted (finds addresses and places)
                     var debounceTimer = null;
                     async function fetchSuggestions(query) {
                         if (!query || query.length < 2) {
@@ -6424,10 +6426,11 @@ const FieldsetBuilder = (function(){
                         }
                         
                         try {
-                            // Use same API call as map controls (no type restrictions)
-                            var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-                                input: query
-                            });
+                            var request = { input: query };
+                            if (isVenueBox) {
+                                request.includedPrimaryTypes = ['establishment'];
+                            }
+                            var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
                             
                             dropdown.innerHTML = '';
                             
@@ -6497,10 +6500,8 @@ const FieldsetBuilder = (function(){
                                         
                                         if (isVenueBox) {
                                             // User searched in venue box
-                                            // Strip venue name to just the name (Google fills with full address)
-                                            if (isEstablishment && venueName) {
-                                                smartVenueInput.value = venueName;
-                                            }
+                                            // Always use displayName for the venue (never the full formatted address)
+                                            smartVenueInput.value = venueName || address;
                                             // Address: ALWAYS use the Google-confirmed formatted address.
                                             smartAddrInput.value = address;
                                             syncSmartAddrDisplay();
@@ -6509,13 +6510,13 @@ const FieldsetBuilder = (function(){
                                             // Address: strip to just address (in case Google added extra)
                                             smartAddrInput.value = address;
                                             syncSmartAddrDisplay();
-                                            // Venue name: fill if empty (use venue name if available, otherwise address)
+                                            // Venue name: fill if empty (use displayName if available, otherwise address)
                                             if (!smartVenueInput.value.trim()) {
-                                                smartVenueInput.value = (isEstablishment && venueName) ? venueName : address;
+                                                smartVenueInput.value = venueName || address;
                                             }
                                         }
                                         
-                                        inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
+                                        inputEl.value = isVenueBox ? (venueName || address) : address;
                                         kb.close();
                                         
                                         // After a confirmed selection, return address to display-mode.
