@@ -173,8 +173,8 @@ try {
     $params = [];
     $types = '';
 
-    // If filtering by member_id, we show all their posts regardless of status
-    if ($memberId <= 0) {
+    // If filtering by member_id or fetching a specific post by ID/key, skip public filters
+    if ($memberId <= 0 && $postId <= 0 && $postKey === '') {
         // Visibility filter (expired toggle can widen this)
         if ($includeExpired) {
             $where[] = 'p.visibility IN (?, ?)';
