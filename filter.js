@@ -1445,7 +1445,6 @@ const FilterModule = (function() {
                     var headerToggleArea = document.createElement('div');
                     headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
                     var headerSwitch = SwitchComponent.create({
-                        size: 'big',
                         checked: true
                     });
                     headerSwitch.element.classList.add('filter-categoryfilter-toggle');
@@ -1490,9 +1489,7 @@ const FilterModule = (function() {
                         optCount.className = 'filter-categoryfilter-count';
                         optCount.textContent = '';
                         
-                        // Project rule: category filter uses BIG switches (no small switches).
                         var optSwitch = SwitchComponent.create({
-                            size: 'big',
                             checked: true,
                             onChange: function() {
                                 // Grey out when subcategory is off (but still allow toggling back on)

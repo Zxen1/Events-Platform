@@ -515,8 +515,8 @@ const SwitchComponent = (function(){
     /**
      * Create a new switch element
      * @param {Object} options - Configuration options
-     * @param {string} options.size - Size variant: 'small', 'medium' (default), 'large'
      * @param {boolean} options.checked - Initial checked state
+     * @param {string} options.state - On-state variant: 'on-default' (blue), 'on-filter' (orange), 'on-danger' (red)
      * @param {string} options.name - Input name attribute
      * @param {string} options.id - Input id attribute
      * @param {string} options.ariaLabel - Accessible label
@@ -528,33 +528,29 @@ const SwitchComponent = (function(){
             throw new Error('SwitchComponent.create: options parameter is required');
         }
         
-        var size = options.size || 'medium';
         var checked = options.checked;
-        
-        // Build class prefix based on size
-        // Supported sizes: 'small', 'big'
-        var prefix = 'component-' + size + '-switch';
+        var onClass = 'component-switch-slider--' + (options.state || 'on-default');
         
         var label = document.createElement('label');
-        label.className = prefix;
+        label.className = 'component-switch';
         
         var input = document.createElement('input');
         input.type = 'checkbox';
-        input.className = prefix + '-input';
+        input.className = 'component-switch-input';
         input.checked = checked;
         if (options.name) input.name = options.name;
         if (options.id) input.id = options.id;
         if (options.ariaLabel) input.setAttribute('aria-label', options.ariaLabel);
         
         var slider = document.createElement('span');
-        slider.className = prefix + '-slider';
-        slider.classList.toggle(prefix + '-slider--on', !!input.checked);
+        slider.className = 'component-switch-slider';
+        slider.classList.toggle(onClass, !!input.checked);
         
         label.appendChild(input);
         label.appendChild(slider);
         
             input.addEventListener('change', function() {
-            slider.classList.toggle(prefix + '-slider--on', !!input.checked);
+            slider.classList.toggle(onClass, !!input.checked);
             if (typeof options.onChange === 'function') {
                 options.onChange(input.checked);
         }
@@ -568,11 +564,11 @@ const SwitchComponent = (function(){
             },
             setChecked: function(value) {
                 input.checked = !!value;
-                slider.classList.toggle(prefix + '-slider--on', !!input.checked);
+                slider.classList.toggle(onClass, !!input.checked);
             },
             toggle: function() {
                 input.checked = !input.checked;
-                slider.classList.toggle(prefix + '-slider--on', !!input.checked);
+                slider.classList.toggle(onClass, !!input.checked);
                 if (typeof options.onChange === 'function') {
                     options.onChange(input.checked);
                 }
