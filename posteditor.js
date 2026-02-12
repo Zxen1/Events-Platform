@@ -842,7 +842,7 @@
         hideSwitchInput.type = 'checkbox';
         hideSwitchInput.checked = post.visibility === 'hidden';
         var hideSwitchSlider = document.createElement('span');
-        hideSwitchSlider.className = 'component-switch-slider' + (post.visibility === 'hidden' ? ' component-switch-slider--on-danger' : '');
+        hideSwitchSlider.className = 'component-switch-slider' + (post.visibility === 'hidden' ? ' component-switch-slider--on-default' : '');
         hideSwitch.appendChild(hideSwitchInput);
         hideSwitch.appendChild(hideSwitchSlider);
         hideRow.appendChild(hideSwitch);
@@ -912,7 +912,7 @@
         hideRow.addEventListener('click', function(e) {
             e.stopPropagation();
             if (isExpired) return;
-            var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-danger');
+            var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-default');
             var titleText = willHide ? 'Hide Post' : 'Show Post';
             var msgKey = willHide ? 'msg_posteditor_confirm_hide' : 'msg_posteditor_confirm_show';
             setMoreMenuOpen(false);
@@ -947,7 +947,7 @@
                         .then(function(res) {
                             if (res && res.success) {
                                 hideSwitchInput.checked = !hideSwitchInput.checked;
-                                hideSwitchSlider.classList.toggle('component-switch-slider--on-danger');
+                                hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
                                 // Update local post data
                                 post.visibility = newVisibility;
                                 if (editingPostsData[postId] && editingPostsData[postId].original) {
