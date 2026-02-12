@@ -911,6 +911,7 @@
         // Hide toggle handler — instant, no dialog
         hideRow.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (e.target.classList.contains('component-switch-input')) return;
             if (isExpired) return;
             var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-default');
             var user = getCurrentUser();
