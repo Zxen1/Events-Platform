@@ -78,17 +78,17 @@
 
         if (isDeleted) {
             status = 'DELETED';
-            colorClass = 'posteditor-status-bar--gray';
+            colorClass = 'posteditor-status-bar--black';
             dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
-            colorClass = 'posteditor-status-bar--black';
+            colorClass = 'posteditor-status-bar--darkgray';
             if (expiresAt) {
                 dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
             }
         } else if (visibility === 'hidden') {
             status = 'HIDDEN';
-            colorClass = 'posteditor-status-bar--gray';
+            colorClass = 'posteditor-status-bar--darkgray';
             if (expiresAt) {
                 dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
