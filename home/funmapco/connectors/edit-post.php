@@ -324,6 +324,33 @@ if (!$isAdmin && (int)$postOwnerId !== $memberId) {
   fail_key(403, 'msg_post_edit_forbidden');
 }
 
+// ============================================================================
+// LIGHTWEIGHT MANAGE ACTIONS (hide/show, delete, upgrade, etc.)
+// If manage_action is present, handle the simple update and exit early.
+// ============================================================================
+$manageAction = isset($data['manage_action']) ? trim((string)$data['manage_action']) : '';
+if ($manageAction !== '') {
+  switch ($manageAction) {
+
+    case 'toggle_visibility':
+      $newVisibility = isset($data['visibility']) ? trim((string)$data['visibility']) : '';
+      $allowed = ['active', 'hidden'];
+      if (!in_array($newVisibility, $allowed, true)) {
+        fail_key(400, 'msg_post_edit_error');
+      }
+      $stmt = $mysqli->prepare("UPDATE posts SET visibility = ?, updated_at = NOW() WHERE id = ?");
+      if (!$stmt) fail_key(500, 'msg_post_edit_error');
+      $stmt->bind_param('si', $newVisibility, $postId);
+      if (!$stmt->execute()) { $stmt->close(); fail_key(500, 'msg_post_edit_error'); }
+      $stmt->close();
+      echo json_encode(['success' => true, 'manage_action' => 'toggle_visibility', 'visibility' => $newVisibility]);
+      exit;
+
+    default:
+      fail_key(400, 'msg_post_edit_error');
+  }
+}
+
 // Use the existing subcategory_key from database (don't allow changing category during edit)
 $subcategoryKey = $existingSubcategoryKey;
 

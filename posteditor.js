@@ -82,8 +82,8 @@
             if (expiresAt) {
                 dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
             }
-        } else if (visibility === 'paused') {
-            status = 'PAUSED';
+        } else if (visibility === 'hidden') {
+            status = 'HIDDEN';
             colorClass = 'posteditor-status-bar--gray';
             if (expiresAt) {
                 dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
@@ -820,7 +820,7 @@
         hideRow.className = 'posteditor-manage-more-item';
         hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
         var hideSwitch = document.createElement('div');
-        hideSwitch.className = 'posteditor-manage-more-switch' + (post.hidden ? ' on' : '');
+        hideSwitch.className = 'posteditor-manage-more-switch' + (post.visibility === 'hidden' ? ' on' : '');
         hideRow.appendChild(hideSwitch);
         moreMenu.appendChild(hideRow);
 
@@ -902,10 +902,29 @@
                         confirmClass: 'danger',
                         focusCancel: true
                     }).then(function(confirmed) {
-                        if (confirmed) {
-                            hideSwitch.classList.toggle('on');
-                            // TODO: call backend to toggle post visibility
-                        }
+                        if (!confirmed) return;
+                        var user = getCurrentUser();
+                        var mId = user ? parseInt(user.id, 10) : 0;
+                        var mType = user ? (user.type || 'member') : 'member';
+                        var newVisibility = willHide ? 'hidden' : 'active';
+                        fetch('/gateway.php?action=edit-post', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                post_id: postId,
+                                member_id: mId,
+                                member_type: mType,
+                                manage_action: 'toggle_visibility',
+                                visibility: newVisibility
+                            })
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                            if (res && res.success) {
+                                hideSwitch.classList.toggle('on');
+                                refreshPostCard(postId);
+                            }
+                        });
                     });
                 });
             }
