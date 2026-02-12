@@ -815,9 +815,12 @@
         var moreMenu = document.createElement('div');
         moreMenu.className = 'posteditor-manage-more-menu';
 
-        // Hide row (toggle switch)
+        // Hide row (toggle switch) — disabled for expired posts
+        var postVisibility = post.visibility || 'active';
+        var postExpiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var isExpired = postVisibility === 'expired' || (postExpiresAt && postExpiresAt.getTime() <= Date.now());
         var hideRow = document.createElement('div');
-        hideRow.className = 'posteditor-manage-more-item';
+        hideRow.className = 'posteditor-manage-more-item' + (isExpired ? ' posteditor-manage-more-item--disabled' : '');
         hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
         var hideSwitch = document.createElement('div');
         hideSwitch.className = 'posteditor-manage-more-switch' + (post.visibility === 'hidden' ? ' on' : '');
@@ -887,6 +890,7 @@
         // Hide toggle handler
         hideRow.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (isExpired) return;
             var willHide = !hideSwitch.classList.contains('on');
             var titleText = willHide ? 'Hide Post' : 'Show Post';
             var msgKey = willHide ? 'msg_posteditor_confirm_hide' : 'msg_posteditor_confirm_show';
