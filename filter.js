@@ -226,7 +226,7 @@ const FilterModule = (function() {
             var headerToggleSlider = headerToggleLabel ? headerToggleLabel.querySelector('span') : null;
             if (headerToggleInput && headerToggleSlider) {
                 headerToggleInput.checked = catState.enabled;
-                headerToggleSlider.classList.toggle('component-big-switch-slider--on', catState.enabled);
+                headerToggleSlider.classList.toggle('component-switch-slider--on-default', catState.enabled);
                 // Update disabled state
                 accordion.classList.toggle('filter-categoryfilter-accordion--disabled', !catState.enabled);
                 var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
@@ -246,7 +246,7 @@ const FilterModule = (function() {
                         if (subToggleInput && subToggleSlider) {
                             subToggleInput.checked = catState.subs[subKey];
                             // Project rule: category filter uses BIG switches (no small switches).
-                            subToggleSlider.classList.toggle('component-big-switch-slider--on', catState.subs[subKey]);
+                            subToggleSlider.classList.toggle('component-switch-slider--on-default', catState.subs[subKey]);
                             opt.classList.toggle('filter-categoryfilter-accordion-option--suboff', !catState.subs[subKey]);
                         }
                         opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !catState.enabled);
@@ -262,9 +262,9 @@ const FilterModule = (function() {
                         if (!catState.subs[k]) anySubOff = true;
                     });
                 }
-                headerToggleSlider.classList.toggle('component-big-switch-slider--partial', anySubOff);
+                headerToggleSlider.classList.toggle('component-switch-slider--on-filter', anySubOff);
             } else if (headerToggleSlider) {
-                headerToggleSlider.classList.remove('component-big-switch-slider--partial');
+                headerToggleSlider.classList.remove('component-switch-slider--on-filter');
             }
         });
         
@@ -723,9 +723,9 @@ const FilterModule = (function() {
             if (input) input.checked = true;
             if (slider) {
                 // Project rule: category filter uses BIG switches (no small switches).
-                slider.classList.remove('component-big-switch-slider--on');
-                slider.classList.add('component-big-switch-slider--on');
-                slider.classList.remove('component-big-switch-slider--partial');
+                slider.classList.remove('component-switch-slider--on-default');
+                slider.classList.add('component-switch-slider--on-default');
+                slider.classList.remove('component-switch-slider--on-filter');
             }
         });
         
@@ -1318,7 +1318,7 @@ const FilterModule = (function() {
     
     function syncExpiredToggleUi() {
         if (!expiredInput || !expiredSlider) return;
-        expiredSlider.classList.toggle('component-bigorange-switch-slider--on', !!expiredInput.checked);
+        expiredSlider.classList.toggle('component-switch-slider--on-filter', !!expiredInput.checked);
     }
 
 
@@ -1544,14 +1544,14 @@ const FilterModule = (function() {
                         var slider = headerSwitch.element.querySelector('span');
                         if (!slider) return;
                         if (!headerSwitch.isChecked()) {
-                            slider.classList.remove('component-big-switch-slider--partial');
+                            slider.classList.remove('component-switch-slider--on-filter');
                             return;
                         }
                         var anySubOff = false;
                         body.querySelectorAll('.filter-categoryfilter-toggle input').forEach(function(inp) {
                             if (!inp.checked) anySubOff = true;
                         });
-                        slider.classList.toggle('component-big-switch-slider--partial', anySubOff);
+                        slider.classList.toggle('component-switch-slider--on-filter', anySubOff);
                     }
                     
                     // Category toggle area click - disable and force close

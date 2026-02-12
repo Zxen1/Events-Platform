@@ -82,7 +82,7 @@
             dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
-            colorClass = 'posteditor-status-bar--gray';
+            colorClass = 'posteditor-status-bar--black';
             if (expiresAt) {
                 dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
             }
@@ -819,8 +819,16 @@
         var hideRow = document.createElement('div');
         hideRow.className = 'posteditor-manage-more-item' + (isExpired ? ' posteditor-manage-more-item--disabled' : '');
         hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
-        var hideSwitch = document.createElement('div');
-        hideSwitch.className = 'posteditor-manage-more-switch' + (post.visibility === 'hidden' ? ' on' : '');
+        var hideSwitch = document.createElement('label');
+        hideSwitch.className = 'component-switch' + (isExpired ? ' component-switch--disabled' : '');
+        var hideSwitchInput = document.createElement('input');
+        hideSwitchInput.className = 'component-switch-input';
+        hideSwitchInput.type = 'checkbox';
+        hideSwitchInput.checked = post.visibility === 'hidden';
+        var hideSwitchSlider = document.createElement('span');
+        hideSwitchSlider.className = 'component-switch-slider' + (post.visibility === 'hidden' ? ' component-switch-slider--on-danger' : '');
+        hideSwitch.appendChild(hideSwitchInput);
+        hideSwitch.appendChild(hideSwitchSlider);
         hideRow.appendChild(hideSwitch);
         moreMenu.appendChild(hideRow);
 
@@ -868,7 +876,7 @@
 
         moreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (e.target.closest('.posteditor-manage-more-item') || e.target.closest('.posteditor-manage-more-switch')) return;
+            if (e.target.closest('.posteditor-manage-more-item') || e.target.closest('.component-switch')) return;
             setMoreMenuOpen(!moreMenuOpen);
         });
 
@@ -888,7 +896,7 @@
         hideRow.addEventListener('click', function(e) {
             e.stopPropagation();
             if (isExpired) return;
-            var willHide = !hideSwitch.classList.contains('on');
+            var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-danger');
             var titleText = willHide ? 'Hide Post' : 'Show Post';
             var msgKey = willHide ? 'msg_posteditor_confirm_hide' : 'msg_posteditor_confirm_show';
             setMoreMenuOpen(false);
@@ -900,7 +908,7 @@
                         messageText: msg,
                         confirmLabel: willHide ? 'Hide' : 'Show',
                         cancelLabel: 'Cancel',
-                        confirmClass: 'danger',
+                        confirmClass: willHide ? 'danger' : 'success',
                         focusCancel: true
                     }).then(function(confirmed) {
                         if (!confirmed) return;
@@ -922,7 +930,8 @@
                         .then(function(r) { return r.json(); })
                         .then(function(res) {
                             if (res && res.success) {
-                                hideSwitch.classList.toggle('on');
+                                hideSwitchInput.checked = !hideSwitchInput.checked;
+                                hideSwitchSlider.classList.toggle('component-switch-slider--on-danger');
                                 // Update local post data
                                 post.visibility = newVisibility;
                                 if (editingPostsData[postId] && editingPostsData[postId].original) {

@@ -378,9 +378,9 @@ if (empty($ogTitle)) {
           </div>
           <div class="filter-expired-row row-class-1">
             <span class="filter-expired-label">Show Expired Events</span>
-            <label class="component-bigorange-switch">
-              <input class="component-bigorange-switch-input filter-expired-input" type="checkbox">
-              <span class="component-bigorange-switch-slider"></span>
+            <label class="component-switch">
+              <input class="component-switch-input filter-expired-input" type="checkbox">
+              <span class="component-switch-slider"></span>
             </label>
           </div>
           <div class="filter-calendar-container" aria-hidden="true">
@@ -494,9 +494,9 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div id="adminWelcomeLoadType" class="admin-settings-welcome-type-toggles row-class-1">
@@ -535,16 +535,16 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Devtools Console Filter</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
           </div>
@@ -553,16 +553,16 @@ if (empty($ogTitle)) {
           <div class="admin-settings-countdown-container">
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Countdown in Posts</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-countdown-tooltip"></div></span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminCountdownPosts" data-setting-key="countdown_posts" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminCountdownPosts" data-setting-key="countdown_posts" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Countdown on Postcards</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-countdown-tooltip"></div></span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminCountdownPostcards" data-setting-key="countdown_postcards" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminCountdownPostcards" data-setting-key="countdown_postcards" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div id="adminCountdownPostcardsMode" class="admin-settings-countdown-mode-toggles row-class-1">
@@ -976,18 +976,18 @@ if (empty($ogTitle)) {
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Spin on Logo</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminSpinLogoClick" class="component-big-switch-input" checked />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminSpinLogoClick" class="component-switch-input" checked />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
             </div>
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Spin on Load</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminSpinLoadStart" class="component-big-switch-input" />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminSpinLoadStart" class="component-switch-input" />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
               <div id="adminSpinType" class="admin-spin-type-toggles admin-spin-type-toggles--no-margin row-class-1">
@@ -1054,9 +1054,9 @@ if (empty($ogTitle)) {
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Wait for Map Tiles</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminWaitForMapTiles" class="component-big-switch-input" checked />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminWaitForMapTiles" class="component-switch-input" checked />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
             </div>

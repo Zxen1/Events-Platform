@@ -2453,9 +2453,9 @@ const AdminModule = (function() {
     
     // Helper to update switch slider visual state
     function updateSwitchSlider(checkbox) {
-        var slider = checkbox.parentElement.querySelector('.component-big-switch-slider');
+        var slider = checkbox.parentElement.querySelector('.component-switch-slider');
         if (slider) {
-            slider.classList.toggle('component-big-switch-slider--on', checkbox.checked);
+            slider.classList.toggle('component-switch-slider--on-default', checkbox.checked);
         }
     }
     
@@ -3276,7 +3276,7 @@ const AdminModule = (function() {
         });
         
         // Attach to toggle checkboxes
-        settingsContainer.querySelectorAll('.component-big-switch-input[data-setting-key]').forEach(function(checkbox) {
+        settingsContainer.querySelectorAll('.component-switch-input[data-setting-key]').forEach(function(checkbox) {
             var key = checkbox.dataset.settingKey;
             var initialValue = settingsData[key] === true || settingsData[key] === 'true' || settingsData[key] === '1';
             checkbox.checked = initialValue;
@@ -3398,11 +3398,11 @@ const AdminModule = (function() {
 
     function syncSettingsToggleUi(checkbox) {
         if (!checkbox) return;
-        var wrapper = checkbox.closest('.component-big-switch');
+        var wrapper = checkbox.closest('.component-switch');
         if (!wrapper) return;
-        var slider = wrapper.querySelector('.component-big-switch-slider');
+        var slider = wrapper.querySelector('.component-switch-slider');
         if (!slider) return;
-        slider.classList.toggle('component-big-switch-slider--on', !!checkbox.checked);
+        slider.classList.toggle('component-switch-slider--on-default', !!checkbox.checked);
     }
 
     function syncSettingsImagemanagerAccordionUi(acc) {
@@ -4163,7 +4163,7 @@ const AdminModule = (function() {
         });
         
         // Reset toggles
-        settingsContainer.querySelectorAll('.component-big-switch-input[data-setting-key]').forEach(function(checkbox) {
+        settingsContainer.querySelectorAll('.component-switch-input[data-setting-key]').forEach(function(checkbox) {
             var key = checkbox.dataset.settingKey;
             var entry = fieldRegistry['settings.' + key];
             if (entry && entry.type === 'simple') {

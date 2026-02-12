@@ -95,12 +95,12 @@
    Size variants: small, medium (default), large
    ============================================================================ */
 
-/* Base - Medium (default) */
+/* Switch (36x20) */
 .component-switch {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
+    width: 36px;
+    height: 20px;
     flex-shrink: 0;
     cursor: pointer;
 }
@@ -117,109 +117,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    background: #444;
+    border-radius: 10px;
     transition: background 0.2s;
 }
 
 .component-switch-slider::before {
     content: '';
     position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-}
-
-/* States */
-.component-switch-slider--on {
-    background: var(--blue-600);
-}
-
-.component-switch-slider--on::before {
-    transform: translateX(20px);
-}
-
-/* Size: Massive (44x24, 18px knob) */
-.component-massive-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-.component-massive-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.component-massive-switch-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    transition: background 0.2s;
-}
-
-.component-massive-switch-slider::before {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-}
-
-.component-massive-switch-slider--on {
-    background: var(--blue-500);
-}
-
-.component-massive-switch-slider--on::before {
-    transform: translateX(20px);
-}
-
-/* Size: Big (gray background, 36x20) */
-.component-big-switch {
-    position: relative;
-    display: inline-block;
-    width: 36px;
-    height: 20px;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-.component-big-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.component-big-switch-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #444;
-    border-radius: 10px;
-    transition: background 0.2s;
-}
-
-.component-big-switch-slider::before {
-    content: '';
-    position: absolute;
     width: 16px;
     height: 16px;
     left: 2px;
@@ -229,119 +134,40 @@
     transition: transform 0.2s, background 0.2s;
 }
 
-.component-big-switch-slider--on {
+/* States: on-default (blue) */
+.component-switch-slider--on-default {
     background: var(--blue-600);
 }
 
-.component-big-switch-slider--on::before {
+.component-switch-slider--on-default::before {
     transform: translateX(16px);
     background: #fff;
 }
 
-/* Partial state: orange instead of blue (filters partially active) */
-.component-big-switch-slider--partial {
+/* States: on-filter (orange) */
+.component-switch-slider--on-filter {
     background: #cc6600;
 }
 
-.component-big-switch-slider--partial::before {
+.component-switch-slider--on-filter::before {
     transform: translateX(16px);
     background: #fff;
 }
 
-/* Size: Big Orange (orange when on, 36x20) */
-.component-bigorange-switch {
-    position: relative;
-    display: inline-block;
-    width: 36px;
-    height: 20px;
-    flex-shrink: 0;
-    cursor: pointer;
+/* States: on-danger (red) */
+.component-switch-slider--on-danger {
+    background: #7f1d1d;
 }
 
-.component-bigorange-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.component-bigorange-switch-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #444;
-    border-radius: 10px;
-    transition: background 0.2s;
-}
-
-.component-bigorange-switch-slider::before {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    left: 2px;
-    top: 2px;
-    background: #888;
-    border-radius: 50%;
-    transition: transform 0.2s, background 0.2s;
-}
-
-.component-bigorange-switch-slider--on {
-    background: #cc6600;
-}
-
-.component-bigorange-switch-slider--on::before {
+.component-switch-slider--on-danger::before {
     transform: translateX(16px);
     background: #fff;
 }
 
-/* Size: Small (gray background, 32x18) */
-.component-small-switch {
-    position: relative;
-    display: inline-block;
-    width: 32px;
-    height: 18px;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-.component-small-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.component-small-switch-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #444;
-    border-radius: 9px;
-    transition: background 0.2s;
-}
-
-.component-small-switch-slider::before {
-    content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    left: 2px;
-    top: 2px;
-    background: #888;
-    border-radius: 50%;
-    transition: transform 0.2s, background 0.2s;
-}
-
-.component-small-switch-slider--on {
-    background: var(--blue-600);
-}
-
-.component-small-switch-slider--on::before {
-    transform: translateX(14px);
-    background: #fff;
+/* Modifier: disabled (can combine with any state) */
+.component-switch--disabled {
+    cursor: default;
+    opacity: 0.5;
 }
 
 
@@ -2555,6 +2381,18 @@
 .component-confirm-dialog-button--confirm.danger:focus-visible,
 .component-confirm-dialog-button--confirm.danger:hover {
     background: #991b1b;
+}
+
+/* Success variant for positive actions */
+.component-confirm-dialog-button--confirm.success {
+    background: #065f46;
+    border-color: #10b981;
+    color: #fff;
+}
+
+.component-confirm-dialog-button--confirm.success:focus-visible,
+.component-confirm-dialog-button--confirm.success:hover {
+    background: #047857;
 }
 
 /* ============================================================================
