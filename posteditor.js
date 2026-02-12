@@ -923,6 +923,26 @@
                         .then(function(res) {
                             if (res && res.success) {
                                 hideSwitch.classList.toggle('on');
+                                // Update local post data
+                                post.visibility = newVisibility;
+                                if (editingPostsData[postId] && editingPostsData[postId].original) {
+                                    editingPostsData[postId].original.visibility = newVisibility;
+                                }
+                                // Rebuild modal status bar
+                                var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                if (oldModalBar) {
+                                    var newModalBar = buildStatusBar(post);
+                                    oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                                }
+                                // Rebuild My Posts card status bar
+                                var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                if (postItem) {
+                                    var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                    if (oldBar) {
+                                        var newBar = buildStatusBar(post);
+                                        oldBar.parentNode.replaceChild(newBar, oldBar);
+                                    }
+                                }
                                 App.emit('post:updated', { post_id: postId });
                             }
                         });
