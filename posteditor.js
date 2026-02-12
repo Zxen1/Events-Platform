@@ -72,11 +72,15 @@
         var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
         var now = new Date();
 
+        // Expired always wins — check expiry before hidden
+        var isExpiredByDb = visibility === 'expired';
+        var isExpiredByTime = expiresAt && expiresAt.getTime() <= now.getTime();
+
         if (isDeleted) {
             status = 'DELETED';
             colorClass = 'posteditor-status-bar--gray';
             dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
-        } else if (visibility === 'expired') {
+        } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
             colorClass = 'posteditor-status-bar--gray';
             if (expiresAt) {
@@ -90,27 +94,20 @@
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
             }
         } else {
-            // Active (or expired but database not yet updated)
+            // Active
             if (expiresAt) {
                 var msRemaining = expiresAt.getTime() - now.getTime();
                 var daysRemaining = msRemaining / (1000 * 60 * 60 * 24);
-                if (msRemaining <= 0) {
-                    // Expiry time has passed even though visibility still says active
-                    status = 'EXPIRED';
-                    colorClass = 'posteditor-status-bar--gray';
-                    dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
+                status = 'ACTIVE';
+                if (daysRemaining >= 7) {
+                    colorClass = 'posteditor-status-bar--green';
+                } else if (daysRemaining >= 3) {
+                    colorClass = 'posteditor-status-bar--yellow';
                 } else {
-                    status = 'ACTIVE';
-                    if (daysRemaining >= 7) {
-                        colorClass = 'posteditor-status-bar--green';
-                    } else if (daysRemaining >= 3) {
-                        colorClass = 'posteditor-status-bar--yellow';
-                    } else {
-                        colorClass = 'posteditor-status-bar--red';
-                    }
-                    dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
-                    countdownSpan.textContent = formatCountdown(expiresAt, now);
+                    colorClass = 'posteditor-status-bar--red';
                 }
+                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                countdownSpan.textContent = formatCountdown(expiresAt, now);
             } else {
                 status = 'ACTIVE';
                 colorClass = 'posteditor-status-bar--green';
