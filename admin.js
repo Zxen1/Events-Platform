@@ -3697,7 +3697,7 @@ const AdminModule = (function() {
                 '<div class="admin-checkout-accordion-body-more-menu">' +
                     '<div class="admin-checkout-accordion-body-more-item">' +
                         '<span class="admin-checkout-accordion-body-more-item-text">Hide Tier</span>' +
-                        '<div class="admin-checkout-accordion-body-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
+                        '<label class="component-switch"><input class="component-switch-input" type="checkbox"' + (isHidden ? ' checked' : '') + '><span class="component-switch-slider' + (isHidden ? ' component-switch-slider--on-default' : '') + '"></span></label>' +
                     '</div>' +
                     '<div class="admin-checkout-accordion-body-more-item admin-checkout-accordion-body-more-delete">Delete Tier</div>' +
                 '</div>';
@@ -3772,10 +3772,14 @@ const AdminModule = (function() {
             });
 
             // Hide switch click
-            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-body-more-switch');
+            var hideSwitch = moreBtn.querySelector('.component-switch');
+            var hideSwitchInput = hideSwitch.querySelector('.component-switch-input');
+            var hideSwitchSlider = hideSwitch.querySelector('.component-switch-slider');
             hideSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
-                hideSwitch.classList.toggle('on');
+                e.preventDefault();
+                hideSwitchInput.checked = !hideSwitchInput.checked;
+                hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
                 accordion.classList.toggle('admin-checkout-accordion--hidden');
                 syncCheckoutAccordionUi(accordion);
                 markDirty();
@@ -4061,7 +4065,7 @@ const AdminModule = (function() {
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
-            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-body-more-switch');
+            var hiddenSwitchInput = accordion.querySelector('.component-switch-input');
 
             if (!titleInput) {
                 console.warn('Checkout option title input not found for accordion:', accordion);
@@ -4077,7 +4081,7 @@ const AdminModule = (function() {
                 checkout_discount_day_rate: discountDayRate,
                 checkout_featured: featuredCheckbox && featuredCheckbox.checked ? 1 : 0,
                 checkout_sidebar_ad: sidebarCheckbox && sidebarCheckbox.checked ? 1 : 0,
-                hidden: hiddenSwitch && hiddenSwitch.classList.contains('on') ? 1 : 0
+                hidden: hiddenSwitchInput && hiddenSwitchInput.checked ? 1 : 0
             });
         });
         return options;

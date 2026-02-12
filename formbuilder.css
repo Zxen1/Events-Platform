@@ -279,34 +279,7 @@
   flex: 1;
 }
 
-.formbuilder-accordion-editpanel-more-switch {
-  width: 36px;
-  height: 20px;
-  background: #444;
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-}
-
-.formbuilder-accordion-editpanel-more-switch::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: left 0.2s;
-}
-
-.formbuilder-accordion-editpanel-more-switch.on {
-  background: var(--blue-600);
-}
-
-.formbuilder-accordion-editpanel-more-switch.on::after {
-  left: 18px;
-}
+/* Hide Category toggle: uses component-switch with --on-default state */
 
 .formbuilder-accordion-editpanel-more-delete {
   color: #f87171;
@@ -1223,45 +1196,7 @@
   cursor: not-allowed;
 }
 
-.formbuilder-field-switch {
-  width: 36px;
-  height: 20px;
-  background: #444;
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.formbuilder-field-switch::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: left 0.2s;
-}
-
-.formbuilder-field-switch.on {
-  background: var(--blue-600);
-}
-
-.formbuilder-field-switch.on::after {
-  left: 18px;
-}
-
-.formbuilder-field-switch.disabled {
-  background: #333;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.formbuilder-field-switch.disabled::after {
-  background: #666;
-}
+/* Field toggle: uses component-switch with --on-default state */
 
 /* Modify Section */
 .formbuilder-field-modify-container {

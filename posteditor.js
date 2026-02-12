@@ -908,72 +908,54 @@
         };
         document.addEventListener('click', outsideClickHandler);
 
-        // Hide toggle handler
+        // Hide toggle handler — instant, no dialog
         hideRow.addEventListener('click', function(e) {
             e.stopPropagation();
             if (isExpired) return;
             var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-default');
-            var titleText = willHide ? 'Hide Post' : 'Show Post';
-            var msgKey = willHide ? 'msg_posteditor_confirm_hide' : 'msg_posteditor_confirm_show';
-            setMoreMenuOpen(false);
-            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
-                window.getMessage(msgKey, {}, false).then(function(msg) {
-                    if (!msg) return;
-                    ConfirmDialogComponent.show({
-                        titleText: titleText,
-                        messageText: msg,
-                        confirmLabel: willHide ? 'Hide' : 'Show',
-                        cancelLabel: 'Cancel',
-                        confirmClass: willHide ? 'danger' : 'success',
-                        focusCancel: true
-                    }).then(function(confirmed) {
-                        if (!confirmed) return;
-                        var user = getCurrentUser();
-                        var mId = user ? parseInt(user.id, 10) : 0;
-                        var mType = user ? (user.type || 'member') : 'member';
-                        var newVisibility = willHide ? 'hidden' : 'active';
-                        fetch('/gateway.php?action=edit-post', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                post_id: postId,
-                                member_id: mId,
-                                member_type: mType,
-                                manage_action: 'toggle_visibility',
-                                visibility: newVisibility
-                            })
-                        })
-                        .then(function(r) { return r.json(); })
-                        .then(function(res) {
-                            if (res && res.success) {
-                                hideSwitchInput.checked = !hideSwitchInput.checked;
-                                hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
-                                // Update local post data
-                                post.visibility = newVisibility;
-                                if (editingPostsData[postId] && editingPostsData[postId].original) {
-                                    editingPostsData[postId].original.visibility = newVisibility;
-                                }
-                                // Rebuild modal status bar
-                                var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
-                                if (oldModalBar) {
-                                    var newModalBar = buildStatusBar(post);
-                                    oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
-                                }
-                                // Rebuild My Posts card status bar
-                                var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
-                                if (postItem) {
-                                    var oldBar = postItem.querySelector('.posteditor-status-bar');
-                                    if (oldBar) {
-                                        var newBar = buildStatusBar(post);
-                                        oldBar.parentNode.replaceChild(newBar, oldBar);
-                                    }
-                                }
-                                App.emit('post:updated', { post_id: postId });
-                            }
-                        });
-                    });
-                });
-            }
+            var user = getCurrentUser();
+            var mId = user ? parseInt(user.id, 10) : 0;
+            var mType = user ? (user.type || 'member') : 'member';
+            var newVisibility = willHide ? 'hidden' : 'active';
+            fetch('/gateway.php?action=edit-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    post_id: postId,
+                    member_id: mId,
+                    member_type: mType,
+                    manage_action: 'toggle_visibility',
+                    visibility: newVisibility
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success) {
+                    hideSwitchInput.checked = !hideSwitchInput.checked;
+                    hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
+                    // Update local post data
+                    post.visibility = newVisibility;
+                    if (editingPostsData[postId] && editingPostsData[postId].original) {
+                        editingPostsData[postId].original.visibility = newVisibility;
+                    }
+                    // Rebuild modal status bar
+                    var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                    if (oldModalBar) {
+                        var newModalBar = buildStatusBar(post);
+                        oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                    }
+                    // Rebuild My Posts card status bar
+                    var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                    if (postItem) {
+                        var oldBar = postItem.querySelector('.posteditor-status-bar');
+                        if (oldBar) {
+                            var newBar = buildStatusBar(post);
+                            oldBar.parentNode.replaceChild(newBar, oldBar);
+                        }
+                    }
+                    App.emit('post:updated', { post_id: postId });
+                }
+            });
         });
 
         // Delete handler

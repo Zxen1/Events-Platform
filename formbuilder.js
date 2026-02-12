@@ -305,12 +305,12 @@
             var headerText = accordion.querySelector('.formbuilder-accordion-header-text');
             var headerImg = accordion.querySelector('.formbuilder-accordion-header-image');
             var nameInput = accordion.querySelector('.formbuilder-accordion-editpanel-input');
-            var hideSwitch = accordion.querySelector('.formbuilder-accordion-editpanel-more-switch');
+            var hideSwitchInput = accordion.querySelector('.component-switch-input');
             
             var catName = nameInput ? nameInput.value.trim() : (headerText ? headerText.textContent.trim() : '');
             var catKey = catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             var catId = accordion.dataset.categoryId ? parseInt(accordion.dataset.categoryId, 10) : null;
-            var catHidden = hideSwitch ? hideSwitch.classList.contains('on') : false;
+            var catHidden = hideSwitchInput ? hideSwitchInput.checked : false;
             // Use src attribute (not resolved .src) to avoid capturing current page URL when src is empty/removed.
             var catIconAttr = headerImg ? headerImg.getAttribute('src') : '';
             var catIconPath = catIconAttr ? catIconAttr.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
@@ -341,14 +341,14 @@
                 var subHeaderText = option.querySelector('.formbuilder-accordion-option-text');
                 var subHeaderImg = option.querySelector('.formbuilder-accordion-option-image');
                 var subNameInput = option.querySelector('.formbuilder-accordion-editpanel-input');
-                var subHideSwitch = option.querySelector('.formbuilder-accordion-editpanel-more-switch');
+                var subHideSwitchInput = option.querySelector('.component-switch-input');
                 var surchargeInput = option.querySelector('.formbuilder-fee-input');
                 var eventsRadio = option.querySelector('input[type="radio"][value="Events"]');
                 
                 var subName = subNameInput ? subNameInput.value.trim() : (subHeaderText ? subHeaderText.textContent.trim() : '');
                 var subKey = subName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 var subId = option.dataset.subcategoryId ? parseInt(option.dataset.subcategoryId, 10) : null;
-                var subHidden = subHideSwitch ? subHideSwitch.classList.contains('on') : false;
+                var subHidden = subHideSwitchInput ? subHideSwitchInput.checked : false;
                 var subIconAttr = subHeaderImg ? subHeaderImg.getAttribute('src') : '';
                 var subIconPath = subIconAttr ? subIconAttr.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
                 
@@ -1234,7 +1234,7 @@
         
         var moreBtn = document.createElement('div');
         moreBtn.className = 'formbuilder-accordion-editpanel-more';
-        moreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+        moreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><label class="component-switch"><input class="component-switch-input" type="checkbox"' + (cat.hidden ? ' checked' : '') + '><span class="component-switch-slider' + (cat.hidden ? ' component-switch-slider--on-default' : '') + '"></span></label></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
         var moreMenuEl = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         moreBtn.addEventListener('click', function(e) {
@@ -1244,10 +1244,14 @@
             if (!wasOpen && moreMenuEl) moreMenuEl.classList.add('formbuilder-accordion-editpanel-more-menu--open');
         });
         
-        var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
+        var hideSwitch = moreBtn.querySelector('.component-switch');
+        var hideSwitchInput = hideSwitch.querySelector('.component-switch-input');
+        var hideSwitchSlider = hideSwitch.querySelector('.component-switch-slider');
         hideSwitch.addEventListener('click', function(e) {
             e.stopPropagation();
-            hideSwitch.classList.toggle('on');
+            e.preventDefault();
+            hideSwitchInput.checked = !hideSwitchInput.checked;
+            hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
             notifyChange();
         });
         
@@ -1448,7 +1452,7 @@
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
         subMoreBtn.classList.add('formbuilder-accordion-editpanel-more--subcategory');
-        subMoreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+        subMoreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><label class="component-switch"><input class="component-switch-input" type="checkbox"' + (subHidden ? ' checked' : '') + '><span class="component-switch-slider' + (subHidden ? ' component-switch-slider--on-default' : '') + '"></span></label></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
         var subMoreMenuEl = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         subMoreBtn.addEventListener('click', function(e) {
@@ -1458,10 +1462,14 @@
             if (!wasOpen && subMoreMenuEl) subMoreMenuEl.classList.add('formbuilder-accordion-editpanel-more-menu--open');
         });
         
-        var subHideSwitch = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
+        var subHideSwitch = subMoreBtn.querySelector('.component-switch');
+        var subHideSwitchInput = subHideSwitch.querySelector('.component-switch-input');
+        var subHideSwitchSlider = subHideSwitch.querySelector('.component-switch-slider');
         subHideSwitch.addEventListener('click', function(e) {
             e.stopPropagation();
-            subHideSwitch.classList.toggle('on');
+            e.preventDefault();
+            subHideSwitchInput.checked = !subHideSwitchInput.checked;
+            subHideSwitchSlider.classList.toggle('component-switch-slider--on-default');
             notifyChange();
         });
         

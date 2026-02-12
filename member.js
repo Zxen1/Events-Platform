@@ -687,18 +687,15 @@ const MemberModule = (function() {
         
         // Hide Account switch
         if (profileHideSwitch) {
-            profileHideSwitch.addEventListener('click', function() {
-                var isHidden = profileHideSwitch.getAttribute('aria-checked') === 'true';
-                profileHideSwitch.setAttribute('aria-checked', !isHidden ? 'true' : 'false');
+            var profileHideInput = profileHideSwitch.querySelector('.component-switch-input');
+            var profileHideSlider = profileHideSwitch.querySelector('.component-switch-slider');
+            profileHideSwitch.addEventListener('click', function(e) {
+                e.preventDefault();
+                profileHideInput.checked = !profileHideInput.checked;
+                profileHideSlider.classList.toggle('component-switch-slider--on-default');
                 // Save to database
                 if (currentUser && currentUser.id) {
-                    saveProfileHiddenState(!isHidden);
-                }
-            });
-            profileHideSwitch.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    profileHideSwitch.click();
+                    saveProfileHiddenState(profileHideInput.checked);
                 }
             });
         }
@@ -6707,7 +6704,10 @@ const MemberModule = (function() {
             // Set hide account switch state
             if (profileHideSwitch) {
                 var isHidden = currentUser.hidden === true || currentUser.hidden === 1 || currentUser.hidden === '1';
-                profileHideSwitch.setAttribute('aria-checked', isHidden ? 'true' : 'false');
+                var hideInput = profileHideSwitch.querySelector('.component-switch-input');
+                var hideSlider = profileHideSwitch.querySelector('.component-switch-slider');
+                if (hideInput) hideInput.checked = isHidden;
+                if (hideSlider) hideSlider.classList.toggle('component-switch-slider--on-default', isHidden);
             }
             pendingProfileAvatarBlob = null;
             updateProfileSaveState();
