@@ -383,14 +383,30 @@
     }
     
     // Sort posts: favorites first (by post date), then non-favorites (by post date)
+    function getPostTier(post) {
+        var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
+        if (isDeleted) return 2;
+        var vis = post.visibility || 'active';
+        if (vis === 'expired') return 1;
+        var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        if (expiresAt && expiresAt.getTime() <= Date.now()) return 1;
+        return 0; // active or hidden
+    }
+
     function sortPostsWithFavorites(posts) {
         return posts.slice().sort(function(a, b) {
-            var aFav = isFavorite(a.id);
-            var bFav = isFavorite(b.id);
-            
-            // Favorites come first
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
+            // Tier: 0 = active/hidden, 1 = expired, 2 = deleted
+            var aTier = getPostTier(a);
+            var bTier = getPostTier(b);
+            if (aTier !== bTier) return aTier - bTier;
+
+            // Within tier 0, favorites come first
+            if (aTier === 0) {
+                var aFav = isFavorite(a.id);
+                var bFav = isFavorite(b.id);
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+            }
             
             // Within same group, sort by created_at descending (newest first)
             var aDate = new Date(a.created_at || 0).getTime();
