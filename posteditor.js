@@ -82,7 +82,7 @@
             dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
-            colorClass = 'posteditor-status-bar--darkgray';
+            colorClass = 'posteditor-status-bar--black';
             if (expiresAt) {
                 dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
             }
