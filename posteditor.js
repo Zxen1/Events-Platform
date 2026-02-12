@@ -922,7 +922,7 @@
                         .then(function(res) {
                             if (res && res.success) {
                                 hideSwitch.classList.toggle('on');
-                                refreshPostCard(postId);
+                                App.emit('post:updated', { post_id: postId });
                             }
                         });
                     });
