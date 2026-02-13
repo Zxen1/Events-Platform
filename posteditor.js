@@ -48,8 +48,7 @@
 
     /**
      * Check if saved filters would hide a post from the post panel.
-     * Mirrors the filter logic in PostModule.filterPosts so the Post Editor
-     * can warn members when their own filters are hiding their active post.
+     * Conservative: only returns true when confident the post would be hidden.
      * @param {Object} post - Post object with map_cards, subcategory_key, etc.
      * @returns {boolean} True if filters would hide this post
      */
@@ -60,11 +59,11 @@
 
         var mapCards = post.map_cards || [];
 
-        // Category/subcategory filter
-        if (filters.subcategoryKeys && Array.isArray(filters.subcategoryKeys)) {
-            if (filters.subcategoryKeys.length === 0) return true;
+        // Category/subcategory filter — only check when the array has actual entries
+        // null or empty means no category filtering (all categories shown)
+        if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length > 0) {
             var postSubKey = String(post.subcategory_key || '');
-            if (!postSubKey || filters.subcategoryKeys.indexOf(postSubKey) === -1) return true;
+            if (postSubKey && filters.subcategoryKeys.indexOf(postSubKey) === -1) return true;
         }
 
         // Keyword filter
