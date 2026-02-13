@@ -2133,26 +2133,16 @@
                     var lat = Number(firstCard.latitude);
                     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
 
-                    // Get postsLoadZoom — same zoom the location menu uses
-                    var flyZoom = 14;
-                    if (window.App && typeof App.getConfig === 'function') {
-                        var configZoom = Number(App.getConfig('postsLoadZoom'));
-                        if (Number.isFinite(configZoom)) flyZoom = configZoom;
-                    }
+                    // Same pattern as PostLocationComponent — switch to map, fly, reopen posts on arrival
+                    var postsLoadZoom = Number(App.getConfig('postsLoadZoom'));
 
-                    // Close member panel so the map is visible during flight
-                    if (window.MemberModule && typeof MemberModule.closePanel === 'function') {
-                        MemberModule.closePanel();
-                    }
-
-                    // Switch to map mode during flight
+                    // Switch to map mode (closes post/recent/filter panels during flight)
                     var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
                     if (mapBtn) mapBtn.click();
 
-                    // Fly to location at postsLoadZoom
-                    MapModule.flyTo(lng, lat, flyZoom);
+                    MapModule.flyTo(lng, lat, postsLoadZoom);
 
-                    // After arrival, switch to posts mode
+                    // On arrival, switch to posts mode (reopens post panel as normal)
                     var mainMap = MapModule.getMap();
                     if (mainMap) {
                         mainMap.once('moveend', function() {
