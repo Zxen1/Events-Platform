@@ -3643,7 +3643,7 @@ const MapControlRowComponent = (function(){
                 var geoUrl = App.getImageUrl('systemImages', geoFilename);
                 iconEl.style.webkitMaskImage = 'url(' + geoUrl + ')';
                 iconEl.style.maskImage = 'url(' + geoUrl + ')';
-                iconEl.style.display = 'inline-block';
+                iconEl.style.opacity = '1';
             }
         } catch (_e) {}
         // If already active, sync immediately

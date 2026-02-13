@@ -53,7 +53,8 @@ const FilterModule = (function() {
     var previousSort = 'recommended';  // For reverting if geolocation is denied
     var userGeoLocation = null;        // { lat, lng } from geolocation API
     var closeSortMenu = null;          // Reference to setSortMenuOpen for use in applySort
-    var sortGeoIconEl = null;          // Geolocate icon in "Sort by Closest" option
+    var sortGeoIconEl = null;          // Geolocate icon in "Sort by Distance" dropdown option
+    var sortGeoIconBtnEl = null;       // Geolocate icon in the sort button (shown when sort is 'nearest')
     var closeBtn = null;
     
     // Filter basics
@@ -373,54 +374,44 @@ const FilterModule = (function() {
                         o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === currentSort);
                     });
                 }
+                // Show geolocate icon in button if sort is 'nearest'
+                if (sortGeoIconBtnEl) {
+                    sortGeoIconBtnEl.style.display = (currentSort === 'nearest') ? 'inline-block' : 'none';
+                }
             } catch (_eSortRestore) {}
 
-            // If saved sort is 'nearest', silently restore geolocation — but only if
-            // the browser has already granted permission (no popup on page load).
-            if (currentSort === 'nearest' && navigator.permissions && navigator.geolocation) {
-                navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-                    if (result.state === 'granted') {
-                        navigator.geolocation.getCurrentPosition(
-                            function(pos) {
-                                userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                                if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
-                                    MapControlRowComponent.setCachedLocation(pos.coords.latitude, pos.coords.longitude);
-                                }
-                                if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
-                                    MapControlRowComponent.setAllGeolocateActive();
-                                }
-                                // Emit sort so posts re-sort by distance once location is available
-                                App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
-                            },
-                            function() {
-                                // Silent failure — revert to recommended
-                                currentSort = 'recommended';
-                                try {
-                                    var recOpt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]') : null;
-                                    if (recOpt && sortButtonText) sortButtonText.textContent = recOpt.textContent;
-                                    if (sortMenuEl) {
-                                        sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
-                                            o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === 'recommended');
-                                        });
-                                    }
-                                } catch (_e) {}
-                            },
-                            { enableHighAccuracy: true, timeout: 10000 }
-                        );
-                    } else {
-                        // Permission not granted — silently revert to recommended (no popup)
+            // If saved sort is 'nearest', restore geolocation on page load.
+            // If permission was previously granted, this resolves instantly (no popup).
+            // If not, the browser will prompt — which is appropriate since the user
+            // explicitly chose "Sort by Distance" as their preference.
+            if (currentSort === 'nearest' && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
+                            MapControlRowComponent.setCachedLocation(pos.coords.latitude, pos.coords.longitude);
+                        }
+                        if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
+                            MapControlRowComponent.setAllGeolocateActive();
+                        }
+                        App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
+                    },
+                    function() {
+                        // Denied or error — revert to recommended
                         currentSort = 'recommended';
                         try {
                             var recOpt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]') : null;
                             if (recOpt && sortButtonText) sortButtonText.textContent = recOpt.textContent;
+                            if (sortGeoIconBtnEl) sortGeoIconBtnEl.style.display = 'none';
                             if (sortMenuEl) {
                                 sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
                                     o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === 'recommended');
                                 });
                             }
                         } catch (_e) {}
-                    }
-                });
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             }
         }
         
@@ -697,14 +688,23 @@ const FilterModule = (function() {
             }
         });
 
-        // Register the sort geolocate icon now that MapControlRowComponent is ready
+        // Register both sort geolocate icons now that MapControlRowComponent is ready
         // and system_images are loaded (same timing as the built-in geolocate icons)
-        if (sortGeoIconEl && MapControlRowComponent.registerGeolocateIcon) {
-            MapControlRowComponent.registerGeolocateIcon(
-                sortGeoIconEl,
-                'filter-sort-geolocate-icon',
-                'filter-sort-geolocate-icon'
-            );
+        if (MapControlRowComponent.registerGeolocateIcon) {
+            if (sortGeoIconEl) {
+                MapControlRowComponent.registerGeolocateIcon(
+                    sortGeoIconEl,
+                    'filter-sort-geolocate-icon',
+                    'filter-sort-geolocate-icon'
+                );
+            }
+            if (sortGeoIconBtnEl) {
+                MapControlRowComponent.registerGeolocateIcon(
+                    sortGeoIconBtnEl,
+                    'filter-sort-geolocate-icon',
+                    'filter-sort-geolocate-icon'
+                );
+            }
         }
     }
     
@@ -905,8 +905,9 @@ const FilterModule = (function() {
         var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
 
-        // Store the icon element for deferred registration
-        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-geolocate-icon');
+        // Store icon elements for deferred registration
+        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="nearest"] .filter-sort-geolocate-icon');
+        sortGeoIconBtnEl = sortMenuEl.querySelector('.filter-sort-geolocate-icon--button');
 
         function setSortMenuOpen(isOpen) {
             sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);
@@ -1018,6 +1019,11 @@ const FilterModule = (function() {
         
         if (sortButtonText && label) {
             sortButtonText.textContent = label;
+        }
+        
+        // Show/hide the geolocate icon in the sort button
+        if (sortGeoIconBtnEl) {
+            sortGeoIconBtnEl.style.display = (sortKey === 'nearest') ? 'inline-block' : 'none';
         }
         
         // Update selected state
