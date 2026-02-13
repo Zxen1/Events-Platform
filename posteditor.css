@@ -247,7 +247,7 @@
   flex: 1;
 }
 
-/* Post card inside My Posts - identical to post panel */
+/* Post card inside Post Editor - identical to post panel */
 .posteditor-item .post-card {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
   border: none;
@@ -261,7 +261,7 @@
   box-shadow: none;
 }
 
-/* Expanded post inside My Posts - same margin as card */
+/* Expanded post inside Post Editor - same margin as card */
 .posteditor-item .post {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
 }
@@ -304,7 +304,7 @@
   position: relative;
 }
 
-/* Expanded post frame in My Posts — color matches status bar */
+/* Expanded post frame in Post Editor — color matches status bar */
 .posteditor-item:has(.posteditor-status-bar--green) .post::after {
   border-left-color: var(--green-900);
   border-right-color: var(--green-900);

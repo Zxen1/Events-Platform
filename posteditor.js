@@ -1,12 +1,12 @@
 /* ============================================================================
-   POST EDITOR MODULE - Member Panel > My Posts Tab
+   POST EDITOR MODULE - Member Panel > Post Editor Tab
    Post listing, editing, and management for member's own posts.
    ============================================================================
    
    PATTERN:
    This module follows the FormbuilderModule pattern - it owns an entire tab
    within a parent panel. MemberModule calls PostEditorModule.init() when
-   the My Posts tab is activated.
+   the Post Editor tab is activated.
    
    DEPENDENCIES:
    - MemberModule: currentUser, memberCategories, ensureCategoriesLoaded,
@@ -300,7 +300,7 @@
                 '<div class="posteditor-placeholder-title">' + escapeHtml(title) + '</div>' +
             '</div>';
         
-        // Insert at top of My Posts panel
+        // Insert at top of Post Editor panel
         container.insertBefore(placeholder, container.firstChild);
     }
     
@@ -945,7 +945,7 @@
                         var newModalBar = buildStatusBar(post);
                         oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                     }
-                    // Rebuild My Posts card status bar
+                    // Rebuild Post Editor card status bar
                     var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
                     if (postItem) {
                         var oldBar = postItem.querySelector('.posteditor-status-bar');

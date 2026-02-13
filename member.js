@@ -5,7 +5,7 @@
    Controls the member panel (right side).
    
    CONTAINS:
-   - Tab buttons (Profile, Create Post, My Posts)
+   - Tab buttons (Profile, Create Post, Post Editor)
    - Profile tab (logged out):
      - Login subtab (email, password, login button)
      - Register subtab (name, email, password, confirm, avatar, create button)
@@ -19,7 +19,7 @@
      - Checkout options
      - Terms agreement
      - Submit button
-   - My Posts tab:
+   - Post Editor tab:
      - User's posts list (not yet coded)
    
    DEPENDENCIES:
@@ -213,7 +213,7 @@ const MemberModule = (function() {
             CurrencyComponent.loadFromDatabase();
         }
         
-        // Preload categories/forms for My Posts and Create Post tabs
+        // Preload categories/forms for Post Editor and Create Post tabs
         ensureCategoriesLoaded();
         
         // Avatar filenames are loaded via ensureSiteAvatarFilenames() which is already called in showPanel()
@@ -229,7 +229,7 @@ const MemberModule = (function() {
         loadStoredSession();
         render();
         
-        // Listen for post updates to refresh My Posts cards
+        // Listen for post updates to refresh Post Editor cards
         if (window.App && typeof App.on === 'function') {
             App.on('post:updated', function(data) {
                 if (data && data.post_id && window.PostEditorModule) {
@@ -462,7 +462,7 @@ const MemberModule = (function() {
             });
         }
         
-        // Main tab switching (Profile / Create Post / My Posts)
+        // Main tab switching (Profile / Create Post / Post Editor)
         if (tabButtons) {
             tabButtons.forEach(function(btn) {
                 btn.addEventListener('click', function() {
@@ -6728,7 +6728,7 @@ const MemberModule = (function() {
 
             // Also refresh create-tab submit visibility state after login.
             try { updateSubmitButtonState(); } catch (e01) {}
-            // My Posts tab must not show stale logged-out UI after login.
+            // Post Editor tab must not show stale logged-out UI after login.
             try { refreshAuthDependentTabs(); } catch (e02) {}
             
         } else {
@@ -6798,11 +6798,11 @@ const MemberModule = (function() {
         try { updateSubmitButtonState(); } catch (e1) {}
 
         // Post Editor: Clear content on logout (PostEditorModule will reload on tab switch)
-        var myPostsEl = document.getElementById('member-tab-posteditor');
-        if (myPostsEl) {
-            myPostsEl.innerHTML = '';
+        var postEditorEl = document.getElementById('member-tab-posteditor');
+        if (postEditorEl) {
+            postEditorEl.innerHTML = '';
             try {
-                if (myPostsEl.dataset) delete myPostsEl.dataset.posteditorInitialized;
+                if (postEditorEl.dataset) delete postEditorEl.dataset.posteditorInitialized;
             } catch (_eFlag) {}
         }
     }

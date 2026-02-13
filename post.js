@@ -2564,7 +2564,7 @@ const PostModule = (function() {
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
-    // When originEl is outside the standard panels (e.g. My Posts tab), use its list ancestor
+    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
     if (originEl && (!container || !container.contains(originEl))) {
       var posteditorItem = originEl.closest('.posteditor-item');
       if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
@@ -2575,7 +2575,7 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-slot | Recent panel: .recent-card-wrapper | My Posts: .posteditor-item
+    // Post panel: .post-slot | Recent panel: .recent-card-wrapper | Post Editor: .posteditor-item
     var slot = null;
     if (originEl) {
       slot = originEl.closest('.post-slot') || originEl.closest('.recent-card-wrapper') || originEl.closest('.posteditor-item');

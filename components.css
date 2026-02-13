@@ -2843,7 +2843,7 @@
    LOCATION WALLPAPER
    
    Animated map wallpaper background for location displays.
-   Used in: Post panel, Recent panel, My Posts panel, Member forms.
+   Used in: Post panel, Recent panel, Post Editor panel, Member forms.
    
    Decoupled from form-specific classes - uses generic component classes.
    Width is dynamic via --locationwallpaper-width CSS variable (set by JS).

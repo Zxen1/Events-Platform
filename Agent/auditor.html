@@ -133,9 +133,10 @@
 
     <div class="setup">
         <strong>Keys to search for (comma separated):</strong>
-        <textarea id="keysInput">custom_text, custom_textarea, custom_dropdown, custom_radio, public_phone, age_rating, public_email, ticket_pricing, account_email, custom_checklist, session_pricing, item_pricing</textarea>
+        <textarea id="keysInput"></textarea>
         
         <div class="controls">
+            <label style="white-space: nowrap; font-size: 13px; cursor: pointer;"><input type="checkbox" id="caseSensitive"> Case sensitive</label>
             <div class="file-input-wrapper">
                 <strong>Select Files:</strong>
                 <input type="file" id="filePicker" multiple>
@@ -201,9 +202,12 @@
             const content = await file.text();
             const lines = content.split(/\r?\n/);
             
+        const caseSensitive = document.getElementById('caseSensitive').checked;
+
             lines.forEach((line, index) => {
                 keys.forEach(key => {
-                    if (line.includes(key)) {
+                    const match = caseSensitive ? line.includes(key) : line.toLowerCase().includes(key.toLowerCase());
+                    if (match) {
                         totalMatches++;
                         const item = document.createElement('div');
                         item.className = 'result-item';
