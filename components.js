@@ -9535,7 +9535,7 @@ const LocationWallpaperComponent = (function() {
             }
         }
 
-        function startStillMode(lat, lng) {
+        function startStillMode(lat, lng, prefetchedLib) {
             cancelLazyCleanup();
             st.isActive = true;
             ensureResizeObserver();
@@ -9568,7 +9568,7 @@ const LocationWallpaperComponent = (function() {
             }
 
             // Check for library wallpapers (container cache, post data, or API)
-            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+            function handleLib(lib) {
                 console.log('[TRACK-VIEW] STILL MODE - library result:', lib ? 'FOUND ' + Object.keys(lib).length : 'NOT FOUND');
                 if (lib && lib[0]) {
                     // Library wallpaper found - instant display
@@ -9599,7 +9599,13 @@ const LocationWallpaperComponent = (function() {
                         setImageUrl(url);
                     });
                 });
-            });
+            }
+
+            if (prefetchedLib !== undefined) {
+                handleLib(prefetchedLib);
+            } else {
+                getLibraryWallpapers(locationContainerEl, lat, lng, handleLib);
+            }
         }
 
         function deactivateStillMode() {
@@ -9641,7 +9647,7 @@ const LocationWallpaperComponent = (function() {
             });
         }
 
-        function startBasicMode(lat, lng) {
+        function startBasicMode(lat, lng, prefetchedLib) {
             cancelLazyCleanup();
             st.isActive = true;
             ensureResizeObserver();
@@ -9735,7 +9741,7 @@ const LocationWallpaperComponent = (function() {
                 });
             }
 
-            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+            function handleLib(lib) {
                 console.log('[TRACK-VIEW] BASIC MODE - library result:', lib ? Object.keys(lib).length + ' images' : 'NOT FOUND');
                 if (lib && Object.keys(lib).length === 4) {
                     console.log('[TRACK-VIEW] BASIC MODE - displaying from STORAGE');
@@ -9744,7 +9750,13 @@ const LocationWallpaperComponent = (function() {
                     console.log('[TRACK-VIEW] BASIC MODE - will GENERATE or use cache');
                     fallbackToCache();
                 }
-            });
+            }
+
+            if (prefetchedLib !== undefined) {
+                handleLib(prefetchedLib);
+            } else {
+                getLibraryWallpapers(locationContainerEl, lat, lng, handleLib);
+            }
         }
 
         function advanceBasic() {
@@ -9817,7 +9829,7 @@ const LocationWallpaperComponent = (function() {
         // ============================================================
         // ENSURE ALL 4 IMAGES EXIST (regardless of viewing mode)
         // ============================================================
-        function ensureAllFourImages(lat, lng) {
+        function ensureAllFourImages(lat, lng, prefetchedLib) {
             // Always capture all 4 bearings when location changes.
             // This runs regardless of viewing mode (off/still/basic/orbit).
             console.log('[TRACK] ensureAllFourImages called for', lat, lng);
@@ -9825,8 +9837,7 @@ const LocationWallpaperComponent = (function() {
             var cameras = getBasicModeCameras(locationType, [lng, lat]);
             var bearings = [0, 90, 180, 270];
 
-            // Check library first (already uploaded to server)
-            getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+            function handleLib(lib) {
                 console.log('[TRACK] Library check result:', lib ? Object.keys(lib).length + ' images' : 'none');
                 if (lib && Object.keys(lib).length === 4) {
                     // All 4 already exist on server - nothing to do
@@ -9870,7 +9881,13 @@ const LocationWallpaperComponent = (function() {
                     };
                     captureNext(0);
                 });
-            });
+            }
+
+            if (prefetchedLib !== undefined) {
+                handleLib(prefetchedLib);
+            } else {
+                getLibraryWallpapers(locationContainerEl, lat, lng, handleLib);
+            }
         }
 
         // ============================================================
@@ -9899,14 +9916,12 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
-                // Ensure all 4 images are captured and stored in browser cache
-                // This happens regardless of view mode - images are needed for submission
-                ensureAllFourImages(lat, lng);
             }
 
             // Now handle display based on mode
             if (mode === 'off') {
-                // Hide everything (but images were still captured above)
+                // Hide everything (but still ensure images are captured)
+                if (changed) ensureAllFourImages(lat, lng);
                 clearAllTimers();
                 removeMap();
                 setImageUrl('');
@@ -9923,13 +9938,28 @@ const LocationWallpaperComponent = (function() {
             if (mode !== 'orbit' && mode !== 'still') removeMap();
 
             if (mode === 'orbit') {
+                if (changed) ensureAllFourImages(lat, lng);
                 startOrbitMode(lat, lng);
             } else if (mode === 'still') {
-                startStillMode(lat, lng);
+                if (changed) {
+                    // Single library fetch shared between ensure and display
+                    getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                        ensureAllFourImages(lat, lng, lib);
+                        startStillMode(lat, lng, lib);
+                    });
+                } else {
+                    startStillMode(lat, lng);
+                }
             } else if (mode === 'basic') {
-                // Resume if same location, container exists, and images are ready
                 if (!changed && basicContainer && basicReady) {
+                    // Resume if same location, container exists, and images are ready
                     resumeBasicMode();
+                } else if (changed) {
+                    // Single library fetch shared between ensure and display
+                    getLibraryWallpapers(locationContainerEl, lat, lng, function(lib) {
+                        ensureAllFourImages(lat, lng, lib);
+                        startBasicMode(lat, lng, lib);
+                    });
                 } else {
                     startBasicMode(lat, lng);
                 }
