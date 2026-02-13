@@ -48,7 +48,8 @@
 
     /**
      * Build a status bar element for a post.
-     * Layout: STATUS (left) | tier | countdown | date (right)
+     * Layout: [STATUS tier] (left) | countdown (center) | date (right)
+     * Three flex items with space-between. Status and tier share the first item.
      * Color: green (7+ days), yellow (3-7 days), red (<3 days), darkgray (hidden), black (expired/deleted).
      * @param {Object} post - Post object with visibility, expires_at, deleted_at, checkout_title
      * @returns {HTMLElement} Status bar div
@@ -57,6 +58,8 @@
         var bar = document.createElement('div');
         bar.className = 'posteditor-status-bar';
 
+        var leftSpan = document.createElement('span');
+        leftSpan.className = 'posteditor-status-bar-left';
         var statusSpan = document.createElement('span');
         statusSpan.className = 'posteditor-status-bar-status';
         var tierSpan = document.createElement('span');
@@ -120,8 +123,9 @@
         statusSpan.textContent = status;
         tierSpan.textContent = post.checkout_title || '';
 
-        bar.appendChild(statusSpan);
-        bar.appendChild(tierSpan);
+        leftSpan.appendChild(statusSpan);
+        leftSpan.appendChild(tierSpan);
+        bar.appendChild(leftSpan);
         bar.appendChild(countdownSpan);
         bar.appendChild(dateSpan);
 

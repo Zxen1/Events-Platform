@@ -116,14 +116,17 @@
   white-space: nowrap;
 }
 
-.posteditor-status-bar-status {
+.posteditor-status-bar-left {
   flex-shrink: 0;
+}
+
+.posteditor-status-bar-status {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
 
 .posteditor-status-bar-tier {
-  flex-shrink: 0;
+  margin-left: 6px;
 }
 
 .posteditor-status-bar-countdown {
