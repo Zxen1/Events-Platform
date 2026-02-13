@@ -48,7 +48,7 @@ const MarqueeModule = (function() {
      -------------------------------------------------------------------------- */
   let marqueeEl = null;           // .marquee element
   let contentEl = null;           // .marquee-content element
-  let posts = [];                 // Posts to display (internal state for rotation)
+  let entries = [];               // Map card entries to display: [{ post, mapCard }, ...]
   let currentIndex = -1;          // Current slide index
   let rotationTimer = null;       // Interval timer
   let postsKey = '';              // Cache key to detect changes
@@ -148,8 +148,8 @@ const MarqueeModule = (function() {
       contentEl.classList.add('marquee-content--visible');
       isVisible = true;
       
-      // Start rotation if we have posts
-      if (posts.length > 0 && !rotationTimer) {
+      // Start rotation if we have entries
+      if (entries.length > 0 && !rotationTimer) {
         startRotation();
       }
       
@@ -221,39 +221,41 @@ const MarqueeModule = (function() {
      -------------------------------------------------------------------------- */
   
   /**
-   * Handle filter:applied event - update marquee posts
-   * @param {Object} data - Filter data with marqueePosts array
+   * Handle filter:applied event - update marquee entries
+   * @param {Object} data - Filter data with marqueeMapCards array [{ post, mapCard }, ...]
    */
   function handleFilterApplied(data) {
-    if (!data || !Array.isArray(data.marqueePosts)) return;
+    if (!data || !Array.isArray(data.marqueeMapCards)) return;
     
-    const newPosts = data.marqueePosts;
-    const newKey = newPosts.map(p => p.id).join(',');
+    var newEntries = data.marqueeMapCards;
+    var newKey = newEntries.map(function(e) {
+      return String(e.post.id) + ':' + String(e.mapCard.id);
+    }).join(',');
     
-    // Only update if posts changed
+    // Only update if entries changed
     if (newKey !== postsKey) {
-      updatePosts(newPosts);
+      updateEntries(newEntries);
       postsKey = newKey;
     }
   }
   
   /**
-   * Update the posts to display
-   * @param {Array} newPosts - Array of post objects
+   * Update the entries to display
+   * @param {Array} newEntries - Array of { post, mapCard } objects
    */
-  function updatePosts(newPosts) {
+  function updateEntries(newEntries) {
     // Stop current rotation
     stopRotation();
     
     // Clear existing slides
     clearSlides();
     
-    // Update posts
-    posts = newPosts;
+    // Update entries
+    entries = newEntries;
     currentIndex = -1;
     
-    // Start showing if we have posts
-    if (posts.length > 0) {
+    // Start showing if we have entries
+    if (entries.length > 0) {
       showNextSlide();
       startRotation();
     }
@@ -293,14 +295,17 @@ const MarqueeModule = (function() {
    * Show the next slide in rotation
    */
   function showNextSlide() {
-    if (!contentEl || posts.length === 0) return;
+    if (!contentEl || entries.length === 0) return;
     
-    currentIndex = (currentIndex + 1) % posts.length;
-    const post = posts[currentIndex];
+    currentIndex = (currentIndex + 1) % entries.length;
+    var entry = entries[currentIndex];
+    var post = entry.post;
+    var mapCard = entry.mapCard;
     
     const slide = document.createElement('a');
     slide.className = 'marquee-slide';
     slide.dataset.id = post.id;
+    slide.dataset.mapCardId = String(mapCard.id);
     slide.href = getPostUrl(post);
     
     const img = new Image();
@@ -311,7 +316,7 @@ const MarqueeModule = (function() {
     // Wait for image to decode before showing
     img.decode().catch(function() {}).then(function() {
       slide.appendChild(img);
-      slide.appendChild(createSlideInfo(post));
+      slide.appendChild(createSlideInfo(post, mapCard));
       contentEl.appendChild(slide);
       
       requestAnimationFrame(function() {
@@ -334,39 +339,33 @@ const MarqueeModule = (function() {
   /**
    * Create the info overlay for a slide
    * @param {Object} post - Post object
+   * @param {Object} mapCard - Specific map card for this slide
    * @returns {HTMLElement} The info element
    */
-  function createSlideInfo(post) {
+  function createSlideInfo(post, mapCard) {
     const info = document.createElement('div');
     info.className = 'marquee-slide-info';
-    
-    // Get first map card data
-    const mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
 
-    // Get display data (mirroring PostModule.renderPostCard)
-    let title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
+    // Display data from the specific map card (always shows exact location, never "X Locations")
+    var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
     if (title === 'Array') title = 'Post #' + post.id;
-    const venueName = (mapCard && mapCard.venue_name) || '';
-    const suburb = (mapCard && mapCard.suburb) || '';
-    const city = (mapCard && mapCard.city) || '';
-    const state = (mapCard && mapCard.state) || '';
-    const countryName = (mapCard && mapCard.country_name) || '';
-    const locationType = (mapCard && mapCard.location_type) || '';
-    const locationCount = (post.map_cards && post.map_cards.length) ? post.map_cards.length : 1;
-    let locationDisplay = '';
-    if (locationCount > 1) {
-      // Multi-location posts show count instead of a single location name
-      locationDisplay = locationCount + ' Locations';
-    } else if (locationType === 'venue') {
+    var venueName = (mapCard && mapCard.venue_name) || '';
+    var suburb = (mapCard && mapCard.suburb) || '';
+    var city = (mapCard && mapCard.city) || '';
+    var state = (mapCard && mapCard.state) || '';
+    var countryName = (mapCard && mapCard.country_name) || '';
+    var locationType = (mapCard && mapCard.location_type) || '';
+    var locationDisplay = '';
+    if (locationType === 'venue') {
       // Venue: "Venue Name, Suburb"
       locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
     } else if (locationType === 'city') {
       // City: "City, State" (fallback to Country)
-      const citySecond = state || countryName || '';
+      var citySecond = state || countryName || '';
       locationDisplay = (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
     } else {
       // Address: "Suburb, State" (fallback to Country)
-      const addrSecond = state || countryName || '';
+      var addrSecond = state || countryName || '';
       locationDisplay = (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || city || '');
     }
 
@@ -480,32 +479,32 @@ const MarqueeModule = (function() {
    * @param {Event} e - Click event
    */
   function handleSlideClick(e) {
-    const slide = e.target.closest('.marquee-slide');
+    var slide = e.target.closest('.marquee-slide');
     if (!slide) return;
     
     e.preventDefault();
     
-    const postId = slide.dataset.id;
-    if (!postId) return;
+    var postId = slide.dataset.id;
+    var mapCardId = slide.dataset.mapCardId;
+    if (!postId || !mapCardId) return;
     
-    // Find the post in our internal array to get coordinates
-    var post = null;
-    for (var i = 0; i < posts.length; i++) {
-      if (String(posts[i].id) === String(postId)) {
-        post = posts[i];
+    // Find the matching entry in our internal array
+    var entry = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (String(entries[i].post.id) === String(postId) &&
+          String(entries[i].mapCard.id) === String(mapCardId)) {
+        entry = entries[i];
         break;
       }
     }
-    if (!post) throw new Error('[Marquee] Post not found in internal array: ' + postId);
+    if (!entry) throw new Error('[Marquee] Entry not found: post=' + postId + ' mapCard=' + mapCardId);
     
-    // Fly to the first map card's location, then open the post on arrival
-    var mapCards = (post.map_cards && post.map_cards.length) ? post.map_cards : [];
-    var firstCard = mapCards[0];
-    if (!firstCard) throw new Error('[Marquee] Post has no map cards: ' + postId);
-    
-    var lng = Number(firstCard.longitude);
-    var lat = Number(firstCard.latitude);
-    if (!Number.isFinite(lng) || !Number.isFinite(lat)) throw new Error('[Marquee] Invalid coordinates for post: ' + postId);
+    var mapCard = entry.mapCard;
+    var lng = Number(mapCard.longitude);
+    var lat = Number(mapCard.latitude);
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+      throw new Error('[Marquee] Invalid coordinates for post=' + postId + ' mapCard=' + mapCardId);
+    }
     
     MapModule.flyTo(lng, lat);
     
@@ -519,7 +518,7 @@ const MarqueeModule = (function() {
         // Open the post with the specific map card selected
         if (window.PostModule && typeof PostModule.openPostById === 'function') {
           PostModule.openPostById(postId, {
-            postMapCardId: String(firstCard.id),
+            postMapCardId: String(mapCard.id),
             source: 'marquee'
           });
         }
@@ -578,11 +577,11 @@ const MarqueeModule = (function() {
     show,
     hide,
     toggle,
-    updatePosts,
+    updateEntries,
     
     // Getters for external access
     isVisible: () => isVisible,
-    getPostCount: () => posts.length,
+    getEntryCount: () => entries.length,
     getCurrentIndex: () => currentIndex
   };
 
@@ -591,10 +590,10 @@ const MarqueeModule = (function() {
 // Register with App
 App.registerModule('marquee', MarqueeModule);
 
-// Lazy initialization - only init when width is 1900+, posts mode active, and posts loaded
+// Lazy initialization - only init when width is 1900+, posts mode active, and entries loaded
 (function() {
     var bootloaded = false;
-    var lastPosts = null;
+    var lastEntries = null;
     var currentMode = 'map';
     
     function isWideEnough() {
@@ -605,16 +604,16 @@ App.registerModule('marquee', MarqueeModule);
         if (bootloaded || !isWideEnough()) return;
         MarqueeModule.init();
         bootloaded = true;
-        if (lastPosts && lastPosts.length > 0) {
-            MarqueeModule.updatePosts(lastPosts);
+        if (lastEntries && lastEntries.length > 0) {
+            MarqueeModule.updateEntries(lastEntries);
         }
     }
     
     function checkAndShow() {
         if (!bootloaded) return;
         
-        // Must be: wide enough + posts mode + has posts
-        if (isWideEnough() && currentMode === 'posts' && lastPosts && lastPosts.length > 0) {
+        // Must be: wide enough + posts mode + has entries
+        if (isWideEnough() && currentMode === 'posts' && lastEntries && lastEntries.length > 0) {
             MarqueeModule.show();
         } else {
             MarqueeModule.hide();
@@ -623,11 +622,11 @@ App.registerModule('marquee', MarqueeModule);
     
     if (window.App && App.on) {
         App.on('filter:applied', function(data) {
-            if (data && Array.isArray(data.marqueePosts)) {
-                lastPosts = data.marqueePosts;
+            if (data && Array.isArray(data.marqueeMapCards)) {
+                lastEntries = data.marqueeMapCards;
             }
             
-            if (lastPosts && lastPosts.length > 0 && isWideEnough()) {
+            if (lastEntries && lastEntries.length > 0 && isWideEnough()) {
                 lazyInit();
             }
             checkAndShow();
@@ -641,7 +640,7 @@ App.registerModule('marquee', MarqueeModule);
         });
 
         window.addEventListener('resize', function() {
-            if (!bootloaded && lastPosts && lastPosts.length > 0 && isWideEnough()) {
+            if (!bootloaded && lastEntries && lastEntries.length > 0 && isWideEnough()) {
                 lazyInit();
             }
             checkAndShow();

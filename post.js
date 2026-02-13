@@ -1613,6 +1613,12 @@ const PostModule = (function() {
   // (matches live-site behavior: don't clear everything on every refresh).
   var lastRenderedVenueMarkerSigByKey = {};
 
+  // --- Map Card Priority System ---
+  // Cached random scores for each venue key, persisted between renders.
+  // Only regenerated on zoom changes exceeding the reshuffle threshold.
+  var priorityScoreCache = {};        // venueKey -> random score (0-1)
+  var lastReshuffleZoom = null;       // Zoom level at which the last reshuffle occurred
+
   /**
    * Convert a map card to marker-friendly format
    * @param {Object} post - Parent post data
@@ -1807,44 +1813,105 @@ const PostModule = (function() {
       allMarkerData.push(markerData);
     });
 
-    // --- High-Density Logic ---
+    // --- Map Card Priority System ---
+    // Tiers: sidebar_ad (Premium) > featured (Featured) > standard
+    // Within each tier: randomized for fair exposure
+    // Fairness rule: one map card per post before any post gets a second
+    // Premium/Featured never become dots (always card or icon)
     var MAX_MAP_CARDS = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
     var totalResultCount = allMarkerData.length;
     var isHighDensity = totalResultCount > MAX_MAP_CARDS;
-    
-    // Determine which featured posts get the 50 "Card" slots
-    // We sort by 'recommended' logic (Featured first, then Newest) to fill slots
-    var sortedForSlots = allMarkerData.slice().sort(function(a, b) {
-      var pA = a._originalPost;
-      var pB = b._originalPost;
-      var featA = (pA.featured === 1);
-      var featB = (pB.featured === 1);
-      if (featA !== featB) return featB ? 1 : -1;
-      return (Number(pB.sortCreatedAt) || 0) - (Number(pA.sortCreatedAt) || 0);
+
+    // Determine whether to reshuffle random scores or reuse cached ones.
+    // Reshuffle only when zoom changes by more than the configured threshold.
+    var currentZoom = (typeof lastZoom === 'number') ? lastZoom : 0;
+    var reshuffleThreshold = (window.App && typeof App.getConfig === 'function')
+      ? App.getConfig('reshuffleZoomThreshold') : 0.5;
+    var needsReshuffle = (lastReshuffleZoom === null) ||
+      (Math.abs(currentZoom - lastReshuffleZoom) >= reshuffleThreshold);
+
+    if (needsReshuffle) {
+      // Full reshuffle: regenerate random scores for all venue keys
+      priorityScoreCache = {};
+      allMarkerData.forEach(function(item) {
+        priorityScoreCache[item.venueKey] = Math.random();
+      });
+      lastReshuffleZoom = currentZoom;
+    } else {
+      // Partial update: keep existing scores, assign new ones for unseen venue keys
+      allMarkerData.forEach(function(item) {
+        if (priorityScoreCache[item.venueKey] === undefined) {
+          priorityScoreCache[item.venueKey] = Math.random();
+        }
+      });
+    }
+
+    // Classify each marker into its tier
+    var tierPremium = [];   // sidebar_ad === 1
+    var tierFeatured = [];  // featured === 1, not sidebar_ad
+    var tierStandard = [];  // everything else
+
+    allMarkerData.forEach(function(item) {
+      var post = item._originalPost;
+      if (post.sidebar_ad === 1) {
+        tierPremium.push(item);
+      } else if (post.featured === 1) {
+        tierFeatured.push(item);
+      } else {
+        tierStandard.push(item);
+      }
     });
 
+    // Apply fairness rule within a tier: one card per post first, then extras.
+    // Returns items ordered: [firstCards (shuffled), extraCards (shuffled)]
+    function applyFairnessRule(tierItems) {
+      var seenPostIds = {};
+      var firstCards = [];
+      var extraCards = [];
+      // Sort by cached random score so the split is randomized
+      var shuffled = tierItems.slice().sort(function(a, b) {
+        return (priorityScoreCache[a.venueKey] || 0) - (priorityScoreCache[b.venueKey] || 0);
+      });
+      shuffled.forEach(function(item) {
+        var postId = String(item.id);
+        if (!seenPostIds[postId]) {
+          seenPostIds[postId] = true;
+          firstCards.push(item);
+        } else {
+          extraCards.push(item);
+        }
+      });
+      return firstCards.concat(extraCards);
+    }
+
+    // Build the full priority list: Premium → Featured → Standard
+    // Within each tier: first-cards (one per post) then extra-cards, all randomized
+    var priorityList = applyFairnessRule(tierPremium)
+      .concat(applyFairnessRule(tierFeatured))
+      .concat(applyFairnessRule(tierStandard));
+
+    // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots
     var cardSlots = new Set();
     var geojsonFeatures = [];
 
-    sortedForSlots.forEach(function(item, idx) {
-      var isFeatured = item._originalPost && item._originalPost.featured === 1;
+    priorityList.forEach(function(item, idx) {
+      var post = item._originalPost;
+      var isPremiumOrFeatured = (post.sidebar_ad === 1) || (post.featured === 1);
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
       if (hasCardSlot) {
         cardSlots.add(item.venueKey);
       }
 
-      // GeoJSON property: type = 'card' | 'icon' | 'dot'
-      var type = 'card'; // Default to card
-      if (isHighDensity) {
-        if (!hasCardSlot) {
-          type = isFeatured ? 'icon' : 'dot';
-        }
+      // Display tier: card, icon, or dot
+      // Premium/Featured are NEVER dots — they become icons if they miss a card slot
+      var type = 'card';
+      if (isHighDensity && !hasCardSlot) {
+        type = isPremiumOrFeatured ? 'icon' : 'dot';
       }
 
-      // High-Density Rule: NO FALLBACKS.
-      // If color or subcategory key is missing, we must identify it immediately.
-      var subColor = item._originalPost.subcategory_color;
+      // Validate required data (no fallbacks)
+      var subColor = post.subcategory_color;
       if (!subColor) {
         throw new Error('[Map] Subcategory color missing for post ID ' + item.id + ' (required for high-density dots).');
       }
@@ -1857,7 +1924,7 @@ const PostModule = (function() {
       if (type !== 'card') {
         geojsonFeatures.push({
           type: 'Feature',
-          id: item.id, // Using post ID as numeric ID for Mapbox feature-state
+          id: item.id,
           geometry: {
             type: 'Point',
             coordinates: [item.lng, item.lat]
@@ -2044,13 +2111,23 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
-    // Filter for posts with sidebar_ad flag (premium listings with marquee access)
-    var marqueePosts = list.filter(function(p) {
-      return p.sidebar_ad === 1;
-    }).slice(0, 10);
-    
+    // Build individual map card entries for premium posts (sidebar_ad === 1).
+    // Each entry is { post, mapCard } so the marquee can display specific location info.
+    var marqueeMapCards = [];
+    list.forEach(function(p) {
+      if (p.sidebar_ad !== 1) return;
+      if (!p.map_cards || !p.map_cards.length) return;
+      p.map_cards.forEach(function(mc) {
+        if (!mc || !Number.isFinite(mc.latitude) || !Number.isFinite(mc.longitude)) return;
+        marqueeMapCards.push({ post: p, mapCard: mc });
+      });
+    });
+    // Limit to max map card slots
+    var maxCards = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
+    marqueeMapCards = marqueeMapCards.slice(0, maxCards);
+
     App.emit('filter:applied', {
-      marqueePosts: marqueePosts
+      marqueeMapCards: marqueeMapCards
     });
   }
 

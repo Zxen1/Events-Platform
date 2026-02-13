@@ -200,6 +200,7 @@ const App = (function() {
     flyToZoom: 12,         // Fly-to zoom level (synced from DB: flyto_zoom_desktop / flyto_zoom_mobile)
     marqueeWidthThreshold: 1920, // Minimum screen width required to display the marquee
     maxMapCards: 50,       // Threshold for switching to high-density mode
+    reshuffleZoomThreshold: 0.5, // Zoom change threshold for map card priority reshuffle (synced from DB)
     markerDotSize: 8,      // Diameter of standard listing dots
     markerDotStroke: 2,    // Stroke width for dots and icons
     markerIconSize: 30     // Diameter of featured icon landmarks
@@ -497,6 +498,11 @@ const App = (function() {
         var flyToKey = isMobile ? 'flyto_zoom_mobile' : 'flyto_zoom_desktop';
         if (settings[flyToKey] !== undefined) {
           setConfig('flyToZoom', parseFloat(settings[flyToKey]));
+        }
+
+        // Sync Map Card Priority Reshuffle Zoom threshold from database
+        if (settings.map_card_priority_reshuffle_zoom !== undefined) {
+          setConfig('reshuffleZoomThreshold', parseFloat(settings.map_card_priority_reshuffle_zoom));
         }
 
         // Apply Devtools Console Filter (database source of truth; no localStorage dependency)
