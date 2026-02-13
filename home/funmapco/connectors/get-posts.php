@@ -86,7 +86,7 @@ try {
     // Check if user is logged in (for contact detail protection)
     // Contact details (email/phone) are hidden from non-members to prevent bot scraping
     // Note: $showContactDetails is set after parsing $memberId below
-    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
+    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']) || !empty($_SERVER['HTTP_X_MEMBER_AUTH']);
 
     // Load database config
     $configCandidates = [

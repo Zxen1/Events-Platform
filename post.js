@@ -1021,7 +1021,12 @@ const PostModule = (function() {
 
     postsLoading = true;
 
-    return fetch('/gateway.php?action=get-posts&' + requestKey, postsAbort ? { signal: postsAbort.signal } : undefined)
+    var fetchOpts = {};
+    if (postsAbort) fetchOpts.signal = postsAbort.signal;
+    if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+      fetchOpts.headers = { 'X-Member-Auth': '1' };
+    }
+    return fetch('/gateway.php?action=get-posts&' + requestKey, fetchOpts)
       .then(function(response) {
         if (!response.ok) {
           throw new Error('Failed to load posts: ' + response.status);
@@ -4689,7 +4694,11 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1')
+    var authOpts = {};
+    if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+      authOpts.headers = { 'X-Member-Auth': '1' };
+    }
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1', authOpts)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
@@ -4708,7 +4717,11 @@ const PostModule = (function() {
   function loadPostByKey(postKey) {
     var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
     if (!key) return Promise.resolve(null);
-    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
+    var authOpts = {};
+    if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+      authOpts.headers = { 'X-Member-Auth': '1' };
+    }
+    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key), authOpts)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();

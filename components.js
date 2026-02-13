@@ -8966,13 +8966,11 @@ const LocationWallpaperComponent = (function() {
      * @param {Function} callback - Called with wallpapers object or null
      */
     function getLibraryWallpapers(containerEl, lat, lng, callback) {
-        console.log('[TRACK-VIEW] getLibraryWallpapers called for', lat, lng);
         // 1. Check cached on container (from previous API call)
         try {
             if (containerEl.__libraryWallpapers) {
                 var cached = containerEl.__libraryWallpapers;
                 if (cached.lat === lat && cached.lng === lng && cached.wallpapers) {
-                    console.log('[TRACK-VIEW] Found in CONTAINER CACHE:', Object.keys(cached.wallpapers).length, 'images');
                     callback(cached.wallpapers);
                     return;
                 }
@@ -8985,7 +8983,6 @@ const LocationWallpaperComponent = (function() {
             if (mapCardEl && mapCardEl.__mapCardData && mapCardEl.__mapCardData.library_wallpapers) {
                 var lib = mapCardEl.__mapCardData.library_wallpapers;
                 if (lib && Object.keys(lib).length > 0) {
-                    console.log('[TRACK-VIEW] Found in MAP CARD DATA (library_wallpapers):', Object.keys(lib).length, 'images', lib);
                     callback(lib);
                     return;
                 }
@@ -8993,7 +8990,6 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {}
 
         // 3. Fetch from API (for form/profile contexts)
-        console.log('[TRACK-VIEW] Fetching from API...');
         fetch('/gateway.php?action=get-map-wallpapers&lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng))
             .then(function(response) {
                 if (!response.ok) return null;
@@ -9001,7 +8997,6 @@ const LocationWallpaperComponent = (function() {
             })
             .then(function(resp) {
                 if (resp && resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length > 0) {
-                    console.log('[TRACK-VIEW] API returned:', Object.keys(resp.wallpapers).length, 'images from DATABASE', resp.wallpapers);
                     // Cache on container for future use
                     containerEl.__libraryWallpapers = {
                         lat: lat,
@@ -9010,12 +9005,10 @@ const LocationWallpaperComponent = (function() {
                     };
                     callback(resp.wallpapers);
                 } else {
-                    console.log('[TRACK-VIEW] API returned NO images - will need to GENERATE');
                     callback(null);
                 }
             })
             .catch(function() {
-                console.log('[TRACK-VIEW] API FAILED - will need to GENERATE');
                 callback(null);
             });
     }
@@ -9569,14 +9562,11 @@ const LocationWallpaperComponent = (function() {
 
             // Check for library wallpapers (container cache, post data, or API)
             function handleLib(lib) {
-                console.log('[TRACK-VIEW] STILL MODE - library result:', lib ? 'FOUND ' + Object.keys(lib).length : 'NOT FOUND');
                 if (lib && lib[0]) {
                     // Library wallpaper found - instant display
-                    console.log('[TRACK-VIEW] STILL MODE - displaying from STORAGE:', lib[0].substring(0, 80));
                     displayInstant(lib[0]);
                     return;
                 }
-                console.log('[TRACK-VIEW] STILL MODE - will GENERATE on the fly');
 
                 // No library wallpapers - use fallback chain
                 if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
@@ -9742,12 +9732,9 @@ const LocationWallpaperComponent = (function() {
             }
 
             function handleLib(lib) {
-                console.log('[TRACK-VIEW] BASIC MODE - library result:', lib ? Object.keys(lib).length + ' images' : 'NOT FOUND');
                 if (lib && Object.keys(lib).length === 4) {
-                    console.log('[TRACK-VIEW] BASIC MODE - displaying from STORAGE');
                     displayInstant(lib);
                 } else {
-                    console.log('[TRACK-VIEW] BASIC MODE - will GENERATE or use cache');
                     fallbackToCache();
                 }
             }
@@ -9877,38 +9864,29 @@ const LocationWallpaperComponent = (function() {
         function ensureAllFourImages(lat, lng, prefetchedLib) {
             // Always capture all 4 bearings when location changes.
             // This runs regardless of viewing mode (off/still/basic/orbit).
-            console.log('[TRACK] ensureAllFourImages called for', lat, lng);
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var cameras = getBasicModeCameras(locationType, [lng, lat]);
             var bearings = [0, 90, 180, 270];
 
             function handleLib(lib) {
-                console.log('[TRACK] Library check result:', lib ? Object.keys(lib).length + ' images' : 'none');
                 if (lib && Object.keys(lib).length === 4) {
                     // All 4 already exist on server - nothing to do
-                    console.log('[TRACK] All 4 exist on server, skipping capture');
                     return;
                 }
 
                 // Check local cache, capture any missing
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
-                    var cacheCount = cached.filter(function(url) { return !!url; }).length;
-                    console.log('[TRACK] Cache check:', cacheCount, '/4 in local cache');
                     var allCached = cached.every(function(url) { return !!url; });
                     if (allCached) {
-                        console.log('[TRACK] All 4 in local cache, skipping capture');
                         return; // All 4 in local cache
                     }
 
                     // Capture missing images sequentially
                     var capturedUrls = cached.slice(); // Start with what we have
-                    console.log('[TRACK] Starting capture of missing images');
                     var captureNext = function(idx) {
                         if (idx >= 4) {
                             // Store all to cache
-                            console.log('[TRACK] All 4 captured, storing to cache');
                             WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {
-                                console.log('[TRACK] Stored to WallpaperCache');
                                 // Self-healing: upload freshly captured images to server
                                 uploadCapturedWallpapers(lat, lng, bearings, capturedUrls);
                             });
@@ -9919,9 +9897,7 @@ const LocationWallpaperComponent = (function() {
                             captureNext(idx + 1);
                             return;
                         }
-                        console.log('[TRACK] Capturing bearing', bearings[idx]);
                         SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
-                            console.log('[TRACK] Captured bearing', bearings[idx], url ? 'SUCCESS' : 'FAILED');
                             capturedUrls[idx] = url || '';
                             captureNext(idx + 1);
                         });
