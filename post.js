@@ -540,7 +540,7 @@ const PostModule = (function() {
 
     App.on('filter:sortChanged', function(data) {
       if (!data || !data.sort) return;
-      sortPosts(data.sort);
+      sortPosts(data.sort, data.userGeoLocation || null);
     });
 
     App.on('filter:favouritesToggle', function(data) {
@@ -2317,7 +2317,7 @@ const PostModule = (function() {
    * Sort posts by the given sort key
    * @param {string} sortKey - Sort key (az, za, newest, oldest, price-low, price-high)
    */
-  function sortPosts(sortKey) {
+  function sortPosts(sortKey, userGeoLocation) {
     // Agent Essentials: no post response caching.
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
@@ -2339,13 +2339,14 @@ const PostModule = (function() {
     var openPostEl = postListEl.querySelector('.post');
     var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
 
-    var center = getMapCenter();
-    function distanceToCenterKm(cardEl) {
-      if (!center || !cardEl || !cardEl.dataset) return Number.POSITIVE_INFINITY;
+    // "Sort by Closest" uses the user's geolocated position
+    var nearestOrigin = userGeoLocation || null;
+    function distanceToUserKm(cardEl) {
+      if (!nearestOrigin || !cardEl || !cardEl.dataset) return Number.POSITIVE_INFINITY;
       var lng = Number(cardEl.dataset.sortLng);
       var lat = Number(cardEl.dataset.sortLat);
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return Number.POSITIVE_INFINITY;
-      return distKm({ lng: lng, lat: lat }, { lng: Number(center.lng), lat: Number(center.lat) });
+      return distKm({ lng: lng, lat: lat }, { lng: nearestOrigin.lng, lat: nearestOrigin.lat });
     }
 
     slots.sort(function(slotA, slotB) {
@@ -2387,7 +2388,7 @@ const PostModule = (function() {
         case 'price-high':
           return (Number(b.sortPrice) || 0) - (Number(a.sortPrice) || 0);
         case 'nearest':
-          return distanceToCenterKm(aEl) - distanceToCenterKm(bEl);
+          return distanceToUserKm(aEl) - distanceToUserKm(bEl);
         case 'soon':
           return (Number(a.sortSoonTs) || Number.POSITIVE_INFINITY) - (Number(b.sortSoonTs) || Number.POSITIVE_INFINITY);
         default:

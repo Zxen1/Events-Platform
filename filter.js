@@ -50,6 +50,8 @@ const FilterModule = (function() {
     var sortButtonEl = null;
     var sortButtonText = null;
     var currentSort = 'recommended';
+    var previousSort = 'recommended';  // For reverting if geolocation is denied
+    var userGeoLocation = null;        // { lat, lng } from geolocation API
     var closeBtn = null;
     
     // Filter basics
@@ -882,12 +884,80 @@ const FilterModule = (function() {
         if (firstOption) {
             firstOption.classList.add('filter-sort-menu-option--selected');
         }
+
+        // Register the geolocate icon in the "Sort by Closest" option
+        // so it syncs with all other geolocate icons site-wide
+        var sortGeoIcon = sortMenuEl.querySelector('.filter-sort-geolocate-icon');
+        if (sortGeoIcon && typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.registerGeolocateIcon) {
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIcon,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
+        }
     }
     
     function selectSort(sortKey, label) {
+        // "Sort by Closest" triggers geolocation; on denial, revert to previous sort
+        if (sortKey === 'nearest') {
+            if (userGeoLocation) {
+                // Already have location — apply sort immediately
+                applySort(sortKey, label);
+                return;
+            }
+            // Check if geolocate was already done via map control buttons
+            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.getCachedLocation) {
+                var cached = MapControlRowComponent.getCachedLocation();
+                if (cached && cached.lat && cached.lng) {
+                    userGeoLocation = { lat: cached.lat, lng: cached.lng };
+                    applySort(sortKey, label);
+                    return;
+                }
+            }
+            if (!navigator.geolocation) {
+                // Browser doesn't support geolocation — revert
+                applySort(previousSort);
+                return;
+            }
+            // Trigger loading state on all synced geolocate icons
+            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateLoading) {
+                MapControlRowComponent.setAllGeolocateLoading();
+            }
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    // Set active state on all synced geolocate icons
+                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
+                        MapControlRowComponent.setAllGeolocateActive();
+                    }
+                    applySort(sortKey, label);
+                },
+                function() {
+                    // Clear loading state on all synced geolocate icons
+                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.clearAllGeolocateLoading) {
+                        MapControlRowComponent.clearAllGeolocateLoading();
+                    }
+                    // Denied or error — revert to previous sort
+                    applySort(previousSort);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+            return;
+        }
+        applySort(sortKey, label);
+    }
+
+    function applySort(sortKey, label) {
+        previousSort = currentSort;
         currentSort = sortKey;
         
-        if (sortButtonText) {
+        // Resolve label from DOM if not provided (used when reverting)
+        if (!label && sortMenuEl) {
+            var opt = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + sortKey + '"]');
+            if (opt) label = opt.textContent;
+        }
+        
+        if (sortButtonText && label) {
             sortButtonText.textContent = label;
         }
         
@@ -897,7 +967,7 @@ const FilterModule = (function() {
             opt.classList.toggle('filter-sort-menu-option--selected', opt.getAttribute('data-sort') === sortKey);
         });
         
-        App.emit('filter:sortChanged', { sort: sortKey });
+        App.emit('filter:sortChanged', { sort: sortKey, userGeoLocation: userGeoLocation });
         saveFilters();
     }
     
