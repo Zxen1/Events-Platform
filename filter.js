@@ -593,12 +593,8 @@ const FilterModule = (function() {
         }
         
         // Update badge content
-        if (count > 0) {
-            headerFilterBadge.textContent = count > 999 ? '999+' : String(count);
-            headerFilterBadge.style.display = '';
-        } else {
-            headerFilterBadge.style.display = 'none';
-        }
+        headerFilterBadge.textContent = String(count);
+        headerFilterBadge.style.display = '';
     }
 
 
