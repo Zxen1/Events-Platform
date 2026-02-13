@@ -984,7 +984,7 @@ if (empty($ogTitle)) {
               </div>
             </div>
             <div class="admin-panel-field admin-panel-field--spaced">
-              <label class="admin-settings-field-label admin-settings-field-label--has-tooltip" for="adminMapCardPriorityReshuffleZoom"><span class="admin-settings-field-label-text">Map Card Priority Reshuffle</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-map-card-priority-tooltip"></div></label>
+              <label class="admin-settings-field-label admin-settings-field-label--has-tooltip" for="adminMapCardPriorityReshuffleZoom"><span class="admin-settings-field-label-text">Map Card Reshuffle Zoom Increment</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-map-card-priority-tooltip"></div></label>
               <div class="admin-spin-control-row row-class-1">
                 <span id="adminMapCardPriorityReshuffleZoomDisplay" class="admin-slider-value">0.5</span>
                 <input type="range" id="adminMapCardPriorityReshuffleZoom" min="0.1" max="3.0" step="0.1" value="0.5" class="admin-spin-slider" />
