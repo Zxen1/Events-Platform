@@ -1,16 +1,16 @@
 /* ============================================================================
-   POST EDITOR - My Posts Tab
-   Used in Member Panel > My Posts Tab
+   POST EDITOR
+   Used in Member Panel > Post Editor Tab
    
    Provides post listing, editing, and management for member's own posts.
    ============================================================================ */
 
 /* ============================================================================
-   MY POSTS TAB CONTAINER
+   POST EDITOR TAB CONTAINER
    ============================================================================ */
 
-/* My Posts tab - remove panel body right padding only, keep 10px left padding */
-#member-tab-myposts {
+/* Post Editor tab - remove panel body right padding only, keep 10px left padding */
+#member-tab-posteditor {
   margin-right: -10px;
   width: calc(100% + 10px); /* Compensate for right margin only */
 }
@@ -63,10 +63,10 @@
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-top-color: var(--blue-500);
   border-radius: 50%;
-  animation: myposts-spin 0.8s linear infinite;
+  animation: posteditor-spin 0.8s linear infinite;
 }
 
-@keyframes myposts-spin {
+@keyframes posteditor-spin {
   to { transform: rotate(360deg); }
 }
 

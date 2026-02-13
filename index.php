@@ -1241,7 +1241,7 @@ if (empty($ogTitle)) {
         <div class="member-tab-bar" role="tablist" aria-label="Member sections">
           <button type="button" id="member-tab-profile-btn" class="member-tab-profile button-class-2" data-tab="profile" role="tab" aria-selected="true" aria-controls="member-tab-profile">Profile</button>
           <button type="button" id="member-tab-create-btn" class="member-tab-create button-class-2" data-tab="create" role="tab" aria-selected="false" aria-controls="member-tab-create">Create Post</button>
-          <button type="button" id="member-tab-myposts-btn" class="member-tab-myposts button-class-2" data-tab="myposts" role="tab" aria-selected="false" aria-controls="member-tab-myposts" hidden>My Posts</button>
+          <button type="button" id="member-tab-posteditor-btn" class="member-tab-posteditor button-class-2" data-tab="posteditor" role="tab" aria-selected="false" aria-controls="member-tab-posteditor" hidden>Post Editor</button>
           <button type="button" id="member-tab-register-btn" class="member-tab-register button-class-2" data-tab="register" role="tab" aria-selected="false" aria-controls="member-tab-register">Support FunMap</button>
         </div>
       </div>
@@ -1373,9 +1373,9 @@ if (empty($ogTitle)) {
         </section>
         
         <!-- ================================================================
-             MY POSTS TAB
+             POST EDITOR TAB
              ================================================================ -->
-        <section id="member-tab-myposts" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-myposts-btn" data-bottomslack="false" data-topslack="false" hidden>
+        <section id="member-tab-posteditor" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-posteditor-btn" data-bottomslack="false" data-topslack="false" hidden>
           <!-- Content loaded when logged in -->
         </section>
         

@@ -27,7 +27,7 @@
        STATE
        -------------------------------------------------------------------------- */
     
-    var container = null;  // #member-tab-myposts
+    var container = null;  // #member-tab-posteditor
     var isLoaded = false;
     var editingPostsData = {};      // { [postId]: { original: postObj, current: {}, original_extracted_fields: [] } }
     var activeModal = null;         // { backdrop: HTMLElement, close: Function }
@@ -2029,7 +2029,7 @@
     
     function init(containerEl) {
         if (!containerEl) {
-            containerEl = document.getElementById('member-tab-myposts');
+            containerEl = document.getElementById('member-tab-posteditor');
         }
         if (!containerEl) {
             console.warn('[PostEditor] Container not found');

@@ -10444,7 +10444,7 @@ const PostLocationComponent = (function() {
                 var loc = locationList[index];
                 if (!loc) return;
 
-                var isInMyPosts = !!(wrap.closest && wrap.closest('#member-tab-myposts'));
+                var isInPostEditor = !!(wrap.closest && wrap.closest('#member-tab-posteditor'));
                 var isAlreadySelected = (index === locationSelectedIndex);
 
                 locationSelectedIndex = index;
@@ -10473,8 +10473,8 @@ const PostLocationComponent = (function() {
                     callbacks.addToRecentHistory(post, originalIndex);
                 }
 
-                // My Posts tab: re-render in place
-                if (isInMyPosts && callbacks && callbacks.buildPostDetail) {
+                // Post Editor tab: re-render in place
+                if (isInPostEditor && callbacks && callbacks.buildPostDetail) {
                     var newWrap = callbacks.buildPostDetail(post, null, false, originalIndex);
                     if (wrap.parentNode) {
                         wrap.parentNode.replaceChild(newWrap, wrap);

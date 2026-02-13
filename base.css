@@ -1571,14 +1571,14 @@ body {
 }
 
 /* =============================================================================
-   MY POSTS LOADING PLACEHOLDER
+   POST EDITOR LOADING PLACEHOLDER
    Postcard-style placeholder shown while post is uploading
    ============================================================================= */
-.member-myposts-placeholder {
+.member-posteditor-placeholder {
   margin-bottom: 12px;
 }
 
-.member-myposts-placeholder-card {
+.member-posteditor-placeholder-card {
   position: relative;
   background: var(--card-bg, #2a2a2a);
   border: 1px solid var(--card-border, #444);
@@ -1591,39 +1591,39 @@ body {
   align-items: center;
 }
 
-.member-myposts-placeholder-overlay {
+.member-posteditor-placeholder-overlay {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
 }
 
-.member-myposts-placeholder-spinner {
+.member-posteditor-placeholder-spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--spinner-track, rgba(255,255,255,0.2));
   border-top-color: var(--spinner-color, #fff);
   border-radius: 50%;
-  animation: myposts-spin 0.8s linear infinite;
+  animation: posteditor-spin 0.8s linear infinite;
 }
 
-@keyframes myposts-spin {
+@keyframes posteditor-spin {
   to { transform: rotate(360deg); }
 }
 
-.member-myposts-placeholder-text {
+.member-posteditor-placeholder-text {
   color: var(--text-muted, #aaa);
   font-size: 14px;
 }
 
-.member-myposts-placeholder-title {
+.member-posteditor-placeholder-title {
   margin-top: 10px;
   color: var(--text-primary, #fff);
   font-size: 16px;
   font-weight: 500;
 }
 
-.member-myposts-placeholder-check {
+.member-posteditor-placeholder-check {
   width: 32px;
   height: 32px;
   background: var(--success-color, #4CAF50);
@@ -1636,7 +1636,7 @@ body {
   font-weight: bold;
 }
 
-.member-myposts-placeholder-error {
+.member-posteditor-placeholder-error {
   width: 32px;
   height: 32px;
   background: var(--error-color, #f44336);
@@ -1649,23 +1649,23 @@ body {
   font-weight: bold;
 }
 
-.member-myposts-placeholder--success .member-myposts-placeholder-card {
+.member-posteditor-placeholder--success .member-posteditor-placeholder-card {
   border-color: var(--success-color, #4CAF50);
 }
 
-.member-myposts-placeholder--error .member-myposts-placeholder-card {
+.member-posteditor-placeholder--error .member-posteditor-placeholder-card {
   border-color: var(--error-color, #f44336);
 }
 
-/* My Posts List */
-.member-myposts-status {
+/* Post Editor List */
+.member-posteditor-status {
   padding: 20px;
   text-align: center;
   color: var(--text-muted);
 }
 
-.member-myposts-status--error {
+.member-posteditor-status--error {
   color: var(--error-color, #f44336);
 }
 
-/* My Posts item styling moved to member.css */
+/* Post Editor item styling moved to member.css */

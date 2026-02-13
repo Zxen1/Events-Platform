@@ -82,7 +82,7 @@ const MemberModule = (function() {
     var profilePanel = null;
     var registerTabBtn = null;
     var registerTabPanel = null;
-    var mypostsTabBtn = null;
+    var posteditorTabBtn = null;
     var loginInputs = [];
     var registerInputs = [];
     var supporterMessageEl = null;
@@ -350,7 +350,7 @@ const MemberModule = (function() {
         profilePanel = document.getElementById('member-profile-container');
         registerTabBtn = document.getElementById('member-tab-register-btn');
         registerTabPanel = document.getElementById('member-tab-register');
-        mypostsTabBtn = document.getElementById('member-tab-myposts-btn');
+        posteditorTabBtn = document.getElementById('member-tab-posteditor-btn');
         if (registerTabPanel) {
             registerInputs = Array.from(registerTabPanel.querySelectorAll('input'));
         }
@@ -2287,10 +2287,10 @@ const MemberModule = (function() {
             loadFormpicker();
         }
         
-        // Load user's posts when My Posts tab is activated
-        if (tabName === 'myposts') {
+        // Load user's posts when Post Editor tab is activated
+        if (tabName === 'posteditor') {
             if (window.PostEditorModule && typeof PostEditorModule.init === 'function') {
-                PostEditorModule.init(document.getElementById('member-tab-myposts'));
+                PostEditorModule.init(document.getElementById('member-tab-posteditor'));
             }
         }
         
@@ -3454,9 +3454,9 @@ const MemberModule = (function() {
         var imageFiles = validation.imageFiles || [];
         var imagesMeta = validation.imagesMeta || '[]';
         
-        // Immediately switch to My Posts with loading placeholder (no delay)
+        // Immediately switch to Post Editor with loading placeholder (no delay)
         resetCreatePostForm();
-        try { requestTabSwitch('myposts'); } catch (e0) {}
+        try { requestTabSwitch('posteditor'); } catch (e0) {}
         if (window.PostEditorModule && typeof PostEditorModule.showLoadingPlaceholder === 'function') {
             PostEditorModule.showLoadingPlaceholder(validation.payload);
         }
@@ -6674,8 +6674,8 @@ const MemberModule = (function() {
             // Hide the Register tab button when logged in
             if (registerTabBtn) registerTabBtn.hidden = true;
             
-            // Show the My Posts tab button when logged in
-            if (mypostsTabBtn) mypostsTabBtn.hidden = false;
+            // Show the Post Editor tab button when logged in
+            if (posteditorTabBtn) posteditorTabBtn.hidden = false;
             
             // Show profile content
             if (profilePanel) {
@@ -6771,8 +6771,8 @@ const MemberModule = (function() {
             // Show the Register tab button (only visible when logged out)
             if (registerTabBtn) registerTabBtn.hidden = false;
             
-            // Hide the My Posts tab button when logged out
-            if (mypostsTabBtn) mypostsTabBtn.hidden = true;
+            // Hide the Post Editor tab button when logged out
+            if (posteditorTabBtn) posteditorTabBtn.hidden = true;
 
             // Mount login form in profile tab (dynamically created)
             mountProfileLoginForm();
@@ -6781,7 +6781,7 @@ const MemberModule = (function() {
             updateHeaderAvatar(null);
 
             updateHeaderSaveDiscardState();
-            // Create Post + My Posts must not show stale logged-in UI after logout.
+            // Create Post + Post Editor must not show stale logged-in UI after logout.
             try { refreshAuthDependentTabs(); } catch (e03) {}
         }
         
@@ -6797,8 +6797,8 @@ const MemberModule = (function() {
         try { unmountCreateAuth(); } catch (e0) {}
         try { updateSubmitButtonState(); } catch (e1) {}
 
-        // My Posts: Clear content on logout (PostEditorModule will reload on tab switch)
-        var myPostsEl = document.getElementById('member-tab-myposts');
+        // Post Editor: Clear content on logout (PostEditorModule will reload on tab switch)
+        var myPostsEl = document.getElementById('member-tab-posteditor');
         if (myPostsEl) {
             myPostsEl.innerHTML = '';
             try {
