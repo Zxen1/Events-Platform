@@ -2133,25 +2133,7 @@
                     var lat = Number(firstCard.latitude);
                     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
 
-                    // Same pattern as PostLocationComponent — switch to map, fly, reopen posts on arrival
-                    var postsLoadZoom = Number(App.getConfig('postsLoadZoom'));
-
-                    // Switch to map mode (closes post/recent/filter panels during flight)
-                    var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
-                    if (mapBtn) mapBtn.click();
-
-                    MapModule.flyTo(lng, lat, postsLoadZoom);
-
-                    // On arrival, switch to posts mode (reopens post panel as normal)
-                    var mainMap = MapModule.getMap();
-                    if (mainMap) {
-                        mainMap.once('moveend', function() {
-                            var center = mainMap.getCenter();
-                            if (Math.abs(center.lat - lat) > 0.01 || Math.abs(center.lng - lng) > 0.01) return;
-                            var postsBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="posts"]');
-                            if (postsBtn) postsBtn.click();
-                        });
-                    }
+                    MapModule.flyTo(lng, lat);
                 }
             }
         });
