@@ -10550,8 +10550,21 @@ const PostLocationComponent = (function() {
                     callbacks.addToRecentHistory(post, originalIndex);
                 }
 
-                // Post Editor tab: re-render in place
+                // Post Editor tab: fly to location + re-render in place (member panel stays open)
                 if (isInPostEditor && callbacks && callbacks.buildPostDetail) {
+                    var peLat = Number(loc.latitude);
+                    var peLng = Number(loc.longitude);
+                    if (Number.isFinite(peLat) && Number.isFinite(peLng) && window.MapModule && typeof MapModule.flyTo === 'function') {
+                        if (!window.App || typeof App.getConfig !== 'function') {
+                            throw new Error('[PostLocationComponent] App.getConfig is required for postsLoadZoom.');
+                        }
+                        var peZoom = App.getConfig('postsLoadZoom');
+                        if (typeof peZoom !== 'number' || !isFinite(peZoom)) {
+                            throw new Error('[PostLocationComponent] postsLoadZoom config is missing or invalid.');
+                        }
+                        MapModule.flyTo(peLng, peLat, peZoom);
+                    }
+
                     var newWrap = callbacks.buildPostDetail(post, null, false, originalIndex);
                     if (wrap.parentNode) {
                         wrap.parentNode.replaceChild(newWrap, wrap);
