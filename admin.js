@@ -2283,6 +2283,22 @@ const AdminModule = (function() {
             });
         }
         
+        // Map Card Priority Reshuffle Zoom slider
+        var reshuffleZoomSlider = document.getElementById('adminMapCardPriorityReshuffleZoom');
+        var reshuffleZoomDisplay = document.getElementById('adminMapCardPriorityReshuffleZoomDisplay');
+        if (reshuffleZoomSlider && reshuffleZoomDisplay) {
+            var initialReshuffle = mapTabData.map_card_priority_reshuffle_zoom !== undefined ? parseFloat(mapTabData.map_card_priority_reshuffle_zoom) : 0.5;
+            reshuffleZoomSlider.value = initialReshuffle;
+            reshuffleZoomDisplay.textContent = parseFloat(initialReshuffle).toFixed(1);
+            
+            registerField('map.map_card_priority_reshuffle_zoom', initialReshuffle);
+            
+            reshuffleZoomSlider.addEventListener('input', function() {
+                reshuffleZoomDisplay.textContent = parseFloat(reshuffleZoomSlider.value).toFixed(1);
+                updateField('map.map_card_priority_reshuffle_zoom', parseFloat(reshuffleZoomSlider.value));
+            });
+        }
+        
         // Starting Pitch Desktop slider
         var startingPitchDesktopSlider = document.getElementById('adminStartingPitchDesktop');
         var startingPitchDesktopDisplay = document.getElementById('adminStartingPitchDesktopDisplay');
@@ -2618,6 +2634,7 @@ const AdminModule = (function() {
             { id: 'adminStartingZoomMobile', displayId: 'adminStartingZoomMobileDisplay', fieldId: 'map.starting_zoom_mobile', format: 'int' },
             { id: 'adminFlytoZoomDesktop', displayId: 'adminFlytoZoomDesktopDisplay', fieldId: 'map.flyto_zoom_desktop', format: 'int' },
             { id: 'adminFlytoZoomMobile', displayId: 'adminFlytoZoomMobileDisplay', fieldId: 'map.flyto_zoom_mobile', format: 'int' },
+            { id: 'adminMapCardPriorityReshuffleZoom', displayId: 'adminMapCardPriorityReshuffleZoomDisplay', fieldId: 'map.map_card_priority_reshuffle_zoom', format: 'decimal1' },
             { id: 'adminStartingPitchDesktop', displayId: 'adminStartingPitchDesktopDisplay', fieldId: 'map.starting_pitch_desktop', format: 'degree' },
             { id: 'adminStartingPitchMobile', displayId: 'adminStartingPitchMobileDisplay', fieldId: 'map.starting_pitch_mobile', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
@@ -3472,8 +3489,9 @@ const AdminModule = (function() {
     function loadCountdownInfoMessage() {
         var countdownTooltipEls = document.querySelectorAll('.admin-countdown-tooltip');
         var mapCardTooltipEl = document.querySelector('.admin-map-card-breakpoint-tooltip');
+        var mapCardPriorityTooltipEl = document.querySelector('.admin-map-card-priority-tooltip');
         
-        if (!countdownTooltipEls.length && !mapCardTooltipEl) return;
+        if (!countdownTooltipEls.length && !mapCardTooltipEl && !mapCardPriorityTooltipEl) return;
         
         // Fetch messages from admin_messages
         fetch('/gateway.php?action=get-admin-settings&include_messages=true')
@@ -3482,6 +3500,7 @@ const AdminModule = (function() {
                 if (data.success && data.messages) {
                     var timezoneMsg = null;
                     var mapCardMsg = null;
+                    var mapCardPriorityMsg = null;
                     
                     // Messages are grouped by container
                     for (var containerKey in data.messages) {
@@ -3494,6 +3513,9 @@ const AdminModule = (function() {
                                 }
                                 if (msg.message_key === 'msg_map_card_breakpoint_info') {
                                     mapCardMsg = msg;
+                                }
+                                if (msg.message_key === 'msg_map_card_priority_info') {
+                                    mapCardPriorityMsg = msg;
                                 }
                             }
                         }
@@ -3509,6 +3531,11 @@ const AdminModule = (function() {
                     // Populate map card breakpoint tooltip
                     if (mapCardMsg && mapCardMsg.message_text && mapCardTooltipEl) {
                         mapCardTooltipEl.textContent = mapCardMsg.message_text;
+                    }
+                    
+                    // Populate map card priority tooltip
+                    if (mapCardPriorityMsg && mapCardPriorityMsg.message_text && mapCardPriorityTooltipEl) {
+                        mapCardPriorityTooltipEl.textContent = mapCardPriorityMsg.message_text;
                     }
                 }
             })
