@@ -2031,9 +2031,11 @@
 
 /* Removed - hover styles now defined inline with each element */
 
-/* Sort option geolocate icon - inline next to "Sort by Closest" */
+/* Sort option geolocate icon - inline next to "Sort by Distance" */
+/* Hidden by default; registerGeolocateIcon sets display:inline-block after applying the mask-image. */
+/* This prevents a colored square flash before the icon shape loads. */
 .filter-sort-geolocate-icon {
-    display: inline-block;
+    display: none;
     width: 16px;
     height: 16px;
     vertical-align: middle;

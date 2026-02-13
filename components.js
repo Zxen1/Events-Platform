@@ -3633,7 +3633,9 @@ const MapControlRowComponent = (function(){
             geolocateIconBaseClass: iconBaseClass || ''
         };
         instances.push(inst);
-        // Apply system image mask if available
+        // Apply system image mask if available, then reveal the icon.
+        // The icon starts hidden (display:none in CSS) to prevent a colored square
+        // flash before the mask-image loads.
         try {
             var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
             var geoFilename = sys.icon_geolocate || '';
@@ -3641,6 +3643,7 @@ const MapControlRowComponent = (function(){
                 var geoUrl = App.getImageUrl('systemImages', geoFilename);
                 iconEl.style.webkitMaskImage = 'url(' + geoUrl + ')';
                 iconEl.style.maskImage = 'url(' + geoUrl + ')';
+                iconEl.style.display = 'inline-block';
             }
         } catch (_e) {}
         // If already active, sync immediately

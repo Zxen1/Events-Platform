@@ -57,6 +57,8 @@ const PostModule = (function() {
   var postsEnabled = false;
   var favToTop = false; // matches live site: "Favourites on top" is a sort behavior, not a filter
   var favSortDirty = true; // live-site behavior: fav changes don't reorder until user presses the toggle again
+  var pendingSortKey = null;           // Last requested sort key (re-applied after post render)
+  var pendingSortGeoLocation = null;   // userGeoLocation for 'nearest' sort
 
   var modeButtonsBound = false;
 
@@ -540,7 +542,9 @@ const PostModule = (function() {
 
     App.on('filter:sortChanged', function(data) {
       if (!data || !data.sort) return;
-      sortPosts(data.sort, data.userGeoLocation || null);
+      pendingSortKey = data.sort;
+      pendingSortGeoLocation = data.userGeoLocation || null;
+      sortPosts(data.sort, pendingSortGeoLocation);
     });
 
     App.on('filter:favouritesToggle', function(data) {
@@ -1056,6 +1060,11 @@ const PostModule = (function() {
           // Refresh map clusters with new post data
           if (window.MapModule && MapModule.refreshClusters) {
             MapModule.refreshClusters();
+          }
+          // Re-apply pending sort (covers the case where filter:sortChanged fired
+          // before posts were in the DOM, e.g. restoring 'nearest' on page refresh)
+          if (pendingSortKey && pendingSortKey !== 'recommended') {
+            sortPosts(pendingSortKey, pendingSortGeoLocation);
           }
           return data.posts;
         } else {
