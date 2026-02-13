@@ -352,8 +352,12 @@ const MarqueeModule = (function() {
     const state = (mapCard && mapCard.state) || '';
     const countryName = (mapCard && mapCard.country_name) || '';
     const locationType = (mapCard && mapCard.location_type) || '';
+    const locationCount = (post.map_cards && post.map_cards.length) ? post.map_cards.length : 1;
     let locationDisplay = '';
-    if (locationType === 'venue') {
+    if (locationCount > 1) {
+      // Multi-location posts show count instead of a single location name
+      locationDisplay = locationCount + ' Locations';
+    } else if (locationType === 'venue') {
       // Venue: "Venue Name, Suburb"
       locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
     } else if (locationType === 'city') {

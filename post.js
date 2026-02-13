@@ -1313,8 +1313,12 @@ const PostModule = (function() {
     var state = (mapCard && mapCard.state) || '';
     var countryName = (mapCard && mapCard.country_name) || '';
     var locationType = (mapCard && mapCard.location_type) || '';
+    var locationCount = (post.map_cards && post.map_cards.length) ? post.map_cards.length : 1;
     var locationDisplay = '';
-    if (locationType === 'venue') {
+    if (locationCount > 1) {
+      // Multi-location posts show count instead of a single location name
+      locationDisplay = locationCount + ' Locations';
+    } else if (locationType === 'venue') {
       // Venue posts: "Venue Name, Suburb"
       locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
     } else if (locationType === 'city') {
@@ -3918,15 +3922,23 @@ const PostModule = (function() {
       var subName = post.subcategory_name || (mapCard && mapCard.subcategory_name) || '';
       var iconUrl = post.subcategory_icon_url || '';
       
-      // Location text from the specific map card
+      // Location text from the specific map card (same formula as postcards)
       var locText = '';
       if (mapCard) {
-        var venue = mapCard.venue_name || '';
-        var city = mapCard.city || '';
-        locText = venue || city;
-        // If multi-location post, show more context
-        if (mapCards.length > 1 && venue && city) {
-          locText = venue + ', ' + city;
+        var locVenue = mapCard.venue_name || '';
+        var locSuburb = mapCard.suburb || '';
+        var locCity = mapCard.city || '';
+        var locState = mapCard.state || '';
+        var locCountry = mapCard.country_name || '';
+        var locType = mapCard.location_type || '';
+        if (locType === 'venue') {
+          locText = (locVenue && locSuburb) ? locVenue + ', ' + locSuburb : (locVenue || locSuburb || locCity || '');
+        } else if (locType === 'city') {
+          var locCitySecond = locState || locCountry || '';
+          locText = (locCity && locCitySecond) ? locCity + ', ' + locCitySecond : (locCity || locCitySecond || '');
+        } else {
+          var locAddrSecond = locState || locCountry || '';
+          locText = (locSuburb && locAddrSecond) ? locSuburb + ', ' + locAddrSecond : (locSuburb || locAddrSecond || locCity || '');
         }
       }
 
@@ -4363,7 +4375,11 @@ const PostModule = (function() {
   }
 
   /**
-   * Render a recent card
+   * Render a recent card.
+   * Visually identical to a postcard, but represents a specific LOCATION of a post
+   * (tracked by post_map_card_id), not the post as a whole. This means:
+   * - A multi-location post produces separate recent cards per visited location
+   * - The location line always shows the specific location name, never "X Locations"
    * Structure: .recent-card-wrapper > .recent-status-bar + .recent-card
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
    * @returns {HTMLElement|null} Recent card wrapper element
