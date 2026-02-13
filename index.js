@@ -197,6 +197,7 @@ const App = (function() {
      -------------------------------------------------------------------------- */
   const config = {
     postsLoadZoom: 8,      // Posts and marquee only load when map zoom > this value
+    flyToZoom: 12,         // Fly-to zoom level (synced from DB: flyto_zoom_desktop / flyto_zoom_mobile)
     marqueeWidthThreshold: 1920, // Minimum screen width required to display the marquee
     maxMapCards: 50,       // Threshold for switching to high-density mode
     markerDotSize: 8,      // Diameter of standard listing dots
@@ -489,6 +490,13 @@ const App = (function() {
         // Sync Map Card Breakpoint from database to application config
         if (settings.map_card_breakpoint !== undefined) {
           setConfig('postsLoadZoom', parseFloat(settings.map_card_breakpoint));
+        }
+
+        // Sync Fly-To Zoom from database (desktop or mobile based on viewport)
+        var isMobile = window.innerWidth <= 530;
+        var flyToKey = isMobile ? 'flyto_zoom_mobile' : 'flyto_zoom_desktop';
+        if (settings[flyToKey] !== undefined) {
+          setConfig('flyToZoom', parseFloat(settings[flyToKey]));
         }
 
         // Apply Devtools Console Filter (database source of truth; no localStorage dependency)

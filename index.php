@@ -956,6 +956,20 @@ if (empty($ogTitle)) {
               </div>
             </div>
             <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminFlytoZoomDesktop">Fly-To Zoom Desktop</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminFlytoZoomDesktopDisplay" class="admin-slider-value">12</span>
+                <input type="range" id="adminFlytoZoomDesktop" min="1" max="18" step="1" value="12" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminFlytoZoomMobile">Fly-To Zoom Mobile</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminFlytoZoomMobileDisplay" class="admin-slider-value">12</span>
+                <input type="range" id="adminFlytoZoomMobile" min="1" max="18" step="1" value="12" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
               <label class="admin-settings-field-label" for="adminStartingPitchDesktop">Starting Pitch Desktop</label>
               <div class="admin-spin-control-row row-class-1">
                 <span id="adminStartingPitchDesktopDisplay" class="admin-slider-value">0°</span>

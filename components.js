@@ -3479,7 +3479,7 @@ const MapControlRowComponent = (function(){
             // If we already have cached location, use it instantly
             if (cachedLocation) {
                 if (currentMap) {
-                    currentMap.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: 14 });
+                    currentMap.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: App.getConfig('flyToZoom') });
                     updateUserLocationMarker(cachedLocation.lat, cachedLocation.lng, currentMap);
                 }
                 onResult({
@@ -3507,7 +3507,7 @@ const MapControlRowComponent = (function(){
                     
                     var mapForFly = getMapInstance();
                     if (mapForFly) {
-                        mapForFly.flyTo({ center: [lng, lat], zoom: 14 });
+                        mapForFly.flyTo({ center: [lng, lat], zoom: App.getConfig('flyToZoom') });
                         updateUserLocationMarker(lat, lng, mapForFly);
                     }
                     
@@ -5265,7 +5265,7 @@ const WelcomeModalComponent = (function() {
                     if (result && result.center) {
                         var map = window.MapModule && MapModule.getMap ? MapModule.getMap() : null;
                         if (map) {
-                            map.flyTo({ center: result.center, zoom: 14 });
+                            map.flyTo({ center: result.center, zoom: App.getConfig('flyToZoom') });
                         }
                     }
                     close();
@@ -10531,14 +10531,7 @@ const PostLocationComponent = (function() {
                     var peLat = Number(loc.latitude);
                     var peLng = Number(loc.longitude);
                     if (Number.isFinite(peLat) && Number.isFinite(peLng) && window.MapModule && typeof MapModule.flyTo === 'function') {
-                        if (!window.App || typeof App.getConfig !== 'function') {
-                            throw new Error('[PostLocationComponent] App.getConfig is required for postsLoadZoom.');
-                        }
-                        var peZoom = App.getConfig('postsLoadZoom');
-                        if (typeof peZoom !== 'number' || !isFinite(peZoom)) {
-                            throw new Error('[PostLocationComponent] postsLoadZoom config is missing or invalid.');
-                        }
-                        MapModule.flyTo(peLng, peLat, peZoom);
+                        MapModule.flyTo(peLng, peLat);
                     }
 
                     var newWrap = callbacks.buildPostDetail(post, null, false, originalIndex);
@@ -10558,18 +10551,9 @@ const PostLocationComponent = (function() {
                 if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
                 if (!window.MapModule || typeof MapModule.flyTo !== 'function') return;
 
-                // Get zoom threshold
-                if (!window.App || typeof App.getConfig !== 'function') {
-                    throw new Error('[PostLocationComponent] App.getConfig is required for postsLoadZoom.');
-                }
-                var postsLoadZoom = App.getConfig('postsLoadZoom');
-                if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
-                    throw new Error('[PostLocationComponent] postsLoadZoom config is missing or invalid.');
-                }
-
                 // Already-selected: just fly to center
                 if (isAlreadySelected) {
-                    MapModule.flyTo(lng, lat, postsLoadZoom);
+                    MapModule.flyTo(lng, lat);
                     return;
                 }
 
@@ -10581,7 +10565,7 @@ const PostLocationComponent = (function() {
                     mapBtn.click();
                 }
                 
-                MapModule.flyTo(lng, lat, postsLoadZoom);
+                MapModule.flyTo(lng, lat);
                 
                 var mainMap = MapModule.getMap();
                 if (mainMap) {

@@ -2251,6 +2251,38 @@ const AdminModule = (function() {
             });
         }
         
+        // Fly-To Zoom Desktop slider
+        var flytoZoomDesktopSlider = document.getElementById('adminFlytoZoomDesktop');
+        var flytoZoomDesktopDisplay = document.getElementById('adminFlytoZoomDesktopDisplay');
+        if (flytoZoomDesktopSlider && flytoZoomDesktopDisplay) {
+            var initialFlytoDesktop = mapTabData.flyto_zoom_desktop !== undefined ? parseFloat(mapTabData.flyto_zoom_desktop) : 12;
+            flytoZoomDesktopSlider.value = initialFlytoDesktop;
+            flytoZoomDesktopDisplay.textContent = Math.round(initialFlytoDesktop).toString();
+            
+            registerField('map.flyto_zoom_desktop', initialFlytoDesktop);
+            
+            flytoZoomDesktopSlider.addEventListener('input', function() {
+                flytoZoomDesktopDisplay.textContent = Math.round(parseFloat(flytoZoomDesktopSlider.value)).toString();
+                updateField('map.flyto_zoom_desktop', parseFloat(flytoZoomDesktopSlider.value));
+            });
+        }
+        
+        // Fly-To Zoom Mobile slider
+        var flytoZoomMobileSlider = document.getElementById('adminFlytoZoomMobile');
+        var flytoZoomMobileDisplay = document.getElementById('adminFlytoZoomMobileDisplay');
+        if (flytoZoomMobileSlider && flytoZoomMobileDisplay) {
+            var initialFlytoMobile = mapTabData.flyto_zoom_mobile !== undefined ? parseFloat(mapTabData.flyto_zoom_mobile) : 12;
+            flytoZoomMobileSlider.value = initialFlytoMobile;
+            flytoZoomMobileDisplay.textContent = Math.round(initialFlytoMobile).toString();
+            
+            registerField('map.flyto_zoom_mobile', initialFlytoMobile);
+            
+            flytoZoomMobileSlider.addEventListener('input', function() {
+                flytoZoomMobileDisplay.textContent = Math.round(parseFloat(flytoZoomMobileSlider.value)).toString();
+                updateField('map.flyto_zoom_mobile', parseFloat(flytoZoomMobileSlider.value));
+            });
+        }
+        
         // Starting Pitch Desktop slider
         var startingPitchDesktopSlider = document.getElementById('adminStartingPitchDesktop');
         var startingPitchDesktopDisplay = document.getElementById('adminStartingPitchDesktopDisplay');
@@ -2584,6 +2616,8 @@ const AdminModule = (function() {
             { id: 'adminMapCardBreakpoint', displayId: 'adminMapCardBreakpointDisplay', fieldId: 'map.map_card_breakpoint', format: 'int' },
             { id: 'adminStartingZoomDesktop', displayId: 'adminStartingZoomDesktopDisplay', fieldId: 'map.starting_zoom_desktop', format: 'int' },
             { id: 'adminStartingZoomMobile', displayId: 'adminStartingZoomMobileDisplay', fieldId: 'map.starting_zoom_mobile', format: 'int' },
+            { id: 'adminFlytoZoomDesktop', displayId: 'adminFlytoZoomDesktopDisplay', fieldId: 'map.flyto_zoom_desktop', format: 'int' },
+            { id: 'adminFlytoZoomMobile', displayId: 'adminFlytoZoomMobileDisplay', fieldId: 'map.flyto_zoom_mobile', format: 'int' },
             { id: 'adminStartingPitchDesktop', displayId: 'adminStartingPitchDesktopDisplay', fieldId: 'map.starting_pitch_desktop', format: 'degree' },
             { id: 'adminStartingPitchMobile', displayId: 'adminStartingPitchMobileDisplay', fieldId: 'map.starting_pitch_mobile', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },

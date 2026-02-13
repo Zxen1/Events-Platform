@@ -2134,21 +2134,13 @@
                     var lat = Number(firstCard.latitude);
                     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
 
-                    if (!window.App || typeof App.getConfig !== 'function') {
-                        throw new Error('[PostEditor] App.getConfig is required for postsLoadZoom.');
-                    }
-                    var postsLoadZoom = App.getConfig('postsLoadZoom');
-                    if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
-                        throw new Error('[PostEditor] postsLoadZoom config is missing or invalid.');
-                    }
-
                     // Close left panels (keep member panel open) and switch to map mode
                     if (window.HeaderModule) {
                         HeaderModule.closePanels({ keepMember: true });
                         HeaderModule.setMode('map');
                     }
 
-                    MapModule.flyTo(lng, lat, postsLoadZoom);
+                    MapModule.flyTo(lng, lat);
 
                     var mainMap = MapModule.getMap();
                     if (mainMap) {

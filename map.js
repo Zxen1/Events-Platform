@@ -1393,7 +1393,7 @@ const MapModule = (function() {
       } else {
         map.flyTo({
           center: [lng, lat],
-          zoom: 14,
+          zoom: App.getConfig('flyToZoom'),
           essential: true
         });
       }
@@ -2912,8 +2912,17 @@ const MapModule = (function() {
   /**
    * Fly to a location
    */
-  function flyTo(lng, lat, zoom = 14) {
+  function flyTo(lng, lat, zoom) {
     if (!map) return;
+    if (zoom === undefined) {
+      if (!window.App || typeof App.getConfig !== 'function') {
+        throw new Error('[Map] App.getConfig is required for flyToZoom.');
+      }
+      zoom = App.getConfig('flyToZoom');
+      if (typeof zoom !== 'number' || !isFinite(zoom)) {
+        throw new Error('[Map] flyToZoom config is missing or invalid.');
+      }
+    }
     stopSpin();
     map.flyTo({
       center: [lng, lat],
