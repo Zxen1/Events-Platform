@@ -349,7 +349,7 @@ if (empty($ogTitle)) {
           <div class="filter-sort-menu-options menu-options">
             <div class="filter-sort-menu-option menu-option" data-sort="recommended">Sort by Recommended</div>
             <div class="filter-sort-menu-option menu-option" data-sort="az">Sort by Title A-Z</div>
-            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Closest<span class="filter-sort-geolocate-icon" aria-hidden="true"></span></div>
+            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Distance<span class="filter-sort-geolocate-icon" aria-hidden="true"></span></div>
             <div class="filter-sort-menu-option menu-option" data-sort="soon">Sort by Soonest</div>
           </div>
         </div>
