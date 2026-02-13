@@ -2070,6 +2070,73 @@
             }, 50);
         }, true); // Use capture phase
         
+        // Listen for postcard clicks — fly to location (active) or show toast (hidden/expired/deleted)
+        container.addEventListener('click', function(e) {
+            // Skip clicks on buttons (manage, fav, etc.)
+            if (e.target.closest('.posteditor-button-manage') || e.target.closest('.post-card-button-fav')) return;
+            
+            var postCard = e.target.closest('.post-card');
+            if (!postCard) return;
+            
+            var postItem = postCard.closest('.posteditor-item');
+            if (!postItem) return;
+            
+            var postId = postItem.dataset.postId;
+            if (!postId) return;
+            
+            // Find post in current data
+            var post = null;
+            for (var i = 0; i < currentPosts.length; i++) {
+                if (String(currentPosts[i].id) === String(postId)) {
+                    post = currentPosts[i];
+                    break;
+                }
+            }
+            if (!post) return;
+            
+            // Determine post state
+            var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
+            var visibility = post.visibility || 'active';
+            var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+            var now = new Date();
+            var isExpiredByDb = visibility === 'expired';
+            var isExpiredByTime = expiresAt && expiresAt.getTime() <= now.getTime();
+            
+            if (isDeleted) {
+                // Toast: deleted
+                if (typeof window.getMessage === 'function') {
+                    window.getMessage('msg_posteditor_toast_deleted', {}, false).then(function(msg) {
+                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                    });
+                }
+            } else if (isExpiredByDb || isExpiredByTime) {
+                // Toast: expired
+                if (typeof window.getMessage === 'function') {
+                    window.getMessage('msg_posteditor_toast_expired', {}, false).then(function(msg) {
+                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                    });
+                }
+            } else if (visibility === 'hidden') {
+                // Toast: hidden
+                if (typeof window.getMessage === 'function') {
+                    window.getMessage('msg_posteditor_toast_hidden', {}, false).then(function(msg) {
+                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                    });
+                }
+            } else {
+                // Active — fly to first map card location
+                var mapCards = (post.map_cards && post.map_cards.length) ? post.map_cards : [];
+                var firstCard = mapCards[0];
+                if (firstCard && window.MapModule && typeof MapModule.flyTo === 'function') {
+                    var lng = Number(firstCard.longitude);
+                    var lat = Number(firstCard.latitude);
+                    if (Number.isFinite(lng) && Number.isFinite(lat)) {
+                        MapModule.flyTo(lng, lat);
+                    }
+                }
+            }
+        });
+        
         // Load posts
         loadPosts();
     }
