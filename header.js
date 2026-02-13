@@ -301,8 +301,11 @@ const HeaderModule = (function() {
     var currentMode = 'map'; // Default mode
     
     // Close all open panels (filter, member, admin)
-    function closePanels() {
+    // options.keepMember: if truthy, skip closing the member panel
+    function closePanels(options) {
         try {
+            var keep = options || {};
+
             var filterPanel = document.querySelector('.filter-panel');
             if (filterPanel && filterPanel.classList.contains('show')) {
                 if (window.FilterModule && typeof window.FilterModule.closePanel === 'function') {
@@ -313,13 +316,15 @@ const HeaderModule = (function() {
                 }
             }
             
-            var memberPanel = document.querySelector('.member-panel');
-            if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
-                if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
-                    window.MemberModule.closePanel();
-                } else {
-                    var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
-                    if (memberClose) memberClose.click();
+            if (!keep.keepMember) {
+                var memberPanel = document.querySelector('.member-panel');
+                if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
+                    if (window.MemberModule && typeof window.MemberModule.closePanel === 'function') {
+                        window.MemberModule.closePanel();
+                    } else {
+                        var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
+                        if (memberClose) memberClose.click();
+                    }
                 }
             }
             
@@ -646,6 +651,7 @@ const HeaderModule = (function() {
         init: init,
         setLogo: setLogo,
         closePanels: closePanels,
+        setMode: setMode,
         refreshFilterButton: function() {
             refreshHeaderFilterActiveVisual();
         }

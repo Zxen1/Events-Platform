@@ -2124,8 +2124,9 @@
                     });
                 }
             } else {
-                // Active — close member panel, fly to location, open post panel on arrival
-                // Mirrors PostLocationComponent pattern for consistent behavior
+                // Active — fly to location, close left panels, open post on arrival
+                // Mirrors PostLocationComponent different-location pattern exactly
+                // Member panel must stay open throughout (user is editing posts)
                 var mapCards = (post.map_cards && post.map_cards.length) ? post.map_cards : [];
                 var firstCard = mapCards[0];
                 if (firstCard && window.MapModule && typeof MapModule.flyTo === 'function') {
@@ -2133,7 +2134,43 @@
                     var lat = Number(firstCard.latitude);
                     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
 
-                    MapModule.flyTo(lng, lat);
+                    if (!window.App || typeof App.getConfig !== 'function') {
+                        throw new Error('[PostEditor] App.getConfig is required for postsLoadZoom.');
+                    }
+                    var postsLoadZoom = App.getConfig('postsLoadZoom');
+                    if (typeof postsLoadZoom !== 'number' || !isFinite(postsLoadZoom)) {
+                        throw new Error('[PostEditor] postsLoadZoom config is missing or invalid.');
+                    }
+
+                    // Close left panels (keep member panel open) and switch to map mode
+                    if (window.HeaderModule) {
+                        HeaderModule.closePanels({ keepMember: true });
+                        HeaderModule.setMode('map');
+                    }
+
+                    MapModule.flyTo(lng, lat, postsLoadZoom);
+
+                    var mainMap = MapModule.getMap();
+                    if (mainMap) {
+                        mainMap.once('moveend', function() {
+                            var center = mainMap.getCenter();
+                            var latDiff = Math.abs(center.lat - lat);
+                            var lngDiff = Math.abs(center.lng - lng);
+                            if (latDiff > 0.01 || lngDiff > 0.01) return;
+
+                            // Switch to posts mode (keep member panel open)
+                            if (window.HeaderModule) {
+                                HeaderModule.closePanels({ keepMember: true });
+                                HeaderModule.setMode('posts');
+                            }
+
+                            setTimeout(function() {
+                                if (window.PostModule && typeof PostModule.openPostById === 'function') {
+                                    PostModule.openPostById(post.id, { postMapCardId: String(firstCard.id), autoExpand: true });
+                                }
+                            }, 50);
+                        });
+                    }
                 }
             }
         });
