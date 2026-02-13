@@ -47,45 +47,6 @@
     }
 
     /**
-     * Check if saved filters would hide a post from the post panel.
-     * Conservative: only returns true when confident the post would be hidden.
-     * @param {Object} post - Post object with map_cards, subcategory_key, etc.
-     * @returns {boolean} True if filters would hide this post
-     */
-    function wouldFiltersHidePost(post) {
-        var filters;
-        try { filters = JSON.parse(localStorage.getItem('funmap_filters') || '{}'); } catch (_e) { return false; }
-        if (!filters) return false;
-
-        var mapCards = post.map_cards || [];
-
-        // Keyword filter
-        if (filters.keyword && filters.keyword.trim()) {
-            var kw = filters.keyword.toLowerCase();
-            var checkoutTitle = (post.checkout_title || '').toLowerCase();
-            var keywordMatch = mapCards.some(function(mc) {
-                if (!mc) return false;
-                var title = (mc.title || '').toLowerCase();
-                var description = (mc.description || '').toLowerCase();
-                var venue = (mc.venue_name || '').toLowerCase();
-                return title.indexOf(kw) !== -1 || description.indexOf(kw) !== -1 ||
-                       venue.indexOf(kw) !== -1 || checkoutTitle.indexOf(kw) !== -1;
-            });
-            if (!keywordMatch) return true;
-        }
-
-        // Favourites filter
-        if (filters.favourites) {
-            try {
-                var favs = JSON.parse(localStorage.getItem('postFavorites') || '{}');
-                if (!favs[String(post.id)]) return true;
-            } catch (_eF) { return true; }
-        }
-
-        return false;
-    }
-
-    /**
      * Build a status bar element for a post.
      * Layout: [STATUS tier] (left) | countdown (center) | date (right)
      * Three flex items with space-between. Status and tier share the first item.
@@ -2190,16 +2151,6 @@
 
                     // Fly to location at postsLoadZoom
                     MapModule.flyTo(lng, lat, flyZoom);
-
-                    // Show filter toast if filters would hide this post
-                    var isFiltered = wouldFiltersHidePost(post);
-                    if (isFiltered) {
-                        if (typeof window.getMessage === 'function') {
-                            window.getMessage('msg_posteditor_toast_filtered', {}, false).then(function(msg) {
-                                if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
-                            });
-                        }
-                    }
 
                     // After arrival, switch to posts mode
                     var mainMap = MapModule.getMap();
