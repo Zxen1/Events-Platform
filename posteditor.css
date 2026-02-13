@@ -121,6 +121,11 @@
   letter-spacing: 0.5px;
 }
 
+.posteditor-status-bar-tier {
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
 .posteditor-status-bar-countdown {
   flex-shrink: 0;
   margin-left: 10px;

@@ -387,7 +387,7 @@ try {
                 }
                 $description = isset($option['checkout_description']) ? trim((string)$option['checkout_description']) : '';
                 // Get checkout_key from input, or generate from title if not provided
-                // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
+                // Generate key: "Free" -> "free", "Standard" -> "standard" (hyphens, no numbers/timestamps)
                 $key = isset($option['checkout_key']) && trim((string)$option['checkout_key']) !== '' 
                     ? trim((string)$option['checkout_key']) 
                     : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
@@ -423,7 +423,7 @@ try {
                     $checkoutUpdated++;
                 } else {
                     // Insert new - generate key if not already set above
-                    // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
+                    // Generate key: "Free" -> "free", "Standard" -> "standard" (hyphens, no numbers/timestamps)
                     if (!isset($option['checkout_key']) || trim((string)$option['checkout_key']) === '') {
                         $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
                     }
