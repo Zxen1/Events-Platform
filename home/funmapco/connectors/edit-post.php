@@ -423,8 +423,30 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
         $origName = (string)($_FILES['images']['name'][$i] ?? 'image');
         $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         if ($ext === '') $ext = 'jpg';
-        $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
-        $finalFilename = $postId . '-' . $hash . '.' . $ext;
+
+        // Naming convention: {8-digit-padded-post-id}-{original_filename}.{extension}
+        $baseName = pathinfo($origName, PATHINFO_FILENAME);
+        $baseName = preg_replace('/\s+/', '_', trim($baseName));
+        $baseName = preg_replace('/[\/\\\\:*?"<>|]/', '', $baseName);
+        if ($baseName === '') $baseName = 'image';
+        $paddedId = str_pad((string)$postId, 8, '0', STR_PAD_LEFT);
+        $candidateBase = $paddedId . '-' . $baseName;
+        $finalFilename = $candidateBase . '.' . $ext;
+
+        // Duplicate check for this post
+        $dupStmt = $mysqli->prepare("SELECT file_name FROM post_media WHERE post_id = ? AND file_name LIKE ? AND deleted_at IS NULL");
+        $dupPattern = $candidateBase . '%.' . $ext;
+        $dupStmt->bind_param('is', $postId, $dupPattern);
+        $dupStmt->execute();
+        $dupResult = $dupStmt->get_result();
+        $existingNames = [];
+        while ($dupRow = $dupResult->fetch_assoc()) { $existingNames[] = $dupRow['file_name']; }
+        $dupStmt->close();
+        if (in_array($finalFilename, $existingNames)) {
+          $suffix = 2;
+          while (in_array($candidateBase . '-' . $suffix . '.' . $ext, $existingNames)) { $suffix++; }
+          $finalFilename = $candidateBase . '-' . $suffix . '.' . $ext;
+        }
 
         $bytes = file_get_contents($tmp);
         if ($bytes === false) continue;
