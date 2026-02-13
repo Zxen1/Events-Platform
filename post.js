@@ -1355,6 +1355,7 @@ const PostModule = (function() {
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
     try {
+      el.dataset.sortSidebarAd = post.sidebar_ad ? '1' : '0';
       el.dataset.sortFeatured = post.featured ? '1' : '0';
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(post.created_at || 0).getTime() || 0);
@@ -2364,6 +2365,11 @@ const PostModule = (function() {
 
       switch (sortKey) {
         case 'recommended':
+          // Tier 1: Premium (sidebar_ad), Tier 2: Featured, Tier 3: Standard
+          // Within each tier: most recently published first
+          var sidebarA = Number(a.sortSidebarAd) || 0;
+          var sidebarB = Number(b.sortSidebarAd) || 0;
+          if (sidebarA !== sidebarB) return sidebarB - sidebarA;
           var featA = Number(a.sortFeatured) || 0;
           var featB = Number(b.sortFeatured) || 0;
           if (featA !== featB) return featB - featA;
