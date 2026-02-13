@@ -59,13 +59,6 @@
 
         var mapCards = post.map_cards || [];
 
-        // Category/subcategory filter — only check when the array has actual entries
-        // null or empty means no category filtering (all categories shown)
-        if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length > 0) {
-            var postSubKey = String(post.subcategory_key || '');
-            if (postSubKey && filters.subcategoryKeys.indexOf(postSubKey) === -1) return true;
-        }
-
         // Keyword filter
         if (filters.keyword && filters.keyword.trim()) {
             var kw = filters.keyword.toLowerCase();
@@ -2179,11 +2172,11 @@
                     var lat = Number(firstCard.latitude);
                     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
 
-                    // Get postsLoadZoom for correct zoom level
-                    var postsLoadZoom = 14;
+                    // Get postsLoadZoom — same zoom the location menu uses
+                    var flyZoom = 14;
                     if (window.App && typeof App.getConfig === 'function') {
-                        var configZoom = App.getConfig('postsLoadZoom');
-                        if (typeof configZoom === 'number' && isFinite(configZoom)) postsLoadZoom = configZoom;
+                        var configZoom = Number(App.getConfig('postsLoadZoom'));
+                        if (Number.isFinite(configZoom)) flyZoom = configZoom;
                     }
 
                     // Close member panel so the map is visible during flight
@@ -2195,8 +2188,8 @@
                     var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
                     if (mapBtn) mapBtn.click();
 
-                    // Fly to location
-                    MapModule.flyTo(lng, lat, postsLoadZoom);
+                    // Fly to location at postsLoadZoom
+                    MapModule.flyTo(lng, lat, flyZoom);
 
                     // Show filter toast if filters would hide this post
                     var isFiltered = wouldFiltersHidePost(post);
