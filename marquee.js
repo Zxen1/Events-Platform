@@ -488,7 +488,47 @@ const MarqueeModule = (function() {
     const postId = slide.dataset.id;
     if (!postId) return;
     
-    // Emit event for post module to handle
+    // Find the post in our internal array to get coordinates
+    var post = null;
+    for (var i = 0; i < posts.length; i++) {
+      if (String(posts[i].id) === String(postId)) {
+        post = posts[i];
+        break;
+      }
+    }
+    
+    // Fly to the first map card's location, then open the post on arrival
+    var mapCards = (post && post.map_cards && post.map_cards.length) ? post.map_cards : [];
+    var firstCard = mapCards[0];
+    
+    if (firstCard && window.MapModule && typeof MapModule.flyTo === 'function') {
+      var lng = Number(firstCard.longitude);
+      var lat = Number(firstCard.latitude);
+      
+      if (Number.isFinite(lng) && Number.isFinite(lat)) {
+        MapModule.flyTo(lng, lat);
+        
+        var mainMap = MapModule.getMap();
+        if (mainMap) {
+          mainMap.once('moveend', function() {
+            // Verify we arrived near the target
+            var center = mainMap.getCenter();
+            if (Math.abs(center.lat - lat) > 0.01 || Math.abs(center.lng - lng) > 0.01) return;
+            
+            // Open the post with the specific map card selected
+            if (window.PostModule && typeof PostModule.openPostById === 'function') {
+              PostModule.openPostById(postId, {
+                postMapCardId: String(firstCard.id),
+                source: 'marquee'
+              });
+            }
+          });
+        }
+        return;
+      }
+    }
+    
+    // Fallback: no coordinates available, open post directly
     App.emit('post:open', { id: postId, source: 'marquee' });
   }
 
