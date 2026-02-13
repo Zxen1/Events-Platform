@@ -48,8 +48,8 @@
 
     /**
      * Build a status bar element for a post.
-     * Shows countdown (or expired date) on the left, status word on the right.
-     * Color: green (7+ days), yellow (3-7 days), red (<3 days), gray (not visible).
+     * Layout: STATUS (left) | countdown (center) | date (right)
+     * Color: green (7+ days), yellow (3-7 days), red (<3 days), darkgray (hidden), black (expired/deleted).
      * @param {Object} post - Post object with visibility, expires_at, deleted_at
      * @returns {HTMLElement} Status bar div
      */
@@ -57,12 +57,12 @@
         var bar = document.createElement('div');
         bar.className = 'posteditor-status-bar';
 
-        var dateSpan = document.createElement('span');
-        dateSpan.className = 'posteditor-status-bar-date';
-        var countdownSpan = document.createElement('span');
-        countdownSpan.className = 'posteditor-status-bar-countdown';
         var statusSpan = document.createElement('span');
         statusSpan.className = 'posteditor-status-bar-status';
+        var countdownSpan = document.createElement('span');
+        countdownSpan.className = 'posteditor-status-bar-countdown';
+        var dateSpan = document.createElement('span');
+        dateSpan.className = 'posteditor-status-bar-date';
 
         // Determine status and color
         var status = '';
@@ -79,18 +79,18 @@
         if (isDeleted) {
             status = 'DELETED';
             colorClass = 'posteditor-status-bar--black';
-            dateSpan.textContent = 'Deleted ' + formatStatusDate(new Date(post.deleted_at));
+            dateSpan.textContent = formatStatusDate(new Date(post.deleted_at));
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
             colorClass = 'posteditor-status-bar--black';
             if (expiresAt) {
-                dateSpan.textContent = 'Expired ' + formatStatusDate(expiresAt);
+                dateSpan.textContent = formatStatusDate(expiresAt);
             }
         } else if (visibility === 'hidden') {
             status = 'HIDDEN';
             colorClass = 'posteditor-status-bar--darkgray';
             if (expiresAt) {
-                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                dateSpan.textContent = formatStatusDate(expiresAt);
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
             }
         } else {
@@ -106,7 +106,7 @@
                 } else {
                     colorClass = 'posteditor-status-bar--red';
                 }
-                dateSpan.textContent = 'Expires ' + formatStatusDate(expiresAt);
+                dateSpan.textContent = formatStatusDate(expiresAt);
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
             } else {
                 status = 'ACTIVE';
@@ -117,17 +117,9 @@
         bar.classList.add(colorClass);
         statusSpan.textContent = status;
 
-        // Location fraction (active / paid)
-        var locSpan = document.createElement('span');
-        locSpan.className = 'posteditor-status-bar-locations';
-        var activeLocations = post.loc_qty || 1;
-        var paidLocations = post.loc_paid || 1;
-        locSpan.textContent = activeLocations + '/' + paidLocations;
-
-        bar.appendChild(dateSpan);
-        bar.appendChild(countdownSpan);
-        bar.appendChild(locSpan);
         bar.appendChild(statusSpan);
+        bar.appendChild(countdownSpan);
+        bar.appendChild(dateSpan);
 
         return bar;
     }
