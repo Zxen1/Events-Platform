@@ -374,6 +374,54 @@ const FilterModule = (function() {
                     });
                 }
             } catch (_eSortRestore) {}
+
+            // If saved sort is 'nearest', silently restore geolocation — but only if
+            // the browser has already granted permission (no popup on page load).
+            if (currentSort === 'nearest' && navigator.permissions && navigator.geolocation) {
+                navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+                    if (result.state === 'granted') {
+                        navigator.geolocation.getCurrentPosition(
+                            function(pos) {
+                                userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                                if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
+                                    MapControlRowComponent.setCachedLocation(pos.coords.latitude, pos.coords.longitude);
+                                }
+                                if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
+                                    MapControlRowComponent.setAllGeolocateActive();
+                                }
+                                // Emit sort so posts re-sort by distance once location is available
+                                App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
+                            },
+                            function() {
+                                // Silent failure — revert to recommended
+                                currentSort = 'recommended';
+                                try {
+                                    var recOpt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]') : null;
+                                    if (recOpt && sortButtonText) sortButtonText.textContent = recOpt.textContent;
+                                    if (sortMenuEl) {
+                                        sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
+                                            o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === 'recommended');
+                                        });
+                                    }
+                                } catch (_e) {}
+                            },
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                    } else {
+                        // Permission not granted — silently revert to recommended (no popup)
+                        currentSort = 'recommended';
+                        try {
+                            var recOpt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]') : null;
+                            if (recOpt && sortButtonText) sortButtonText.textContent = recOpt.textContent;
+                            if (sortMenuEl) {
+                                sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
+                                    o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === 'recommended');
+                                });
+                            }
+                        } catch (_e) {}
+                    }
+                });
+            }
         }
         
         // Map viewport restore is handled by MapModule at init (DB-first for logged-in users, localStorage for guests)
