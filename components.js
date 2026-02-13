@@ -9827,6 +9827,51 @@ const LocationWallpaperComponent = (function() {
         }
 
         // ============================================================
+        // SELF-HEALING UPLOAD - send freshly captured wallpapers to server
+        // ============================================================
+        function uploadCapturedWallpapers(lat, lng, bearings, dataUrls) {
+            // Fire and forget — don't block the UI
+            try {
+                var files = [];
+                var meta = [];
+                var bearingMap = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
+
+                for (var i = 0; i < bearings.length; i++) {
+                    if (!dataUrls[i]) continue;
+                    try {
+                        var parts = dataUrls[i].split(',');
+                        var mime = parts[0].match(/:(.*?);/)[1];
+                        var bstr = atob(parts[1]);
+                        var n = bstr.length;
+                        var u8arr = new Uint8Array(n);
+                        while (n--) u8arr[n] = bstr.charCodeAt(n);
+                        var blob = new Blob([u8arr], { type: mime });
+
+                        var dir = bearingMap[bearings[i]] || 'N';
+                        var filename = 'location__' + lat.toFixed(6) + '_' + lng.toFixed(6) + '__Z18-P75-' + dir + '.webp';
+                        var file = new File([blob], filename, { type: 'image/webp' });
+
+                        files.push(file);
+                        meta.push({ lat: lat, lng: lng, bearing: bearings[i] });
+                    } catch (e) { /* skip this image */ }
+                }
+
+                if (files.length === 0) return;
+
+                var fd = new FormData();
+                for (var f = 0; f < files.length; f++) {
+                    fd.append('map_images[]', files[f], files[f].name);
+                }
+                fd.append('map_images_meta', JSON.stringify(meta));
+
+                fetch('/gateway.php?action=get-map-wallpapers', {
+                    method: 'POST',
+                    body: fd
+                }).catch(function() {});
+            } catch (e) { /* silent — self-healing is best-effort */ }
+        }
+
+        // ============================================================
         // ENSURE ALL 4 IMAGES EXIST (regardless of viewing mode)
         // ============================================================
         function ensureAllFourImages(lat, lng, prefetchedLib) {
@@ -9864,6 +9909,8 @@ const LocationWallpaperComponent = (function() {
                             console.log('[TRACK] All 4 captured, storing to cache');
                             WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {
                                 console.log('[TRACK] Stored to WallpaperCache');
+                                // Self-healing: upload freshly captured images to server
+                                uploadCapturedWallpapers(lat, lng, bearings, capturedUrls);
                             });
                             return;
                         }
