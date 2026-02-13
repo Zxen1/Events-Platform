@@ -2170,21 +2170,52 @@
                     });
                 }
             } else {
-                // Active — fly to first map card location
+                // Active — close member panel, fly to location, open post panel on arrival
+                // Mirrors PostLocationComponent pattern for consistent behavior
                 var mapCards = (post.map_cards && post.map_cards.length) ? post.map_cards : [];
                 var firstCard = mapCards[0];
                 if (firstCard && window.MapModule && typeof MapModule.flyTo === 'function') {
                     var lng = Number(firstCard.longitude);
                     var lat = Number(firstCard.latitude);
-                    if (Number.isFinite(lng) && Number.isFinite(lat)) {
-                        MapModule.flyTo(lng, lat);
+                    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+
+                    // Get postsLoadZoom for correct zoom level
+                    var postsLoadZoom = 14;
+                    if (window.App && typeof App.getConfig === 'function') {
+                        var configZoom = App.getConfig('postsLoadZoom');
+                        if (typeof configZoom === 'number' && isFinite(configZoom)) postsLoadZoom = configZoom;
                     }
-                }
-                // Check if filters would hide this post — show toast alongside the fly
-                if (wouldFiltersHidePost(post)) {
-                    if (typeof window.getMessage === 'function') {
-                        window.getMessage('msg_posteditor_toast_filtered', {}, false).then(function(msg) {
-                            if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+
+                    // Close member panel so the map is visible during flight
+                    if (window.MemberModule && typeof MemberModule.closePanel === 'function') {
+                        MemberModule.closePanel();
+                    }
+
+                    // Switch to map mode during flight
+                    var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
+                    if (mapBtn) mapBtn.click();
+
+                    // Fly to location
+                    MapModule.flyTo(lng, lat, postsLoadZoom);
+
+                    // Show filter toast if filters would hide this post
+                    var isFiltered = wouldFiltersHidePost(post);
+                    if (isFiltered) {
+                        if (typeof window.getMessage === 'function') {
+                            window.getMessage('msg_posteditor_toast_filtered', {}, false).then(function(msg) {
+                                if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                            });
+                        }
+                    }
+
+                    // After arrival, switch to posts mode
+                    var mainMap = MapModule.getMap();
+                    if (mainMap) {
+                        mainMap.once('moveend', function() {
+                            var center = mainMap.getCenter();
+                            if (Math.abs(center.lat - lat) > 0.01 || Math.abs(center.lng - lng) > 0.01) return;
+                            var postsBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="posts"]');
+                            if (postsBtn) postsBtn.click();
                         });
                     }
                 }
