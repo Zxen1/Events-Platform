@@ -108,6 +108,7 @@
 .posteditor-status-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-size: 12px;
   margin: 0;
   padding: 2px 10px;
@@ -123,17 +124,17 @@
 
 .posteditor-status-bar-tier {
   flex-shrink: 0;
-  margin-left: 10px;
 }
 
 .posteditor-status-bar-countdown {
   flex-shrink: 0;
-  margin-left: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .posteditor-status-bar-date {
-  margin-left: auto;
   flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Color states */
