@@ -3652,6 +3652,13 @@ const MapControlRowComponent = (function(){
     function isActive() {
         return geolocateActive;
     }
+
+    // Set the cached location from an external source (e.g. filter.js geolocation).
+    // This keeps the map control geolocate buttons in sync so they can reuse
+    // the location instantly without re-prompting the browser.
+    function setCachedLocation(lat, lng) {
+        cachedLocation = { lat: lat, lng: lng };
+    }
     
     return {
         create: create,
@@ -3659,6 +3666,7 @@ const MapControlRowComponent = (function(){
         registerGeolocateIcon: registerGeolocateIcon,
         isGeolocateActive: isActive,
         getCachedLocation: function() { return cachedLocation; },
+        setCachedLocation: setCachedLocation,
         setAllGeolocateLoading: setAllGeolocateLoading,
         setAllGeolocateActive: setAllGeolocateActive,
         clearAllGeolocateLoading: clearAllGeolocateLoading

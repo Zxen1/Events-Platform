@@ -2112,23 +2112,54 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
-    // Build individual map card entries for premium posts (sidebar_ad === 1).
+    // Build individual map card entries for premium posts (sidebar_ad === 1)
+    // that are within the visible map area.
     // Each entry is { post, mapCard } so the marquee can display specific location info.
+    var bounds = getMapBounds();
     var marqueeMapCards = [];
     list.forEach(function(p) {
       if (p.sidebar_ad !== 1) return;
       if (!p.map_cards || !p.map_cards.length) return;
       p.map_cards.forEach(function(mc) {
         if (!mc || !Number.isFinite(mc.latitude) || !Number.isFinite(mc.longitude)) return;
+        // Only include map cards visible in the current map viewport
+        if (!pointWithinBounds(mc.longitude, mc.latitude, bounds)) return;
         marqueeMapCards.push({ post: p, mapCard: mc });
       });
     });
+
+    // Interleave entries so the same post's map cards are spread apart.
+    // Group by post ID, then round-robin across groups.
+    var groupsByPost = {};
+    var postOrder = [];
+    marqueeMapCards.forEach(function(entry) {
+      var pid = entry.post.id;
+      if (!groupsByPost[pid]) {
+        groupsByPost[pid] = [];
+        postOrder.push(pid);
+      }
+      groupsByPost[pid].push(entry);
+    });
+    var interleaved = [];
+    var maxRounds = 0;
+    postOrder.forEach(function(pid) {
+      if (groupsByPost[pid].length > maxRounds) maxRounds = groupsByPost[pid].length;
+    });
+    for (var round = 0; round < maxRounds; round++) {
+      for (var g = 0; g < postOrder.length; g++) {
+        var group = groupsByPost[postOrder[g]];
+        if (round < group.length) {
+          interleaved.push(group[round]);
+        }
+      }
+    }
+
     // Limit to max map card slots
     var maxCards = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
-    marqueeMapCards = marqueeMapCards.slice(0, maxCards);
+    interleaved = interleaved.slice(0, maxCards);
 
     App.emit('filter:applied', {
-      marqueeMapCards: marqueeMapCards
+      marqueeMapCards: interleaved
     });
   }
 
