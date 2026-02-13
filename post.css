@@ -1265,7 +1265,7 @@
   max-width: 100%;
   flex: 1 1 auto;
   box-sizing: border-box;
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  margin-bottom: 0; /* Last element in post-body — flush against bottom border */
   align-self: stretch;
 }
 
@@ -1286,7 +1286,7 @@
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0);
   position: relative;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+  margin-bottom: 0; /* Flush to bottom; spacing handled by .post-thumbs padding when present */
 }
 
 .post-hero--clickable {
@@ -1316,13 +1316,17 @@
   object-fit: cover;
 }
 
-/* Thumbnail container */
+/* Thumbnail container - hidden when empty (single-image posts) */
+.post-thumbs:empty {
+  display: none;
+}
+
 .post-thumbs {
   position: relative;
   display: flex;
   flex-wrap: nowrap;
   gap: 5px;
-  padding: 0 10px 5px;
+  padding: 5px 10px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
