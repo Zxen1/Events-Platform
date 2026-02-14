@@ -2144,7 +2144,7 @@ const MapModule = (function() {
   /**
    * Handle cluster click
    * - From below zoom 7.5: fly to cluster center, stop at 7.5 (shows finest cluster breakdown)
-   * - From zoom 7.5+: fly straight to zoom 12 (map card territory)
+   * - From zoom 7.5+: fly straight to configured flyToZoom (same as other fly-to flows)
    * This prevents landing in empty space when clicking large clusters from far out.
    */
   function handleClusterClick(e) {
@@ -2157,10 +2157,17 @@ const MapModule = (function() {
     var currentZoom = map.getZoom();
     
     // Below 7.5: stop at 7.5 to show finest cluster breakdown
-    // At 7.5+: go straight to zoom 12 (map cards)
+    // At 7.5+: go straight to configured flyToZoom (same behavior as MapModule.flyTo)
     var FINEST_CLUSTER_ZOOM = 7.6;
-    var MAP_CARD_ZOOM = 12;
-    var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM ? FINEST_CLUSTER_ZOOM : MAP_CARD_ZOOM;
+    var configuredFlyToZoom = null;
+    if (!window.App || typeof App.getConfig !== 'function') {
+      throw new Error('[Map] App.getConfig is required for flyToZoom.');
+    }
+    configuredFlyToZoom = App.getConfig('flyToZoom');
+    if (typeof configuredFlyToZoom !== 'number' || !isFinite(configuredFlyToZoom)) {
+      throw new Error('[Map] flyToZoom config is missing or invalid.');
+    }
+    var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM ? FINEST_CLUSTER_ZOOM : configuredFlyToZoom;
     
     map.flyTo({
       center: coords,
