@@ -532,28 +532,12 @@ const MarqueeModule = (function() {
     if (!entry) throw new Error('[Marquee] Entry not found: post=' + postId + ' mapCard=' + mapCardId);
     
     var mapCard = entry.mapCard;
-    var lng = Number(mapCard.longitude);
-    var lat = Number(mapCard.latitude);
-    if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
-      throw new Error('[Marquee] Invalid coordinates for post=' + postId + ' mapCard=' + mapCardId);
-    }
-    
-    MapModule.flyTo(lng, lat);
-    
-    var mainMap = MapModule.getMap();
-    if (mainMap) {
-      mainMap.once('moveend', function() {
-        // Verify we arrived near the target
-        var center = mainMap.getCenter();
-        if (Math.abs(center.lat - lat) > 0.01 || Math.abs(center.lng - lng) > 0.01) return;
-        
-        // Open the post with the specific map card selected
-        if (window.PostModule && typeof PostModule.openPostById === 'function') {
-          PostModule.openPostById(postId, {
-            postMapCardId: String(mapCard.id),
-            source: 'marquee'
-          });
-        }
+
+    // Open directly from marquee without flying the map.
+    if (window.PostModule && typeof PostModule.openPostById === 'function') {
+      PostModule.openPostById(postId, {
+        postMapCardId: String(mapCard.id),
+        source: 'marquee'
       });
     }
   }
