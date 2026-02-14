@@ -1568,8 +1568,12 @@ const PostModule = (function() {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
-    // Clear existing list content (cards + summary)
+    // Clear existing list content (cards + summary), preserving slack elements.
+    var _topS = postListEl.querySelector('.topSlack');
+    var _botS = postListEl.querySelector('.bottomSlack');
     postListEl.innerHTML = '';
+    if (_topS) postListEl.appendChild(_topS);
+    if (_botS) postListEl.appendChild(_botS);
 
     // Final paint: restore full opacity once DOM is swapped.
     function finalizeRender() {
@@ -2785,7 +2789,7 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        cardToHide.classList.add(cardToHide.classList.contains('recent-card') ? 'recent-card--slack-hidden' : 'post-card--slack-hidden');
+        // TEST: postcard stays visible (slack anchor test)
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -2874,7 +2878,6 @@ const PostModule = (function() {
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.classList.remove('post-card--slack-hidden', 'recent-card--slack-hidden');
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -3929,7 +3932,6 @@ const PostModule = (function() {
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.classList.remove('post-card--slack-hidden', 'recent-card--slack-hidden');
       // If slot is now empty (was a temp slot), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -4332,8 +4334,12 @@ const PostModule = (function() {
   function renderPostsEmptyState() {
     if (!postListEl) return;
 
-    // Always empty (no posts in this site yet).
+    // Always empty (no posts in this site yet), preserving slack elements.
+    var _topS = postListEl.querySelector('.topSlack');
+    var _botS = postListEl.querySelector('.bottomSlack');
     postListEl.innerHTML = '';
+    if (_topS) postListEl.appendChild(_topS);
+    if (_botS) postListEl.appendChild(_botS);
     
     // Ensure full opacity if we reach empty state (avoids getting stuck at 0.6 from renderPostList).
     postListEl.style.opacity = '1';
@@ -4418,7 +4424,11 @@ const PostModule = (function() {
   function renderRecentEmptyState() {
     if (!recentPanelContentEl) return;
 
+    var _topS = recentPanelContentEl.querySelector('.topSlack');
+    var _botS = recentPanelContentEl.querySelector('.bottomSlack');
     recentPanelContentEl.innerHTML = '';
+    if (_topS) recentPanelContentEl.appendChild(_topS);
+    if (_botS) recentPanelContentEl.appendChild(_botS);
 
     var reminderWrap = document.createElement('div');
     reminderWrap.className = 'recent-panel-reminder';
@@ -4514,7 +4524,11 @@ const PostModule = (function() {
       return;
     }
 
+    var _topS = recentPanelContentEl.querySelector('.topSlack');
+    var _botS = recentPanelContentEl.querySelector('.bottomSlack');
     recentPanelContentEl.innerHTML = '';
+    if (_topS) recentPanelContentEl.appendChild(_topS);
+    if (_botS) recentPanelContentEl.appendChild(_botS);
 
     // Create list container
     var listEl = document.createElement('div');
