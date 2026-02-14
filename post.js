@@ -2502,6 +2502,13 @@ const PostModule = (function() {
     if (openSlot) {
       try { postListEl.insertBefore(openSlot, summaryEl ? summaryEl.nextSibling : postListEl.firstChild); } catch (_eOpen) {}
     }
+
+    // Preserve slack element order: topSlack first, bottomSlack last.
+    // appendChild moves existing elements, so this is safe even if they're already in position.
+    var _topS = postListEl.querySelector('.topSlack');
+    var _botS = postListEl.querySelector('.bottomSlack');
+    if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
+    if (_botS) try { postListEl.appendChild(_botS); } catch (_eBotS) {}
   }
 
   /**

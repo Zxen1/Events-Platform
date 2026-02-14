@@ -6390,12 +6390,12 @@ const TopSlack = (function() {
             }
         }
         
-        function isSlackOffscreenAbove() {
+        function isSlackOffscreenAbove(buffer) {
             if (!slackEl) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
-                return slackRect.bottom <= scrollRect.top;
+                return slackRect.bottom <= scrollRect.top - (buffer || 0);
             } catch (e) {
                 return false;
             }
@@ -6415,11 +6415,14 @@ const TopSlack = (function() {
         }
         
         // If slack is ON but sits above the viewport, collapse it before the user can ever scroll into it.
+        // Use a 200px buffer so collapse only fires when the slack is well clear of the viewport,
+        // preventing visible jolt from the scrollTop compensation.
+        var collapseBuffer = 200;
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
                 if (Date.now() < clickHoldUntil) return false;
-                if (!isSlackOffscreenAbove()) return false;
+                if (!isSlackOffscreenAbove(collapseBuffer)) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
                 return true;
@@ -6518,7 +6521,7 @@ const TopSlack = (function() {
                 if (slackEl && (t === slackEl || slackEl.contains(t))) return;
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
-                // Anchor the closest "button-like" element to avoid anchoring to inner icon spans.
+                // Anchor the nearest data-slack-anchor element, then nearest button-like, then click target.
                 var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
                 clickHoldUntil = Date.now() + clickHoldMs;
