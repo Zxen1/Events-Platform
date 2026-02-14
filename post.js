@@ -2785,7 +2785,8 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        cardToHide.style.display = 'none';
+        // Add open class to slot — CSS hides card behind post (keeps anchor valid for TopSlack)
+        slot.classList.add(slot.className.split(' ')[0] + '--post-open');
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -2872,9 +2873,8 @@ const PostModule = (function() {
     if (slot) {
       // Remove the detail view from the slot
       openPostEl.remove();
-      // Restore the hidden card
-      var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.style.display = '';
+      // Remove post-open class to restore the card
+      slot.classList.remove(slot.className.split(' ')[0] + '--post-open');
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -3927,9 +3927,8 @@ const PostModule = (function() {
 
     if (slot) {
       openPostEl.remove();
-      // Restore the hidden card
-      var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.style.display = '';
+      // Remove post-open class to restore the card
+      slot.classList.remove(slot.className.split(' ')[0] + '--post-open');
       // If slot is now empty (was a temp slot), remove it
       if (!slot.children.length) slot.remove();
     } else {
