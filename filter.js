@@ -705,22 +705,36 @@ const FilterModule = (function() {
             }
         });
 
-        // Register both sort geolocate icons now that MapControlRowComponent is ready
-        // and system_images are loaded (same timing as the built-in geolocate icons)
-        if (MapControlRowComponent.registerGeolocateIcon) {
-            if (sortGeoIconEl) {
-                MapControlRowComponent.registerGeolocateIcon(
-                    sortGeoIconEl,
-                    'filter-sort-geolocate-icon',
-                    'filter-sort-geolocate-icon'
-                );
-            }
-            if (sortGeoIconBtnEl) {
-                MapControlRowComponent.registerGeolocateIcon(
-                    sortGeoIconBtnEl,
-                    'filter-sort-geolocate-icon',
-                    'filter-sort-geolocate-icon'
-                );
+        // Create geolocate icons now that MapControlRowComponent (and system_images)
+        // are ready.  The mask-image is applied immediately by registerGeolocateIcon,
+        // so the icon is never visible as an unstyled square.
+        var nearestOption = sortMenuEl
+            ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="nearest"]')
+            : null;
+        if (nearestOption && MapControlRowComponent.registerGeolocateIcon) {
+            // Dropdown option icon
+            sortGeoIconEl = document.createElement('span');
+            sortGeoIconEl.className = 'filter-sort-geolocate-icon';
+            sortGeoIconEl.setAttribute('aria-hidden', 'true');
+            nearestOption.appendChild(sortGeoIconEl);
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIconEl,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
+
+            // Button icon (clone after registration so inline mask-image is copied)
+            sortGeoIconBtnEl = sortGeoIconEl.cloneNode(true);
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIconBtnEl,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
+
+            // If sort was already restored to 'nearest' before controls loaded,
+            // append the button icon now
+            if (currentSort === 'nearest' && sortButtonText) {
+                sortButtonText.appendChild(sortGeoIconBtnEl);
             }
         }
     }
@@ -922,13 +936,8 @@ const FilterModule = (function() {
         var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
 
-        // Store icon element for deferred registration.
-        // Create a second icon for the button text (appended inside the text span
-        // so it sits directly beside the label, not as a separate flex item).
-        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="nearest"] .filter-sort-geolocate-icon');
-        if (sortGeoIconEl) {
-            sortGeoIconBtnEl = sortGeoIconEl.cloneNode(true);
-        }
+        // Icons are created later in createControls() when the mask-image is ready.
+        // This avoids any flash of unstyled square before the SVG mask loads.
 
         function setSortMenuOpen(isOpen) {
             sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);

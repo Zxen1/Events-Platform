@@ -3634,8 +3634,8 @@ const MapControlRowComponent = (function(){
         };
         instances.push(inst);
         // Apply system image mask if available, then reveal the icon.
-        // The icon starts hidden (display:none in CSS) to prevent a colored square
-        // flash before the mask-image loads.
+        // The icon starts at opacity:0 (CSS safety net) to prevent a colored square
+        // flash; this sets opacity:1 after the mask-image URL is applied.
         try {
             var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
             var geoFilename = sys.icon_geolocate || '';
