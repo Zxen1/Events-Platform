@@ -931,17 +931,30 @@ const PostModule = (function() {
   function refreshOpenModePanelForAuthChange() {
     var openMode = (currentMode === 'posts' || currentMode === 'recent') ? currentMode : '';
     if (!openMode) return;
-    var mapBtn = getModeButton('map');
-    var reopenBtn = getModeButton(openMode);
     var openContentEl = openMode === 'posts' ? postPanelContentEl : recentPanelContentEl;
-    if (!mapBtn || !reopenBtn) return;
-
-    try { mapBtn.click(); } catch (_eClose) { return; }
+    if (openMode === 'posts') {
+      if (!postPanelEl || !postPanelContentEl) return;
+      togglePanel(postPanelEl, postPanelContentEl, 'post', false);
+    } else {
+      if (!recentPanelEl || !recentPanelContentEl) return;
+      togglePanel(recentPanelEl, recentPanelContentEl, 'recent', false);
+    }
 
     // Respect real slide animation duration before reopening.
     var reopenDelayMs = getContentTransitionDurationMs(openContentEl) + 60;
     setTimeout(function() {
-      try { reopenBtn.click(); } catch (_eReopen) {}
+      try {
+        if (openMode === 'posts') {
+          togglePanel(postPanelEl, postPanelContentEl, 'post', true);
+          var threshold = getPostsMinZoom();
+          if (typeof lastZoom === 'number' && lastZoom >= threshold) {
+            applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
+          }
+        } else {
+          togglePanel(recentPanelEl, recentPanelContentEl, 'recent', true);
+          renderRecentPanel();
+        }
+      } catch (_eReopen) {}
     }, reopenDelayMs);
   }
 
