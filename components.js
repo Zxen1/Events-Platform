@@ -5857,6 +5857,7 @@ const BottomSlack = (function() {
             style.textContent =
                 '.bottomSlack{' +
                 'height:var(--bottomSlack,0px);' +
+                'min-height:var(--bottomSlack,0px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +

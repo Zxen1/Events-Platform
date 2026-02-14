@@ -33,6 +33,7 @@
 .bottomSlack {
   /* Default is 0. The Slack system sets this variable as needed. */
   height: var(--bottomSlack, 0px);
+  min-height: var(--bottomSlack, 0px);
   flex: 0 0 auto;
   pointer-events: none;
   /* Do not animate height changes (avoids visible resize/flick). */
