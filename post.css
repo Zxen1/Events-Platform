@@ -273,30 +273,6 @@
   margin-bottom: 0;
 }
 
-/* Keep clicked slot in-flow for Slack anchor; hide card visual while post overlays it */
-.post-slot--post-open,
-.recent-card-wrapper--post-open,
-.posteditor-item--post-open {
-  position: relative;
-}
-
-.post-slot--post-open .post-card,
-.recent-card-wrapper--post-open .recent-card,
-.posteditor-item--post-open .post-card {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.post-slot--post-open > .post,
-.recent-card-wrapper--post-open > .post,
-.posteditor-item--post-open > .post {
-  position: relative;
-  z-index: 1;
-}
-
 /* Status bar above recent card - purple for Recent panel distinction */
 .recent-status-bar {
   display: flex;
