@@ -1651,6 +1651,7 @@ const PostModule = (function() {
       var card = renderPostCard(post);
       var slot = document.createElement('div');
       slot.className = 'post-slot';
+      slot.setAttribute('role', 'button');
       slot.dataset.id = String(post.id);
       slot.appendChild(card);
       postListEl.appendChild(slot);
@@ -2785,7 +2786,7 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        hideCardForOpenSlot(slot, cardToHide);
+        cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -2804,6 +2805,7 @@ const PostModule = (function() {
       // No slot found (e.g. opened from map, card not in the list): create a temp slot.
       slot = document.createElement('div');
       slot.className = 'post-slot';
+      slot.setAttribute('role', 'button');
       slot.dataset.id = String(post.id);
       slot.appendChild(detail);
       var topSlack = null;
@@ -2874,7 +2876,7 @@ const PostModule = (function() {
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) restoreCardAfterOpenSlot(slot, hiddenCard);
+      if (hiddenCard) hiddenCard.style.display = '';
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -2885,62 +2887,6 @@ const PostModule = (function() {
     if (window.App && typeof App.emit === 'function') {
       App.emit('post:closed', { postId: postId });
     }
-  }
-
-  function hideCardForOpenSlot(slot, cardEl) {
-    if (!slot || !cardEl) return;
-    try {
-      var cardRect = cardEl.getBoundingClientRect();
-      var slotRect = slot.getBoundingClientRect();
-      var topPx = cardRect.top - slotRect.top;
-      var leftPx = cardRect.left - slotRect.left;
-      var widthPx = cardRect.width;
-
-      if (!cardEl.hasAttribute('data-open-inline-style')) {
-        var prevStyle = cardEl.getAttribute('style');
-        cardEl.setAttribute('data-open-inline-style', prevStyle === null ? '__none__' : prevStyle);
-      }
-      if (!slot.hasAttribute('data-open-inline-style')) {
-        var prevSlotStyle = slot.getAttribute('style');
-        slot.setAttribute('data-open-inline-style', prevSlotStyle === null ? '__none__' : prevSlotStyle);
-      }
-
-      var slotPos = '';
-      try { slotPos = window.getComputedStyle(slot).position || ''; } catch (_ePos) { slotPos = ''; }
-      if (!slotPos || slotPos === 'static') {
-        slot.style.position = 'relative';
-      }
-
-      cardEl.style.position = 'absolute';
-      cardEl.style.top = String(topPx) + 'px';
-      cardEl.style.left = String(leftPx) + 'px';
-      cardEl.style.width = String(widthPx) + 'px';
-      cardEl.style.visibility = 'hidden';
-      cardEl.style.pointerEvents = 'none';
-    } catch (_eHideCard) {}
-  }
-
-  function restoreCardAfterOpenSlot(slot, cardEl) {
-    if (!slot || !cardEl) return;
-    try {
-      var prevStyle = cardEl.getAttribute('data-open-inline-style');
-      if (prevStyle && prevStyle !== '__none__') {
-        cardEl.setAttribute('style', prevStyle);
-      } else {
-        cardEl.removeAttribute('style');
-      }
-      cardEl.removeAttribute('data-open-inline-style');
-    } catch (_eRestoreCard0) {}
-
-    try {
-      var prevSlotStyle = slot.getAttribute('data-open-inline-style');
-      if (prevSlotStyle && prevSlotStyle !== '__none__') {
-        slot.setAttribute('style', prevSlotStyle);
-      } else {
-        slot.removeAttribute('style');
-      }
-      slot.removeAttribute('data-open-inline-style');
-    } catch (_eRestoreCard1) {}
   }
 
   /**
@@ -4645,6 +4591,7 @@ const PostModule = (function() {
     // Create wrapper to hold timestamp + card
     var wrapper = document.createElement('div');
     wrapper.className = 'recent-card-wrapper';
+    wrapper.setAttribute('role', 'button');
 
     var el = document.createElement('article');
     el.className = 'recent-card';
