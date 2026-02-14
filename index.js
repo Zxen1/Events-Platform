@@ -654,7 +654,7 @@ const App = (function() {
     // Apply per-tab config first
     applySlackConfig();
     
-    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
+    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content'];
     var isMobile = false;
     try {
       isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);

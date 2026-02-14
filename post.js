@@ -211,7 +211,6 @@ const PostModule = (function() {
 
     ensurePanelsDom();
     bindUiPersistence();
-    attachButtonAnchors();
     bindAppEvents();
     bindModeButtons();
 
@@ -5006,29 +5005,6 @@ const PostModule = (function() {
         window.history.replaceState({}, document.title, path);
       } catch (_eUrl) {}
     });
-  }
-
-  /* --------------------------------------------------------------------------
-     BUTTON ANCHORS (Anti-jank)
-     Attach to scroll containers so clicked controls don't "fly away"
-     -------------------------------------------------------------------------- */
-
-  function attachButtonAnchors() {
-    if (!postListEl || !recentPanelContentEl) return;
-    if (!window.BottomSlack) {
-      throw new Error('[Post] BottomSlack is required (components.js).');
-    }
-    if (!window.TopSlack) {
-      throw new Error('[Post] TopSlack is required (components.js).');
-    }
-
-    // Same options used elsewhere (keep site-wide feel consistent).
-    var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
-    // Attach to the actual scroll containers.
-    BottomSlack.attach(postListEl, options);
-    TopSlack.attach(postListEl, options);
-    BottomSlack.attach(recentPanelContentEl, options);
-    TopSlack.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
