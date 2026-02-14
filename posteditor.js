@@ -529,7 +529,6 @@
         // Reuse PostModule's rendering logic with buttons underneath
         var postContainer = document.createElement('div');
         postContainer.className = 'posteditor-item';
-        postContainer.setAttribute('role', 'button');
         postContainer.dataset.postId = post.id;
         
         // Create edit header (sticky container for postcard + Save/Close buttons when editing)

@@ -1397,7 +1397,7 @@ if (empty($ogTitle)) {
         <!-- ================================================================
              POST EDITOR TAB
              ================================================================ -->
-        <section id="member-tab-posteditor" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-posteditor-btn" hidden>
+        <section id="member-tab-posteditor" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-posteditor-btn" data-bottomslack="false" data-topslack="false" hidden>
           <!-- Content loaded when logged in -->
         </section>
         

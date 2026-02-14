@@ -1362,6 +1362,7 @@ const PostModule = (function() {
     el.className = 'post-card';
     el.dataset.id = String(post.id);
     el.dataset.postKey = post.post_key || '';
+    el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
 
     // Use the in-area map card for display (location context must match the current map view).
@@ -1650,7 +1651,6 @@ const PostModule = (function() {
       var card = renderPostCard(post);
       var slot = document.createElement('div');
       slot.className = 'post-slot';
-      slot.setAttribute('role', 'button');
       slot.dataset.id = String(post.id);
       slot.appendChild(card);
       postListEl.appendChild(slot);
@@ -2712,14 +2712,6 @@ const PostModule = (function() {
      - Image Gallery (hero + thumbnails)
      -------------------------------------------------------------------------- */
 
-  function markSlotOpenState(slot, isOpen) {
-    if (!slot || !slot.classList) return;
-
-    slot.classList.toggle('post-slot--post-open', !!isOpen && slot.classList.contains('post-slot'));
-    slot.classList.toggle('recent-card-wrapper--post-open', !!isOpen && slot.classList.contains('recent-card-wrapper'));
-    slot.classList.toggle('posteditor-item--post-open', !!isOpen && slot.classList.contains('posteditor-item'));
-  }
-
   /**
    * Open a post (show detail view)
    * @param {Object} post - Post data
@@ -2793,7 +2785,7 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        markSlotOpenState(slot, true);
+        cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -2812,7 +2804,6 @@ const PostModule = (function() {
       // No slot found (e.g. opened from map, card not in the list): create a temp slot.
       slot = document.createElement('div');
       slot.className = 'post-slot';
-      slot.setAttribute('role', 'button');
       slot.dataset.id = String(post.id);
       slot.appendChild(detail);
       var topSlack = null;
@@ -2881,8 +2872,9 @@ const PostModule = (function() {
     if (slot) {
       // Remove the detail view from the slot
       openPostEl.remove();
-      // Restore slot/card visual state
-      markSlotOpenState(slot, false);
+      // Restore the hidden card
+      var hiddenCard = slot.querySelector('.post-card, .recent-card');
+      if (hiddenCard) hiddenCard.style.display = '';
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -3935,8 +3927,9 @@ const PostModule = (function() {
 
     if (slot) {
       openPostEl.remove();
-      // Restore slot/card visual state
-      markSlotOpenState(slot, false);
+      // Restore the hidden card
+      var hiddenCard = slot.querySelector('.post-card, .recent-card');
+      if (hiddenCard) hiddenCard.style.display = '';
       // If slot is now empty (was a temp slot), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -4596,7 +4589,6 @@ const PostModule = (function() {
     // Create wrapper to hold timestamp + card
     var wrapper = document.createElement('div');
     wrapper.className = 'recent-card-wrapper';
-    wrapper.setAttribute('role', 'button');
 
     var el = document.createElement('article');
     el.className = 'recent-card';
@@ -4610,6 +4602,7 @@ const PostModule = (function() {
     }
     // Unavailable cards are not interactive
     if (!entry.unavailable) {
+      el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
     }
 
