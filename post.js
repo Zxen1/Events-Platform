@@ -2785,7 +2785,7 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        cardToHide.style.display = 'none';
+        cardToHide.classList.add(cardToHide.classList.contains('recent-card') ? 'recent-card--slack-hidden' : 'post-card--slack-hidden');
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -2874,7 +2874,7 @@ const PostModule = (function() {
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.style.display = '';
+      if (hiddenCard) hiddenCard.classList.remove('post-card--slack-hidden', 'recent-card--slack-hidden');
       // If slot is now empty (was a temp slot for map-opened posts), remove it
       if (!slot.children.length) slot.remove();
     } else {
@@ -3929,7 +3929,7 @@ const PostModule = (function() {
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.style.display = '';
+      if (hiddenCard) hiddenCard.classList.remove('post-card--slack-hidden', 'recent-card--slack-hidden');
       // If slot is now empty (was a temp slot), remove it
       if (!slot.children.length) slot.remove();
     } else {
