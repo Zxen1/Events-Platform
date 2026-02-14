@@ -1577,6 +1577,9 @@ const PostModule = (function() {
     // Show empty state if no posts
     if (!posts || !posts.length) {
       renderPostsEmptyState();
+      // _botS was saved before innerHTML='' but renderPostsEmptyState can't find it
+      // (it was already detached). Re-append it here so BottomSlack survives empty renders.
+      if (_botS) postListEl.appendChild(_botS);
       finalizeRender();
 
       // CRITICAL SYNC RULE:
