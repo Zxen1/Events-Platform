@@ -2032,14 +2032,14 @@
 /* Removed - hover styles now defined inline with each element */
 
 /* Sort option geolocate icon - inline next to "Sort by Distance" */
-/* Created programmatically in filter.js createControls() with mask-image already applied.
-   opacity:0 is a safety net — registerGeolocateIcon sets opacity:1 after applying the mask. */
+/* Invisible (opacity:0) until registerGeolocateIcon applies the mask-image and sets opacity:1. */
+/* This prevents a colored square flash before the icon shape loads. */
 .filter-sort-geolocate-icon {
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     vertical-align: -0.15em;
-    margin-left: 8px;
+    margin-left: 10px;
     background-color: currentColor;
     opacity: 0;
     -webkit-mask-size: contain;
