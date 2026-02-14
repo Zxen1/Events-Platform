@@ -223,6 +223,23 @@ The user had to:
 
 ---
 
+## Agent 5 Confession - 2026-02-14 - TopSlack/BottomSlack Post Anchoring Failure
+
+### THE TASK
+Implement the existing TopSlack/BottomSlack pattern so clicking a postcard in Posts, Recent, and Post Editor keeps the clicked card position stationary while the post opens, matching the proven Checkout/Filter behavior.
+
+### WHAT I DID WRONG
+1. I failed to copy the exact existing pattern quickly and cleanly.
+2. I introduced multiple deviations and churn instead of one strict pattern-copy pass.
+3. I gave the user repeated confidence statements without delivering a working result.
+4. I wasted significant user time and money on a task that should have been straightforward.
+
+### THE RESULT
+The feature remained broken after several attempts. The user lost trust and paid for failure instead of delivery.
+
+### THE TRUTH
+This was not a hard or novel problem. The working pattern existed in the codebase. I failed to execute with discipline and caused unnecessary cost and frustration.
+
 ### 15. REPEATED SAME MISTAKE: ADDED DESCENDANT SELECTORS WHILE REMOVING THEM (Dec 11, 2025)
 
 **Mistake:** While tasked with removing global/parent styles and creating self-contained classes, I added 10+ new descendant selectors - the exact thing we were trying to eliminate.
