@@ -1573,7 +1573,6 @@ const PostModule = (function() {
     var _botS = postListEl.querySelector('.bottomSlack');
     postListEl.innerHTML = '';
     if (_topS) postListEl.appendChild(_topS);
-    if (_botS) postListEl.appendChild(_botS);
 
     // Final paint: restore full opacity once DOM is swapped.
     function finalizeRender() {
@@ -1669,6 +1668,7 @@ const PostModule = (function() {
       renderMapMarkers(posts);
     }
 
+    if (_botS) postListEl.appendChild(_botS);
     finalizeRender();
   }
 
@@ -4339,7 +4339,6 @@ const PostModule = (function() {
     var _botS = postListEl.querySelector('.bottomSlack');
     postListEl.innerHTML = '';
     if (_topS) postListEl.appendChild(_topS);
-    if (_botS) postListEl.appendChild(_botS);
     
     // Ensure full opacity if we reach empty state (avoids getting stuck at 0.6 from renderPostList).
     postListEl.style.opacity = '1';
@@ -4419,6 +4418,7 @@ const PostModule = (function() {
     }
 
     postListEl.appendChild(wrap);
+    if (_botS) postListEl.appendChild(_botS);
   }
 
   function renderRecentEmptyState() {
@@ -4428,7 +4428,6 @@ const PostModule = (function() {
     var _botS = recentPanelContentEl.querySelector('.bottomSlack');
     recentPanelContentEl.innerHTML = '';
     if (_topS) recentPanelContentEl.appendChild(_topS);
-    if (_botS) recentPanelContentEl.appendChild(_botS);
 
     var reminderWrap = document.createElement('div');
     reminderWrap.className = 'recent-panel-reminder';
@@ -4467,6 +4466,7 @@ const PostModule = (function() {
     }
 
     recentPanelContentEl.appendChild(reminderWrap);
+    if (_botS) recentPanelContentEl.appendChild(_botS);
   }
 
   /* --------------------------------------------------------------------------
@@ -4528,7 +4528,6 @@ const PostModule = (function() {
     var _botS = recentPanelContentEl.querySelector('.bottomSlack');
     recentPanelContentEl.innerHTML = '';
     if (_topS) recentPanelContentEl.appendChild(_topS);
-    if (_botS) recentPanelContentEl.appendChild(_botS);
 
     // Create list container
     var listEl = document.createElement('div');
@@ -4585,6 +4584,7 @@ const PostModule = (function() {
     }
 
     recentPanelContentEl.appendChild(reminderWrap);
+    if (_botS) recentPanelContentEl.appendChild(_botS);
   }
 
   /**
