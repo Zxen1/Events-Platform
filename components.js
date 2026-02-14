@@ -6169,7 +6169,7 @@ const BottomSlack = (function() {
             // Never expand slack when clicking tab buttons (let forceOff handle it).
             try {
                 var t = e && e.target;
-                if (t && t.closest && t.closest('[role="tab"]')) return;
+                if (t && t.closest && t.closest('[role="tab"]')) { console.log('[BottomSlack] SKIP: tab button click', scrollEl.className); return; }
             } catch (_eTab) {}
             
             // Check if the clicked element is within a tab/panel that has BOTTOM anchor disabled.
@@ -6179,6 +6179,7 @@ const BottomSlack = (function() {
                     var anchorDisabled = t2.closest('[data-bottomslack="false"]');
                     if (anchorDisabled) {
                         // This tab/panel doesn't want bottom anchor - collapse any existing slack and return.
+                        console.log('[BottomSlack] SKIP: data-bottomslack=false', scrollEl.className);
                         applySlackPx(collapsedSlackPx);
                         return;
                     }
@@ -6190,6 +6191,7 @@ const BottomSlack = (function() {
                 var h = scrollEl.clientHeight || 0;
                 var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
                 if (contentNoSlack <= h) {
+                    console.log('[BottomSlack] SKIP: no overflow', scrollEl.className, 'contentNoSlack=' + contentNoSlack, 'clientH=' + h, 'scrollH=' + scrollEl.scrollHeight, 'currentSlack=' + currentSlackPx);
                     // Do not collapse slack while it's visibly on-screen (prevents "slam shut").
                     try {
                         if (isSlackOnScreen()) return;
@@ -6200,6 +6202,7 @@ const BottomSlack = (function() {
                 }
             } catch (e0) {}
             
+            console.log('[BottomSlack] EXPAND', scrollEl.className, 'contentNoSlack=' + ((scrollEl.scrollHeight || 0) - (currentSlackPx || 0)), 'clientH=' + (scrollEl.clientHeight || 0));
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
         }
@@ -6316,7 +6319,6 @@ const TopSlack = (function() {
         opts = opts || {};
         ensureStyle();
         
-        var stopDelayMs = (typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 180;
         var clickHoldMs = (typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
         var scrollbarFadeMs = (typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
         
@@ -6329,13 +6331,10 @@ const TopSlack = (function() {
         var collapsedSlackPx = 0;
         
         var slackEl = ensureSlackEl(scrollEl);
-        var unlockTimer = null;
-        var locked = false;
         var clickHoldUntil = 0;
         var currentSlackPx = 0;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
-        var pendingOffscreenCollapse = false;
         var internalAdjust = false;
         var pendingAnchor = null; // { el, topBefore }
         var anchorObserver = null;
@@ -6390,67 +6389,29 @@ const TopSlack = (function() {
             }
         }
         
-        function isSlackOffscreenAbove(buffer) {
+        function isSlackOffscreenAbove() {
             if (!slackEl) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
-                return slackRect.bottom <= scrollRect.top - (buffer || 0);
+                return slackRect.bottom <= scrollRect.top;
             } catch (e) {
                 return false;
             }
         }
         
-        function maybeCollapseOffscreen() {
-            if (!pendingOffscreenCollapse) return;
-            // Never resize while visible
-            if (isSlackOnScreen()) return;
-            pendingOffscreenCollapse = false;
-            applySlackPx(collapsedSlackPx);
-        }
-        
-        function requestCollapseOffscreen() {
-            pendingOffscreenCollapse = true;
-            maybeCollapseOffscreen();
-        }
-        
-        // If slack is ON but sits above the viewport, collapse it before the user can ever scroll into it.
-        // Use a 200px buffer so collapse only fires when the slack is well clear of the viewport,
-        // preventing visible jolt from the scrollTop compensation.
-        var collapseBuffer = 200;
+        // If slack is ON but fully above the viewport, collapse it.
+        // Basic: set CSS var to 0, adjust scrollTop. Two synchronous operations, one paint frame.
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
                 if (Date.now() < clickHoldUntil) return false;
-                if (!isSlackOffscreenAbove(collapseBuffer)) return false;
-                pendingOffscreenCollapse = false;
+                if (!isSlackOffscreenAbove()) return false;
                 applySlackPx(collapsedSlackPx);
                 return true;
             } catch (e) {
                 return false;
             }
-        }
-        
-        function lock() {
-            if (locked) return;
-            var h = scrollEl.clientHeight || 0;
-            if (h <= 0) return;
-            if (Date.now() < clickHoldUntil) return;
-            scrollEl.style.maxHeight = h + 'px';
-            locked = true;
-        }
-        
-        function unlock() {
-            if (!locked) return;
-            scrollEl.style.maxHeight = '';
-            requestCollapseOffscreen();
-            locked = false;
-        }
-        
-        function startScrollBurst() {
-            lock();
-            if (unlockTimer) clearTimeout(unlockTimer);
-            unlockTimer = setTimeout(unlock, stopDelayMs);
         }
         
         function applyAnchorAdjustment() {
@@ -6550,18 +6511,13 @@ const TopSlack = (function() {
             if (internalAdjust) return;
             try {
                 var st = scrollEl.scrollTop || 0;
-                // While slack is visible, do not allow upward scrolling (no snapping).
+                // Ratchet: while slack is visible, block upward scroll.
                 if (st < lastScrollTop && isSlackOnScreen()) return;
-                
-                // If the user is scrolling up and slack exists above, collapse it before it becomes reachable.
-                if (st < lastScrollTop) collapseIfOffscreenAbove();
-                
+                // If slack is fully above the viewport, collapse it.
+                collapseIfOffscreenAbove();
                 if (st === lastScrollTop) return;
                 lastScrollTop = st;
             } catch (e) {}
-            
-            startScrollBurst();
-            maybeCollapseOffscreen();
         }
         
         scrollEl.addEventListener('scroll', onScroll, { passive: true });
@@ -6597,7 +6553,6 @@ const TopSlack = (function() {
                     return;
                 }
             } catch (e0) {}
-            startScrollBurst();
         }, { passive: false });
         
         // Touch: block upward scroll while slack is visible.
@@ -6607,7 +6562,6 @@ const TopSlack = (function() {
                 var t = e && e.touches && e.touches[0];
                 lastTouchY = t ? t.clientY : null;
             } catch (e0) { lastTouchY = null; }
-            startScrollBurst();
         }, { passive: true });
         
         scrollEl.addEventListener('touchmove', function(e) {
@@ -6665,13 +6619,9 @@ const TopSlack = (function() {
         var controller = {
             forceOff: function() {
                 try { clickHoldUntil = 0; } catch (e0) {}
-                try { pendingOffscreenCollapse = false; } catch (e1) {}
-                try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e2) {}
-                try { scrollEl.style.maxHeight = ''; } catch (e3) {}
-                locked = false;
                 pendingAnchor = null;
                 applySlackPx(collapsedSlackPx);
-                try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
+                try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e1) {}
             }
         };
         
