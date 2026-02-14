@@ -2782,7 +2782,6 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
