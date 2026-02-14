@@ -50,10 +50,6 @@ const FilterModule = (function() {
     var sortButtonEl = null;
     var sortButtonText = null;
     var currentSort = 'recommended';
-    var previousSort = 'recommended';  // For reverting if geolocation is denied
-    var userGeoLocation = null;        // { lat, lng } from geolocation API
-    var closeSortMenu = null;          // Reference to setSortMenuOpen for use in applySort
-    var sortGeoIconEl = null;          // Geolocate icon in "Sort by Closest" option
     var closeBtn = null;
     
     // Filter basics
@@ -648,16 +644,6 @@ const FilterModule = (function() {
                 handleGeocoderResult(result);
             }
         });
-
-        // Register the sort geolocate icon now that MapControlRowComponent is ready
-        // and system_images are loaded (same timing as the built-in geolocate icons)
-        if (sortGeoIconEl && MapControlRowComponent.registerGeolocateIcon) {
-            MapControlRowComponent.registerGeolocateIcon(
-                sortGeoIconEl,
-                'filter-sort-geolocate-icon',
-                'filter-sort-geolocate-icon'
-            );
-        }
     }
     
     function handleGeocoderResult(result) {
@@ -857,9 +843,6 @@ const FilterModule = (function() {
         var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
 
-        // Store the icon element for deferred registration
-        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-geolocate-icon');
-
         function setSortMenuOpen(isOpen) {
             sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);
             if (sortButtonEl) sortButtonEl.classList.toggle('menu-button--open', !!isOpen);
@@ -868,8 +851,6 @@ const FilterModule = (function() {
             // Keep component-specific classes for display toggle
             if (sortOptionsEl) sortOptionsEl.classList.toggle('filter-sort-menu-options--open', !!isOpen);
         }
-        // Expose to module scope so applySort can close the menu after async geolocation
-        closeSortMenu = setSortMenuOpen;
         
         // Toggle menu open/close
         if (sortButtonEl) {
@@ -880,12 +861,12 @@ const FilterModule = (function() {
         }
         
         // Handle option selection
-        // Menu closes from applySort (handles both sync and async geolocation paths)
         options.forEach(function(option) {
             option.addEventListener('click', function(e) {
                 e.stopPropagation();
                 var sort = option.getAttribute('data-sort');
                 selectSort(sort, option.textContent);
+                setSortMenuOpen(false);
             });
         });
         
@@ -904,71 +885,9 @@ const FilterModule = (function() {
     }
     
     function selectSort(sortKey, label) {
-        // "Sort by Closest" triggers geolocation; on denial, revert to previous sort
-        if (sortKey === 'nearest') {
-            if (userGeoLocation) {
-                // Already have location — apply sort immediately
-                applySort(sortKey, label);
-                return;
-            }
-            // Check if geolocate was already done via map control buttons
-            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.getCachedLocation) {
-                var cached = MapControlRowComponent.getCachedLocation();
-                if (cached && cached.lat && cached.lng) {
-                    userGeoLocation = { lat: cached.lat, lng: cached.lng };
-                    applySort(sortKey, label);
-                    return;
-                }
-            }
-            if (!navigator.geolocation) {
-                // Browser doesn't support geolocation — revert
-                applySort(previousSort);
-                return;
-            }
-            // Trigger loading state on all synced geolocate icons
-            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateLoading) {
-                MapControlRowComponent.setAllGeolocateLoading();
-            }
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    // Sync cached location with MapControlRowComponent so map geolocate buttons
-                    // can reuse it instantly without re-triggering the browser prompt
-                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
-                        MapControlRowComponent.setCachedLocation(pos.coords.latitude, pos.coords.longitude);
-                    }
-                    // Set active state on all synced geolocate icons
-                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
-                        MapControlRowComponent.setAllGeolocateActive();
-                    }
-                    applySort(sortKey, label);
-                },
-                function() {
-                    // Clear loading state on all synced geolocate icons
-                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.clearAllGeolocateLoading) {
-                        MapControlRowComponent.clearAllGeolocateLoading();
-                    }
-                    // Denied or error — revert to previous sort
-                    applySort(previousSort);
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-            return;
-        }
-        applySort(sortKey, label);
-    }
-
-    function applySort(sortKey, label) {
-        previousSort = currentSort;
         currentSort = sortKey;
         
-        // Resolve label from DOM if not provided (used when reverting)
-        if (!label && sortMenuEl) {
-            var opt = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + sortKey + '"]');
-            if (opt) label = opt.textContent;
-        }
-        
-        if (sortButtonText && label) {
+        if (sortButtonText) {
             sortButtonText.textContent = label;
         }
         
@@ -978,10 +897,7 @@ const FilterModule = (function() {
             opt.classList.toggle('filter-sort-menu-option--selected', opt.getAttribute('data-sort') === sortKey);
         });
         
-        // Close the sort menu (handles both immediate and async geolocation paths)
-        if (closeSortMenu) closeSortMenu(false);
-        
-        App.emit('filter:sortChanged', { sort: sortKey, userGeoLocation: userGeoLocation });
+        App.emit('filter:sortChanged', { sort: sortKey });
         saveFilters();
     }
     

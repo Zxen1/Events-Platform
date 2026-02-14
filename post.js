@@ -540,7 +540,7 @@ const PostModule = (function() {
 
     App.on('filter:sortChanged', function(data) {
       if (!data || !data.sort) return;
-      sortPosts(data.sort, data.userGeoLocation || null);
+      sortPosts(data.sort);
     });
 
     App.on('filter:favouritesToggle', function(data) {
@@ -2112,54 +2112,23 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
-    // Build individual map card entries for premium posts (sidebar_ad === 1)
-    // that are within the visible map area.
+    // Build individual map card entries for premium posts (sidebar_ad === 1).
     // Each entry is { post, mapCard } so the marquee can display specific location info.
-    var bounds = getMapBounds();
     var marqueeMapCards = [];
     list.forEach(function(p) {
       if (p.sidebar_ad !== 1) return;
       if (!p.map_cards || !p.map_cards.length) return;
       p.map_cards.forEach(function(mc) {
         if (!mc || !Number.isFinite(mc.latitude) || !Number.isFinite(mc.longitude)) return;
-        // Only include map cards visible in the current map viewport
-        if (!pointWithinBounds(mc.longitude, mc.latitude, bounds)) return;
         marqueeMapCards.push({ post: p, mapCard: mc });
       });
     });
-
-    // Interleave entries so the same post's map cards are spread apart.
-    // Group by post ID, then round-robin across groups.
-    var groupsByPost = {};
-    var postOrder = [];
-    marqueeMapCards.forEach(function(entry) {
-      var pid = entry.post.id;
-      if (!groupsByPost[pid]) {
-        groupsByPost[pid] = [];
-        postOrder.push(pid);
-      }
-      groupsByPost[pid].push(entry);
-    });
-    var interleaved = [];
-    var maxRounds = 0;
-    postOrder.forEach(function(pid) {
-      if (groupsByPost[pid].length > maxRounds) maxRounds = groupsByPost[pid].length;
-    });
-    for (var round = 0; round < maxRounds; round++) {
-      for (var g = 0; g < postOrder.length; g++) {
-        var group = groupsByPost[postOrder[g]];
-        if (round < group.length) {
-          interleaved.push(group[round]);
-        }
-      }
-    }
-
     // Limit to max map card slots
     var maxCards = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
-    interleaved = interleaved.slice(0, maxCards);
+    marqueeMapCards = marqueeMapCards.slice(0, maxCards);
 
     App.emit('filter:applied', {
-      marqueeMapCards: interleaved
+      marqueeMapCards: marqueeMapCards
     });
   }
 
@@ -2348,7 +2317,7 @@ const PostModule = (function() {
    * Sort posts by the given sort key
    * @param {string} sortKey - Sort key (az, za, newest, oldest, price-low, price-high)
    */
-  function sortPosts(sortKey, userGeoLocation) {
+  function sortPosts(sortKey) {
     // Agent Essentials: no post response caching.
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
@@ -2370,14 +2339,13 @@ const PostModule = (function() {
     var openPostEl = postListEl.querySelector('.post');
     var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
 
-    // "Sort by Closest" uses the user's geolocated position
-    var nearestOrigin = userGeoLocation || null;
-    function distanceToUserKm(cardEl) {
-      if (!nearestOrigin || !cardEl || !cardEl.dataset) return Number.POSITIVE_INFINITY;
+    var center = getMapCenter();
+    function distanceToCenterKm(cardEl) {
+      if (!center || !cardEl || !cardEl.dataset) return Number.POSITIVE_INFINITY;
       var lng = Number(cardEl.dataset.sortLng);
       var lat = Number(cardEl.dataset.sortLat);
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) return Number.POSITIVE_INFINITY;
-      return distKm({ lng: lng, lat: lat }, { lng: nearestOrigin.lng, lat: nearestOrigin.lat });
+      return distKm({ lng: lng, lat: lat }, { lng: Number(center.lng), lat: Number(center.lat) });
     }
 
     slots.sort(function(slotA, slotB) {
@@ -2419,7 +2387,7 @@ const PostModule = (function() {
         case 'price-high':
           return (Number(b.sortPrice) || 0) - (Number(a.sortPrice) || 0);
         case 'nearest':
-          return distanceToUserKm(aEl) - distanceToUserKm(bEl);
+          return distanceToCenterKm(aEl) - distanceToCenterKm(bEl);
         case 'soon':
           return (Number(a.sortSoonTs) || Number.POSITIVE_INFINITY) - (Number(b.sortSoonTs) || Number.POSITIVE_INFINITY);
         default:
