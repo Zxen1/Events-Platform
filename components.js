@@ -6205,6 +6205,16 @@ const BottomSlack = (function() {
             console.log('[BottomSlack] EXPAND', scrollEl.className, 'contentNoSlack=' + ((scrollEl.scrollHeight || 0) - (currentSlackPx || 0)), 'clientH=' + (scrollEl.clientHeight || 0));
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
+            // Diagnostic: check if the slack element actually grew
+            var _diagEl = scrollEl.querySelector('.bottomSlack');
+            console.log('[BottomSlack] DIAG after expand:', 
+                'slackEl exists:', !!slackEl, 
+                'slackEl connected:', slackEl && slackEl.isConnected,
+                'querySelector found:', !!_diagEl,
+                'same element:', _diagEl === slackEl,
+                'slackEl.offsetHeight:', slackEl ? slackEl.offsetHeight : 'N/A',
+                'scrollH after:', scrollEl.scrollHeight,
+                'cssVar:', scrollEl.style.getPropertyValue('--bottomSlack'));
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
