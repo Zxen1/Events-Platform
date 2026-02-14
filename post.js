@@ -59,6 +59,7 @@ const PostModule = (function() {
   var favSortDirty = true; // live-site behavior: fav changes don't reorder until user presses the toggle again
 
   var modeButtonsBound = false;
+  var lastMemberAuthState = null;
 
   // NOTE: We intentionally do NOT keep an in-memory cache of post responses.
   // We render directly from the latest server response and keep the DOM as the source of truth.
@@ -319,6 +320,26 @@ const PostModule = (function() {
           MapModule.clearActiveMapCards();
         }
       } catch (_eClearActive) {}
+    });
+
+    try {
+      if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function') {
+        lastMemberAuthState = !!MemberModule.isLoggedIn();
+      } else {
+        lastMemberAuthState = false;
+      }
+    } catch (_eAuthInit) {
+      lastMemberAuthState = false;
+    }
+
+    // Login/logout refresh rule:
+    // If Posts or Recent is open, close then reopen so list state is refreshed
+    // for auth-dependent data (favorites, sort order, recents, etc.).
+    App.on('member:stateChanged', function(data) {
+      var nextAuthState = !!(data && data.user);
+      if (lastMemberAuthState === nextAuthState) return;
+      lastMemberAuthState = nextAuthState;
+      refreshOpenModePanelForAuthChange();
     });
 
     // When a post is closed, clear active/big markers (there is no longer an "open post" context).
@@ -905,6 +926,35 @@ const PostModule = (function() {
     if (mapBtn) {
       mapBtn.click();
     }
+  }
+
+  function refreshOpenModePanelForAuthChange() {
+    var openMode = (currentMode === 'posts' || currentMode === 'recent') ? currentMode : '';
+    if (!openMode) return;
+    var mapBtn = getModeButton('map');
+    var reopenBtn = getModeButton(openMode);
+    var openContentEl = openMode === 'posts' ? postPanelContentEl : recentPanelContentEl;
+    if (!mapBtn || !reopenBtn) return;
+
+    try { mapBtn.click(); } catch (_eClose) { return; }
+
+    // Respect real slide animation duration before reopening.
+    var reopenDelayMs = getContentTransitionDurationMs(openContentEl) + 60;
+    setTimeout(function() {
+      try { reopenBtn.click(); } catch (_eReopen) {}
+    }, reopenDelayMs);
+  }
+
+  function getContentTransitionDurationMs(contentEl) {
+    var durationMs = 300;
+    try {
+      if (!contentEl || !window.getComputedStyle) return durationMs;
+      var cs = window.getComputedStyle(contentEl);
+      var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
+      if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
+      else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+    } catch (_eDur) {}
+    return Math.max(0, Math.ceil(durationMs));
   }
 
   /* --------------------------------------------------------------------------

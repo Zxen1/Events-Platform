@@ -79,6 +79,7 @@ const FilterModule = (function() {
     var saveDebounceTimer = null;
     var requestCountsFn = null;
     var serverCountsOk = false;
+    var lastMemberAuthState = null;
     
     // Latest formatted summary text (updated by updateFilterCounts, readable
     // by any module via getFilterSummaryText without depending on panel DOM).
@@ -1790,11 +1791,54 @@ const FilterModule = (function() {
                 togglePanel(data.show);
             }
         });
+
+        try {
+            if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function') {
+                lastMemberAuthState = !!MemberModule.isLoggedIn();
+            } else {
+                lastMemberAuthState = false;
+            }
+        } catch (_eAuthInit) {
+            lastMemberAuthState = false;
+        }
+
+        // Login/logout refresh rule:
+        // If Filter is open, close then reopen to refresh auth-dependent state.
+        App.on('member:stateChanged', function(data) {
+            var nextAuthState = !!(data && data.user);
+            if (lastMemberAuthState === nextAuthState) return;
+            lastMemberAuthState = nextAuthState;
+            refreshOpenFilterPanelForAuthChange();
+        });
         
         // Map viewport is persisted by scheduleSaveMapView() in map.js
         // and included via getMapState() when doSaveFilters() runs.
         // Do NOT call saveFilters() on boundsChanged — it resets the
         // debounce timer on every map movement, preventing DB saves.
+    }
+
+    function refreshOpenFilterPanelForAuthChange() {
+        if (!panelEl || !contentEl) return;
+        if (!panelEl.classList.contains('show')) return;
+
+        closePanel();
+        // Respect real slide animation duration before reopening.
+        var reopenDelayMs = getContentTransitionDurationMs(contentEl) + 60;
+        setTimeout(function() {
+            openPanel();
+        }, reopenDelayMs);
+    }
+
+    function getContentTransitionDurationMs(el) {
+        var durationMs = 300;
+        try {
+            if (!el || !window.getComputedStyle) return durationMs;
+            var cs = window.getComputedStyle(el);
+            var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
+            if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
+            else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+        } catch (_eDur) {}
+        return Math.max(0, Math.ceil(durationMs));
     }
 
 
