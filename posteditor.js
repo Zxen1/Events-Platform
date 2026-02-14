@@ -551,7 +551,10 @@
         var statusBar = buildStatusBar(post);
         postContainer.appendChild(statusBar);
 
-        editHeader.appendChild(cardEl);
+        var anchor = document.createElement('div');
+        anchor.setAttribute('data-slack-anchor', '');
+        anchor.appendChild(cardEl);
+        editHeader.appendChild(anchor);
         postContainer.appendChild(editHeader);
 
         // Create button row underneath the header (Manage button)

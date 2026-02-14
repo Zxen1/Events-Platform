@@ -1652,6 +1652,7 @@ const PostModule = (function() {
       slot.dataset.id = String(post.id);
       slot.appendChild(anchor);
       postListEl.appendChild(slot);
+
     });
     
     // If there was an open post but it is no longer in the filtered list, do not reinsert it.
