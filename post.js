@@ -661,6 +661,7 @@ const PostModule = (function() {
    */
   function openPostById(postId, options) {
     options = options || {};
+    var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee';
 
     // No in-memory cache: always load the post fresh by ID.
     // This keeps development honest (no stale snapshots masking filter/category bugs).
@@ -681,8 +682,8 @@ const PostModule = (function() {
         } catch (_ePick) {}
       }
 
-      // Switch to posts mode if coming from map
-      if (options.fromMap && currentMode !== 'posts') {
+      // For map card and marquee clicks, open the post in the Posts panel.
+      if (shouldOpenPostsPanel && currentMode !== 'posts') {
         var postsBtn = getModeButton('posts');
         if (postsBtn && postsEnabled) {
           postsBtn.click();
@@ -2694,6 +2695,7 @@ const PostModule = (function() {
       if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
+    var shouldScrollToOpenHeaderTop = (!fromRecent && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
     // Close any existing open post in this container
     closeOpenPost(container);
@@ -2746,6 +2748,20 @@ const PostModule = (function() {
       try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
       var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
       container.insertBefore(slot, insertBeforeNode);
+    }
+
+    if (shouldScrollToOpenHeaderTop && detail) {
+      try {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            try {
+              // Align the opened post (header starts at top of .post) to the top of the Posts panel viewport.
+              container.scrollTop = Math.max(0, detail.offsetTop || 0);
+              scheduleSavePanelScroll('post');
+            } catch (_eScrollOpenTop0) {}
+          });
+        });
+      } catch (_eScrollOpenTop1) {}
     }
 
 
