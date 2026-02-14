@@ -356,7 +356,6 @@
 }
 
 .filter-sort-menu-button-text {
-  flex: 1;
   text-align: left;
   font-size: 14px;
   overflow: hidden;
@@ -371,6 +370,7 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
+  margin-left: auto;
 }
 
 .filter-sort-menu-options {
