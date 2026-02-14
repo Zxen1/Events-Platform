@@ -175,6 +175,25 @@
   overflow: hidden; /* Clip status bar corners to border-radius */
 }
 
+/* Keep item wrapper in-flow for Slack; hide card visual while post overlays it */
+.posteditor-item--post-open .posteditor-edit-header {
+  position: relative;
+}
+
+.posteditor-item--post-open .posteditor-edit-header > .post-card {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.posteditor-item--post-open > .post {
+  position: relative;
+  z-index: 1;
+}
+
 .posteditor-item:last-child {
   margin-bottom: 0;
 }
