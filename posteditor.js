@@ -2052,7 +2052,7 @@
         
         container = containerEl;
         isLoaded = true;
-        
+
         // Listen for favorite clicks (capture phase to fire before PostModule's stopPropagation)
         container.addEventListener('click', function(e) {
             var favBtn = e.target.closest('.post-card-button-fav');
@@ -2127,7 +2127,7 @@
                 // Active — open the post directly (no fly-to)
                 // Fly-to is handled by the location menu inside the post instead
                 if (window.PostModule && typeof PostModule.openPostById === 'function') {
-                    PostModule.openPostById(post.id, { source: 'posteditor' });
+                    PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
                 }
             }
         });
