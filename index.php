@@ -344,6 +344,7 @@ if (empty($ogTitle)) {
         <div class="filter-sort-menu menu-class-1">
           <div class="filter-sort-menu-button menu-button">
             <span class="filter-sort-menu-button-text menu-text">Sort by Recommended</span>
+            <span class="filter-sort-geolocate-icon filter-sort-geolocate-icon--button" aria-hidden="true"></span>
             <span class="filter-sort-menu-button-arrow menu-arrow"></span>
           </div>
           <div class="filter-sort-menu-options menu-options">

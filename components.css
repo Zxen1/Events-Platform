@@ -2031,7 +2031,9 @@
 
 /* Removed - hover styles now defined inline with each element */
 
-/* Sort option geolocate icon - inline next to "Sort by Closest" */
+/* Sort option geolocate icon - inline next to "Sort by Distance" */
+/* Invisible (opacity:0) until registerGeolocateIcon applies the mask-image and sets opacity:1. */
+/* This prevents a colored square flash before the icon shape loads. */
 .filter-sort-geolocate-icon {
     display: inline-block;
     width: 16px;
@@ -2039,12 +2041,18 @@
     vertical-align: middle;
     margin-left: 10px;
     background-color: currentColor;
+    opacity: 0;
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
     mask-position: center;
+}
+/* Button variant: hidden unless the current sort is 'nearest' */
+.filter-sort-geolocate-icon--button {
+    display: none;
+    margin-left: 6px;
 }
 
 .filter-mapcontrol-geolocate--loading,
