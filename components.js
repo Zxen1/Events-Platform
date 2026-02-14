@@ -6519,7 +6519,7 @@ const TopSlack = (function() {
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
                 // Anchor the closest "button-like" element to avoid anchoring to inner icon spans.
-                var anchorEl = t.closest('button, [role="button"], a') || t;
+                var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
                 clickHoldUntil = Date.now() + clickHoldMs;
                 anchorApplied = false;

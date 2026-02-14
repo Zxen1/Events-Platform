@@ -1644,11 +1644,13 @@ const PostModule = (function() {
         return;
       }
       var card = renderPostCard(post);
+      var anchor = document.createElement('div');
+      anchor.setAttribute('data-slack-anchor', '');
+      anchor.appendChild(card);
       var slot = document.createElement('div');
       slot.className = 'post-slot';
       slot.dataset.id = String(post.id);
-      slot.setAttribute('role', 'button');
-      slot.appendChild(card);
+      slot.appendChild(anchor);
       postListEl.appendChild(slot);
     });
     
@@ -2782,6 +2784,7 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
+        cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -4597,7 +4600,6 @@ const PostModule = (function() {
     // Create wrapper to hold timestamp + card
     var wrapper = document.createElement('div');
     wrapper.className = 'recent-card-wrapper';
-    if (!entry.unavailable) wrapper.setAttribute('role', 'button');
 
     var el = document.createElement('article');
     el.className = 'recent-card';
@@ -4695,7 +4697,10 @@ const PostModule = (function() {
       wrapper.appendChild(statusBar);
     }
 
-    wrapper.appendChild(el);
+    var anchor = document.createElement('div');
+    anchor.setAttribute('data-slack-anchor', '');
+    anchor.appendChild(el);
+    wrapper.appendChild(anchor);
 
     // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
     if (rawThumbUrl) {
