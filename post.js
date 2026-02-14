@@ -1362,7 +1362,6 @@ const PostModule = (function() {
     el.className = 'post-card';
     el.dataset.id = String(post.id);
     el.dataset.postKey = post.post_key || '';
-    el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
 
     // Use the in-area map card for display (location context must match the current map view).
@@ -4605,7 +4604,6 @@ const PostModule = (function() {
     }
     // Unavailable cards are not interactive
     if (!entry.unavailable) {
-      el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
     }
 
