@@ -3675,7 +3675,7 @@ body.image-modal-open > *:not(.image-modal) {
   position: absolute;
   left: 0;
   right: 0;
-  top: 100%; /* Always positions directly below trigger button height */
+  top: 36px; /* JS syncs this to the actual trigger height at runtime */
   z-index: var(--layer-menu);
   background: var(--ps-bg);
   backdrop-filter: blur(10px);

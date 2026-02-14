@@ -10828,6 +10828,7 @@ const PostSessionComponent = (function() {
         var closeSessionTimer = null;
         var SESSION_SELECT_CLOSE_DELAY_MS = 500;
         var hoverPreviewIso = '';
+        var sessionResizeHandler = null;
 
         try {
             var _dateInit = wrap.querySelector('.post-session-date-left');
@@ -10837,6 +10838,15 @@ const PostSessionComponent = (function() {
         function getLocationListForUi() {
             if (callbacks && callbacks.getLocationListForUi) return callbacks.getLocationListForUi();
             return post.map_cards || [];
+        }
+
+        function syncSessionOptionsOffset() {
+            if (!sessionBtn || !sessionOptionsPanel) return;
+            try {
+                var h = sessionBtn.offsetHeight || 0;
+                if (!h) return;
+                sessionOptionsPanel.style.top = String(h) + 'px';
+            } catch (_eSessTop) {}
         }
 
         function getAgeRatingImageUrl(value) {
@@ -11650,6 +11660,7 @@ const PostSessionComponent = (function() {
 
         // Bind interactions
         try { bindSessionInteractions(); } catch (_eBindSess) {}
+        try { syncSessionOptionsOffset(); } catch (_eSyncSess0) {}
 
         // Button click handler
         sessionBtn.addEventListener('click', function(e) {
@@ -11663,6 +11674,7 @@ const PostSessionComponent = (function() {
             if (callbacks && callbacks.closeLocationDropdown) {
                 try { callbacks.closeLocationDropdown(); } catch (_eCloseOther) {}
             }
+            try { syncSessionOptionsOffset(); } catch (_eSyncSess1) {}
             sessionBtn.classList.add('post-session-button--open');
             if (sessionArrow) sessionArrow.classList.add('post-session-arrow--open');
             try { sessionBtn.setAttribute('aria-expanded', 'true'); } catch (_eAr1) {}
@@ -11696,6 +11708,10 @@ const PostSessionComponent = (function() {
             closeSessionDropdown();
         };
         document.addEventListener('click', clickOutsideHandler);
+        sessionResizeHandler = function() {
+            try { syncSessionOptionsOffset(); } catch (_eSyncSess2) {}
+        };
+        window.addEventListener('resize', sessionResizeHandler);
 
         // Initial promo check (before sessions are loaded, use pricing_groups directly)
         try {
@@ -11719,6 +11735,10 @@ const PostSessionComponent = (function() {
             close: closeSessionDropdown,
             destroy: function() {
                 document.removeEventListener('click', clickOutsideHandler);
+                if (sessionResizeHandler) {
+                    window.removeEventListener('resize', sessionResizeHandler);
+                    sessionResizeHandler = null;
+                }
                 closeSessionDropdown();
             }
         };
