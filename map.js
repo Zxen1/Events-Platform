@@ -2167,7 +2167,7 @@ const MapModule = (function() {
     if (typeof configuredFlyToZoom !== 'number' || !isFinite(configuredFlyToZoom)) {
       throw new Error('[Map] flyToZoom config is missing or invalid.');
     }
-    var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM ? FINEST_CLUSTER_ZOOM : configuredFlyToZoom;
+    var targetZoom = currentZoom < FINEST_CLUSTER_ZOOM - 0.3 ? FINEST_CLUSTER_ZOOM : configuredFlyToZoom;
     
     map.flyTo({
       center: coords,
