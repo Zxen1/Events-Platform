@@ -3619,10 +3619,57 @@ const MapControlRowComponent = (function(){
         });
         instances.length = 0;
     }
+
+    // Register an external geolocate icon to sync with all others.
+    // The icon element must use CSS mask and currentColor (same pattern as built-in icons).
+    function registerGeolocateIcon(iconEl, btnBaseClass, iconBaseClass) {
+        if (!iconEl) return;
+        var inst = {
+            row: null,
+            rowBaseClass: '',
+            geolocateBtn: iconEl,
+            geolocateIcon: iconEl,
+            geolocateBtnBaseClass: btnBaseClass || '',
+            geolocateIconBaseClass: iconBaseClass || ''
+        };
+        instances.push(inst);
+        // Apply system image mask if available
+        try {
+            var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
+            var geoFilename = sys.icon_geolocate || '';
+            if (geoFilename && window.App && typeof App.getImageUrl === 'function') {
+                var geoUrl = App.getImageUrl('systemImages', geoFilename);
+                iconEl.style.webkitMaskImage = 'url(' + geoUrl + ')';
+                iconEl.style.maskImage = 'url(' + geoUrl + ')';
+            }
+        } catch (_e) {}
+        // If already active, sync immediately
+        if (geolocateActive) {
+            if (btnBaseClass) iconEl.classList.add(btnBaseClass + '--active');
+        }
+    }
+
+    function isActive() {
+        return geolocateActive;
+    }
+
+    // Set the cached location from an external source (e.g. filter.js geolocation).
+    // This keeps the map control geolocate buttons in sync so they can reuse
+    // the location instantly without re-prompting the browser.
+    function setCachedLocation(lat, lng) {
+        cachedLocation = { lat: lat, lng: lng };
+    }
     
     return {
         create: create,
-        destroyAll: destroyAll
+        destroyAll: destroyAll,
+        registerGeolocateIcon: registerGeolocateIcon,
+        isGeolocateActive: isActive,
+        getCachedLocation: function() { return cachedLocation; },
+        setCachedLocation: setCachedLocation,
+        setAllGeolocateLoading: setAllGeolocateLoading,
+        setAllGeolocateActive: setAllGeolocateActive,
+        clearAllGeolocateLoading: clearAllGeolocateLoading
     };
 })();
 

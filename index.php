@@ -343,13 +343,13 @@ if (empty($ogTitle)) {
         </button>
         <div class="filter-sort-menu menu-class-1">
           <div class="filter-sort-menu-button menu-button">
-            <span class="filter-sort-menu-button-text menu-text">Recommended</span>
+            <span class="filter-sort-menu-button-text menu-text">Sort by Recommended</span>
             <span class="filter-sort-menu-button-arrow menu-arrow"></span>
           </div>
           <div class="filter-sort-menu-options menu-options">
-            <div class="filter-sort-menu-option menu-option" data-sort="recommended">Recommended</div>
+            <div class="filter-sort-menu-option menu-option" data-sort="recommended">Sort by Recommended</div>
             <div class="filter-sort-menu-option menu-option" data-sort="az">Sort by Title A-Z</div>
-            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Closest</div>
+            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Distance<span class="filter-sort-geolocate-icon" aria-hidden="true"></span></div>
             <div class="filter-sort-menu-option menu-option" data-sort="soon">Sort by Soonest</div>
           </div>
         </div>

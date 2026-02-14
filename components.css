@@ -2031,6 +2031,22 @@
 
 /* Removed - hover styles now defined inline with each element */
 
+/* Sort option geolocate icon - inline next to "Sort by Closest" */
+.filter-sort-geolocate-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-left: 10px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
 .filter-mapcontrol-geolocate--loading,
 .map-mapcontrol-geolocate--loading,
 .welcome-mapcontrol-geolocate--loading {
@@ -2039,7 +2055,8 @@
 
 .filter-mapcontrol-geolocate-icon--loading,
 .map-mapcontrol-geolocate-icon--loading,
-.welcome-mapcontrol-geolocate-icon--loading {
+.welcome-mapcontrol-geolocate-icon--loading,
+.filter-sort-geolocate-icon--loading {
     -webkit-animation: mapcontrol-geolocate-spin 2s infinite linear;
     -moz-animation: mapcontrol-geolocate-spin 2s infinite linear;
     -o-animation: mapcontrol-geolocate-spin 2s infinite linear;
@@ -2075,9 +2092,11 @@
 .filter-mapcontrol-geolocate--loading,
 .map-mapcontrol-geolocate--loading,
 .welcome-mapcontrol-geolocate--loading,
+.filter-sort-geolocate-icon--loading,
 .filter-mapcontrol-geolocate--active,
 .map-mapcontrol-geolocate--active,
-.welcome-mapcontrol-geolocate--active {
+.welcome-mapcontrol-geolocate--active,
+.filter-sort-geolocate-icon--active {
     color: var(--blue-500);
 }
 
