@@ -393,6 +393,9 @@ Any feature that depends on `pricing_groups`, sessions, or item details will sil
 ### Avoid stopPropagation
 Be very careful with `stopPropagation()` as it can interfere with the **Top Slack** and **Bottom Slack** system. This destroys the entire layout of the panel.
 
+### Top Slack / Bottom Slack Requirements
+Any scroll container with slack attached MUST have `> * { flex-shrink: 0; }` on its CSS (see filter.css, admin.css, member.css for the pattern) — without it, flex layout crushes the 4000px slack element to zero height and anchoring silently fails. If a container uses `innerHTML = ''` to re-render content, you must preserve the slack elements (`_topS`, `_botS`) before clearing and re-append them after. The `data-topslack="false"` / `data-bottomslack="false"` HTML attributes and `SLACK_CONFIG` in index.js act as on/off switches per element — check these if slack appears dead on a specific panel or tab.
+
 ### No Debounced Saves on map:boundsChanged
 Never call debounced save functions (e.g. `saveFilters()`) from `map:boundsChanged` — the map fires this event continuously during movement/spin, which resets the debounce timer and prevents saves from ever completing.
 

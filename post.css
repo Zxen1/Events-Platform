@@ -164,6 +164,11 @@
   color: #fff;
 }
 
+/* Prevent flex children shrinking so bottom slack always creates real overflow/scroll. */
+.recent-panel-content > * {
+  flex-shrink: 0;
+}
+
 /* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
 @media (max-width: 530px) {
   .recent-panel-content {
@@ -231,6 +236,11 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   will-change: transform;
+}
+
+/* Prevent flex children shrinking so bottom slack always creates real overflow/scroll. */
+.post-list > * {
+  flex-shrink: 0;
 }
 
 .post-list::-webkit-scrollbar {
