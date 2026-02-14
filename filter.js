@@ -53,8 +53,7 @@ const FilterModule = (function() {
     var previousSort = 'recommended';  // For reverting if geolocation is denied
     var userGeoLocation = null;        // { lat, lng } from geolocation API
     var closeSortMenu = null;          // Reference to setSortMenuOpen for use in applySort
-    var sortGeoIconEl = null;          // Geolocate icon in "Sort by Distance" dropdown option
-    var sortGeoIconBtnEl = null;       // Geolocate icon cloned for the sort button text
+    var sortGeoIconEl = null;          // Geolocate icon in "Sort by Closest" option
     var closeBtn = null;
     
     // Filter basics
@@ -111,7 +110,6 @@ const FilterModule = (function() {
                 expired:         expiredInput ? expiredInput.checked : false,
                 favourites:      favouritesOn,
                 sort:            currentSort,
-                geoLocation:     userGeoLocation,
                 categories:      getCategoryState(),
                 map:             getMapState(),
                 subcategoryKeys: getSelectedSubcategoryKeys()
@@ -375,61 +373,7 @@ const FilterModule = (function() {
                         o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === currentSort);
                     });
                 }
-                // Append geolocate icon in button text if sort is 'nearest'
-                if (currentSort === 'nearest' && sortGeoIconBtnEl && sortButtonText) {
-                    sortButtonText.appendChild(sortGeoIconBtnEl);
-                }
             } catch (_eSortRestore) {}
-
-            // If saved sort is 'nearest', restore geolocation on page load.
-            // Use saved coordinates immediately for instant sorting, then refresh
-            // with fresh GPS in the background.
-            if (currentSort === 'nearest') {
-                // Restore saved coordinates immediately (instant sort on page load)
-                if (saved.geoLocation && saved.geoLocation.lat && saved.geoLocation.lng) {
-                    userGeoLocation = { lat: saved.geoLocation.lat, lng: saved.geoLocation.lng };
-                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
-                        MapControlRowComponent.setCachedLocation(saved.geoLocation.lat, saved.geoLocation.lng);
-                    }
-                    if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
-                        MapControlRowComponent.setAllGeolocateActive();
-                    }
-                    placeUserMarker(saved.geoLocation.lat, saved.geoLocation.lng);
-                    App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
-                }
-                // Refresh with fresh coordinates in the background
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                            userGeoLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setCachedLocation) {
-                                MapControlRowComponent.setCachedLocation(pos.coords.latitude, pos.coords.longitude);
-                            }
-                            if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
-                                MapControlRowComponent.setAllGeolocateActive();
-                            }
-                            placeUserMarker(pos.coords.latitude, pos.coords.longitude);
-                            App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
-                        },
-                        function() {
-                            // If no saved coordinates either, revert to recommended
-                            if (!userGeoLocation) {
-                                currentSort = 'recommended';
-                                try {
-                                    var recOpt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]') : null;
-                                    if (recOpt && sortButtonText) sortButtonText.textContent = recOpt.textContent;
-                                    if (sortMenuEl) {
-                                        sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
-                                            o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === 'recommended');
-                                        });
-                                    }
-                                } catch (_e) {}
-                            }
-                        },
-                        { enableHighAccuracy: true, timeout: 10000 }
-                    );
-                }
-            }
         }
         
         // Map viewport restore is handled by MapModule at init (DB-first for logged-in users, localStorage for guests)
@@ -705,23 +649,14 @@ const FilterModule = (function() {
             }
         });
 
-        // Register both sort geolocate icons now that MapControlRowComponent is ready
+        // Register the sort geolocate icon now that MapControlRowComponent is ready
         // and system_images are loaded (same timing as the built-in geolocate icons)
-        if (MapControlRowComponent.registerGeolocateIcon) {
-            if (sortGeoIconEl) {
-                MapControlRowComponent.registerGeolocateIcon(
-                    sortGeoIconEl,
-                    'filter-sort-geolocate-icon',
-                    'filter-sort-geolocate-icon'
-                );
-            }
-            if (sortGeoIconBtnEl) {
-                MapControlRowComponent.registerGeolocateIcon(
-                    sortGeoIconBtnEl,
-                    'filter-sort-geolocate-icon',
-                    'filter-sort-geolocate-icon'
-                );
-            }
+        if (sortGeoIconEl && MapControlRowComponent.registerGeolocateIcon) {
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIconEl,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
         }
     }
     
@@ -922,13 +857,8 @@ const FilterModule = (function() {
         var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
 
-        // Store icon element for deferred registration.
-        // Create a second icon for the button text (appended inside the text span
-        // so it sits directly beside the label, not as a separate flex item).
-        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="nearest"] .filter-sort-geolocate-icon');
-        if (sortGeoIconEl) {
-            sortGeoIconBtnEl = sortGeoIconEl.cloneNode(true);
-        }
+        // Store the icon element for deferred registration
+        sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-geolocate-icon');
 
         function setSortMenuOpen(isOpen) {
             sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);
@@ -972,15 +902,6 @@ const FilterModule = (function() {
             firstOption.classList.add('filter-sort-menu-option--selected');
         }
     }
-
-    // Place the user location marker on the map
-    function placeUserMarker(lat, lng) {
-        if (typeof MapControlRowComponent === 'undefined' || !MapControlRowComponent.updateUserLocationMarker) return;
-        var map = (typeof MapModule !== 'undefined' && MapModule.getMap) ? MapModule.getMap() : null;
-        if (map) {
-            MapControlRowComponent.updateUserLocationMarker(lat, lng, map);
-        }
-    }
     
     function selectSort(sortKey, label) {
         // "Sort by Closest" triggers geolocation; on denial, revert to previous sort
@@ -1020,7 +941,6 @@ const FilterModule = (function() {
                     if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
                         MapControlRowComponent.setAllGeolocateActive();
                     }
-                    placeUserMarker(pos.coords.latitude, pos.coords.longitude);
                     applySort(sortKey, label);
                 },
                 function() {
@@ -1050,10 +970,6 @@ const FilterModule = (function() {
         
         if (sortButtonText && label) {
             sortButtonText.textContent = label;
-            // Append geolocate icon inside the text span (right beside the label)
-            if (sortKey === 'nearest' && sortGeoIconBtnEl) {
-                sortButtonText.appendChild(sortGeoIconBtnEl);
-            }
         }
         
         // Update selected state
