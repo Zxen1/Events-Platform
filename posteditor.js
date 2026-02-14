@@ -2124,10 +2124,10 @@
                     });
                 }
             } else {
-                // Active — open the post directly (no fly-to)
-                // Fly-to is handled by the location menu inside the post instead
-                if (window.PostModule && typeof PostModule.openPostById === 'function') {
-                    PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
+                // Active — open the post synchronously so TopSlack can anchor.
+                // Fly-to is handled by the location menu inside the post instead.
+                if (window.PostModule && typeof PostModule.openPost === 'function') {
+                    PostModule.openPost(post, { source: 'posteditor', originEl: postCard });
                 }
             }
         });

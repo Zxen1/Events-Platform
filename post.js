@@ -1482,11 +1482,8 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        // Always fetch full post data before opening (includes age_ratings)
-        loadPostById(post.id).then(function(fullPost) {
-          if (!fullPost) return;
-          openPost(fullPost, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
-        });
+        // Open synchronously so TopSlack can anchor (same pattern as description toggle).
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
       }
     });
 
@@ -1497,11 +1494,8 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      // Always fetch full post data before opening (includes age_ratings)
-      loadPostById(post.id).then(function(fullPost) {
-        if (!fullPost) return;
-        openPost(fullPost, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
-      });
+      // Open synchronously so TopSlack can anchor (same pattern as description toggle).
+      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
     });
 
     // Favorite toggle handler
@@ -2788,7 +2782,6 @@ const PostModule = (function() {
       // Other slot children (status bars, Edit/Manage buttons) remain visible.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       if (cardToHide) {
-        // TEST: postcard stays visible (slack anchor test)
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -4720,7 +4713,11 @@ const PostModule = (function() {
         return;
       }
 
-      // No in-memory post cache: always fetch the post payload before opening.
+      // Close any existing open post synchronously so TopSlack catches the vacuum.
+      // The new post opens downward — only the close causes upward shift.
+      closeOpenPost(recentPanelContentEl);
+
+      // Fetch full post data, then open (opens downward from the card).
       loadPostById(entry.id).then(function(fetchedPost) {
         if (!fetchedPost) return;
         openPost(fetchedPost, { fromRecent: true, originEl: el, postMapCardId: entry.post_map_card_id });
