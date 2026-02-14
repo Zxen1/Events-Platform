@@ -2757,8 +2757,10 @@ const PostModule = (function() {
           requestAnimationFrame(function() {
             try {
               // Align the opened post (header starts at top of .post) to the top of the Posts panel viewport.
-              container.scrollTop = Math.max(0, detail.offsetTop || 0);
-              scheduleSavePanelScroll('post');
+              container.scrollTo({
+                top: Math.max(0, detail.offsetTop || 0),
+                behavior: 'smooth'
+              });
             } catch (_eScrollOpenTop0) {}
           });
         });
