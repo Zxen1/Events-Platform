@@ -394,6 +394,7 @@ const FilterModule = (function() {
                     if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
                         MapControlRowComponent.setAllGeolocateActive();
                     }
+                    placeUserMarker(saved.geoLocation.lat, saved.geoLocation.lng);
                     App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
                 }
                 // Refresh with fresh coordinates in the background
@@ -407,6 +408,7 @@ const FilterModule = (function() {
                             if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
                                 MapControlRowComponent.setAllGeolocateActive();
                             }
+                            placeUserMarker(pos.coords.latitude, pos.coords.longitude);
                             App.emit('filter:sortChanged', { sort: 'nearest', userGeoLocation: userGeoLocation });
                         },
                         function() {
@@ -970,6 +972,15 @@ const FilterModule = (function() {
             firstOption.classList.add('filter-sort-menu-option--selected');
         }
     }
+
+    // Place the user location marker on the map
+    function placeUserMarker(lat, lng) {
+        if (typeof MapControlRowComponent === 'undefined' || !MapControlRowComponent.updateUserLocationMarker) return;
+        var map = (typeof MapModule !== 'undefined' && MapModule.getMap) ? MapModule.getMap() : null;
+        if (map) {
+            MapControlRowComponent.updateUserLocationMarker(lat, lng, map);
+        }
+    }
     
     function selectSort(sortKey, label) {
         // "Sort by Closest" triggers geolocation; on denial, revert to previous sort
@@ -1009,6 +1020,7 @@ const FilterModule = (function() {
                     if (typeof MapControlRowComponent !== 'undefined' && MapControlRowComponent.setAllGeolocateActive) {
                         MapControlRowComponent.setAllGeolocateActive();
                     }
+                    placeUserMarker(pos.coords.latitude, pos.coords.longitude);
                     applySort(sortKey, label);
                 },
                 function() {

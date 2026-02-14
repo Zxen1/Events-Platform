@@ -3672,7 +3672,8 @@ const MapControlRowComponent = (function(){
         setCachedLocation: setCachedLocation,
         setAllGeolocateLoading: setAllGeolocateLoading,
         setAllGeolocateActive: setAllGeolocateActive,
-        clearAllGeolocateLoading: clearAllGeolocateLoading
+        clearAllGeolocateLoading: clearAllGeolocateLoading,
+        updateUserLocationMarker: updateUserLocationMarker
     };
 })();
 
