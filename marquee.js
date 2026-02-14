@@ -244,17 +244,49 @@ const MarqueeModule = (function() {
    * @param {Array} newEntries - Array of { post, mapCard } objects
    */
   function updateEntries(newEntries) {
-    // Stop current rotation
+    newEntries = Array.isArray(newEntries) ? newEntries : [];
+
+    // If nothing is currently on screen, apply immediately.
+    var activeSlide = contentEl ? contentEl.querySelector('.marquee-slide--active') : null;
+    if (!activeSlide) {
+      stopRotation();
+      clearSlides();
+      entries = newEntries;
+      currentIndex = -1;
+      if (entries.length > 0) {
+        showNextSlide();
+        startRotation();
+      }
+      return;
+    }
+
+    var activePostId = String(activeSlide.dataset.id || '');
+    var activeMapCardId = String(activeSlide.dataset.mapCardId || '');
+    var activeStillEligibleIndex = -1;
+    for (var i = 0; i < newEntries.length; i++) {
+      var pId = String(newEntries[i] && newEntries[i].post ? newEntries[i].post.id : '');
+      var mId = String(newEntries[i] && newEntries[i].mapCard ? newEntries[i].mapCard.id : '');
+      if (pId === activePostId && mId === activeMapCardId) {
+        activeStillEligibleIndex = i;
+        break;
+      }
+    }
+
+    // Keep current on-screen slide if still valid; queue updated rotation list behind the scenes.
+    if (activeStillEligibleIndex !== -1) {
+      entries = newEntries;
+      currentIndex = activeStillEligibleIndex;
+      if (!rotationTimer && entries.length > 0) {
+        startRotation();
+      }
+      return;
+    }
+
+    // Active slide is no longer eligible (e.g. moved off-map) -> replace immediately.
     stopRotation();
-    
-    // Clear existing slides
     clearSlides();
-    
-    // Update entries
     entries = newEntries;
     currentIndex = -1;
-    
-    // Start showing if we have entries
     if (entries.length > 0) {
       showNextSlide();
       startRotation();

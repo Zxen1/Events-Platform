@@ -2695,7 +2695,7 @@ const PostModule = (function() {
       if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
-    var shouldScrollToOpenHeaderTop = (!fromRecent && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
+    var shouldScrollToOpenHeaderTop = (!fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
     // Close any existing open post in this container
     closeOpenPost(container);
