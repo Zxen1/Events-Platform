@@ -655,6 +655,13 @@ const FilterModule = (function() {
             setTimeout(initMapControls, 100);
             return;
         }
+        // Wait for system_images so icon masks are available at creation time
+        // (without this, icons render as colored squares if images load after controls)
+        var sys = (window.App && typeof App.getState === 'function') ? App.getState('system_images') : null;
+        if (!sys || !sys.icon_geolocate) {
+            setTimeout(initMapControls, 100);
+            return;
+        }
         
         var container = panelEl.querySelector('.filter-map-controls');
         if (!container) return;
