@@ -633,16 +633,9 @@ const App = (function() {
         }
       }
 
-      function applyTierColor(btn, animate) {
+      function applyTierColor(btn) {
         var color = btn.dataset.tierColor;
-        if (!color) return;
-        if (animate) {
-          setTimeout(function() {
-            slider.style.background = color;
-          }, 250);
-        } else {
-          slider.style.background = color;
-        }
+        slider.style.background = color || '';
       }
 
       // Position slider on active button once container has layout
@@ -655,7 +648,7 @@ const App = (function() {
           return;
         }
         moveSlider(activeBtn, false);
-        applyTierColor(activeBtn, false);
+        applyTierColor(activeBtn);
       }
       positionInitial();
 
@@ -663,7 +656,7 @@ const App = (function() {
         var btn = e.target.closest('.toggle-button');
         if (!btn || btn.disabled) return;
         moveSlider(btn, true);
-        applyTierColor(btn, true);
+        applyTierColor(btn);
       });
     }
 
