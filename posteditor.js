@@ -1071,7 +1071,11 @@
             }
         }
 
-        var tierColors = ['#8B6914', '#71717A', '#B8860B'];
+        var tierColors = [
+            'linear-gradient(135deg, #CD7F32 0%, #8B5A2B 40%, #CD7F32 60%, #A0522D 100%)',
+            'linear-gradient(135deg, #C0C0C0 0%, #808080 40%, #C0C0C0 60%, #A9A9A9 100%)',
+            'linear-gradient(135deg, #FFD700 0%, #B8860B 40%, #FFD700 60%, #DAA520 100%)'
+        ];
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
             var description = option.checkout_description ? String(option.checkout_description) : '';
