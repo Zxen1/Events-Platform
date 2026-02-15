@@ -1669,7 +1669,7 @@
                 var paymentRequired = locUsed > locPaid;
 
                 // Swap Save / Check out label based on payment state
-                var saveLabel = paymentRequired ? 'Check out' : 'Save';
+                var saveLabel = paymentRequired ? 'Checkout' : 'Save';
                 saveBtn.textContent = saveLabel;
                 if (topSaveBtn) topSaveBtn.textContent = saveLabel;
 
