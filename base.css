@@ -1043,8 +1043,8 @@
   border-radius: 5px;
   background: #111;
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
   padding: 3px;
   box-sizing: border-box;
 }
@@ -1057,8 +1057,8 @@
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.12);
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   transition: transform 0.25s ease, width 0.25s ease;
   pointer-events: none;
 }
