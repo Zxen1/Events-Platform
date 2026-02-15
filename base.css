@@ -1032,7 +1032,7 @@
   border: 1px solid transparent;
   border-radius: 0;
   background: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1057,7 +1057,7 @@
   }
 
   .toggle-class-1 .toggle-button:disabled:hover {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.7);
     border-color: transparent;
   }
 }
