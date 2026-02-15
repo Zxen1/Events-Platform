@@ -874,28 +874,6 @@
         summarySection.appendChild(summaryTable);
         body.appendChild(summarySection);
 
-        // --- Manage Content (always visible) ---
-        var manageContent = document.createElement('div');
-        manageContent.className = 'posteditor-manage-content';
-        manageContent.innerHTML = [
-            '<div class="posteditor-manage-section">',
-                '<div class="member-panel-label">Extend Listing Time</div>',
-                '<div class="posteditor-manage-row">',
-                    '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
-                    '<div class="posteditor-manage-button-row">',
-                        '<button class="button-class-2c" style="flex:1">Add 30 Days (Placeholder)</button>',
-                    '</div>',
-                '</div>',
-            '</div>',
-            '<div class="posteditor-manage-section">',
-                '<div class="member-panel-label">Change Plan</div>',
-                '<div class="posteditor-manage-row">',
-                    '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
-                    '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
-                '</div>',
-            '</div>'
-        ].join('');
-        body.appendChild(manageContent);
 
         // --- Three-dot More button (Hide / Restore / Delete) ---
         var moreBtn = document.createElement('div');
