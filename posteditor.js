@@ -1071,6 +1071,7 @@
             }
         }
 
+        var tierColors = ['#8B6914', '#71717A', '#B8860B'];
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
             var description = option.checkout_description ? String(option.checkout_description) : '';
@@ -1079,6 +1080,7 @@
             btn.className = 'posteditor-manage-tier-button toggle-button';
             btn.textContent = title;
             btn.dataset.tierIndex = String(idx);
+            if (tierColors[idx]) btn.dataset.tierColor = tierColors[idx];
             btn.setAttribute('aria-pressed', idx === currentTierIndex ? 'true' : 'false');
 
             if (idx === currentTierIndex) {
