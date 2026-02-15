@@ -51,6 +51,9 @@ try {
         fail(500, 'Database connection unavailable.');
     }
 
+    // Auto-expire posts whose expires_at has passed
+    $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+
     // Get zoom level from request (determines grid size)
     $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 3;
     

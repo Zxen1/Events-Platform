@@ -115,6 +115,9 @@ try {
         fail(500, 'Database connection unavailable.');
     }
 
+    // Auto-expire posts whose expires_at has passed
+    $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+
     // Parse query parameters
     //
     // IMPORTANT (Developer Note):
@@ -169,12 +172,15 @@ try {
     }
 
     // Build WHERE conditions
-    $where = ['p.deleted_at IS NULL'];
+    $where = [];
     $params = [];
     $types = '';
 
     // If filtering by member_id or fetching a specific post by ID/key, skip public filters
     if ($memberId <= 0 && $postId <= 0 && $postKey === '') {
+        // Exclude soft-deleted posts from public view
+        $where[] = 'p.deleted_at IS NULL';
+
         // Visibility filter (expired toggle can widen this)
         if ($includeExpired) {
             $where[] = 'p.visibility IN (?, ?)';

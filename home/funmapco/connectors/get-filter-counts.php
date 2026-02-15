@@ -60,6 +60,9 @@ try {
   require_once $configPath;
   if (!isset($mysqli) || !($mysqli instanceof mysqli)) fail(500, 'Database connection unavailable.');
 
+  // Auto-expire posts whose expires_at has passed
+  $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+
   $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 0.0;
 
   // Read map_card_breakpoint from database settings (no hardcoded fallback)
