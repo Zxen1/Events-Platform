@@ -2838,6 +2838,15 @@ const PostModule = (function() {
       } catch (_eScrollOpenTop1) {}
     }
 
+    // Mobile: scroll window to top when opened from map card or marquee
+    if (isMobileViewport && !fromRecent && (!!options.fromMap || options.source === 'marquee') && detail) {
+      try {
+        requestAnimationFrame(function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      } catch (_eMobileScrollTop) {}
+    }
+
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
 
