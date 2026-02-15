@@ -32,6 +32,10 @@
     margin-bottom: 10px;
 }
 
+.fieldset:last-child {
+    margin-bottom: 0;
+}
+
 .fieldset-divider {
     width: 100%;
     height: 1px;
