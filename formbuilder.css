@@ -1620,19 +1620,9 @@
    used by both admin form preview and member-facing forms.
    ============================================================================ */
 
-/* Form Primary Container - matches formpicker menu styling */
+/* Form Primary Container */
 .form-primary-container {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  /* Bottom padding is required so the last child doesn't touch the container. */
-  padding: 10px 12px 10px 12px;
   margin-bottom: 10px;
-}
-
-/* When container is active/focused - blue border */
-.form-primary-container[data-active="true"] {
-  border-color: var(--blue-500);
 }
 
 /* Form Location Picker - matches formpicker menu styling */
