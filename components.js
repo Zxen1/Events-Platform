@@ -4906,6 +4906,10 @@ const ConfirmDialogComponent = (function() {
         
         return new Promise(function(resolve) {
             function cleanup(result) {
+                // Move focus out before hiding to avoid aria-hidden violation
+                if (document.activeElement && overlay.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
                 overlay.classList.remove('component-confirm-dialog-overlay--visible');
                 overlay.setAttribute('aria-hidden', 'true');
                 document.removeEventListener('keydown', onKeyDown, true);
@@ -5093,6 +5097,10 @@ const ThreeButtonDialogComponent = (function() {
         
         return new Promise(function(resolve) {
             function cleanup(result) {
+                // Move focus out before hiding to avoid aria-hidden violation
+                if (document.activeElement && overlay.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
                 overlay.classList.remove('component-three-button-dialog-overlay--visible');
                 overlay.setAttribute('aria-hidden', 'true');
                 document.removeEventListener('keydown', onKeyDown, true);
