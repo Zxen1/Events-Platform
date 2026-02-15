@@ -6195,8 +6195,13 @@ const FieldsetBuilder = (function(){
                             var dateBox = group.querySelector('.fieldset-sessions-session-field-label');
                             var standaloneCopyBtn = group.querySelector('.fieldset-sessions-copy-button');
                             if (dateBox && standaloneCopyBtn) {
-                                standaloneCopyBtn.style.width = dateBox.offsetWidth + 'px';
-                                standaloneCopyBtn.style.flex = 'none';
+                                requestAnimationFrame(function() {
+                                    var w = dateBox.offsetWidth;
+                                    if (w > 0) {
+                                        standaloneCopyBtn.style.width = w + 'px';
+                                        standaloneCopyBtn.style.flex = 'none';
+                                    }
+                                });
                             }
                         }
 
