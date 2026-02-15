@@ -435,6 +435,44 @@
   color: #F59E0B;
 }
 
+/* Button Class 7: Segmented group button (selects one from a row) */
+.button-class-7-group {
+  display: grid;
+  width: 100%;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.button-class-7 {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 14px;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.button-class-7[aria-pressed="true"],
+.button-class-7.button-class-7--active {
+  color: var(--blue-500);
+}
+
+.button-class-7:disabled,
+.button-class-7.button-class-7--disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 /* ============================================================================
    INPUT CLASSES
    
@@ -496,6 +534,17 @@
     background: rgba(245, 158, 11, 0.15);
     border-color: #F59E0B;
     color: #F59E0B;
+  }
+
+  .button-class-7:hover {
+    color: var(--blue-500);
+    border-color: var(--blue-500);
+  }
+
+  .button-class-7:disabled:hover,
+  .button-class-7.button-class-7--disabled:hover {
+    color: rgba(255, 255, 255, 0.4);
+    border-color: transparent;
   }
 
   .input-class-1:hover {

@@ -851,71 +851,14 @@
 }
 
 
+/* Lighting/Style/Wallpaper buttons use button-class-7 from base.css */
 .admin-lighting-buttons,
-.admin-style-buttons,
 .admin-wallpaper-buttons {
-  display: grid;
   grid-template-columns: repeat(4, 1fr);
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
 }
 
 .admin-style-buttons {
   grid-template-columns: repeat(2, 1fr);
-}
-
-.admin-lighting-button,
-.admin-style-button,
-.admin-wallpaper-button {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  box-sizing: border-box;
-  font-size: 14px;
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-.admin-lighting-button:hover,
-.admin-style-button:hover,
-.admin-wallpaper-button:hover {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--blue-500);
-}
-
-.admin-lighting-button--active,
-.admin-lighting-button[aria-pressed="true"],
-.admin-style-button--active,
-.admin-style-button[aria-pressed="true"],
-.admin-wallpaper-button--active,
-.admin-wallpaper-button[aria-pressed="true"] {
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--blue-500);
-}
-
-.admin-lighting-button-text {
-  font-size: 14px;
-  line-height: 1;
-  white-space: nowrap;
-  text-transform: none;
-}
-
-.admin-style-button-text,
-.admin-wallpaper-button-text {
-  font-size: 14px;
-  white-space: nowrap;
 }
 
 /* ============================================================================

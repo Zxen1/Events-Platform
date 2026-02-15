@@ -868,13 +868,13 @@
         statusGroup.appendChild(statusLabel);
 
         var statusBtnRow = document.createElement('div');
-        statusBtnRow.className = 'posteditor-manage-status-buttons';
+        statusBtnRow.className = 'posteditor-manage-status-buttons button-class-7-group';
 
         var statusOptions = [
             { key: 'active', label: 'Active' },
-            { key: 'hidden', label: 'Hidden' },
+            { key: 'hidden', label: 'Hide' },
             { key: 'expired', label: 'Expired' },
-            { key: 'deleted', label: 'Deleted' }
+            { key: 'deleted', label: 'Delete' }
         ];
 
         var currentStatus = 'active';
@@ -886,22 +886,22 @@
 
         function setStatusButtonActive(key) {
             for (var sk in statusButtons) {
-                statusButtons[sk].classList.remove('posteditor-manage-status-button--active');
+                statusButtons[sk].classList.remove('button-class-7--active');
                 statusButtons[sk].setAttribute('aria-pressed', 'false');
             }
-            statusButtons[key].classList.add('posteditor-manage-status-button--active');
+            statusButtons[key].classList.add('button-class-7--active');
             statusButtons[key].setAttribute('aria-pressed', 'true');
         }
 
         statusOptions.forEach(function(opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'posteditor-manage-status-button';
+            btn.className = 'posteditor-manage-status-button button-class-7';
             btn.textContent = opt.label;
             btn.setAttribute('aria-pressed', opt.key === currentStatus ? 'true' : 'false');
 
             if (opt.key === currentStatus) {
-                btn.classList.add('posteditor-manage-status-button--active');
+                btn.classList.add('button-class-7--active');
             }
 
             if (opt.key === 'deleted') {
@@ -910,7 +910,6 @@
 
             // Expired is system-determined, not clickable
             if (opt.key === 'expired') {
-                btn.classList.add('posteditor-manage-status-button--disabled');
                 btn.disabled = true;
             }
 
@@ -918,7 +917,6 @@
             if (opt.key === 'active' || opt.key === 'hidden') {
                 // Disabled when expired or deleted
                 if (isExpired || summaryIsDeleted || summaryVisibility === 'deleted') {
-                    btn.classList.add('posteditor-manage-status-button--disabled');
                     btn.disabled = true;
                 } else {
                     btn.addEventListener('click', function() {
@@ -972,7 +970,6 @@
             // Delete handler
             if (opt.key === 'deleted') {
                 if (summaryIsDeleted || summaryVisibility === 'deleted') {
-                    btn.classList.add('posteditor-manage-status-button--disabled');
                     btn.disabled = true;
                 } else {
                     btn.addEventListener('click', function() {
@@ -1014,7 +1011,7 @@
         tierGroup.appendChild(tierLabel);
 
         var tierBtnRow = document.createElement('div');
-        tierBtnRow.className = 'posteditor-manage-tier-buttons';
+        tierBtnRow.className = 'posteditor-manage-tier-buttons button-class-7-group';
 
         var tierDesc = document.createElement('div');
         tierDesc.className = 'posteditor-manage-tier-description';
@@ -1037,17 +1034,16 @@
             var description = option.checkout_description ? String(option.checkout_description) : '';
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'posteditor-manage-tier-button';
+            btn.className = 'posteditor-manage-tier-button button-class-7';
             btn.textContent = title;
             btn.dataset.tierIndex = String(idx);
             btn.setAttribute('aria-pressed', idx === currentTierIndex ? 'true' : 'false');
 
             if (idx === currentTierIndex) {
-                btn.classList.add('posteditor-manage-tier-button--active');
+                btn.classList.add('button-class-7--active');
                 tierDesc.textContent = description;
             } else if (idx < currentTierIndex) {
                 // Below current tier — downgrading not allowed
-                btn.classList.add('posteditor-manage-tier-button--disabled');
                 btn.disabled = true;
             }
 
@@ -1056,10 +1052,10 @@
                 // Update active state
                 var allBtns = tierBtnRow.querySelectorAll('.posteditor-manage-tier-button');
                 for (var bi = 0; bi < allBtns.length; bi++) {
-                    allBtns[bi].classList.remove('posteditor-manage-tier-button--active');
+                    allBtns[bi].classList.remove('button-class-7--active');
                     allBtns[bi].setAttribute('aria-pressed', 'false');
                 }
-                btn.classList.add('posteditor-manage-tier-button--active');
+                btn.classList.add('button-class-7--active');
                 btn.setAttribute('aria-pressed', 'true');
                 tierDesc.textContent = description;
             });

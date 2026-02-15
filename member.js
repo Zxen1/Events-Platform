@@ -747,17 +747,14 @@ const MemberModule = (function() {
             var lighting = btn.dataset.lighting;
             var isActive = lighting === currentLighting;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            btn.classList.toggle('member-lighting-button--active', isActive);
             
             btn.addEventListener('click', function() {
                 if (btn.getAttribute('aria-pressed') === 'true') return;
                 
                 lightingButtons.forEach(function(b) {
                     b.setAttribute('aria-pressed', 'false');
-                    b.classList.remove('member-lighting-button--active');
                 });
                 btn.setAttribute('aria-pressed', 'true');
-                btn.classList.add('member-lighting-button--active');
                 
                 // Update map
                 if (window.MapModule && window.MapModule.setMapLighting) {
@@ -797,17 +794,14 @@ const MemberModule = (function() {
             var style = btn.dataset.style;
             var isActive = style === currentStyle;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            btn.classList.toggle('member-style-button--active', isActive);
             
             btn.addEventListener('click', function() {
                 if (btn.getAttribute('aria-pressed') === 'true') return;
                 
                 styleButtons.forEach(function(b) {
                     b.setAttribute('aria-pressed', 'false');
-                    b.classList.remove('member-style-button--active');
                 });
                 btn.setAttribute('aria-pressed', 'true');
-                btn.classList.add('member-style-button--active');
                 
                 // Update map
                 if (window.MapModule && window.MapModule.setMapStyle) {
@@ -843,17 +837,14 @@ const MemberModule = (function() {
             var wallpaper = btn.dataset.wallpaper;
             var isActive = wallpaper === currentWallpaper;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            btn.classList.toggle('member-wallpaper-button--active', isActive);
             
             btn.addEventListener('click', function() {
                 if (btn.getAttribute('aria-pressed') === 'true') return;
                 
                 wallpaperButtons.forEach(function(b) {
                     b.setAttribute('aria-pressed', 'false');
-                    b.classList.remove('member-wallpaper-button--active');
                 });
                 btn.setAttribute('aria-pressed', 'true');
-                btn.classList.add('member-wallpaper-button--active');
                 
                 // Save to localStorage (guests) or database (members)
                 if (currentUser) {

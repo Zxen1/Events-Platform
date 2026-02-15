@@ -449,112 +449,33 @@
   font-size: 13px;
 }
 
-/* Status toggle buttons (copies member-lighting-buttons pattern) */
+/* Status toggle buttons (uses button-class-7) */
 .posteditor-manage-status-buttons {
-  display: grid;
   grid-template-columns: repeat(4, 1fr);
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.posteditor-manage-status-button {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  font-size: 14px;
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-.posteditor-manage-status-button:hover {
-  color: var(--blue-500);
-}
-
-.posteditor-manage-status-button--active,
-.posteditor-manage-status-button[aria-pressed="true"] {
-  color: var(--blue-500);
 }
 
 .posteditor-manage-status-button--delete {
-  color: #f87171;
+  color: rgba(248, 113, 113, 0.4);
 }
 
 .posteditor-manage-status-button--delete:hover {
   color: #f87171;
+  border-color: #f87171;
 }
 
-.posteditor-manage-status-button--delete.posteditor-manage-status-button--active {
+.posteditor-manage-status-button--delete.button-class-7--active,
+.posteditor-manage-status-button--delete[aria-pressed="true"] {
   color: #f87171;
 }
 
-.posteditor-manage-status-button--disabled {
-  opacity: 0.3;
-  cursor: default;
+.posteditor-manage-status-button--delete:disabled:hover {
+  color: rgba(248, 113, 113, 0.4);
+  border-color: transparent;
 }
 
-.posteditor-manage-status-button--disabled:hover {
-  color: #fff;
-}
-
-.posteditor-manage-status-button--delete.posteditor-manage-status-button--disabled:hover {
-  color: #f87171;
-}
-
-/* Tier toggle buttons (copies member-lighting-buttons pattern) */
+/* Tier toggle buttons (uses button-class-7) */
 .posteditor-manage-tier-buttons {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.posteditor-manage-tier-button {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  font-size: 14px;
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-.posteditor-manage-tier-button:hover {
-  color: var(--blue-500);
-}
-
-.posteditor-manage-tier-button--active,
-.posteditor-manage-tier-button[aria-pressed="true"] {
-  color: var(--blue-500);
-}
-
-.posteditor-manage-tier-button--disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.posteditor-manage-tier-button--disabled:hover {
-  color: #fff;
 }
 
 .posteditor-manage-tier-description {

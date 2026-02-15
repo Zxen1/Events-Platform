@@ -2143,7 +2143,6 @@ const AdminModule = (function() {
                 var lighting = btn.dataset.lighting;
                 var isActive = lighting === initialLighting;
                 btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                btn.classList.toggle('admin-lighting-button--active', isActive);
                 
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
@@ -2152,10 +2151,8 @@ const AdminModule = (function() {
                     
                     lightingButtons.forEach(function(b) {
                         b.setAttribute('aria-pressed', 'false');
-                        b.classList.remove('admin-lighting-button--active');
                     });
                     btn.setAttribute('aria-pressed', 'true');
-                    btn.classList.add('admin-lighting-button--active');
                     
                     updateField('map.map_lighting', lighting);
                     if (window.MapModule && window.MapModule.setMapLighting) {
@@ -2177,7 +2174,6 @@ const AdminModule = (function() {
                 var style = btn.dataset.style;
                 var isActive = style === initialStyle;
                 btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                btn.classList.toggle('admin-style-button--active', isActive);
                 
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
@@ -2186,10 +2182,8 @@ const AdminModule = (function() {
                     
                     styleButtons.forEach(function(b) {
                         b.setAttribute('aria-pressed', 'false');
-                        b.classList.remove('admin-style-button--active');
                     });
                     btn.setAttribute('aria-pressed', 'true');
-                    btn.classList.add('admin-style-button--active');
                     
                     updateField('map.map_style', style);
                     if (window.MapModule && window.MapModule.setMapStyle) {
@@ -2454,17 +2448,14 @@ const AdminModule = (function() {
                 var mode = btn.dataset.wallpaper;
                 var isActive = mode === initialWallpaperMode;
                 btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                btn.classList.toggle('admin-wallpaper-button--active', isActive);
                 
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
                     
                     wallpaperButtons.forEach(function(b) {
                         b.setAttribute('aria-pressed', 'false');
-                        b.classList.remove('admin-wallpaper-button--active');
                     });
                     btn.setAttribute('aria-pressed', 'true');
-                    btn.classList.add('admin-wallpaper-button--active');
                     
                     updateField('map.default_wallpaper_mode', mode);
                 });
@@ -2696,7 +2687,7 @@ const AdminModule = (function() {
         
         // Reset button groups
         var buttonGroups = [
-            { selector: '.admin-wallpaper-button', fieldId: 'map.default_wallpaper_mode', dataAttr: 'wallpaper', activeClass: 'admin-wallpaper-button--active' }
+            { selector: '.admin-wallpaper-button', fieldId: 'map.default_wallpaper_mode', dataAttr: 'wallpaper' }
         ];
         
         buttonGroups.forEach(function(bg) {
@@ -2707,7 +2698,6 @@ const AdminModule = (function() {
                     var value = btn.dataset[bg.dataAttr];
                     var isActive = value === entry.original;
                     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                    btn.classList.toggle(bg.activeClass, isActive);
                 });
             }
         });
