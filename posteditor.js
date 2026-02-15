@@ -801,27 +801,22 @@
         body.appendChild(editAccordionRow);
         body.appendChild(editAccordionContent);
 
-        // --- Post Summary ---
-        var summarySection = document.createElement('div');
-        summarySection.className = 'posteditor-manage-section';
-
-        var summaryTable = document.createElement('div');
-        summaryTable.className = 'posteditor-manage-summary';
-
+        // --- Summary data ---
         var summaryNow = new Date();
         var summaryVisibility = post.visibility || 'active';
         var summaryExpiresAt = post.expires_at ? new Date(post.expires_at) : null;
         var summaryIsDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
         var summaryIsExpiredByDb = summaryVisibility === 'expired';
         var summaryIsExpiredByTime = summaryExpiresAt && summaryExpiresAt.getTime() <= summaryNow.getTime();
+        var isExpired = summaryIsExpiredByDb || summaryIsExpiredByTime;
 
         // 1. Status
         var statusText = 'Active';
         if (summaryIsDeleted || summaryVisibility === 'deleted') statusText = 'Deleted';
-        else if (summaryIsExpiredByDb || summaryIsExpiredByTime) statusText = 'Expired';
+        else if (isExpired) statusText = 'Expired';
         else if (summaryVisibility === 'hidden') statusText = 'Hidden';
 
-        // 2. Plan/Tier
+        // 2. Tier
         var tierText = post.checkout_title || post.checkout_key || '—';
 
         // 3. Locations
@@ -831,57 +826,48 @@
         var timeText = '—';
         if (summaryIsDeleted || summaryVisibility === 'deleted') {
             timeText = 'Deleted';
-        } else if (summaryIsExpiredByDb || summaryIsExpiredByTime) {
+        } else if (isExpired) {
             timeText = 'Expired';
         } else if (summaryExpiresAt) {
             timeText = formatCountdown(summaryExpiresAt, summaryNow);
         }
 
-        // 5. Created
-        var createdText = post.created_at ? formatStatusDate(new Date(post.created_at)) : '—';
-
-        // 6. Expiry date
+        // 5. Expiry date
         var expiryText = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
 
-        var summaryRows = [
-            ['Status', statusText],
-            ['Tier', tierText],
-            ['Locations', locText],
-            ['Time Remaining', timeText],
-            ['Expires', expiryText],
-            ['Created', createdText]
-        ];
+        // 6. Created
+        var createdText = post.created_at ? formatStatusDate(new Date(post.created_at)) : '—';
 
-        for (var si = 0; si < summaryRows.length; si++) {
-            var sRow = document.createElement('div');
-            sRow.className = 'posteditor-manage-summary-row';
-            var sLabel = document.createElement('span');
-            sLabel.className = 'posteditor-manage-summary-label';
-            sLabel.textContent = summaryRows[si][0];
-            var sValue = document.createElement('span');
-            sValue.className = 'posteditor-manage-summary-value';
-            sValue.textContent = summaryRows[si][1];
-            sRow.appendChild(sLabel);
-            sRow.appendChild(sValue);
-            summaryTable.appendChild(sRow);
+        // --- Helper: build a labelled 36px row ---
+        function buildManageRow(labelText, valueText, extraClass) {
+            var group = document.createElement('div');
+            group.className = 'posteditor-manage-field';
+            var lbl = document.createElement('div');
+            lbl.className = 'posteditor-manage-field-label';
+            lbl.textContent = labelText;
+            var row = document.createElement('div');
+            row.className = 'posteditor-manage-field-row' + (extraClass ? ' ' + extraClass : '');
+            var val = document.createElement('span');
+            val.className = 'posteditor-manage-field-value';
+            val.textContent = valueText;
+            row.appendChild(val);
+            group.appendChild(lbl);
+            group.appendChild(row);
+            return { group: group, row: row, value: val };
         }
 
-        summarySection.appendChild(summaryTable);
-        body.appendChild(summarySection);
+        // --- Status row (with three-dot button for Hide / Delete) ---
+        var statusField = buildManageRow('Status', statusText);
 
+        // Status three-dot button
+        var statusMoreBtn = document.createElement('div');
+        statusMoreBtn.className = 'posteditor-manage-more';
+        statusMoreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
 
-        // --- Three-dot More button (Hide / Restore / Delete) ---
-        var moreBtn = document.createElement('div');
-        moreBtn.className = 'posteditor-manage-more';
-        moreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
-
-        var moreMenu = document.createElement('div');
-        moreMenu.className = 'posteditor-manage-more-menu';
+        var statusMoreMenu = document.createElement('div');
+        statusMoreMenu.className = 'posteditor-manage-more-menu';
 
         // Hide row (toggle switch) — disabled for expired posts
-        var postVisibility = post.visibility || 'active';
-        var postExpiresAt = post.expires_at ? new Date(post.expires_at) : null;
-        var isExpired = postVisibility === 'expired' || (postExpiresAt && postExpiresAt.getTime() <= Date.now());
         var hideRow = document.createElement('div');
         hideRow.className = 'posteditor-manage-more-item' + (isExpired ? ' posteditor-manage-more-item--disabled' : '');
         hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
@@ -896,67 +882,51 @@
         hideSwitch.appendChild(hideSwitchInput);
         hideSwitch.appendChild(hideSwitchSlider);
         hideRow.appendChild(hideSwitch);
-        moreMenu.appendChild(hideRow);
-
-        // Divider before restore
-        var restoreDivider = document.createElement('div');
-        restoreDivider.className = 'posteditor-manage-more-divider';
-        moreMenu.appendChild(restoreDivider);
-
-        // Restore heading
-        var restoreHeading = document.createElement('div');
-        restoreHeading.className = 'posteditor-manage-more-heading';
-        restoreHeading.textContent = 'Restore';
-        moreMenu.appendChild(restoreHeading);
-
-        // Placeholder for restore items (populated async)
-        var restoreContainer = document.createElement('div');
-        restoreContainer.className = 'posteditor-manage-more-restore-list';
-        restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
-        moreMenu.appendChild(restoreContainer);
+        statusMoreMenu.appendChild(hideRow);
 
         // Divider before delete
         var deleteDivider = document.createElement('div');
         deleteDivider.className = 'posteditor-manage-more-divider';
-        moreMenu.appendChild(deleteDivider);
+        statusMoreMenu.appendChild(deleteDivider);
 
-        // Delete row (always last)
+        // Delete row
         var deleteRow = document.createElement('div');
         deleteRow.className = 'posteditor-manage-more-item posteditor-manage-more-delete';
         deleteRow.innerHTML = '<span class="posteditor-manage-more-item-text">Delete Post</span>';
-        moreMenu.appendChild(deleteRow);
+        statusMoreMenu.appendChild(deleteRow);
 
-        moreBtn.appendChild(moreMenu);
-        editAccordionRow.appendChild(moreBtn);
+        statusMoreBtn.appendChild(statusMoreMenu);
+        statusField.row.appendChild(statusMoreBtn);
+        body.appendChild(statusField.group);
 
-        // Toggle menu open/close
-        var moreMenuOpen = false;
-        function setMoreMenuOpen(open) {
-            moreMenuOpen = open;
+        // Status menu toggle
+        var statusMenuOpen = false;
+        function setStatusMenuOpen(open) {
+            statusMenuOpen = open;
             if (open) {
-                moreMenu.classList.add('posteditor-manage-more-menu--open');
+                statusMoreMenu.classList.add('posteditor-manage-more-menu--open');
             } else {
-                moreMenu.classList.remove('posteditor-manage-more-menu--open');
+                statusMoreMenu.classList.remove('posteditor-manage-more-menu--open');
             }
         }
 
-        moreBtn.addEventListener('click', function(e) {
+        statusMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (e.target.closest('.posteditor-manage-more-item') || e.target.closest('.component-switch')) return;
-            setMoreMenuOpen(!moreMenuOpen);
+            setStatusMenuOpen(!statusMenuOpen);
         });
 
-        // Close menu when clicking outside (self-cleans when modal is removed from DOM)
-        var outsideClickHandler = function(e) {
+        // Close status menu when clicking outside
+        var statusOutsideHandler = function(e) {
             if (!backdrop.parentNode) {
-                document.removeEventListener('click', outsideClickHandler);
+                document.removeEventListener('click', statusOutsideHandler);
                 return;
             }
-            if (moreMenuOpen && !moreBtn.contains(e.target)) {
-                setMoreMenuOpen(false);
+            if (statusMenuOpen && !statusMoreBtn.contains(e.target)) {
+                setStatusMenuOpen(false);
             }
         };
-        document.addEventListener('click', outsideClickHandler);
+        document.addEventListener('click', statusOutsideHandler);
 
         // Hide toggle handler — instant, no dialog
         hideRow.addEventListener('click', function(e) {
@@ -984,11 +954,12 @@
                 if (res && res.success) {
                     hideSwitchInput.checked = !hideSwitchInput.checked;
                     hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
-                    // Update local post data
                     post.visibility = newVisibility;
                     if (editingPostsData[postId] && editingPostsData[postId].original) {
                         editingPostsData[postId].original.visibility = newVisibility;
                     }
+                    // Update status text
+                    statusField.value.textContent = newVisibility === 'hidden' ? 'Hidden' : 'Active';
                     // Rebuild modal status bar
                     var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
                     if (oldModalBar) {
@@ -1012,7 +983,7 @@
         // Delete handler
         deleteRow.addEventListener('click', function(e) {
             e.stopPropagation();
-            setMoreMenuOpen(false);
+            setStatusMenuOpen(false);
             if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
                 window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
                     if (!msg) return;
@@ -1031,6 +1002,78 @@
                 });
             }
         });
+
+        // --- Tier row ---
+        var tierField = buildManageRow('Tier', tierText);
+        body.appendChild(tierField.group);
+
+        // --- Locations row ---
+        var locField = buildManageRow('Locations', locText);
+        body.appendChild(locField.group);
+
+        // --- Time Remaining row ---
+        var timeField = buildManageRow('Time Remaining', timeText);
+        body.appendChild(timeField.group);
+
+        // --- Expires row ---
+        var expiryField = buildManageRow('Expires', expiryText);
+        body.appendChild(expiryField.group);
+
+        // --- Created row ---
+        var createdField = buildManageRow('Created', createdText);
+        body.appendChild(createdField.group);
+
+        // --- Restore three-dot button (beside Edit) ---
+        var moreBtn = document.createElement('div');
+        moreBtn.className = 'posteditor-manage-more';
+        moreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
+
+        var moreMenu = document.createElement('div');
+        moreMenu.className = 'posteditor-manage-more-menu';
+
+        // Restore heading
+        var restoreHeading = document.createElement('div');
+        restoreHeading.className = 'posteditor-manage-more-heading';
+        restoreHeading.textContent = 'Restore';
+        moreMenu.appendChild(restoreHeading);
+
+        // Placeholder for restore items (populated async)
+        var restoreContainer = document.createElement('div');
+        restoreContainer.className = 'posteditor-manage-more-restore-list';
+        restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
+        moreMenu.appendChild(restoreContainer);
+
+        moreBtn.appendChild(moreMenu);
+        editAccordionRow.appendChild(moreBtn);
+
+        // Restore menu toggle
+        var moreMenuOpen = false;
+        function setMoreMenuOpen(open) {
+            moreMenuOpen = open;
+            if (open) {
+                moreMenu.classList.add('posteditor-manage-more-menu--open');
+            } else {
+                moreMenu.classList.remove('posteditor-manage-more-menu--open');
+            }
+        }
+
+        moreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (e.target.closest('.posteditor-manage-more-item')) return;
+            setMoreMenuOpen(!moreMenuOpen);
+        });
+
+        // Close restore menu when clicking outside
+        var outsideClickHandler = function(e) {
+            if (!backdrop.parentNode) {
+                document.removeEventListener('click', outsideClickHandler);
+                return;
+            }
+            if (moreMenuOpen && !moreBtn.contains(e.target)) {
+                setMoreMenuOpen(false);
+            }
+        };
+        document.addEventListener('click', outsideClickHandler);
 
         // Fetch and populate restore items
         function loadRevisions() {
