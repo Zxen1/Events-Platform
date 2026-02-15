@@ -2839,7 +2839,7 @@ const PostModule = (function() {
     }
 
     // Mobile: scroll window to top when opened from map card or marquee
-    if (isMobileViewport && !fromRecent && (!!options.fromMap || options.source === 'marquee') && detail) {
+    if (isMobileViewport && !fromRecent && !!options.fromMap && detail) {
       try {
         requestAnimationFrame(function() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
