@@ -416,6 +416,14 @@
   display: none;
 }
 
+/* Pending payment message (below Edit/Restore buttons) */
+.posteditor-manage-pending-message {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* ============================================================================
    MANAGE PANEL
    ============================================================================ */

@@ -777,7 +777,7 @@
             if (!editFormLoaded) {
                 editFormLoaded = true;
                 if (editingPostsData[postId]) {
-                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn);
+                    renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn, editToggleBtn, pendingPaymentMsg);
                 } else {
                     editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
                     var user = getCurrentUser();
@@ -789,7 +789,7 @@
                             var post = res.posts[0];
                             editingPostsData[postId] = { original: post, current: {} };
                             editAccordionContent.innerHTML = '';
-                            renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn);
+                            renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn, editToggleBtn, pendingPaymentMsg);
                         } else {
                             editAccordionContent.innerHTML = '<p class="posteditor-status--error">Failed to load post data.</p>';
                         }
@@ -802,6 +802,19 @@
 
         body.appendChild(editAccordionRow);
         body.appendChild(editAccordionContent);
+
+        // --- Pending payment message (hidden by default, shown when loc_qty > loc_paid) ---
+        var pendingPaymentMsg = document.createElement('div');
+        pendingPaymentMsg.className = 'posteditor-manage-pending-message';
+        pendingPaymentMsg.style.display = 'none';
+        body.appendChild(pendingPaymentMsg);
+
+        // Load pending payment message text from database
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_posteditor_pending_payment', {}, false).then(function(msg) {
+                if (msg) pendingPaymentMsg.textContent = msg;
+            });
+        }
 
         // --- Summary data ---
         var summaryNow = new Date();
@@ -822,7 +835,9 @@
         var tierText = post.checkout_title || post.checkout_key || '—';
 
         // 3. Locations (used / paid)
-        var locText = String(post.loc_qty || 0) + '/' + String(post.loc_paid || 0);
+        var locUsed = post.loc_qty || 0;
+        var locPaid = post.loc_paid || 0;
+        var locText = locUsed + '/' + locPaid + (locPaid === 1 ? ' Location' : ' Locations');
 
         // 4. Time Remaining
         var timeText = '—';
@@ -1357,7 +1372,7 @@
 
 
 
-    function renderEditForm(post, formContainer, closeModalFn, topSaveBtn, topCloseBtn) {
+    function renderEditForm(post, formContainer, closeModalFn, topSaveBtn, topCloseBtn, editToggleBtn, pendingPaymentMsg) {
         if (!post || !formContainer) return;
         
         var memberCategories = getMemberCategories();
@@ -1647,6 +1662,17 @@
                 saveBtn.disabled = !canSave;
                 if (topSaveBtn) topSaveBtn.disabled = !canSave;
 
+                // Check if locations exceed paid (payment required)
+                var locContainers = formContainer.querySelectorAll('.member-location-container');
+                var locUsed = locContainers.length;
+                var locPaid = post.loc_paid || 0;
+                var paymentRequired = locUsed > locPaid;
+
+                // Swap Save / Check out label based on payment state
+                var saveLabel = paymentRequired ? 'Check out' : 'Save';
+                saveBtn.textContent = saveLabel;
+                if (topSaveBtn) topSaveBtn.textContent = saveLabel;
+
                 // Swap Close/Discard on bottom button
                 if (isDirty) {
                     closeBtn.textContent = 'Discard';
@@ -1664,6 +1690,14 @@
                         topCloseBtn.textContent = 'Close';
                         topCloseBtn.className = 'posteditor-manage-edit-close button-class-2b';
                     }
+                }
+
+                // Update Edit button text and pending payment message
+                if (editToggleBtn) {
+                    editToggleBtn.textContent = paymentRequired ? 'Edit (Pending)' : 'Edit';
+                }
+                if (pendingPaymentMsg) {
+                    pendingPaymentMsg.style.display = paymentRequired ? '' : 'none';
                 }
             }
             
