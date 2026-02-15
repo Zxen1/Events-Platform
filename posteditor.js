@@ -1096,7 +1096,7 @@
 
                         var revRow = document.createElement('div');
                         revRow.className = 'posteditor-manage-more-item posteditor-manage-more-restore';
-                        revRow.innerHTML = '<span class="posteditor-manage-more-item-text">' + typeLabel + ' — ' + dateStr + '</span>';
+                        revRow.innerHTML = '<span class="posteditor-manage-restore-label">' + typeLabel + '</span><span class="posteditor-manage-restore-date">' + dateStr + '</span>';
                         revRow.addEventListener('click', (function(revData, revDateStr) {
                             return function(e) {
                                 e.stopPropagation();

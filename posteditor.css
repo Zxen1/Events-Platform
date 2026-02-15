@@ -565,6 +565,15 @@
   color: #fff;
 }
 
+.posteditor-manage-restore-label {
+  width: 150px;
+  min-width: 150px;
+}
+
+.posteditor-manage-restore-date {
+  flex: 1;
+}
+
 /* Delete — always last, danger color */
 .posteditor-manage-more-delete {
   color: #f87171;
