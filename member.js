@@ -4795,6 +4795,9 @@ const MemberModule = (function() {
         }
         updateSubmitButtonState();
         closeTermsModal();
+        if (window.App && typeof App.emit === 'function') {
+            App.emit('terms:agreed');
+        }
     }
     
     async function createTermsModal() {

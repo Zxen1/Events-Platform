@@ -1176,6 +1176,14 @@
         termsWrapper.appendChild(checkboxWrapper);
         body.appendChild(termsWrapper);
 
+        // Check the checkbox when user clicks Agree in the terms modal
+        var termsAgreedHandler = function() {
+            termsCheckbox.checked = true;
+        };
+        if (window.App && typeof App.on === 'function') {
+            App.on('terms:agreed', termsAgreedHandler);
+        }
+
         // --- Submit buttons ---
         var manageActionsWrapper = document.createElement('div');
         manageActionsWrapper.className = 'posteditor-manage-actions';
@@ -1218,6 +1226,9 @@
 
         function closeModal() {
             document.removeEventListener('keydown', escapeHandler);
+            if (window.App && typeof App.off === 'function') {
+                App.off('terms:agreed', termsAgreedHandler);
+            }
             if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
             activeModal = null;
         }
