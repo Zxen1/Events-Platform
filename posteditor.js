@@ -1081,8 +1081,29 @@
         tierGroup.appendChild(tierDesc);
         body.appendChild(tierGroup);
 
-        // --- Locations row ---
+        // --- Locations row (with tooltip) ---
         var locField = buildManageRow('Locations', locText);
+        // Replace plain label with tooltip-enabled label (same pattern as admin Map Card Breakpoint)
+        var locLabel = locField.group.querySelector('.posteditor-manage-field-label');
+        locLabel.textContent = '';
+        locLabel.classList.add('admin-settings-field-label--has-tooltip');
+        var locLabelText = document.createElement('span');
+        locLabelText.className = 'admin-settings-field-label-text';
+        locLabelText.textContent = 'Locations';
+        var locTooltipIcon = document.createElement('span');
+        locTooltipIcon.className = 'admin-tooltip';
+        locTooltipIcon.innerHTML = '<svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg>';
+        var locTooltipText = document.createElement('div');
+        locTooltipText.className = 'admin-tooltip-text';
+        locLabel.appendChild(locLabelText);
+        locLabel.appendChild(locTooltipIcon);
+        locLabel.appendChild(locTooltipText);
+        // Load tooltip message from database
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_posteditor_locations_info', {}, false).then(function(msg) {
+                if (msg) locTooltipText.textContent = msg;
+            });
+        }
         body.appendChild(locField.group);
 
         // --- Time Remaining row ---
@@ -1572,6 +1593,11 @@
             saveBtn.disabled = true;
             saveBtn.addEventListener('click', function() {
                 if (saveBtn.disabled) return;
+                // Block save when payment is required
+                var locContainers = formContainer.querySelectorAll('.member-location-container');
+                var locUsed = locContainers.length;
+                var locPaid = post.loc_paid || 0;
+                if (locUsed > locPaid) return;
                 handleSave();
             });
             
