@@ -435,6 +435,22 @@
   color: #F59E0B;
 }
 
+/* Button Class 7: Square icon button (36x36, for icon-only triggers like 3-dot menus) */
+.button-class-7 {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--website-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 /* ============================================================================
    INPUT CLASSES
    
@@ -496,6 +512,11 @@
     background: rgba(245, 158, 11, 0.15);
     border-color: #F59E0B;
     color: #F59E0B;
+  }
+
+  .button-class-7:hover {
+    background: var(--blue-600);
+    border-color: var(--blue-600);
   }
 
   .input-class-1:hover {

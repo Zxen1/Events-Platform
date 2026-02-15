@@ -879,142 +879,165 @@
             return { group: group, row: row, value: val };
         }
 
-        // --- Status row (toggle buttons: Active, Hidden, Expired, Deleted) ---
-        var statusGroup = document.createElement('div');
-        statusGroup.className = 'posteditor-manage-field';
-
-        var statusLabel = document.createElement('div');
-        statusLabel.className = 'posteditor-manage-field-label';
-        statusLabel.textContent = 'Status';
-        statusGroup.appendChild(statusLabel);
-
-        var statusBtnRow = document.createElement('div');
-        statusBtnRow.className = 'posteditor-manage-status-buttons toggle-class-1';
-
-        var statusOptions = [
-            { key: 'active', label: 'Active' },
-            { key: 'hidden', label: 'Hidden' },
-            { key: 'expired', label: 'Expired' },
-            { key: 'deleted', label: 'Deleted' }
-        ];
-
+        // --- Status row (text display + 3-dot menu for Hide/Delete) ---
         var currentStatus = 'active';
         if (summaryIsDeleted || summaryVisibility === 'deleted') currentStatus = 'deleted';
         else if (isExpired) currentStatus = 'expired';
         else if (summaryVisibility === 'hidden') currentStatus = 'hidden';
 
-        var statusButtons = {};
+        var statusField = buildManageRow('Status', statusText);
+        var statusValueEl = statusField.value;
 
-        function setStatusButtonActive(key) {
-            for (var sk in statusButtons) {
-                statusButtons[sk].setAttribute('aria-pressed', 'false');
-            }
-            statusButtons[key].setAttribute('aria-pressed', 'true');
+        // 3-dot menu button
+        var statusMoreBtn = document.createElement('button');
+        statusMoreBtn.type = 'button';
+        statusMoreBtn.className = 'posteditor-manage-status-more button-class-7';
+        var statusMoreIcon = document.createElement('div');
+        statusMoreIcon.className = 'posteditor-manage-status-more-icon';
+        statusMoreBtn.appendChild(statusMoreIcon);
+
+        // Menu dropdown
+        var statusMoreMenu = document.createElement('div');
+        statusMoreMenu.className = 'posteditor-manage-status-more-menu';
+
+        // Hide item (toggle switch)
+        var hideItem = document.createElement('div');
+        hideItem.className = 'posteditor-manage-status-more-item';
+        var hideItemText = document.createElement('span');
+        hideItemText.className = 'posteditor-manage-status-more-item-text';
+        hideItemText.textContent = 'Hide';
+        var hideLabel = document.createElement('label');
+        hideLabel.className = 'component-switch';
+        var hideInput = document.createElement('input');
+        hideInput.className = 'component-switch-input';
+        hideInput.type = 'checkbox';
+        if (currentStatus === 'hidden') hideInput.checked = true;
+        var hideSlider = document.createElement('span');
+        hideSlider.className = 'component-switch-slider' + (currentStatus === 'hidden' ? ' component-switch-slider--on-default' : '');
+        hideLabel.appendChild(hideInput);
+        hideLabel.appendChild(hideSlider);
+        hideItem.appendChild(hideItemText);
+        hideItem.appendChild(hideLabel);
+
+        // Disable hide when expired or deleted
+        if (isExpired || summaryIsDeleted || summaryVisibility === 'deleted') {
+            hideInput.disabled = true;
+            hideItem.classList.add('posteditor-manage-status-more-item--disabled');
         }
 
-        statusOptions.forEach(function(opt) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'posteditor-manage-status-button toggle-button';
-            btn.textContent = opt.label;
-            btn.setAttribute('aria-pressed', opt.key === currentStatus ? 'true' : 'false');
+        // Hide toggle handler
+        hideLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (hideInput.disabled) return;
+            var newVisibility = hideInput.checked ? 'active' : 'hidden';
+            var user = getCurrentUser();
+            var mId = user ? parseInt(user.id, 10) : 0;
+            var mType = user ? (user.type || 'member') : 'member';
+            fetch('/gateway.php?action=edit-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    post_id: postId,
+                    member_id: mId,
+                    member_type: mType,
+                    manage_action: 'toggle_visibility',
+                    visibility: newVisibility
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success) {
+                    currentStatus = newVisibility;
+                    post.visibility = newVisibility;
+                    if (editingPostsData[postId] && editingPostsData[postId].original) {
+                        editingPostsData[postId].original.visibility = newVisibility;
+                    }
+                    hideInput.checked = !hideInput.checked;
+                    hideSlider.classList.toggle('component-switch-slider--on-default');
+                    statusValueEl.textContent = newVisibility === 'hidden' ? 'Hidden' : 'Active';
+                    // Rebuild modal status bar
+                    var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                    if (oldModalBar) {
+                        var newModalBar = buildStatusBar(post);
+                        oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                    }
+                    // Rebuild Post Editor card status bar
+                    var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                    if (postItem) {
+                        var oldBar = postItem.querySelector('.posteditor-status-bar');
+                        if (oldBar) {
+                            var newBar = buildStatusBar(post);
+                            oldBar.parentNode.replaceChild(newBar, oldBar);
+                        }
+                    }
+                    App.emit('post:updated', { post_id: postId });
+                }
+            });
+        });
 
-            if (opt.key === 'deleted') {
-                btn.classList.add('posteditor-manage-status-button--delete');
-            }
-
-            // Expired is system-determined, not clickable
-            if (opt.key === 'expired') {
-                btn.disabled = true;
-            }
-
-            // Active/Hidden toggle
-            if (opt.key === 'active' || opt.key === 'hidden') {
-                // Disabled when expired or deleted
-                if (isExpired || summaryIsDeleted || summaryVisibility === 'deleted') {
-                    btn.disabled = true;
-                } else {
-                    btn.addEventListener('click', function() {
-                        if (opt.key === currentStatus) return;
-                        var newVisibility = opt.key;
-                        var user = getCurrentUser();
-                        var mId = user ? parseInt(user.id, 10) : 0;
-                        var mType = user ? (user.type || 'member') : 'member';
-                        fetch('/gateway.php?action=edit-post', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                post_id: postId,
-                                member_id: mId,
-                                member_type: mType,
-                                manage_action: 'toggle_visibility',
-                                visibility: newVisibility
-                            })
-                        })
-                        .then(function(r) { return r.json(); })
-                        .then(function(res) {
-                            if (res && res.success) {
-                                currentStatus = newVisibility;
-                                post.visibility = newVisibility;
-                                if (editingPostsData[postId] && editingPostsData[postId].original) {
-                                    editingPostsData[postId].original.visibility = newVisibility;
-                                }
-                                setStatusButtonActive(newVisibility);
-                                // Rebuild modal status bar
-                                var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
-                                if (oldModalBar) {
-                                    var newModalBar = buildStatusBar(post);
-                                    oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
-                                }
-                                // Rebuild Post Editor card status bar
-                                var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
-                                if (postItem) {
-                                    var oldBar = postItem.querySelector('.posteditor-status-bar');
-                                    if (oldBar) {
-                                        var newBar = buildStatusBar(post);
-                                        oldBar.parentNode.replaceChild(newBar, oldBar);
-                                    }
-                                }
-                                App.emit('post:updated', { post_id: postId });
+        // Delete item
+        var deleteItem = document.createElement('div');
+        deleteItem.className = 'posteditor-manage-status-more-item posteditor-manage-status-more-delete';
+        deleteItem.textContent = 'Delete';
+        if (summaryIsDeleted || summaryVisibility === 'deleted') {
+            deleteItem.classList.add('posteditor-manage-status-more-item--disabled');
+        } else {
+            deleteItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+                statusMenuOpen = false;
+                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                    window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
+                        if (!msg) return;
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete Post',
+                            messageText: msg,
+                            confirmLabel: 'Delete',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                // TODO: call backend to soft-delete post
                             }
                         });
                     });
                 }
-            }
+            });
+        }
 
-            // Delete handler
-            if (opt.key === 'deleted') {
-                if (summaryIsDeleted || summaryVisibility === 'deleted') {
-                    btn.disabled = true;
-                } else {
-                    btn.addEventListener('click', function() {
-                        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
-                            window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
-                                if (!msg) return;
-                                ConfirmDialogComponent.show({
-                                    titleText: 'Delete Post',
-                                    messageText: msg,
-                                    confirmLabel: 'Delete',
-                                    cancelLabel: 'Cancel',
-                                    confirmClass: 'danger',
-                                    focusCancel: true
-                                }).then(function(confirmed) {
-                                    if (confirmed) {
-                                        // TODO: call backend to soft-delete post
-                                    }
-                                });
-                            });
-                        }
-                    });
-                }
-            }
+        statusMoreMenu.appendChild(hideItem);
+        statusMoreMenu.appendChild(deleteItem);
+        statusMoreBtn.appendChild(statusMoreMenu);
 
-            statusButtons[opt.key] = btn;
-            statusBtnRow.appendChild(btn);
+        // Menu toggle
+        var statusMenuOpen = false;
+        statusMoreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            statusMenuOpen = !statusMenuOpen;
+            if (statusMenuOpen) {
+                statusMoreMenu.classList.add('posteditor-manage-status-more-menu--open');
+            } else {
+                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+            }
         });
 
-        statusGroup.appendChild(statusBtnRow);
-        body.appendChild(statusGroup);
+        // Close status menu when clicking outside
+        var statusOutsideHandler = function(e) {
+            if (!backdrop.parentNode) {
+                document.removeEventListener('click', statusOutsideHandler);
+                return;
+            }
+            if (statusMenuOpen && !statusMoreBtn.contains(e.target)) {
+                statusMenuOpen = false;
+                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+            }
+        };
+        document.addEventListener('click', statusOutsideHandler);
+
+        statusField.row.appendChild(statusMoreBtn);
+        body.appendChild(statusField.group);
 
         // --- Tier row (interactive toggle buttons) ---
         var tierGroup = document.createElement('div');

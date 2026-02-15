@@ -457,27 +457,71 @@
   font-size: 13px;
 }
 
-/* Status toggle buttons (uses toggle-class-1) */
-.posteditor-manage-status-buttons {
-  grid-template-columns: repeat(4, 1fr);
+/* Status 3-dot menu button */
+.posteditor-manage-status-more {
+  position: relative;
 }
 
-.toggle-class-1 .posteditor-manage-status-button--delete {
-  color: rgba(248, 113, 113, 0.7);
+.posteditor-manage-status-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
-.toggle-class-1 .posteditor-manage-status-button--delete:hover {
+.posteditor-manage-status-more-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+  display: none;
+}
+
+.posteditor-manage-status-more-menu--open {
+  display: block;
+}
+
+.posteditor-manage-status-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.posteditor-manage-status-more-item:hover {
+  background: #222;
+}
+
+.posteditor-manage-status-more-item-text {
+  flex: 1;
+}
+
+.posteditor-manage-status-more-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.posteditor-manage-status-more-delete {
   color: #f87171;
-  border-color: #f87171;
 }
 
-.toggle-class-1 .posteditor-manage-status-button--delete[aria-pressed="true"] {
-  color: #f87171;
-}
-
-.toggle-class-1 .posteditor-manage-status-button--delete:disabled:hover {
-  color: rgba(248, 113, 113, 0.7);
-  border-color: transparent;
+.posteditor-manage-status-more-delete:hover {
+  background: #7f1d1d;
 }
 
 /* Tier toggle buttons (uses toggle-class-1) */
