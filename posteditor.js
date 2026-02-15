@@ -858,152 +858,151 @@
             return { group: group, row: row, value: val };
         }
 
-        // --- Status row (with three-dot button for Hide / Delete) ---
-        var statusField = buildManageRow('Status', statusText);
+        // --- Status row (toggle buttons: Active, Hidden, Expired, Deleted) ---
+        var statusGroup = document.createElement('div');
+        statusGroup.className = 'posteditor-manage-field';
 
-        // Status three-dot button
-        var statusMoreBtn = document.createElement('div');
-        statusMoreBtn.className = 'posteditor-manage-more';
-        statusMoreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
+        var statusLabel = document.createElement('div');
+        statusLabel.className = 'posteditor-manage-field-label';
+        statusLabel.textContent = 'Status';
+        statusGroup.appendChild(statusLabel);
 
-        var statusMoreMenu = document.createElement('div');
-        statusMoreMenu.className = 'posteditor-manage-more-menu';
+        var statusBtnRow = document.createElement('div');
+        statusBtnRow.className = 'posteditor-manage-status-buttons';
 
-        // Hide row (toggle switch) — disabled for expired posts
-        var hideRow = document.createElement('div');
-        hideRow.className = 'posteditor-manage-more-item' + (isExpired ? ' posteditor-manage-more-item--disabled' : '');
-        hideRow.innerHTML = '<span class="posteditor-manage-more-item-text">Hide Post</span>';
-        var hideSwitch = document.createElement('label');
-        hideSwitch.className = 'component-switch' + (isExpired ? ' component-switch--disabled' : '');
-        var hideSwitchInput = document.createElement('input');
-        hideSwitchInput.className = 'component-switch-input';
-        hideSwitchInput.type = 'checkbox';
-        hideSwitchInput.checked = post.visibility === 'hidden';
-        var hideSwitchSlider = document.createElement('span');
-        hideSwitchSlider.className = 'component-switch-slider' + (post.visibility === 'hidden' ? ' component-switch-slider--on-default' : '');
-        hideSwitch.appendChild(hideSwitchInput);
-        hideSwitch.appendChild(hideSwitchSlider);
-        hideRow.appendChild(hideSwitch);
-        statusMoreMenu.appendChild(hideRow);
+        var statusOptions = [
+            { key: 'active', label: 'Active' },
+            { key: 'hidden', label: 'Hidden' },
+            { key: 'expired', label: 'Expired' },
+            { key: 'deleted', label: 'Deleted' }
+        ];
 
-        // Divider before delete
-        var deleteDivider = document.createElement('div');
-        deleteDivider.className = 'posteditor-manage-more-divider';
-        statusMoreMenu.appendChild(deleteDivider);
+        var currentStatus = 'active';
+        if (summaryIsDeleted || summaryVisibility === 'deleted') currentStatus = 'deleted';
+        else if (isExpired) currentStatus = 'expired';
+        else if (summaryVisibility === 'hidden') currentStatus = 'hidden';
 
-        // Delete row
-        var deleteRow = document.createElement('div');
-        deleteRow.className = 'posteditor-manage-more-item posteditor-manage-more-delete';
-        deleteRow.innerHTML = '<span class="posteditor-manage-more-item-text">Delete Post</span>';
-        statusMoreMenu.appendChild(deleteRow);
+        var statusButtons = {};
 
-        statusMoreBtn.appendChild(statusMoreMenu);
-        statusField.row.appendChild(statusMoreBtn);
-        body.appendChild(statusField.group);
-
-        // Status menu toggle
-        var statusMenuOpen = false;
-        function setStatusMenuOpen(open) {
-            statusMenuOpen = open;
-            if (open) {
-                statusMoreMenu.classList.add('posteditor-manage-more-menu--open');
-            } else {
-                statusMoreMenu.classList.remove('posteditor-manage-more-menu--open');
+        function setStatusButtonActive(key) {
+            for (var sk in statusButtons) {
+                statusButtons[sk].classList.remove('posteditor-manage-status-button--active');
+                statusButtons[sk].setAttribute('aria-pressed', 'false');
             }
+            statusButtons[key].classList.add('posteditor-manage-status-button--active');
+            statusButtons[key].setAttribute('aria-pressed', 'true');
         }
 
-        statusMoreBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (e.target.closest('.posteditor-manage-more-item') || e.target.closest('.component-switch')) return;
-            setStatusMenuOpen(!statusMenuOpen);
-        });
+        statusOptions.forEach(function(opt) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'posteditor-manage-status-button';
+            btn.textContent = opt.label;
+            btn.setAttribute('aria-pressed', opt.key === currentStatus ? 'true' : 'false');
 
-        // Close status menu when clicking outside
-        var statusOutsideHandler = function(e) {
-            if (!backdrop.parentNode) {
-                document.removeEventListener('click', statusOutsideHandler);
-                return;
+            if (opt.key === currentStatus) {
+                btn.classList.add('posteditor-manage-status-button--active');
             }
-            if (statusMenuOpen && !statusMoreBtn.contains(e.target)) {
-                setStatusMenuOpen(false);
-            }
-        };
-        document.addEventListener('click', statusOutsideHandler);
 
-        // Hide toggle handler — instant, no dialog
-        hideRow.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (e.target.classList.contains('component-switch-input')) return;
-            if (isExpired) return;
-            var willHide = !hideSwitchSlider.classList.contains('component-switch-slider--on-default');
-            var user = getCurrentUser();
-            var mId = user ? parseInt(user.id, 10) : 0;
-            var mType = user ? (user.type || 'member') : 'member';
-            var newVisibility = willHide ? 'hidden' : 'active';
-            fetch('/gateway.php?action=edit-post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    post_id: postId,
-                    member_id: mId,
-                    member_type: mType,
-                    manage_action: 'toggle_visibility',
-                    visibility: newVisibility
-                })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res && res.success) {
-                    hideSwitchInput.checked = !hideSwitchInput.checked;
-                    hideSwitchSlider.classList.toggle('component-switch-slider--on-default');
-                    post.visibility = newVisibility;
-                    if (editingPostsData[postId] && editingPostsData[postId].original) {
-                        editingPostsData[postId].original.visibility = newVisibility;
-                    }
-                    // Update status text
-                    statusField.value.textContent = newVisibility === 'hidden' ? 'Hidden' : 'Active';
-                    // Rebuild modal status bar
-                    var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
-                    if (oldModalBar) {
-                        var newModalBar = buildStatusBar(post);
-                        oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
-                    }
-                    // Rebuild Post Editor card status bar
-                    var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
-                    if (postItem) {
-                        var oldBar = postItem.querySelector('.posteditor-status-bar');
-                        if (oldBar) {
-                            var newBar = buildStatusBar(post);
-                            oldBar.parentNode.replaceChild(newBar, oldBar);
-                        }
-                    }
-                    App.emit('post:updated', { post_id: postId });
+            if (opt.key === 'deleted') {
+                btn.classList.add('posteditor-manage-status-button--delete');
+            }
+
+            // Expired is system-determined, not clickable
+            if (opt.key === 'expired') {
+                btn.classList.add('posteditor-manage-status-button--disabled');
+                btn.disabled = true;
+            }
+
+            // Active/Hidden toggle
+            if (opt.key === 'active' || opt.key === 'hidden') {
+                // Disabled when expired or deleted
+                if (isExpired || summaryIsDeleted || summaryVisibility === 'deleted') {
+                    btn.classList.add('posteditor-manage-status-button--disabled');
+                    btn.disabled = true;
+                } else {
+                    btn.addEventListener('click', function() {
+                        if (opt.key === currentStatus) return;
+                        var newVisibility = opt.key;
+                        var user = getCurrentUser();
+                        var mId = user ? parseInt(user.id, 10) : 0;
+                        var mType = user ? (user.type || 'member') : 'member';
+                        fetch('/gateway.php?action=edit-post', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                post_id: postId,
+                                member_id: mId,
+                                member_type: mType,
+                                manage_action: 'toggle_visibility',
+                                visibility: newVisibility
+                            })
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                            if (res && res.success) {
+                                currentStatus = newVisibility;
+                                post.visibility = newVisibility;
+                                if (editingPostsData[postId] && editingPostsData[postId].original) {
+                                    editingPostsData[postId].original.visibility = newVisibility;
+                                }
+                                setStatusButtonActive(newVisibility);
+                                // Rebuild modal status bar
+                                var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                if (oldModalBar) {
+                                    var newModalBar = buildStatusBar(post);
+                                    oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                                }
+                                // Rebuild Post Editor card status bar
+                                var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                if (postItem) {
+                                    var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                    if (oldBar) {
+                                        var newBar = buildStatusBar(post);
+                                        oldBar.parentNode.replaceChild(newBar, oldBar);
+                                    }
+                                }
+                                App.emit('post:updated', { post_id: postId });
+                            }
+                        });
+                    });
                 }
-            });
-        });
+            }
 
-        // Delete handler
-        deleteRow.addEventListener('click', function(e) {
-            e.stopPropagation();
-            setStatusMenuOpen(false);
-            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
-                window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
-                    if (!msg) return;
-                    ConfirmDialogComponent.show({
-                        titleText: 'Delete Post',
-                        messageText: msg,
-                        confirmLabel: 'Delete',
-                        cancelLabel: 'Cancel',
-                        confirmClass: 'danger',
-                        focusCancel: true
-                    }).then(function(confirmed) {
-                        if (confirmed) {
-                            // TODO: call backend to soft-delete post
+            // Delete handler
+            if (opt.key === 'deleted') {
+                if (summaryIsDeleted || summaryVisibility === 'deleted') {
+                    btn.classList.add('posteditor-manage-status-button--disabled');
+                    btn.disabled = true;
+                } else {
+                    btn.addEventListener('click', function() {
+                        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                            window.getMessage('msg_posteditor_confirm_delete', {}, false).then(function(msg) {
+                                if (!msg) return;
+                                ConfirmDialogComponent.show({
+                                    titleText: 'Delete Post',
+                                    messageText: msg,
+                                    confirmLabel: 'Delete',
+                                    cancelLabel: 'Cancel',
+                                    confirmClass: 'danger',
+                                    focusCancel: true
+                                }).then(function(confirmed) {
+                                    if (confirmed) {
+                                        // TODO: call backend to soft-delete post
+                                    }
+                                });
+                            });
                         }
                     });
-                });
+                }
             }
+
+            statusButtons[opt.key] = btn;
+            statusBtnRow.appendChild(btn);
         });
+
+        statusGroup.appendChild(statusBtnRow);
+        body.appendChild(statusGroup);
 
         // --- Tier row (interactive toggle buttons) ---
         var tierGroup = document.createElement('div');
