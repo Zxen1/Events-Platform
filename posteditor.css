@@ -496,21 +496,20 @@
 
 .posteditor-manage-status-more-item {
   height: 36px;
-  line-height: 36px;
+  display: flex;
+  align-items: center;
   padding: 0 10px;
   cursor: pointer;
   color: #fff;
   font-size: 13px;
-  text-align: left;
 }
 
 .posteditor-manage-status-more-item:hover {
   background: #222;
 }
 
-.posteditor-manage-status-more-item .component-switch {
-  float: right;
-  vertical-align: middle;
+.posteditor-manage-status-more-item-text {
+  flex: 1;
 }
 
 .posteditor-manage-status-more-item--disabled {
