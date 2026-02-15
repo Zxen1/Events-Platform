@@ -618,9 +618,10 @@ const App = (function() {
       container.insertBefore(slider, container.firstChild);
 
       function moveSlider(btn, animate) {
+        var pad = parseFloat(getComputedStyle(container).paddingLeft) || 0;
         var containerRect = container.getBoundingClientRect();
         var btnRect = btn.getBoundingClientRect();
-        var offsetLeft = btnRect.left - containerRect.left - 3;
+        var offsetLeft = btnRect.left - containerRect.left - pad;
         slider.style.width = btnRect.width + 'px';
         if (!animate) {
           slider.style.transition = 'none';
@@ -632,10 +633,13 @@ const App = (function() {
         }
       }
 
-      var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
-      if (activeBtn) {
-        moveSlider(activeBtn, false);
-      }
+      // Defer initial position until after paint
+      requestAnimationFrame(function() {
+        var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+        if (activeBtn) {
+          moveSlider(activeBtn, false);
+        }
+      });
 
       container.addEventListener('click', function(e) {
         var btn = e.target.closest('.toggle-button');
