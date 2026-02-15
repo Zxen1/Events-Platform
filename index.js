@@ -604,6 +604,69 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     TOGGLE SLIDER
+     Sliding pill indicator for toggle-class-1 containers.
+     Auto-initializes on any toggle-class-1 in the DOM or added later.
+     -------------------------------------------------------------------------- */
+  function initToggleSliders() {
+    function setupSlider(container) {
+      if (container._toggleSliderInit) return;
+      container._toggleSliderInit = true;
+
+      var slider = document.createElement('div');
+      slider.className = 'toggle-class-1-slider';
+      container.insertBefore(slider, container.firstChild);
+
+      function moveSlider(btn, animate) {
+        var containerRect = container.getBoundingClientRect();
+        var btnRect = btn.getBoundingClientRect();
+        var offsetLeft = btnRect.left - containerRect.left - 3;
+        slider.style.width = btnRect.width + 'px';
+        if (!animate) {
+          slider.style.transition = 'none';
+        }
+        slider.style.transform = 'translateX(' + offsetLeft + 'px)';
+        if (!animate) {
+          slider.offsetHeight;
+          slider.style.transition = '';
+        }
+      }
+
+      var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+      if (activeBtn) {
+        moveSlider(activeBtn, false);
+      }
+
+      container.addEventListener('click', function(e) {
+        var btn = e.target.closest('.toggle-button');
+        if (!btn || btn.disabled) return;
+        moveSlider(btn, true);
+      });
+    }
+
+    // Initialize any existing containers
+    document.querySelectorAll('.toggle-class-1').forEach(setupSlider);
+
+    // Watch for dynamically added containers
+    var observer = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          if (added[j].nodeType !== 1) continue;
+          if (added[j].classList && added[j].classList.contains('toggle-class-1')) {
+            setupSlider(added[j]);
+          }
+          var nested = added[j].querySelectorAll ? added[j].querySelectorAll('.toggle-class-1') : [];
+          for (var k = 0; k < nested.length; k++) {
+            setupSlider(nested[k]);
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /* --------------------------------------------------------------------------
      INITIALIZATION
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
@@ -723,6 +786,9 @@ const App = (function() {
     
     // Global autofill compliance - detect browser autofill and trigger validation
     initGlobalAutofillHandler();
+
+    // Toggle slider (sliding pill for toggle-class-1)
+    initToggleSliders();
 
     // App initialization complete
   }
