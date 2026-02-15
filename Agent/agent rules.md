@@ -453,15 +453,34 @@ image.jpg?class=thumbnail&crop=100,50,400,350
 2. **No resizing while visible**: slack must not change size while the spacer is on-screen.
 3. **No snapping**: do not "snap back" scroll positions as a workaround.
 
+### Preserving slack elements across innerHTML clears
+
+**The Problem:** `innerHTML = ''` destroys dynamically-created `.topSlack` and `.bottomSlack` elements. BottomSlack's closure keeps a JS reference to the detached element, but it has zero height and no effect because it's no longer in the DOM. The element is permanently lost — every future render's `querySelector` returns null.
+
+**The Rule:** Any render function that clears a scroll container with `innerHTML = ''` MUST:
+1. Save references: `var _topS = el.querySelector('.topSlack'); var _botS = el.querySelector('.bottomSlack');`
+2. Clear: `el.innerHTML = '';`
+3. Re-append `_topS` first (as first child) and `_botS` last (as last child).
+
+**Critical early-return trap:** If the render function delegates to a sub-function (e.g. `renderPostsEmptyState`) that does its own `innerHTML = ''`, the sub-function's `querySelector` will return null for `.bottomSlack` because the caller already removed it. The **caller must re-append `_botS` after the sub-function returns** — both the early-return path AND the normal path. This was the root cause of BottomSlack being permanently broken in the post panel (Feb 2026).
+
+### BottomSlack in block vs flex layout
+
+**The Problem:** `.bottomSlack` originally relied on `flex: 0 0 auto` for sizing, which only works in flex containers. In block-layout containers (like `.post-list`), the element had zero contribution to `scrollHeight`.
+
+**The Fix:** `.bottomSlack` CSS uses both `height` and `min-height` set via `var(--bottomSlack)`. The `min-height` ensures the element expands in block layout. Do not remove `min-height` from `.bottomSlack` in either `components.css` or the JS-injected style in `components.js`.
+
 ### Fixing "jumping" when clicking non-button elements
 
 **The Problem:** TopSlack anchors to the clicked element to keep it stable. It identifies anchors using:
 ```javascript
-var anchorEl = t.closest('button, [role="button"], a') || t;
+var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
 ```
-If the clicked element isn't a button/link and doesn't have `role="button"`, the element itself becomes the anchor. If that element then gets `display: none` (e.g., switching from display text to input), the anchor disappears from flow and the slack calculation breaks, causing massive jumps (5000+ pixels).
+Priority: `data-slack-anchor` first, then nearest button/role/link, then the click target itself. If the anchor element gets `display: none`, the slack calculation breaks, causing massive jumps.
 
-**The Solution:** Add `role="button"` to a **parent container that stays visible** when child elements toggle visibility.
+**The Solution (option A — preferred for postcards):** Wrap the clickable element in a `<div data-slack-anchor>` that stays in the DOM when the child is hidden. TopSlack will anchor to the wrapper instead.
+
+**The Solution (option B — for simpler cases):** Add `role="button"` to a **parent container that stays visible** when child elements toggle visibility.
 
 **Example (Messages tab fix - January 2026):**
 - Clicking `.admin-message-text-display` caused jumping because the text got `display: none` when editing
@@ -475,7 +494,7 @@ item.className = 'admin-message-item';
 item.setAttribute('role', 'button');  // ← This fixes jumping
 ```
 
-**Rule:** Any clickable element that toggles visibility (text↔input, collapsed↔expanded) should have `role="button"` on a stable parent container, not on the element that disappears.
+**Rule:** Any clickable element that toggles visibility (text↔input, collapsed↔expanded) needs a stable ancestor for TopSlack to anchor to — either via `data-slack-anchor` or `role="button"` on a parent that remains visible.
 
 ---
 

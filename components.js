@@ -6170,7 +6170,7 @@ const BottomSlack = (function() {
             // Never expand slack when clicking tab buttons (let forceOff handle it).
             try {
                 var t = e && e.target;
-                if (t && t.closest && t.closest('[role="tab"]')) { console.log('[BottomSlack] SKIP: tab button click', scrollEl.className); return; }
+                if (t && t.closest && t.closest('[role="tab"]')) return;
             } catch (_eTab) {}
             
             // Check if the clicked element is within a tab/panel that has BOTTOM anchor disabled.
@@ -6180,7 +6180,6 @@ const BottomSlack = (function() {
                     var anchorDisabled = t2.closest('[data-bottomslack="false"]');
                     if (anchorDisabled) {
                         // This tab/panel doesn't want bottom anchor - collapse any existing slack and return.
-                        console.log('[BottomSlack] SKIP: data-bottomslack=false', scrollEl.className);
                         applySlackPx(collapsedSlackPx);
                         return;
                     }
@@ -6192,7 +6191,6 @@ const BottomSlack = (function() {
                 var h = scrollEl.clientHeight || 0;
                 var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
                 if (contentNoSlack <= h) {
-                    console.log('[BottomSlack] SKIP: no overflow', scrollEl.className, 'contentNoSlack=' + contentNoSlack, 'clientH=' + h, 'scrollH=' + scrollEl.scrollHeight, 'currentSlack=' + currentSlackPx);
                     // Do not collapse slack while it's visibly on-screen (prevents "slam shut").
                     try {
                         if (isSlackOnScreen()) return;
@@ -6203,19 +6201,8 @@ const BottomSlack = (function() {
                 }
             } catch (e0) {}
             
-            console.log('[BottomSlack] EXPAND', scrollEl.className, 'contentNoSlack=' + ((scrollEl.scrollHeight || 0) - (currentSlackPx || 0)), 'clientH=' + (scrollEl.clientHeight || 0));
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
-            // Diagnostic: check if the slack element actually grew
-            var _diagEl = scrollEl.querySelector('.bottomSlack');
-            console.log('[BottomSlack] DIAG after expand:', 
-                'slackEl exists:', !!slackEl, 
-                'slackEl connected:', slackEl && slackEl.isConnected,
-                'querySelector found:', !!_diagEl,
-                'same element:', _diagEl === slackEl,
-                'slackEl.offsetHeight:', slackEl ? slackEl.offsetHeight : 'N/A',
-                'scrollH after:', scrollEl.scrollHeight,
-                'cssVar:', scrollEl.style.getPropertyValue('--bottomSlack'));
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
