@@ -1043,6 +1043,7 @@
 
 .toggle-class-1 .toggle-button[aria-pressed="true"] {
   color: var(--blue-500);
+  font-weight: 600;
 }
 
 .toggle-class-1 .toggle-button:disabled {
