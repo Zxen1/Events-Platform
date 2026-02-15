@@ -1001,7 +1001,7 @@
 
         var tierLabel = document.createElement('div');
         tierLabel.className = 'posteditor-manage-field-label';
-        tierLabel.textContent = 'Tier';
+        tierLabel.textContent = 'Listing Tier';
         tierGroup.appendChild(tierLabel);
 
         var tierBtnRow = document.createElement('div');
