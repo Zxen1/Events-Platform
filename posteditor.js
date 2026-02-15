@@ -1073,8 +1073,8 @@
         }
 
         var tierColors = [
-            'linear-gradient(180deg, #4A2A12 0%, #8B5A2B 30%, #4A2A12 100%)',
-            'linear-gradient(180deg, #333338 0%, #5A5A60 30%, #333338 100%)',
+            '',
+            'linear-gradient(180deg, #1A2A3A 0%, #3A5A7A 30%, #1A2A3A 100%)',
             'linear-gradient(180deg, #4A3E10 0%, #8B7A2B 30%, #4A3E10 100%)'
         ];
         allCheckoutOptions.forEach(function(option, idx) {
