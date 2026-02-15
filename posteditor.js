@@ -821,8 +821,8 @@
         // 2. Tier
         var tierText = post.checkout_title || post.checkout_key || '—';
 
-        // 3. Locations
-        var locText = String(post.loc_qty || 0) + (post.loc_qty === 1 ? ' Location' : ' Locations');
+        // 3. Locations (used / paid)
+        var locText = String(post.loc_qty || 0) + '/' + String(post.loc_paid || 0);
 
         // 4. Time Remaining
         var timeText = '—';
