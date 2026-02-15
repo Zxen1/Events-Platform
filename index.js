@@ -633,12 +633,14 @@ const App = (function() {
         }
       }
 
-      // Defer initial position until after paint
+      // Defer initial position until after first paint (double rAF)
       requestAnimationFrame(function() {
-        var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
-        if (activeBtn) {
-          moveSlider(activeBtn, false);
-        }
+        requestAnimationFrame(function() {
+          var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+          if (activeBtn) {
+            moveSlider(activeBtn, false);
+          }
+        });
       });
 
       container.addEventListener('click', function(e) {
