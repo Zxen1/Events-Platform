@@ -1043,6 +1043,8 @@
   border-radius: 5px;
   background: #111;
   border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 3px;
   box-sizing: border-box;
 }
