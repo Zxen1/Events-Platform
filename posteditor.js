@@ -1609,9 +1609,9 @@
                 var locUsed = locContainers.length;
                 var locPaid = post.loc_paid || 0;
                 if (locUsed > locPaid) {
+                    closeModalFn();
                     editToggleBtn.textContent = 'Edit (Pending)';
                     pendingPaymentMsg.style.display = '';
-                    closeModalFn();
                     return;
                 }
                 handleSave();
