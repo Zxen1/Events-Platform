@@ -1034,26 +1034,25 @@
    - :disabled on non-selectable toggle-buttons
    ============================================================================ */
 
-/* Toggle Class 1: Standard segmented row */
+/* Toggle Class 1: Standard segmented row (pill slider) */
 .toggle-class-1 {
   display: grid;
-  gap: 1px;
   width: 100%;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px;
+  box-sizing: border-box;
 }
 
 .toggle-class-1 .toggle-button {
   width: 100%;
   height: 100%;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 0;
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 15px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1063,7 +1062,8 @@
 }
 
 .toggle-class-1 .toggle-button[aria-pressed="true"] {
-  color: var(--blue-500);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
   font-weight: 600;
 }
 
@@ -1074,13 +1074,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .toggle-class-1 .toggle-button:hover {
-    color: var(--blue-500);
-    border-color: var(--blue-500);
+    color: rgba(255, 255, 255, 0.8);
   }
 
   .toggle-class-1 .toggle-button:disabled:hover {
-    color: rgba(255, 255, 255, 0.7);
-    border-color: transparent;
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 
