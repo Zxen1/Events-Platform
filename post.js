@@ -2838,13 +2838,19 @@ const PostModule = (function() {
       } catch (_eScrollOpenTop1) {}
     }
 
-    // Mobile: scroll window to top when opened from map card or marquee
+    // Mobile: scroll window so the opened post is at the top of the screen
     if (isMobileViewport && !fromRecent && !!options.fromMap && detail) {
       try {
         requestAnimationFrame(function() {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          requestAnimationFrame(function() {
+            try {
+              var rect = detail.getBoundingClientRect();
+              var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+              window.scrollTo({ top: scrollY + rect.top, behavior: 'smooth' });
+            } catch (_eMobileScrollTop0) {}
+          });
         });
-      } catch (_eMobileScrollTop) {}
+      } catch (_eMobileScrollTop1) {}
     }
 
     // Highlight the exact map marker for this location context
