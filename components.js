@@ -4895,12 +4895,14 @@ const ConfirmDialogComponent = (function() {
         overlay.classList.add('component-confirm-dialog-overlay--visible');
         overlay.setAttribute('aria-hidden', 'false');
         
-        // Focus appropriate button
-        if (focusCancel) {
-            cancelBtn.focus();
-        } else {
-            confirmBtn.focus();
-        }
+        // Focus after frame so aria-hidden="false" is processed first
+        requestAnimationFrame(function() {
+            if (focusCancel) {
+                cancelBtn.focus();
+            } else {
+                confirmBtn.focus();
+            }
+        });
         
         return new Promise(function(resolve) {
             function cleanup(result) {
@@ -5080,12 +5082,14 @@ const ThreeButtonDialogComponent = (function() {
         overlay.classList.add('component-three-button-dialog-overlay--visible');
         overlay.setAttribute('aria-hidden', 'false');
         
-        // Focus appropriate button
-        if (focusCancel) {
-            cancelBtn.focus();
-        } else {
-            saveBtn.focus();
-        }
+        // Focus after frame so aria-hidden="false" is processed first
+        requestAnimationFrame(function() {
+            if (focusCancel) {
+                cancelBtn.focus();
+            } else {
+                saveBtn.focus();
+            }
+        });
         
         return new Promise(function(resolve) {
             function cleanup(result) {
