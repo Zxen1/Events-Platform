@@ -454,21 +454,21 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
-.posteditor-manage-status-button--delete {
-  color: rgba(248, 113, 113, 0.4);
+.toggle-class-1 .posteditor-manage-status-button--delete {
+  color: rgba(248, 113, 113, 0.7);
 }
 
-.posteditor-manage-status-button--delete:hover {
+.toggle-class-1 .posteditor-manage-status-button--delete:hover {
   color: #f87171;
   border-color: #f87171;
 }
 
-.posteditor-manage-status-button--delete[aria-pressed="true"] {
+.toggle-class-1 .posteditor-manage-status-button--delete[aria-pressed="true"] {
   color: #f87171;
 }
 
-.posteditor-manage-status-button--delete:disabled:hover {
-  color: rgba(248, 113, 113, 0.4);
+.toggle-class-1 .posteditor-manage-status-button--delete:disabled:hover {
+  color: rgba(248, 113, 113, 0.7);
   border-color: transparent;
 }
 
