@@ -477,8 +477,9 @@
             container.insertBefore(placeholder, container.firstChild);
         }
         
-        // Smooth scroll to top
-        container.scrollTo({ top: 0, behavior: 'smooth' });
+        // Smooth scroll to top (scroll container is .member-panel-body)
+        var scrollParent = container.closest('.member-panel-body');
+        if (scrollParent) scrollParent.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function refreshPostCard(postId) {

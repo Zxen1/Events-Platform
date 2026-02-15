@@ -369,19 +369,19 @@ if (!$stmt) {
 
 if ($hasPaymentStatus && $hasModerationStatus) {
   // 10 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'isiissssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
+  if (!bind_statement_params($stmt, 'issiisssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
   // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'isiisssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
+  if (!bind_statement_params($stmt, 'issiissss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
   // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'isiissss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $expiresAt)) {
+  if (!bind_statement_params($stmt, 'issiisss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
