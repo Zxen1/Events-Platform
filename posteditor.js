@@ -740,12 +740,14 @@
             if (expand) {
                 editToggleBtn.style.display = 'none';
                 if (moreBtn) moreBtn.style.display = 'none';
+                if (moreMenu) moreMenu.style.display = 'none';
                 editTopSaveBtn.style.display = '';
                 editTopCloseBtn.style.display = '';
                 editAccordionContent.classList.remove('posteditor-manage-edit-content--hidden');
             } else {
                 editToggleBtn.style.display = '';
                 if (moreBtn) moreBtn.style.display = '';
+                if (moreMenu) moreMenu.style.display = '';
                 editTopSaveBtn.style.display = 'none';
                 editTopCloseBtn.style.display = 'none';
                 editAccordionContent.classList.add('posteditor-manage-edit-content--hidden');
@@ -1023,19 +1025,13 @@
         var createdField = buildManageRow('Created', createdText);
         body.appendChild(createdField.group);
 
-        // --- Restore three-dot button (beside Edit) ---
-        var moreBtn = document.createElement('div');
-        moreBtn.className = 'posteditor-manage-more';
-        moreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
+        // --- Restore button (beside Edit) ---
+        var moreBtn = document.createElement('button');
+        moreBtn.className = 'posteditor-manage-restore-toggle button-class-2b';
+        moreBtn.textContent = 'Restore';
 
         var moreMenu = document.createElement('div');
-        moreMenu.className = 'posteditor-manage-more-menu';
-
-        // Restore heading
-        var restoreHeading = document.createElement('div');
-        restoreHeading.className = 'posteditor-manage-more-heading';
-        restoreHeading.textContent = 'Restore';
-        moreMenu.appendChild(restoreHeading);
+        moreMenu.className = 'posteditor-manage-restore-menu';
 
         // Placeholder for restore items (populated async)
         var restoreContainer = document.createElement('div');
@@ -1043,23 +1039,22 @@
         restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
         moreMenu.appendChild(restoreContainer);
 
-        moreBtn.appendChild(moreMenu);
         editAccordionRow.appendChild(moreBtn);
+        editAccordionRow.appendChild(moreMenu);
 
         // Restore menu toggle
         var moreMenuOpen = false;
         function setMoreMenuOpen(open) {
             moreMenuOpen = open;
             if (open) {
-                moreMenu.classList.add('posteditor-manage-more-menu--open');
+                moreMenu.classList.add('posteditor-manage-restore-menu--open');
             } else {
-                moreMenu.classList.remove('posteditor-manage-more-menu--open');
+                moreMenu.classList.remove('posteditor-manage-restore-menu--open');
             }
         }
 
         moreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (e.target.closest('.posteditor-manage-more-item')) return;
             setMoreMenuOpen(!moreMenuOpen);
         });
 
@@ -1069,7 +1064,7 @@
                 document.removeEventListener('click', outsideClickHandler);
                 return;
             }
-            if (moreMenuOpen && !moreBtn.contains(e.target)) {
+            if (moreMenuOpen && !moreMenu.contains(e.target) && e.target !== moreBtn) {
                 setMoreMenuOpen(false);
             }
         };

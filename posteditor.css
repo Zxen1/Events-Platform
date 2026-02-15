@@ -375,15 +375,32 @@
 /* Edit accordion row — holds Edit button (collapsed) or Save+Close (expanded) */
 .posteditor-manage-edit-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   position: relative; /* For popover positioning */
 }
 
 .posteditor-manage-edit-toggle,
+.posteditor-manage-restore-toggle,
 .posteditor-manage-edit-save,
 .posteditor-manage-edit-close {
   flex: 1;
+}
+
+/* Restore dropdown menu (full width below Edit/Restore buttons) */
+.posteditor-manage-restore-menu {
+  display: none;
+  width: 100%;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+}
+
+.posteditor-manage-restore-menu--open {
+  display: block;
 }
 
 /* Edit accordion content area */
