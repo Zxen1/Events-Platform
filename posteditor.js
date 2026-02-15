@@ -1543,16 +1543,6 @@
                 } catch (_eLW) {}
             }
             
-            // Re-evaluate fieldset completeness after population
-            // Collapsed containers hide controls (display:none), causing isVisibleControl to fail.
-            // Temporarily expand all, re-evaluate, then collapse back.
-            var collapsedContainers = formContainer.querySelectorAll('.member-location-container:not(.accordion-class-1--open)');
-            collapsedContainers.forEach(function(c) { c.classList.add('accordion-class-1--open'); });
-            formContainer.querySelectorAll('.fieldset[data-complete]').forEach(function(fs) {
-                try { fs.dispatchEvent(new Event('change', { bubbles: false })); } catch (e) {}
-            });
-            collapsedContainers.forEach(function(c) { c.classList.remove('accordion-class-1--open'); });
-
             // Store initial extracted fields for dirty checking (must happen after populate)
             editingPostsData[post.id].original_extracted_fields = collectFormData(formContainer, post);
 

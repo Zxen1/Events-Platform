@@ -6754,7 +6754,11 @@ const FieldsetBuilder = (function(){
                 // Be conservative: treat detached controls as visible so required fieldsets start incomplete (red).
                 if (el.isConnected === false) return true;
                 // Covers display:none, detached, etc.
-                if (el.offsetParent === null && el.getClientRects().length === 0) return false;
+                if (el.offsetParent === null && el.getClientRects().length === 0) {
+                    // Controls inside collapsed accordions are still valid for completeness
+                    if (el.closest('.accordion-class-1:not(.accordion-class-1--open)')) return true;
+                    return false;
+                }
                 return true;
             }
 
