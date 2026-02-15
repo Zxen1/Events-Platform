@@ -405,6 +405,32 @@
   padding: 0;
 }
 
+/* Post Summary table */
+.posteditor-manage-summary {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 5px;
+  padding: 10px 10px 0;
+}
+
+.posteditor-manage-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 28px;
+  margin-bottom: 8px;
+}
+
+.posteditor-manage-summary-label {
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  font-size: 13px;
+}
+
+.posteditor-manage-summary-value {
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+  font-size: 13px;
+}
+
 .posteditor-manage-section {
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
 }

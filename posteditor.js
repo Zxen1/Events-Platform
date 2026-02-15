@@ -799,6 +799,75 @@
         body.appendChild(editAccordionRow);
         body.appendChild(editAccordionContent);
 
+        // --- Post Summary ---
+        var summarySection = document.createElement('div');
+        summarySection.className = 'posteditor-manage-section';
+
+        var summaryLabel = document.createElement('div');
+        summaryLabel.className = 'member-panel-label';
+        summaryLabel.textContent = 'Post Summary';
+        summarySection.appendChild(summaryLabel);
+
+        var summaryTable = document.createElement('div');
+        summaryTable.className = 'posteditor-manage-summary';
+
+        var summaryNow = new Date();
+        var summaryVisibility = post.visibility || 'active';
+        var summaryExpiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var summaryIsDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
+        var summaryIsExpiredByDb = summaryVisibility === 'expired';
+        var summaryIsExpiredByTime = summaryExpiresAt && summaryExpiresAt.getTime() <= summaryNow.getTime();
+
+        // 1. Status
+        var statusText = 'Active';
+        if (summaryIsDeleted || summaryVisibility === 'deleted') statusText = 'Deleted';
+        else if (summaryIsExpiredByDb || summaryIsExpiredByTime) statusText = 'Expired';
+        else if (summaryVisibility === 'hidden') statusText = 'Hidden';
+
+        // 2. Plan/Tier
+        var tierText = post.checkout_title || post.checkout_key || '—';
+
+        // 3. Locations
+        var locText = String(post.loc_qty || 0) + (post.loc_qty === 1 ? ' Location' : ' Locations');
+
+        // 4. Time Remaining
+        var timeText = '—';
+        if (summaryIsDeleted || summaryVisibility === 'deleted') {
+            timeText = 'Deleted';
+        } else if (summaryIsExpiredByDb || summaryIsExpiredByTime) {
+            timeText = 'Expired';
+        } else if (summaryExpiresAt) {
+            timeText = formatCountdown(summaryExpiresAt, summaryNow);
+        }
+
+        // 5. Created
+        var createdText = post.created_at ? formatStatusDate(new Date(post.created_at)) : '—';
+
+        var summaryRows = [
+            ['Status', statusText],
+            ['Plan', tierText],
+            ['Locations', locText],
+            ['Time Remaining', timeText],
+            ['Created', createdText]
+        ];
+
+        for (var si = 0; si < summaryRows.length; si++) {
+            var sRow = document.createElement('div');
+            sRow.className = 'posteditor-manage-summary-row';
+            var sLabel = document.createElement('span');
+            sLabel.className = 'posteditor-manage-summary-label';
+            sLabel.textContent = summaryRows[si][0];
+            var sValue = document.createElement('span');
+            sValue.className = 'posteditor-manage-summary-value';
+            sValue.textContent = summaryRows[si][1];
+            sRow.appendChild(sLabel);
+            sRow.appendChild(sValue);
+            summaryTable.appendChild(sRow);
+        }
+
+        summarySection.appendChild(summaryTable);
+        body.appendChild(summarySection);
+
         // --- Manage Content (always visible) ---
         var manageContent = document.createElement('div');
         manageContent.className = 'posteditor-manage-content';
