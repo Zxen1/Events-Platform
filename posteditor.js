@@ -1144,6 +1144,61 @@
             });
         }
 
+        // --- Terms and Conditions row ---
+        var termsWrapper = document.createElement('div');
+        termsWrapper.className = 'fieldset posteditor-manage-terms';
+
+        var checkboxWrapper = document.createElement('label');
+        checkboxWrapper.className = 'posteditor-manage-terms-label';
+
+        var termsCheckbox = document.createElement('input');
+        termsCheckbox.type = 'checkbox';
+        termsCheckbox.className = 'posteditor-manage-terms-checkbox';
+
+        var termsLabelText = document.createElement('span');
+        termsLabelText.className = 'posteditor-manage-terms-text';
+        termsLabelText.textContent = 'I agree to the ';
+
+        var termsLink = document.createElement('a');
+        termsLink.href = '#';
+        termsLink.className = 'posteditor-manage-terms-link';
+        termsLink.textContent = 'Terms and Conditions';
+        termsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.MemberModule && typeof MemberModule.openTermsModal === 'function') {
+                MemberModule.openTermsModal();
+            }
+        });
+
+        checkboxWrapper.appendChild(termsCheckbox);
+        checkboxWrapper.appendChild(termsLabelText);
+        checkboxWrapper.appendChild(termsLink);
+        termsWrapper.appendChild(checkboxWrapper);
+        body.appendChild(termsWrapper);
+
+        // --- Submit buttons ---
+        var manageActionsWrapper = document.createElement('div');
+        manageActionsWrapper.className = 'posteditor-manage-actions';
+
+        var manageSubmitBtn = document.createElement('button');
+        manageSubmitBtn.type = 'button';
+        manageSubmitBtn.className = 'posteditor-manage-submit button-class-2b';
+        manageSubmitBtn.textContent = 'Submit';
+        manageSubmitBtn.disabled = true;
+        manageActionsWrapper.appendChild(manageSubmitBtn);
+
+        var user = getCurrentUser();
+        if (user && user.isAdmin) {
+            var manageAdminSubmitBtn = document.createElement('button');
+            manageAdminSubmitBtn.type = 'button';
+            manageAdminSubmitBtn.className = 'posteditor-manage-admin-submit button-class-2c';
+            manageAdminSubmitBtn.textContent = 'Admin: Submit Free';
+            manageAdminSubmitBtn.disabled = true;
+            manageActionsWrapper.appendChild(manageAdminSubmitBtn);
+        }
+
+        body.appendChild(manageActionsWrapper);
+
         modalContainer.appendChild(body);
         backdrop.appendChild(modalContainer);
 

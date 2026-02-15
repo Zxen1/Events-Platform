@@ -6934,7 +6934,8 @@ const MemberModule = (function() {
         getDefaultCurrencyForForms: getDefaultCurrencyForForms,
         submitPostData: submitPostData,
         extractFieldValue: extractFieldValue,
-        updateHeaderSaveDiscardState: updateHeaderSaveDiscardState
+        updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
+        openTermsModal: openTermsModal
     };
 
 })();
