@@ -1057,8 +1057,10 @@
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.12);
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
   transition: transform 0.25s ease, width 0.25s ease;
   pointer-events: none;
 }
