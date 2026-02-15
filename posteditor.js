@@ -1466,6 +1466,11 @@
                     });
                 },
                 initialQuantity: (post.map_cards && post.map_cards.length) || 1,
+                onQuantityChange: function(quantity, isIncrease) {
+                    // Re-apply fraction format after formbuilder sets just the number
+                    var qtyDisplay = formContainer.querySelector('.member-postform-location-quantity-display');
+                    if (qtyDisplay) qtyDisplay.textContent = quantity + '/' + (post.loc_paid || 1);
+                },
                 getMessage: function(key, params, fallback) {
                     return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
                 },
