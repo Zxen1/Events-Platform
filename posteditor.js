@@ -1087,7 +1087,7 @@
                         return;
                     }
                     res.revisions.forEach(function(rev) {
-                        var typeLabel = rev.change_type === 'create' ? 'Original' : 'Save';
+                        var typeLabel = rev.change_type === 'create' ? 'Original' : 'Save Point';
                         var dateStr = rev.created_at || '';
                         try {
                             var d = new Date(dateStr.replace(' ', 'T') + 'Z');
