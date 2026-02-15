@@ -6938,7 +6938,8 @@ const MemberModule = (function() {
         submitPostData: submitPostData,
         extractFieldValue: extractFieldValue,
         updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
-        openTermsModal: openTermsModal
+        openTermsModal: openTermsModal,
+        getCheckoutOptions: function() { return checkoutOptions; }
     };
 
 })();

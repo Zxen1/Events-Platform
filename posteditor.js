@@ -1005,9 +1005,80 @@
             }
         });
 
-        // --- Tier row ---
-        var tierField = buildManageRow('Tier', tierText);
-        body.appendChild(tierField.group);
+        // --- Tier row (interactive toggle buttons) ---
+        var tierGroup = document.createElement('div');
+        tierGroup.className = 'posteditor-manage-field';
+
+        var tierLabel = document.createElement('div');
+        tierLabel.className = 'posteditor-manage-field-label';
+        tierLabel.textContent = 'Tier';
+        tierGroup.appendChild(tierLabel);
+
+        var tierBtnRow = document.createElement('div');
+        tierBtnRow.className = 'posteditor-manage-tier-buttons';
+
+        var tierDesc = document.createElement('div');
+        tierDesc.className = 'posteditor-manage-tier-description';
+
+        var allCheckoutOptions = (window.MemberModule && typeof MemberModule.getCheckoutOptions === 'function') ? MemberModule.getCheckoutOptions() : [];
+        var currentTierKey = post.checkout_key || '';
+        var currentTierIndex = -1;
+
+        // Find current tier index
+        for (var ti = 0; ti < allCheckoutOptions.length; ti++) {
+            if (String(allCheckoutOptions[ti].checkout_key || allCheckoutOptions[ti].id) === currentTierKey ||
+                String(allCheckoutOptions[ti].checkout_title || '').toLowerCase() === (post.checkout_title || '').toLowerCase()) {
+                currentTierIndex = ti;
+                break;
+            }
+        }
+
+        allCheckoutOptions.forEach(function(option, idx) {
+            var title = String(option.checkout_title || '').trim();
+            var description = option.checkout_description ? String(option.checkout_description) : '';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'posteditor-manage-tier-button';
+            btn.textContent = title;
+            btn.dataset.tierIndex = String(idx);
+            btn.setAttribute('aria-pressed', idx === currentTierIndex ? 'true' : 'false');
+
+            if (idx === currentTierIndex) {
+                btn.classList.add('posteditor-manage-tier-button--active');
+                tierDesc.textContent = description;
+            } else if (idx < currentTierIndex) {
+                // Below current tier — downgrading not allowed
+                btn.classList.add('posteditor-manage-tier-button--disabled');
+                btn.disabled = true;
+            }
+
+            btn.addEventListener('click', function() {
+                if (btn.disabled) return;
+                // Update active state
+                var allBtns = tierBtnRow.querySelectorAll('.posteditor-manage-tier-button');
+                for (var bi = 0; bi < allBtns.length; bi++) {
+                    allBtns[bi].classList.remove('posteditor-manage-tier-button--active');
+                    allBtns[bi].setAttribute('aria-pressed', 'false');
+                }
+                btn.classList.add('posteditor-manage-tier-button--active');
+                btn.setAttribute('aria-pressed', 'true');
+                tierDesc.textContent = description;
+            });
+
+            tierBtnRow.appendChild(btn);
+        });
+
+        // Fallback if no checkout options loaded
+        if (allCheckoutOptions.length === 0) {
+            var tierFallback = document.createElement('span');
+            tierFallback.className = 'posteditor-manage-field-value';
+            tierFallback.textContent = tierText;
+            tierBtnRow.appendChild(tierFallback);
+        }
+
+        tierGroup.appendChild(tierBtnRow);
+        tierGroup.appendChild(tierDesc);
+        body.appendChild(tierGroup);
 
         // --- Locations row ---
         var locField = buildManageRow('Locations', locText);

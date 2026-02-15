@@ -449,6 +449,63 @@
   font-size: 13px;
 }
 
+/* Tier toggle buttons (copies member-lighting-buttons pattern) */
+.posteditor-manage-tier-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.posteditor-manage-tier-button {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 14px;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.posteditor-manage-tier-button:hover {
+  color: var(--blue-500);
+}
+
+.posteditor-manage-tier-button--active,
+.posteditor-manage-tier-button[aria-pressed="true"] {
+  color: var(--blue-500);
+}
+
+.posteditor-manage-tier-button--disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.posteditor-manage-tier-button--disabled:hover {
+  color: #fff;
+}
+
+.posteditor-manage-tier-description {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.posteditor-manage-tier-description:empty {
+  display: none;
+}
+
 .posteditor-manage-section:last-child {
   margin-bottom: 0;
 }
