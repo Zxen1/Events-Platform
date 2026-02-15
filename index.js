@@ -633,15 +633,18 @@ const App = (function() {
         }
       }
 
-      // Defer initial position until after first paint (double rAF)
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
-          if (activeBtn) {
-            moveSlider(activeBtn, false);
-          }
-        });
-      });
+      // Position slider on active button once container has layout
+      function positionInitial() {
+        var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+        if (!activeBtn) return;
+        var containerRect = container.getBoundingClientRect();
+        if (containerRect.width === 0) {
+          setTimeout(positionInitial, 50);
+          return;
+        }
+        moveSlider(activeBtn, false);
+      }
+      positionInitial();
 
       container.addEventListener('click', function(e) {
         var btn = e.target.closest('.toggle-button');
