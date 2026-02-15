@@ -868,7 +868,7 @@
         statusGroup.appendChild(statusLabel);
 
         var statusBtnRow = document.createElement('div');
-        statusBtnRow.className = 'posteditor-manage-status-buttons button-class-7-group';
+        statusBtnRow.className = 'posteditor-manage-status-buttons toggle-class-1';
 
         var statusOptions = [
             { key: 'active', label: 'Active' },
@@ -886,23 +886,17 @@
 
         function setStatusButtonActive(key) {
             for (var sk in statusButtons) {
-                statusButtons[sk].classList.remove('button-class-7--active');
                 statusButtons[sk].setAttribute('aria-pressed', 'false');
             }
-            statusButtons[key].classList.add('button-class-7--active');
             statusButtons[key].setAttribute('aria-pressed', 'true');
         }
 
         statusOptions.forEach(function(opt) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'posteditor-manage-status-button button-class-7';
+            btn.className = 'posteditor-manage-status-button toggle-button';
             btn.textContent = opt.label;
             btn.setAttribute('aria-pressed', opt.key === currentStatus ? 'true' : 'false');
-
-            if (opt.key === currentStatus) {
-                btn.classList.add('button-class-7--active');
-            }
 
             if (opt.key === 'deleted') {
                 btn.classList.add('posteditor-manage-status-button--delete');
@@ -1011,7 +1005,7 @@
         tierGroup.appendChild(tierLabel);
 
         var tierBtnRow = document.createElement('div');
-        tierBtnRow.className = 'posteditor-manage-tier-buttons button-class-7-group';
+        tierBtnRow.className = 'posteditor-manage-tier-buttons toggle-class-1';
 
         var tierDesc = document.createElement('div');
         tierDesc.className = 'posteditor-manage-tier-description';
@@ -1034,13 +1028,12 @@
             var description = option.checkout_description ? String(option.checkout_description) : '';
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'posteditor-manage-tier-button button-class-7';
+            btn.className = 'posteditor-manage-tier-button toggle-button';
             btn.textContent = title;
             btn.dataset.tierIndex = String(idx);
             btn.setAttribute('aria-pressed', idx === currentTierIndex ? 'true' : 'false');
 
             if (idx === currentTierIndex) {
-                btn.classList.add('button-class-7--active');
                 tierDesc.textContent = description;
             } else if (idx < currentTierIndex) {
                 // Below current tier — downgrading not allowed
@@ -1052,10 +1045,8 @@
                 // Update active state
                 var allBtns = tierBtnRow.querySelectorAll('.posteditor-manage-tier-button');
                 for (var bi = 0; bi < allBtns.length; bi++) {
-                    allBtns[bi].classList.remove('button-class-7--active');
                     allBtns[bi].setAttribute('aria-pressed', 'false');
                 }
-                btn.classList.add('button-class-7--active');
                 btn.setAttribute('aria-pressed', 'true');
                 tierDesc.textContent = description;
             });

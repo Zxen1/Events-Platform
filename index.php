@@ -1043,28 +1043,28 @@ if (empty($ogTitle)) {
           <div class="admin-map-lighting-container" id="admin-map-lighting-container">
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Map Lighting</label>
-              <div class="admin-lighting-buttons button-class-7-group">
-                <button type="button" class="admin-lighting-button button-class-7" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+              <div class="admin-lighting-buttons toggle-class-1">
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
                   <span class="admin-lighting-button-text">Sunrise</span>
                 </button>
-                <button type="button" class="admin-lighting-button button-class-7" data-lighting="day" aria-pressed="true" title="Day">
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
                   <span class="admin-lighting-button-text">Day</span>
                 </button>
-                <button type="button" class="admin-lighting-button button-class-7" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
                   <span class="admin-lighting-button-text">Sunset</span>
                 </button>
-                <button type="button" class="admin-lighting-button button-class-7" data-lighting="night" aria-pressed="false" title="Night">
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
                   <span class="admin-lighting-button-text">Night</span>
                 </button>
               </div>
             </div>
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Map Style</label>
-              <div class="admin-style-buttons button-class-7-group">
-                <button type="button" class="admin-style-button button-class-7" data-style="standard" aria-pressed="true">
+              <div class="admin-style-buttons toggle-class-1">
+                <button type="button" class="admin-style-button toggle-button" data-style="standard" aria-pressed="true">
                   <span class="admin-style-button-text">Standard</span>
                 </button>
-                <button type="button" class="admin-style-button button-class-7" data-style="standard-satellite" aria-pressed="false">
+                <button type="button" class="admin-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
                   <span class="admin-style-button-text">Satellite</span>
                 </button>
               </div>
@@ -1100,17 +1100,17 @@ if (empty($ogTitle)) {
             <!-- Default wallpaper mode for new users (members override with their own preference) -->
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Default Location Wallpaper</label>
-              <div class="admin-wallpaper-buttons button-class-7-group">
-                <button type="button" class="admin-wallpaper-button button-class-7" data-wallpaper="off" aria-pressed="false">
+              <div class="admin-wallpaper-buttons toggle-class-1">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Off</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button button-class-7" data-wallpaper="still" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Still</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button button-class-7" data-wallpaper="basic" aria-pressed="true">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
                   <span class="admin-wallpaper-button-text">Basic</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button button-class-7" data-wallpaper="orbit" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Orbit</span>
                 </button>
               </div>
@@ -1280,45 +1280,45 @@ if (empty($ogTitle)) {
           <div class="member-mapstyle-container">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Lighting</label>
-              <div class="member-lighting-buttons button-class-7-group">
-                <button type="button" class="member-lighting-button button-class-7" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+              <div class="member-lighting-buttons toggle-class-1">
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
                   <span class="member-lighting-button-text">Sunrise</span>
                 </button>
-                <button type="button" class="member-lighting-button button-class-7" data-lighting="day" aria-pressed="true" title="Day">
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
                   <span class="member-lighting-button-text">Day</span>
                 </button>
-                <button type="button" class="member-lighting-button button-class-7" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
                   <span class="member-lighting-button-text">Sunset</span>
                 </button>
-                <button type="button" class="member-lighting-button button-class-7" data-lighting="night" aria-pressed="false" title="Night">
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
                   <span class="member-lighting-button-text">Night</span>
                 </button>
               </div>
             </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Style</label>
-              <div class="member-style-buttons button-class-7-group">
-                <button type="button" class="member-style-button button-class-7" data-style="standard" aria-pressed="true">
+              <div class="member-style-buttons toggle-class-1">
+                <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
                   <span class="member-style-button-text">Standard</span>
                 </button>
-                <button type="button" class="member-style-button button-class-7" data-style="standard-satellite" aria-pressed="false">
+                <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
                   <span class="member-style-button-text">Satellite</span>
                 </button>
               </div>
             </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Wallpaper Animation</label>
-              <div class="member-wallpaper-buttons button-class-7-group">
-                <button type="button" class="member-wallpaper-button button-class-7" data-wallpaper="off" aria-pressed="false">
+              <div class="member-wallpaper-buttons toggle-class-1">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Off</span>
                 </button>
-                <button type="button" class="member-wallpaper-button button-class-7" data-wallpaper="still" aria-pressed="false">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Still</span>
                 </button>
-                <button type="button" class="member-wallpaper-button button-class-7" data-wallpaper="basic" aria-pressed="true">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
                   <span class="member-wallpaper-button-text">Basic</span>
                 </button>
-                <button type="button" class="member-wallpaper-button button-class-7" data-wallpaper="orbit" aria-pressed="false">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Orbit</span>
                 </button>
               </div>

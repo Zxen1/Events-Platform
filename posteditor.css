@@ -449,7 +449,7 @@
   font-size: 13px;
 }
 
-/* Status toggle buttons (uses button-class-7) */
+/* Status toggle buttons (uses toggle-class-1) */
 .posteditor-manage-status-buttons {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -463,7 +463,6 @@
   border-color: #f87171;
 }
 
-.posteditor-manage-status-button--delete.button-class-7--active,
 .posteditor-manage-status-button--delete[aria-pressed="true"] {
   color: #f87171;
 }
@@ -473,7 +472,7 @@
   border-color: transparent;
 }
 
-/* Tier toggle buttons (uses button-class-7) */
+/* Tier toggle buttons (uses toggle-class-1) */
 .posteditor-manage-tier-buttons {
   grid-template-columns: repeat(3, 1fr);
 }

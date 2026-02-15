@@ -521,7 +521,7 @@
 
 /* member-preferences-container removed (no language/currency filters) */
 
-/* Lighting/Style/Wallpaper buttons use button-class-7 from base.css */
+/* Lighting/Style/Wallpaper buttons use toggle-class-1 from base.css */
 .member-lighting-buttons,
 .member-wallpaper-buttons {
   grid-template-columns: repeat(4, 1fr);
