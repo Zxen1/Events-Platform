@@ -3023,6 +3023,7 @@ const PostModule = (function() {
     // Create wrapper - proper class naming: .post
     var wrap = document.createElement('div');
     wrap.className = 'post';
+    wrap.setAttribute('data-slack-anchor', '');
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
     // Track the active location context for this open post (source-of-truth: post_map_card_id).

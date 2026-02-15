@@ -400,6 +400,29 @@ All scroll containers using slack MUST be registered in the `selectors` array in
 
 **BottomSlack in block vs flex layout:** The `.bottomSlack` element uses both `height` and `min-height` set via `var(--bottomSlack)`. The `min-height` is required so BottomSlack works in block-layout containers (not just flex). Do not remove `min-height` from `.bottomSlack` CSS.
 
+**Post DOM structure (when a post is open):**
+```
+.post-list (scroll container, slack attached here)
+  └── .topSlack
+  └── .post-slot
+        ├── div[data-slack-anchor]          ← stable wrapper, TopSlack anchors here on card click
+        │     └── .postcard (display:none)  ← hidden but stays in DOM
+        └── .post[data-slack-anchor]        ← TopSlack anchors here on description click
+              └── .component-locationwallpaper-content
+                    ├── cardEl (hidden copy)
+                    ├── .post-header                    ← always visible, top edge = .post top edge
+                    └── .post-body
+                          └── .post-details
+                                ├── .post-info-container        ← HIDDEN in compact, SHOWN on expand
+                                ├── .post-description-container
+                                │     ├── .post-description-text  ← clickable, toggles compact/expanded
+                                │     └── .post-description-member ← HIDDEN in compact, SHOWN on expand
+                                └── .post-images-container
+  └── .post-slot (next post...)
+  └── .bottomSlack
+```
+The `data-slack-anchor` on `.post` means description clicks anchor to the post's top edge (= header), so the header stays rock-solid while info/description content expands downward.
+
 ### No Debounced Saves on map:boundsChanged
 Never call debounced save functions (e.g. `saveFilters()`) from `map:boundsChanged` — the map fires this event continuously during movement/spin, which resets the debounce timer and prevents saves from ever completing.
 
