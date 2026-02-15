@@ -843,11 +843,15 @@
         // 5. Created
         var createdText = post.created_at ? formatStatusDate(new Date(post.created_at)) : '—';
 
+        // 6. Expiry date
+        var expiryText = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
+
         var summaryRows = [
             ['Status', statusText],
-            ['Plan', tierText],
+            ['Tier', tierText],
             ['Locations', locText],
             ['Time Remaining', timeText],
+            ['Expires', expiryText],
             ['Created', createdText]
         ];
 
