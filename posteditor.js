@@ -761,6 +761,9 @@
             // (discardEdits wipes editingPostsData, so the stale form would be broken)
             editFormLoaded = false;
             editAccordionContent.innerHTML = '';
+            // Reset edit button and pending message to default state
+            editToggleBtn.textContent = 'Edit';
+            pendingPaymentMsg.style.display = 'none';
             // Clear popover flag so it re-attaches with fresh closure on next expand
             try { editTopSaveBtn._popoverAttached = false; } catch (e) {}
             // Remove stale popover element from the accordion row
