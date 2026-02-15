@@ -5316,7 +5316,7 @@ const FieldsetBuilder = (function(){
                     if (tpTicketGroups[key]) return tpTicketGroups[key];
 
                     var group = document.createElement('div');
-                    group.className = 'fieldset-ticketpricing-ticketgroup-item accordion-class-1 accordion-class-1--open';
+                    group.className = 'fieldset-ticketpricing-ticketgroup-item accordion-class-1' + (options.postId ? '' : ' accordion-class-1--open');
                     group.dataset.ticketGroupKey = key;
 
                     var header = document.createElement('div');

@@ -1455,6 +1455,7 @@
             var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
                 fields: fields,
                 container: formContainer,
+                startCollapsed: true,
                 buildFieldset: function(fieldData, options) {
                     var field = ensureFieldDefaults(fieldData);
                     return FieldsetBuilder.buildFieldset(field, {

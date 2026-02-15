@@ -3724,15 +3724,6 @@
         var quantityControls = document.createElement('div');
         quantityControls.className = 'member-postform-location-quantity-controls';
         
-        var minusBtn = document.createElement('button');
-        minusBtn.type = 'button';
-        minusBtn.className = 'member-postform-location-quantity-btn member-postform-location-quantity-btn--minus';
-        minusBtn.setAttribute('aria-label', 'Decrease location quantity');
-        var minusIcon = document.createElement('span');
-        minusIcon.className = 'member-postform-location-quantity-btn-icon member-postform-location-quantity-btn-icon--minus';
-        minusIcon.setAttribute('aria-hidden', 'true');
-        minusBtn.appendChild(minusIcon);
-        
         var quantityDisplay = document.createElement('span');
         quantityDisplay.className = 'member-postform-location-quantity-display';
         quantityDisplay.textContent = initialQuantity;
@@ -3747,23 +3738,12 @@
         plusBtn.appendChild(plusIcon);
         
         quantityControls.appendChild(quantityDisplay);
-        quantityControls.appendChild(minusBtn);
         quantityControls.appendChild(plusBtn);
         
         quantityRow.appendChild(quantityLabel);
         quantityRow.appendChild(quantityControls);
         
-        // Quantity button handlers
-        minusBtn.addEventListener('click', function() {
-            var currentQty = parseInt(quantityDisplay.textContent, 10);
-            if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
-            if (currentQty > 1) {
-                currentQty--;
-                quantityDisplay.textContent = currentQty;
-                onQuantityChange(currentQty, false);
-            }
-        });
-        
+        // Quantity button handler
         plusBtn.addEventListener('click', function() {
             var currentQty = parseInt(quantityDisplay.textContent, 10);
             if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
@@ -3896,21 +3876,29 @@
         var showDelete = options.showDelete !== false;
         var onDelete = options.onDelete || function() {};
         var onActivate = options.onActivate || function() {};
+        var startOpen = options.startOpen !== false;
         
         // Create container (includes component-locationwallpaper-container for LocationWallpaperComponent)
         var container = document.createElement('div');
-        container.className = 'member-location-container component-locationwallpaper-container container-class-2';
+        container.className = 'member-location-container component-locationwallpaper-container container-class-2 accordion-class-1' + (startOpen ? ' accordion-class-1--open' : '');
         container.dataset.venue = String(locationNumber);
         container.dataset.locationNumber = String(locationNumber);
         
         // Create header
         var header = document.createElement('div');
-        header.className = 'member-postform-location-header container-header';
+        header.className = 'member-postform-location-header container-header accordion-header';
         
         // Header text
         var headerText = document.createElement('span');
         headerText.className = 'member-postform-location-header-text';
         headerText.textContent = locationName;
+        
+        // Arrow (collapse/expand indicator — same pattern as ticket groups)
+        var arrowWrap = document.createElement('div');
+        arrowWrap.className = 'member-postform-location-header-arrow';
+        var arrowIcon = document.createElement('span');
+        arrowIcon.className = 'member-postform-location-header-arrow-icon';
+        arrowWrap.appendChild(arrowIcon);
         
         // Delete button
         var deleteBtn = document.createElement('button');
@@ -3927,14 +3915,16 @@
             onDelete(container, locationNumber);
         });
         
-        // Header click handler (activate only)
+        // Header click handler (toggle collapse + activate)
         header.addEventListener('click', function(e) {
             if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
+            container.classList.toggle('accordion-class-1--open');
             onActivate(container, locationNumber);
         });
         
         // Assemble header
         header.appendChild(headerText);
+        header.appendChild(arrowWrap);
         header.appendChild(deleteBtn);
         container.appendChild(header);
         
@@ -3988,6 +3978,7 @@
         var getMessage = options.getMessage || null;
         var customOnDelete = options.onDelete || null;
         var customOnActivate = options.onActivate || null;
+        var startCollapsed = !!options.startCollapsed;
         var idPrefix = '';
         if (options && options.idPrefix && typeof options.idPrefix === 'string') {
             idPrefix = options.idPrefix;
@@ -4075,6 +4066,7 @@
             locationName: venue1Name,
             locationNumber: 1,
             showDelete: customOnDelete !== null && initialQuantity > 1,
+            startOpen: !startCollapsed,
             onDelete: customOnDelete || function() {},
             onActivate: customOnActivate || function(container, locationNumber) {
                 // Remove active from all container types
@@ -4213,6 +4205,7 @@
                     locationName: additionalName,
                     locationNumber: locationNum,
                     showDelete: customOnDelete !== null,
+                    startOpen: !startCollapsed,
                     onDelete: customOnDelete || function() {},
                     onActivate: customOnActivate || function(container, locationNumber) {
                         // Remove active from all container types
