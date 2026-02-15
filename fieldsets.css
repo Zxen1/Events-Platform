@@ -1215,6 +1215,37 @@
 
 /* Instruction Text - uses generic .fieldset-instruction class */
 
+/* Basic / Advanced Mode Toggle */
+.fieldset-ticketpricing-mode-row {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.fieldset-ticketpricing-mode-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.fieldset-ticketpricing-mode-radio--selected {
+    border-color: var(--blue-500);
+}
+
+.fieldset-ticketpricing-mode-radio-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
 /* Ticket Groups Container */
 .fieldset-ticketpricing-ticketgroups-container {
     width: 100%;

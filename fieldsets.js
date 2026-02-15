@@ -3497,7 +3497,146 @@ const FieldsetBuilder = (function(){
                 // Sessions fieldset reads ticket group keys from this fieldset.
                 
                 // Don't show character count for this fieldset - it has multiple sub-fields with different limits
-                fieldset.appendChild(buildLabel(name, tooltip, null, null, instruction));
+                var tpLabelEl = buildLabel(name, tooltip, null, null, null);
+                fieldset.appendChild(tpLabelEl);
+
+                // --- Basic / Advanced mode toggle ---
+                var tpMode = 'basic'; // 'basic' or 'advanced'
+
+                // Store reference to instruction text for show/hide in mode toggle
+                var tpInstructionEl = null;
+                if (instruction && typeof instruction === 'string' && instruction.trim()) {
+                    tpInstructionEl = document.createElement('div');
+                    tpInstructionEl.className = 'fieldset-instruction';
+                    tpInstructionEl.textContent = instruction.trim();
+                    tpInstructionEl.style.marginBottom = '10px';
+                    tpInstructionEl.style.display = 'none'; // hidden in basic mode by default
+                    fieldset.appendChild(tpInstructionEl);
+                }
+
+                // Radio icons from system_images
+                function tpGetSystemRadioIconUrl(settingKey) {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys[settingKey] ? String(sys[settingKey] || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e0) {
+                        return '';
+                    }
+                }
+
+                var tpRadioUrl = tpGetSystemRadioIconUrl('icon_radio');
+                var tpRadioSelectedUrl = tpGetSystemRadioIconUrl('icon_radio_selected');
+
+                var tpModeRow = document.createElement('div');
+                tpModeRow.className = 'fieldset-ticketpricing-mode-row';
+
+                function tpBuildModeRadio(label, value) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'fieldset-ticketpricing-mode-radio';
+                    btn.dataset.value = value;
+
+                    var iconWrap = document.createElement('span');
+                    iconWrap.className = 'fieldset-radio-box';
+                    var radioImg = document.createElement('img');
+                    radioImg.className = 'fieldset-radio-icon';
+                    radioImg.alt = '';
+                    radioImg.src = tpRadioUrl;
+                    iconWrap.appendChild(radioImg);
+                    var selectedImg = document.createElement('img');
+                    selectedImg.className = 'fieldset-radio-icon-selected';
+                    selectedImg.alt = '';
+                    selectedImg.src = tpRadioSelectedUrl;
+                    selectedImg.style.display = 'none';
+                    iconWrap.appendChild(selectedImg);
+
+                    var text = document.createElement('span');
+                    text.className = 'fieldset-ticketpricing-mode-radio-text';
+                    text.textContent = label;
+
+                    btn.appendChild(iconWrap);
+                    btn.appendChild(text);
+                    return btn;
+                }
+
+                var tpModeBasicBtn = tpBuildModeRadio('Basic', 'basic');
+                var tpModeAdvancedBtn = tpBuildModeRadio('Advanced', 'advanced');
+                tpModeRow.appendChild(tpModeBasicBtn);
+                tpModeRow.appendChild(tpModeAdvancedBtn);
+                fieldset.appendChild(tpModeRow);
+
+                function tpSyncModeRadioUi() {
+                    [tpModeBasicBtn, tpModeAdvancedBtn].forEach(function(btn) {
+                        var isOn = (btn.dataset.value === tpMode);
+                        btn.classList.toggle('fieldset-ticketpricing-mode-radio--selected', isOn);
+                        var selectedImg = btn.querySelector('.fieldset-radio-icon-selected');
+                        if (selectedImg) selectedImg.style.display = isOn ? '' : 'none';
+                    });
+                }
+
+                function tpSetMode(newMode) {
+                    tpMode = newMode;
+                    tpSyncModeRadioUi();
+                    tpApplyMode();
+                    // Notify sessions fieldsets to update their display
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+
+                tpModeBasicBtn.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    // Can only switch to basic if there's only 1 group
+                    if (Object.keys(tpTicketGroups).length > 1) return;
+                    tpSetMode('basic');
+                });
+
+                tpModeAdvancedBtn.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    tpSetMode('advanced');
+                });
+
+                // Apply mode: show/hide elements based on basic vs advanced
+                function tpApplyMode() {
+                    var isBasic = (tpMode === 'basic');
+
+                    // Show/hide instruction text
+                    if (tpInstructionEl) tpInstructionEl.style.display = isBasic ? 'none' : '';
+
+                    // Show/hide add/remove buttons and rename header label on all groups
+                    Object.keys(tpTicketGroups).forEach(function(k) {
+                        var g = tpTicketGroups[k];
+                        if (!g) return;
+                        var addBtn = g.querySelector('.fieldset-ticketpricing-ticketgroup-button-add');
+                        var removeBtn = g.querySelector('.fieldset-ticketpricing-ticketgroup-button-remove');
+                        var headerLabel = g.querySelector('.fieldset-ticketpricing-ticketgroup-header-label');
+                        if (addBtn) addBtn.style.display = isBasic ? 'none' : '';
+                        if (removeBtn) removeBtn.style.display = isBasic ? 'none' : '';
+                        if (headerLabel) {
+                            if (isBasic) {
+                                headerLabel.textContent = 'Ticket Information';
+                            } else {
+                                headerLabel.textContent = 'Ticket Group ' + k;
+                            }
+                        }
+                    });
+
+                    // Lock mode toggle: disable basic when multiple groups exist
+                    var groupCount = Object.keys(tpTicketGroups).length;
+                    if (groupCount > 1) {
+                        tpModeBasicBtn.disabled = true;
+                        tpModeBasicBtn.style.opacity = '0.3';
+                        tpModeBasicBtn.style.cursor = 'not-allowed';
+                    } else {
+                        tpModeBasicBtn.disabled = false;
+                        tpModeBasicBtn.style.opacity = '';
+                        tpModeBasicBtn.style.cursor = '';
+                    }
+                }
+
+                // Initialize mode UI
+                tpSyncModeRadioUi();
 
                 // Ticket group state
                 var tpTicketGroups = {}; // { A: itemEl, B: itemEl, ... }
@@ -5216,6 +5355,7 @@ const FieldsetBuilder = (function(){
                     
                     tpEnsureTicketGroup(newKey, autofillState);
                     tpUpdateAllGroupButtons();
+                    tpApplyMode();
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
 
@@ -5282,6 +5422,7 @@ const FieldsetBuilder = (function(){
                     }
                     
                     tpUpdateAllGroupButtons();
+                    tpApplyMode();
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                 }
 
@@ -5425,10 +5566,16 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(tpPricingGroupsWrap);
                 
                 tpEnsureDefaultGroup();
+                tpApplyMode();
 
                 // Expose function to get ticket group keys for sessions fieldset
                 fieldset._getTicketGroupKeys = function() {
                     return Object.keys(tpTicketGroups).sort();
+                };
+
+                // Expose function to get basic/advanced mode for sessions fieldset
+                fieldset._getTicketPricingMode = function() {
+                    return tpMode;
                 };
 
                 fieldset._setValue = function(val) {
@@ -5457,6 +5604,12 @@ const FieldsetBuilder = (function(){
                     }
                     
                     tpEnsureDefaultGroup();
+                    // Auto-detect mode from loaded data: if multiple groups, switch to advanced
+                    if (Object.keys(tpTicketGroups).length > 1) {
+                        tpMode = 'advanced';
+                    }
+                    tpSyncModeRadioUi();
+                    tpApplyMode();
                     updateCompleteFromDom();
                 };
 
@@ -5490,7 +5643,29 @@ const FieldsetBuilder = (function(){
                 // This fieldset exists in location containers (below the line).
                 // Reads ticket group keys from ticket_pricing fieldset.
                 
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, null));
+
+                // Store reference to instruction text for show/hide based on ticket pricing mode
+                var sessInstructionEl = null;
+                if (instruction && typeof instruction === 'string' && instruction.trim()) {
+                    sessInstructionEl = document.createElement('div');
+                    sessInstructionEl.className = 'fieldset-instruction';
+                    sessInstructionEl.textContent = instruction.trim();
+                    sessInstructionEl.style.marginBottom = '10px';
+                    fieldset.appendChild(sessInstructionEl);
+                }
+
+                // Check ticket pricing mode (basic or advanced)
+                function sessGetTicketPricingMode() {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var tpFieldset = form.querySelector('.fieldset[data-fieldset-key="ticket-pricing"]');
+                        if (tpFieldset && typeof tpFieldset._getTicketPricingMode === 'function') {
+                            return tpFieldset._getTicketPricingMode();
+                        }
+                    } catch (e) {}
+                    return 'basic';
+                }
 
                 // Track selected dates
                 var sessSessionData = {};
@@ -5860,6 +6035,15 @@ const FieldsetBuilder = (function(){
                 });
 
                 function sessRenderSessions() {
+                    var sessCurrentMode = sessGetTicketPricingMode();
+                    var sessIsBasic = (sessCurrentMode === 'basic');
+
+                    // Show/hide sessions instruction based on ticket pricing mode
+                    if (sessInstructionEl) sessInstructionEl.style.display = sessIsBasic ? 'none' : '';
+
+                    // Show/hide the picker row ticket button based on mode
+                    try { sessPickerTicketBtn.style.display = sessIsBasic ? 'none' : ''; } catch (e0) {}
+
                     fieldset.querySelectorAll('.fieldset-sessions-ticketgroup-menu--open').forEach(function(m) {
                         m.classList.remove('fieldset-sessions-ticketgroup-menu--open');
                         var b = m.querySelector('.menu-button');
@@ -6170,6 +6354,13 @@ const FieldsetBuilder = (function(){
                                     }
                                 });
                             })(dateStr, idx, timeInput, ticketBtn, ticketMenu, ticketOpts, letter);
+
+                            // Hide ticket group menu in basic mode; force group A assignment
+                            if (sessIsBasic) {
+                                ticketMenu.style.display = 'none';
+                                if (data.groups) data.groups[idx] = 'A';
+                                timeInput.dataset.ticketGroupKey = 'A';
+                            }
                             row.appendChild(ticketMenu);
 
                             group.appendChild(row);
@@ -6210,6 +6401,19 @@ const FieldsetBuilder = (function(){
                 }
 
                 sessRenderSessions();
+
+                // Listen for ticket pricing mode changes to re-render sessions
+                try {
+                    var sessForm = fieldset.closest('form') || fieldset.closest('.member-post-form');
+                    if (sessForm) {
+                        sessForm.addEventListener('change', function(e) {
+                            var target = e.target;
+                            if (!target) return;
+                            var tpFs = target.closest('.fieldset[data-fieldset-key="ticket-pricing"]');
+                            if (tpFs) sessRenderSessions();
+                        });
+                    }
+                } catch (eListen) {}
 
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
