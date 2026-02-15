@@ -872,9 +872,9 @@
 
         var statusOptions = [
             { key: 'active', label: 'Active' },
-            { key: 'hidden', label: 'Hide' },
+            { key: 'hidden', label: 'Hidden' },
             { key: 'expired', label: 'Expired' },
-            { key: 'deleted', label: 'Delete' }
+            { key: 'deleted', label: 'Deleted' }
         ];
 
         var currentStatus = 'active';
