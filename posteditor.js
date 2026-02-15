@@ -979,7 +979,10 @@
         // Delete item
         var deleteItem = document.createElement('div');
         deleteItem.className = 'posteditor-manage-status-more-item posteditor-manage-status-more-delete';
-        deleteItem.textContent = 'Delete';
+        var deleteItemText = document.createElement('span');
+        deleteItemText.className = 'posteditor-manage-status-more-item-text';
+        deleteItemText.textContent = 'Delete';
+        deleteItem.appendChild(deleteItemText);
         if (summaryIsDeleted || summaryVisibility === 'deleted') {
             deleteItem.classList.add('posteditor-manage-status-more-item--disabled');
         } else {
