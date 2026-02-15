@@ -666,7 +666,6 @@
 .posteditor-edit-footer {
   display: flex;
   gap: 10px;
-  padding: 0 10px;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   position: relative; /* For popover positioning */
 }
