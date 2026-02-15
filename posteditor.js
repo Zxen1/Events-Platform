@@ -755,20 +755,23 @@
         }
 
         // Collapse accordion (used as closeModalFn for renderEditForm)
-        function collapseAccordion() {
+        // preserveForm: if true, keep the form in memory (for Checkout/pending payment)
+        function collapseAccordion(preserveForm) {
             setAccordionExpanded(false);
-            // Reset so the form reloads with fresh data on next expand
-            // (discardEdits wipes editingPostsData, so the stale form would be broken)
-            editFormLoaded = false;
-            editAccordionContent.innerHTML = '';
-            // Reset edit button and pending message to default state
-            editToggleBtn.textContent = 'Edit';
-            pendingPaymentMsg.style.display = 'none';
-            // Clear popover flag so it re-attaches with fresh closure on next expand
-            try { editTopSaveBtn._popoverAttached = false; } catch (e) {}
-            // Remove stale popover element from the accordion row
-            var stalePopover = editAccordionRow.querySelector('.posteditor-popover');
-            if (stalePopover) stalePopover.remove();
+            if (!preserveForm) {
+                // Reset so the form reloads with fresh data on next expand
+                // (discardEdits wipes editingPostsData, so the stale form would be broken)
+                editFormLoaded = false;
+                editAccordionContent.innerHTML = '';
+                // Reset edit button and pending message to default state
+                editToggleBtn.textContent = 'Edit';
+                pendingPaymentMsg.style.display = 'none';
+                // Clear popover flag so it re-attaches with fresh closure on next expand
+                try { editTopSaveBtn._popoverAttached = false; } catch (e) {}
+                // Remove stale popover element from the accordion row
+                var stalePopover = editAccordionRow.querySelector('.posteditor-popover');
+                if (stalePopover) stalePopover.remove();
+            }
             // Refresh revision list (a save may have created a new snapshot)
             loadRevisions();
         }
@@ -1609,7 +1612,8 @@
                 var locUsed = locContainers.length;
                 var locPaid = post.loc_paid || 0;
                 if (locUsed > locPaid) {
-                    closeModalFn();
+                    // Visually collapse without destroying the form
+                    closeModalFn(true);
                     editToggleBtn.textContent = 'Edit (Pending)';
                     pendingPaymentMsg.style.display = '';
                     return;
