@@ -457,6 +457,13 @@
   font-size: 13px;
 }
 
+/* Status value (uppercase, matches status bar pattern) */
+.posteditor-manage-status-value {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
 /* Status 3-dot menu button */
 .posteditor-manage-status-more {
   position: relative;

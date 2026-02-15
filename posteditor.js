@@ -887,6 +887,7 @@
 
         var statusField = buildManageRow('Status', statusText);
         var statusValueEl = statusField.value;
+        statusValueEl.classList.add('posteditor-manage-status-value');
 
         // 3-dot menu button
         var statusMoreBtn = document.createElement('button');
