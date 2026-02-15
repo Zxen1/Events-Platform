@@ -1091,7 +1091,7 @@
                         var dateStr = rev.created_at || '';
                         try {
                             var d = new Date(dateStr.replace(' ', 'T') + 'Z');
-                            dateStr = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                            dateStr = formatStatusDate(d);
                         } catch (e) { /* keep raw */ }
 
                         var revRow = document.createElement('div');
