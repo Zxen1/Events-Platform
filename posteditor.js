@@ -1072,9 +1072,9 @@
         }
 
         var tierColors = [
-            'linear-gradient(90deg, #5C3A1E 0%, #8B5A2B 40%, #6B4226 60%, #4A2A12 100%)',
-            'linear-gradient(90deg, #3A3A3F 0%, #5A5A60 40%, #4A4A50 60%, #333338 100%)',
-            'linear-gradient(90deg, #6B5A1E 0%, #8B7A2B 40%, #7A6A20 60%, #4A3E10 100%)'
+            'linear-gradient(180deg, #4A2A12 0%, #8B5A2B 30%, #4A2A12 100%)',
+            'linear-gradient(180deg, #333338 0%, #5A5A60 30%, #333338 100%)',
+            'linear-gradient(180deg, #4A3E10 0%, #8B7A2B 30%, #4A3E10 100%)'
         ];
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
