@@ -1077,6 +1077,7 @@
             'linear-gradient(180deg, #1A2A3A 0%, #3A5A7A 30%, #1A2A3A 100%)',
             'linear-gradient(180deg, #4A3E10 0%, #8B7A2B 30%, #4A3E10 100%)'
         ];
+        var tierDescColors = ['', '#7AB8E0', '#E0D080'];
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
             var description = option.checkout_description ? String(option.checkout_description) : '';
@@ -1090,6 +1091,7 @@
 
             if (idx === currentTierIndex) {
                 tierDesc.textContent = description;
+                tierDesc.style.color = tierDescColors[idx] || '';
             } else if (idx < currentTierIndex) {
                 // Below current tier — downgrading not allowed
                 btn.disabled = true;
@@ -1104,6 +1106,7 @@
                 }
                 btn.setAttribute('aria-pressed', 'true');
                 tierDesc.textContent = description;
+                tierDesc.style.color = tierDescColors[idx] || '';
             });
 
             tierBtnRow.appendChild(btn);
