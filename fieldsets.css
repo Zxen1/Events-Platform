@@ -32,10 +32,6 @@
     margin-bottom: 10px;
 }
 
-.fieldset:last-child {
-    margin-bottom: 0;
-}
-
 .fieldset-divider {
     width: 100%;
     height: 1px;
@@ -1216,6 +1212,15 @@
 /* ============================================================================
    TICKET PRICING FIELDSET
    ============================================================================ */
+
+/* Ticket Pricing fieldset overrides */
+.fieldset[data-fieldset-key="ticket-pricing"] {
+    margin-bottom: 0;
+}
+
+.fieldset[data-fieldset-key="ticket-pricing"] > .fieldset-label {
+    margin-bottom: 0;
+}
 
 /* Instruction Text - uses generic .fieldset-instruction class */
 
