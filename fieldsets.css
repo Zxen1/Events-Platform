@@ -1218,32 +1218,24 @@
 /* Basic / Advanced Mode Toggle */
 .fieldset-ticketpricing-mode-row {
     display: flex;
-    align-items: center;
-    height: 36px;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 20px;
 }
 
-.fieldset-ticketpricing-mode-radio {
+.fieldset-ticketpricing-mode-option {
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 36px;
-    padding: 0 10px;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 5px;
     cursor: pointer;
-    color: #fff;
 }
 
-.fieldset-ticketpricing-mode-radio--selected {
-    border-color: var(--blue-500);
+.fieldset-ticketpricing-mode-option-input {
+    cursor: pointer;
 }
 
-.fieldset-ticketpricing-mode-radio-text {
+.fieldset-ticketpricing-mode-option-label {
     font-size: 13px;
-    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 /* Ticket Groups Container */

@@ -3503,6 +3503,41 @@ const FieldsetBuilder = (function(){
                 // --- Basic / Advanced mode toggle ---
                 var tpMode = 'basic'; // 'basic' or 'advanced'
 
+                // Mode toggle row (native radio inputs, matches admin settings pattern)
+                var tpModeRow = document.createElement('div');
+                tpModeRow.className = 'fieldset-ticketpricing-mode-row row-class-1';
+
+                var tpModeBasicLabel = document.createElement('label');
+                tpModeBasicLabel.className = 'fieldset-ticketpricing-mode-option';
+                var tpModeBasicInput = document.createElement('input');
+                tpModeBasicInput.type = 'radio';
+                tpModeBasicInput.name = 'tpMode_' + (options.postId || Math.random().toString(36).substr(2, 6));
+                tpModeBasicInput.value = 'basic';
+                tpModeBasicInput.className = 'fieldset-ticketpricing-mode-option-input';
+                tpModeBasicInput.checked = true;
+                var tpModeBasicText = document.createElement('span');
+                tpModeBasicText.className = 'fieldset-ticketpricing-mode-option-label';
+                tpModeBasicText.textContent = 'Basic';
+                tpModeBasicLabel.appendChild(tpModeBasicInput);
+                tpModeBasicLabel.appendChild(tpModeBasicText);
+
+                var tpModeAdvancedLabel = document.createElement('label');
+                tpModeAdvancedLabel.className = 'fieldset-ticketpricing-mode-option';
+                var tpModeAdvancedInput = document.createElement('input');
+                tpModeAdvancedInput.type = 'radio';
+                tpModeAdvancedInput.name = tpModeBasicInput.name;
+                tpModeAdvancedInput.value = 'advanced';
+                tpModeAdvancedInput.className = 'fieldset-ticketpricing-mode-option-input';
+                var tpModeAdvancedText = document.createElement('span');
+                tpModeAdvancedText.className = 'fieldset-ticketpricing-mode-option-label';
+                tpModeAdvancedText.textContent = 'Advanced';
+                tpModeAdvancedLabel.appendChild(tpModeAdvancedInput);
+                tpModeAdvancedLabel.appendChild(tpModeAdvancedText);
+
+                tpModeRow.appendChild(tpModeBasicLabel);
+                tpModeRow.appendChild(tpModeAdvancedLabel);
+                fieldset.appendChild(tpModeRow);
+
                 // Store reference to instruction text for show/hide in mode toggle
                 var tpInstructionEl = null;
                 if (instruction && typeof instruction === 'string' && instruction.trim()) {
@@ -3514,67 +3549,9 @@ const FieldsetBuilder = (function(){
                     fieldset.appendChild(tpInstructionEl);
                 }
 
-                // Radio icons from system_images
-                function tpGetSystemRadioIconUrl(settingKey) {
-                    try {
-                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
-                        var sys = App.getState('system_images') || {};
-                        var filename = sys && sys[settingKey] ? String(sys[settingKey] || '').trim() : '';
-                        if (!filename) return '';
-                        return App.getImageUrl('systemImages', filename);
-                    } catch (e0) {
-                        return '';
-                    }
-                }
-
-                var tpRadioUrl = tpGetSystemRadioIconUrl('icon_radio');
-                var tpRadioSelectedUrl = tpGetSystemRadioIconUrl('icon_radio_selected');
-
-                var tpModeRow = document.createElement('div');
-                tpModeRow.className = 'fieldset-ticketpricing-mode-row';
-
-                function tpBuildModeRadio(label, value) {
-                    var btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'fieldset-ticketpricing-mode-radio';
-                    btn.dataset.value = value;
-
-                    var iconWrap = document.createElement('span');
-                    iconWrap.className = 'fieldset-radio-box';
-                    var radioImg = document.createElement('img');
-                    radioImg.className = 'fieldset-radio-icon';
-                    radioImg.alt = '';
-                    radioImg.src = tpRadioUrl;
-                    iconWrap.appendChild(radioImg);
-                    var selectedImg = document.createElement('img');
-                    selectedImg.className = 'fieldset-radio-icon-selected';
-                    selectedImg.alt = '';
-                    selectedImg.src = tpRadioSelectedUrl;
-                    selectedImg.style.display = 'none';
-                    iconWrap.appendChild(selectedImg);
-
-                    var text = document.createElement('span');
-                    text.className = 'fieldset-ticketpricing-mode-radio-text';
-                    text.textContent = label;
-
-                    btn.appendChild(iconWrap);
-                    btn.appendChild(text);
-                    return btn;
-                }
-
-                var tpModeBasicBtn = tpBuildModeRadio('Basic', 'basic');
-                var tpModeAdvancedBtn = tpBuildModeRadio('Advanced', 'advanced');
-                tpModeRow.appendChild(tpModeBasicBtn);
-                tpModeRow.appendChild(tpModeAdvancedBtn);
-                fieldset.appendChild(tpModeRow);
-
                 function tpSyncModeRadioUi() {
-                    [tpModeBasicBtn, tpModeAdvancedBtn].forEach(function(btn) {
-                        var isOn = (btn.dataset.value === tpMode);
-                        btn.classList.toggle('fieldset-ticketpricing-mode-radio--selected', isOn);
-                        var selectedImg = btn.querySelector('.fieldset-radio-icon-selected');
-                        if (selectedImg) selectedImg.style.display = isOn ? '' : 'none';
-                    });
+                    tpModeBasicInput.checked = (tpMode === 'basic');
+                    tpModeAdvancedInput.checked = (tpMode === 'advanced');
                 }
 
                 function tpSetMode(newMode) {
@@ -3585,16 +3562,12 @@ const FieldsetBuilder = (function(){
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
 
-                tpModeBasicBtn.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    // Can only switch to basic if there's only 1 group
-                    if (Object.keys(tpTicketGroups).length > 1) return;
-                    tpSetMode('basic');
+                tpModeBasicInput.addEventListener('change', function() {
+                    if (this.checked) tpSetMode('basic');
                 });
 
-                tpModeAdvancedBtn.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    tpSetMode('advanced');
+                tpModeAdvancedInput.addEventListener('change', function() {
+                    if (this.checked) tpSetMode('advanced');
                 });
 
                 // Apply mode: show/hide elements based on basic vs advanced
@@ -3624,15 +3597,9 @@ const FieldsetBuilder = (function(){
 
                     // Lock mode toggle: disable basic when multiple groups exist
                     var groupCount = Object.keys(tpTicketGroups).length;
-                    if (groupCount > 1) {
-                        tpModeBasicBtn.disabled = true;
-                        tpModeBasicBtn.style.opacity = '0.3';
-                        tpModeBasicBtn.style.cursor = 'not-allowed';
-                    } else {
-                        tpModeBasicBtn.disabled = false;
-                        tpModeBasicBtn.style.opacity = '';
-                        tpModeBasicBtn.style.cursor = '';
-                    }
+                    tpModeBasicInput.disabled = (groupCount > 1);
+                    tpModeBasicLabel.style.opacity = (groupCount > 1) ? '0.3' : '';
+                    tpModeBasicLabel.style.cursor = (groupCount > 1) ? 'not-allowed' : '';
                 }
 
                 // Initialize mode UI
