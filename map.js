@@ -2930,6 +2930,15 @@ const MapModule = (function() {
         throw new Error('[Map] flyToZoom config is missing or invalid.');
       }
     }
+    // Mobile: close filter panel so fly animation is visible
+    if (window.innerWidth <= 530) {
+      try {
+        if (window.FilterModule && typeof FilterModule.closePanel === 'function') {
+          FilterModule.closePanel();
+        }
+      } catch (_eCloseFilt) {}
+    }
+
     stopSpin();
     map.flyTo({
       center: [lng, lat],
