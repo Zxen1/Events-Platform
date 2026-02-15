@@ -805,11 +805,6 @@
         var summarySection = document.createElement('div');
         summarySection.className = 'posteditor-manage-section';
 
-        var summaryLabel = document.createElement('div');
-        summaryLabel.className = 'member-panel-label';
-        summaryLabel.textContent = 'Post Summary';
-        summarySection.appendChild(summaryLabel);
-
         var summaryTable = document.createElement('div');
         summaryTable.className = 'posteditor-manage-summary';
 
