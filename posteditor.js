@@ -739,11 +739,13 @@
             accordionExpanded = expand;
             if (expand) {
                 editToggleBtn.style.display = 'none';
+                if (moreBtn) moreBtn.style.display = 'none';
                 editTopSaveBtn.style.display = '';
                 editTopCloseBtn.style.display = '';
                 editAccordionContent.classList.remove('posteditor-manage-edit-content--hidden');
             } else {
                 editToggleBtn.style.display = '';
+                if (moreBtn) moreBtn.style.display = '';
                 editTopSaveBtn.style.display = 'none';
                 editTopCloseBtn.style.display = 'none';
                 editAccordionContent.classList.add('posteditor-manage-edit-content--hidden');
@@ -896,7 +898,6 @@
         body.appendChild(manageContent);
 
         // --- Three-dot More button (Hide / Restore / Delete) ---
-        var buttonRow = manageContent.querySelector('.posteditor-manage-button-row');
         var moreBtn = document.createElement('div');
         moreBtn.className = 'posteditor-manage-more';
         moreBtn.innerHTML = '<div class="posteditor-manage-more-icon"></div>';
@@ -953,7 +954,7 @@
         moreMenu.appendChild(deleteRow);
 
         moreBtn.appendChild(moreMenu);
-        buttonRow.appendChild(moreBtn);
+        editAccordionRow.appendChild(moreBtn);
 
         // Toggle menu open/close
         var moreMenuOpen = false;
