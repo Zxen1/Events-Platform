@@ -1604,11 +1604,16 @@
             saveBtn.disabled = true;
             saveBtn.addEventListener('click', function() {
                 if (saveBtn.disabled) return;
-                // Block save when payment is required
+                // When payment is required, collapse to "Edit (Pending)" without saving
                 var locContainers = formContainer.querySelectorAll('.member-location-container');
                 var locUsed = locContainers.length;
                 var locPaid = post.loc_paid || 0;
-                if (locUsed > locPaid) return;
+                if (locUsed > locPaid) {
+                    editToggleBtn.textContent = 'Edit (Pending)';
+                    pendingPaymentMsg.style.display = '';
+                    closeModalFn();
+                    return;
+                }
                 handleSave();
             });
             
