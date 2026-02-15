@@ -1219,6 +1219,7 @@
 .fieldset-ticketpricing-mode-row {
     display: flex;
     gap: 20px;
+    margin-bottom: 0;
 }
 
 .fieldset-ticketpricing-mode-option {
@@ -1241,7 +1242,7 @@
 /* Ticket Groups Container */
 .fieldset-ticketpricing-ticketgroups-container {
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 0;
     box-sizing: border-box;
 }
 
