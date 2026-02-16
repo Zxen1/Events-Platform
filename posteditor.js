@@ -1079,6 +1079,20 @@
         var tierLabel = document.createElement('div');
         tierLabel.className = 'posteditor-manage-field-label';
         tierLabel.textContent = 'Increase Visibility';
+        var tierTip = document.createElement('span');
+        tierTip.className = 'fieldset-label-tooltip';
+        var tierTipIcon = document.createElement('span');
+        tierTipIcon.className = 'fieldset-label-tooltip-icon';
+        tierTip.appendChild(tierTipIcon);
+        tierLabel.appendChild(tierTip);
+        var tierTipBox = document.createElement('div');
+        tierTipBox.className = 'fieldset-label-tooltipbox';
+        tierLabel.appendChild(tierTipBox);
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_posteditor_visibility_info', {}, false).then(function(msg) {
+                if (msg) tierTipBox.textContent = msg;
+            });
+        }
         tierGroup.appendChild(tierLabel);
 
         var tierBtnRow = document.createElement('div');
@@ -1158,6 +1172,20 @@
         var durationLabel = document.createElement('div');
         durationLabel.className = 'posteditor-manage-field-label';
         durationLabel.textContent = 'Increase Duration';
+        var durationTip = document.createElement('span');
+        durationTip.className = 'fieldset-label-tooltip';
+        var durationTipIcon = document.createElement('span');
+        durationTipIcon.className = 'fieldset-label-tooltip-icon';
+        durationTip.appendChild(durationTipIcon);
+        durationLabel.appendChild(durationTip);
+        var durationTipBox = document.createElement('div');
+        durationTipBox.className = 'fieldset-label-tooltipbox';
+        durationLabel.appendChild(durationTipBox);
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_posteditor_duration_info', {}, false).then(function(msg) {
+                if (msg) durationTipBox.textContent = msg;
+            });
+        }
         durationGroup.appendChild(durationLabel);
 
         var durationAddRow = document.createElement('div');
@@ -1188,6 +1216,50 @@
         durationAddRow.appendChild(durationNewValue);
         durationGroup.appendChild(durationAddRow);
         pricingContainer.appendChild(durationGroup);
+
+        // --- Reach section (locations) ---
+        var reachGroup = document.createElement('div');
+        reachGroup.className = 'posteditor-manage-field';
+
+        var reachLabel = document.createElement('div');
+        reachLabel.className = 'posteditor-manage-field-label';
+        reachLabel.textContent = 'Increase Reach';
+        var reachTip = document.createElement('span');
+        reachTip.className = 'fieldset-label-tooltip';
+        var reachTipIcon = document.createElement('span');
+        reachTipIcon.className = 'fieldset-label-tooltip-icon';
+        reachTip.appendChild(reachTipIcon);
+        reachLabel.appendChild(reachTip);
+        var reachTipBox = document.createElement('div');
+        reachTipBox.className = 'fieldset-label-tooltipbox';
+        reachLabel.appendChild(reachTipBox);
+        if (typeof window.getMessage === 'function') {
+            window.getMessage('msg_posteditor_locations_info', {}, false).then(function(msg) {
+                if (msg) reachTipBox.textContent = msg;
+            });
+        }
+        reachGroup.appendChild(reachLabel);
+
+        var reachRow = document.createElement('div');
+        reachRow.className = 'posteditor-manage-duration-row';
+
+        var reachInputWrapper = document.createElement('div');
+        reachInputWrapper.className = 'posteditor-manage-duration-inputbox input-class-1 posteditor-manage-duration-inputbox--readonly';
+        var reachPrefix = document.createElement('span');
+        reachPrefix.className = 'posteditor-manage-duration-inputbox-affix';
+        reachPrefix.textContent = '+';
+        var reachValue = document.createElement('span');
+        reachValue.className = 'posteditor-manage-reach-value';
+        reachValue.textContent = '0';
+        var reachSuffix = document.createElement('span');
+        reachSuffix.className = 'posteditor-manage-duration-inputbox-affix';
+        reachSuffix.textContent = 'Locations';
+        reachInputWrapper.appendChild(reachPrefix);
+        reachInputWrapper.appendChild(reachValue);
+        reachInputWrapper.appendChild(reachSuffix);
+        reachRow.appendChild(reachInputWrapper);
+        reachGroup.appendChild(reachRow);
+        pricingContainer.appendChild(reachGroup);
 
         durationAddInput.addEventListener('keydown', function(e) {
             if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
@@ -1253,6 +1325,7 @@
             var addDays = parseInt(durationAddInput.value, 10) || 0;
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
+            reachValue.textContent = String(newLocs);
 
             // Upgrade cost
             var upgradeCost = 0;

@@ -605,6 +605,18 @@
   padding: 0;
 }
 
+.posteditor-manage-duration-inputbox--readonly {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.posteditor-manage-reach-value {
+  font-size: 13px;
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+  text-align: center;
+  min-width: 12px;
+}
+
 .posteditor-manage-duration-value {
   font-size: 13px;
   color: var(--text-primary, rgba(255, 255, 255, 0.9));
