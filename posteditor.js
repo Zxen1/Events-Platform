@@ -1261,6 +1261,10 @@
         reachGroup.appendChild(reachRow);
         pricingContainer.appendChild(reachGroup);
 
+        durationAddInput.addEventListener('focus', function() {
+            if (durationAddInput.value === '0') durationAddInput.value = '';
+        });
+
         durationAddInput.addEventListener('keydown', function(e) {
             if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
@@ -1343,11 +1347,23 @@
             }
             upgradeLine.el.style.display = upgradeCost > 0 ? '' : 'none';
             upgradeLine.value.textContent = '$' + upgradeCost.toFixed(2);
-            upgradeLine.tooltip.textContent = upgradeCost > 0
-                ? daysRemaining + ' days × ' + Math.round(selectedRates.basic * 100) + '¢ basic'
-                    + (paidExtraLocs > 0 ? ' + ' + daysRemaining + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount × ' + paidExtraLocs + ' extra loc' + (paidExtraLocs !== 1 ? 's' : '') : '')
-                    + ' minus current tier (' + Math.round(currentRates.basic * 100) + '¢/' + Math.round(currentRates.discount * 100) + '¢)'
-                : '';
+            if (upgradeCost > 0) {
+                var selTitle = allCheckoutOptions[selectedTierIndex] ? String(allCheckoutOptions[selectedTierIndex].checkout_title || '') : '';
+                var curTitle = allCheckoutOptions[currentTierIndex] ? String(allCheckoutOptions[currentTierIndex].checkout_title || '') : '';
+                var upgradeLines = [];
+                upgradeLines.push('New Tier: ' + selTitle);
+                upgradeLines.push('Current Tier: ' + curTitle);
+                upgradeLines.push('Days Remaining: ' + daysRemaining);
+                upgradeLines.push('Basic Day Rate: ' + Math.round(selectedRates.basic * 100) + '¢ (was ' + Math.round(currentRates.basic * 100) + '¢)');
+                if (paidExtraLocs > 0) {
+                    upgradeLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢ (was ' + Math.round(currentRates.discount * 100) + '¢)');
+                    upgradeLines.push('Extra Locations: ' + paidExtraLocs);
+                }
+                upgradeLines.push('Upgrade Cost: $' + upgradeCost.toFixed(2));
+                upgradeLine.tooltip.textContent = upgradeLines.join('\n');
+            } else {
+                upgradeLine.tooltip.textContent = '';
+            }
 
             // Add days cost
             var addDaysCost = 0;
@@ -1356,10 +1372,19 @@
             }
             addDaysLine.el.style.display = addDays > 0 ? '' : 'none';
             addDaysLine.value.textContent = '$' + addDaysCost.toFixed(2);
-            addDaysLine.tooltip.textContent = addDays > 0
-                ? addDays + ' days × ' + Math.round(selectedRates.basic * 100) + '¢ basic'
-                    + (paidExtraLocs > 0 ? ' + ' + addDays + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount × ' + paidExtraLocs + ' extra loc' + (paidExtraLocs !== 1 ? 's' : '') : '')
-                : '';
+            if (addDays > 0) {
+                var daysLines = [];
+                daysLines.push('Days Added: ' + addDays);
+                daysLines.push('Basic Day Rate: ' + Math.round(selectedRates.basic * 100) + '¢');
+                if (paidExtraLocs > 0) {
+                    daysLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢');
+                    daysLines.push('Extra Locations: ' + paidExtraLocs);
+                }
+                daysLines.push('Duration Cost: $' + addDaysCost.toFixed(2));
+                addDaysLine.tooltip.textContent = daysLines.join('\n');
+            } else {
+                addDaysLine.tooltip.textContent = '';
+            }
 
             // Extra locations cost
             var locCost = 0;
@@ -1368,9 +1393,16 @@
             }
             locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
             locationsLine.value.textContent = '$' + locCost.toFixed(2);
-            locationsLine.tooltip.textContent = newLocs > 0
-                ? '+' + newLocs + ' location' + (newLocs !== 1 ? 's' : '') + ' × ' + daysRemaining + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount'
-                : '';
+            if (newLocs > 0) {
+                var locLines = [];
+                locLines.push('New Locations: ' + newLocs);
+                locLines.push('Days Remaining: ' + daysRemaining);
+                locLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢');
+                locLines.push('Location Cost: $' + locCost.toFixed(2));
+                locationsLine.tooltip.textContent = locLines.join('\n');
+            } else {
+                locationsLine.tooltip.textContent = '';
+            }
 
             // New expiry
             if (addDays > 0 && summaryExpiresAt) {
