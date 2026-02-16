@@ -1322,8 +1322,23 @@
         var manageSubmitBtn = document.createElement('button');
         manageSubmitBtn.type = 'button';
         manageSubmitBtn.className = 'posteditor-manage-submit button-class-2b';
-        manageSubmitBtn.textContent = 'Submit';
         manageSubmitBtn.disabled = true;
+
+        var submitText = document.createElement('span');
+        submitText.className = 'posteditor-manage-submit-text';
+        submitText.textContent = 'Pay $0.00';
+
+        var submitIcons = document.createElement('span');
+        submitIcons.className = 'posteditor-manage-submit-icons';
+        submitIcons.innerHTML = [
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Visa"><rect width="38" height="24" rx="3" fill="#1A1F71"/><text x="19" y="15.5" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="Arial,sans-serif">VISA</text></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Mastercard"><rect width="38" height="24" rx="3" fill="#252525"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 6.5a7 7 0 010 11 7 7 0 010-11z" fill="#FF5F00"/></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Amex"><rect width="38" height="24" rx="3" fill="#2E77BC"/><text x="19" y="15.5" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold" font-family="Arial,sans-serif">AMEX</text></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="PayPal"><rect width="38" height="24" rx="3" fill="#003087"/><text x="12" y="16" fill="#fff" font-size="8.5" font-weight="bold" font-family="Arial,sans-serif">Pay</text><text x="25" y="16" fill="#009CDE" font-size="8.5" font-weight="bold" font-family="Arial,sans-serif">Pal</text></svg>'
+        ].join('');
+
+        manageSubmitBtn.appendChild(submitText);
+        manageSubmitBtn.appendChild(submitIcons);
         manageActionsWrapper.appendChild(manageSubmitBtn);
 
         var user = getCurrentUser();

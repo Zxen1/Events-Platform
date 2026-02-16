@@ -1036,7 +1036,21 @@
 }
 
 .posteditor-manage-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
+}
+
+.posteditor-manage-submit-text {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.posteditor-manage-submit-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .posteditor-manage-admin-submit {

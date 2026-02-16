@@ -3056,12 +3056,27 @@ const MemberModule = (function() {
         var actionsWrapper = document.createElement('div');
         actionsWrapper.className = 'member-checkout-actions-container';
         
-        // Main submit button
+        // Main submit button (payment gateway trigger)
         submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
         submitBtn.className = 'member-button-submit button-class-2b';
-        submitBtn.textContent = 'Submit';
         submitBtn.disabled = true;
+
+        var submitText = document.createElement('span');
+        submitText.className = 'member-button-submit-text';
+        submitText.textContent = 'Pay $0.00';
+
+        var submitIcons = document.createElement('span');
+        submitIcons.className = 'member-button-submit-icons';
+        submitIcons.innerHTML = [
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Visa"><rect width="38" height="24" rx="3" fill="#1A1F71"/><text x="19" y="15.5" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="Arial,sans-serif">VISA</text></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Mastercard"><rect width="38" height="24" rx="3" fill="#252525"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 6.5a7 7 0 010 11 7 7 0 010-11z" fill="#FF5F00"/></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="Amex"><rect width="38" height="24" rx="3" fill="#2E77BC"/><text x="19" y="15.5" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold" font-family="Arial,sans-serif">AMEX</text></svg>',
+            '<svg viewBox="0 0 38 24" width="32" height="20" aria-label="PayPal"><rect width="38" height="24" rx="3" fill="#003087"/><text x="12" y="16" fill="#fff" font-size="8.5" font-weight="bold" font-family="Arial,sans-serif">Pay</text><text x="25" y="16" fill="#009CDE" font-size="8.5" font-weight="bold" font-family="Arial,sans-serif">Pal</text></svg>'
+        ].join('');
+
+        submitBtn.appendChild(submitText);
+        submitBtn.appendChild(submitIcons);
         actionsWrapper.appendChild(submitBtn);
         
         // Admin submit button - only create if user is admin (security: don't load for non-admins)
