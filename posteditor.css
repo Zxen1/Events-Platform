@@ -376,7 +376,7 @@
 .posteditor-manage-edit-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 6px;
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid #333;
