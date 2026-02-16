@@ -1036,8 +1036,6 @@
         };
         document.addEventListener('click', statusOutsideHandler);
 
-        body.appendChild(statusMoreBtn);
-
         // --- Tier row (interactive toggle buttons) ---
         var tierGroup = document.createElement('div');
         tierGroup.className = 'posteditor-manage-field';
@@ -1118,9 +1116,6 @@
         tierGroup.appendChild(tierDesc);
         body.appendChild(tierGroup);
 
-        // --- Created row ---
-        var createdField = buildManageRow('Created', createdText);
-        body.appendChild(createdField.group);
 
         // --- Restore button (beside Edit) ---
         var moreBtn = document.createElement('button');
@@ -1138,6 +1133,7 @@
 
         editAccordionRow.appendChild(moreBtn);
         editAccordionRow.appendChild(moreMenu);
+        editAccordionRow.appendChild(statusMoreBtn);
 
         // Restore menu toggle
         var moreMenuOpen = false;
