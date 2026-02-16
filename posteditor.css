@@ -393,7 +393,7 @@
 /* Restore menu (absolute, floats over content like the 3-dot menu) */
 .posteditor-manage-restore-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: 100%;
   left: 0;
   width: 100%;
   display: none;

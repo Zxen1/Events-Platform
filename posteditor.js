@@ -1015,6 +1015,7 @@
         var statusMenuOpen = false;
         statusMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (moreMenuOpen) setMoreMenuOpen(false);
             statusMenuOpen = !statusMenuOpen;
             if (statusMenuOpen) {
                 statusMoreMenu.classList.add('posteditor-manage-status-more-menu--open');
@@ -1148,6 +1149,10 @@
 
         moreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (statusMenuOpen) {
+                statusMenuOpen = false;
+                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+            }
             setMoreMenuOpen(!moreMenuOpen);
         });
 
