@@ -939,6 +939,14 @@ const PostModule = (function() {
       togglePanel(recentPanelEl, recentPanelContentEl, 'recent', false);
     }
 
+    // Close any open post detail so renderPostList does not preserve stale auth-gated data
+    // (e.g. public_email/public_phone that the API now returns as "members only").
+    if (openMode === 'posts' && postListEl) {
+      closeOpenPost(postListEl);
+    } else if (recentPanelContentEl) {
+      closeOpenPost(recentPanelContentEl);
+    }
+
     // Respect real slide animation duration before reopening.
     var reopenDelayMs = getContentTransitionDurationMs(openContentEl) + 60;
     setTimeout(function() {
