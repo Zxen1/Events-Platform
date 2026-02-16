@@ -522,6 +522,14 @@
   .input-class-1:hover {
     border-color: #555;
   }
+
+  .input-class-1:hover + .textarea-resize-handle {
+    border-color: #555;
+  }
+
+  .textarea-resize-handle:hover .textarea-resize-handle-grip {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .input-class-1:focus {
@@ -531,6 +539,30 @@
 
 .input-class-1::placeholder {
   color: #888;
+}
+
+/* Textarea Resize Handle: full-width drag bar placed below textareas */
+.textarea-resize-handle {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.textarea-resize-handle-grip {
+  width: 30px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+}
+
+.input-class-1:focus + .textarea-resize-handle {
+  border-color: var(--blue-500);
 }
 
 /* ============================================================================

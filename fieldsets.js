@@ -992,6 +992,55 @@ const FieldsetBuilder = (function(){
         }
     }
     
+    // Attach a full-width resize handle below a textarea (replaces native corner grip)
+    function attachTextareaResize(textarea) {
+        if (!textarea) return;
+        
+        textarea.style.borderBottomLeftRadius = '0';
+        textarea.style.borderBottomRightRadius = '0';
+        textarea.style.borderBottom = 'none';
+        
+        var handle = document.createElement('div');
+        handle.className = 'textarea-resize-handle';
+        var grip = document.createElement('div');
+        grip.className = 'textarea-resize-handle-grip';
+        handle.appendChild(grip);
+        
+        textarea.parentNode.insertBefore(handle, textarea.nextSibling);
+        
+        var computedMin = parseInt(window.getComputedStyle(textarea).minHeight);
+        var minHeight = (computedMin && computedMin > 0) ? computedMin : 60;
+        
+        function onStart(e) {
+            e.preventDefault();
+            var startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            var startHeight = textarea.offsetHeight;
+            
+            document.body.style.userSelect = 'none';
+            
+            function onMove(ev) {
+                var currentY = ev.type === 'touchmove' ? ev.touches[0].clientY : ev.clientY;
+                textarea.style.height = Math.max(minHeight, startHeight + (currentY - startY)) + 'px';
+            }
+            
+            function onEnd() {
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            }
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+        
+        handle.addEventListener('mousedown', onStart);
+        handle.addEventListener('touchstart', onStart, { passive: false });
+    }
+
     /**
      * Build a complete fieldset element based on field type
      * @param {Object} fieldData - Field configuration from the form data
@@ -1203,6 +1252,7 @@ const FieldsetBuilder = (function(){
                 applyPlaceholder(descTextarea, placeholder);
                 var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
                 fieldset.appendChild(descTextarea);
+                attachTextareaResize(descTextarea);
                 fieldset.appendChild(descValidation.charCount);
                 break;
                 
@@ -1224,6 +1274,7 @@ const FieldsetBuilder = (function(){
                 applyPlaceholder(editableTextarea, placeholder);
                 var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
                 fieldset.appendChild(editableTextarea);
+                attachTextareaResize(editableTextarea);
                 fieldset.appendChild(textareaValidation.charCount);
                 break;
                 
@@ -7187,7 +7238,8 @@ const FieldsetBuilder = (function(){
         loadFromDatabase: loadFromDatabase,
         buildCurrencyMenuCompact: buildCurrencyMenuCompact,
         buildPhonePrefixMenu: buildPhonePrefixMenu,
-        buildAgeRatingMenu: buildAgeRatingMenu
+        buildAgeRatingMenu: buildAgeRatingMenu,
+        attachTextareaResize: attachTextareaResize
     };
 })();
 
