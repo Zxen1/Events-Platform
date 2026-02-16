@@ -1101,6 +1101,8 @@
         var daysPurchased = parseInt(post.days_purchased, 10) || 0;
         var discountThreshold = 365;
         var thresholdUnlocked = daysPurchased >= discountThreshold;
+        var maxFutureDays = 730;
+        var maxAddDays = Math.max(0, Math.min(365, maxFutureDays - daysRemaining));
 
         // --- Tier section ---
         var tierGroup = document.createElement('div');
@@ -1226,7 +1228,7 @@
             var baseDate = summaryExpiresAt && !isExpired ? summaryExpiresAt : summaryNow;
             var diffMs = latestDate.getTime() - baseDate.getTime();
             var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-            return diffDays > 0 ? Math.min(diffDays, 365) : 0;
+            return diffDays > 0 ? Math.min(diffDays, maxAddDays) : 0;
         }
 
         var durationGroup = document.createElement('div');
@@ -1351,7 +1353,7 @@
             durationAddInput.addEventListener('input', function() {
                 durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
                 var parsed = parseInt(durationAddInput.value, 10);
-                if (parsed > 365) durationAddInput.value = '365';
+                if (parsed > maxAddDays) durationAddInput.value = String(maxAddDays);
                 recalcPricing();
             });
 
@@ -1540,10 +1542,11 @@
                 addDaysLine.tooltip.textContent = '';
             }
 
-            // Extra locations cost — always at discount rate, threshold doesn't change this
+            // Extra locations cost — covers full active period (remaining + added days)
+            var locTotalDays = daysRemaining + addDays;
             var locBase = 0;
-            if (newLocs > 0 && daysRemaining > 0) {
-                locBase = newLocs * daysRemaining * selectedRates.discount;
+            if (newLocs > 0 && locTotalDays > 0) {
+                locBase = newLocs * locTotalDays * selectedRates.discount;
             }
             var locCost = locBase * surchargeMultiplier;
             locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
@@ -1551,7 +1554,10 @@
             if (newLocs > 0) {
                 var selLocDiscC = Math.round(selectedRates.discount * 100);
                 var lt = [];
-                lt.push(newLocs + ' Location' + (newLocs !== 1 ? 's' : '') + ' \u00D7 ' + daysRemaining + ' Days \u00D7 ' + selLocDiscC + '\u00A2 Discount Rate = $' + locBase.toFixed(2));
+                lt.push(newLocs + ' Location' + (newLocs !== 1 ? 's' : '') + ' \u00D7 ' + locTotalDays + ' Days \u00D7 ' + selLocDiscC + '\u00A2 Discount Rate = $' + locBase.toFixed(2));
+                if (daysRemaining > 0 && addDays > 0) {
+                    lt.push('(' + daysRemaining + ' Remaining + ' + addDays + ' Added)');
+                }
                 if (hasSurcharge) {
                     lt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): $' + (locCost - locBase).toFixed(2));
                     lt.push('Total: $' + locCost.toFixed(2));
@@ -1901,9 +1907,10 @@
                 });
             }
 
-            // New locations
-            if (newLocs > 0 && daysRemaining > 0) {
-                var locBase = newLocs * daysRemaining * selectedRates.discount;
+            // New locations — charged for full active period (remaining + added)
+            var locTotalDays = daysRemaining + addDays;
+            if (newLocs > 0 && locTotalDays > 0) {
+                var locBase = newLocs * locTotalDays * selectedRates.discount;
                 var locCost = locBase * surchargeMultiplier;
                 items.push({
                     type: 'add_locations',
@@ -1911,6 +1918,8 @@
                     loc_paid_before: pricingLocPaid,
                     loc_paid_after: pricingLocUsed,
                     days_remaining: daysRemaining,
+                    days_added: addDays,
+                    total_days: locTotalDays,
                     discount_rate: selectedRates.discount,
                     surcharge_percent: surchargePercent,
                     subtotal: parseFloat(locBase.toFixed(2)),

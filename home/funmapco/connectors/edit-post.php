@@ -359,7 +359,6 @@ if ($manageAction !== '') {
         fail_key(400, 'msg_post_edit_error');
       }
       if ($addDays < 0) $addDays = 0;
-      if ($addDays > 365) $addDays = 365;
       if ($newLocQty < 1) $newLocQty = 1;
 
       $lineItemsJson = json_encode($lineItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -372,6 +371,15 @@ if ($manageAction !== '') {
       $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
       if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
       $stmtPost->close();
+
+      // Enforce max future days cap (730 days from now)
+      $maxFutureDays = 730;
+      $now = new DateTime('now', new DateTimeZone('UTC'));
+      $curExpiry = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+      if ($curExpiry < $now) $curExpiry = $now;
+      $daysRemainingServer = max(0, (int)$curExpiry->diff($now)->days);
+      $maxAddDays = max(0, min(365, $maxFutureDays - $daysRemainingServer));
+      if ($addDays > $maxAddDays) $addDays = $maxAddDays;
 
       // Begin transaction
       if (!$mysqli->begin_transaction()) fail_key(500, 'msg_post_edit_error');
