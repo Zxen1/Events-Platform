@@ -1125,8 +1125,8 @@
         }
 
         tierGroup.appendChild(tierBtnRow);
-        tierGroup.appendChild(tierRates);
         tierGroup.appendChild(tierDesc);
+        tierGroup.appendChild(tierRates);
         body.appendChild(tierGroup);
 
 
