@@ -535,6 +535,15 @@
   background: #7f1d1d;
 }
 
+/* Pricing Tier Container */
+.posteditor-manage-tier-container {
+  padding: 10px 10px 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-radius: 5px;
+  margin-bottom: 12px;
+}
+
 /* Tier toggle buttons (uses toggle-class-1) */
 .posteditor-manage-tier-buttons {
   grid-template-columns: repeat(3, 1fr);
@@ -560,6 +569,39 @@
 
 .posteditor-manage-tier-description:empty {
   display: none;
+}
+
+/* Post Duration Container */
+.posteditor-manage-duration-container {
+  padding: 10px 10px 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-radius: 5px;
+  margin-bottom: 12px;
+}
+
+.posteditor-manage-duration-row {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.posteditor-manage-duration-text {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.posteditor-manage-duration-value {
+  font-size: 13px;
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+}
+
+.posteditor-manage-duration-input {
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .posteditor-manage-section:last-child {

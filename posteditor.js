@@ -1043,7 +1043,7 @@
 
         var tierLabel = document.createElement('div');
         tierLabel.className = 'posteditor-manage-field-label';
-        tierLabel.textContent = 'Listing Tier';
+        tierLabel.textContent = 'Increase Visibility';
         tierGroup.appendChild(tierLabel);
 
         var tierBtnRow = document.createElement('div');
@@ -1127,8 +1127,97 @@
         tierGroup.appendChild(tierBtnRow);
         tierGroup.appendChild(tierDesc);
         tierGroup.appendChild(tierRates);
-        body.appendChild(tierGroup);
 
+        var tierContainer = document.createElement('div');
+        tierContainer.className = 'posteditor-manage-tier-container';
+        tierContainer.appendChild(tierGroup);
+        body.appendChild(tierContainer);
+
+        // --- Post Duration Container ---
+        var durationContainer = document.createElement('div');
+        durationContainer.className = 'posteditor-manage-duration-container';
+
+        var durationLabel = document.createElement('div');
+        durationLabel.className = 'posteditor-manage-field-label';
+        durationLabel.textContent = 'Increase Duration';
+        durationContainer.appendChild(durationLabel);
+
+        var daysRemaining = 0;
+        if (summaryExpiresAt && !isExpired) {
+            daysRemaining = Math.floor((summaryExpiresAt.getTime() - summaryNow.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysRemaining < 0) daysRemaining = 0;
+        }
+
+        var durationDaysRow = document.createElement('div');
+        durationDaysRow.className = 'posteditor-manage-duration-row';
+        var durationDaysLabel = document.createElement('span');
+        durationDaysLabel.className = 'posteditor-manage-duration-text';
+        durationDaysLabel.textContent = 'Days Remaining';
+        var durationDaysValue = document.createElement('span');
+        durationDaysValue.className = 'posteditor-manage-duration-value';
+        durationDaysValue.textContent = String(daysRemaining);
+        durationDaysRow.appendChild(durationDaysLabel);
+        durationDaysRow.appendChild(durationDaysValue);
+        durationContainer.appendChild(durationDaysRow);
+
+        var durationAddRow = document.createElement('div');
+        durationAddRow.className = 'posteditor-manage-duration-row';
+        var durationAddLabel = document.createElement('span');
+        durationAddLabel.className = 'posteditor-manage-duration-text';
+        durationAddLabel.textContent = 'Add Days';
+        var durationAddInput = document.createElement('input');
+        durationAddInput.type = 'text';
+        durationAddInput.className = 'posteditor-manage-duration-input fieldset-input input-class-1';
+        durationAddInput.maxLength = 4;
+        durationAddInput.placeholder = 'eg. 30';
+        durationAddInput.inputMode = 'numeric';
+        durationAddRow.appendChild(durationAddLabel);
+        durationAddRow.appendChild(durationAddInput);
+        durationContainer.appendChild(durationAddRow);
+
+        var durationCurrentRow = document.createElement('div');
+        durationCurrentRow.className = 'posteditor-manage-duration-row';
+        var durationCurrentLabel = document.createElement('span');
+        durationCurrentLabel.className = 'posteditor-manage-duration-text';
+        durationCurrentLabel.textContent = 'Current Expiry';
+        var durationCurrentValue = document.createElement('span');
+        durationCurrentValue.className = 'posteditor-manage-duration-value';
+        durationCurrentValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
+        durationCurrentRow.appendChild(durationCurrentLabel);
+        durationCurrentRow.appendChild(durationCurrentValue);
+        durationContainer.appendChild(durationCurrentRow);
+
+        var durationNewRow = document.createElement('div');
+        durationNewRow.className = 'posteditor-manage-duration-row';
+        var durationNewLabel = document.createElement('span');
+        durationNewLabel.className = 'posteditor-manage-duration-text';
+        durationNewLabel.textContent = 'New Expiry';
+        var durationNewValue = document.createElement('span');
+        durationNewValue.className = 'posteditor-manage-duration-value';
+        durationNewValue.textContent = '—';
+        durationNewRow.appendChild(durationNewLabel);
+        durationNewRow.appendChild(durationNewValue);
+        durationContainer.appendChild(durationNewRow);
+
+        durationAddInput.addEventListener('keydown', function(e) {
+            if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+            }
+        });
+
+        durationAddInput.addEventListener('input', function() {
+            durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
+            var addDays = parseInt(durationAddInput.value, 10);
+            if (addDays > 0 && summaryExpiresAt) {
+                var baseDate = isExpired ? summaryNow : summaryExpiresAt;
+                var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
+                durationNewValue.textContent = formatStatusDate(newExpiry);
+            } else {
+                durationNewValue.textContent = '—';
+            }
+        });
+
+        body.appendChild(durationContainer);
 
         // --- Restore button (beside Edit) ---
         var moreBtn = document.createElement('button');
