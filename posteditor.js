@@ -1074,6 +1074,7 @@
 
         var surchargePercent = 0;
         var surchargeSubName = post.subcategory_name || '';
+        var subcategoryType = '';
         var memberCategories = getMemberCategories();
         for (var ci = 0; ci < memberCategories.length; ci++) {
             var cat = memberCategories[ci];
@@ -1088,12 +1089,14 @@
                         var parsed = parseFloat(feeInfo.checkout_surcharge);
                         if (!isNaN(parsed)) surchargePercent = parsed;
                     }
+                    if (feeInfo.subcategory_type) subcategoryType = String(feeInfo.subcategory_type);
                     break;
                 }
             }
-            if (surchargePercent !== 0) break;
+            if (subcategoryType !== '') break;
         }
         var surchargeMultiplier = 1 + (surchargePercent / 100);
+        var isEvent = subcategoryType === 'Events';
 
         var daysPurchased = parseInt(post.days_purchased, 10) || 0;
         var discountThreshold = 365;
@@ -1193,6 +1196,39 @@
         pricingContainer.appendChild(tierGroup);
 
         // --- Duration section ---
+        // For events: auto-calculate days from the latest session date
+        function getLatestEventDate() {
+            var latest = null;
+            var sessionFieldsets = editAccordionContent.querySelectorAll('.fieldset[data-fieldset-key="sessions"], .fieldset[data-fieldset-key="session_pricing"]');
+            for (var fi = 0; fi < sessionFieldsets.length; fi++) {
+                var fs = sessionFieldsets[fi];
+                var isoCsv = fs.dataset.selectedIsos || '';
+                var isos = isoCsv ? isoCsv.split(',').filter(Boolean) : [];
+                if (isos.length === 0) {
+                    var selectedLabels = fs.querySelectorAll('.fieldset-sessions-session-field-label--selected[data-iso], .fieldset-sessionpricing-session-field-label--selected[data-iso]');
+                    for (var li = 0; li < selectedLabels.length; li++) {
+                        var iso = selectedLabels[li].dataset.iso;
+                        if (iso) isos.push(iso);
+                    }
+                }
+                for (var ii = 0; ii < isos.length; ii++) {
+                    if (!latest || isos[ii] > latest) latest = isos[ii];
+                }
+            }
+            if (!latest) return null;
+            var d = new Date(latest.trim() + 'T23:59:59');
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function calcEventAddDays() {
+            var latestDate = getLatestEventDate();
+            if (!latestDate) return 0;
+            var baseDate = summaryExpiresAt && !isExpired ? summaryExpiresAt : summaryNow;
+            var diffMs = latestDate.getTime() - baseDate.getTime();
+            var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? Math.min(diffDays, 365) : 0;
+        }
+
         var durationGroup = document.createElement('div');
         durationGroup.className = 'posteditor-manage-field';
 
@@ -1209,7 +1245,8 @@
         durationTipBox.className = 'fieldset-label-tooltipbox';
         durationLabel.appendChild(durationTipBox);
         if (typeof window.getMessage === 'function') {
-            window.getMessage('msg_posteditor_duration_info', {}, false).then(function(msg) {
+            var durationMsgKey = isEvent ? 'msg_posteditor_duration_event_info' : 'msg_posteditor_duration_info';
+            window.getMessage(durationMsgKey, {}, false).then(function(msg) {
                 if (msg) durationTipBox.textContent = msg;
             });
         }
@@ -1288,29 +1325,43 @@
         reachGroup.appendChild(reachRow);
         pricingContainer.appendChild(reachGroup);
 
-        durationAddInput.addEventListener('focus', function() {
-            if (durationAddInput.value === '0') durationAddInput.value = '';
-        });
+        if (isEvent) {
+            durationAddInput.readOnly = true;
+            durationAddInput.tabIndex = -1;
+            durationInputWrapper.classList.add('posteditor-manage-duration-inputbox--readonly');
+            var eventDays = calcEventAddDays();
+            durationAddInput.value = String(eventDays);
 
-        durationAddInput.addEventListener('keydown', function(e) {
-            if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
-                e.preventDefault();
-            }
-        });
-
-        durationAddInput.addEventListener('input', function() {
-            durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
-            var parsed = parseInt(durationAddInput.value, 10);
-            if (parsed > 365) durationAddInput.value = '365';
-            recalcPricing();
-        });
-
-        durationAddInput.addEventListener('blur', function() {
-            if (!durationAddInput.value || durationAddInput.value.trim() === '') {
-                durationAddInput.value = '0';
+            editAccordionContent.addEventListener('fieldset:sessions-change', function() {
+                var days = calcEventAddDays();
+                durationAddInput.value = String(days);
                 recalcPricing();
-            }
-        });
+            });
+        } else {
+            durationAddInput.addEventListener('focus', function() {
+                if (durationAddInput.value === '0') durationAddInput.value = '';
+            });
+
+            durationAddInput.addEventListener('keydown', function(e) {
+                if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                }
+            });
+
+            durationAddInput.addEventListener('input', function() {
+                durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
+                var parsed = parseInt(durationAddInput.value, 10);
+                if (parsed > 365) durationAddInput.value = '365';
+                recalcPricing();
+            });
+
+            durationAddInput.addEventListener('blur', function() {
+                if (!durationAddInput.value || durationAddInput.value.trim() === '') {
+                    durationAddInput.value = '0';
+                    recalcPricing();
+                }
+            });
+        }
 
         // --- Subtotal lines ---
         function createPricingLine(labelText) {
@@ -1376,6 +1427,11 @@
             var selectedRates = getTierRates(selectedTierIndex);
             var currentRates = getTierRates(currentTierIndex);
             var addDays = parseInt(durationAddInput.value, 10) || 0;
+
+            // Read live location count from the edit form DOM
+            var liveLocContainers = editAccordionContent.querySelectorAll('.member-location-container');
+            if (liveLocContainers.length > 0) pricingLocUsed = liveLocContainers.length;
+
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
             reachValue.textContent = String(newLocs);
@@ -1506,10 +1562,15 @@
             }
 
             // New expiry
-            if (addDays > 0 && summaryExpiresAt) {
-                var baseDate = isExpired ? summaryNow : summaryExpiresAt;
-                var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
-                durationNewValue.textContent = formatStatusDate(newExpiry);
+            if (addDays > 0) {
+                if (isEvent) {
+                    var latestEventDate = getLatestEventDate();
+                    durationNewValue.textContent = latestEventDate ? formatStatusDate(latestEventDate) : '\u2014';
+                } else {
+                    var baseDate = (summaryExpiresAt && !isExpired) ? summaryExpiresAt : summaryNow;
+                    var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
+                    durationNewValue.textContent = formatStatusDate(newExpiry);
+                }
             } else {
                 durationNewValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '\u2014';
             }
@@ -1521,7 +1582,14 @@
 
             // Update submit button text
             submitText.textContent = 'Pay $' + total.toFixed(2);
+
+            // Enable/disable submit based on total
+            manageSubmitBtn.disabled = total <= 0;
         }
+
+        editAccordionContent.addEventListener('locations:change', function() {
+            recalcPricing();
+        });
 
         body.appendChild(pricingContainer);
 
@@ -2051,6 +2119,7 @@
                     if (qtyDisplay) qtyDisplay.textContent = quantity + '/' + (post.loc_paid || 1);
                     // Update Save/Checkout button state immediately
                     updateFooterButtonState();
+                    formContainer.dispatchEvent(new CustomEvent('locations:change', { bubbles: true, detail: { count: quantity } }));
                 },
                 getMessage: function(key, params, fallback) {
                     return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
@@ -2080,6 +2149,7 @@
                                 if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
                                     FormbuilderModule.updateVenueDeleteButtons();
                                 }
+                                formContainer.dispatchEvent(new CustomEvent('locations:change', { bubbles: true, detail: { count: allContainers.length } }));
                             }
                         });
                     }
