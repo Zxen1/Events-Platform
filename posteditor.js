@@ -886,10 +886,6 @@
         else if (isExpired) currentStatus = 'expired';
         else if (summaryVisibility === 'hidden') currentStatus = 'hidden';
 
-        var statusField = buildManageRow('Status', statusText);
-        var statusValueEl = statusField.value;
-        statusValueEl.classList.add('posteditor-manage-status-value');
-
         // 3-dot menu button
         var statusMoreBtn = document.createElement('button');
         statusMoreBtn.type = 'button';
@@ -957,7 +953,6 @@
                     }
                     hideInput.checked = !hideInput.checked;
                     hideSlider.classList.toggle('component-switch-slider--on-default');
-                    statusValueEl.textContent = newVisibility === 'hidden' ? 'Hidden' : 'Active';
                     // Rebuild modal status bar
                     var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
                     if (oldModalBar) {
@@ -1041,8 +1036,7 @@
         };
         document.addEventListener('click', statusOutsideHandler);
 
-        statusField.row.appendChild(statusMoreBtn);
-        body.appendChild(statusField.group);
+        body.appendChild(statusMoreBtn);
 
         // --- Tier row (interactive toggle buttons) ---
         var tierGroup = document.createElement('div');
@@ -1123,39 +1117,6 @@
         tierGroup.appendChild(tierBtnRow);
         tierGroup.appendChild(tierDesc);
         body.appendChild(tierGroup);
-
-        // --- Locations row (with tooltip) ---
-        var locField = buildManageRow('Locations', locText);
-        // Replace plain label with tooltip-enabled label (same pattern as admin Map Card Breakpoint)
-        var locLabel = locField.group.querySelector('.posteditor-manage-field-label');
-        locLabel.textContent = '';
-        locLabel.classList.add('admin-settings-field-label--has-tooltip');
-        var locLabelText = document.createElement('span');
-        locLabelText.className = 'admin-settings-field-label-text';
-        locLabelText.textContent = 'Locations';
-        var locTooltipIcon = document.createElement('span');
-        locTooltipIcon.className = 'admin-tooltip';
-        locTooltipIcon.innerHTML = '<svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg>';
-        var locTooltipText = document.createElement('div');
-        locTooltipText.className = 'admin-tooltip-text';
-        locLabel.appendChild(locLabelText);
-        locLabel.appendChild(locTooltipIcon);
-        locLabel.appendChild(locTooltipText);
-        // Load tooltip message from database
-        if (typeof window.getMessage === 'function') {
-            window.getMessage('msg_posteditor_locations_info', {}, false).then(function(msg) {
-                if (msg) locTooltipText.textContent = msg;
-            });
-        }
-        body.appendChild(locField.group);
-
-        // --- Time Remaining row ---
-        var timeField = buildManageRow('Time Remaining', timeText);
-        body.appendChild(timeField.group);
-
-        // --- Expires row ---
-        var expiryField = buildManageRow('Expires', expiryText);
-        body.appendChild(expiryField.group);
 
         // --- Created row ---
         var createdField = buildManageRow('Created', createdText);
