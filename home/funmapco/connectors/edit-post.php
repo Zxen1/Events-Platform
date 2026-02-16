@@ -346,6 +346,87 @@ if ($manageAction !== '') {
       echo json_encode(['success' => true, 'manage_action' => 'toggle_visibility', 'visibility' => $newVisibility]);
       exit;
 
+    case 'upgrade_checkout':
+      // Validate required fields
+      $checkoutKey = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : '';
+      $currency    = isset($data['currency']) ? trim((string)$data['currency']) : 'USD';
+      $amount      = isset($data['amount']) ? round((float)$data['amount'], 2) : 0.00;
+      $lineItems   = isset($data['line_items']) && is_array($data['line_items']) ? $data['line_items'] : [];
+      $addDays     = isset($data['add_days']) ? (int)$data['add_days'] : 0;
+      $newLocQty   = isset($data['loc_qty']) ? (int)$data['loc_qty'] : 0;
+
+      if ($checkoutKey === '' || $amount <= 0 || empty($lineItems)) {
+        fail_key(400, 'msg_post_edit_error');
+      }
+      if ($addDays < 0) $addDays = 0;
+      if ($addDays > 365) $addDays = 365;
+      if ($newLocQty < 1) $newLocQty = 1;
+
+      $lineItemsJson = json_encode($lineItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+      // Fetch current post state for safe updates
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
+      $stmtPost->bind_param('i', $postId);
+      $stmtPost->execute();
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
+      $stmtPost->close();
+
+      // Begin transaction
+      if (!$mysqli->begin_transaction()) fail_key(500, 'msg_post_edit_error');
+      $upgradeActive = true;
+
+      // 1. Insert transaction record (status pending until payment confirmed)
+      $description = 'Post #' . $postId . ' upgrade';
+      $stmtTx = $mysqli->prepare(
+        "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, amount, currency, line_items, description, status, created_at, updated_at)
+         VALUES (?, ?, 'edit', ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
+      );
+      if (!$stmtTx) { $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
+      $stmtTx->bind_param('iisdsss', $memberId, $postId, $checkoutKey, $amount, $currency, $lineItemsJson, $description);
+      if (!$stmtTx->execute()) { $stmtTx->close(); $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
+      $transactionId = $stmtTx->insert_id;
+      $stmtTx->close();
+
+      // 2. Update post: checkout_key, days_purchased, loc_paid, expires_at
+      $newDaysPurchased = (int)$curDaysPurchased + $addDays;
+
+      // Calculate new expiry: add days to current expires_at (or from now if expired)
+      $newExpiresAt = $curExpiresAt;
+      if ($addDays > 0) {
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $expiryBase = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+        if ($expiryBase < $now) $expiryBase = $now;
+        $expiryBase->modify('+' . $addDays . ' days');
+        $newExpiresAt = $expiryBase->format('Y-m-d H:i:s');
+      }
+
+      // Only update loc_paid if new locations were added (loc_qty > current loc_paid)
+      $newLocPaid = max((int)$curLocPaid, $newLocQty);
+
+      $stmtUpdate = $mysqli->prepare(
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+      );
+      if (!$stmtUpdate) { $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
+      $stmtUpdate->bind_param('siisi', $checkoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
+      if (!$stmtUpdate->execute()) { $stmtUpdate->close(); $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
+      $stmtUpdate->close();
+
+      $mysqli->commit();
+
+      echo json_encode([
+        'success'        => true,
+        'manage_action'  => 'upgrade_checkout',
+        'transaction_id' => $transactionId,
+        'checkout_key'   => $checkoutKey,
+        'days_purchased' => $newDaysPurchased,
+        'loc_paid'       => $newLocPaid,
+        'expires_at'     => $newExpiresAt,
+        'amount'         => $amount
+      ]);
+      exit;
+
     default:
       fail_key(400, 'msg_post_edit_error');
   }

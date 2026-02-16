@@ -1758,6 +1758,157 @@
             manageActionsWrapper.appendChild(manageAdminSubmitBtn);
         }
 
+        // --- Build line items for transaction ---
+        function buildLineItems() {
+            var selectedRates = getTierRates(selectedTierIndex);
+            var currentRates = getTierRates(currentTierIndex);
+            var addDays = parseInt(durationAddInput.value, 10) || 0;
+            var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
+            var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
+            var items = [];
+            var selOpt = allCheckoutOptions[selectedTierIndex] || {};
+            var curOpt = allCheckoutOptions[currentTierIndex] || {};
+            var currency = selOpt.checkout_currency || curOpt.checkout_currency || 'USD';
+
+            // Tier upgrade
+            if (selectedTierIndex > currentTierIndex && daysRemaining > 0) {
+                var selFirst = thresholdUnlocked ? selectedRates.discount : selectedRates.basic;
+                var curFirst = thresholdUnlocked ? currentRates.discount : currentRates.basic;
+                var newTierCost = daysRemaining * selFirst + daysRemaining * selectedRates.discount * paidExtraLocs;
+                var curTierCost = daysRemaining * curFirst + daysRemaining * currentRates.discount * paidExtraLocs;
+                var upgradeBase = newTierCost - curTierCost;
+                var upgradeCost = upgradeBase * surchargeMultiplier;
+                if (upgradeBase > 0) {
+                    items.push({
+                        type: 'tier_upgrade',
+                        from_tier: curOpt.checkout_key || '',
+                        to_tier: selOpt.checkout_key || '',
+                        days_remaining: daysRemaining,
+                        threshold_unlocked: thresholdUnlocked,
+                        first_loc_rate: selFirst,
+                        first_loc_rate_label: thresholdUnlocked ? 'discount' : 'basic',
+                        discount_rate: selectedRates.discount,
+                        previous_basic_rate: currentRates.basic,
+                        previous_discount_rate: currentRates.discount,
+                        extra_locations: paidExtraLocs,
+                        surcharge_percent: surchargePercent,
+                        subtotal: parseFloat(upgradeBase.toFixed(2)),
+                        total: parseFloat(upgradeCost.toFixed(2))
+                    });
+                }
+            }
+
+            // Add days
+            if (addDays > 0) {
+                var daysBeforeThreshold = 0;
+                var daysAfterThreshold = 0;
+                var addDaysBase = 0;
+                if (thresholdUnlocked) {
+                    addDaysBase = addDays * selectedRates.discount * (1 + paidExtraLocs);
+                    daysAfterThreshold = addDays;
+                } else if (daysPurchased + addDays >= discountThreshold) {
+                    daysBeforeThreshold = discountThreshold - daysPurchased;
+                    daysAfterThreshold = addDays - daysBeforeThreshold;
+                    addDaysBase = daysBeforeThreshold * selectedRates.basic + daysAfterThreshold * selectedRates.discount + addDays * selectedRates.discount * paidExtraLocs;
+                } else {
+                    addDaysBase = addDays * selectedRates.basic + addDays * selectedRates.discount * paidExtraLocs;
+                    daysBeforeThreshold = addDays;
+                }
+                var addDaysCost = addDaysBase * surchargeMultiplier;
+                items.push({
+                    type: 'add_days',
+                    days_added: addDays,
+                    days_purchased_before: daysPurchased,
+                    days_purchased_after: daysPurchased + addDays,
+                    threshold_unlocked_before: thresholdUnlocked,
+                    threshold_unlocked_after: (daysPurchased + addDays) >= discountThreshold,
+                    days_at_basic_rate: daysBeforeThreshold,
+                    days_at_discount_rate: daysAfterThreshold,
+                    basic_rate: selectedRates.basic,
+                    discount_rate: selectedRates.discount,
+                    extra_locations: paidExtraLocs,
+                    surcharge_percent: surchargePercent,
+                    subtotal: parseFloat(addDaysBase.toFixed(2)),
+                    total: parseFloat(addDaysCost.toFixed(2))
+                });
+            }
+
+            // New locations
+            if (newLocs > 0 && daysRemaining > 0) {
+                var locBase = newLocs * daysRemaining * selectedRates.discount;
+                var locCost = locBase * surchargeMultiplier;
+                items.push({
+                    type: 'add_locations',
+                    new_locations: newLocs,
+                    loc_paid_before: pricingLocPaid,
+                    loc_paid_after: pricingLocUsed,
+                    days_remaining: daysRemaining,
+                    discount_rate: selectedRates.discount,
+                    surcharge_percent: surchargePercent,
+                    subtotal: parseFloat(locBase.toFixed(2)),
+                    total: parseFloat(locCost.toFixed(2))
+                });
+            }
+
+            var grandTotal = 0;
+            for (var li = 0; li < items.length; li++) grandTotal += items[li].total;
+
+            return {
+                line_items: items,
+                currency: currency,
+                checkout_key: selOpt.checkout_key || curOpt.checkout_key || '',
+                total: parseFloat(grandTotal.toFixed(2))
+            };
+        }
+
+        // --- Submit handler ---
+        manageSubmitBtn.addEventListener('click', function() {
+            var pricing = buildLineItems();
+            if (pricing.total <= 0) return;
+            manageSubmitBtn.disabled = true;
+
+            var user = getCurrentUser();
+            var payload = {
+                post_id: postId,
+                member_id: user ? parseInt(user.id, 10) : 0,
+                member_name: user ? (user.name || user.username || '') : '',
+                member_type: user ? (user.type || 'member') : 'member',
+                manage_action: 'upgrade_checkout',
+                checkout_key: pricing.checkout_key,
+                currency: pricing.currency,
+                amount: pricing.total,
+                line_items: pricing.line_items,
+                add_days: parseInt(durationAddInput.value, 10) || 0,
+                loc_qty: pricingLocUsed
+            };
+
+            fetch('/gateway.php?action=edit-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (res && res.success) {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        ToastComponent.showSuccess('Upgrade submitted successfully.');
+                    }
+                    App.emit('post:updated', { post_id: postId });
+                    closeModal();
+                    refreshPostCard(postId);
+                } else {
+                    manageSubmitBtn.disabled = false;
+                    var errMsg = (res && res.error) ? res.error : 'Something went wrong.';
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(errMsg);
+                    }
+                }
+            }).catch(function() {
+                manageSubmitBtn.disabled = false;
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError('Network error. Please try again.');
+                }
+            });
+        });
+
         body.appendChild(manageActionsWrapper);
 
         modalContainer.appendChild(body);
