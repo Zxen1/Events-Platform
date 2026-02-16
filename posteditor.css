@@ -634,14 +634,20 @@
   display: flex;
   align-items: center;
   height: 36px;
-  position: relative;
-  cursor: help;
 }
 
 .posteditor-manage-pricing-line-label {
   flex: 1;
   font-size: 13px;
   color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.posteditor-manage-pricing-line-valuewrap {
+  position: relative;
+  cursor: help;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .posteditor-manage-pricing-line-value {
@@ -653,20 +659,21 @@
   display: none;
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 0;
   right: 0;
+  min-width: 260px;
   background: #111;
   border: 1px solid var(--blue-500);
   border-radius: 5px;
   padding: 10px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.8);
-  line-height: 1.4;
+  line-height: 1.6;
   z-index: var(--layer-dialog, 86);
   white-space: pre-line;
 }
 
-.posteditor-manage-pricing-line:hover .posteditor-manage-pricing-tooltip:not(:empty) {
+.posteditor-manage-pricing-line-valuewrap:hover .posteditor-manage-pricing-tooltip:not(:empty),
+.posteditor-manage-pricing-tooltip--open:not(:empty) {
   display: block;
 }
 

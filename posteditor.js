@@ -1072,6 +1072,33 @@
             if (daysRemaining < 0) daysRemaining = 0;
         }
 
+        var surchargePercent = 0;
+        var surchargeSubName = post.subcategory_name || '';
+        var memberCategories = getMemberCategories();
+        for (var ci = 0; ci < memberCategories.length; ci++) {
+            var cat = memberCategories[ci];
+            if (!cat.subs) continue;
+            for (var si = 0; si < cat.subs.length; si++) {
+                var sub = cat.subs[si];
+                var subKey = (typeof sub === 'string') ? sub : (sub && sub.name);
+                var feeInfo = cat.subFees && cat.subFees[subKey];
+                var feeSubKey = feeInfo && feeInfo.subcategory_key ? String(feeInfo.subcategory_key) : '';
+                if (feeSubKey === (post.subcategory_key || '')) {
+                    if (feeInfo.checkout_surcharge !== null && feeInfo.checkout_surcharge !== undefined) {
+                        var parsed = parseFloat(feeInfo.checkout_surcharge);
+                        if (!isNaN(parsed)) surchargePercent = parsed;
+                    }
+                    break;
+                }
+            }
+            if (surchargePercent !== 0) break;
+        }
+        var surchargeMultiplier = 1 + (surchargePercent / 100);
+
+        var daysPurchased = parseInt(post.days_purchased, 10) || 0;
+        var discountThreshold = 365;
+        var thresholdUnlocked = daysPurchased >= discountThreshold;
+
         // --- Tier section ---
         var tierGroup = document.createElement('div');
         tierGroup.className = 'posteditor-manage-field';
@@ -1293,16 +1320,31 @@
             var lineLbl = document.createElement('span');
             lineLbl.className = 'posteditor-manage-pricing-line-label';
             lineLbl.textContent = labelText;
+            var lineValWrap = document.createElement('span');
+            lineValWrap.className = 'posteditor-manage-pricing-line-valuewrap';
             var lineVal = document.createElement('span');
             lineVal.className = 'posteditor-manage-pricing-line-value';
             lineVal.textContent = '$0.00';
             var lineTooltip = document.createElement('div');
             lineTooltip.className = 'posteditor-manage-pricing-tooltip';
+            lineValWrap.appendChild(lineVal);
+            lineValWrap.appendChild(lineTooltip);
+            lineValWrap.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = lineTooltip.classList.contains('posteditor-manage-pricing-tooltip--open');
+                var allTips = pricingContainer.querySelectorAll('.posteditor-manage-pricing-tooltip--open');
+                for (var t = 0; t < allTips.length; t++) allTips[t].classList.remove('posteditor-manage-pricing-tooltip--open');
+                if (!isOpen && lineTooltip.textContent) lineTooltip.classList.add('posteditor-manage-pricing-tooltip--open');
+            });
             line.appendChild(lineLbl);
-            line.appendChild(lineVal);
-            line.appendChild(lineTooltip);
+            line.appendChild(lineValWrap);
             return { el: line, value: lineVal, tooltip: lineTooltip };
         }
+
+        document.addEventListener('click', function() {
+            var allTips = pricingContainer.querySelectorAll('.posteditor-manage-pricing-tooltip--open');
+            for (var t = 0; t < allTips.length; t++) allTips[t].classList.remove('posteditor-manage-pricing-tooltip--open');
+        });
 
         var subtotalsWrapper = document.createElement('div');
         subtotalsWrapper.className = 'posteditor-manage-pricing-subtotals';
@@ -1337,69 +1379,128 @@
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
             reachValue.textContent = String(newLocs);
+            var hasSurcharge = surchargePercent !== 0;
+            var firstLocRate = thresholdUnlocked ? 'discount' : 'basic';
 
-            // Upgrade cost
-            var upgradeCost = 0;
+            // Upgrade cost — uses discount rate for first location if threshold already unlocked
+            var upgradeBase = 0;
             if (selectedTierIndex > currentTierIndex && daysRemaining > 0) {
-                var newTierCost = daysRemaining * selectedRates.basic + daysRemaining * selectedRates.discount * paidExtraLocs;
-                var curTierCost = daysRemaining * currentRates.basic + daysRemaining * currentRates.discount * paidExtraLocs;
-                upgradeCost = newTierCost - curTierCost;
+                var selFirst = thresholdUnlocked ? selectedRates.discount : selectedRates.basic;
+                var curFirst = thresholdUnlocked ? currentRates.discount : currentRates.basic;
+                var newTierCost = daysRemaining * selFirst + daysRemaining * selectedRates.discount * paidExtraLocs;
+                var curTierCost = daysRemaining * curFirst + daysRemaining * currentRates.discount * paidExtraLocs;
+                upgradeBase = newTierCost - curTierCost;
             }
-            upgradeLine.el.style.display = upgradeCost > 0 ? '' : 'none';
+            var upgradeCost = upgradeBase * surchargeMultiplier;
+            upgradeLine.el.style.display = upgradeBase > 0 ? '' : 'none';
             upgradeLine.value.textContent = '$' + upgradeCost.toFixed(2);
-            if (upgradeCost > 0) {
+            if (upgradeBase > 0) {
                 var selTitle = allCheckoutOptions[selectedTierIndex] ? String(allCheckoutOptions[selectedTierIndex].checkout_title || '') : '';
                 var curTitle = allCheckoutOptions[currentTierIndex] ? String(allCheckoutOptions[currentTierIndex].checkout_title || '') : '';
-                var upgradeLines = [];
-                upgradeLines.push('New Tier: ' + selTitle);
-                upgradeLines.push('Current Tier: ' + curTitle);
-                upgradeLines.push('Days Remaining: ' + daysRemaining);
-                upgradeLines.push('Basic Day Rate: ' + Math.round(selectedRates.basic * 100) + '¢ (was ' + Math.round(currentRates.basic * 100) + '¢)');
+                var selFirst = thresholdUnlocked ? selectedRates.discount : selectedRates.basic;
+                var curFirst = thresholdUnlocked ? currentRates.discount : currentRates.basic;
+                var selFirstC = Math.round(selFirst * 100);
+                var curFirstC = Math.round(curFirst * 100);
+                var selDiscC = Math.round(selectedRates.discount * 100);
+                var curDiscC = Math.round(currentRates.discount * 100);
+                var firstRateLabel = thresholdUnlocked ? 'Discount Rate' : 'Basic Rate';
+                var newCostVal = daysRemaining * selFirst + daysRemaining * selectedRates.discount * paidExtraLocs;
+                var curCostVal = daysRemaining * curFirst + daysRemaining * currentRates.discount * paidExtraLocs;
+                var tt = [];
+                if (thresholdUnlocked) tt.push('365-Day Discount Unlocked');
+                tt.push('');
+                tt.push('Selected Tier (' + selTitle + ')');
+                tt.push(daysRemaining + ' Days \u00D7 ' + selFirstC + '\u00A2 ' + firstRateLabel + ' = $' + (daysRemaining * selFirst).toFixed(2));
                 if (paidExtraLocs > 0) {
-                    upgradeLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢ (was ' + Math.round(currentRates.discount * 100) + '¢)');
-                    upgradeLines.push('Extra Locations: ' + paidExtraLocs);
+                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + selDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = $' + (daysRemaining * selectedRates.discount * paidExtraLocs).toFixed(2));
                 }
-                upgradeLines.push('Upgrade Cost: $' + upgradeCost.toFixed(2));
-                upgradeLine.tooltip.textContent = upgradeLines.join('\n');
+                tt.push('Subtotal: $' + newCostVal.toFixed(2));
+                tt.push('');
+                tt.push('Current Tier (' + curTitle + ')');
+                tt.push(daysRemaining + ' Days \u00D7 ' + curFirstC + '\u00A2 ' + firstRateLabel + ' = $' + (daysRemaining * curFirst).toFixed(2));
+                if (paidExtraLocs > 0) {
+                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + curDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = $' + (daysRemaining * currentRates.discount * paidExtraLocs).toFixed(2));
+                }
+                tt.push('Subtotal: $' + curCostVal.toFixed(2));
+                tt.push('');
+                tt.push('Difference: $' + upgradeBase.toFixed(2));
+                if (hasSurcharge) {
+                    tt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): $' + (upgradeCost - upgradeBase).toFixed(2));
+                    tt.push('Total: $' + upgradeCost.toFixed(2));
+                }
+                upgradeLine.tooltip.textContent = tt.join('\n');
             } else {
                 upgradeLine.tooltip.textContent = '';
             }
 
-            // Add days cost
-            var addDaysCost = 0;
+            // Add days cost — pro-rates across the 365-day threshold
+            var addDaysBase = 0;
+            var daysBeforeThreshold = 0;
+            var daysAfterThreshold = 0;
             if (addDays > 0) {
-                addDaysCost = addDays * selectedRates.basic + addDays * selectedRates.discount * paidExtraLocs;
+                if (thresholdUnlocked) {
+                    addDaysBase = addDays * selectedRates.discount * (1 + paidExtraLocs);
+                    daysAfterThreshold = addDays;
+                } else if (daysPurchased + addDays >= discountThreshold) {
+                    daysBeforeThreshold = discountThreshold - daysPurchased;
+                    daysAfterThreshold = addDays - daysBeforeThreshold;
+                    var firstLocCost = daysBeforeThreshold * selectedRates.basic + daysAfterThreshold * selectedRates.discount;
+                    var extraLocCost = addDays * selectedRates.discount * paidExtraLocs;
+                    addDaysBase = firstLocCost + extraLocCost;
+                } else {
+                    addDaysBase = addDays * selectedRates.basic + addDays * selectedRates.discount * paidExtraLocs;
+                    daysBeforeThreshold = addDays;
+                }
             }
+            var addDaysCost = addDaysBase * surchargeMultiplier;
             addDaysLine.el.style.display = addDays > 0 ? '' : 'none';
             addDaysLine.value.textContent = '$' + addDaysCost.toFixed(2);
             if (addDays > 0) {
-                var daysLines = [];
-                daysLines.push('Days Added: ' + addDays);
-                daysLines.push('Basic Day Rate: ' + Math.round(selectedRates.basic * 100) + '¢');
-                if (paidExtraLocs > 0) {
-                    daysLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢');
-                    daysLines.push('Extra Locations: ' + paidExtraLocs);
+                var selRateBasicC = Math.round(selectedRates.basic * 100);
+                var selRateDiscC = Math.round(selectedRates.discount * 100);
+                var dt = [];
+                if (thresholdUnlocked) {
+                    dt.push('365-Day Discount Unlocked');
+                    dt.push('');
+                    dt.push(addDays + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate = $' + (addDays * selectedRates.discount).toFixed(2));
+                } else if (daysAfterThreshold > 0) {
+                    dt.push('365-Day Discount Unlocks After ' + daysBeforeThreshold + ' Days');
+                    dt.push('');
+                    dt.push(daysBeforeThreshold + ' Days \u00D7 ' + selRateBasicC + '\u00A2 Basic Rate = $' + (daysBeforeThreshold * selectedRates.basic).toFixed(2));
+                    dt.push('+ ' + daysAfterThreshold + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate = $' + (daysAfterThreshold * selectedRates.discount).toFixed(2));
+                } else {
+                    dt.push(addDays + ' Days \u00D7 ' + selRateBasicC + '\u00A2 Basic Rate = $' + (addDays * selectedRates.basic).toFixed(2));
                 }
-                daysLines.push('Duration Cost: $' + addDaysCost.toFixed(2));
-                addDaysLine.tooltip.textContent = daysLines.join('\n');
+                if (paidExtraLocs > 0) {
+                    dt.push('+ ' + addDays + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = $' + (addDays * selectedRates.discount * paidExtraLocs).toFixed(2));
+                }
+                dt.push('Subtotal: $' + addDaysBase.toFixed(2));
+                if (hasSurcharge) {
+                    dt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): $' + (addDaysCost - addDaysBase).toFixed(2));
+                    dt.push('Total: $' + addDaysCost.toFixed(2));
+                }
+                addDaysLine.tooltip.textContent = dt.join('\n');
             } else {
                 addDaysLine.tooltip.textContent = '';
             }
 
-            // Extra locations cost
-            var locCost = 0;
+            // Extra locations cost — always at discount rate, threshold doesn't change this
+            var locBase = 0;
             if (newLocs > 0 && daysRemaining > 0) {
-                locCost = newLocs * daysRemaining * selectedRates.discount;
+                locBase = newLocs * daysRemaining * selectedRates.discount;
             }
+            var locCost = locBase * surchargeMultiplier;
             locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
             locationsLine.value.textContent = '$' + locCost.toFixed(2);
             if (newLocs > 0) {
-                var locLines = [];
-                locLines.push('New Locations: ' + newLocs);
-                locLines.push('Days Remaining: ' + daysRemaining);
-                locLines.push('Discount Day Rate: ' + Math.round(selectedRates.discount * 100) + '¢');
-                locLines.push('Location Cost: $' + locCost.toFixed(2));
-                locationsLine.tooltip.textContent = locLines.join('\n');
+                var selLocDiscC = Math.round(selectedRates.discount * 100);
+                var lt = [];
+                lt.push(newLocs + ' Location' + (newLocs !== 1 ? 's' : '') + ' \u00D7 ' + daysRemaining + ' Days \u00D7 ' + selLocDiscC + '\u00A2 Discount Rate = $' + locBase.toFixed(2));
+                if (hasSurcharge) {
+                    lt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): $' + (locCost - locBase).toFixed(2));
+                    lt.push('Total: $' + locCost.toFixed(2));
+                }
+                locationsLine.tooltip.textContent = lt.join('\n');
             } else {
                 locationsLine.tooltip.textContent = '';
             }
@@ -1410,7 +1511,7 @@
                 var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
                 durationNewValue.textContent = formatStatusDate(newExpiry);
             } else {
-                durationNewValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
+                durationNewValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '\u2014';
             }
 
             // Total
