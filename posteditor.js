@@ -1037,7 +1037,42 @@
         };
         document.addEventListener('click', statusOutsideHandler);
 
-        // --- Tier row (interactive toggle buttons) ---
+        // --- Pricing Container (tier + duration + subtotals) ---
+        var pricingContainer = document.createElement('div');
+        pricingContainer.className = 'posteditor-manage-pricing-container';
+
+        var allCheckoutOptions = (window.MemberModule && typeof MemberModule.getCheckoutOptions === 'function') ? MemberModule.getCheckoutOptions() : [];
+        var currentTierKey = post.checkout_key || '';
+        var currentTierIndex = -1;
+        var selectedTierIndex = -1;
+        var pricingLocUsed = locUsed;
+        var pricingLocPaid = locPaid;
+
+        for (var ti = 0; ti < allCheckoutOptions.length; ti++) {
+            if (String(allCheckoutOptions[ti].checkout_key || allCheckoutOptions[ti].id) === currentTierKey ||
+                String(allCheckoutOptions[ti].checkout_title || '').toLowerCase() === (post.checkout_title || '').toLowerCase()) {
+                currentTierIndex = ti;
+                selectedTierIndex = ti;
+                break;
+            }
+        }
+
+        function getTierRates(idx) {
+            if (idx < 0 || idx >= allCheckoutOptions.length) return { basic: 0, discount: 0 };
+            var opt = allCheckoutOptions[idx];
+            return {
+                basic: parseFloat(opt.checkout_basic_day_rate) || 0,
+                discount: parseFloat(opt.checkout_discount_day_rate) || 0
+            };
+        }
+
+        var daysRemaining = 0;
+        if (summaryExpiresAt && !isExpired) {
+            daysRemaining = Math.floor((summaryExpiresAt.getTime() - summaryNow.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysRemaining < 0) daysRemaining = 0;
+        }
+
+        // --- Tier section ---
         var tierGroup = document.createElement('div');
         tierGroup.className = 'posteditor-manage-field';
 
@@ -1055,19 +1090,6 @@
         var tierDesc = document.createElement('div');
         tierDesc.className = 'posteditor-manage-tier-description';
 
-        var allCheckoutOptions = (window.MemberModule && typeof MemberModule.getCheckoutOptions === 'function') ? MemberModule.getCheckoutOptions() : [];
-        var currentTierKey = post.checkout_key || '';
-        var currentTierIndex = -1;
-
-        // Find current tier index
-        for (var ti = 0; ti < allCheckoutOptions.length; ti++) {
-            if (String(allCheckoutOptions[ti].checkout_key || allCheckoutOptions[ti].id) === currentTierKey ||
-                String(allCheckoutOptions[ti].checkout_title || '').toLowerCase() === (post.checkout_title || '').toLowerCase()) {
-                currentTierIndex = ti;
-                break;
-            }
-        }
-
         var tierColors = [
             '',
             'linear-gradient(180deg, #1A2A3A 0%, #3A5A7A 30%, #1A2A3A 100%)',
@@ -1077,7 +1099,6 @@
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
             var description = option.checkout_description ? String(option.checkout_description) : '';
-            var currency = option.checkout_currency || 'USD';
             var basicRate = parseFloat(option.checkout_basic_day_rate);
             var discountRate = parseFloat(option.checkout_discount_day_rate);
             var ratesText = (isFinite(basicRate) && isFinite(discountRate))
@@ -1107,16 +1128,17 @@
                     allBtns[bi].setAttribute('aria-pressed', 'false');
                 }
                 btn.setAttribute('aria-pressed', 'true');
+                selectedTierIndex = idx;
                 tierDesc.textContent = description;
                 tierDesc.style.color = tierDescColors[idx] || '';
                 tierRates.textContent = ratesText;
                 tierRates.style.color = tierDescColors[idx] || '';
+                recalcPricing();
             });
 
             tierBtnRow.appendChild(btn);
         });
 
-        // Fallback if no checkout options loaded
         if (allCheckoutOptions.length === 0) {
             var tierFallback = document.createElement('span');
             tierFallback.className = 'posteditor-manage-field-value';
@@ -1127,77 +1149,32 @@
         tierGroup.appendChild(tierBtnRow);
         tierGroup.appendChild(tierDesc);
         tierGroup.appendChild(tierRates);
+        pricingContainer.appendChild(tierGroup);
 
-        var tierContainer = document.createElement('div');
-        tierContainer.className = 'posteditor-manage-tier-container';
-        tierContainer.appendChild(tierGroup);
-        body.appendChild(tierContainer);
-
-        // --- Post Duration Container ---
-        var durationContainer = document.createElement('div');
-        durationContainer.className = 'posteditor-manage-duration-container';
+        // --- Duration section ---
+        var durationGroup = document.createElement('div');
+        durationGroup.className = 'posteditor-manage-field';
 
         var durationLabel = document.createElement('div');
         durationLabel.className = 'posteditor-manage-field-label';
-        durationLabel.textContent = 'Increase Duration';
-        durationContainer.appendChild(durationLabel);
-
-        var daysRemaining = 0;
-        if (summaryExpiresAt && !isExpired) {
-            daysRemaining = Math.floor((summaryExpiresAt.getTime() - summaryNow.getTime()) / (1000 * 60 * 60 * 24));
-            if (daysRemaining < 0) daysRemaining = 0;
-        }
-
-        var durationDaysRow = document.createElement('div');
-        durationDaysRow.className = 'posteditor-manage-duration-row';
-        var durationDaysLabel = document.createElement('span');
-        durationDaysLabel.className = 'posteditor-manage-duration-text';
-        durationDaysLabel.textContent = 'Days Remaining';
-        var durationDaysValue = document.createElement('span');
-        durationDaysValue.className = 'posteditor-manage-duration-value';
-        durationDaysValue.textContent = String(daysRemaining);
-        durationDaysRow.appendChild(durationDaysLabel);
-        durationDaysRow.appendChild(durationDaysValue);
-        durationContainer.appendChild(durationDaysRow);
+        durationLabel.textContent = 'Add Days';
+        durationGroup.appendChild(durationLabel);
 
         var durationAddRow = document.createElement('div');
         durationAddRow.className = 'posteditor-manage-duration-row';
-        var durationAddLabel = document.createElement('span');
-        durationAddLabel.className = 'posteditor-manage-duration-text';
-        durationAddLabel.textContent = 'Add Days';
         var durationAddInput = document.createElement('input');
         durationAddInput.type = 'text';
         durationAddInput.className = 'posteditor-manage-duration-input fieldset-input input-class-1';
         durationAddInput.maxLength = 4;
         durationAddInput.placeholder = 'eg. 30';
         durationAddInput.inputMode = 'numeric';
-        durationAddRow.appendChild(durationAddLabel);
-        durationAddRow.appendChild(durationAddInput);
-        durationContainer.appendChild(durationAddRow);
-
-        var durationCurrentRow = document.createElement('div');
-        durationCurrentRow.className = 'posteditor-manage-duration-row';
-        var durationCurrentLabel = document.createElement('span');
-        durationCurrentLabel.className = 'posteditor-manage-duration-text';
-        durationCurrentLabel.textContent = 'Current Expiry';
-        var durationCurrentValue = document.createElement('span');
-        durationCurrentValue.className = 'posteditor-manage-duration-value';
-        durationCurrentValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
-        durationCurrentRow.appendChild(durationCurrentLabel);
-        durationCurrentRow.appendChild(durationCurrentValue);
-        durationContainer.appendChild(durationCurrentRow);
-
-        var durationNewRow = document.createElement('div');
-        durationNewRow.className = 'posteditor-manage-duration-row';
-        var durationNewLabel = document.createElement('span');
-        durationNewLabel.className = 'posteditor-manage-duration-text';
-        durationNewLabel.textContent = 'New Expiry';
         var durationNewValue = document.createElement('span');
         durationNewValue.className = 'posteditor-manage-duration-value';
         durationNewValue.textContent = '—';
-        durationNewRow.appendChild(durationNewLabel);
-        durationNewRow.appendChild(durationNewValue);
-        durationContainer.appendChild(durationNewRow);
+        durationAddRow.appendChild(durationAddInput);
+        durationAddRow.appendChild(durationNewValue);
+        durationGroup.appendChild(durationAddRow);
+        pricingContainer.appendChild(durationGroup);
 
         durationAddInput.addEventListener('keydown', function(e) {
             if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
@@ -1207,7 +1184,100 @@
 
         durationAddInput.addEventListener('input', function() {
             durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
-            var addDays = parseInt(durationAddInput.value, 10);
+            recalcPricing();
+        });
+
+        // --- Subtotal lines ---
+        function createPricingLine(labelText) {
+            var line = document.createElement('div');
+            line.className = 'posteditor-manage-pricing-line';
+            line.style.display = 'none';
+            var lineLbl = document.createElement('span');
+            lineLbl.className = 'posteditor-manage-pricing-line-label';
+            lineLbl.textContent = labelText;
+            var lineVal = document.createElement('span');
+            lineVal.className = 'posteditor-manage-pricing-line-value';
+            lineVal.textContent = '$0.00';
+            var lineTooltip = document.createElement('div');
+            lineTooltip.className = 'posteditor-manage-pricing-tooltip';
+            line.appendChild(lineLbl);
+            line.appendChild(lineVal);
+            line.appendChild(lineTooltip);
+            return { el: line, value: lineVal, tooltip: lineTooltip };
+        }
+
+        var subtotalsWrapper = document.createElement('div');
+        subtotalsWrapper.className = 'posteditor-manage-pricing-subtotals';
+
+        var upgradeLine = createPricingLine('Tier Upgrade');
+        var addDaysLine = createPricingLine('Add Days');
+        var locationsLine = createPricingLine('Locations');
+        subtotalsWrapper.appendChild(upgradeLine.el);
+        subtotalsWrapper.appendChild(addDaysLine.el);
+        subtotalsWrapper.appendChild(locationsLine.el);
+
+        var totalLine = document.createElement('div');
+        totalLine.className = 'posteditor-manage-pricing-total';
+        totalLine.style.display = 'none';
+        var totalLbl = document.createElement('span');
+        totalLbl.className = 'posteditor-manage-pricing-total-label';
+        totalLbl.textContent = 'Total';
+        var totalVal = document.createElement('span');
+        totalVal.className = 'posteditor-manage-pricing-total-value';
+        totalVal.textContent = '$0.00';
+        totalLine.appendChild(totalLbl);
+        totalLine.appendChild(totalVal);
+        subtotalsWrapper.appendChild(totalLine);
+
+        pricingContainer.appendChild(subtotalsWrapper);
+
+        // --- Central pricing recalculation ---
+        function recalcPricing() {
+            var selectedRates = getTierRates(selectedTierIndex);
+            var currentRates = getTierRates(currentTierIndex);
+            var addDays = parseInt(durationAddInput.value, 10) || 0;
+            var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
+            var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
+
+            // Upgrade cost
+            var upgradeCost = 0;
+            if (selectedTierIndex > currentTierIndex && daysRemaining > 0) {
+                var newTierCost = daysRemaining * selectedRates.basic + daysRemaining * selectedRates.discount * paidExtraLocs;
+                var curTierCost = daysRemaining * currentRates.basic + daysRemaining * currentRates.discount * paidExtraLocs;
+                upgradeCost = newTierCost - curTierCost;
+            }
+            upgradeLine.el.style.display = upgradeCost > 0 ? '' : 'none';
+            upgradeLine.value.textContent = '$' + upgradeCost.toFixed(2);
+            upgradeLine.tooltip.textContent = upgradeCost > 0
+                ? daysRemaining + ' days × ' + Math.round(selectedRates.basic * 100) + '¢ basic'
+                    + (paidExtraLocs > 0 ? ' + ' + daysRemaining + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount × ' + paidExtraLocs + ' extra loc' + (paidExtraLocs !== 1 ? 's' : '') : '')
+                    + ' minus current tier (' + Math.round(currentRates.basic * 100) + '¢/' + Math.round(currentRates.discount * 100) + '¢)'
+                : '';
+
+            // Add days cost
+            var addDaysCost = 0;
+            if (addDays > 0) {
+                addDaysCost = addDays * selectedRates.basic + addDays * selectedRates.discount * paidExtraLocs;
+            }
+            addDaysLine.el.style.display = addDays > 0 ? '' : 'none';
+            addDaysLine.value.textContent = '$' + addDaysCost.toFixed(2);
+            addDaysLine.tooltip.textContent = addDays > 0
+                ? addDays + ' days × ' + Math.round(selectedRates.basic * 100) + '¢ basic'
+                    + (paidExtraLocs > 0 ? ' + ' + addDays + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount × ' + paidExtraLocs + ' extra loc' + (paidExtraLocs !== 1 ? 's' : '') : '')
+                : '';
+
+            // Extra locations cost
+            var locCost = 0;
+            if (newLocs > 0 && daysRemaining > 0) {
+                locCost = newLocs * daysRemaining * selectedRates.discount;
+            }
+            locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
+            locationsLine.value.textContent = '$' + locCost.toFixed(2);
+            locationsLine.tooltip.textContent = newLocs > 0
+                ? '+' + newLocs + ' location' + (newLocs !== 1 ? 's' : '') + ' × ' + daysRemaining + ' days × ' + Math.round(selectedRates.discount * 100) + '¢ discount'
+                : '';
+
+            // New expiry
             if (addDays > 0 && summaryExpiresAt) {
                 var baseDate = isExpired ? summaryNow : summaryExpiresAt;
                 var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
@@ -1215,9 +1285,17 @@
             } else {
                 durationNewValue.textContent = '—';
             }
-        });
 
-        body.appendChild(durationContainer);
+            // Total
+            var total = upgradeCost + addDaysCost + locCost;
+            totalLine.style.display = total > 0 ? '' : 'none';
+            totalVal.textContent = '$' + total.toFixed(2);
+
+            // Update submit button text
+            submitText.textContent = 'Pay $' + total.toFixed(2);
+        }
+
+        body.appendChild(pricingContainer);
 
         // --- Restore button (beside Edit) ---
         var moreBtn = document.createElement('button');
