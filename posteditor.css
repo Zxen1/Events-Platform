@@ -540,6 +540,17 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
+.posteditor-manage-tier-rates {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.posteditor-manage-tier-rates:empty {
+  display: none;
+}
+
 .posteditor-manage-tier-description {
   margin-top: 10px;
   font-size: 13px;

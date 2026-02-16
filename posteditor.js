@@ -1049,6 +1049,9 @@
         var tierBtnRow = document.createElement('div');
         tierBtnRow.className = 'posteditor-manage-tier-buttons toggle-class-1';
 
+        var tierRates = document.createElement('div');
+        tierRates.className = 'posteditor-manage-tier-rates';
+
         var tierDesc = document.createElement('div');
         tierDesc.className = 'posteditor-manage-tier-description';
 
@@ -1074,6 +1077,12 @@
         allCheckoutOptions.forEach(function(option, idx) {
             var title = String(option.checkout_title || '').trim();
             var description = option.checkout_description ? String(option.checkout_description) : '';
+            var currency = option.checkout_currency || 'USD';
+            var basicRate = parseFloat(option.checkout_basic_day_rate);
+            var discountRate = parseFloat(option.checkout_discount_day_rate);
+            var ratesText = (isFinite(basicRate) && isFinite(discountRate))
+                ? 'Basic Day Rate ' + Math.round(basicRate * 100) + '¢ · Discount Day Rate ' + Math.round(discountRate * 100) + '¢'
+                : '';
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'posteditor-manage-tier-button toggle-button';
@@ -1085,14 +1094,14 @@
             if (idx === currentTierIndex) {
                 tierDesc.textContent = description;
                 tierDesc.style.color = tierDescColors[idx] || '';
+                tierRates.textContent = ratesText;
+                tierRates.style.color = tierDescColors[idx] || '';
             } else if (idx < currentTierIndex) {
-                // Below current tier — downgrading not allowed
                 btn.disabled = true;
             }
 
             btn.addEventListener('click', function() {
                 if (btn.disabled) return;
-                // Update active state
                 var allBtns = tierBtnRow.querySelectorAll('.posteditor-manage-tier-button');
                 for (var bi = 0; bi < allBtns.length; bi++) {
                     allBtns[bi].setAttribute('aria-pressed', 'false');
@@ -1100,6 +1109,8 @@
                 btn.setAttribute('aria-pressed', 'true');
                 tierDesc.textContent = description;
                 tierDesc.style.color = tierDescColors[idx] || '';
+                tierRates.textContent = ratesText;
+                tierRates.style.color = tierDescColors[idx] || '';
             });
 
             tierBtnRow.appendChild(btn);
@@ -1114,6 +1125,7 @@
         }
 
         tierGroup.appendChild(tierBtnRow);
+        tierGroup.appendChild(tierRates);
         tierGroup.appendChild(tierDesc);
         body.appendChild(tierGroup);
 
