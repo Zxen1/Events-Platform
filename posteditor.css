@@ -579,9 +579,30 @@
   gap: 10px;
 }
 
-.posteditor-manage-duration-input {
-  width: 80px;
+.posteditor-manage-duration-inputbox {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  gap: 6px;
   flex-shrink: 0;
+}
+
+.posteditor-manage-duration-inputbox-affix {
+  font-size: 13px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  flex-shrink: 0;
+}
+
+.posteditor-manage-duration-input {
+  width: 36px;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary, rgba(255, 255, 255, 0.9));
+  font-size: 13px;
+  text-align: center;
+  padding: 0;
 }
 
 .posteditor-manage-duration-value {

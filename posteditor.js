@@ -1157,21 +1157,34 @@
 
         var durationLabel = document.createElement('div');
         durationLabel.className = 'posteditor-manage-field-label';
-        durationLabel.textContent = 'Add Days';
+        durationLabel.textContent = 'Increase Duration';
         durationGroup.appendChild(durationLabel);
 
         var durationAddRow = document.createElement('div');
         durationAddRow.className = 'posteditor-manage-duration-row';
+
+        var durationInputWrapper = document.createElement('div');
+        durationInputWrapper.className = 'posteditor-manage-duration-inputbox input-class-1';
+        var durationPrefix = document.createElement('span');
+        durationPrefix.className = 'posteditor-manage-duration-inputbox-affix';
+        durationPrefix.textContent = '+';
         var durationAddInput = document.createElement('input');
         durationAddInput.type = 'text';
-        durationAddInput.className = 'posteditor-manage-duration-input fieldset-input input-class-1';
-        durationAddInput.maxLength = 4;
-        durationAddInput.placeholder = 'eg. 30';
+        durationAddInput.className = 'posteditor-manage-duration-input';
+        durationAddInput.maxLength = 3;
+        durationAddInput.value = '0';
         durationAddInput.inputMode = 'numeric';
+        var durationSuffix = document.createElement('span');
+        durationSuffix.className = 'posteditor-manage-duration-inputbox-affix';
+        durationSuffix.textContent = 'Days';
+        durationInputWrapper.appendChild(durationPrefix);
+        durationInputWrapper.appendChild(durationAddInput);
+        durationInputWrapper.appendChild(durationSuffix);
+
         var durationNewValue = document.createElement('span');
         durationNewValue.className = 'posteditor-manage-duration-value';
-        durationNewValue.textContent = '—';
-        durationAddRow.appendChild(durationAddInput);
+        durationNewValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
+        durationAddRow.appendChild(durationInputWrapper);
         durationAddRow.appendChild(durationNewValue);
         durationGroup.appendChild(durationAddRow);
         pricingContainer.appendChild(durationGroup);
@@ -1184,6 +1197,8 @@
 
         durationAddInput.addEventListener('input', function() {
             durationAddInput.value = durationAddInput.value.replace(/[^0-9]/g, '');
+            var parsed = parseInt(durationAddInput.value, 10);
+            if (parsed > 365) durationAddInput.value = '365';
             recalcPricing();
         });
 
@@ -1283,7 +1298,7 @@
                 var newExpiry = new Date(baseDate.getTime() + addDays * 24 * 60 * 60 * 1000);
                 durationNewValue.textContent = formatStatusDate(newExpiry);
             } else {
-                durationNewValue.textContent = '—';
+                durationNewValue.textContent = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
             }
 
             // Total
