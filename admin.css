@@ -1470,7 +1470,7 @@
   padding: 10px 12px;
   color: #ccc;
   font-size: 13px;
-  resize: vertical;
+  resize: none;
   min-height: 60px;
   line-height: 1.4;
   caret-color: #fff;
@@ -1479,6 +1479,14 @@
 .admin-checkout-option-description:focus {
   outline: none;
   background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.admin-checkout-option-description + .component-textarearesize-handle {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-checkout-option-description:focus + .component-textarearesize-handle {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -1860,12 +1868,16 @@
   border-radius: 5px;
   color: #fff;
   font-size: 14px;
-  resize: vertical;
+  resize: none;
   caret-color: #fff;
 }
 
 .admin-checkout-accordion-body-textarea:focus {
   outline: none;
+  border-color: var(--blue-500);
+}
+
+.admin-checkout-accordion-body-textarea:focus + .component-textarearesize-handle {
   border-color: var(--blue-500);
 }
 
@@ -2140,14 +2152,14 @@
 .admin-message-text-input {
   width: 100%;
   padding: 10px;
-  margin: 0 0 10px 0;
+  margin: 0;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
   color: var(--button-text);
   font-size: 14px;
   line-height: 1.5;
-  resize: vertical;
+  resize: none;
   min-height: 24px;
   box-sizing: border-box;
   transition: all 0.2s ease;
@@ -2161,7 +2173,20 @@
   box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.1);
 }
 
+.admin-message-text-input + .component-textarearesize-handle {
+  border-color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 10px;
+}
+
+.admin-message-text-input:focus + .component-textarearesize-handle {
+  border-color: rgba(100, 150, 255, 0.5);
+}
+
 .admin-message-text-input--hidden {
+  display: none;
+}
+
+.admin-message-text-input--hidden + .component-textarearesize-handle {
   display: none;
 }
 
@@ -2406,12 +2431,20 @@
   color: #fff;
   font-size: 13px;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
   caret-color: #fff;
 }
 
 .admin-settings-field-textarea:focus {
   outline: none;
+  border-color: var(--blue-500);
+}
+
+.admin-settings-field-textarea + .component-textarearesize-handle {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-settings-field-textarea:focus + .component-textarearesize-handle {
   border-color: var(--blue-500);
 }
 

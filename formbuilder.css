@@ -1052,7 +1052,7 @@
   border-radius: 5px;
   color: #fff;
   font-size: 13px;
-  resize: vertical;
+  resize: none;
   line-height: 1.4;
   margin-bottom: 0;
   cursor: text;
@@ -1062,6 +1062,15 @@
 .formbuilder-field-textarea:hover,
 .formbuilder-field-textarea:focus {
   outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-textarea + .component-textarearesize-handle {
+  border-color: #222222;
+}
+
+.formbuilder-field-textarea:hover + .component-textarearesize-handle,
+.formbuilder-field-textarea:focus + .component-textarearesize-handle {
   border-color: var(--blue-500);
 }
 

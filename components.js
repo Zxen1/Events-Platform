@@ -8,6 +8,7 @@
    - ICONS               - (removed) no hard-coded SVG icons allowed in new site
    - MENU MANAGER        - Global manager for closing menus
    - CLEAR BUTTON        - Reusable X/clear button
+   - TEXTAREA RESIZE     - Full-width drag handle below textareas
    - SWITCH              - Toggle switch (has size variants)
    - CALENDAR            - Horizontal scrolling date picker
    - CURRENCY            - Currency selector (has variants)
@@ -501,6 +502,115 @@ const ClearButtonComponent = (function(){
     return {
         create: create,
         upgradeAll: upgradeAll
+    };
+})();
+
+
+/* ============================================================================
+   TEXTAREA RESIZE
+   Full-width drag handle below textareas (replaces native corner grip)
+   ============================================================================ */
+
+const TextareaResizeComponent = (function(){
+    
+    function buildHandle() {
+        var handle = document.createElement('div');
+        handle.className = 'component-textarearesize-handle';
+        var grip = document.createElement('div');
+        grip.className = 'component-textarearesize-handle-grip';
+        handle.appendChild(grip);
+        return handle;
+    }
+    
+    function prepareTextarea(textarea) {
+        textarea.style.resize = 'none';
+        textarea.style.borderBottomLeftRadius = '0';
+        textarea.style.borderBottomRightRadius = '0';
+        textarea.style.borderBottom = 'none';
+    }
+    
+    function bindDrag(textarea, handle) {
+        var computedMin = parseInt(window.getComputedStyle(textarea).minHeight);
+        var minHeight = (computedMin && computedMin > 0) ? computedMin : 60;
+        
+        function onStart(e) {
+            e.preventDefault();
+            var startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            var startHeight = textarea.offsetHeight;
+            
+            document.body.style.userSelect = 'none';
+            
+            function onMove(ev) {
+                var currentY = ev.type === 'touchmove' ? ev.touches[0].clientY : ev.clientY;
+                textarea.style.height = Math.max(minHeight, startHeight + (currentY - startY)) + 'px';
+            }
+            
+            function onEnd() {
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            }
+            
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+        
+        handle.addEventListener('mousedown', onStart);
+        handle.addEventListener('touchstart', onStart, { passive: false });
+    }
+    
+    /**
+     * Create a complete textarea with resize handle
+     * @param {Object} options - Configuration options
+     * @param {string} options.className - CSS class(es) for the textarea
+     * @param {string} options.placeholder - Placeholder text
+     * @param {number} options.rows - Number of rows
+     * @returns {{ element: HTMLElement, textarea: HTMLTextAreaElement }}
+     */
+    function create(options) {
+        options = options || {};
+        
+        var textarea = document.createElement('textarea');
+        if (options.className) textarea.className = options.className;
+        if (options.placeholder) textarea.placeholder = options.placeholder;
+        if (options.rows) textarea.rows = options.rows;
+        
+        prepareTextarea(textarea);
+        
+        var handle = buildHandle();
+        
+        var wrapper = document.createElement('div');
+        wrapper.className = 'component-textarearesize';
+        wrapper.appendChild(textarea);
+        wrapper.appendChild(handle);
+        
+        bindDrag(textarea, handle);
+        
+        return { element: wrapper, textarea: textarea };
+    }
+    
+    /**
+     * Attach resize handle to an existing textarea already in the DOM
+     * @param {HTMLTextAreaElement} textarea - Existing textarea element
+     */
+    function attach(textarea) {
+        if (!textarea) return;
+        
+        prepareTextarea(textarea);
+        
+        var handle = buildHandle();
+        textarea.parentNode.insertBefore(handle, textarea.nextSibling);
+        
+        bindDrag(textarea, handle);
+    }
+    
+    return {
+        create: create,
+        attach: attach
     };
 })();
 
@@ -11791,6 +11901,7 @@ window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
 window.PostCropperComponent = PostCropperComponent;
 window.ClearButtonComponent = ClearButtonComponent;
+window.TextareaResizeComponent = TextareaResizeComponent;
 window.SwitchComponent = SwitchComponent;
 window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;

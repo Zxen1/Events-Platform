@@ -2784,10 +2784,12 @@
             var placeholderLabel = document.createElement('label');
             placeholderLabel.className = 'formbuilder-field-label';
             placeholderLabel.textContent = 'Placeholder';
-            placeholderInput = document.createElement('textarea');
-            placeholderInput.className = 'formbuilder-field-textarea formbuilder-field-placeholder';
-            placeholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
-            placeholderInput.rows = 3;
+            var placeholderResult = TextareaResizeComponent.create({
+                className: 'formbuilder-field-textarea formbuilder-field-placeholder',
+                placeholder: defaultPlaceholder || 'Placeholder text',
+                rows: 3
+            });
+            placeholderInput = placeholderResult.textarea;
             // Only set value if it's different from default (meaning it was modified)
             var customPlaceholder = fieldData.placeholder || '';
             if (customPlaceholder && customPlaceholder !== defaultPlaceholder) {
@@ -2808,15 +2810,17 @@
                 notifyChange();
             });
             modifyContainer.appendChild(placeholderLabel);
-            modifyContainer.appendChild(placeholderInput);
+            modifyContainer.appendChild(placeholderResult.element);
             
             var tooltipLabel = document.createElement('label');
             tooltipLabel.className = 'formbuilder-field-label';
             tooltipLabel.textContent = 'Tooltip';
-            tooltipInput = document.createElement('textarea');
-            tooltipInput.className = 'formbuilder-field-textarea formbuilder-field-tooltip';
-            tooltipInput.placeholder = defaultTooltip || 'Tooltip text';
-            tooltipInput.rows = 3;
+            var tooltipResult = TextareaResizeComponent.create({
+                className: 'formbuilder-field-textarea formbuilder-field-tooltip',
+                placeholder: defaultTooltip || 'Tooltip text',
+                rows: 3
+            });
+            tooltipInput = tooltipResult.textarea;
             // Only set value if it's different from default (meaning it was modified)
             var customTooltip = fieldData.tooltip || '';
             if (customTooltip && customTooltip !== defaultTooltip) {
@@ -2837,16 +2841,18 @@
                 notifyChange();
             });
             modifyContainer.appendChild(tooltipLabel);
-            modifyContainer.appendChild(tooltipInput);
+            modifyContainer.appendChild(tooltipResult.element);
             
             // Instruction text (available for all fieldsets, same as placeholder and tooltip)
             var instructionLabel = document.createElement('label');
             instructionLabel.className = 'formbuilder-field-label';
             instructionLabel.textContent = 'Instruction';
-            instructionInput = document.createElement('textarea');
-            instructionInput.className = 'formbuilder-field-textarea formbuilder-field-instruction';
-            instructionInput.placeholder = defaultInstruction || 'Instruction text shown to users';
-            instructionInput.rows = 3;
+            var instructionResult = TextareaResizeComponent.create({
+                className: 'formbuilder-field-textarea formbuilder-field-instruction',
+                placeholder: defaultInstruction || 'Instruction text shown to users',
+                rows: 3
+            });
+            instructionInput = instructionResult.textarea;
             var customInstruction = fieldData.instruction || '';
             if (customInstruction && customInstruction !== defaultInstruction) {
                 instructionInput.value = customInstruction;
@@ -2866,7 +2872,7 @@
                 notifyChange();
             });
             modifyContainer.appendChild(instructionLabel);
-            modifyContainer.appendChild(instructionInput);
+            modifyContainer.appendChild(instructionResult.element);
             
             fieldEditPanel.appendChild(modifyContainer);
             

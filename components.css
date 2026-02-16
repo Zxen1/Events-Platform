@@ -6,6 +6,7 @@
    
    STRUCTURE:
    - CLEAR BUTTON        - Reusable X/clear button
+   - TEXTAREA RESIZE     - Resizable textarea with full-width drag handle
    - SWITCH              - Toggle switch (has size variants)
    - CALENDAR            - Horizontal scrolling date picker
    - CURRENCY            - Currency selector (has variants)
@@ -87,6 +88,49 @@
 /* States */
 .clear-button:hover {
     opacity: 0.7;
+}
+
+
+/* ============================================================================
+   TEXTAREA RESIZE
+   Resizable textarea with full-width drag handle (replaces native corner grip)
+   ============================================================================ */
+
+.component-textarearesize {
+  width: 100%;
+}
+
+.component-textarearesize-handle {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.component-textarearesize-handle-grip {
+  width: 30px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1px;
+}
+
+.input-class-1:focus + .component-textarearesize-handle {
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .input-class-1:hover + .component-textarearesize-handle {
+    border-color: #555;
+  }
+
+  .component-textarearesize-handle:hover .component-textarearesize-handle-grip {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 

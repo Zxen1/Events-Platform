@@ -1667,6 +1667,7 @@ const AdminModule = (function() {
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
+        TextareaResizeComponent.attach(textInput);
         
         return item;
     }
@@ -1795,6 +1796,7 @@ const AdminModule = (function() {
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
+        TextareaResizeComponent.attach(textInput);
         
         return item;
     }
@@ -1898,6 +1900,7 @@ const AdminModule = (function() {
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
+        TextareaResizeComponent.attach(textInput);
         
         return item;
     }
@@ -3314,6 +3317,8 @@ const AdminModule = (function() {
             textarea.addEventListener('input', function() {
                 updateField('settings.' + key, textarea.value);
             });
+            
+            TextareaResizeComponent.attach(textarea);
         });
         
         // Attach to toggle checkboxes
@@ -3887,6 +3892,7 @@ const AdminModule = (function() {
                 descriptionInput.addEventListener('input', function() {
                     markDirty();
                 });
+                TextareaResizeComponent.attach(descriptionInput);
             }
 
             // Featured checkbox updates badge
