@@ -611,10 +611,10 @@
 }
 
 .posteditor-manage-reach-value {
+  width: 36px;
   font-size: 13px;
   color: var(--text-primary, rgba(255, 255, 255, 0.9));
   text-align: center;
-  min-width: 12px;
 }
 
 .posteditor-manage-duration-value {

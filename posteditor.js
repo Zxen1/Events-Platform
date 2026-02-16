@@ -1077,7 +1077,7 @@
         tierGroup.className = 'posteditor-manage-field';
 
         var tierLabel = document.createElement('div');
-        tierLabel.className = 'posteditor-manage-field-label';
+        tierLabel.className = 'posteditor-manage-field-label fieldset-label';
         tierLabel.textContent = 'Increase Visibility';
         var tierTip = document.createElement('span');
         tierTip.className = 'fieldset-label-tooltip';
@@ -1170,7 +1170,7 @@
         durationGroup.className = 'posteditor-manage-field';
 
         var durationLabel = document.createElement('div');
-        durationLabel.className = 'posteditor-manage-field-label';
+        durationLabel.className = 'posteditor-manage-field-label fieldset-label';
         durationLabel.textContent = 'Increase Duration';
         var durationTip = document.createElement('span');
         durationTip.className = 'fieldset-label-tooltip';
@@ -1222,7 +1222,7 @@
         reachGroup.className = 'posteditor-manage-field';
 
         var reachLabel = document.createElement('div');
-        reachLabel.className = 'posteditor-manage-field-label';
+        reachLabel.className = 'posteditor-manage-field-label fieldset-label';
         reachLabel.textContent = 'Increase Reach';
         var reachTip = document.createElement('span');
         reachTip.className = 'fieldset-label-tooltip';
@@ -1272,6 +1272,13 @@
             var parsed = parseInt(durationAddInput.value, 10);
             if (parsed > 365) durationAddInput.value = '365';
             recalcPricing();
+        });
+
+        durationAddInput.addEventListener('blur', function() {
+            if (!durationAddInput.value || durationAddInput.value.trim() === '') {
+                durationAddInput.value = '0';
+                recalcPricing();
+            }
         });
 
         // --- Subtotal lines ---
