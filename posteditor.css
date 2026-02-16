@@ -390,10 +390,11 @@
   flex: 1;
 }
 
-/* Restore dropdown menu (full width below Edit/Restore buttons) */
+/* Restore menu (full width below Edit/Restore buttons) */
 .posteditor-manage-restore-menu {
   display: none;
   width: 100%;
+  margin-top: 10px;
   background: #111;
   border: 1px solid var(--blue-500);
   border-radius: 5px;

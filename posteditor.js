@@ -1132,8 +1132,8 @@
         moreMenu.appendChild(restoreContainer);
 
         editAccordionRow.appendChild(moreBtn);
-        editAccordionRow.appendChild(moreMenu);
         editAccordionRow.appendChild(statusMoreBtn);
+        body.insertBefore(moreMenu, editAccordionContent);
 
         // Restore menu toggle
         var moreMenuOpen = false;
