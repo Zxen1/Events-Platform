@@ -582,6 +582,7 @@
 .posteditor-manage-duration-inputbox {
   display: flex;
   align-items: center;
+  width: 150px;
   height: 36px;
   padding: 0 10px;
   gap: 6px;
