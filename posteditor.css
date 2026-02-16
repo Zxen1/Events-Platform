@@ -433,36 +433,22 @@
 }
 
 /* Post Summary table */
-/* Manage modal field rows (inline: label 150px + value on same row) */
+/* Manage modal field rows (label + 36px row) */
 .posteditor-manage-field {
-  display: flex;
-  align-items: center;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
 }
 
 .posteditor-manage-field-label {
-  width: 150px;
-  flex-shrink: 0;
   color: var(--text-secondary, rgba(255, 255, 255, 0.6));
   font-size: 13px;
+  margin-bottom: 6px; /* 10-12-6 Rule: 6px between label and element */
 }
 
 .posteditor-manage-field-row {
   display: flex;
   align-items: center;
   height: 36px;
-  flex: 1;
   gap: 10px;
-}
-
-/* Tier row keeps stacked layout (label above interactive buttons) */
-.posteditor-manage-field--tier {
-  display: block;
-}
-
-.posteditor-manage-field--tier > .posteditor-manage-field-label {
-  width: auto;
-  margin-bottom: 6px; /* 10-12-6 Rule: 6px between label and element */
 }
 
 .posteditor-manage-field-value {

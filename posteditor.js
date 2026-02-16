@@ -1046,7 +1046,7 @@
 
         // --- Tier row (interactive toggle buttons) ---
         var tierGroup = document.createElement('div');
-        tierGroup.className = 'posteditor-manage-field posteditor-manage-field--tier';
+        tierGroup.className = 'posteditor-manage-field';
 
         var tierLabel = document.createElement('div');
         tierLabel.className = 'posteditor-manage-field-label';
