@@ -390,11 +390,13 @@
   flex: 1;
 }
 
-/* Restore menu (full width below Edit/Restore buttons) */
+/* Restore menu (absolute, floats over content like the 3-dot menu) */
 .posteditor-manage-restore-menu {
-  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
   width: 100%;
-  margin-top: 10px;
+  display: none;
   background: #111;
   border: 1px solid var(--blue-500);
   border-radius: 5px;

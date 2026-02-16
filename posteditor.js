@@ -1133,7 +1133,7 @@
 
         editAccordionRow.appendChild(moreBtn);
         editAccordionRow.appendChild(statusMoreBtn);
-        body.insertBefore(moreMenu, editAccordionContent);
+        editAccordionRow.appendChild(moreMenu);
 
         // Restore menu toggle
         var moreMenuOpen = false;
