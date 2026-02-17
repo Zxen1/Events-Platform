@@ -848,7 +848,7 @@ const PostModule = (function() {
       // Show (force a frame between "off-screen" and "visible" so the slide-in
       // always transitions at the same speed as slide-out)
       panelEl.classList.add(panelShowClass);
-      panelEl.setAttribute('aria-hidden', 'false');
+      panelEl.removeAttribute('aria-hidden');
 
       // Ensure we start from the hidden/off-screen state.
       contentEl.classList.remove(visibleClass);

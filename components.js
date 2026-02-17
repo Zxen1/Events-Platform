@@ -11277,6 +11277,7 @@ const PostSessionComponent = (function() {
 
         function hideSessionPopover() {
             if (!sessionPopover) return;
+            sessionPopover.setAttribute('aria-hidden', 'true');
             sessionPopover.classList.remove('post-session-popover--left', 'post-session-popover--right');
             sessionPopover.innerHTML = '';
             sessionPopoverIso = '';
@@ -11441,6 +11442,7 @@ const PostSessionComponent = (function() {
                 }
             } catch (_eCellH0) {}
             sessionPopoverIso = iso;
+            sessionPopover.removeAttribute('aria-hidden');
             // Build popover content with selected state
             sessionPopover.innerHTML = times.map(function(t) {
                 var timeText = normalizeTimeHHMM(t);

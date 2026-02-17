@@ -357,7 +357,7 @@
         var memberId = parseInt(user.id, 10);
         if (!memberId) return;
 
-        fetch('/gateway.php?action=get-posts&member_id=' + memberId)
+        fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId)
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res && res.success && Array.isArray(res.posts)) {
