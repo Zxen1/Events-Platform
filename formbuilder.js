@@ -278,6 +278,8 @@
     function notifyChange() {
         if (!isLoaded) return; // Don't notify during initial load
         
+        console.trace('[formbuilder] notifyChange called');
+        
         // Tell admin to recheck the field registry
         // Admin's composite registration will call captureFormbuilderState() to compare
         if (window.AdminModule && typeof AdminModule.notifyFieldChange === 'function') {
