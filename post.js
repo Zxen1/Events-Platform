@@ -7,11 +7,12 @@
    USES COMPONENTS (from components.js):
    - PostLocationComponent - Location picker with minimap
    - PostSessionComponent - Session/dates picker with calendar
+   - PostItemComponent - Item pricing display (name, variants, price, promo)
    - PostPriceComponent - Price display
    
    DEPENDENCIES:
    - index.js (backbone)
-   - components.js (PostLocationComponent, PostSessionComponent, PostPriceComponent)
+   - components.js (PostLocationComponent, PostSessionComponent, PostItemComponent, PostPriceComponent)
    
    COMMUNICATES WITH:
    - map.js (clicking cards highlights markers)
@@ -3158,6 +3159,12 @@ const PostModule = (function() {
           priceSummary: activeLoc.price_summary || '',
           escapeHtml: escapeHtml
         }),
+        // Item pricing component (name, variants, price, promo, age rating)
+        PostItemComponent.render({
+          postId: post.id,
+          mapCard: activeLoc,
+          escapeHtml: escapeHtml
+        }),
         // Website URL
         websiteUrl ? '<div class="post-info-row post-info-row-website">' +
           '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
@@ -3417,6 +3424,9 @@ const PostModule = (function() {
         if (locationApi && locationApi.close) locationApi.close();
       }
     });
+
+    // Item pricing component initialization (async message loading)
+    PostItemComponent.init(wrap);
 
     // IMPORTANT:
     // Menu buttons stopPropagation() to avoid unwanted post-close/selection clicks.

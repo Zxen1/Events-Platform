@@ -20,7 +20,7 @@
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
-   - POST ITEM           - Item menu with dropdown options
+   - POST ITEM           - Item pricing display panel (name, variants, price, promo)
    
    ============================================================================ */
 
@@ -4006,171 +4006,162 @@ body.image-modal-open > *:not(.image-modal) {
 /* ============================================================================
    POST ITEM COMPONENT
    
-   Self-contained item menu with dropdown options.
-   Used in post info container to display/select items.
+   Self-contained item pricing display panel.
+   Shows item name, variants, price with currency flag, promo section, and
+   age rating. One item per map card; no dropdown needed.
    
    STRUCTURE:
-   - .post-item-container    (root wrapper)
-   - .post-item-button       (trigger button)
-   - .post-item-text         (button text area)
-   - .post-item-arrow        (dropdown arrow icon)
-   - .post-item-options      (dropdown panel)
-   - .post-item-option       (item list entries)
+   - .post-item-container       (root wrapper)
+   - .post-item-header          (item name + age rating row)
+   - .post-item-name            (item name text)
+   - .post-item-age-rating      (age rating icon)
+   - .post-item-variants        (variant chips wrapper)
+   - .post-item-variant         (individual variant chip)
+   - .post-item-promo-section   (promo banner: badge + message)
+   - .post-item-promo-badge     (promo code badge)
+   - .post-item-promo-message   (promo explanation text)
+   - .post-item-price-row       (flag + price display)
+   - .post-item-price-flag      (currency flag icon)
+   - .post-item-price-text      (standard price)
+   - .post-item-price-original  (crossed-out original price when promo active)
+   - .post-item-price-promo     (highlighted promo price)
    ============================================================================ */
 
-/* Component variables */
+/* Container */
 .post-item-container {
-  --pi-bg: rgba(0, 0, 0, 0.5);
-  --pi-bg-button: rgba(0, 0, 0, 0.35);
-  --pi-border: rgba(255, 255, 255, 0.12);
-  --pi-border-hover: rgba(255, 255, 255, 0.2);
-  --pi-border-focus: var(--blue-500);
-  --pi-text: #fff;
-  --pi-text-secondary: rgba(255, 255, 255, 0.7);
-  --pi-muted: rgba(255, 255, 255, 0.5);
-  --pi-hover: var(--blue-500);
-  --pi-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --pi-radius: 5px;
-  position: relative;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
-/* Button */
-.post-item-button {
+/* Header row: item name + age rating */
+.post-item-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 70px;
-  padding: 10px;
-  background: var(--pi-bg-button);
-  border: 1px solid var(--pi-border);
-  border-radius: var(--pi-radius);
-  color: var(--pi-text);
-  cursor: pointer;
-  transition: border-color 0.2s;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .post-item-container:not(:focus-within) .post-item-button:not(.post-item-button--open):not(:active):hover {
-    border-color: var(--pi-border-hover);
-  }
-}
-
-.post-item-button--open {
-  border-color: var(--pi-border-focus);
-  border-radius: var(--pi-radius) var(--pi-radius) 0 0;
-  border-bottom: none;
-}
-
-/* Button text */
-.post-item-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: left;
-  color: var(--pi-text);
-}
-
-.post-item-text-main {
+.post-item-name {
   font-weight: 600;
-}
-
-.post-item-text-secondary {
-  font-size: 12px;
-  color: var(--pi-text-secondary);
-  margin-top: 2px;
-}
-
-/* Arrow */
-.post-item-arrow {
-  width: 12px;
-  height: 12px;
-  flex: 0 0 auto;
-  margin-left: 10px;
-  background-color: var(--pi-muted);
-  -webkit-mask-image: var(--ui-icon-arrow-down);
-  mask-image: var(--ui-icon-arrow-down);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  transition: transform 0.2s;
-  transform-origin: center;
-}
-
-.post-item-arrow--open {
-  transform: rotate(180deg);
-}
-
-/* Options panel */
-.post-item-options {
-  display: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  z-index: var(--layer-menu);
-  background: var(--pi-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--pi-border-focus);
-  border-top: none;
-  border-radius: 0 0 var(--pi-radius) var(--pi-radius);
-  box-shadow: var(--pi-shadow);
-  max-height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.post-item-button--open + .post-item-options {
-  display: block;
-}
-
-/* Item option (70px row) */
-.post-item-option {
-  min-height: 70px;
-  padding: 10px;
-  cursor: pointer;
-  color: var(--pi-text);
   font-size: 14px;
-  line-height: 1.4;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--pi-border);
-  text-align: left;
-  width: 100%;
+}
+
+.post-item-age-rating {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  object-fit: contain;
+}
+
+/* Variant chips */
+.post-item-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.post-item-variant {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Promo section (badge + message) - mirrors session promo styling */
+.post-item-promo-section {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  box-sizing: border-box;
+  gap: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--green-50);
+  border-radius: 8px;
+  border: 1px solid var(--green-200);
 }
 
-.post-item-option:last-child {
-  border-bottom: none;
-}
-
-.post-item-option-main {
+.post-item-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--green-600);
+  color: #fff;
+  font-size: 13px;
   font-weight: 600;
-  text-align: left;
+  border-radius: 4px;
+  width: fit-content;
+  letter-spacing: 0.02em;
 }
 
-.post-item-option-secondary {
-  font-size: 12px;
-  color: var(--pi-text-secondary);
-  margin-top: 2px;
-  text-align: left;
+.post-item-promo-message {
+  font-size: 13px;
+  color: var(--green-800);
+  line-height: 1.4;
 }
 
-/* Option hover/highlighted states */
-.post-item-option.post-item-highlighted {
-  background: var(--pi-hover);
+.post-item-promo-message:empty {
+  display: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .post-item-option:hover {
-    background: var(--pi-hover);
+/* Price row */
+.post-item-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-item-price-flag {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  object-fit: contain;
+}
+
+.post-item-price-text {
+  font-weight: 600;
+}
+
+/* Promo pricing: original crossed out + promo highlighted */
+.post-item-price-original {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.post-item-price-promo {
+  color: var(--green-600);
+  font-weight: 600;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .post-item-variant {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .post-item-promo-section {
+    background: var(--green-900);
+    border-color: var(--green-700);
+  }
+
+  .post-item-promo-badge {
+    background: var(--green-500);
+  }
+
+  .post-item-promo-message {
+    color: var(--green-200);
+  }
+
+  .post-item-price-promo {
+    color: var(--green-400);
   }
 }
 

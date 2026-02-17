@@ -22,7 +22,7 @@
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
-   - POST ITEM           - Item menu with dropdown options
+   - POST ITEM           - Item pricing display panel (name, variants, price, promo)
    
    ============================================================================ */
 
@@ -11827,160 +11827,185 @@ const PostSessionComponent = (function() {
 
 /* ============================================================================
    POST ITEM COMPONENT
-   Self-contained item menu with dropdown options.
-   Used in post info container to display/select items.
+   Self-contained item pricing display panel.
+   Shows item name, variants, price with currency flag, promo section, and
+   age rating. One item per map card; no dropdown needed.
+   Used in post info container beneath the session component.
    ============================================================================ */
 
 const PostItemComponent = (function() {
     'use strict';
 
     /**
-     * Render a single item option HTML
+     * Get currency flag URL from currency code (mirrors session component pattern)
      */
-    function renderItemOption(item, index, isSelected, escapeHtml) {
-        var itemName = item.item_name || '';
-        var itemDetail = item.item_detail || '';
-
-        var html = [];
-        html.push('<div class="post-item-option' + (isSelected ? ' post-item-highlighted' : '') + '" data-index="' + index + '">');
-        html.push('<div class="post-item-option-main">' + escapeHtml(itemName) + '</div>');
-        if (itemDetail) {
-            html.push('<div class="post-item-option-secondary">' + escapeHtml(itemDetail) + '</div>');
+    function getCurrencyFlagUrl(currencyCode) {
+        if (!currencyCode || !window.CurrencyComponent) return '';
+        var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
+        if (!currency || !currency.filename) return '';
+        var countryCode = currency.filename.replace('.svg', '');
+        if (window.App && typeof window.App.getImageUrl === 'function') {
+            return window.App.getImageUrl('currencies', countryCode + '.svg');
         }
-        html.push('</div>');
-
-        return html.join('');
+        return '';
     }
 
     /**
-     * Render the item section HTML
+     * Format price with symbol using CurrencyComponent (always show decimal places)
+     */
+    function formatPriceWithSymbol(price, currencyCode) {
+        if (!currencyCode || !window.CurrencyComponent) return String(price || '');
+        try {
+            return CurrencyComponent.formatWithSymbol(price, currencyCode, { trimZeroDecimals: false });
+        } catch (_e) {
+            return String(price || '');
+        }
+    }
+
+    /**
+     * Get age rating image URL
+     */
+    function getAgeRatingImageUrl(value) {
+        if (!value) return '';
+        var filename = 'age-rating-' + value + '.svg';
+        if (window.App && typeof window.App.getImageUrl === 'function') {
+            return window.App.getImageUrl('ageRatings', filename);
+        }
+        return '';
+    }
+
+    /**
+     * Render the item pricing section HTML
+     * @param {Object} options
+     * @param {string} options.postId - Post ID
+     * @param {Object} options.mapCard - Active map card with item pricing fields
+     * @param {Function} options.escapeHtml - HTML escape function
+     * @returns {string} HTML string (empty if no item data)
      */
     function render(options) {
         var postId = options.postId || '';
-        var itemList = options.itemList || [];
+        var mc = options.mapCard || {};
         var escapeHtml = options.escapeHtml || function(s) { return s; };
 
-        if (!itemList.length) return '';
+        var itemName = mc.item_name || '';
+        if (!itemName) return '';
 
-        var item0 = itemList[0] || {};
-        var itemName = item0.item_name || '';
-        var itemDetail = item0.item_detail || '';
+        var itemPrice = mc.item_price;
+        var currency = mc.currency || '';
+        var variants = mc.item_variants || [];
+        var ageRating = mc.age_rating || '';
+        var promoOption = mc.promo_option || 'none';
+        var promoCode = mc.promo_code || '';
+        var promoPrice = mc.promo_price;
 
         var html = [];
-
         html.push('<div class="post-item-container" data-post-id="' + postId + '">');
-        html.push('<button class="post-item-button" type="button" aria-haspopup="true" aria-expanded="false">');
-        html.push('<div class="post-item-text">');
-        html.push('<div class="post-item-text-main">' + escapeHtml(itemName) + '</div>');
-        if (itemDetail) {
-            html.push('<div class="post-item-text-secondary">' + escapeHtml(itemDetail) + '</div>');
-        }
-        html.push('</div>');
-        html.push('<div class="post-item-arrow"></div>');
-        html.push('</button>');
 
-        html.push('<div class="post-item-options">');
-        for (var i = 0; i < itemList.length; i++) {
-            html.push(renderItemOption(itemList[i], i, i === 0, escapeHtml));
+        // Item header (name + age rating)
+        html.push('<div class="post-item-header">');
+        html.push('<span class="post-item-name">' + escapeHtml(itemName) + '</span>');
+        if (ageRating) {
+            var ageUrl = getAgeRatingImageUrl(ageRating);
+            if (ageUrl) {
+                html.push('<img class="post-item-age-rating" src="' + escapeHtml(ageUrl) + '" alt="' + escapeHtml(ageRating) + '" title="Age rating: ' + escapeHtml(ageRating === 'all' ? 'All Ages' : ageRating + '+') + '">');
+            }
         }
         html.push('</div>');
 
-        html.push('</div>');
+        // Variants list
+        if (variants.length) {
+            html.push('<div class="post-item-variants">');
+            for (var i = 0; i < variants.length; i++) {
+                html.push('<span class="post-item-variant">' + escapeHtml(variants[i]) + '</span>');
+            }
+            html.push('</div>');
+        }
 
+        // Promo section (badge + message) - mirrors session promo logic exactly
+        var hasPromo = promoOption && promoOption !== 'none' && promoPrice;
+        if (hasPromo) {
+            html.push('<div class="post-item-promo-section">');
+
+            var isLoggedIn = window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn();
+            var badgeText = '';
+            var messageKey = '';
+
+            if (promoOption === 'funmap') {
+                badgeText = promoCode;
+                messageKey = 'msg_promo_code_reminder';
+            } else if (promoOption === 'personal') {
+                if (isLoggedIn) {
+                    badgeText = promoCode;
+                    messageKey = 'msg_promo_code_reminder';
+                } else {
+                    badgeText = 'Members Only';
+                    messageKey = 'msg_promo_code_member_teaser';
+                }
+            }
+
+            html.push('<div class="post-item-promo-badge">' + escapeHtml(badgeText) + '</div>');
+            html.push('<div class="post-item-promo-message" data-message-key="' + escapeHtml(messageKey) + '"></div>');
+            html.push('</div>');
+        }
+
+        // Price row (flag + price, with promo strikethrough if applicable)
+        if (itemPrice !== null && itemPrice !== undefined && itemPrice !== '') {
+            var flagUrl = getCurrencyFlagUrl(currency);
+            var priceFormatted = formatPriceWithSymbol(itemPrice, currency);
+
+            // Determine if promo price should be shown
+            var showPromoPrice = false;
+            if (hasPromo) {
+                var isLoggedIn2 = window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn();
+                if (promoOption === 'funmap') {
+                    showPromoPrice = true;
+                } else if (promoOption === 'personal' && isLoggedIn2) {
+                    showPromoPrice = true;
+                }
+            }
+
+            html.push('<div class="post-item-price-row">');
+            if (flagUrl) {
+                html.push('<img class="post-item-price-flag" src="' + escapeHtml(flagUrl) + '" alt="' + escapeHtml(currency) + '">');
+            }
+            if (showPromoPrice) {
+                var promoPriceFormatted = formatPriceWithSymbol(promoPrice, currency);
+                html.push('<span class="post-item-price-original">' + escapeHtml(priceFormatted) + '</span>');
+                html.push('<span class="post-item-price-promo">' + escapeHtml(promoPriceFormatted) + '</span>');
+            } else {
+                html.push('<span class="post-item-price-text">' + escapeHtml(priceFormatted) + '</span>');
+            }
+            html.push('</div>');
+        }
+
+        html.push('</div>');
         return html.join('');
     }
 
     /**
-     * Initialize item component behavior
+     * Initialize item component behavior (load async messages)
      * @param {HTMLElement} wrap - The post wrapper element
-     * @param {Object} post - The post data object
-     * @param {Object} callbacks - Callback functions from post.js
-     * @param {Function} callbacks.onItemSelect - Called when an item is selected (item, index)
      */
-    function init(wrap, post, callbacks) {
-        if (!wrap || !post) return null;
+    function init(wrap) {
+        if (!wrap) return null;
 
-        var itemBtn = wrap.querySelector('.post-item-button');
-        var itemArrow = wrap.querySelector('.post-item-arrow');
-        var itemOptions = wrap.querySelectorAll('.post-item-option');
-        var selectedIndex = 0;
+        var container = wrap.querySelector('.post-item-container');
+        if (!container) return null;
 
-        if (!itemBtn) return null;
-
-        function closeDropdown() {
-            itemBtn.classList.remove('post-item-button--open');
-            if (itemArrow) itemArrow.classList.remove('post-item-arrow--open');
+        // Load promo message asynchronously
+        var msgEl = container.querySelector('.post-item-promo-message');
+        if (msgEl && typeof window.getMessage === 'function') {
+            var key = msgEl.getAttribute('data-message-key');
+            if (key) {
+                window.getMessage(key, {}, false).then(function(message) {
+                    if (message && msgEl) {
+                        msgEl.textContent = message;
+                    }
+                }).catch(function() {});
+            }
         }
 
-        // Button click handler
-        itemBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var isOpen = itemBtn.classList.contains('post-item-button--open');
-
-            if (isOpen) {
-                closeDropdown();
-            } else {
-                itemBtn.classList.add('post-item-button--open');
-                if (itemArrow) itemArrow.classList.add('post-item-arrow--open');
-            }
-        });
-
-        // Item option selection
-        itemOptions.forEach(function(opt) {
-            opt.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var index = parseInt(opt.dataset.index, 10);
-
-                selectedIndex = index;
-
-                // Update button content
-                var btnTextMain = wrap.querySelector('.post-item-text-main');
-                var btnTextSecondary = wrap.querySelector('.post-item-text-secondary');
-                var optMain = opt.querySelector('.post-item-option-main');
-                var optSecondary = opt.querySelector('.post-item-option-secondary');
-                if (btnTextMain && optMain) {
-                    btnTextMain.textContent = optMain.textContent;
-                }
-                if (btnTextSecondary && optSecondary) {
-                    btnTextSecondary.textContent = optSecondary.textContent;
-                } else if (btnTextSecondary) {
-                    btnTextSecondary.textContent = '';
-                }
-
-                // Update selected state
-                itemOptions.forEach(function(o) {
-                    o.classList.remove('post-item-highlighted');
-                });
-                opt.classList.add('post-item-highlighted');
-
-                closeDropdown();
-
-                if (callbacks && callbacks.onItemSelect) {
-                    var itemList = post.items || [];
-                    callbacks.onItemSelect(itemList[index], index);
-                }
-            });
-        });
-
-        // Click-outside handler
-        var clickOutsideHandler = function(e) {
-            if (!itemBtn.classList.contains('post-item-button--open')) return;
-            var target = e.target;
-            if (!target) return;
-            var container = wrap.querySelector('.post-item-container');
-            if (container && container.contains(target)) return;
-            closeDropdown();
-        };
-        document.addEventListener('click', clickOutsideHandler);
-
-        // Return API for cleanup
-        return {
-            close: closeDropdown,
-            destroy: function() {
-                document.removeEventListener('click', clickOutsideHandler);
-                closeDropdown();
-            }
-        };
+        return {};
     }
 
     return {
