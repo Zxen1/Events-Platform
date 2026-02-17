@@ -327,10 +327,11 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 
 ## IF UNSURE
 
-1. Search existing code first
-2. Copy existing patterns exactly
-3. If still unsure, ASK the user
-4. Never guess, never invent
+1. **Re-read this file first** — the answer may already be documented here
+2. Search existing code
+3. Copy existing patterns exactly
+4. If still unsure, ASK the user
+5. Never guess, never invent
 
 ---
 
