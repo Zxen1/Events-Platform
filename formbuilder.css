@@ -1412,6 +1412,17 @@
   color: #fff;
 }
 
+.formbuilder-type-value {
+  font-size: 13px;
+  color: var(--blue-500);
+}
+
+.formbuilder-add-subcategory-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .formbuilder-type-option {
   display: flex;
   align-items: center;

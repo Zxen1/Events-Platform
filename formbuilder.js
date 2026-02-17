@@ -343,7 +343,6 @@
                 var subNameInput = option.querySelector('.formbuilder-accordion-editpanel-input');
                 var subHideSwitchInput = option.querySelector('.component-switch-input');
                 var surchargeInput = option.querySelector('.formbuilder-fee-input');
-                var eventsRadio = option.querySelector('input[type="radio"][value="Events"]');
                 
                 var subName = subNameInput ? subNameInput.value.trim() : (subHeaderText ? subHeaderText.textContent.trim() : '');
                 var subKey = subName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -368,7 +367,7 @@
                 
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
-                var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
+                var subcategoryType = option.dataset.subcategoryType || 'General';
                 
                 // Location type - read from radio buttons (name pattern: locationType-{catName}-{subName})
                 var locationTypeRadio = option.querySelector('input[type="radio"][name^="locationType-"]:checked');
@@ -602,7 +601,7 @@
        ADD SUBCATEGORY
        -------------------------------------------------------------------------- */
     
-    function addSubcategory(categoryAccordion) {
+    function addSubcategory(categoryAccordion, subcategoryType) {
         if (!categoryAccordion) return;
         
         var body = categoryAccordion.querySelector('.formbuilder-accordion-body');
@@ -632,20 +631,34 @@
             counter++;
         }
         
+        // Set location type based on subcategory type
+        var locationType = (subcategoryType === 'Events') ? 'Venue' : 'City';
+        
         // Get category data structure (needed for buildSubcategoryOption)
         var cat = {
             name: catName,
             subs: existingSubs,
-            subFees: {}
+            subFees: {},
+            subFields: {}
         };
+        
+        // Set type and location on the data structure before building
+        cat.subFees[newSubName] = {
+            subcategory_type: subcategoryType,
+            location_type: locationType
+        };
+        
+        // Pre-populate default fieldsets based on type
+        var defaultFields = getDefaultFieldsets(subcategoryType, locationType);
+        cat.subFields[newSubName] = defaultFields;
         
         // Build the subcategory option
         var option = buildSubcategoryOption(cat, newSubName, loadedSubcategoryIconPaths, loadedFieldsets, body);
         
-        // Insert before the Add Subcategory button
-        var addSubBtn = body.querySelector('.formbuilder-add-subcategory');
-        if (addSubBtn) {
-            body.insertBefore(option, addSubBtn);
+        // Insert before the Add Subcategory buttons
+        var addBtnContainer = body.querySelector('.formbuilder-add-subcategory-buttons');
+        if (addBtnContainer) {
+            body.insertBefore(option, addBtnContainer);
         } else {
             body.appendChild(option);
         }
@@ -663,6 +676,52 @@
         }
         
         notifyChange();
+    }
+    
+    // Returns the default fieldset list for a new subcategory based on type
+    function getDefaultFieldsets(subcategoryType, locationType) {
+        var fields = [];
+        
+        // Default amenities for Events subcategories
+        var eventAmenities = [
+            'Wheelchair Access',
+            'Hearing Loop',
+            'Food & Beverages',
+            'Licensed Venue',
+            'BYO Allowed',
+            'Ample Parking',
+            'Smoking Area',
+            'Air Conditioning',
+            'Pet Friendly'
+        ];
+        
+        if (subcategoryType === 'Events') {
+            // Above the line (primary container)
+            fields.push({ fieldsetKey: 'title', name: 'Title', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'description', name: 'Description', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'images', name: 'Images', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'public-phone', name: 'Public Phone', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'public-email', name: 'Public Email', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'website-url', name: 'Website (URL)', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'tickets-url', name: 'Tickets (URL)', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'ticket-pricing', name: 'Ticket Pricing', required: true, location_specific: false });
+            // Below the line (location-specific)
+            fields.push({ fieldsetKey: 'venue', name: 'Venue', required: true, location_specific: true });
+            fields.push({ fieldsetKey: 'amenities', name: 'Amenities', required: true, location_specific: true, selectedAmenities: eventAmenities });
+            fields.push({ fieldsetKey: 'sessions', name: 'Sessions', required: true, location_specific: true });
+        } else {
+            // General: above the line
+            fields.push({ fieldsetKey: 'title', name: 'Title', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'description', name: 'Description', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'images', name: 'Images', required: true, location_specific: false });
+            fields.push({ fieldsetKey: 'public-phone', name: 'Public Phone', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'public-email', name: 'Public Email', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'website-url', name: 'Website (URL)', required: false, location_specific: false });
+            // Below the line (location-specific)
+            fields.push({ fieldsetKey: 'city', name: 'City', required: true, location_specific: true });
+        }
+        
+        return fields;
     }
     
     /* --------------------------------------------------------------------------
@@ -1286,15 +1345,29 @@
             });
         }
         
-        // Add Subcategory button
-        var addSubBtn = document.createElement('div');
-        addSubBtn.className = 'formbuilder-add-subcategory';
-        addSubBtn.textContent = '+ Add Subcategory';
-        addSubBtn.addEventListener('click', function(e) {
+        // Add Subcategory buttons (two stacked: Event and General)
+        var addBtnContainer = document.createElement('div');
+        addBtnContainer.className = 'formbuilder-add-subcategory-buttons';
+        
+        var addEventBtn = document.createElement('div');
+        addEventBtn.className = 'formbuilder-add-subcategory';
+        addEventBtn.textContent = '+ Add Event Subcategory';
+        addEventBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            addSubcategory(accordion);
+            addSubcategory(accordion, 'Events');
         });
-        body.appendChild(addSubBtn);
+        
+        var addGeneralBtn = document.createElement('div');
+        addGeneralBtn.className = 'formbuilder-add-subcategory';
+        addGeneralBtn.textContent = '+ Add General Subcategory';
+        addGeneralBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addSubcategory(accordion, 'General');
+        });
+        
+        addBtnContainer.appendChild(addEventBtn);
+        addBtnContainer.appendChild(addGeneralBtn);
+        body.appendChild(addBtnContainer);
         
         accordion.appendChild(header);
         accordion.appendChild(editPanel);
@@ -1337,6 +1410,12 @@
         var subId = cat.subIds && cat.subIds[subName];
         if (subId) {
             option.dataset.subcategoryId = subId;
+        }
+        
+        // Store subcategory type on the element for save function to read
+        var storedType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].subcategory_type) ? cat.subFees[subName].subcategory_type : null;
+        if (storedType) {
+            option.dataset.subcategoryType = storedType;
         }
         
         // Get subcategory icon
@@ -1507,7 +1586,7 @@
         var subFees = cat.subFees;
         var subFeeData = cat.subFees[subName];
         
-        // Subcategory Type row
+        // Subcategory Type row (read-only label, type is set at creation)
         var typeRow = document.createElement('div');
         typeRow.className = 'formbuilder-type-row';
         
@@ -1517,37 +1596,12 @@
         
         var currentType = subFeeData && subFeeData.subcategory_type ? subFeeData.subcategory_type : null;
         
-        var eventsLabel = document.createElement('label');
-        eventsLabel.className = 'formbuilder-type-option';
-        var eventsInput = document.createElement('input');
-        eventsInput.type = 'radio';
-        eventsInput.className = 'formbuilder-type-option-input';
-        eventsInput.name = 'subType-' + cat.name + '-' + subName;
-        eventsInput.value = 'Events';
-        eventsInput.checked = currentType === 'Events';
-        var eventsText = document.createElement('span');
-        eventsText.className = 'formbuilder-type-option-text';
-        eventsText.textContent = 'Events';
-        eventsLabel.appendChild(eventsInput);
-        eventsLabel.appendChild(eventsText);
-        
-        var generalLabel = document.createElement('label');
-        generalLabel.className = 'formbuilder-type-option';
-        var generalInput = document.createElement('input');
-        generalInput.type = 'radio';
-        generalInput.className = 'formbuilder-type-option-input';
-        generalInput.name = 'subType-' + cat.name + '-' + subName;
-        generalInput.value = 'General';
-        generalInput.checked = currentType === 'General';
-        var generalText = document.createElement('span');
-        generalText.className = 'formbuilder-type-option-text';
-        generalText.textContent = 'General';
-        generalLabel.appendChild(generalInput);
-        generalLabel.appendChild(generalText);
+        var typeValue = document.createElement('span');
+        typeValue.className = 'formbuilder-type-value';
+        typeValue.textContent = currentType || 'Not Set';
         
         typeRow.appendChild(typeLabel);
-        typeRow.appendChild(eventsLabel);
-        typeRow.appendChild(generalLabel);
+        typeRow.appendChild(typeValue);
         subEditPanel.appendChild(typeRow);
         
         // Location Type row
@@ -2110,101 +2164,11 @@
         // Store location type for later use when fieldsetOpts is created
         var initialLocationType = currentLocationType;
         
-        // Update when Events/General type changes
-        eventsInput.addEventListener('change', function() {
-            if (eventsInput.checked) {
-                // Venue stays enabled, only City and Address are disabled
-                cityInput.disabled = true;
-                addressInput.disabled = true;
-                // When switching to Events, location type must be Venue
-                // Get current location type from data structure
-                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
-                if (!existingLocationType || existingLocationType === null || existingLocationType === '') {
-                    // No location type set - set to Venue
-                    venueInput.checked = true;
-                    cityInput.checked = false;
-                    addressInput.checked = false;
-                    if (!cat.subFees) cat.subFees = {};
-                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                    cat.subFees[subName].location_type = 'Venue';
-                    updateLocationTypeFieldsets('Venue');
-                    manageLocationTypeFieldsets('Venue');
-                } else {
-                    // Location type already set - if it's not Venue, change to Venue (Events requires Venue)
-                    if (existingLocationType === 'Venue') {
-                        venueInput.checked = true;
-                        cityInput.checked = false;
-                        addressInput.checked = false;
-                        // Keep Venue, just update UI
-                        updateLocationTypeFieldsets('Venue');
-                        manageLocationTypeFieldsets('Venue');
-                    } else {
-                        // If it was City or Address, change to Venue (Events requires Venue)
-                        venueInput.checked = true;
-                        cityInput.checked = false;
-                        addressInput.checked = false;
-                        if (!cat.subFees) cat.subFees = {};
-                        if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                        cat.subFees[subName].location_type = 'Venue';
-                        updateLocationTypeFieldsets('Venue');
-                        manageLocationTypeFieldsets('Venue');
-                    }
-                }
-                if (!cat.subFees) cat.subFees = {};
-                if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].subcategory_type = 'Events';
-                // Enable event-only fieldsets for Events type
-                updateEventOnlyFieldsets('Events');
-                // Auto-add mandatory event fieldsets (ticket_pricing, sessions)
-                autoAddEventFieldsets();
-                notifyChange();
-            }
-        });
-        
-        generalInput.addEventListener('change', function() {
-            if (generalInput.checked) {
-                venueInput.disabled = false;
-                cityInput.disabled = false;
-                addressInput.disabled = false;
-                // When switching to General, keep the current location type (don't clear it)
-                // Get current location type from data structure
-                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
-                // Update radio button states to match current location type
-                if (existingLocationType === 'Venue') {
-                    venueInput.checked = true;
-                    cityInput.checked = false;
-                    addressInput.checked = false;
-                } else if (existingLocationType === 'City') {
-                    venueInput.checked = false;
-                    cityInput.checked = true;
-                    addressInput.checked = false;
-                } else if (existingLocationType === 'Address') {
-                    venueInput.checked = false;
-                    cityInput.checked = false;
-                    addressInput.checked = true;
-                } else {
-                    // No location type set - leave all unchecked
-                    venueInput.checked = false;
-                    cityInput.checked = false;
-                    addressInput.checked = false;
-                }
-                // Update fieldset states based on current location type
-                if (existingLocationType) {
-                    updateLocationTypeFieldsets(existingLocationType);
-                    manageLocationTypeFieldsets(existingLocationType);
-                } else {
-                    updateLocationTypeFieldsets(null);
-                    manageLocationTypeFieldsets(null);
-                }
-                if (!cat.subFees) cat.subFees = {};
-                if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].subcategory_type = 'General';
-                // Keep existing location_type - don't set to null
-                // Disable event-only fieldsets for General type
-                updateEventOnlyFieldsets('General');
-                notifyChange();
-            }
-        });
+        // Events type locks location to Venue
+        if (currentType === 'Events') {
+            cityInput.disabled = true;
+            addressInput.disabled = true;
+        }
         
         locationTypeRow.appendChild(locationTypeLabel);
         locationTypeRow.appendChild(venueLabel);
@@ -3061,6 +3025,11 @@
         } else {
             // No location type selected - keep button visible but force location type selection first
             updateLocationTypeFieldsets(null);
+        }
+        
+        // Apply event-only fieldset filtering based on subcategory type
+        if (currentType) {
+            updateEventOnlyFieldsets(currentType);
         }
         
         // Load existing fields from database FIRST
