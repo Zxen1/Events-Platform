@@ -1792,7 +1792,7 @@
         }
         
         // Function to update divider line and location repeat switches based on location type selection
-        function updateLocationDividerAndRepeatSwitches() {
+        function updateLocationDividerAndRepeatSwitches(suppressNotify) {
             if (!fieldsContainer) return;
             
             // Check if any location type is selected (Venue, City, or Address)
@@ -1882,12 +1882,12 @@
                         // Below divider - location-specific
                         wrapper.classList.add('formbuilder-field-wrapper--location-specific');
                         syncFieldWrapperUi(wrapper);
-                        notifyChange();
+                        if (!suppressNotify) notifyChange();
                     } else {
                         // Above divider - common/shared
                         wrapper.classList.remove('formbuilder-field-wrapper--location-specific');
                         syncFieldWrapperUi(wrapper);
-                        notifyChange();
+                        if (!suppressNotify) notifyChange();
                     }
                 }
                 
@@ -3060,7 +3060,7 @@
             manageLocationTypeFieldsets(initialLocationType);
             // Update divider and location repeat switches for existing subcategories with location type
             setTimeout(function() {
-                updateLocationDividerAndRepeatSwitches();
+                updateLocationDividerAndRepeatSwitches(true);
             }, 0);
         }
         
