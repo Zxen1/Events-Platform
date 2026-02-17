@@ -3434,7 +3434,11 @@ const MemberModule = (function() {
 
         var suffix = '';
         if (price !== null && currencyCode) {
-            suffix = ' ' + currencyCode + ' ' + price.toFixed(2);
+            try {
+                suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2), currencyCode);
+            } catch (e) {
+                suffix = ' ' + currencyCode + ' ' + price.toFixed(2);
+            }
         }
 
         var textEl = submitBtn.querySelector('.member-button-submit-text');
