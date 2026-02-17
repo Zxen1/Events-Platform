@@ -278,8 +278,6 @@
     function notifyChange() {
         if (!isLoaded) return; // Don't notify during initial load
         
-        console.trace('[formbuilder] notifyChange called');
-        
         // Tell admin to recheck the field registry
         // Admin's composite registration will call captureFormbuilderState() to compare
         if (window.AdminModule && typeof AdminModule.notifyFieldChange === 'function') {
@@ -1175,10 +1173,14 @@
         isLoaded = true;
         
         // Register formbuilder as a composite field with admin's field registry
-        // This captures current state and sets it as the baseline for comparison
-        if (window.AdminModule && typeof AdminModule.registerComposite === 'function') {
-            AdminModule.registerComposite('formbuilder', captureFormbuilderState);
-        }
+        // This captures current state and sets it as the baseline for comparison.
+        // Deferred to allow all setTimeout(updateLocationDividerAndRepeatSwitches, 0) calls
+        // from buildSubcategoryOption to complete before capturing the baseline.
+        setTimeout(function() {
+            if (window.AdminModule && typeof AdminModule.registerComposite === 'function') {
+                AdminModule.registerComposite('formbuilder', captureFormbuilderState);
+            }
+        }, 0);
     }
     
     function buildCategoryAccordion(cat, categoryIconPaths, subcategoryIconPaths, fieldsets) {
