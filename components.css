@@ -20,6 +20,7 @@
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
+   - POST ITEM           - Item menu with dropdown options
    
    ============================================================================ */
 
@@ -3998,6 +3999,178 @@ body.image-modal-open > *:not(.image-modal) {
   .post-session-popover-time.post-session-time-selected:hover {
     background: var(--ps-selected);
     box-shadow: none;
+  }
+}
+
+
+/* ============================================================================
+   POST ITEM COMPONENT
+   
+   Self-contained item menu with dropdown options.
+   Used in post info container to display/select items.
+   
+   STRUCTURE:
+   - .post-item-container    (root wrapper)
+   - .post-item-button       (trigger button)
+   - .post-item-text         (button text area)
+   - .post-item-arrow        (dropdown arrow icon)
+   - .post-item-options      (dropdown panel)
+   - .post-item-option       (item list entries)
+   ============================================================================ */
+
+/* Component variables */
+.post-item-container {
+  --pi-bg: rgba(0, 0, 0, 0.5);
+  --pi-bg-button: rgba(0, 0, 0, 0.35);
+  --pi-border: rgba(255, 255, 255, 0.12);
+  --pi-border-hover: rgba(255, 255, 255, 0.2);
+  --pi-border-focus: var(--blue-500);
+  --pi-text: #fff;
+  --pi-text-secondary: rgba(255, 255, 255, 0.7);
+  --pi-muted: rgba(255, 255, 255, 0.5);
+  --pi-hover: var(--blue-500);
+  --pi-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --pi-radius: 5px;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* Button */
+.post-item-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 10px;
+  background: var(--pi-bg-button);
+  border: 1px solid var(--pi-border);
+  border-radius: var(--pi-radius);
+  color: var(--pi-text);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-item-container:not(:focus-within) .post-item-button:not(.post-item-button--open):not(:active):hover {
+    border-color: var(--pi-border-hover);
+  }
+}
+
+.post-item-button--open {
+  border-color: var(--pi-border-focus);
+  border-radius: var(--pi-radius) var(--pi-radius) 0 0;
+  border-bottom: none;
+}
+
+/* Button text */
+.post-item-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  color: var(--pi-text);
+}
+
+.post-item-text-main {
+  font-weight: 600;
+}
+
+.post-item-text-secondary {
+  font-size: 12px;
+  color: var(--pi-text-secondary);
+  margin-top: 2px;
+}
+
+/* Arrow */
+.post-item-arrow {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+  background-color: var(--pi-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.post-item-arrow--open {
+  transform: rotate(180deg);
+}
+
+/* Options panel */
+.post-item-options {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  background: var(--pi-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--pi-border-focus);
+  border-top: none;
+  border-radius: 0 0 var(--pi-radius) var(--pi-radius);
+  box-shadow: var(--pi-shadow);
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.post-item-button--open + .post-item-options {
+  display: block;
+}
+
+/* Item option (70px row) */
+.post-item-option {
+  min-height: 70px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--pi-text);
+  font-size: 14px;
+  line-height: 1.4;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--pi-border);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.post-item-option:last-child {
+  border-bottom: none;
+}
+
+.post-item-option-main {
+  font-weight: 600;
+  text-align: left;
+}
+
+.post-item-option-secondary {
+  font-size: 12px;
+  color: var(--pi-text-secondary);
+  margin-top: 2px;
+  text-align: left;
+}
+
+/* Option hover/highlighted states */
+.post-item-option.post-item-highlighted {
+  background: var(--pi-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-item-option:hover {
+    background: var(--pi-hover);
   }
 }
 

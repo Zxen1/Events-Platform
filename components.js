@@ -22,6 +22,7 @@
    - LOCATION WALLPAPER  - Animated map wallpaper for location displays
    - POST LOCATION       - Location picker with minimap and location list
    - POST SESSION        - Session picker with calendar and time slots
+   - POST ITEM           - Item menu with dropdown options
    
    ============================================================================ */
 
@@ -11825,6 +11826,171 @@ const PostSessionComponent = (function() {
 
 
 /* ============================================================================
+   POST ITEM COMPONENT
+   Self-contained item menu with dropdown options.
+   Used in post info container to display/select items.
+   ============================================================================ */
+
+const PostItemComponent = (function() {
+    'use strict';
+
+    /**
+     * Render a single item option HTML
+     */
+    function renderItemOption(item, index, isSelected, escapeHtml) {
+        var itemName = item.item_name || '';
+        var itemDetail = item.item_detail || '';
+
+        var html = [];
+        html.push('<div class="post-item-option' + (isSelected ? ' post-item-highlighted' : '') + '" data-index="' + index + '">');
+        html.push('<div class="post-item-option-main">' + escapeHtml(itemName) + '</div>');
+        if (itemDetail) {
+            html.push('<div class="post-item-option-secondary">' + escapeHtml(itemDetail) + '</div>');
+        }
+        html.push('</div>');
+
+        return html.join('');
+    }
+
+    /**
+     * Render the item section HTML
+     */
+    function render(options) {
+        var postId = options.postId || '';
+        var itemList = options.itemList || [];
+        var escapeHtml = options.escapeHtml || function(s) { return s; };
+
+        if (!itemList.length) return '';
+
+        var item0 = itemList[0] || {};
+        var itemName = item0.item_name || '';
+        var itemDetail = item0.item_detail || '';
+
+        var html = [];
+
+        html.push('<div class="post-item-container" data-post-id="' + postId + '">');
+        html.push('<button class="post-item-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-item-text">');
+        html.push('<div class="post-item-text-main">' + escapeHtml(itemName) + '</div>');
+        if (itemDetail) {
+            html.push('<div class="post-item-text-secondary">' + escapeHtml(itemDetail) + '</div>');
+        }
+        html.push('</div>');
+        html.push('<div class="post-item-arrow"></div>');
+        html.push('</button>');
+
+        html.push('<div class="post-item-options">');
+        for (var i = 0; i < itemList.length; i++) {
+            html.push(renderItemOption(itemList[i], i, i === 0, escapeHtml));
+        }
+        html.push('</div>');
+
+        html.push('</div>');
+
+        return html.join('');
+    }
+
+    /**
+     * Initialize item component behavior
+     * @param {HTMLElement} wrap - The post wrapper element
+     * @param {Object} post - The post data object
+     * @param {Object} callbacks - Callback functions from post.js
+     * @param {Function} callbacks.onItemSelect - Called when an item is selected (item, index)
+     */
+    function init(wrap, post, callbacks) {
+        if (!wrap || !post) return null;
+
+        var itemBtn = wrap.querySelector('.post-item-button');
+        var itemArrow = wrap.querySelector('.post-item-arrow');
+        var itemOptions = wrap.querySelectorAll('.post-item-option');
+        var selectedIndex = 0;
+
+        if (!itemBtn) return null;
+
+        function closeDropdown() {
+            itemBtn.classList.remove('post-item-button--open');
+            if (itemArrow) itemArrow.classList.remove('post-item-arrow--open');
+        }
+
+        // Button click handler
+        itemBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = itemBtn.classList.contains('post-item-button--open');
+
+            if (isOpen) {
+                closeDropdown();
+            } else {
+                itemBtn.classList.add('post-item-button--open');
+                if (itemArrow) itemArrow.classList.add('post-item-arrow--open');
+            }
+        });
+
+        // Item option selection
+        itemOptions.forEach(function(opt) {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var index = parseInt(opt.dataset.index, 10);
+
+                selectedIndex = index;
+
+                // Update button content
+                var btnTextMain = wrap.querySelector('.post-item-text-main');
+                var btnTextSecondary = wrap.querySelector('.post-item-text-secondary');
+                var optMain = opt.querySelector('.post-item-option-main');
+                var optSecondary = opt.querySelector('.post-item-option-secondary');
+                if (btnTextMain && optMain) {
+                    btnTextMain.textContent = optMain.textContent;
+                }
+                if (btnTextSecondary && optSecondary) {
+                    btnTextSecondary.textContent = optSecondary.textContent;
+                } else if (btnTextSecondary) {
+                    btnTextSecondary.textContent = '';
+                }
+
+                // Update selected state
+                itemOptions.forEach(function(o) {
+                    o.classList.remove('post-item-highlighted');
+                });
+                opt.classList.add('post-item-highlighted');
+
+                closeDropdown();
+
+                if (callbacks && callbacks.onItemSelect) {
+                    var itemList = post.items || [];
+                    callbacks.onItemSelect(itemList[index], index);
+                }
+            });
+        });
+
+        // Click-outside handler
+        var clickOutsideHandler = function(e) {
+            if (!itemBtn.classList.contains('post-item-button--open')) return;
+            var target = e.target;
+            if (!target) return;
+            var container = wrap.querySelector('.post-item-container');
+            if (container && container.contains(target)) return;
+            closeDropdown();
+        };
+        document.addEventListener('click', clickOutsideHandler);
+
+        // Return API for cleanup
+        return {
+            close: closeDropdown,
+            destroy: function() {
+                document.removeEventListener('click', clickOutsideHandler);
+                closeDropdown();
+            }
+        };
+    }
+
+    return {
+        render: render,
+        init: init
+    };
+})();
+
+
+/* ============================================================================
    POST PRICE COMPONENT
    Renders price info for post info container.
    ============================================================================ */
@@ -11929,6 +12095,7 @@ window.MiniMap = MiniMap;
 window.PostLocationMapComponent = PostLocationMapComponent;
 window.PostLocationComponent = PostLocationComponent;
 window.PostSessionComponent = PostSessionComponent;
+window.PostItemComponent = PostItemComponent;
 window.PostPriceComponent = PostPriceComponent;
 
 
