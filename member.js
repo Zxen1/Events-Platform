@@ -3432,13 +3432,17 @@ const MemberModule = (function() {
             }
         }
 
-        var suffix = '';
-        if (price !== null && currencyCode) {
+        var sym = '$';
+        if (currencyCode && window.CurrencyComponent) {
             try {
-                suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2), currencyCode);
-            } catch (e) {
-                suffix = ' ' + currencyCode + ' ' + price.toFixed(2);
-            }
+                var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
+                if (curr && curr.symbol) sym = curr.symbol;
+            } catch (e) {}
+        }
+
+        var suffix = '';
+        if (price !== null) {
+            suffix = ' ' + sym + price.toFixed(2);
         }
 
         var textEl = submitBtn.querySelector('.member-button-submit-text');
