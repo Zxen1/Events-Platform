@@ -2600,7 +2600,6 @@
                 var isOpen = modifyContainer.style.display !== 'none';
                 modifyContainer.style.display = isOpen ? 'none' : 'block';
                 modifyButton.classList.toggle('formbuilder-field-modify-button--open');
-                notifyChange();
             });
             fieldEditPanel.appendChild(modifyButton);
             
