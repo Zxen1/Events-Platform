@@ -154,13 +154,11 @@ const AdminModule = (function() {
             var entry = fieldRegistry[fieldId];
             if (entry.type === 'simple') {
                 if (entry.current !== entry.original) {
-                    console.log('[DIRTY]', fieldId);
                     return true;
                 }
             } else if (entry.type === 'composite') {
                 var currentState = entry.captureState();
                 if (JSON.stringify(currentState) !== entry.original) {
-                    console.log('[DIRTY]', fieldId);
                     return true;
                 }
             }
