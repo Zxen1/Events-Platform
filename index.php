@@ -1043,18 +1043,23 @@ if (empty($ogTitle)) {
           <div class="admin-map-lighting-container" id="admin-map-lighting-container">
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Map Lighting</label>
+              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
               <div class="admin-lighting-buttons toggle-class-1">
                 <button type="button" class="admin-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="admin-lighting-button-text">Sunrise</span>
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Sunrise</span> -->
                 </button>
                 <button type="button" class="admin-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="admin-lighting-button-text">Day</span>
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Day</span> -->
                 </button>
                 <button type="button" class="admin-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="admin-lighting-button-text">Sunset</span>
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Sunset</span> -->
                 </button>
                 <button type="button" class="admin-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="admin-lighting-button-text">Night</span>
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Night</span> -->
                 </button>
               </div>
             </div>
@@ -1280,18 +1285,23 @@ if (empty($ogTitle)) {
           <div class="member-mapstyle-container">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Lighting</label>
+              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
               <div class="member-lighting-buttons toggle-class-1">
                 <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="member-lighting-button-text">Sunrise</span>
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Sunrise</span> -->
                 </button>
                 <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="member-lighting-button-text">Day</span>
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Day</span> -->
                 </button>
                 <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="member-lighting-button-text">Sunset</span>
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Sunset</span> -->
                 </button>
                 <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="member-lighting-button-text">Night</span>
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Night</span> -->
                 </button>
               </div>
             </div>

@@ -648,7 +648,7 @@
   justify-content: center;
   background: #222;
   border: 1px solid #222222;
-  border-radius: 5px;
+  border-radius: 0;
   color: #888;
   font-size: 13px;
   cursor: pointer;
@@ -1420,7 +1420,6 @@
 .formbuilder-add-subcategory-buttons {
   display: flex;
   flex-direction: column;
-  gap: 3px;
 }
 
 .formbuilder-type-option {

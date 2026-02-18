@@ -210,36 +210,34 @@
   white-space: nowrap;
 }
 
-/* Posts and Map buttons always show text */
-.header-modeswitch-posts,
-.header-modeswitch-map {
-  width: auto;
-  height: 36px;
-  padding: 0 14px;
-}
-
-.header-modeswitch-posts .header-modeswitch-button-icon,
-.header-modeswitch-map .header-modeswitch-button-icon {
+/* SWITCH: Mobile modeswitch buttons — icons active, text hidden.
+   To swap back to text, comment out the block below and uncomment the text-visible block. Do not delete either. */
+/* Mobile: all modeswitch buttons show icon, hide text */
+.header-modeswitch-recent .header-modeswitch-button-text,
+.header-modeswitch-posts .header-modeswitch-button-text,
+.header-modeswitch-map .header-modeswitch-button-text {
   display: none;
 }
 
-/* Recent button shows icon on mobile, text on desktop */
-.header-modeswitch-recent .header-modeswitch-button-text {
-  display: none;
-}
-
+/* Desktop: all modeswitch buttons show text, hide icon */
 @media (min-width: 531px) {
-  .header-modeswitch-recent {
+  .header-modeswitch-recent,
+  .header-modeswitch-posts,
+  .header-modeswitch-map {
     width: auto;
     height: 36px;
     padding: 0 14px;
   }
   
-  .header-modeswitch-recent .header-modeswitch-button-icon {
+  .header-modeswitch-recent .header-modeswitch-button-icon,
+  .header-modeswitch-posts .header-modeswitch-button-icon,
+  .header-modeswitch-map .header-modeswitch-button-icon {
     display: none;
   }
   
-  .header-modeswitch-recent .header-modeswitch-button-text {
+  .header-modeswitch-recent .header-modeswitch-button-text,
+  .header-modeswitch-posts .header-modeswitch-button-text,
+  .header-modeswitch-map .header-modeswitch-button-text {
     display: block;
   }
 }

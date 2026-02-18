@@ -2141,6 +2141,20 @@ const AdminModule = (function() {
         // Map Lighting buttons
         var lightingButtons = mapTabContainer.querySelectorAll('.admin-lighting-button');
         if (lightingButtons.length) {
+            // Apply lighting icons from system images
+            var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
+            lightingButtons.forEach(function(btn) {
+                var iconEl = btn.querySelector('.admin-lighting-button-icon');
+                if (!iconEl) return;
+                var key = iconEl.dataset.iconKey;
+                if (key && sys[key] && window.App && typeof App.getImageUrl === 'function') {
+                    var url = App.getImageUrl('systemImages', sys[key]);
+                    iconEl.style.webkitMaskImage = 'url(' + url + ')';
+                    iconEl.style.maskImage = 'url(' + url + ')';
+                    iconEl.style.opacity = '1';
+                }
+            });
+            
             var initialLighting = mapTabData.map_lighting || 'day';
             lightingButtons.forEach(function(btn) {
                 var lighting = btn.dataset.lighting;
