@@ -5696,8 +5696,8 @@ const MemberModule = (function() {
         // Insert into checkout container (or fallback to formWrapper)
         var checkoutContainer = document.querySelector('.member-checkout-container');
         if (checkoutContainer) {
-            // Insert before the submit buttons (member-checkout-actions-container)
-            var actionsEl = checkoutContainer.querySelector('.member-checkout-actions-container');
+            // Insert before the submit buttons (component-paymentsubmit)
+            var actionsEl = checkoutContainer.querySelector('.component-paymentsubmit');
             if (actionsEl) {
                 checkoutContainer.insertBefore(wrap, actionsEl);
             } else {
