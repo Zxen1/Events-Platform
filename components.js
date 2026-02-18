@@ -4296,8 +4296,6 @@ const CheckoutOptionsComponent = (function(){
    
    Usage:
      var refs = PaymentSubmitComponent.create({
-       prefix: 'member-button',
-       containerClass: 'member-checkout-actions-container',
        baseLabel: 'Pay',
        isAdmin: currentUser && currentUser.isAdmin,
        onSubmitClick: function(e) { ... },
@@ -4318,8 +4316,6 @@ const PaymentSubmitComponent = (function() {
 
     /**
      * @param {Object} options
-     * @param {string} options.prefix           - CSS class prefix (e.g. 'member-button', 'posteditor-manage')
-     * @param {string} [options.containerClass] - Override container class (default: prefix + '-actions')
      * @param {string} [options.baseLabel]      - Initial button text (default: 'Pay')
      * @param {boolean} [options.isAdmin]       - Whether to create admin bypass button
      * @param {string} [options.adminLabel]     - Admin button text (default: 'Admin: Submit Free')
@@ -4329,27 +4325,25 @@ const PaymentSubmitComponent = (function() {
      */
     function create(options) {
         if (!options) throw new Error('PaymentSubmitComponent.create: options parameter is required');
-        if (!options.prefix) throw new Error('PaymentSubmitComponent.create: options.prefix is required');
 
-        var prefix = options.prefix;
         var baseLabel = options.baseLabel || 'Pay';
         var adminLabel = options.adminLabel || 'Admin: Submit Free';
 
         var container = document.createElement('div');
-        container.className = options.containerClass || (prefix + '-actions');
+        container.className = 'component-paymentsubmit';
 
         var submitBtn = document.createElement('button');
         submitBtn.type = 'button';
-        submitBtn.className = prefix + '-submit button-class-2b';
+        submitBtn.className = 'component-paymentsubmit-button button-class-2b';
         submitBtn.disabled = true;
         submitBtn.setAttribute('data-base-label', baseLabel);
 
         var submitText = document.createElement('span');
-        submitText.className = prefix + '-submit-text';
+        submitText.className = 'component-paymentsubmit-button-text';
         submitText.textContent = baseLabel;
 
         var submitIcons = document.createElement('span');
-        submitIcons.className = prefix + '-submit-icons';
+        submitIcons.className = 'component-paymentsubmit-button-icons';
         submitIcons.innerHTML = paymentIconsSvg;
 
         submitBtn.appendChild(submitText);
@@ -4364,7 +4358,7 @@ const PaymentSubmitComponent = (function() {
         if (options.isAdmin) {
             adminBtn = document.createElement('button');
             adminBtn.type = 'button';
-            adminBtn.className = prefix + '-admin-submit button-class-2c';
+            adminBtn.className = 'component-paymentsubmit-admin button-class-2c';
             adminBtn.textContent = adminLabel;
             adminBtn.disabled = true;
             container.appendChild(adminBtn);
