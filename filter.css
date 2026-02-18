@@ -633,7 +633,7 @@
 /* Body uses container-content for appearance */
 .filter-categoryfilter-accordion-body {
   display: none;
-  padding: 10px 10px 0 10px;
+  padding: 0;
 }
 
 .filter-categoryfilter-accordion-body--open {
@@ -644,8 +644,8 @@
   height: 36px;
   display: flex;
   align-items: center;
-  padding: 0;
-  border-radius: 5px;
+  padding: 0 10px;
+  border-radius: 0;
   cursor: pointer;
   margin-bottom: 0;
 }
