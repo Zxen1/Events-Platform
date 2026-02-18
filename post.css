@@ -749,7 +749,8 @@
    ============================================================================ */
 
 .post-list .topSlack,
-.recent-panel-content .topSlack {
+.recent-panel-content .topSlack,
+.member-panel-body .topSlack {
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -757,7 +758,8 @@
 }
 
 .post-list .bottomSlack,
-.recent-panel-content .bottomSlack {
+.recent-panel-content .bottomSlack,
+.member-panel-body .bottomSlack {
   overflow: hidden;
 }
 

@@ -1681,51 +1681,11 @@ const PostModule = (function() {
     }
 
     if (_botS) postListEl.appendChild(_botS);
-    populateBackdrop(_topS);
-    populateBackdrop(_botS);
+    BackdropComponent.populate(_topS);
+    BackdropComponent.populate(_botS);
     finalizeRender();
   }
 
-  function buildGhostCard() {
-    var card = document.createElement('div');
-    card.className = 'post-backdrop-card';
-
-    var img = document.createElement('div');
-    img.className = 'post-backdrop-card-image';
-
-    var meta = document.createElement('div');
-    meta.className = 'post-backdrop-card-meta';
-
-    var title = document.createElement('div');
-    title.className = 'post-backdrop-card-title';
-    meta.appendChild(title);
-
-    for (var i = 0; i < 3; i++) {
-      var row = document.createElement('div');
-      row.className = 'post-backdrop-card-row';
-      var badge = document.createElement('div');
-      badge.className = 'post-backdrop-card-badge';
-      var line = document.createElement('div');
-      line.className = 'post-backdrop-card-line';
-      row.appendChild(badge);
-      row.appendChild(line);
-      meta.appendChild(row);
-    }
-
-    card.appendChild(img);
-    card.appendChild(meta);
-    return card;
-  }
-
-  function populateBackdrop(slackEl) {
-    if (!slackEl) return;
-    if (slackEl.querySelector('.post-backdrop-card')) return;
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < 35; i++) {
-      frag.appendChild(buildGhostCard());
-    }
-    slackEl.appendChild(frag);
-  }
 
   /* --------------------------------------------------------------------------
      MAP MARKER INTEGRATION
@@ -4539,8 +4499,8 @@ const PostModule = (function() {
 
     recentPanelContentEl.appendChild(reminderWrap);
     if (_botS) recentPanelContentEl.appendChild(_botS);
-    populateBackdrop(_topS);
-    populateBackdrop(_botS);
+    BackdropComponent.populate(_topS);
+    BackdropComponent.populate(_botS);
   }
 
   /* --------------------------------------------------------------------------
@@ -4659,8 +4619,8 @@ const PostModule = (function() {
 
     recentPanelContentEl.appendChild(reminderWrap);
     if (_botS) recentPanelContentEl.appendChild(_botS);
-    populateBackdrop(_topS);
-    populateBackdrop(_botS);
+    BackdropComponent.populate(_topS);
+    BackdropComponent.populate(_botS);
   }
 
   /**
@@ -5252,8 +5212,7 @@ const PostModule = (function() {
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary,
-    mapCardHasPromo: mapCardHasPromo,
-    populateBackdrop: populateBackdrop
+    mapCardHasPromo: mapCardHasPromo
   };
 
 })();

@@ -12089,7 +12089,61 @@ function fixIOSScrollBoundary(el) {
 }
 
 
+/* ============================================================================
+   BACKDROP COMPONENT
+   Ghost postcards that fill TopSlack/BottomSlack empty space in any panel.
+   ============================================================================ */
+
+var BackdropComponent = (function() {
+    function buildGhostCard() {
+        var card = document.createElement('div');
+        card.className = 'post-backdrop-card';
+
+        var img = document.createElement('div');
+        img.className = 'post-backdrop-card-image';
+
+        var meta = document.createElement('div');
+        meta.className = 'post-backdrop-card-meta';
+
+        var title = document.createElement('div');
+        title.className = 'post-backdrop-card-title';
+        meta.appendChild(title);
+
+        for (var i = 0; i < 3; i++) {
+            var row = document.createElement('div');
+            row.className = 'post-backdrop-card-row';
+            var badge = document.createElement('div');
+            badge.className = 'post-backdrop-card-badge';
+            var line = document.createElement('div');
+            line.className = 'post-backdrop-card-line';
+            row.appendChild(badge);
+            row.appendChild(line);
+            meta.appendChild(row);
+        }
+
+        card.appendChild(img);
+        card.appendChild(meta);
+        return card;
+    }
+
+    function populate(slackEl) {
+        if (!slackEl) return;
+        if (slackEl.querySelector('.post-backdrop-card')) return;
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < 35; i++) {
+            frag.appendChild(buildGhostCard());
+        }
+        slackEl.appendChild(frag);
+    }
+
+    return {
+        populate: populate
+    };
+})();
+
+
 // Expose globally
+window.BackdropComponent = BackdropComponent;
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
 window.PostCropperComponent = PostCropperComponent;
