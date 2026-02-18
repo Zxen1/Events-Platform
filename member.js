@@ -496,20 +496,57 @@ const MemberModule = (function() {
             });
         }
         if (supporterCustomAmountInput) {
+            function getSupporterSymbolInfo() {
+                var code = getSiteCurrencyCode();
+                if (!code) return null;
+                var cur = CurrencyComponent.getCurrencyByCode(code);
+                if (!cur || !cur.symbol) return null;
+                return { code: code, symbol: cur.symbol, right: cur.symbolPosition === 'right' };
+            }
+
+            function buildCustomDisplay(raw, info) {
+                if (!info) return raw;
+                if (info.right) return raw + ' ' + info.symbol;
+                return info.symbol + raw;
+            }
+
+            function stripCustomDisplay(val, info) {
+                if (!info) return val;
+                if (info.right) {
+                    var suffix = ' ' + info.symbol;
+                    if (val.length > suffix.length && val.slice(-suffix.length) === suffix) {
+                        return val.slice(0, -suffix.length);
+                    }
+                } else {
+                    var prefix = info.symbol;
+                    if (val.indexOf(prefix) === 0) {
+                        return val.slice(prefix.length);
+                    }
+                }
+                return val;
+            }
+
+            function getCustomEditableRange(info) {
+                var val = String(supporterCustomAmountInput.value || '');
+                if (!info) return { min: 0, max: val.length };
+                if (info.right) {
+                    var suffixLen = info.symbol.length + 1;
+                    return { min: 0, max: Math.max(0, val.length - suffixLen) };
+                }
+                return { min: info.symbol.length, max: val.length };
+            }
+
             function lockSupporterCurrencyCaret() {
                 try {
-                    var code = getSiteCurrencyCode();
-                    if (!code) return;
-                    var prefix = code + ' ';
-                    var v = String(supporterCustomAmountInput.value || '');
-                    if (v.indexOf(prefix) !== 0) return;
-                    var min = prefix.length;
+                    var info = getSupporterSymbolInfo();
+                    if (!info) return;
+                    var range = getCustomEditableRange(info);
                     var s = supporterCustomAmountInput.selectionStart;
                     var e = supporterCustomAmountInput.selectionEnd;
                     if (typeof s !== 'number' || typeof e !== 'number') return;
-                    if (s < min || e < min) {
-                        var ns = Math.max(min, s);
-                        var ne = Math.max(min, e);
+                    var ns = Math.min(Math.max(range.min, s), range.max);
+                    var ne = Math.min(Math.max(range.min, e), range.max);
+                    if (ns !== s || ne !== e) {
                         supporterCustomAmountInput.setSelectionRange(ns, ne);
                     }
                 } catch (e) {
@@ -519,34 +556,49 @@ const MemberModule = (function() {
 
             supporterCustomAmountInput.addEventListener('keydown', function(e) {
                 try {
-                    var code = getSiteCurrencyCode();
-                    if (!code) return;
-                    var prefix = code + ' ';
-                    var v = String(supporterCustomAmountInput.value || '');
-                    if (v.indexOf(prefix) !== 0) return;
-                    var min = prefix.length;
+                    var info = getSupporterSymbolInfo();
+                    if (!info) return;
+                    var range = getCustomEditableRange(info);
                     var s = supporterCustomAmountInput.selectionStart;
                     var end = supporterCustomAmountInput.selectionEnd;
                     if (typeof s !== 'number' || typeof end !== 'number') return;
 
                     if (e.key === 'Backspace') {
-                        // Don't let backspace delete into the prefix.
-                        if (s <= min && end <= min) {
+                        if (s <= range.min && end <= range.min) {
                             e.preventDefault();
-                            supporterCustomAmountInput.setSelectionRange(min, min);
+                            supporterCustomAmountInput.setSelectionRange(range.min, range.min);
+                        }
+                        return;
+                    }
+                    if (e.key === 'Delete') {
+                        if (s >= range.max && end >= range.max) {
+                            e.preventDefault();
+                            supporterCustomAmountInput.setSelectionRange(range.max, range.max);
                         }
                         return;
                     }
                     if (e.key === 'ArrowLeft') {
-                        if (s <= min) {
+                        if (s <= range.min) {
                             e.preventDefault();
-                            supporterCustomAmountInput.setSelectionRange(min, min);
+                            supporterCustomAmountInput.setSelectionRange(range.min, range.min);
+                        }
+                        return;
+                    }
+                    if (e.key === 'ArrowRight') {
+                        if (s >= range.max) {
+                            e.preventDefault();
+                            supporterCustomAmountInput.setSelectionRange(range.max, range.max);
                         }
                         return;
                     }
                     if (e.key === 'Home') {
                         e.preventDefault();
-                        supporterCustomAmountInput.setSelectionRange(min, min);
+                        supporterCustomAmountInput.setSelectionRange(range.min, range.min);
+                        return;
+                    }
+                    if (e.key === 'End') {
+                        e.preventDefault();
+                        supporterCustomAmountInput.setSelectionRange(range.max, range.max);
                         return;
                     }
                 } catch (err) {
@@ -560,50 +612,39 @@ const MemberModule = (function() {
             supporterCustomAmountInput.addEventListener('select', lockSupporterCurrencyCaret);
 
             supporterCustomAmountInput.addEventListener('input', function() {
-                var code = getSiteCurrencyCode();
+                var info = getSupporterSymbolInfo();
                 var raw = String(supporterCustomAmountInput.value || '');
 
-                // If the currency prefix is present, strip it for numeric processing.
-                if (code) {
-                    var prefix = code + ' ';
-                    if (raw.indexOf(prefix) === 0) {
-                        raw = raw.slice(prefix.length);
-                    }
+                if (info) {
+                    raw = stripCustomDisplay(raw, info);
                 }
 
-                // Keep only numbers + decimal point (no formatting/libraries)
                 raw = raw.replace(/[^0-9.]/g, '');
-                // Allow only first decimal point
                 var parts = raw.split('.');
                 if (parts.length > 2) {
                     raw = parts[0] + '.' + parts.slice(1).join('');
                 }
 
-                // Show currency in the visible input (button-like layout).
-                var displayValue = code ? (code + ' ' + raw) : raw;
+                var displayValue = info ? buildCustomDisplay(raw, info) : raw;
                 if (displayValue !== supporterCustomAmountInput.value) {
                     supporterCustomAmountInput.value = displayValue;
                     try {
-                        // Keep caret on the digits, never inside the currency prefix.
-                        var prefixLen = code ? (String(code).length + 1) : 0;
-                        var caret = prefixLen + raw.length;
+                        var range = getCustomEditableRange(info);
+                        var caret = info && info.right ? raw.length : (info ? info.symbol.length + raw.length : raw.length);
+                        caret = Math.min(caret, range.max);
                         supporterCustomAmountInput.setSelectionRange(caret, caret);
                     } catch (e) {
                         // ignore
                     }
                 }
 
-                // Allow under-min values while typing; clamp happens on blur/finalize.
                 setSupporterAmount(raw, { fromCustom: true, allowUnderMin: true });
             });
             supporterCustomAmountInput.addEventListener('blur', function() {
-                var code = getSiteCurrencyCode();
+                var info = getSupporterSymbolInfo();
                 var raw = String(supporterCustomAmountInput.value || '').trim();
-                if (code) {
-                    var prefix = code + ' ';
-                    if (raw.indexOf(prefix) === 0) {
-                        raw = raw.slice(prefix.length);
-                    }
+                if (info) {
+                    raw = stripCustomDisplay(raw, info);
                 }
                 raw = raw.replace(/[^0-9.]/g, '');
                 setSupporterAmount(raw, { fromCustom: true });
@@ -5353,11 +5394,10 @@ const MemberModule = (function() {
         if (supporterAmountHiddenInput) supporterAmountHiddenInput.value = value;
 
         if (supporterCustomAmountInput) {
-            // If the value was clamped/formatted, write it back so the UI matches the hidden value.
             if (!options.fromCustom || (!options.allowUnderMin)) {
                 var code = getSiteCurrencyCode();
                 if (code && value) {
-                    supporterCustomAmountInput.value = code + ' ' + value;
+                    supporterCustomAmountInput.value = CurrencyComponent.formatWithSymbol(value, code, { trimZeroDecimals: false });
                 } else {
                     supporterCustomAmountInput.value = value ? value : '';
                 }
