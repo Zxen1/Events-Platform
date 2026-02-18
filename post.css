@@ -789,7 +789,8 @@
 }
 
 .post-backdrop-card-title {
-  width: 75%;
+  width: 300px;
+  max-width: 100%;
   height: 19px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
@@ -812,7 +813,8 @@
 }
 
 .post-backdrop-card-line {
-  width: 50%;
+  width: 200px;
+  max-width: 100%;
   height: 16px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
