@@ -436,11 +436,11 @@
   width: 100%;
   margin: 0;
   height: 30px;
-  line-height: 30px;
+  display: flex;
+  align-items: center;
   padding-left: 20px;
   background: var(--blue-900);
   color: #fff;
-  text-align: left;
   flex-shrink: 0;
   box-sizing: border-box;
 }
