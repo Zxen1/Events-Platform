@@ -747,12 +747,18 @@
    BACKDROP - Ghost postcards that fill TopSlack/BottomSlack empty space
    ============================================================================ */
 
+.post-list .topSlack,
+.post-list .bottomSlack {
+  overflow: hidden;
+}
+
 .post-backdrop-card {
   display: grid;
   grid-template-columns: 100px 1fr 36px;
   gap: 12px;
   padding: 10px 10px 0;
-  margin-bottom: 12px;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   pointer-events: none;
 }
 
