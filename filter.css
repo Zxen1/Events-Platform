@@ -452,7 +452,7 @@
 .filter-daterange-input {
   flex: 1;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 10px;
   font: inherit;
   font-size: 14px;
   text-align: left;
@@ -466,7 +466,6 @@
 /* Price row specific */
 .filter-price-input {
   min-width: 0;
-  padding: 0 8px;
 }
 
 .filter-price-separator {
