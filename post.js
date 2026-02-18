@@ -2440,9 +2440,13 @@ const PostModule = (function() {
     }
     if (!slots.length) return;
 
-    // Find the slot with an open post (to keep it at the top after sort).
+    // Find the slot with an open post (exclude from sort, stays at current position).
     var openPostEl = postListEl.querySelector('.post');
     var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
+    var openSlotIndex = openSlot ? slots.indexOf(openSlot) : -1;
+    if (openSlot) {
+      slots.splice(openSlotIndex, 1);
+    }
 
     // "Sort by Closest" uses the user's geolocated position
     var nearestOrigin = userGeoLocation || null;
@@ -2501,6 +2505,11 @@ const PostModule = (function() {
       }
     });
 
+    // Re-insert the open slot at its original position before re-appending.
+    if (openSlot && openSlotIndex >= 0) {
+      slots.splice(openSlotIndex, 0, openSlot);
+    }
+
     // Re-append slots in sorted order (DOM is the source of truth).
     slots.forEach(function(slot) {
       try { postListEl.appendChild(slot); } catch (_eAppend) {}
@@ -2509,10 +2518,6 @@ const PostModule = (function() {
     // Keep summary at the top if present.
     if (summaryEl) {
       try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
-    }
-    // Keep open post's slot at the top if present.
-    if (openSlot) {
-      try { postListEl.insertBefore(openSlot, summaryEl ? summaryEl.nextSibling : postListEl.firstChild); } catch (_eOpen) {}
     }
 
     // Preserve slack element order: topSlack first, bottomSlack last.
