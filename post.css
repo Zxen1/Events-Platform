@@ -432,14 +432,17 @@
 /* Post panel header (count bar) - lives outside .post-list, never scrolls */
 .post-panel-header,
 .post-panel-empty-header {
-  font-size: 12px;
+  font-size: 13px;
   width: 100%;
   margin: 0;
-  padding: 2px 4px;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 20px;
   background: var(--blue-900);
   color: #fff;
   text-align: left;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 .post-panel-header--active,
 .post-panel-empty-header--active {
