@@ -825,23 +825,7 @@
   margin-bottom: 0;
 }
 
-.member-button-submit {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.member-button-submit-text {
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.member-button-submit-icons {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
+/* Payment submit button styles moved to components.css (PaymentSubmitComponent) */
 
 /* Incomplete-list popover (shown on hover over disabled submit area) */
 .member-missing-popover {
@@ -886,9 +870,7 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-.member-button-admin-submit {
-  width: 100%;
-}
+/* Admin submit button styles moved to components.css (PaymentSubmitComponent) */
 
 
 /* ============================================================================

@@ -1818,42 +1818,16 @@
             App.on('terms:agreed', termsAgreedHandler);
         }
 
-        // --- Submit buttons ---
-        var manageActionsWrapper = document.createElement('div');
-        manageActionsWrapper.className = 'posteditor-manage-actions';
-
-        var manageSubmitBtn = document.createElement('button');
-        manageSubmitBtn.type = 'button';
-        manageSubmitBtn.className = 'posteditor-manage-submit button-class-2b';
-        manageSubmitBtn.disabled = true;
-
-        var submitText = document.createElement('span');
-        submitText.className = 'posteditor-manage-submit-text';
-        submitText.textContent = 'Pay ' + formatPriceWithSymbol(0, pricingCurrencyCode);
-
-        var submitIcons = document.createElement('span');
-        submitIcons.className = 'posteditor-manage-submit-icons';
-        submitIcons.innerHTML = [
-            '<svg width="32" height="20" viewBox="0 0 780 500" aria-label="Visa"><path d="M40 0H740C762.092 0 780 17.909 780 40V460C780 482.092 762.092 500 740 500H40C17.909 500 0 482.092 0 460V40C0 17.909 17.909 0 40 0Z" fill="#1434CB"/><path d="M489.823 143.111C442.988 143.111 401.134 167.393 401.134 212.256C401.134 263.706 475.364 267.259 475.364 293.106C475.364 303.989 462.895 313.731 441.6 313.731C411.377 313.731 388.789 300.119 388.789 300.119L379.123 345.391C379.123 345.391 405.145 356.889 439.692 356.889C490.898 356.889 531.19 331.415 531.19 285.784C531.19 231.419 456.652 227.971 456.652 203.981C456.652 195.455 466.887 186.114 488.122 186.114C512.081 186.114 531.628 196.014 531.628 196.014L541.087 152.289C541.087 152.289 519.818 143.111 489.823 143.111ZM61.3294 146.411L60.1953 153.011C60.1953 153.011 79.8988 156.618 97.645 163.814C120.495 172.064 122.122 176.868 125.971 191.786L167.905 353.486H224.118L310.719 146.411H254.635L198.989 287.202L176.282 167.861C174.199 154.203 163.651 146.411 150.74 146.411H61.3294ZM333.271 146.411L289.275 353.486H342.756L386.598 146.411H333.271ZM631.554 146.411C618.658 146.411 611.825 153.318 606.811 165.386L528.458 353.486H584.542L595.393 322.136H663.72L670.318 353.486H719.805L676.633 146.411H631.554ZM638.848 202.356L655.473 280.061H610.935L638.848 202.356Z" fill="white"/></svg>',
-            '<svg width="32" height="20" viewBox="0 0 780 500" aria-label="Mastercard"><path d="M40 0H740C762.092 0 780 17.909 780 40V460C780 482.092 762.092 500 740 500H40C17.909 500 0 482.092 0 460V40C0 17.909 17.909 0 40 0Z" fill="#253747"/><path d="M465.738 69.1387H313.812V342.088H465.738V69.1387Z" fill="#FF5A00"/><path d="M323.926 205.613C323.926 150.158 349.996 100.94 390 69.1387C360.559 45.9902 323.42 32 282.91 32C186.945 32 109.297 109.648 109.297 205.613C109.297 301.578 186.945 379.227 282.91 379.227C323.42 379.227 360.559 365.237 390 342.088C349.94 310.737 323.926 261.069 323.926 205.613Z" fill="#EB001B"/><path d="M670.711 205.613C670.711 301.578 593.062 379.227 497.098 379.227C456.588 379.227 419.449 365.237 390.008 342.088C430.518 310.231 456.082 261.069 456.082 205.613C456.082 150.158 430.012 100.94 390.008 69.1387C419.393 45.9902 456.532 32 497.041 32C593.062 32 670.711 110.154 670.711 205.613Z" fill="#F79E1B"/></svg>',
-            '<svg width="32" height="20" viewBox="0 0 48 30" aria-label="Amex"><rect width="48" height="30" rx="4" fill="#2557D6"/><text x="24" y="19.5" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="Arial,Helvetica,sans-serif">AMEX</text></svg>',
-            '<svg width="32" height="20" viewBox="0 0 48 30" aria-label="PayPal"><rect width="48" height="30" rx="4" fill="#253B80"/><text y="19.5" font-size="10" font-weight="bold" font-family="Arial,Helvetica,sans-serif"><tspan x="8" fill="#fff">Pay</tspan><tspan fill="#009CDE">Pal</tspan></text></svg>'
-        ].join('');
-
-        manageSubmitBtn.appendChild(submitText);
-        manageSubmitBtn.appendChild(submitIcons);
-        manageActionsWrapper.appendChild(manageSubmitBtn);
-
-        var manageAdminSubmitBtn = null;
+        // --- Submit buttons via shared component ---
         var user = getCurrentUser();
-        if (user && user.isAdmin) {
-            manageAdminSubmitBtn = document.createElement('button');
-            manageAdminSubmitBtn.type = 'button';
-            manageAdminSubmitBtn.className = 'posteditor-manage-admin-submit button-class-2c';
-            manageAdminSubmitBtn.textContent = 'Admin: Submit Free';
-            manageAdminSubmitBtn.disabled = true;
-            manageActionsWrapper.appendChild(manageAdminSubmitBtn);
-        }
+        var paymentRefs = PaymentSubmitComponent.create({
+            baseLabel: 'Pay ' + formatPriceWithSymbol(0, pricingCurrencyCode),
+            isAdmin: user && user.isAdmin
+        });
+        var manageActionsWrapper = paymentRefs.container;
+        var manageSubmitBtn = paymentRefs.submitBtn;
+        var submitText = paymentRefs.submitText;
+        var manageAdminSubmitBtn = paymentRefs.adminBtn;
 
         // --- Build line items for transaction ---
         function buildLineItems() {

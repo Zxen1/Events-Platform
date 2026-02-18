@@ -1430,7 +1430,7 @@ if (empty($ogTitle)) {
               <div id="member-avatar-grid-register" aria-label="Avatar choices"></div>
               <div id="member-supporter-country-menu"></div>
               <input type="hidden" id="member-supporter-country" name="country" value="">
-              <button type="submit" class="member-button-submit button-class-2c" data-action="register">Supporter payment gateway</button>
+              <div id="member-register-payment-container"></div>
             </div>
           </form>
         </section>

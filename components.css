@@ -4168,3 +4168,45 @@ body.image-modal-open > *:not(.image-modal) {
   }
 }
 
+
+/* ============================================================================
+   PAYMENT SUBMIT COMPONENT
+   ============================================================================ */
+
+.component-paymentsubmit {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.component-paymentsubmit > * {
+  margin-bottom: 10px;
+}
+
+.component-paymentsubmit > *:last-child {
+  margin-bottom: 0;
+}
+
+.component-paymentsubmit-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.component-paymentsubmit-button-text {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.component-paymentsubmit-button-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.component-paymentsubmit-admin {
+  width: 100%;
+}
+

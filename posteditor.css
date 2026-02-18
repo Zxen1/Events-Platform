@@ -1168,42 +1168,7 @@
   color: #60a5fa;
 }
 
-.posteditor-manage-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-bottom: 10px;
-}
-
-.posteditor-manage-actions > * {
-  margin-bottom: 10px;
-}
-
-.posteditor-manage-actions > *:last-child {
-  margin-bottom: 0;
-}
-
-.posteditor-manage-submit {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.posteditor-manage-submit-text {
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.posteditor-manage-submit-icons {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.posteditor-manage-admin-submit {
-  width: 100%;
-}
+/* Payment submit button styles (including container layout) moved to components.css (PaymentSubmitComponent) */
 
 /* Favorite button highlight animation */
 .posteditor-fav-highlight {
