@@ -1696,19 +1696,16 @@ const PostModule = (function() {
     title.className = 'post-backdrop-card-title';
     meta.appendChild(title);
 
-    var badges = document.createElement('div');
-    badges.className = 'post-backdrop-card-badges';
     for (var i = 0; i < 3; i++) {
+      var row = document.createElement('div');
+      row.className = 'post-backdrop-card-row';
       var badge = document.createElement('div');
       badge.className = 'post-backdrop-card-badge';
-      badges.appendChild(badge);
-    }
-    meta.appendChild(badges);
-
-    for (var j = 0; j < 3; j++) {
       var line = document.createElement('div');
       line.className = 'post-backdrop-card-line';
-      meta.appendChild(line);
+      row.appendChild(badge);
+      row.appendChild(line);
+      meta.appendChild(row);
     }
 
     card.appendChild(img);

@@ -429,7 +429,7 @@
   z-index: -1;
 }
 
-/* Post panel summary (count at top) - matches filter-panel-summary */
+/* Post panel summary (count at top) - sticky, never scrolls off */
 .post-panel-summary,
 .post-panel-empty-summary {
   font-size: 12px;
@@ -439,6 +439,9 @@
   background: var(--blue-900);
   color: #fff;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: var(--layer-sticky);
 }
 .post-panel-summary--active,
 .post-panel-empty-summary--active {
@@ -747,7 +750,13 @@
    BACKDROP - Ghost postcards that fill TopSlack/BottomSlack empty space
    ============================================================================ */
 
-.post-list .topSlack,
+.post-list .topSlack {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
 .post-list .bottomSlack {
   overflow: hidden;
 }
@@ -758,7 +767,6 @@
   gap: 12px;
   padding: 10px 10px 0;
   margin: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   pointer-events: none;
 }
 
@@ -785,8 +793,9 @@
   margin-bottom: 6px;
 }
 
-.post-backdrop-card-badges {
+.post-backdrop-card-row {
   display: flex;
+  align-items: center;
   gap: 6px;
   margin-bottom: 6px;
 }
@@ -796,6 +805,7 @@
   height: 16px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
 }
 
 .post-backdrop-card-line {
@@ -803,7 +813,6 @@
   height: 13px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
-  margin-bottom: 6px;
 }
 
 .post-backdrop-card-meta > *:last-child {
