@@ -1147,9 +1147,8 @@
             var description = option.checkout_description ? String(option.checkout_description) : '';
             var basicRate = parseFloat(option.checkout_basic_day_rate);
             var discountRate = parseFloat(option.checkout_discount_day_rate);
-            var optionCurrency = option.checkout_currency || '';
             var ratesText = (isFinite(basicRate) && isFinite(discountRate))
-                ? 'Basic Day Rate ' + formatPriceWithSymbol(basicRate, optionCurrency) + ' · Discount Day Rate ' + formatPriceWithSymbol(discountRate, optionCurrency)
+                ? 'Basic Day Rate ' + formatPriceWithSymbol(basicRate, pricingCurrencyCode) + ' · Discount Day Rate ' + formatPriceWithSymbol(discountRate, pricingCurrencyCode)
                 : '';
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -1366,8 +1365,12 @@
             });
         }
 
-        // Derive initial currency code for placeholder values
-        var pricingCurrencyCode = (allCheckoutOptions[currentTierIndex] && allCheckoutOptions[currentTierIndex].checkout_currency) || '';
+        // Derive currency code from site settings (same source as Create Post)
+        var pricingCurrencyCode = '';
+        if (window.App && typeof App.getState === 'function') {
+            var _settings = App.getState('settings');
+            if (_settings && _settings.website_currency) pricingCurrencyCode = String(_settings.website_currency).trim();
+        }
 
         // Format price with symbol using CurrencyComponent (always show decimal places)
         function formatPriceWithSymbol(price, currencyCode) {
@@ -1441,8 +1444,7 @@
 
         // --- Central pricing recalculation ---
         function recalcPricing() {
-            var currencyCode = (allCheckoutOptions[selectedTierIndex] && allCheckoutOptions[selectedTierIndex].checkout_currency) ||
-                               (allCheckoutOptions[currentTierIndex] && allCheckoutOptions[currentTierIndex].checkout_currency) || '';
+            var currencyCode = pricingCurrencyCode;
             var selectedRates = getTierRates(selectedTierIndex);
             var currentRates = getTierRates(currentTierIndex);
             var addDays = parseInt(durationAddInput.value, 10) || 0;
@@ -1599,11 +1601,11 @@
             // Update submit button text
             submitText.textContent = 'Pay ' + formatPriceWithSymbol(total, currencyCode);
 
-            // Enable/disable submit based on total and terms
-            var termsOk = termsCheckbox && termsCheckbox.checked;
-            manageSubmitBtn.disabled = total <= 0 || !termsOk;
+            // Single readiness check for all submit buttons
+            var ready = total > 0 && termsCheckbox && termsCheckbox.checked;
+            manageSubmitBtn.disabled = !ready;
             if (manageAdminSubmitBtn) {
-                manageAdminSubmitBtn.disabled = !termsOk;
+                manageAdminSubmitBtn.disabled = !ready;
             }
         }
 
@@ -1857,7 +1859,7 @@
             var items = [];
             var selOpt = allCheckoutOptions[selectedTierIndex] || {};
             var curOpt = allCheckoutOptions[currentTierIndex] || {};
-            var currency = selOpt.checkout_currency || curOpt.checkout_currency || '';
+            var currency = pricingCurrencyCode;
 
             // Tier upgrade
             if (selectedTierIndex > currentTierIndex && daysRemaining > 0) {
@@ -1976,12 +1978,14 @@
                 manageAdminSubmitBtn.disabled = true;
 
                 var user = getCurrentUser();
+                var selOpt = allCheckoutOptions[selectedTierIndex] || {};
                 var payload = {
                     post_id: postId,
                     member_id: user ? user.id : null,
                     member_name: user ? (user.username || user.name || '') : '',
                     member_type: user && user.isAdmin ? 'admin' : 'member',
-                    manage_action: 'admin_free',
+                    manage_action: 'skip_payment',
+                    checkout_key: selOpt.checkout_key || '',
                     add_days: parseInt(durationAddInput.value, 10) || 0,
                     loc_qty: pricingLocUsed
                 };

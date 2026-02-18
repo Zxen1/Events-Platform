@@ -435,6 +435,65 @@ if ($manageAction !== '') {
       ]);
       exit;
 
+    case 'skip_payment':
+      if (!$isAdmin) {
+        fail_key(403, 'msg_post_edit_forbidden');
+      }
+      $checkoutKey = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : '';
+      $addDays     = isset($data['add_days']) ? (int)$data['add_days'] : 0;
+      $newLocQty   = isset($data['loc_qty']) ? (int)$data['loc_qty'] : 0;
+
+      if ($addDays < 0) $addDays = 0;
+      if ($newLocQty < 1) $newLocQty = 1;
+
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
+      $stmtPost->bind_param('i', $postId);
+      $stmtPost->execute();
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
+      $stmtPost->close();
+
+      $maxFutureDays = 730;
+      $now = new DateTime('now', new DateTimeZone('UTC'));
+      $curExpiry = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+      if ($curExpiry < $now) $curExpiry = $now;
+      $daysRemainingServer = max(0, (int)$curExpiry->diff($now)->days);
+      $maxAddDays = max(0, min(365, $maxFutureDays - $daysRemainingServer));
+      if ($addDays > $maxAddDays) $addDays = $maxAddDays;
+
+      $finalCheckoutKey = ($checkoutKey !== '') ? $checkoutKey : $curCheckoutKey;
+      $newDaysPurchased = (int)$curDaysPurchased + $addDays;
+
+      $newExpiresAt = $curExpiresAt;
+      if ($addDays > 0) {
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $expiryBase = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+        if ($expiryBase < $now) $expiryBase = $now;
+        $expiryBase->modify('+' . $addDays . ' days');
+        $newExpiresAt = $expiryBase->format('Y-m-d H:i:s');
+      }
+
+      $newLocPaid = max((int)$curLocPaid, $newLocQty);
+
+      $stmtUpdate = $mysqli->prepare(
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+      );
+      if (!$stmtUpdate) fail_key(500, 'msg_post_edit_error');
+      $stmtUpdate->bind_param('siisi', $finalCheckoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
+      if (!$stmtUpdate->execute()) { $stmtUpdate->close(); fail_key(500, 'msg_post_edit_error'); }
+      $stmtUpdate->close();
+
+      echo json_encode([
+        'success'        => true,
+        'manage_action'  => 'skip_payment',
+        'checkout_key'   => $finalCheckoutKey,
+        'days_purchased' => $newDaysPurchased,
+        'loc_paid'       => $newLocPaid,
+        'expires_at'     => $newExpiresAt
+      ]);
+      exit;
+
     default:
       fail_key(400, 'msg_post_edit_error');
   }
