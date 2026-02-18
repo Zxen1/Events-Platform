@@ -518,6 +518,7 @@
   margin-right: auto;
 }
 
+.filter-expired-btn:hover,
 .filter-expired-btn--active {
   background: var(--filter-active-color);
   border-color: var(--filter-active-color);

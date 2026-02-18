@@ -1306,7 +1306,7 @@ const FilterModule = (function() {
         var expiredBtn = document.createElement('button');
         expiredBtn.className = 'filter-expired-btn button-class-2';
         expiredBtn.type = 'button';
-        expiredBtn.textContent = 'Show expired events';
+        expiredBtn.textContent = 'Show Expired Events';
         if (expiredInput && expiredInput.checked) {
             expiredBtn.classList.add('filter-expired-btn--active');
         }
