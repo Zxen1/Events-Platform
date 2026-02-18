@@ -1707,13 +1707,26 @@ const MapModule = (function() {
     return getClusterGridSize(zoom).toFixed(2);
   }
 
+  // Shared state for on-demand balloon stamping
+  var clusterBalloonImg = null;
+  var clusterBalloonCanvas = null;
+  var clusterBalloonCtx = null;
+  var clusterBalloonPixelRatio = 1;
+
   /**
-   * Load balloon PNG then generate numbered variants (1-999) via canvas.
-   * Each variant is registered as a Mapbox image: "cluster-1", "cluster-2", etc.
+   * Load the base balloon PNG. Numbered variants are stamped on-demand
+   * by ensureClusterImage() as cluster data arrives.
    */
   function loadClusterIcons() {
     return new Promise(function(resolve) {
       if (!map || clusterIconsLoaded) {
+        resolve();
+        return;
+      }
+      
+      // Base PNG already in memory (e.g. after style change) -- just mark ready
+      if (clusterBalloonImg) {
+        clusterIconsLoaded = true;
         resolve();
         return;
       }
@@ -1730,32 +1743,12 @@ const MapModule = (function() {
       var img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function() {
-        var w = img.width;
-        var h = img.height;
-        var pixelRatio = w >= 256 ? 2 : 1;
-        
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        
-        // Vertical center of the round head (top 65% of image, stem is the bottom)
-        var textCenterY = h * 0.38;
-        var fontSize = Math.round(w * 0.32);
-        
-        for (var n = 1; n <= CLUSTER_MAX_COUNT; n++) {
-          ctx.clearRect(0, 0, w, h);
-          ctx.drawImage(img, 0, 0);
-          
-          ctx.font = 'bold ' + fontSize + 'px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#ffffff';
-          ctx.fillText(String(n), w / 2, textCenterY);
-          
-          var imageData = ctx.getImageData(0, 0, w, h);
-          map.addImage(CLUSTER_ICON_PREFIX + n, imageData, { pixelRatio: pixelRatio });
-        }
+        clusterBalloonImg = img;
+        clusterBalloonPixelRatio = img.width >= 256 ? 2 : 1;
+        clusterBalloonCanvas = document.createElement('canvas');
+        clusterBalloonCanvas.width = img.width;
+        clusterBalloonCanvas.height = img.height;
+        clusterBalloonCtx = clusterBalloonCanvas.getContext('2d', { willReadFrequently: true });
         
         clusterIconsLoaded = true;
         resolve();
@@ -1766,6 +1759,35 @@ const MapModule = (function() {
       };
       img.src = iconUrl;
     });
+  }
+
+  /**
+   * Stamp a number onto the balloon and register it with Mapbox (on-demand).
+   * Skips if the image already exists.
+   */
+  function ensureClusterImage(n) {
+    var imageId = CLUSTER_ICON_PREFIX + n;
+    if (map.hasImage(imageId)) return;
+    if (!clusterBalloonImg || !clusterBalloonCtx) return;
+    
+    var w = clusterBalloonImg.width;
+    var h = clusterBalloonImg.height;
+    var ctx = clusterBalloonCtx;
+    
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(clusterBalloonImg, 0, 0);
+    
+    var fontSize = Math.round(w * 0.40);
+    var textCenterY = h * 0.42;
+    
+    ctx.font = 'bold ' + fontSize + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(String(n), w / 2, textCenterY);
+    
+    var imageData = ctx.getImageData(0, 0, w, h);
+    map.addImage(imageId, imageData, { pixelRatio: clusterBalloonPixelRatio });
   }
 
   /**
@@ -2068,6 +2090,7 @@ const MapModule = (function() {
         if (clusterInFlightKey !== requestKey) return;
 
         var data = buildClusterFeatureCollectionFromServer(result.clusters);
+        data.features.forEach(function(f) { ensureClusterImage(f.properties.count); });
         source.setData(data);
         lastClusterBucketKey = bucketKey;
         lastClusterRequestKey = requestKey;
