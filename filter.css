@@ -164,11 +164,12 @@
 }
 
 .filter-panel-summary {
-  font-size: 12px;
+  font-size: 13px;
   width: calc(100% + 20px);
   max-width: none;
   margin: 0 -10px;
-  padding: 2px 0;
+  height: 30px;
+  line-height: 30px;
   background: var(--blue-900);
   color: #fff;
   text-align: center;
