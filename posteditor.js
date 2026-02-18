@@ -1136,6 +1136,21 @@
         var tierDesc = document.createElement('div');
         tierDesc.className = 'posteditor-manage-tier-description';
 
+        // Derive currency code from site settings (same source as Create Post)
+        var pricingCurrencyCode = '';
+        if (window.App && typeof App.getState === 'function') {
+            var _settings = App.getState('settings');
+            if (_settings && _settings.website_currency) pricingCurrencyCode = String(_settings.website_currency).trim();
+        }
+
+        // Format price with symbol using CurrencyComponent (always show decimal places)
+        function formatPriceWithSymbol(price, currencyCode) {
+            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
+                throw new Error('[PostEditor] CurrencyComponent.formatWithSymbol is required');
+            }
+            return CurrencyComponent.formatWithSymbol(price, currencyCode, { trimZeroDecimals: false });
+        }
+
         var tierColors = [
             '',
             'linear-gradient(180deg, #1A2A3A 0%, #3A5A7A 30%, #1A2A3A 100%)',
@@ -1363,21 +1378,6 @@
                     recalcPricing();
                 }
             });
-        }
-
-        // Derive currency code from site settings (same source as Create Post)
-        var pricingCurrencyCode = '';
-        if (window.App && typeof App.getState === 'function') {
-            var _settings = App.getState('settings');
-            if (_settings && _settings.website_currency) pricingCurrencyCode = String(_settings.website_currency).trim();
-        }
-
-        // Format price with symbol using CurrencyComponent (always show decimal places)
-        function formatPriceWithSymbol(price, currencyCode) {
-            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
-                throw new Error('[PostEditor] CurrencyComponent.formatWithSymbol is required');
-            }
-            return CurrencyComponent.formatWithSymbol(price, currencyCode, { trimZeroDecimals: false });
         }
 
         // --- Subtotal lines ---
