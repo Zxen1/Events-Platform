@@ -2497,12 +2497,12 @@ const PostModule = (function() {
       }
     });
 
-    // Capture open post's visual position before DOM reorder.
+    // Capture open post's visual position before DOM reorder (same approach as TopSlack anchor).
     var openPostEl = postListEl.querySelector('.post');
     var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
-    var openSlotTopBefore = 0;
+    var openSlotRectTop = null;
     if (openSlot) {
-      openSlotTopBefore = openSlot.offsetTop - postListEl.scrollTop;
+      openSlotRectTop = openSlot.getBoundingClientRect().top;
     }
 
     // Re-append slots in sorted order (DOM is the source of truth).
@@ -2521,9 +2521,23 @@ const PostModule = (function() {
     if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
     if (_botS) try { postListEl.appendChild(_botS); } catch (_eBotS) {}
 
-    // Restore open post's visual position after DOM reorder and slack repositioning.
-    if (openSlot) {
-      postListEl.scrollTop = openSlot.offsetTop - openSlotTopBefore;
+    // Restore open post's visual position after DOM reorder (mirrors TopSlack anchor logic).
+    if (openSlot && openSlotRectTop !== null) {
+      var afterTop = openSlot.getBoundingClientRect().top;
+      var delta = afterTop - openSlotRectTop;
+      if (delta) {
+        var desired = (postListEl.scrollTop || 0) + delta;
+        if (desired < 0) {
+          var expandPx = 4000;
+          var currentSlack = parseInt(getComputedStyle(postListEl).getPropertyValue('--topSlack'), 10) || 0;
+          if (currentSlack < expandPx) {
+            postListEl.style.setProperty('--topSlack', String(expandPx) + 'px');
+            postListEl.scrollTop = (postListEl.scrollTop || 0) + (expandPx - currentSlack);
+            desired = desired + (expandPx - currentSlack);
+          }
+        }
+        postListEl.scrollTop = desired;
+      }
     }
   }
 
