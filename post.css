@@ -436,6 +436,7 @@
   width: 100%;
   margin: 0;
   padding: 2px 4px;
+  margin-bottom: 10px;
   background: var(--blue-900);
   color: #fff;
   text-align: left;
@@ -763,7 +764,7 @@
   display: grid;
   grid-template-columns: 100px 1fr 36px;
   gap: 12px;
-  padding: 20px 10px 0;
+  padding: 10px 10px 10px;
   margin: 0;
   pointer-events: none;
 }
