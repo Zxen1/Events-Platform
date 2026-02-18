@@ -433,3 +433,9 @@ When closing modals, prevent the click/tap from activating elements behind:
 - Use `e.preventDefault()` + `e.stopPropagation()` + `setTimeout(close, 0)` for click events (only on the modal's own click handler)
 
 ---
+
+## NOTES
+
+**Backdrop**: Ghost postcards — repeating placeholder postcard rows in light gray that fill TopSlack/BottomSlack empty space in the post panel.
+
+---
