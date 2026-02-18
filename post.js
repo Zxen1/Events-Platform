@@ -2497,6 +2497,14 @@ const PostModule = (function() {
       }
     });
 
+    // Capture open post's visual position before DOM reorder.
+    var openPostEl = postListEl.querySelector('.post');
+    var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
+    var openSlotTopBefore = 0;
+    if (openSlot) {
+      openSlotTopBefore = openSlot.offsetTop - postListEl.scrollTop;
+    }
+
     // Re-append slots in sorted order (DOM is the source of truth).
     slots.forEach(function(slot) {
       try { postListEl.appendChild(slot); } catch (_eAppend) {}
@@ -2507,8 +2515,12 @@ const PostModule = (function() {
       try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
     }
 
+    // Restore open post's visual position after DOM reorder.
+    if (openSlot) {
+      postListEl.scrollTop = openSlot.offsetTop - openSlotTopBefore;
+    }
+
     // Preserve slack element order: topSlack first, bottomSlack last.
-    // appendChild moves existing elements, so this is safe even if they're already in position.
     var _topS = postListEl.querySelector('.topSlack');
     var _botS = postListEl.querySelector('.bottomSlack');
     if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
