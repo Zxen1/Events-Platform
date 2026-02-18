@@ -2525,6 +2525,9 @@ const PostModule = (function() {
     var _botS = postListEl.querySelector('.bottomSlack');
     if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
     if (_botS) try { postListEl.appendChild(_botS); } catch (_eBotS) {}
+
+    // Trigger slack recalculation after DOM reorder.
+    try { postListEl.dispatchEvent(new Event('scroll')); } catch (_eScroll) {}
   }
 
   /**
