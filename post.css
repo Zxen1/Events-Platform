@@ -744,6 +744,68 @@
 }
 
 /* ============================================================================
+   BACKDROP - Ghost postcards that fill TopSlack/BottomSlack empty space
+   ============================================================================ */
+
+.post-backdrop-card {
+  display: grid;
+  grid-template-columns: 100px 1fr 36px;
+  gap: 12px;
+  padding: 10px 10px 0;
+  margin-bottom: 12px;
+  pointer-events: none;
+}
+
+.post-backdrop-card-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.post-backdrop-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.post-backdrop-card-title {
+  width: 75%;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 6px;
+}
+
+.post-backdrop-card-badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.post-backdrop-card-badge {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.post-backdrop-card-line {
+  width: 50%;
+  height: 13px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 6px;
+}
+
+.post-backdrop-card-meta > *:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ============================================================================
    DESCRIPTION
    ============================================================================ */
 
