@@ -209,7 +209,9 @@ const MemberModule = (function() {
             CountryComponent.loadFromDatabase();
         }
         if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
-            CurrencyComponent.loadFromDatabase();
+            CurrencyComponent.loadFromDatabase().then(function() {
+                syncSupporterCurrencyUi();
+            });
         }
         
         // Preload categories/forms for Post Editor and Create Post tabs
@@ -5192,6 +5194,7 @@ const MemberModule = (function() {
     function syncSupporterCurrencyUi() {
         var code = getSiteCurrencyCode();
         if (!code) return;
+        if (!CurrencyComponent.isLoaded()) return;
         if (supporterCustomAmountInput) {
             supporterCustomAmountInput.placeholder = CurrencyComponent.formatWithSymbol(0, code, { trimZeroDecimals: false });
         }
