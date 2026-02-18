@@ -2440,14 +2440,6 @@ const PostModule = (function() {
     }
     if (!slots.length) return;
 
-    // Find the slot with an open post (exclude from sort, stays at current position).
-    var openPostEl = postListEl.querySelector('.post');
-    var openSlot = openPostEl ? openPostEl.closest('.post-slot') : null;
-    var openSlotIndex = openSlot ? slots.indexOf(openSlot) : -1;
-    if (openSlot) {
-      slots.splice(openSlotIndex, 1);
-    }
-
     // "Sort by Closest" uses the user's geolocated position
     var nearestOrigin = userGeoLocation || null;
     function distanceToUserKm(cardEl) {
@@ -2504,11 +2496,6 @@ const PostModule = (function() {
           return 0;
       }
     });
-
-    // Re-insert the open slot at its original position before re-appending.
-    if (openSlot && openSlotIndex >= 0) {
-      slots.splice(openSlotIndex, 0, openSlot);
-    }
 
     // Re-append slots in sorted order (DOM is the source of truth).
     slots.forEach(function(slot) {
