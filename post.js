@@ -588,13 +588,13 @@ const PostModule = (function() {
     // Update post panel summary background when filters are active
     App.on('filter:activeState', function(data) {
       var isActive = !!(data && data.active);
-      var summaryEl = postListEl ? postListEl.querySelector('.post-panel-summary') : null;
+      var summaryEl = postPanelContentEl ? postPanelContentEl.querySelector('.post-panel-header') : null;
       if (summaryEl) {
-        summaryEl.classList.toggle('post-panel-summary--active', isActive);
+        summaryEl.classList.toggle('post-panel-header--active', isActive);
       }
-      var emptySummaryEl = postListEl ? postListEl.querySelector('.post-panel-empty-summary') : null;
+      var emptySummaryEl = postPanelContentEl ? postPanelContentEl.querySelector('.post-panel-empty-header') : null;
       if (emptySummaryEl) {
-        emptySummaryEl.classList.toggle('post-panel-empty-summary--active', isActive);
+        emptySummaryEl.classList.toggle('post-panel-empty-header--active', isActive);
       }
     });
 
@@ -1569,7 +1569,11 @@ const PostModule = (function() {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
-    // Clear existing list content (cards + summary), preserving slack elements.
+    // Remove previous summary from panel (it now lives outside post-list).
+    var oldSummary = postPanelContentEl.querySelector('.post-panel-header');
+    if (oldSummary) oldSummary.parentNode.removeChild(oldSummary);
+
+    // Clear existing list content (cards), preserving slack elements.
     var _topS = postListEl.querySelector('.topSlack');
     var _botS = postListEl.querySelector('.bottomSlack');
     postListEl.innerHTML = '';
@@ -1612,7 +1616,7 @@ const PostModule = (function() {
     var summaryText = getFilterSummaryText();
     if (summaryText) {
       var summaryEl = document.createElement('div');
-      summaryEl.className = 'msg--summary post-panel-summary';
+      summaryEl.className = 'msg--summary post-panel-header';
       // Check if filters are active (read from localStorage)
       try {
         var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
@@ -1640,11 +1644,11 @@ const PostModule = (function() {
           }
         }
         if (hasActiveFilter) {
-          summaryEl.classList.add('post-panel-summary--active');
+          summaryEl.classList.add('post-panel-header--active');
         }
       } catch (_e) {}
       summaryEl.textContent = summaryText;
-      postListEl.appendChild(summaryEl);
+      postPanelContentEl.insertBefore(summaryEl, postListEl);
     }
 
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
@@ -2470,9 +2474,6 @@ const PostModule = (function() {
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
 
-    // Preserve summary position.
-    var summaryEl = postListEl.querySelector('.post-panel-summary');
-
     // Sort .post-slot wrappers (each contains a .post-card with sort metadata).
     var slots = [];
     try {
@@ -2544,11 +2545,6 @@ const PostModule = (function() {
     slots.forEach(function(slot) {
       try { postListEl.appendChild(slot); } catch (_eAppend) {}
     });
-
-    // Keep summary at the top if present.
-    if (summaryEl) {
-      try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
-    }
 
     // Preserve slack element order: topSlack first, bottomSlack last.
     var _topS = postListEl.querySelector('.topSlack');
@@ -4424,7 +4420,7 @@ const PostModule = (function() {
     wrap.className = 'post-panel-empty';
 
     var summaryCopy = document.createElement('div');
-    summaryCopy.className = 'msg--summary post-panel-empty-summary';
+    summaryCopy.className = 'msg--summary post-panel-empty-header';
     // Check if filters are active (read from localStorage)
     try {
       var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
@@ -4452,7 +4448,7 @@ const PostModule = (function() {
         }
       }
       if (hasActiveFilter) {
-        summaryCopy.classList.add('post-panel-empty-summary--active');
+        summaryCopy.classList.add('post-panel-empty-header--active');
       }
     } catch (_e) {}
     summaryCopy.textContent = getFilterSummaryText();
