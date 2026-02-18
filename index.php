@@ -377,13 +377,7 @@ if (empty($ogTitle)) {
               <button class="clear-button filter-daterange-clear" type="button" aria-label="Clear date"></button>
             </div>
           </div>
-          <div class="filter-expired-row row-class-1">
-            <span class="filter-expired-label">Show Expired Events</span>
-            <label class="component-switch">
-              <input class="component-switch-input filter-expired-input" type="checkbox">
-              <span class="component-switch-slider"></span>
-            </label>
-          </div>
+          <input class="filter-expired-input" type="checkbox" style="display:none">
           <div class="filter-calendar-container" aria-hidden="true">
             <div class="filter-calendar"></div>
           </div>

@@ -513,18 +513,15 @@
   border-color: #cc6600;
 }
 
-/* Expired row - uses row-class-1 for 36px height */
-.filter-expired-row {
-  width: 100%;
-  justify-content: space-between;
-  gap: 8px;
-  max-width: 420px;
-  margin: 0 auto 10px auto;
+/* Expired button inside calendar actions */
+.filter-expired-btn {
+  margin-right: auto;
 }
 
-.filter-expired-label {
+.filter-expired-btn--active {
+  background: var(--filter-active-color);
+  border-color: var(--filter-active-color);
   color: #fff;
-  font-size: 14px;
 }
 
 /* Calendar container */

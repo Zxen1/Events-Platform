@@ -66,13 +66,13 @@ const FilterModule = (function() {
     var daterangeInput = null;
     var daterangeClear = null;
     var expiredInput = null;
-    var expiredSlider = null;
     var calendarContainer = null;
     var calendarInstance = null;
     var dateStart = null;
     var dateEnd = null;
     var dateRangeDraftOpen = false;
     var outsideCloseBound = false;
+    var expiredStateBeforeOpen = false;
     
     // Persistence
     var STORAGE_KEY = 'funmap_filters';
@@ -1142,35 +1142,20 @@ const FilterModule = (function() {
         // Close calendar when clicking outside
         document.addEventListener('click', function(e) {
             if (calendarContainer && calendarContainer.classList.contains('filter-calendar-container--open')) {
-                // Check if click is outside calendar, daterange input, and expired toggle row
-                var expiredRow = container.querySelector('.filter-expired-row');
-                var isExpiredRow = expiredRow && expiredRow.contains(e.target);
-                if (!calendarContainer.contains(e.target) && e.target !== daterangeInput && !isExpiredRow) {
-                    // Revert draft display back to committed value
+                if (!calendarContainer.contains(e.target) && e.target !== daterangeInput) {
+                    if (expiredInput) expiredInput.checked = expiredStateBeforeOpen;
                     setDaterangeInputValue(dateStart, dateEnd);
-                    // Clear any incomplete selection and close
                     if (calendarInstance && calendarInstance.clearSelection) {
                         calendarInstance.clearSelection();
                     }
+                    rebuildCalendar();
                     closeCalendar();
                 }
             }
         });
         
-        // Expired toggle
+        // Expired toggle (hidden checkbox, controlled by button inside calendar actions)
         expiredInput = container.querySelector('.filter-expired-input');
-        expiredSlider = expiredInput ? expiredInput.nextElementSibling : null;
-        
-        if (expiredInput) {
-            expiredInput.addEventListener('change', function() {
-                syncExpiredToggleUi();
-                // Rebuild calendar with extended date range when showing expired
-                rebuildCalendar();
-                applyFilters();
-                updateClearButtons();
-            });
-        }
-        syncExpiredToggleUi();
         
         updateClearButtons();
     }
@@ -1318,6 +1303,31 @@ const FilterModule = (function() {
         var actionsEl = document.createElement('div');
         actionsEl.className = 'calendar-actions';
         
+        var expiredBtn = document.createElement('button');
+        expiredBtn.className = 'filter-expired-btn button-class-2';
+        expiredBtn.type = 'button';
+        expiredBtn.textContent = 'Show expired events';
+        if (expiredInput && expiredInput.checked) {
+            expiredBtn.classList.add('filter-expired-btn--active');
+        }
+        expiredBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (expiredInput) {
+                expiredInput.checked = !expiredInput.checked;
+            }
+            expiredBtn.classList.toggle('filter-expired-btn--active', expiredInput && expiredInput.checked);
+            rebuildCalendar();
+            
+            if (expiredInput && expiredInput.checked) {
+                var now = new Date();
+                var pastDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+                var futureDate = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+                setDaterangeInputValue(pastDate.toISOString().slice(0, 10), futureDate.toISOString().slice(0, 10));
+            } else {
+                setDaterangeInputValue(dateStart, dateEnd);
+            }
+        });
+        
         var cancelBtn = document.createElement('button');
         cancelBtn.className = 'calendar-cancel button-class-2';
         cancelBtn.type = 'button';
@@ -1325,8 +1335,10 @@ const FilterModule = (function() {
         cancelBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             calendarInstance.clearSelection();
+            if (expiredInput) expiredInput.checked = expiredStateBeforeOpen;
             setDaterangeInputValue(dateStart, dateEnd, false);
             dateRangeDraftOpen = false;
+            rebuildCalendar();
             closeCalendar();
             updateClearButtons();
         });
@@ -1339,13 +1351,19 @@ const FilterModule = (function() {
             e.stopPropagation();
             if (calendarInstance.selectedStart || calendarInstance.selectedEnd) {
                 setDateRange(calendarInstance.selectedStart, calendarInstance.selectedEnd);
-                dateRangeDraftOpen = false;
-                closeCalendar();
-                applyFilters();
-                updateClearButtons();
+            } else if (expiredInput && expiredInput.checked) {
+                var now = new Date();
+                var pastDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+                var futureDate = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+                setDateRange(pastDate.toISOString().slice(0, 10), futureDate.toISOString().slice(0, 10));
             }
+            dateRangeDraftOpen = false;
+            closeCalendar();
+            applyFilters();
+            updateClearButtons();
         });
         
+        actionsEl.appendChild(expiredBtn);
         actionsEl.appendChild(cancelBtn);
         actionsEl.appendChild(okBtn);
         calendarContainer.appendChild(actionsEl);
@@ -1373,9 +1391,10 @@ const FilterModule = (function() {
         var isOpen = calendarContainer.classList.contains('filter-calendar-container--open');
         
         if (isOpen) {
-            // Treat closing as cancel: revert display and clear draft selection
+            if (expiredInput) expiredInput.checked = expiredStateBeforeOpen;
             setDaterangeInputValue(dateStart, dateEnd, false);
             dateRangeDraftOpen = false;
+            rebuildCalendar();
             closeCalendar();
         } else {
             openCalendar();
@@ -1384,6 +1403,7 @@ const FilterModule = (function() {
     
     function openCalendar() {
         if (!calendarContainer) return;
+        expiredStateBeforeOpen = expiredInput ? expiredInput.checked : false;
         calendarContainer.classList.add('filter-calendar-container--open');
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'true');
@@ -1457,8 +1477,9 @@ const FilterModule = (function() {
     }
     
     function syncExpiredToggleUi() {
-        if (!expiredInput || !expiredSlider) return;
-        expiredSlider.classList.toggle('component-switch-slider--on-filter', !!expiredInput.checked);
+        if (!expiredInput) return;
+        var btn = calendarContainer ? calendarContainer.querySelector('.filter-expired-btn') : null;
+        if (btn) btn.classList.toggle('filter-expired-btn--active', !!expiredInput.checked);
     }
 
 
