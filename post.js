@@ -2515,19 +2515,21 @@ const PostModule = (function() {
       try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
     }
 
-    // Restore open post's visual position after DOM reorder.
-    if (openSlot) {
-      postListEl.scrollTop = openSlot.offsetTop - openSlotTopBefore;
-    }
-
     // Preserve slack element order: topSlack first, bottomSlack last.
     var _topS = postListEl.querySelector('.topSlack');
     var _botS = postListEl.querySelector('.bottomSlack');
     if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
     if (_botS) try { postListEl.appendChild(_botS); } catch (_eBotS) {}
 
-    // Trigger slack recalculation after DOM reorder.
-    try { postListEl.dispatchEvent(new Event('scroll')); } catch (_eScroll) {}
+    // Restore open post's visual position after DOM reorder and slack repositioning.
+    if (openSlot) {
+      postListEl.scrollTop = openSlot.offsetTop - openSlotTopBefore;
+    }
+
+    // Trigger slack recalculation after layout settles.
+    requestAnimationFrame(function() {
+      try { postListEl.dispatchEvent(new Event('scroll')); } catch (_eScroll) {}
+    });
   }
 
   /**
