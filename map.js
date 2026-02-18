@@ -1744,10 +1744,11 @@ const MapModule = (function() {
       img.crossOrigin = 'anonymous';
       img.onload = function() {
         clusterBalloonImg = img;
-        clusterBalloonPixelRatio = img.width >= 256 ? 2 : 1;
+        var scale = 3;
+        clusterBalloonPixelRatio = scale;
         clusterBalloonCanvas = document.createElement('canvas');
-        clusterBalloonCanvas.width = img.width;
-        clusterBalloonCanvas.height = img.height;
+        clusterBalloonCanvas.width = img.width * scale;
+        clusterBalloonCanvas.height = img.height * scale;
         clusterBalloonCtx = clusterBalloonCanvas.getContext('2d', { willReadFrequently: true });
         
         clusterIconsLoaded = true;
@@ -1770,19 +1771,28 @@ const MapModule = (function() {
     if (map.hasImage(imageId)) return;
     if (!clusterBalloonImg || !clusterBalloonCtx) return;
     
-    var w = clusterBalloonImg.width;
-    var h = clusterBalloonImg.height;
+    var canvas = clusterBalloonCanvas;
+    var w = canvas.width;
+    var h = canvas.height;
     var ctx = clusterBalloonCtx;
     
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(clusterBalloonImg, 0, 0);
+    ctx.drawImage(clusterBalloonImg, 0, 0, w, h);
     
-    var fontSize = Math.round(w * 0.40);
+    var digits = String(n).length;
+    var sizeRatio = digits >= 3 ? 0.36 : digits === 2 ? 0.42 : 0.48;
+    var fontSize = Math.round(w * sizeRatio);
     var textCenterY = h * 0.42;
     
     ctx.font = 'bold ' + fontSize + 'px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
+    ctx.strokeStyle = 'rgba(120, 0, 0, 0.5)';
+    ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.08));
+    ctx.lineJoin = 'round';
+    ctx.strokeText(String(n), w / 2, textCenterY);
+    
     ctx.fillStyle = '#ffffff';
     ctx.fillText(String(n), w / 2, textCenterY);
     
