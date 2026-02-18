@@ -416,6 +416,17 @@
   flex-shrink: 0;
 }
 
+.member-panel-body .topSlack {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.member-panel-body .bottomSlack {
+  overflow: hidden;
+}
+
 .member-panel-body::-webkit-scrollbar {
   width: 12px;
 }

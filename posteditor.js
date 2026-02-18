@@ -442,6 +442,14 @@
             var card = renderPostCard(post);
             container.appendChild(card);
         });
+
+        var scrollParent = container.closest('.member-panel-body');
+        if (scrollParent && window.PostModule && typeof PostModule.populateBackdrop === 'function') {
+            var _topS = scrollParent.querySelector('.topSlack');
+            var _botS = scrollParent.querySelector('.bottomSlack');
+            PostModule.populateBackdrop(_topS);
+            PostModule.populateBackdrop(_botS);
+        }
     }
     
     // Reorder posts after favorite toggle (with animation)

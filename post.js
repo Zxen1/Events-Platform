@@ -4539,6 +4539,8 @@ const PostModule = (function() {
 
     recentPanelContentEl.appendChild(reminderWrap);
     if (_botS) recentPanelContentEl.appendChild(_botS);
+    populateBackdrop(_topS);
+    populateBackdrop(_botS);
   }
 
   /* --------------------------------------------------------------------------
@@ -4657,6 +4659,8 @@ const PostModule = (function() {
 
     recentPanelContentEl.appendChild(reminderWrap);
     if (_botS) recentPanelContentEl.appendChild(_botS);
+    populateBackdrop(_topS);
+    populateBackdrop(_botS);
   }
 
   /**
@@ -5248,7 +5252,8 @@ const PostModule = (function() {
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary,
-    mapCardHasPromo: mapCardHasPromo
+    mapCardHasPromo: mapCardHasPromo,
+    populateBackdrop: populateBackdrop
   };
 
 })();

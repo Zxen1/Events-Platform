@@ -748,14 +748,16 @@
    BACKDROP - Ghost postcards that fill TopSlack/BottomSlack empty space
    ============================================================================ */
 
-.post-list .topSlack {
+.post-list .topSlack,
+.recent-panel-content .topSlack {
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 }
 
-.post-list .bottomSlack {
+.post-list .bottomSlack,
+.recent-panel-content .bottomSlack {
   overflow: hidden;
 }
 
