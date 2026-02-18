@@ -1700,7 +1700,7 @@ const PostModule = (function() {
     title.className = 'post-backdrop-card-title';
     meta.appendChild(title);
 
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 2; i++) {
       var row = document.createElement('div');
       row.className = 'post-backdrop-card-row';
       var badge = document.createElement('div');
