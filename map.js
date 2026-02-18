@@ -1675,11 +1675,12 @@ const MapModule = (function() {
   // Cluster constants
   const CLUSTER_SOURCE_ID = 'post-cluster-source';
   const CLUSTER_LAYER_ID = 'post-clusters';
-  const CLUSTER_ICON_ID = 'cluster-icon';
+  const CLUSTER_ICON_PREFIX = 'cluster-';
+  const CLUSTER_MAX_COUNT = 999;
   const CLUSTER_MIN_ZOOM = 0;
   
   // Cluster state
-  let clusterIconLoaded = false;
+  let clusterIconsLoaded = false;
   let lastClusterBucketKey = null;
   let lastClusterRequestKey = null;
   let clusterRequestToken = 0;
@@ -1707,11 +1708,12 @@ const MapModule = (function() {
   }
 
   /**
-   * Load cluster icon from admin settings
+   * Load balloon PNG then generate numbered variants (1-999) via canvas.
+   * Each variant is registered as a Mapbox image: "cluster-1", "cluster-2", etc.
    */
-  function loadClusterIcon() {
+  function loadClusterIcons() {
     return new Promise(function(resolve) {
-      if (!map || clusterIconLoaded) {
+      if (!map || clusterIconsLoaded) {
         resolve();
         return;
       }
@@ -1728,9 +1730,34 @@ const MapModule = (function() {
       var img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function() {
-        var pixelRatio = img.width >= 256 ? 2 : 1;
-        map.addImage(CLUSTER_ICON_ID, img, { pixelRatio: pixelRatio });
-        clusterIconLoaded = true;
+        var w = img.width;
+        var h = img.height;
+        var pixelRatio = w >= 256 ? 2 : 1;
+        
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        
+        // Vertical center of the round head (top 65% of image, stem is the bottom)
+        var textCenterY = h * 0.38;
+        var fontSize = Math.round(w * 0.32);
+        
+        for (var n = 1; n <= CLUSTER_MAX_COUNT; n++) {
+          ctx.clearRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0);
+          
+          ctx.font = 'bold ' + fontSize + 'px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(String(n), w / 2, textCenterY);
+          
+          var imageData = ctx.getImageData(0, 0, w, h);
+          map.addImage(CLUSTER_ICON_PREFIX + n, imageData, { pixelRatio: pixelRatio });
+        }
+        
+        clusterIconsLoaded = true;
         resolve();
       };
       img.onerror = function() {
@@ -1931,7 +1958,7 @@ const MapModule = (function() {
     // because this is called inside whenStartupSettingsReady.
     adminSettings = App.getState('settings') || {};
 
-    loadClusterIcon().then(function() {
+    loadClusterIcons().then(function() {
       setupClusterLayers();
     });
 
@@ -1948,9 +1975,8 @@ const MapModule = (function() {
   function setupClusterLayers() {
     if (!map) return;
     
-    // Cluster icon is required - if not loaded, clusters won't appear
-    if (!clusterIconLoaded || !map.hasImage(CLUSTER_ICON_ID)) {
-      console.error('[Map] Cluster icon not loaded. Configure marker_cluster_icon in Admin > Map tab.');
+    if (!clusterIconsLoaded) {
+      console.error('[Map] Cluster icons not loaded. Configure marker_cluster_icon in Admin > Map tab.');
       return;
     }
     
@@ -1968,7 +1994,7 @@ const MapModule = (function() {
     var emptyData = { type: 'FeatureCollection', features: [] };
     map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
     
-    // Create cluster layer with icon
+    // Create cluster layer — each count has its own pre-rendered balloon image
     map.addLayer({
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
@@ -1976,24 +2002,15 @@ const MapModule = (function() {
       minzoom: CLUSTER_MIN_ZOOM,
       maxzoom: getClusterZoomMax(),
       layout: {
-        'icon-image': CLUSTER_ICON_ID,
+        'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
         'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
         'icon-anchor': 'bottom',
-        'text-field': ['to-string', ['coalesce', ['get', 'label'], ['get', 'count']]],
-        'text-size': 12,
-        'text-offset': [0, -1.35],
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-        'text-allow-overlap': true,
-        'text-ignore-placement': true,
         'symbol-z-order': 'viewport-y',
         'symbol-sort-key': 900
       },
       paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': 'rgba(0,0,0,0.45)',
-        'text-halo-width': 1.2,
         'icon-opacity': 0.95
       }
     });
@@ -2133,10 +2150,11 @@ const MapModule = (function() {
     }
     
     var features = clusters.map(function(c) {
+      var count = Math.min(c.count, CLUSTER_MAX_COUNT);
       return {
         type: 'Feature',
         properties: {
-          count: c.count,
+          count: count,
           label: c.label
         },
         geometry: { type: 'Point', coordinates: [c.lng, c.lat] }
@@ -3028,12 +3046,12 @@ const MapModule = (function() {
         
         // Style change removes all images/sources/layers - must reload clusters
         // Also reset cluster cache keys so updateClusterData will fetch fresh data
-        console.log('[Map] Resetting cluster state and reloading icon...');
-        clusterIconLoaded = false;
+        console.log('[Map] Resetting cluster state and reloading icons...');
+        clusterIconsLoaded = false;
         lastClusterBucketKey = null;
         lastClusterRequestKey = null;
-        loadClusterIcon().then(function() {
-          console.log('[Map] loadClusterIcon resolved, clusterIconLoaded =', clusterIconLoaded);
+        loadClusterIcons().then(function() {
+          console.log('[Map] loadClusterIcons resolved, clusterIconsLoaded =', clusterIconsLoaded);
           if (token !== styleChangeToken) {
             console.log('[Map] Token mismatch after icon load, aborting');
             return;
@@ -3042,7 +3060,7 @@ const MapModule = (function() {
           setupClusterLayers();
           console.log('[Map] Cluster layers re-added after style change');
         }).catch(function(err) {
-          console.error('[Map] loadClusterIcon failed:', err);
+          console.error('[Map] loadClusterIcons failed:', err);
         });
         
         // Fade back in on first render of the new style
