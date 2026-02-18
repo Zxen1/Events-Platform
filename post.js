@@ -2525,11 +2525,6 @@ const PostModule = (function() {
     if (openSlot) {
       postListEl.scrollTop = openSlot.offsetTop - openSlotTopBefore;
     }
-
-    // Trigger slack recalculation after layout settles.
-    requestAnimationFrame(function() {
-      try { postListEl.dispatchEvent(new Event('scroll')); } catch (_eScroll) {}
-    });
   }
 
   /**
