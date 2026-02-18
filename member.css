@@ -1128,10 +1128,7 @@
 }
 
 .member-auth-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  grid-template-columns: repeat(2, 1fr);
   margin-bottom: 12px;
 }
 

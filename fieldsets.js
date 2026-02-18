@@ -3089,12 +3089,14 @@ const FieldsetBuilder = (function(){
                 // Get current currency symbol for the fixed option
                 function ipGetPromoCurrentCurrencySymbol() {
                     var currencyCode = ipGetSelectedCurrencyCode();
-                    if (!currencyCode) return '$';
-                    if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
-                        var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
-                        if (curr && curr.symbol) return curr.symbol;
+                    if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.getCurrencyByCode) {
+                        throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode is required');
                     }
-                    return '$';
+                    var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
+                    if (!curr || !curr.symbol) {
+                        throw new Error('[FieldsetBuilder] Currency symbol not found for code: ' + currencyCode);
+                    }
+                    return curr.symbol;
                 }
                 
                 var ipPromoTypePercent = document.createElement('button');
@@ -4822,12 +4824,14 @@ const FieldsetBuilder = (function(){
                     // Get current currency symbol for the fixed option
                     function getPromoCurrentCurrencySymbol() {
                         var currencyCode = tpGetTicketCurrencyCode();
-                        if (!currencyCode) return '$';
-                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
-                            var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
-                            if (curr && curr.symbol) return curr.symbol;
+                        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.getCurrencyByCode) {
+                            throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode is required');
                         }
-                        return '$';
+                        var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
+                        if (!curr || !curr.symbol) {
+                            throw new Error('[FieldsetBuilder] Currency symbol not found for code: ' + currencyCode);
+                        }
+                        return curr.symbol;
                     }
                     
                     var promoTypePercent = document.createElement('button');

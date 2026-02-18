@@ -2362,6 +2362,19 @@ const AdminModule = (function() {
             });
         }
         
+        // Grey out spin type radios when spin on load is off
+        var spinTypeContainer = document.getElementById('adminSpinType');
+        if (spinLoadStartCheckbox && spinTypeContainer) {
+            if (!spinLoadStartCheckbox.checked) spinTypeContainer.classList.add('admin-panel-field--disabled');
+            spinLoadStartCheckbox.addEventListener('change', function() {
+                if (spinLoadStartCheckbox.checked) {
+                    spinTypeContainer.classList.remove('admin-panel-field--disabled');
+                } else {
+                    spinTypeContainer.classList.add('admin-panel-field--disabled');
+                }
+            });
+        }
+
         // Spin on Logo checkbox
         var spinLogoClickCheckbox = document.getElementById('adminSpinLogoClick');
         if (spinLogoClickCheckbox) {
@@ -3385,6 +3398,34 @@ const AdminModule = (function() {
             });
         }
         
+        // Grey out welcome load type when welcome message is off
+        var welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
+        var welcomeLoadTypeContainer = document.getElementById('adminWelcomeLoadType');
+        if (welcomeEnabledCheckbox && welcomeLoadTypeContainer) {
+            if (!welcomeEnabledCheckbox.checked) welcomeLoadTypeContainer.classList.add('admin-panel-field--disabled');
+            welcomeEnabledCheckbox.addEventListener('change', function() {
+                if (welcomeEnabledCheckbox.checked) {
+                    welcomeLoadTypeContainer.classList.remove('admin-panel-field--disabled');
+                } else {
+                    welcomeLoadTypeContainer.classList.add('admin-panel-field--disabled');
+                }
+            });
+        }
+
+        // Grey out countdown postcards mode when countdown postcards is off
+        var countdownPostcardsCheckbox = document.getElementById('adminCountdownPostcards');
+        var countdownPostcardsModeContainer = document.getElementById('adminCountdownPostcardsMode');
+        if (countdownPostcardsCheckbox && countdownPostcardsModeContainer) {
+            if (!countdownPostcardsCheckbox.checked) countdownPostcardsModeContainer.classList.add('admin-panel-field--disabled');
+            countdownPostcardsCheckbox.addEventListener('change', function() {
+                if (countdownPostcardsCheckbox.checked) {
+                    countdownPostcardsModeContainer.classList.remove('admin-panel-field--disabled');
+                } else {
+                    countdownPostcardsModeContainer.classList.add('admin-panel-field--disabled');
+                }
+            });
+        }
+
         // Load countdown info message from admin_messages
         loadCountdownInfoMessage();
         

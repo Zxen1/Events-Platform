@@ -3432,17 +3432,9 @@ const MemberModule = (function() {
             }
         }
 
-        var sym = '$';
-        if (currencyCode && window.CurrencyComponent) {
-            try {
-                var curr = CurrencyComponent.getCurrencyByCode(currencyCode);
-                if (curr && curr.symbol) sym = curr.symbol;
-            } catch (e) {}
-        }
-
         var suffix = '';
         if (price !== null) {
-            suffix = ' ' + sym + price.toFixed(2);
+            suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2), currencyCode, { trimZeroDecimals: false });
         }
 
         var textEl = submitBtn.querySelector('.member-button-submit-text');
@@ -5456,10 +5448,7 @@ const MemberModule = (function() {
         target = (target === 'register') ? 'register' : 'login';
         var isLogin = target === 'login';
 
-        // Button Class 2 uses aria-selected for styling
-        if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-        if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
-        // These are not role="tab" (to allow click-hold bottom slack), so use aria-pressed for toggle state.
+        // toggle-class-1 uses aria-pressed for the active button state
         if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
         if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-pressed', !isLogin ? 'true' : 'false');
 
@@ -5614,26 +5603,24 @@ const MemberModule = (function() {
         wrap.className = 'member-auth-container';
         wrap.dataset.active = 'login';
 
-        // Header (tab buttons)
+        // Header (tab buttons — toggle-class-1 pill slider)
         var header = document.createElement('div');
-        header.className = 'member-auth-header';
+        header.className = 'member-auth-header toggle-class-1';
         header.setAttribute('role', 'group');
         header.setAttribute('aria-label', 'Continue to submit');
 
         var btnLogin = document.createElement('button');
         btnLogin.type = 'button';
-        btnLogin.className = 'member-auth-login button-class-2';
+        btnLogin.className = 'member-auth-login toggle-button';
         btnLogin.dataset.target = 'login';
-        btnLogin.setAttribute('role', 'tab');
-        btnLogin.setAttribute('aria-selected', 'true');
+        btnLogin.setAttribute('aria-pressed', 'true');
         btnLogin.textContent = 'Log In';
 
         var btnRegister = document.createElement('button');
         btnRegister.type = 'button';
-        btnRegister.className = 'member-auth-register button-class-2';
+        btnRegister.className = 'member-auth-register toggle-button';
         btnRegister.dataset.target = 'register';
-        btnRegister.setAttribute('role', 'tab');
-        btnRegister.setAttribute('aria-selected', 'false');
+        btnRegister.setAttribute('aria-pressed', 'false');
         btnRegister.textContent = 'Register';
 
         header.appendChild(btnLogin);

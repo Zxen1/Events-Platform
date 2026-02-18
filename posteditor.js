@@ -1147,8 +1147,9 @@
             var description = option.checkout_description ? String(option.checkout_description) : '';
             var basicRate = parseFloat(option.checkout_basic_day_rate);
             var discountRate = parseFloat(option.checkout_discount_day_rate);
+            var optionCurrency = option.checkout_currency || '';
             var ratesText = (isFinite(basicRate) && isFinite(discountRate))
-                ? 'Basic Day Rate ' + Math.round(basicRate * 100) + '¢ · Discount Day Rate ' + Math.round(discountRate * 100) + '¢'
+                ? 'Basic Day Rate ' + formatPriceWithSymbol(basicRate, optionCurrency) + ' · Discount Day Rate ' + formatPriceWithSymbol(discountRate, optionCurrency)
                 : '';
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -1365,6 +1366,17 @@
             });
         }
 
+        // Derive initial currency code for placeholder values
+        var pricingCurrencyCode = (allCheckoutOptions[currentTierIndex] && allCheckoutOptions[currentTierIndex].checkout_currency) || '';
+
+        // Format price with symbol using CurrencyComponent (always show decimal places)
+        function formatPriceWithSymbol(price, currencyCode) {
+            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
+                throw new Error('[PostEditor] CurrencyComponent.formatWithSymbol is required');
+            }
+            return CurrencyComponent.formatWithSymbol(price, currencyCode, { trimZeroDecimals: false });
+        }
+
         // --- Subtotal lines ---
         function createPricingLine(labelText) {
             var line = document.createElement('div');
@@ -1377,7 +1389,7 @@
             lineValWrap.className = 'posteditor-manage-pricing-line-valuewrap';
             var lineVal = document.createElement('span');
             lineVal.className = 'posteditor-manage-pricing-line-value';
-            lineVal.textContent = getCurrSym() + '0.00';
+            lineVal.textContent = formatPriceWithSymbol(0, pricingCurrencyCode);
             var lineTooltip = document.createElement('div');
             lineTooltip.className = 'posteditor-manage-pricing-tooltip';
             lineValWrap.appendChild(lineVal);
@@ -1417,29 +1429,20 @@
         totalLbl.textContent = 'Total';
         var totalVal = document.createElement('span');
         totalVal.className = 'posteditor-manage-pricing-total-value';
-        totalVal.textContent = getCurrSym() + '0.00';
+        totalVal.textContent = formatPriceWithSymbol(0, pricingCurrencyCode);
         totalLine.appendChild(totalLbl);
         totalLine.appendChild(totalVal);
         subtotalsWrapper.appendChild(totalLine);
 
         pricingContainer.appendChild(subtotalsWrapper);
 
-        // --- Currency symbol helper ---
-        function getCurrSym() {
-            try {
-                var code = (allCheckoutOptions[selectedTierIndex] && allCheckoutOptions[selectedTierIndex].checkout_currency) ||
-                           (allCheckoutOptions[currentTierIndex] && allCheckoutOptions[currentTierIndex].checkout_currency) || 'USD';
-                if (window.CurrencyComponent) {
-                    var curr = CurrencyComponent.getCurrencyByCode(code);
-                    if (curr && curr.symbol) return curr.symbol;
-                }
-            } catch (e) {}
-            return '$';
-        }
+        // Currency code is refreshed each recalc in case the selected tier changes
+        // formatPriceWithSymbol (defined above) handles symbol position and formatting
 
         // --- Central pricing recalculation ---
         function recalcPricing() {
-            var sym = getCurrSym();
+            var currencyCode = (allCheckoutOptions[selectedTierIndex] && allCheckoutOptions[selectedTierIndex].checkout_currency) ||
+                               (allCheckoutOptions[currentTierIndex] && allCheckoutOptions[currentTierIndex].checkout_currency) || '';
             var selectedRates = getTierRates(selectedTierIndex);
             var currentRates = getTierRates(currentTierIndex);
             var addDays = parseInt(durationAddInput.value, 10) || 0;
@@ -1465,16 +1468,12 @@
             }
             var upgradeCost = upgradeBase * surchargeMultiplier;
             upgradeLine.el.style.display = upgradeBase > 0 ? '' : 'none';
-            upgradeLine.value.textContent = sym + upgradeCost.toFixed(2);
+            upgradeLine.value.textContent = formatPriceWithSymbol(upgradeCost, currencyCode);
             if (upgradeBase > 0) {
                 var selTitle = allCheckoutOptions[selectedTierIndex] ? String(allCheckoutOptions[selectedTierIndex].checkout_title || '') : '';
                 var curTitle = allCheckoutOptions[currentTierIndex] ? String(allCheckoutOptions[currentTierIndex].checkout_title || '') : '';
                 var selFirst = thresholdUnlocked ? selectedRates.discount : selectedRates.basic;
                 var curFirst = thresholdUnlocked ? currentRates.discount : currentRates.basic;
-                var selFirstC = Math.round(selFirst * 100);
-                var curFirstC = Math.round(curFirst * 100);
-                var selDiscC = Math.round(selectedRates.discount * 100);
-                var curDiscC = Math.round(currentRates.discount * 100);
                 var firstRateLabel = thresholdUnlocked ? 'Discount Rate' : 'Basic Rate';
                 var newCostVal = daysRemaining * selFirst + daysRemaining * selectedRates.discount * paidExtraLocs;
                 var curCostVal = daysRemaining * curFirst + daysRemaining * currentRates.discount * paidExtraLocs;
@@ -1482,23 +1481,23 @@
                 if (thresholdUnlocked) tt.push('365-Day Discount Unlocked');
                 tt.push('');
                 tt.push('Selected Tier (' + selTitle + ')');
-                tt.push(daysRemaining + ' Days \u00D7 ' + selFirstC + '\u00A2 ' + firstRateLabel + ' = ' + sym + (daysRemaining * selFirst).toFixed(2));
+                tt.push(daysRemaining + ' Days \u00D7 ' + formatPriceWithSymbol(selFirst, currencyCode) + ' ' + firstRateLabel + ' = ' + formatPriceWithSymbol(daysRemaining * selFirst, currencyCode));
                 if (paidExtraLocs > 0) {
-                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + selDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + sym + (daysRemaining * selectedRates.discount * paidExtraLocs).toFixed(2));
+                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + formatPriceWithSymbol(daysRemaining * selectedRates.discount * paidExtraLocs, currencyCode));
                 }
-                tt.push('Subtotal: ' + sym + newCostVal.toFixed(2));
+                tt.push('Subtotal: ' + formatPriceWithSymbol(newCostVal, currencyCode));
                 tt.push('');
                 tt.push('Current Tier (' + curTitle + ')');
-                tt.push(daysRemaining + ' Days \u00D7 ' + curFirstC + '\u00A2 ' + firstRateLabel + ' = ' + sym + (daysRemaining * curFirst).toFixed(2));
+                tt.push(daysRemaining + ' Days \u00D7 ' + formatPriceWithSymbol(curFirst, currencyCode) + ' ' + firstRateLabel + ' = ' + formatPriceWithSymbol(daysRemaining * curFirst, currencyCode));
                 if (paidExtraLocs > 0) {
-                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + curDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + sym + (daysRemaining * currentRates.discount * paidExtraLocs).toFixed(2));
+                    tt.push('+ ' + daysRemaining + ' Days \u00D7 ' + formatPriceWithSymbol(currentRates.discount, currencyCode) + ' Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + formatPriceWithSymbol(daysRemaining * currentRates.discount * paidExtraLocs, currencyCode));
                 }
-                tt.push('Subtotal: ' + sym + curCostVal.toFixed(2));
+                tt.push('Subtotal: ' + formatPriceWithSymbol(curCostVal, currencyCode));
                 tt.push('');
-                tt.push('Difference: ' + sym + upgradeBase.toFixed(2));
+                tt.push('Difference: ' + formatPriceWithSymbol(upgradeBase, currencyCode));
                 if (hasSurcharge) {
-                    tt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + sym + (upgradeCost - upgradeBase).toFixed(2));
-                    tt.push('Total: ' + sym + upgradeCost.toFixed(2));
+                    tt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + formatPriceWithSymbol(upgradeCost - upgradeBase, currencyCode));
+                    tt.push('Total: ' + formatPriceWithSymbol(upgradeCost, currencyCode));
                 }
                 upgradeLine.tooltip.textContent = tt.join('\n');
             } else {
@@ -1526,30 +1525,28 @@
             }
             var addDaysCost = addDaysBase * surchargeMultiplier;
             addDaysLine.el.style.display = addDays > 0 ? '' : 'none';
-            addDaysLine.value.textContent = sym + addDaysCost.toFixed(2);
+            addDaysLine.value.textContent = formatPriceWithSymbol(addDaysCost, currencyCode);
             if (addDays > 0) {
-                var selRateBasicC = Math.round(selectedRates.basic * 100);
-                var selRateDiscC = Math.round(selectedRates.discount * 100);
                 var dt = [];
                 if (thresholdUnlocked) {
                     dt.push('365-Day Discount Unlocked');
                     dt.push('');
-                    dt.push(addDays + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate = ' + sym + (addDays * selectedRates.discount).toFixed(2));
+                    dt.push(addDays + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate = ' + formatPriceWithSymbol(addDays * selectedRates.discount, currencyCode));
                 } else if (daysAfterThreshold > 0) {
                     dt.push('365-Day Discount Unlocks After ' + daysBeforeThreshold + ' Days');
                     dt.push('');
-                    dt.push(daysBeforeThreshold + ' Days \u00D7 ' + selRateBasicC + '\u00A2 Basic Rate = ' + sym + (daysBeforeThreshold * selectedRates.basic).toFixed(2));
-                    dt.push('+ ' + daysAfterThreshold + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate = ' + sym + (daysAfterThreshold * selectedRates.discount).toFixed(2));
+                    dt.push(daysBeforeThreshold + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.basic, currencyCode) + ' Basic Rate = ' + formatPriceWithSymbol(daysBeforeThreshold * selectedRates.basic, currencyCode));
+                    dt.push('+ ' + daysAfterThreshold + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate = ' + formatPriceWithSymbol(daysAfterThreshold * selectedRates.discount, currencyCode));
                 } else {
-                    dt.push(addDays + ' Days \u00D7 ' + selRateBasicC + '\u00A2 Basic Rate = ' + sym + (addDays * selectedRates.basic).toFixed(2));
+                    dt.push(addDays + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.basic, currencyCode) + ' Basic Rate = ' + formatPriceWithSymbol(addDays * selectedRates.basic, currencyCode));
                 }
                 if (paidExtraLocs > 0) {
-                    dt.push('+ ' + addDays + ' Days \u00D7 ' + selRateDiscC + '\u00A2 Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + sym + (addDays * selectedRates.discount * paidExtraLocs).toFixed(2));
+                    dt.push('+ ' + addDays + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + formatPriceWithSymbol(addDays * selectedRates.discount * paidExtraLocs, currencyCode));
                 }
-                dt.push('Subtotal: ' + sym + addDaysBase.toFixed(2));
+                dt.push('Subtotal: ' + formatPriceWithSymbol(addDaysBase, currencyCode));
                 if (hasSurcharge) {
-                    dt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + sym + (addDaysCost - addDaysBase).toFixed(2));
-                    dt.push('Total: ' + sym + addDaysCost.toFixed(2));
+                    dt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + formatPriceWithSymbol(addDaysCost - addDaysBase, currencyCode));
+                    dt.push('Total: ' + formatPriceWithSymbol(addDaysCost, currencyCode));
                 }
                 addDaysLine.tooltip.textContent = dt.join('\n');
             } else {
@@ -1564,17 +1561,16 @@
             }
             var locCost = locBase * surchargeMultiplier;
             locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
-            locationsLine.value.textContent = sym + locCost.toFixed(2);
+            locationsLine.value.textContent = formatPriceWithSymbol(locCost, currencyCode);
             if (newLocs > 0) {
-                var selLocDiscC = Math.round(selectedRates.discount * 100);
                 var lt = [];
-                lt.push(newLocs + ' Location' + (newLocs !== 1 ? 's' : '') + ' \u00D7 ' + locTotalDays + ' Days \u00D7 ' + selLocDiscC + '\u00A2 Discount Rate = ' + sym + locBase.toFixed(2));
+                lt.push(newLocs + ' Location' + (newLocs !== 1 ? 's' : '') + ' \u00D7 ' + locTotalDays + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate = ' + formatPriceWithSymbol(locBase, currencyCode));
                 if (daysRemaining > 0 && addDays > 0) {
                     lt.push('(' + daysRemaining + ' Remaining + ' + addDays + ' Added)');
                 }
                 if (hasSurcharge) {
-                    lt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + sym + (locCost - locBase).toFixed(2));
-                    lt.push('Total: ' + sym + locCost.toFixed(2));
+                    lt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + formatPriceWithSymbol(locCost - locBase, currencyCode));
+                    lt.push('Total: ' + formatPriceWithSymbol(locCost, currencyCode));
                 }
                 locationsLine.tooltip.textContent = lt.join('\n');
             } else {
@@ -1598,13 +1594,17 @@
             // Total
             var total = upgradeCost + addDaysCost + locCost;
             totalLine.style.display = total > 0 ? '' : 'none';
-            totalVal.textContent = sym + total.toFixed(2);
+            totalVal.textContent = formatPriceWithSymbol(total, currencyCode);
 
             // Update submit button text
-            submitText.textContent = 'Pay ' + sym + total.toFixed(2);
+            submitText.textContent = 'Pay ' + formatPriceWithSymbol(total, currencyCode);
 
-            // Enable/disable submit based on total
-            manageSubmitBtn.disabled = total <= 0;
+            // Enable/disable submit based on total and terms
+            var termsOk = termsCheckbox && termsCheckbox.checked;
+            manageSubmitBtn.disabled = total <= 0 || !termsOk;
+            if (manageAdminSubmitBtn) {
+                manageAdminSubmitBtn.disabled = !termsOk;
+            }
         }
 
         editAccordionContent.addEventListener('locations:change', function() {
@@ -1821,7 +1821,7 @@
 
         var submitText = document.createElement('span');
         submitText.className = 'posteditor-manage-submit-text';
-        submitText.textContent = 'Pay ' + getCurrSym() + '0.00';
+        submitText.textContent = 'Pay ' + formatPriceWithSymbol(0, pricingCurrencyCode);
 
         var submitIcons = document.createElement('span');
         submitIcons.className = 'posteditor-manage-submit-icons';
@@ -1836,9 +1836,10 @@
         manageSubmitBtn.appendChild(submitIcons);
         manageActionsWrapper.appendChild(manageSubmitBtn);
 
+        var manageAdminSubmitBtn = null;
         var user = getCurrentUser();
         if (user && user.isAdmin) {
-            var manageAdminSubmitBtn = document.createElement('button');
+            manageAdminSubmitBtn = document.createElement('button');
             manageAdminSubmitBtn.type = 'button';
             manageAdminSubmitBtn.className = 'posteditor-manage-admin-submit button-class-2c';
             manageAdminSubmitBtn.textContent = 'Admin: Submit Free';
@@ -1856,7 +1857,7 @@
             var items = [];
             var selOpt = allCheckoutOptions[selectedTierIndex] || {};
             var curOpt = allCheckoutOptions[currentTierIndex] || {};
-            var currency = selOpt.checkout_currency || curOpt.checkout_currency || 'USD';
+            var currency = selOpt.checkout_currency || curOpt.checkout_currency || '';
 
             // Tier upgrade
             if (selectedTierIndex > currentTierIndex && daysRemaining > 0) {
@@ -1952,8 +1953,89 @@
             };
         }
 
+        // Recalculate button states when terms checkbox changes
+        if (termsCheckbox) {
+            termsCheckbox.addEventListener('change', function() {
+                recalcPricing();
+            });
+        }
+
+        // --- Admin free submit handler ---
+        if (manageAdminSubmitBtn) {
+            manageAdminSubmitBtn.addEventListener('click', function() {
+                if (!termsCheckbox || !termsCheckbox.checked) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        if (typeof window.getMessage === 'function') {
+                            window.getMessage('msg_post_terms_required', {}, false).then(function(msg) {
+                                if (msg) ToastComponent.showError(msg);
+                            });
+                        }
+                    }
+                    return;
+                }
+                manageAdminSubmitBtn.disabled = true;
+
+                var user = getCurrentUser();
+                var payload = {
+                    post_id: postId,
+                    member_id: user ? user.id : null,
+                    member_name: user ? (user.username || user.name || '') : '',
+                    member_type: user && user.isAdmin ? 'admin' : 'member',
+                    manage_action: 'admin_free',
+                    add_days: parseInt(durationAddInput.value, 10) || 0,
+                    loc_qty: pricingLocUsed
+                };
+
+                fetch('/gateway.php?action=edit-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(function(r) { return r.json(); }).then(function(res) {
+                    if (res && res.success) {
+                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                            var key = (res && res.message_key) ? String(res.message_key) : 'msg_posteditor_admin_success';
+                            getMessage(key, {}, false).then(function(msg) {
+                                if (msg) ToastComponent.showSuccess(msg);
+                            });
+                        }
+                        App.emit('post:updated', { post_id: postId });
+                        closeModal();
+                        refreshPostCard(postId);
+                    } else {
+                        manageAdminSubmitBtn.disabled = false;
+                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                            if (res && res.error) {
+                                ToastComponent.showError(res.error);
+                            } else {
+                                getMessage('msg_member_error_response', {}, false).then(function(msg) {
+                                    if (msg) ToastComponent.showError(msg);
+                                });
+                            }
+                        }
+                    }
+                }).catch(function() {
+                    manageAdminSubmitBtn.disabled = false;
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        getMessage('msg_member_error_network', {}, false).then(function(msg) {
+                            if (msg) ToastComponent.showError(msg);
+                        });
+                    }
+                });
+            });
+        }
+
         // --- Submit handler ---
         manageSubmitBtn.addEventListener('click', function() {
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_post_terms_required', {}, false).then(function(msg) {
+                            if (msg) ToastComponent.showError(msg);
+                        });
+                    }
+                }
+                return;
+            }
             var pricing = buildLineItems();
             if (pricing.total <= 0) return;
             manageSubmitBtn.disabled = true;
@@ -1961,9 +2043,9 @@
             var user = getCurrentUser();
             var payload = {
                 post_id: postId,
-                member_id: user ? parseInt(user.id, 10) : 0,
-                member_name: user ? (user.name || user.username || '') : '',
-                member_type: user ? (user.type || 'member') : 'member',
+                member_id: user ? user.id : null,
+                member_name: user ? (user.username || user.name || '') : '',
+                member_type: user && user.isAdmin ? 'admin' : 'member',
                 manage_action: 'upgrade_checkout',
                 checkout_key: pricing.checkout_key,
                 currency: pricing.currency,
@@ -1980,22 +2062,32 @@
             }).then(function(r) { return r.json(); }).then(function(res) {
                 if (res && res.success) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        ToastComponent.showSuccess('Upgrade submitted successfully.');
+                        var key = (res && res.message_key) ? String(res.message_key) : 'msg_posteditor_upgrade_success';
+                        getMessage(key, {}, false).then(function(msg) {
+                            if (msg) ToastComponent.showSuccess(msg);
+                        });
                     }
                     App.emit('post:updated', { post_id: postId });
                     closeModal();
                     refreshPostCard(postId);
                 } else {
                     manageSubmitBtn.disabled = false;
-                    var errMsg = (res && res.error) ? res.error : 'Something went wrong.';
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        ToastComponent.showError(errMsg);
+                        if (res && res.error) {
+                            ToastComponent.showError(res.error);
+                        } else {
+                            getMessage('msg_member_error_response', {}, false).then(function(msg) {
+                                if (msg) ToastComponent.showError(msg);
+                            });
+                        }
                     }
                 }
             }).catch(function() {
                 manageSubmitBtn.disabled = false;
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError('Network error. Please try again.');
+                    getMessage('msg_member_error_network', {}, false).then(function(msg) {
+                        if (msg) ToastComponent.showError(msg);
+                    });
                 }
             });
         });

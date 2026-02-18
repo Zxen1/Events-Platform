@@ -1024,11 +1024,22 @@ if (!empty($savedMapCardIds)) {
   if ($r) { while ($row = $r->fetch_assoc()) $savedSnapshot['post_amenities'][] = $row; $r->free(); }
 }
 $savedJson = json_encode($savedSnapshot, JSON_UNESCAPED_UNICODE);
+if ($savedJson === false) {
+  error_log("[edit-post] json_encode failed for post_id=$postId revision snapshot: " . json_last_error_msg());
+  $savedJson = null;
+}
+$revEditorId = $memberId !== null ? (int)$memberId : 0;
+$revEditorName = !empty($memberName) ? $memberName : 'Unknown';
+$revTitle = !empty($primaryTitle) ? $primaryTitle : '';
 $stmtRev = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at) VALUES (?, ?, ?, ?, 'edit', 'Edited', ?, NOW(), NOW())");
 if ($stmtRev) {
-  $stmtRev->bind_param('isiss', $postId, $primaryTitle, $memberId, $memberName, $savedJson);
-  $stmtRev->execute();
+  $stmtRev->bind_param('isiss', $postId, $revTitle, $revEditorId, $revEditorName, $savedJson);
+  if (!$stmtRev->execute()) {
+    error_log("[edit-post] Failed to insert revision for post_id=$postId: " . $stmtRev->error);
+  }
   $stmtRev->close();
+} else {
+  error_log("[edit-post] Failed to prepare revision INSERT for post_id=$postId: " . $mysqli->error);
 }
 
 // Prune old edit snapshots: keep only the 5 most recent per post (never touch 'create' entries)
