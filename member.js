@@ -368,7 +368,7 @@ const MemberModule = (function() {
         var registerPaymentContainer = document.getElementById('member-register-payment-container');
         if (registerPaymentContainer) {
             var regPaymentRefs = PaymentSubmitComponent.create({
-                baseLabel: 'Supporter payment gateway',
+                baseLabel: 'Pay',
                 isAdmin: false,
                 onSubmitClick: function(e) {
                     e.preventDefault();
@@ -5152,16 +5152,15 @@ const MemberModule = (function() {
         var code = getSiteCurrencyCode();
         if (!code) return;
         if (supporterCustomAmountInput) {
-            supporterCustomAmountInput.placeholder = code + ' 0.00';
+            supporterCustomAmountInput.placeholder = CurrencyComponent.formatWithSymbol(0, code, { trimZeroDecimals: false });
         }
         if (supporterPresetButtons && supporterPresetButtons.length) {
             supporterPresetButtons.forEach(function(btn) {
                 var amt = String(btn.getAttribute('data-amount') || '').trim();
                 if (!amt) return;
-                // Match site-wide formatting used in checkout options: "USD 2.00"
                 var n = parseFloat(amt);
-                var formatted = isFinite(n) ? n.toFixed(2) : amt;
-                btn.textContent = code + ' ' + formatted;
+                if (!isFinite(n)) return;
+                btn.textContent = CurrencyComponent.formatWithSymbol(n, code, { trimZeroDecimals: false });
             });
         }
 
@@ -5178,9 +5177,8 @@ const MemberModule = (function() {
             if (!textEl) return;
             var rawAmt = supporterAmountHiddenInput ? String(supporterAmountHiddenInput.value || '').trim() : '';
             var nAmt = parseFloat(rawAmt);
-            var formattedAmt = isFinite(nAmt) ? nAmt.toFixed(2) : '';
-            if (formattedAmt) {
-                textEl.textContent = baseLabel + ' — ' + code + ' ' + formattedAmt;
+            if (isFinite(nAmt) && nAmt > 0) {
+                textEl.textContent = baseLabel + ' ' + CurrencyComponent.formatWithSymbol(nAmt, code, { trimZeroDecimals: false });
             } else {
                 textEl.textContent = baseLabel;
             }
@@ -5395,9 +5393,8 @@ const MemberModule = (function() {
                 return;
             }
             var nAmt = parseFloat(value);
-            var formattedAmt = isFinite(nAmt) ? nAmt.toFixed(2) : '';
-            if (formattedAmt) {
-                textEl.textContent = baseLabel + ' — ' + code + ' ' + formattedAmt;
+            if (isFinite(nAmt) && nAmt > 0) {
+                textEl.textContent = baseLabel + ' ' + CurrencyComponent.formatWithSymbol(nAmt, code, { trimZeroDecimals: false });
             } else {
                 textEl.textContent = baseLabel;
             }

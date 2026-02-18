@@ -4077,7 +4077,7 @@ const CheckoutOptionsComponent = (function(){
                     var res = computeEventTotal(flagfallPrice, basicDayRate, discountDayRate, eventVenueDays, locationCount, surchargePercent);
                     var primaryDays = res.primaryDays;
                     var price = res.total;
-                    priceText.textContent = buildLocationSummary(primaryDays, locationCount) + ' — ' + (price > 0 ? currency + ' ' + price.toFixed(2) : 'Free');
+                    priceText.textContent = buildLocationSummary(primaryDays, locationCount) + ' — ' + (price > 0 ? CurrencyComponent.formatWithSymbol(price, currency, { trimZeroDecimals: false }) : 'Free');
                 } else {
                     priceText.classList.add('member-checkout-price-display--disabled');
                     priceText.textContent = 'Select session dates for all locations for price';
@@ -4107,7 +4107,7 @@ const CheckoutOptionsComponent = (function(){
                 radio30.required = true;
                 var text30 = document.createElement('span');
                 text30.className = 'member-checkout-duration-text';
-                text30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
+                text30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (price30 > 0 ? CurrencyComponent.formatWithSymbol(price30, currency, { trimZeroDecimals: false }) : 'Free');
                 label30.appendChild(radio30);
                 label30.appendChild(text30);
                 
@@ -4125,7 +4125,7 @@ const CheckoutOptionsComponent = (function(){
                 radio365.required = true;
                 var text365 = document.createElement('span');
                 text365.className = 'member-checkout-duration-text';
-                text365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (price365 > 0 ? currency + ' ' + price365.toFixed(2) : 'Free');
+                text365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (price365 > 0 ? CurrencyComponent.formatWithSymbol(price365, currency, { trimZeroDecimals: false }) : 'Free');
                 label365.appendChild(radio365);
                 label365.appendChild(text365);
                 
@@ -4224,7 +4224,7 @@ const CheckoutOptionsComponent = (function(){
                             var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
                             var curr = card.dataset.currency || null;
                                 var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
-                                priceDisplay.textContent = buildLocationSummary(res.primaryDays, locationCount) + ' — ' + (res.total > 0 ? curr + ' ' + res.total.toFixed(2) : 'Free');
+                                priceDisplay.textContent = buildLocationSummary(res.primaryDays, locationCount) + ' — ' + (res.total > 0 ? CurrencyComponent.formatWithSymbol(res.total, curr, { trimZeroDecimals: false }) : 'Free');
                         }
                     } else {
                         card.classList.add('member-checkout-option--disabled');
@@ -4255,9 +4255,9 @@ const CheckoutOptionsComponent = (function(){
                         var res30 = computeGeneralTotal(flagfall, basicRate, discountRate, 30, locationCount, surchargePercent);
                         var res365 = computeGeneralTotal(flagfall, basicRate, discountRate, 365, locationCount, surchargePercent);
                         if (r30) r30.dataset.price = res30.total.toFixed(2);
-                        if (t30) t30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (res30.total > 0 ? curr + ' ' + res30.total.toFixed(2) : 'Free');
+                        if (t30) t30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (res30.total > 0 ? CurrencyComponent.formatWithSymbol(res30.total, curr, { trimZeroDecimals: false }) : 'Free');
                         if (r365) r365.dataset.price = res365.total.toFixed(2);
-                        if (t365) t365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (res365.total > 0 ? curr + ' ' + res365.total.toFixed(2) : 'Free');
+                        if (t365) t365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (res365.total > 0 ? CurrencyComponent.formatWithSymbol(res365.total, curr, { trimZeroDecimals: false }) : 'Free');
                     });
                 }
                 syncSelectedStyles();
