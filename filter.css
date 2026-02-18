@@ -170,9 +170,11 @@
   margin: 0 -10px;
   height: 30px;
   line-height: 30px;
+  padding-left: 20px;
   background: var(--blue-900);
   color: #fff;
-  text-align: center;
+  text-align: left;
+  box-sizing: border-box;
 }
 .filter-panel-summary--active {
   background: var(--filter-active-color);
