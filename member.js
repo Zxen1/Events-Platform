@@ -370,7 +370,7 @@ const MemberModule = (function() {
         var registerPaymentContainer = document.getElementById('member-register-payment-container');
         if (registerPaymentContainer) {
             var regPaymentRefs = PaymentSubmitComponent.create({
-                baseLabel: 'Pay',
+                baseLabel: 'Register & Pay',
                 isAdmin: false,
                 onSubmitClick: function(e) {
                     e.preventDefault();
