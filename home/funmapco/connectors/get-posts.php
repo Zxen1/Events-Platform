@@ -205,64 +205,59 @@ try {
         $types .= 'ss';
     }
 
-    // User-facing filter conditions (subcategory, keyword, date, price).
-    // For list loads these restrict which posts are returned.
-    // For single-post loads they only affect passes_filter so the post always loads.
-    $isSinglePostLoad = ($postId > 0 || $postKey !== '');
-    $ufWhere = [];
-    $ufParams = [];
-    $ufTypes = '';
-
+    // Subcategory filters
+    //
+    // IMPORTANT:
+    // Clusters + filter counts operate on map cards (`post_map_cards.subcategory_key`).
+    // The zoom 8+ post loader must match that behavior, otherwise category toggles can appear to work
+    // at low zoom (clusters) but not at high zoom (posts list).
     if ($subcategoryKey !== '') {
-        $ufWhere[] = 'mc.subcategory_key = ?';
-        $ufParams[] = $subcategoryKey;
-        $ufTypes .= 's';
+        $where[] = 'mc.subcategory_key = ?';
+        $params[] = $subcategoryKey;
+        $types .= 's';
     } elseif (!empty($subcategoryKeys)) {
         $placeholders = implode(',', array_fill(0, count($subcategoryKeys), '?'));
-        $ufWhere[] = "mc.subcategory_key IN ($placeholders)";
+        $where[] = "mc.subcategory_key IN ($placeholders)";
         foreach ($subcategoryKeys as $k) {
-            $ufParams[] = $k;
-            $ufTypes .= 's';
+            $params[] = $k;
+            $types .= 's';
         }
     }
 
+    // Keyword filter (map card + checkout info)
     if ($keyword !== '') {
         $kw = '%' . $keyword . '%';
-        $ufWhere[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)';
-        $ufParams[] = $kw; $ufParams[] = $kw; $ufParams[] = $kw; $ufParams[] = $kw; $ufParams[] = $kw; $ufParams[] = $kw;
-        $ufTypes .= 'ssssss';
+        $where[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)';
+        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
+        $types .= 'ssssss';
     }
 
+    // Date range filter (correct: uses post_sessions)
     if ($dateStart !== '' || $dateEnd !== '') {
         $start = $dateStart !== '' ? $dateStart : $dateEnd;
         $end = $dateEnd !== '' ? $dateEnd : $dateStart;
         if ($start === '' || $end === '') { $start = $start ?: $end; $end = $start; }
-        $ufWhere[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
-        $ufParams[] = $start;
-        $ufParams[] = $end;
-        $ufTypes .= 'ss';
+        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
+        $params[] = $start;
+        $params[] = $end;
+        $types .= 'ss';
     }
 
+    // Price range filter (correct: uses pricing tables)
     if ($minPrice !== null || $maxPrice !== null) {
         if ($minPrice !== null && $maxPrice !== null) {
-            $ufWhere[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
-            $ufParams[] = $minPrice; $ufParams[] = $maxPrice; $ufParams[] = $minPrice; $ufParams[] = $maxPrice;
-            $ufTypes .= 'dddd';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
+            $params[] = $minPrice; $params[] = $maxPrice; $params[] = $minPrice; $params[] = $maxPrice;
+            $types .= 'dddd';
         } elseif ($minPrice !== null) {
-            $ufWhere[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price >= ?))';
-            $ufParams[] = $minPrice; $ufParams[] = $minPrice;
-            $ufTypes .= 'dd';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price >= ?))';
+            $params[] = $minPrice; $params[] = $minPrice;
+            $types .= 'dd';
         } elseif ($maxPrice !== null) {
-            $ufWhere[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price <= ?))';
-            $ufParams[] = $maxPrice; $ufParams[] = $maxPrice;
-            $ufTypes .= 'dd';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price <= ?))';
+            $params[] = $maxPrice; $params[] = $maxPrice;
+            $types .= 'dd';
         }
-    }
-
-    if (!$isSinglePostLoad) {
-        $where = array_merge($where, $ufWhere);
-        $params = array_merge($params, $ufParams);
-        $types .= $ufTypes;
     }
 
     // Single post by ID filter
@@ -286,10 +281,10 @@ try {
         $types .= 'i';
     }
 
-    // Snapshot for passes_filter: base + user-facing filters, no bounds.
-    $filterWhere = array_merge($where, $isSinglePostLoad ? $ufWhere : []);
-    $filterParams = array_merge($params, $isSinglePostLoad ? $ufParams : []);
-    $filterTypes = $types . ($isSinglePostLoad ? $ufTypes : '');
+    // Snapshot user-facing filters (before bounds) for passes_filter check in Step 1b
+    $filterWhere = $where;
+    $filterParams = $params;
+    $filterTypes = $types;
 
     // Bounds filter (for map viewport)
     if ($bounds !== null) {
@@ -350,7 +345,7 @@ try {
     // joined map cards for those posts without a row-limit.
     // ---------------------------------------------------------------------
 
-    // 1) Fetch page of post IDs (or, for single-post fetch, fetch matching id(s) without LIMIT)
+    // 1) Fetch page of post IDs (pagination via DISTINCT p.id + LIMIT)
     $pagePostIds = [];
     if ($postId > 0 || $postKey !== '') {
         // Single post fetch: do NOT apply LIMIT/OFFSET; return all map cards for that post.
@@ -412,7 +407,7 @@ try {
         exit;
     }
 
-    // 1b) Collect which mc.id values pass user-facing filters for these posts.
+    // 1b) Collect which mc.id values passed user-facing filters (excluding bounds) for these posts.
     $matchedMapCardIds = [];
     $mcIdPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
     $mcIdSql = "
@@ -603,7 +598,7 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
-                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || (empty($matchedMapCardIds) && empty($ufWhere)) ? 1 : 0,
+                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || empty($matchedMapCardIds) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below

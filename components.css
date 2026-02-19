@@ -2615,7 +2615,7 @@
 }
 
 .component-toast--warning {
-    background: #ff9800;
+    background: var(--filter-active-color);
     color: #fff;
 }
 
@@ -3350,9 +3350,9 @@ body.image-modal-open > *:not(.image-modal) {
   text-align: left;
 }
 
+/* Filtered-out location (subcategory not in active filters) */
 .post-location-option--filtered {
   opacity: 0.4;
-  filter: grayscale(1);
   cursor: default;
 }
 

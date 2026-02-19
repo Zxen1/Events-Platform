@@ -10437,6 +10437,7 @@ const PostLocationMapComponent = (function() {
         var ownerId = 'post-location-map-' + postId + '-' + instanceCounter;
 
         // Filter valid locations
+        var isLocationFiltered = options.isLocationFiltered || null;
         var validLocs = [];
         for (var i = 0; i < locations.length; i++) {
             var loc = locations[i];
@@ -10447,7 +10448,7 @@ const PostLocationMapComponent = (function() {
                     lat: lat,
                     lng: lng,
                     label: loc.venue_name || '',
-                    filtered: loc.passes_filter === 0
+                    filtered: isLocationFiltered ? isLocationFiltered(loc) : false
                 });
             }
         }
@@ -10542,15 +10543,14 @@ const PostLocationComponent = (function() {
     /**
      * Render a single location option HTML
      */
-    function renderLocationOption(loc, index, isSelected, escapeHtml) {
+    function renderLocationOption(loc, index, isSelected, escapeHtml, isFiltered) {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
-        var filtered = loc.passes_filter === 0;
 
         var cls = 'post-location-option';
         if (isSelected) cls += ' post-location-highlighted';
-        if (filtered) cls += ' post-location-option--filtered';
+        if (isFiltered) cls += ' post-location-option--filtered';
 
         var html = [];
         html.push('<div class="' + cls + '" data-index="' + index + '">');
@@ -10571,6 +10571,7 @@ const PostLocationComponent = (function() {
         var postId = options.postId || '';
         var locationList = options.locationList || [];
         var escapeHtml = options.escapeHtml || function(s) { return s; };
+        var isLocationFiltered = options.isLocationFiltered || null;
 
         if (!locationList.length) return '';
 
@@ -10596,7 +10597,8 @@ const PostLocationComponent = (function() {
         html.push('<div class="post-location-options">');
         html.push(PostLocationMapComponent.render({ postId: postId }));
         for (var i = 0; i < locationList.length; i++) {
-            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
+            var filtered = isLocationFiltered ? isLocationFiltered(locationList[i]) : false;
+            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml, filtered));
         }
         html.push('</div>');
 
@@ -10673,6 +10675,22 @@ const PostLocationComponent = (function() {
             });
         }
 
+        function refreshFilterState() {
+            var isLocationFiltered = callbacks && callbacks.isLocationFiltered;
+            if (!isLocationFiltered) return;
+            var locationList = getLocationListForUi();
+            locationOptions.forEach(function(opt) {
+                var index = parseInt(opt.dataset.index, 10);
+                var loc = locationList[index];
+                if (!loc) return;
+                if (isLocationFiltered(loc)) {
+                    opt.classList.add('post-location-option--filtered');
+                } else {
+                    opt.classList.remove('post-location-option--filtered');
+                }
+            });
+        }
+
         // Button click handler
         locationBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -10681,6 +10699,7 @@ const PostLocationComponent = (function() {
             if (isOpen) {
                 closeLocationDropdown();
             } else {
+                refreshFilterState();
                 locationBtn.classList.add('post-location-button--open');
                 if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
                 
@@ -10693,6 +10712,7 @@ const PostLocationComponent = (function() {
                         locations: locationList,
                         iconUrl: iconUrl,
                         activeIndex: locationSelectedIndex,
+                        isLocationFiltered: callbacks && callbacks.isLocationFiltered ? callbacks.isLocationFiltered : null,
                         onMarkerClick: function(index) {
                             var opt = locationOptions[index];
                             if (opt) opt.click();
@@ -10850,6 +10870,7 @@ const PostLocationComponent = (function() {
         // Return API for cleanup
         return {
             close: closeLocationDropdown,
+            refreshFilterState: refreshFilterState,
             destroy: function() {
                 document.removeEventListener('click', clickOutsideHandler);
                 closeLocationDropdown();
