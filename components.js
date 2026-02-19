@@ -8982,15 +8982,12 @@ var MiniMap = (function() {
                         if (index === activeIndex) {
                             el.className += ' post-location-map-marker--current';
                         }
-                        if (loc.filtered) {
-                            el.className += ' post-location-map-marker--filtered';
-                        }
                         el.style.width = iconSize + 'px';
                         el.style.height = iconSize + 'px';
                         el.style.backgroundImage = 'url(' + iconUrl + ')';
                         el.style.backgroundSize = 'contain';
                         el.style.backgroundRepeat = 'no-repeat';
-                        el.style.cursor = loc.filtered ? 'default' : 'pointer';
+                        el.style.cursor = 'pointer';
                         el.setAttribute('data-index', index);
 
                         // Hover events
@@ -10437,7 +10434,6 @@ const PostLocationMapComponent = (function() {
         var ownerId = 'post-location-map-' + postId + '-' + instanceCounter;
 
         // Filter valid locations
-        var isLocationFiltered = options.isLocationFiltered || null;
         var validLocs = [];
         for (var i = 0; i < locations.length; i++) {
             var loc = locations[i];
@@ -10447,8 +10443,7 @@ const PostLocationMapComponent = (function() {
                 validLocs.push({
                     lat: lat,
                     lng: lng,
-                    label: loc.venue_name || '',
-                    filtered: isLocationFiltered ? isLocationFiltered(loc) : false
+                    label: loc.venue_name || ''
                 });
             }
         }
@@ -10543,17 +10538,13 @@ const PostLocationComponent = (function() {
     /**
      * Render a single location option HTML
      */
-    function renderLocationOption(loc, index, isSelected, escapeHtml, isFiltered) {
+    function renderLocationOption(loc, index, isSelected, escapeHtml) {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
 
-        var cls = 'post-location-option';
-        if (isSelected) cls += ' post-location-highlighted';
-        if (isFiltered) cls += ' post-location-option--filtered';
-
         var html = [];
-        html.push('<div class="' + cls + '" data-index="' + index + '">');
+        html.push('<div class="post-location-option' + (isSelected ? ' post-location-highlighted' : '') + '" data-index="' + index + '">');
         html.push('<div class="post-location-option-main">' + escapeHtml(venueName) + '</div>');
         if (addressLine || city) {
             var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
@@ -10571,7 +10562,6 @@ const PostLocationComponent = (function() {
         var postId = options.postId || '';
         var locationList = options.locationList || [];
         var escapeHtml = options.escapeHtml || function(s) { return s; };
-        var isLocationFiltered = options.isLocationFiltered || null;
 
         if (!locationList.length) return '';
 
@@ -10597,8 +10587,7 @@ const PostLocationComponent = (function() {
         html.push('<div class="post-location-options">');
         html.push(PostLocationMapComponent.render({ postId: postId }));
         for (var i = 0; i < locationList.length; i++) {
-            var filtered = isLocationFiltered ? isLocationFiltered(locationList[i]) : false;
-            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml, filtered));
+            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
         }
         html.push('</div>');
 
@@ -10695,7 +10684,6 @@ const PostLocationComponent = (function() {
                         locations: locationList,
                         iconUrl: iconUrl,
                         activeIndex: locationSelectedIndex,
-                        isLocationFiltered: callbacks && callbacks.isLocationFiltered ? callbacks.isLocationFiltered : null,
                         onMarkerClick: function(index) {
                             var opt = locationOptions[index];
                             if (opt) opt.click();
@@ -10730,17 +10718,6 @@ const PostLocationComponent = (function() {
                 var locationList = getLocationListForUi();
                 var loc = locationList[index];
                 if (!loc) return;
-
-                if (opt.classList.contains('post-location-option--filtered')) {
-                    if (typeof window.getMessage === 'function') {
-                        window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
-                            if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
-                                ToastComponent.showWarning(msg);
-                            }
-                        });
-                    }
-                    return;
-                }
 
                 var isInPostEditor = !!(wrap.closest && wrap.closest('#member-tab-posteditor'));
                 var isAlreadySelected = (index === locationSelectedIndex);
