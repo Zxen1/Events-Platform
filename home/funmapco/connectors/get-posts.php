@@ -614,7 +614,7 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
-                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || empty($matchedMapCardIds) ? 1 : 0,
+                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || (empty($matchedMapCardIds) && empty($ufWhere)) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below
