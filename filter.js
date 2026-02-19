@@ -1133,7 +1133,9 @@ const FilterModule = (function() {
         
         if (daterangeClear) {
             daterangeClear.addEventListener('click', function() {
+                if (expiredInput) expiredInput.checked = false;
                 clearDateRange();
+                rebuildCalendar();
                 applyFilters();
                 updateClearButtons();
             });
@@ -1307,18 +1309,26 @@ const FilterModule = (function() {
         expiredBtn.className = 'filter-expired-btn button-class-2';
         expiredBtn.type = 'button';
         expiredBtn.textContent = 'Show Expired Events';
-        if (expiredInput && expiredInput.checked) {
+        if (expiredInput && expiredInput.checked && expiredStateBeforeOpen) {
             expiredBtn.classList.add('filter-expired-btn--active');
+        } else if (expiredInput && expiredInput.checked) {
+            expiredBtn.classList.add('filter-expired-btn--selected');
         }
         expiredBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (expiredInput) {
                 expiredInput.checked = !expiredInput.checked;
             }
-            expiredBtn.classList.toggle('filter-expired-btn--active', expiredInput && expiredInput.checked);
+            var isOn = expiredInput && expiredInput.checked;
+            expiredBtn.classList.remove('filter-expired-btn--active', 'filter-expired-btn--selected');
+            if (isOn && expiredStateBeforeOpen) {
+                expiredBtn.classList.add('filter-expired-btn--active');
+            } else if (isOn) {
+                expiredBtn.classList.add('filter-expired-btn--selected');
+            }
             rebuildCalendar();
             
-            if (expiredInput && expiredInput.checked) {
+            if (isOn) {
                 var now = new Date();
                 var pastDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
                 var futureDate = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
@@ -1479,7 +1489,13 @@ const FilterModule = (function() {
     function syncExpiredToggleUi() {
         if (!expiredInput) return;
         var btn = calendarContainer ? calendarContainer.querySelector('.filter-expired-btn') : null;
-        if (btn) btn.classList.toggle('filter-expired-btn--active', !!expiredInput.checked);
+        if (!btn) return;
+        btn.classList.remove('filter-expired-btn--active', 'filter-expired-btn--selected');
+        if (expiredInput.checked && expiredStateBeforeOpen) {
+            btn.classList.add('filter-expired-btn--active');
+        } else if (expiredInput.checked) {
+            btn.classList.add('filter-expired-btn--selected');
+        }
     }
 
 
