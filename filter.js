@@ -1144,7 +1144,8 @@ const FilterModule = (function() {
         // Close calendar when clicking outside
         document.addEventListener('click', function(e) {
             if (calendarContainer && calendarContainer.classList.contains('filter-calendar-container--open')) {
-                if (!calendarContainer.contains(e.target) && e.target !== daterangeInput) {
+                var isClearBtn = daterangeClear && (daterangeClear === e.target || daterangeClear.contains(e.target));
+                if (!calendarContainer.contains(e.target) && e.target !== daterangeInput && !isClearBtn) {
                     if (expiredInput) expiredInput.checked = expiredStateBeforeOpen;
                     setDaterangeInputValue(dateStart, dateEnd);
                     if (calendarInstance && calendarInstance.clearSelection) {
@@ -1415,6 +1416,7 @@ const FilterModule = (function() {
         if (!calendarContainer) return;
         expiredStateBeforeOpen = expiredInput ? expiredInput.checked : false;
         calendarContainer.classList.add('filter-calendar-container--open');
+        syncExpiredToggleUi();
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'true');
         }
