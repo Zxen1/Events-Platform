@@ -213,12 +213,6 @@ try {
     $ufParams = [];
     $ufTypes = '';
 
-    // Subcategory filters
-    //
-    // IMPORTANT:
-    // Clusters + filter counts operate on map cards (`post_map_cards.subcategory_key`).
-    // The zoom 8+ post loader must match that behavior, otherwise category toggles can appear to work
-    // at low zoom (clusters) but not at high zoom (posts list).
     if ($subcategoryKey !== '') {
         $ufWhere[] = 'mc.subcategory_key = ?';
         $ufParams[] = $subcategoryKey;
@@ -232,7 +226,6 @@ try {
         }
     }
 
-    // Keyword filter (map card + checkout info)
     if ($keyword !== '') {
         $kw = '%' . $keyword . '%';
         $ufWhere[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)';
@@ -240,7 +233,6 @@ try {
         $ufTypes .= 'ssssss';
     }
 
-    // Date range filter (correct: uses post_sessions)
     if ($dateStart !== '' || $dateEnd !== '') {
         $start = $dateStart !== '' ? $dateStart : $dateEnd;
         $end = $dateEnd !== '' ? $dateEnd : $dateStart;
@@ -251,7 +243,6 @@ try {
         $ufTypes .= 'ss';
     }
 
-    // Price range filter (correct: uses pricing tables)
     if ($minPrice !== null || $maxPrice !== null) {
         if ($minPrice !== null && $maxPrice !== null) {
             $ufWhere[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';

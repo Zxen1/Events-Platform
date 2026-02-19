@@ -8982,15 +8982,15 @@ var MiniMap = (function() {
                         if (index === activeIndex) {
                             el.className += ' post-location-map-marker--current';
                         }
-                        if (loc.isBlocked) {
-                            el.className += ' post-location-map-marker--blocked';
+                        if (loc.filtered) {
+                            el.className += ' post-location-map-marker--filtered';
                         }
                         el.style.width = iconSize + 'px';
                         el.style.height = iconSize + 'px';
                         el.style.backgroundImage = 'url(' + iconUrl + ')';
                         el.style.backgroundSize = 'contain';
                         el.style.backgroundRepeat = 'no-repeat';
-                        el.style.cursor = loc.isBlocked ? 'default' : 'pointer';
+                        el.style.cursor = loc.filtered ? 'default' : 'pointer';
                         el.setAttribute('data-index', index);
 
                         // Hover events
@@ -10395,12 +10395,6 @@ const PostLocationMapComponent = (function() {
 
     var instanceCounter = 0;
 
-    function isLocationFiltered(loc) {
-        if (!loc) return false;
-        var v = loc.passes_filter;
-        return v === 0 || v === '0' || v === false;
-    }
-
     /**
      * Render the map container HTML
      * @param {Object} options
@@ -10453,7 +10447,7 @@ const PostLocationMapComponent = (function() {
                     lat: lat,
                     lng: lng,
                     label: loc.venue_name || '',
-                    isBlocked: isLocationFiltered(loc)
+                    filtered: loc.passes_filter === 0
                 });
             }
         }
@@ -10545,12 +10539,6 @@ const PostLocationMapComponent = (function() {
 const PostLocationComponent = (function() {
     'use strict';
 
-    function isLocationFiltered(loc) {
-        if (!loc) return false;
-        var v = loc.passes_filter;
-        return v === 0 || v === '0' || v === false;
-    }
-
     /**
      * Render a single location option HTML
      */
@@ -10558,11 +10546,11 @@ const PostLocationComponent = (function() {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
-        var filtered = isLocationFiltered(loc);
+        var filtered = loc.passes_filter === 0;
 
         var cls = 'post-location-option';
         if (isSelected) cls += ' post-location-highlighted';
-        if (filtered) cls += ' post-location-option--blocked';
+        if (filtered) cls += ' post-location-option--filtered';
 
         var html = [];
         html.push('<div class="' + cls + '" data-index="' + index + '">');
@@ -10685,34 +10673,6 @@ const PostLocationComponent = (function() {
             });
         }
 
-        function showLocationBlockedToast() {
-            if (typeof window.getMessage !== 'function') return;
-            window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
-                if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
-                    ToastComponent.showWarning(msg);
-                }
-            });
-        }
-
-        function syncOptionBlockedState(locationList) {
-            locationOptions.forEach(function(opt, idx) {
-                var loc = locationList[idx];
-                var blocked = isLocationFiltered(loc);
-                opt.classList.toggle('post-location-option--blocked', blocked);
-            });
-        }
-
-        function resolveLocationFilterState(locationList, done) {
-            for (var i = 0; i < locationList.length; i++) {
-                var loc = locationList[i];
-                if (!loc) continue;
-                if (loc.passes_filter === undefined || loc.passes_filter === null) {
-                    loc.passes_filter = 1;
-                }
-            }
-            done();
-        }
-
         // Button click handler
         locationBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -10727,31 +10687,23 @@ const PostLocationComponent = (function() {
                 if (locationMapContainer) {
                     var locationList = getLocationListForUi();
                     var iconUrl = post.subcategory_icon_url || '';
-
-                    resolveLocationFilterState(locationList, function() {
-                        syncOptionBlockedState(locationList);
-                        locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
-                            postId: post.id,
-                            locations: locationList,
-                            iconUrl: iconUrl,
-                            activeIndex: locationSelectedIndex,
-                            onMarkerClick: function(index) {
-                                var markerLoc = locationList[index];
-                                if (isLocationFiltered(markerLoc)) {
-                                    showLocationBlockedToast();
-                                    return;
-                                }
-                                var opt = locationOptions[index];
-                                if (opt) opt.click();
-                            },
-                            onMarkerHover: function(index) {
-                                highlightListItem(index);
-                            },
-                            onDisconnect: function() {
-                                closeLocationDropdown();
-                            },
-                            onReady: function() {}
-                        });
+                    
+                    locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
+                        postId: post.id,
+                        locations: locationList,
+                        iconUrl: iconUrl,
+                        activeIndex: locationSelectedIndex,
+                        onMarkerClick: function(index) {
+                            var opt = locationOptions[index];
+                            if (opt) opt.click();
+                        },
+                        onMarkerHover: function(index) {
+                            highlightListItem(index);
+                        },
+                        onDisconnect: function() {
+                            closeLocationDropdown();
+                        },
+                        onReady: function() {}
                     });
                 }
             }
@@ -10776,8 +10728,14 @@ const PostLocationComponent = (function() {
                 var loc = locationList[index];
                 if (!loc) return;
 
-                if (opt.classList.contains('post-location-option--blocked')) {
-                    showLocationBlockedToast();
+                if (opt.classList.contains('post-location-option--filtered')) {
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
+                                ToastComponent.showWarning(msg);
+                            }
+                        });
+                    }
                     return;
                 }
 
