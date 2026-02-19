@@ -2971,6 +2971,23 @@ const PostModule = (function() {
       locationList = [activeLoc].concat(rest);
     }
 
+    // Build subcategory filter check (mirrors the map-card marker filter at line ~1830)
+    var allowedSubKeys = null;
+    try {
+      if (currentFilters && Array.isArray(currentFilters.subcategoryKeys)) {
+        allowedSubKeys = new Set(currentFilters.subcategoryKeys.map(function(v) { return String(v); }));
+      }
+    } catch (_eSubKeys) {
+      allowedSubKeys = null;
+    }
+    function isLocationFiltered(loc) {
+      if (!allowedSubKeys) return false;
+      var mcKey = (loc.subcategory_key !== undefined && loc.subcategory_key !== null)
+        ? String(loc.subcategory_key)
+        : String(post.subcategory_key || '');
+      return !mcKey || !allowedSubKeys.has(mcKey);
+    }
+
     // Get display data from first location
     var title = activeLoc.title || post.checkout_title || '';
     var description = activeLoc.description || '';
@@ -3139,7 +3156,8 @@ const PostModule = (function() {
         PostLocationComponent.render({
           postId: post.id,
           locationList: locationList,
-          escapeHtml: escapeHtml
+          escapeHtml: escapeHtml,
+          isLocationFiltered: isLocationFiltered
         }),
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
@@ -3390,6 +3408,7 @@ const PostModule = (function() {
         }
         return 0;
       },
+      isLocationFiltered: isLocationFiltered,
       buildPostDetail: buildPostDetail,
       addToRecentHistory: addToRecentHistory,
       openPost: openPost,

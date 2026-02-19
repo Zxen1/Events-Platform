@@ -10538,13 +10538,17 @@ const PostLocationComponent = (function() {
     /**
      * Render a single location option HTML
      */
-    function renderLocationOption(loc, index, isSelected, escapeHtml) {
+    function renderLocationOption(loc, index, isSelected, escapeHtml, isFiltered) {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
 
+        var cls = 'post-location-option';
+        if (isSelected) cls += ' post-location-highlighted';
+        if (isFiltered) cls += ' post-location-option--filtered';
+
         var html = [];
-        html.push('<div class="post-location-option' + (isSelected ? ' post-location-highlighted' : '') + '" data-index="' + index + '">');
+        html.push('<div class="' + cls + '" data-index="' + index + '">');
         html.push('<div class="post-location-option-main">' + escapeHtml(venueName) + '</div>');
         if (addressLine || city) {
             var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
@@ -10562,6 +10566,7 @@ const PostLocationComponent = (function() {
         var postId = options.postId || '';
         var locationList = options.locationList || [];
         var escapeHtml = options.escapeHtml || function(s) { return s; };
+        var isLocationFiltered = options.isLocationFiltered || null;
 
         if (!locationList.length) return '';
 
@@ -10587,7 +10592,8 @@ const PostLocationComponent = (function() {
         html.push('<div class="post-location-options">');
         html.push(PostLocationMapComponent.render({ postId: postId }));
         for (var i = 0; i < locationList.length; i++) {
-            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml));
+            var filtered = isLocationFiltered ? isLocationFiltered(locationList[i]) : false;
+            html.push(renderLocationOption(locationList[i], i, i === 0, escapeHtml, filtered));
         }
         html.push('</div>');
 
@@ -10718,6 +10724,17 @@ const PostLocationComponent = (function() {
                 var locationList = getLocationListForUi();
                 var loc = locationList[index];
                 if (!loc) return;
+
+                if (opt.classList.contains('post-location-option--filtered')) {
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent && typeof ToastComponent.show === 'function') {
+                                ToastComponent.show(msg);
+                            }
+                        });
+                    }
+                    return;
+                }
 
                 var isInPostEditor = !!(wrap.closest && wrap.closest('#member-tab-posteditor'));
                 var isAlreadySelected = (index === locationSelectedIndex);
