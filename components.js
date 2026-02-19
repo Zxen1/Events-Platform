@@ -10691,6 +10691,7 @@ const PostLocationComponent = (function() {
             });
         }
 
+
         // Button click handler
         locationBtn.addEventListener('click', function(e) {
             e.stopPropagation();

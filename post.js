@@ -2276,12 +2276,44 @@ const PostModule = (function() {
    * Apply filters to the cached posts
    * @param {Object} filterState - Filter state from FilterModule
    */
+  function syncAllOpenPostFilters() {
+    document.querySelectorAll('.post[data-id]').forEach(function(openWrap) {
+      var postId = openWrap.dataset.id;
+      if (!postId) return;
+      loadPostById(postId).then(function(freshPost) {
+        if (!freshPost || !freshPost.map_cards) return;
+        var storedList = openWrap.__postLocationList;
+        if (!storedList) return;
+        var freshById = {};
+        freshPost.map_cards.forEach(function(mc) { if (mc && mc.id != null) freshById[mc.id] = mc; });
+        storedList.forEach(function(loc) {
+          var fresh = freshById[loc.id];
+          if (fresh) loc.passes_filter = fresh.passes_filter;
+        });
+        var locContainer = openWrap.querySelector('.post-location-container');
+        if (!locContainer) return;
+        locContainer.querySelectorAll('.post-location-option').forEach(function(opt) {
+          var idx = parseInt(opt.dataset.index, 10);
+          var loc = storedList[idx];
+          if (!loc) return;
+          if (loc.passes_filter === 0) {
+            opt.classList.add('post-location-option--filtered');
+          } else {
+            opt.classList.remove('post-location-option--filtered');
+          }
+        });
+      });
+    });
+  }
+
   function applyFilters(filterState) {
     currentFilters = filterState;
     // Persist to localStorage so map clusters (which read localStorage) update even if filter panel closes.
     try {
       localStorage.setItem('funmap_filters', JSON.stringify(filterState || {}));
     } catch (_eStore) {}
+
+    syncAllOpenPostFilters();
 
     // At zoom >= threshold, results must be filtered server-side (correct tables: sessions/pricing/etc).
     var threshold = getPostsMinZoom();
