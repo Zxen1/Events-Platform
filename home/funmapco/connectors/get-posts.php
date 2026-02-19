@@ -339,7 +339,7 @@ try {
     // joined map cards for those posts without a row-limit.
     // ---------------------------------------------------------------------
 
-    // 1) Fetch page of post IDs (or, for single-post fetch, fetch matching id(s) without LIMIT)
+    // 1) Fetch page of post IDs (pagination via DISTINCT p.id + LIMIT)
     $pagePostIds = [];
     if ($postId > 0 || $postKey !== '') {
         // Single post fetch: do NOT apply LIMIT/OFFSET; return all map cards for that post.
@@ -399,6 +399,32 @@ try {
         ob_end_clean();
         echo $json;
         exit;
+    }
+
+    // 1b) Collect which mc.id values passed step 1's filters for these posts.
+    //     Reuses the same WHERE clause so any future filter additions automatically propagate.
+    $matchedMapCardIds = [];
+    $mcIdPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
+    $mcIdSql = "
+        SELECT mc.id
+        FROM `posts` p
+        LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+        LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
+        WHERE p.id IN ($mcIdPlaceholders) AND {$whereClause}
+    ";
+    $mcIdStmt = $mysqli->prepare($mcIdSql);
+    if ($mcIdStmt) {
+        $mcIdParams = array_merge($pagePostIds, $params);
+        $mcIdTypes = str_repeat('i', count($pagePostIds)) . $types;
+        bind_params_array($mcIdStmt, $mcIdTypes, $mcIdParams);
+        $mcIdStmt->execute();
+        $mcIdRes = $mcIdStmt->get_result();
+        while ($mcIdRes && ($mr = $mcIdRes->fetch_assoc())) {
+            if ($mr['id'] !== null) {
+                $matchedMapCardIds[(int)$mr['id']] = true;
+            }
+        }
+        $mcIdStmt->close();
     }
 
     // 2) Fetch posts + ALL their map cards (no LIMIT; constrained by p.id IN (...))
@@ -567,6 +593,7 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
+                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || empty($matchedMapCardIds) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below

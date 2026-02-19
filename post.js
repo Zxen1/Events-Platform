@@ -2971,21 +2971,8 @@ const PostModule = (function() {
       locationList = [activeLoc].concat(rest);
     }
 
-    // Build subcategory filter check (mirrors the map-card marker filter at line ~1830)
-    var allowedSubKeys = null;
-    try {
-      if (currentFilters && Array.isArray(currentFilters.subcategoryKeys)) {
-        allowedSubKeys = new Set(currentFilters.subcategoryKeys.map(function(v) { return String(v); }));
-      }
-    } catch (_eSubKeys) {
-      allowedSubKeys = null;
-    }
     function isLocationFiltered(loc) {
-      if (!allowedSubKeys) return false;
-      var mcKey = (loc.subcategory_key !== undefined && loc.subcategory_key !== null)
-        ? String(loc.subcategory_key)
-        : String(post.subcategory_key || '');
-      return !mcKey || !allowedSubKeys.has(mcKey);
+      return loc.passes_filter === 0;
     }
 
     // Get display data from first location
@@ -3274,7 +3261,7 @@ const PostModule = (function() {
     contentWrap.appendChild(postBody);
 
     // Event handlers
-    setupPostDetailEvents(wrap, post);
+    setupPostDetailEvents(wrap, post, isLocationFiltered);
 
     return wrap;
   }
@@ -3335,7 +3322,7 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post) {
+  function setupPostDetailEvents(wrap, post, isLocationFiltered) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
@@ -4967,7 +4954,23 @@ const PostModule = (function() {
     if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
       authOpts.headers = { 'X-Member-Auth': '1' };
     }
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1', authOpts)
+    var params = new URLSearchParams();
+    params.append('limit', '1');
+    params.append('post_id', String(postId));
+    params.append('full', '1');
+    var f = currentFilters;
+    if (f) {
+      if (f.keyword) params.append('keyword', String(f.keyword));
+      if (f.minPrice) params.append('min_price', String(f.minPrice));
+      if (f.maxPrice) params.append('max_price', String(f.maxPrice));
+      if (f.dateStart) params.append('date_start', String(f.dateStart));
+      if (f.dateEnd) params.append('date_end', String(f.dateEnd));
+      if (f.expired) params.append('expired', '1');
+      if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
+        params.append('subcategory_keys', f.subcategoryKeys.map(String).join(','));
+      }
+    }
+    return fetch('/gateway.php?action=get-posts&' + params.toString(), authOpts)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
