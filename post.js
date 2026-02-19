@@ -1657,6 +1657,34 @@ const PostModule = (function() {
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
         postListEl.appendChild(preservedOpenSlot);
+
+        // Sync passes_filter from fresh server data onto the open post's stored map_cards
+        try {
+          var openWrap = preservedOpenSlot.querySelector('.post');
+          var storedList = openWrap ? openWrap.__postLocationList : null;
+          if (storedList && post.map_cards) {
+            var freshById = {};
+            post.map_cards.forEach(function(mc) { if (mc && mc.id != null) freshById[mc.id] = mc; });
+            storedList.forEach(function(loc) {
+              var fresh = freshById[loc.id];
+              if (fresh) loc.passes_filter = fresh.passes_filter;
+            });
+          }
+          var locContainer = openWrap ? openWrap.querySelector('.post-location-container') : null;
+          if (locContainer) {
+            locContainer.querySelectorAll('.post-location-option').forEach(function(opt) {
+              var idx = parseInt(opt.dataset.index, 10);
+              var loc = storedList && storedList[idx];
+              if (!loc) return;
+              if (loc.passes_filter === 0) {
+                opt.classList.add('post-location-option--filtered');
+              } else {
+                opt.classList.remove('post-location-option--filtered');
+              }
+            });
+          }
+        } catch (_eSyncFilter) {}
+
         return;
       }
       var card = renderPostCard(post);
@@ -1857,6 +1885,8 @@ const PostModule = (function() {
       } else if (markerData && markerData.id !== undefined && markerData.id !== null) {
         ids = [String(markerData.id)];
       }
+      var pf = (markerData && markerData._mapCard && markerData._mapCard.passes_filter != null)
+        ? String(markerData._mapCard.passes_filter) : '';
       return [
         markerData && markerData.isMultiPost ? '1' : '0',
         ids.join(','),
@@ -1864,7 +1894,8 @@ const PostModule = (function() {
         markerData && markerData.venue ? String(markerData.venue) : '',
         markerData && markerData.sub ? String(markerData.sub) : '',
         markerData && markerData.iconUrl ? String(markerData.iconUrl) : '',
-        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : ''
+        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : '',
+        pf
       ].join('|');
     }
 

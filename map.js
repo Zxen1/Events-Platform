@@ -778,6 +778,12 @@ const MapModule = (function() {
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
+      
+      /* Filtered-out map card (location does not pass active filters) */
+      .map-card-container--filtered {
+        filter: grayscale(1);
+        opacity: 0.5;
+      }
     `;
     
     const style = document.createElement('style');
@@ -2310,6 +2316,9 @@ const MapModule = (function() {
     // Create marker element
     const el = document.createElement('div');
     el.className = 'map-card-container';
+    if (post._mapCard && post._mapCard.passes_filter === 0) {
+      el.classList.add('map-card-container--filtered');
+    }
     el.innerHTML = buildMapCardHTML(post, 'small');
 
     // Create Mapbox marker

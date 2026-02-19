@@ -10670,6 +10670,22 @@ const PostLocationComponent = (function() {
             });
         }
 
+        function refreshFilterState() {
+            var isLocationFiltered = callbacks && callbacks.isLocationFiltered;
+            if (!isLocationFiltered) return;
+            var locationList = getLocationListForUi();
+            locationOptions.forEach(function(opt) {
+                var index = parseInt(opt.dataset.index, 10);
+                var loc = locationList[index];
+                if (!loc) return;
+                if (isLocationFiltered(loc)) {
+                    opt.classList.add('post-location-option--filtered');
+                } else {
+                    opt.classList.remove('post-location-option--filtered');
+                }
+            });
+        }
+
         // Button click handler
         locationBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -10678,6 +10694,7 @@ const PostLocationComponent = (function() {
             if (isOpen) {
                 closeLocationDropdown();
             } else {
+                refreshFilterState();
                 locationBtn.classList.add('post-location-button--open');
                 if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
                 
@@ -10728,8 +10745,8 @@ const PostLocationComponent = (function() {
                 if (opt.classList.contains('post-location-option--filtered')) {
                     if (typeof window.getMessage === 'function') {
                         window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
-                            if (msg && window.ToastComponent && typeof ToastComponent.show === 'function') {
-                                ToastComponent.show(msg);
+                            if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
+                                ToastComponent.showWarning(msg);
                             }
                         });
                     }
@@ -10847,6 +10864,7 @@ const PostLocationComponent = (function() {
         // Return API for cleanup
         return {
             close: closeLocationDropdown,
+            refreshFilterState: refreshFilterState,
             destroy: function() {
                 document.removeEventListener('click', clickOutsideHandler);
                 closeLocationDropdown();
