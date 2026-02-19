@@ -10694,6 +10694,94 @@ const PostLocationComponent = (function() {
             });
         }
 
+        function getSavedFilters() {
+            try {
+                var raw = localStorage.getItem('funmap_filters');
+                if (!raw) return null;
+                var parsed = JSON.parse(raw);
+                return parsed && typeof parsed === 'object' ? parsed : null;
+            } catch (_eFilters) {
+                return null;
+            }
+        }
+
+        function hasActiveUserFilters(filters) {
+            if (!filters || typeof filters !== 'object') return false;
+            if (filters.keyword && String(filters.keyword).trim() !== '') return true;
+            if (filters.minPrice && String(filters.minPrice).trim() !== '') return true;
+            if (filters.maxPrice && String(filters.maxPrice).trim() !== '') return true;
+            if (filters.dateStart || filters.dateEnd) return true;
+            if (filters.expired) return true;
+            if (Array.isArray(filters.subcategoryKeys)) return true;
+            return false;
+        }
+
+        function syncOptionBlockedState(locationList) {
+            locationOptions.forEach(function(opt, idx) {
+                var loc = locationList[idx];
+                var blocked = isLocationFiltered(loc);
+                opt.classList.toggle('post-location-option--blocked', blocked);
+            });
+        }
+
+        function resolveLocationFilterState(locationList, done) {
+            var filters = getSavedFilters();
+            if (!hasActiveUserFilters(filters)) {
+                for (var i = 0; i < locationList.length; i++) {
+                    if (locationList[i]) locationList[i].passes_filter = 1;
+                }
+                done();
+                return;
+            }
+
+            if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length === 0) {
+                for (var z = 0; z < locationList.length; z++) {
+                    if (locationList[z]) locationList[z].passes_filter = 0;
+                }
+                done();
+                return;
+            }
+
+            var qs = new URLSearchParams();
+            qs.set('action', 'get-posts');
+            qs.set('limit', '1');
+            qs.set('post_id', String(post.id || ''));
+            if (filters.keyword) qs.set('keyword', String(filters.keyword));
+            if (filters.minPrice) qs.set('min_price', String(filters.minPrice));
+            if (filters.maxPrice) qs.set('max_price', String(filters.maxPrice));
+            if (filters.dateStart) qs.set('date_start', String(filters.dateStart));
+            if (filters.dateEnd) qs.set('date_end', String(filters.dateEnd));
+            if (filters.expired) qs.set('expired', '1');
+            if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length) {
+                qs.set('subcategory_keys', filters.subcategoryKeys.map(String).join(','));
+            }
+
+            var authOpts = {};
+            if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
+                authOpts.headers = { 'X-Member-Auth': '1' };
+            }
+
+            fetch('/gateway.php?' + qs.toString(), authOpts)
+                .then(function(res) { return res && res.ok ? res.json() : null; })
+                .then(function(data) {
+                    var matchedIds = {};
+                    try {
+                        var cards = (((data || {}).posts || [])[0] || {}).map_cards || [];
+                        for (var c = 0; c < cards.length; c++) {
+                            var cid = cards[c] && cards[c].id;
+                            if (cid !== undefined && cid !== null) matchedIds[String(cid)] = true;
+                        }
+                    } catch (_eData) {}
+                    for (var j = 0; j < locationList.length; j++) {
+                        var loc = locationList[j];
+                        if (!loc) continue;
+                        loc.passes_filter = matchedIds[String(loc.id)] ? 1 : 0;
+                    }
+                })
+                .catch(function() {})
+                .finally(function() { done(); });
+        }
+
         // Button click handler
         locationBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -10708,28 +10796,31 @@ const PostLocationComponent = (function() {
                 if (locationMapContainer) {
                     var locationList = getLocationListForUi();
                     var iconUrl = post.subcategory_icon_url || '';
-                    
-                    locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
-                        postId: post.id,
-                        locations: locationList,
-                        iconUrl: iconUrl,
-                        activeIndex: locationSelectedIndex,
-                        onMarkerClick: function(index) {
-                            var markerLoc = locationList[index];
-                            if (isLocationFiltered(markerLoc)) {
-                                showLocationBlockedToast();
-                                return;
-                            }
-                            var opt = locationOptions[index];
-                            if (opt) opt.click();
-                        },
-                        onMarkerHover: function(index) {
-                            highlightListItem(index);
-                        },
-                        onDisconnect: function() {
-                            closeLocationDropdown();
-                        },
-                        onReady: function() {}
+
+                    resolveLocationFilterState(locationList, function() {
+                        syncOptionBlockedState(locationList);
+                        locationMapOwnerId = PostLocationMapComponent.init(locationMapContainer, {
+                            postId: post.id,
+                            locations: locationList,
+                            iconUrl: iconUrl,
+                            activeIndex: locationSelectedIndex,
+                            onMarkerClick: function(index) {
+                                var markerLoc = locationList[index];
+                                if (isLocationFiltered(markerLoc)) {
+                                    showLocationBlockedToast();
+                                    return;
+                                }
+                                var opt = locationOptions[index];
+                                if (opt) opt.click();
+                            },
+                            onMarkerHover: function(index) {
+                                highlightListItem(index);
+                            },
+                            onDisconnect: function() {
+                                closeLocationDropdown();
+                            },
+                            onReady: function() {}
+                        });
                     });
                 }
             }
