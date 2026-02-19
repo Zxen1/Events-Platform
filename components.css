@@ -2615,7 +2615,7 @@
 }
 
 .component-toast--warning {
-    background: var(--filter-active-color);
+    background: #ff9800;
     color: #fff;
 }
 
@@ -3305,11 +3305,6 @@ body.image-modal-open > *:not(.image-modal) {
   box-shadow: 0 0 0 2px var(--pl-border-focus);
 }
 
-.post-location-map-marker--filtered {
-  filter: grayscale(1);
-  opacity: 0.4;
-}
-
 /* Location option (70px row) */
 .post-location-option {
   min-height: 70px;
@@ -3350,20 +3345,14 @@ body.image-modal-open > *:not(.image-modal) {
   text-align: left;
 }
 
-/* Filtered-out location (subcategory not in active filters) */
-.post-location-option--filtered {
-  opacity: 0.4;
-  cursor: default;
-}
-
 /* Option hover/highlighted states */
-.post-location-option.post-location-hover:not(.post-location-option--filtered),
-.post-location-option.post-location-highlighted:not(.post-location-option--filtered) {
+.post-location-option.post-location-hover,
+.post-location-option.post-location-highlighted {
   background: var(--pl-hover);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .post-location-option:hover:not(.post-location-option--filtered) {
+  .post-location-option:hover {
     background: var(--pl-hover);
   }
 }

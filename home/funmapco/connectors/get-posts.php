@@ -281,11 +281,6 @@ try {
         $types .= 'i';
     }
 
-    // Snapshot user-facing filters (before bounds) for passes_filter check in Step 1b
-    $filterWhere = $where;
-    $filterParams = $params;
-    $filterTypes = $types;
-
     // Bounds filter (for map viewport)
     if ($bounds !== null) {
         $where[] = 'mc.latitude BETWEEN ? AND ?';
@@ -298,7 +293,6 @@ try {
     }
 
     $whereClause = implode(' AND ', $where);
-    $filterWhereClause = implode(' AND ', $filterWhere);
 
     // Count total matching posts
     $countSql = "
@@ -345,7 +339,7 @@ try {
     // joined map cards for those posts without a row-limit.
     // ---------------------------------------------------------------------
 
-    // 1) Fetch page of post IDs (pagination via DISTINCT p.id + LIMIT)
+    // 1) Fetch page of post IDs (or, for single-post fetch, fetch matching id(s) without LIMIT)
     $pagePostIds = [];
     if ($postId > 0 || $postKey !== '') {
         // Single post fetch: do NOT apply LIMIT/OFFSET; return all map cards for that post.
@@ -405,31 +399,6 @@ try {
         ob_end_clean();
         echo $json;
         exit;
-    }
-
-    // 1b) Collect which mc.id values passed user-facing filters (excluding bounds) for these posts.
-    $matchedMapCardIds = [];
-    $mcIdPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
-    $mcIdSql = "
-        SELECT mc.id
-        FROM `posts` p
-        LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
-        LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-        WHERE p.id IN ($mcIdPlaceholders) AND {$filterWhereClause}
-    ";
-    $mcIdStmt = $mysqli->prepare($mcIdSql);
-    if ($mcIdStmt) {
-        $mcIdParams = array_merge($pagePostIds, $filterParams);
-        $mcIdTypes = str_repeat('i', count($pagePostIds)) . $filterTypes;
-        bind_params_array($mcIdStmt, $mcIdTypes, $mcIdParams);
-        $mcIdStmt->execute();
-        $mcIdRes = $mcIdStmt->get_result();
-        while ($mcIdRes && ($mr = $mcIdRes->fetch_assoc())) {
-            if ($mr['id'] !== null) {
-                $matchedMapCardIds[(int)$mr['id']] = true;
-            }
-        }
-        $mcIdStmt->close();
     }
 
     // 2) Fetch posts + ALL their map cards (no LIMIT; constrained by p.id IN (...))
@@ -598,7 +567,6 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
-                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || empty($matchedMapCardIds) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below

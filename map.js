@@ -778,7 +778,6 @@ const MapModule = (function() {
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
       }
-      
     `;
     
     const style = document.createElement('style');

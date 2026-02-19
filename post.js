@@ -1657,34 +1657,6 @@ const PostModule = (function() {
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
         postListEl.appendChild(preservedOpenSlot);
-
-        // Sync passes_filter from fresh server data onto the open post's stored map_cards
-        try {
-          var openWrap = preservedOpenSlot.querySelector('.post');
-          var storedList = openWrap ? openWrap.__postLocationList : null;
-          if (storedList && post.map_cards) {
-            var freshById = {};
-            post.map_cards.forEach(function(mc) { if (mc && mc.id != null) freshById[mc.id] = mc; });
-            storedList.forEach(function(loc) {
-              var fresh = freshById[loc.id];
-              if (fresh) loc.passes_filter = fresh.passes_filter;
-            });
-          }
-          var locContainer = openWrap ? openWrap.querySelector('.post-location-container') : null;
-          if (locContainer) {
-            locContainer.querySelectorAll('.post-location-option').forEach(function(opt) {
-              var idx = parseInt(opt.dataset.index, 10);
-              var loc = storedList && storedList[idx];
-              if (!loc) return;
-              if (loc.passes_filter === 0) {
-                opt.classList.add('post-location-option--filtered');
-              } else {
-                opt.classList.remove('post-location-option--filtered');
-              }
-            });
-          }
-        } catch (_eSyncFilter) {}
-
         return;
       }
       var card = renderPostCard(post);
@@ -2999,10 +2971,6 @@ const PostModule = (function() {
       locationList = [activeLoc].concat(rest);
     }
 
-    function isLocationFiltered(loc) {
-      return loc.passes_filter === 0;
-    }
-
     // Get display data from first location
     var title = activeLoc.title || post.checkout_title || '';
     var description = activeLoc.description || '';
@@ -3171,8 +3139,7 @@ const PostModule = (function() {
         PostLocationComponent.render({
           postId: post.id,
           locationList: locationList,
-          escapeHtml: escapeHtml,
-          isLocationFiltered: isLocationFiltered
+          escapeHtml: escapeHtml
         }),
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
@@ -3289,7 +3256,7 @@ const PostModule = (function() {
     contentWrap.appendChild(postBody);
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered);
+    setupPostDetailEvents(wrap, post);
 
     return wrap;
   }
@@ -3350,7 +3317,7 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered) {
+  function setupPostDetailEvents(wrap, post) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
@@ -3423,7 +3390,6 @@ const PostModule = (function() {
         }
         return 0;
       },
-      isLocationFiltered: isLocationFiltered,
       buildPostDetail: buildPostDetail,
       addToRecentHistory: addToRecentHistory,
       openPost: openPost,
@@ -4982,23 +4948,7 @@ const PostModule = (function() {
     if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
       authOpts.headers = { 'X-Member-Auth': '1' };
     }
-    var params = new URLSearchParams();
-    params.append('limit', '1');
-    params.append('post_id', String(postId));
-    params.append('full', '1');
-    var f = currentFilters;
-    if (f) {
-      if (f.keyword) params.append('keyword', String(f.keyword));
-      if (f.minPrice) params.append('min_price', String(f.minPrice));
-      if (f.maxPrice) params.append('max_price', String(f.maxPrice));
-      if (f.dateStart) params.append('date_start', String(f.dateStart));
-      if (f.dateEnd) params.append('date_end', String(f.dateEnd));
-      if (f.expired) params.append('expired', '1');
-      if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
-        params.append('subcategory_keys', f.subcategoryKeys.map(String).join(','));
-      }
-    }
-    return fetch('/gateway.php?action=get-posts&' + params.toString(), authOpts)
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1', authOpts)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
