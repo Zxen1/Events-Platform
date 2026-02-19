@@ -8982,15 +8982,15 @@ var MiniMap = (function() {
                         if (index === activeIndex) {
                             el.className += ' post-location-map-marker--current';
                         }
-                        if (loc.filtered) {
-                            el.className += ' post-location-map-marker--filtered';
+                        if (loc.isBlocked) {
+                            el.className += ' post-location-map-marker--blocked';
                         }
                         el.style.width = iconSize + 'px';
                         el.style.height = iconSize + 'px';
                         el.style.backgroundImage = 'url(' + iconUrl + ')';
                         el.style.backgroundSize = 'contain';
                         el.style.backgroundRepeat = 'no-repeat';
-                        el.style.cursor = loc.filtered ? 'default' : 'pointer';
+                        el.style.cursor = loc.isBlocked ? 'default' : 'pointer';
                         el.setAttribute('data-index', index);
 
                         // Hover events
@@ -10395,6 +10395,12 @@ const PostLocationMapComponent = (function() {
 
     var instanceCounter = 0;
 
+    function isLocationFiltered(loc) {
+        if (!loc) return false;
+        var v = loc.passes_filter;
+        return v === 0 || v === '0' || v === false;
+    }
+
     /**
      * Render the map container HTML
      * @param {Object} options
@@ -10447,7 +10453,7 @@ const PostLocationMapComponent = (function() {
                     lat: lat,
                     lng: lng,
                     label: loc.venue_name || '',
-                    filtered: loc.passes_filter === 0
+                    isBlocked: isLocationFiltered(loc)
                 });
             }
         }
@@ -10539,6 +10545,12 @@ const PostLocationMapComponent = (function() {
 const PostLocationComponent = (function() {
     'use strict';
 
+    function isLocationFiltered(loc) {
+        if (!loc) return false;
+        var v = loc.passes_filter;
+        return v === 0 || v === '0' || v === false;
+    }
+
     /**
      * Render a single location option HTML
      */
@@ -10546,11 +10558,11 @@ const PostLocationComponent = (function() {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
-        var filtered = loc.passes_filter === 0;
+        var filtered = isLocationFiltered(loc);
 
         var cls = 'post-location-option';
         if (isSelected) cls += ' post-location-highlighted';
-        if (filtered) cls += ' post-location-option--filtered';
+        if (filtered) cls += ' post-location-option--blocked';
 
         var html = [];
         html.push('<div class="' + cls + '" data-index="' + index + '">');
@@ -10673,7 +10685,7 @@ const PostLocationComponent = (function() {
             });
         }
 
-        function showFilteredLocationBlockedToast() {
+        function showLocationBlockedToast() {
             if (typeof window.getMessage !== 'function') return;
             window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
                 if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
@@ -10704,8 +10716,8 @@ const PostLocationComponent = (function() {
                         activeIndex: locationSelectedIndex,
                         onMarkerClick: function(index) {
                             var markerLoc = locationList[index];
-                            if (markerLoc && markerLoc.passes_filter === 0) {
-                                showFilteredLocationBlockedToast();
+                            if (isLocationFiltered(markerLoc)) {
+                                showLocationBlockedToast();
                                 return;
                             }
                             var opt = locationOptions[index];
@@ -10742,8 +10754,8 @@ const PostLocationComponent = (function() {
                 var loc = locationList[index];
                 if (!loc) return;
 
-                if (opt.classList.contains('post-location-option--filtered')) {
-                    showFilteredLocationBlockedToast();
+                if (opt.classList.contains('post-location-option--blocked')) {
+                    showLocationBlockedToast();
                     return;
                 }
 
