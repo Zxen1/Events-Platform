@@ -429,9 +429,11 @@
   z-index: -1;
 }
 
-/* Post panel header (count bar) - lives outside .post-list, never scrolls */
 .post-panel-header,
 .post-panel-empty-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   font-size: 13px;
   width: 100%;
   margin: 0;

@@ -1569,8 +1569,7 @@ const PostModule = (function() {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
-    // Remove previous summary from panel (it now lives outside post-list).
-    var oldSummary = postPanelContentEl.querySelector('.post-panel-header');
+    var oldSummary = postListEl.querySelector('.post-panel-header');
     if (oldSummary) oldSummary.parentNode.removeChild(oldSummary);
 
     // Clear existing list content (cards), preserving slack elements.
@@ -1648,7 +1647,7 @@ const PostModule = (function() {
         }
       } catch (_e) {}
       summaryEl.textContent = summaryText;
-      postPanelContentEl.insertBefore(summaryEl, postListEl);
+      postListEl.insertBefore(summaryEl, postListEl.firstChild);
     }
 
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
