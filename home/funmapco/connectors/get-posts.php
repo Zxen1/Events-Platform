@@ -351,21 +351,32 @@ try {
     // 1) Fetch page of post IDs (pagination via DISTINCT p.id + LIMIT)
     $pagePostIds = [];
     if ($postId > 0 || $postKey !== '') {
-        // Single post fetch: do NOT apply LIMIT/OFFSET; return all map cards for that post.
+        // Single post fetch: always return the post regardless of user filters.
+        // User filters only affect passes_filter (Step 1b), not whether the post is returned.
+        $singleWhere = [];
+        $singleParams = [];
+        $singleTypes = '';
+        if ($postId > 0) {
+            $singleWhere[] = 'p.id = ?';
+            $singleParams[] = $postId;
+            $singleTypes .= 'i';
+        }
+        if ($postKey !== '') {
+            $singleWhere[] = 'p.post_key = ?';
+            $singleParams[] = $postKey;
+            $singleTypes .= 's';
+        }
+        $singleWhereClause = implode(' AND ', $singleWhere);
         $idsSql = "
             SELECT DISTINCT p.id
             FROM `posts` p
-            LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
-            LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-            WHERE {$whereClause}
+            WHERE {$singleWhereClause}
             ORDER BY p.created_at DESC
         ";
         $idsStmt = $mysqli->prepare($idsSql);
         if (!$idsStmt) fail(500, 'Failed to prepare post id query.');
-        if (!empty($params)) {
-            $idsParams = $params;
-            $idsTypes = $types;
-            bind_params_array($idsStmt, $idsTypes, $idsParams);
+        if (!empty($singleParams)) {
+            bind_params_array($idsStmt, $singleTypes, $singleParams);
         }
     } else {
         $idsSql = "
