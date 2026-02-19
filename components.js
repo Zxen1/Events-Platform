@@ -10742,44 +10742,66 @@ const PostLocationComponent = (function() {
                 return;
             }
 
-            var qs = new URLSearchParams();
-            qs.set('action', 'get-posts');
-            qs.set('limit', '1');
-            qs.set('post_id', String(post.id || ''));
-            if (filters.keyword) qs.set('keyword', String(filters.keyword));
-            if (filters.minPrice) qs.set('min_price', String(filters.minPrice));
-            if (filters.maxPrice) qs.set('max_price', String(filters.maxPrice));
-            if (filters.dateStart) qs.set('date_start', String(filters.dateStart));
-            if (filters.dateEnd) qs.set('date_end', String(filters.dateEnd));
-            if (filters.expired) qs.set('expired', '1');
-            if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length) {
-                qs.set('subcategory_keys', filters.subcategoryKeys.map(String).join(','));
-            }
-
             var authOpts = {};
             if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
                 authOpts.headers = { 'X-Member-Auth': '1' };
             }
+            var pending = 0;
+            function completeOne() {
+                pending--;
+                if (pending <= 0) done();
+            }
 
-            fetch('/gateway.php?' + qs.toString(), authOpts)
-                .then(function(res) { return res && res.ok ? res.json() : null; })
-                .then(function(data) {
-                    var matchedIds = {};
-                    try {
-                        var cards = (((data || {}).posts || [])[0] || {}).map_cards || [];
-                        for (var c = 0; c < cards.length; c++) {
-                            var cid = cards[c] && cards[c].id;
-                            if (cid !== undefined && cid !== null) matchedIds[String(cid)] = true;
-                        }
-                    } catch (_eData) {}
-                    for (var j = 0; j < locationList.length; j++) {
-                        var loc = locationList[j];
-                        if (!loc) continue;
-                        loc.passes_filter = matchedIds[String(loc.id)] ? 1 : 0;
+            for (var j = 0; j < locationList.length; j++) {
+                var loc = locationList[j];
+                if (!loc) continue;
+
+                var lat = Number(loc.latitude);
+                var lng = Number(loc.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    loc.passes_filter = 0;
+                    continue;
+                }
+
+                pending++;
+                (function(targetLoc, tLat, tLng) {
+                    var eps = 0.00001;
+                    var qs = new URLSearchParams();
+                    qs.set('action', 'get-posts');
+                    qs.set('limit', '1');
+                    qs.set('offset', '0');
+                    qs.set('bounds', [tLng - eps, tLat - eps, tLng + eps, tLat + eps].join(','));
+                    if (filters.keyword) qs.set('keyword', String(filters.keyword));
+                    if (filters.minPrice) qs.set('min_price', String(filters.minPrice));
+                    if (filters.maxPrice) qs.set('max_price', String(filters.maxPrice));
+                    if (filters.dateStart) qs.set('date_start', String(filters.dateStart));
+                    if (filters.dateEnd) qs.set('date_end', String(filters.dateEnd));
+                    if (filters.expired) qs.set('expired', '1');
+                    if (Array.isArray(filters.subcategoryKeys) && filters.subcategoryKeys.length) {
+                        qs.set('subcategory_keys', filters.subcategoryKeys.map(String).join(','));
                     }
-                })
-                .catch(function() {})
-                .finally(function() { done(); });
+
+                    fetch('/gateway.php?' + qs.toString(), authOpts)
+                        .then(function(res) { return res && res.ok ? res.json() : null; })
+                        .then(function(data) {
+                            var posts = (data && data.success && Array.isArray(data.posts)) ? data.posts : [];
+                            var found = false;
+                            for (var p = 0; p < posts.length; p++) {
+                                if (String(posts[p].id) === String(post.id)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            targetLoc.passes_filter = found ? 1 : 0;
+                        })
+                        .catch(function() {
+                            targetLoc.passes_filter = 1;
+                        })
+                        .finally(completeOne);
+                })(loc, lat, lng);
+            }
+
+            if (pending === 0) done();
         }
 
         // Button click handler
