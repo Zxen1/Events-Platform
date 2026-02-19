@@ -8982,12 +8982,15 @@ var MiniMap = (function() {
                         if (index === activeIndex) {
                             el.className += ' post-location-map-marker--current';
                         }
+                        if (loc.filtered) {
+                            el.className += ' post-location-map-marker--filtered';
+                        }
                         el.style.width = iconSize + 'px';
                         el.style.height = iconSize + 'px';
                         el.style.backgroundImage = 'url(' + iconUrl + ')';
                         el.style.backgroundSize = 'contain';
                         el.style.backgroundRepeat = 'no-repeat';
-                        el.style.cursor = 'pointer';
+                        el.style.cursor = loc.filtered ? 'default' : 'pointer';
                         el.setAttribute('data-index', index);
 
                         // Hover events
@@ -10443,7 +10446,8 @@ const PostLocationMapComponent = (function() {
                 validLocs.push({
                     lat: lat,
                     lng: lng,
-                    label: loc.venue_name || ''
+                    label: loc.venue_name || '',
+                    filtered: loc.passes_filter === 0
                 });
             }
         }
@@ -10542,9 +10546,14 @@ const PostLocationComponent = (function() {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
+        var filtered = loc.passes_filter === 0;
+
+        var cls = 'post-location-option';
+        if (isSelected) cls += ' post-location-highlighted';
+        if (filtered) cls += ' post-location-option--filtered';
 
         var html = [];
-        html.push('<div class="post-location-option' + (isSelected ? ' post-location-highlighted' : '') + '" data-index="' + index + '">');
+        html.push('<div class="' + cls + '" data-index="' + index + '">');
         html.push('<div class="post-location-option-main">' + escapeHtml(venueName) + '</div>');
         if (addressLine || city) {
             var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
@@ -10718,6 +10727,17 @@ const PostLocationComponent = (function() {
                 var locationList = getLocationListForUi();
                 var loc = locationList[index];
                 if (!loc) return;
+
+                if (opt.classList.contains('post-location-option--filtered')) {
+                    if (typeof window.getMessage === 'function') {
+                        window.getMessage('msg_filter_location_blocked', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
+                                ToastComponent.showWarning(msg);
+                            }
+                        });
+                    }
+                    return;
+                }
 
                 var isInPostEditor = !!(wrap.closest && wrap.closest('#member-tab-posteditor'));
                 var isAlreadySelected = (index === locationSelectedIndex);
