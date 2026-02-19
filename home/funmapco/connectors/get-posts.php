@@ -281,6 +281,11 @@ try {
         $types .= 'i';
     }
 
+    // Snapshot user-facing filters (before bounds) for passes_filter check in Step 1b
+    $filterWhere = $where;
+    $filterParams = $params;
+    $filterTypes = $types;
+
     // Bounds filter (for map viewport)
     if ($bounds !== null) {
         $where[] = 'mc.latitude BETWEEN ? AND ?';
@@ -293,6 +298,7 @@ try {
     }
 
     $whereClause = implode(' AND ', $where);
+    $filterWhereClause = implode(' AND ', $filterWhere);
 
     // Count total matching posts
     $countSql = "
@@ -401,8 +407,7 @@ try {
         exit;
     }
 
-    // 1b) Collect which mc.id values passed step 1's filters for these posts.
-    //     Reuses the same WHERE clause so any future filter additions automatically propagate.
+    // 1b) Collect which mc.id values passed user-facing filters (excluding bounds) for these posts.
     $matchedMapCardIds = [];
     $mcIdPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
     $mcIdSql = "
@@ -410,12 +415,12 @@ try {
         FROM `posts` p
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-        WHERE p.id IN ($mcIdPlaceholders) AND {$whereClause}
+        WHERE p.id IN ($mcIdPlaceholders) AND {$filterWhereClause}
     ";
     $mcIdStmt = $mysqli->prepare($mcIdSql);
     if ($mcIdStmt) {
-        $mcIdParams = array_merge($pagePostIds, $params);
-        $mcIdTypes = str_repeat('i', count($pagePostIds)) . $types;
+        $mcIdParams = array_merge($pagePostIds, $filterParams);
+        $mcIdTypes = str_repeat('i', count($pagePostIds)) . $filterTypes;
         bind_params_array($mcIdStmt, $mcIdTypes, $mcIdParams);
         $mcIdStmt->execute();
         $mcIdRes = $mcIdStmt->get_result();
