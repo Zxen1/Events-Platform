@@ -734,6 +734,9 @@
                 // (discardEdits wipes editingPostsData, so the stale form would be broken)
                 editFormLoaded = false;
                 editAccordionContent.innerHTML = '';
+                if (editingPostsData[postId]) {
+                    delete editingPostsData[postId].original_extracted_fields;
+                }
                 // Reset edit button and pending message to default state
                 editToggleBtn.textContent = 'Edit';
                 pendingPaymentMsg.style.display = 'none';
