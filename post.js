@@ -5262,7 +5262,8 @@ const PostModule = (function() {
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary,
-    mapCardHasPromo: mapCardHasPromo
+    mapCardHasPromo: mapCardHasPromo,
+    loadPostById: loadPostById
   };
 
 })();

@@ -147,6 +147,8 @@ try {
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
+
+    $hasUserFilters = ($keyword !== '' || $dateStart !== '' || $dateEnd !== '' || $minPrice !== null || $maxPrice !== null || $subcategoryKey !== '' || !empty($subcategoryKeys));
     
     // Show contact details if:
     // 1. User is logged in (cookie/header present), OR
@@ -612,7 +614,7 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
-                'passes_filter' => isset($matchedMapCardIds[(int)$row['post_map_card_id']]) || empty($matchedMapCardIds) ? 1 : 0,
+                'passes_filter' => !$hasUserFilters || isset($matchedMapCardIds[(int)$row['post_map_card_id']]) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below

@@ -489,47 +489,21 @@
     }
 
     function refreshPostCard(postId) {
-        // Find the existing post container
         var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
         if (!postContainer) return;
-        
-        // Fetch fresh post data (include member_id to bypass contact security filtering)
-        var user = getCurrentUser();
-        var memberId = user ? parseInt(user.id, 10) : 0;
-        fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId)
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res && res.success && res.posts && res.posts.length > 0) {
-                    var post = res.posts[0];
-                    
-                    // Find the old card element (first child that's a post-card)
-                    var oldCard = postContainer.querySelector('.post-card');
-                    if (!oldCard) return;
-                    
-                    // Create new card using PostModule
-                    var newCard = null;
-                    if (window.PostModule && typeof PostModule.renderPostCard === 'function') {
-                        newCard = PostModule.renderPostCard(post);
-                    } else {
-                        newCard = document.createElement('div');
-                        newCard.className = 'post-card';
-                        var fallbackTitle = post.checkout_title || 'Post #' + post.id;
-                        if (fallbackTitle === 'Array') fallbackTitle = 'Post #' + post.id;
-                        newCard.textContent = fallbackTitle;
-                    }
-                    
-                    // Replace old card with new one
-                    oldCard.parentNode.replaceChild(newCard, oldCard);
-                    
-                    // Update cached data
-                    if (editingPostsData[postId]) {
-                        editingPostsData[postId].original = post;
-                    }
-                }
-            })
-            .catch(function(err) {
-                console.warn('[PostEditor] Failed to refresh post card:', err);
-            });
+
+        PostModule.loadPostById(postId).then(function(post) {
+            if (!post) return;
+
+            var oldCard = postContainer.querySelector('.post-card');
+            if (!oldCard) return;
+
+            oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
+
+            if (editingPostsData[postId]) {
+                editingPostsData[postId].original = post;
+            }
+        });
     }
 
     function renderPostCard(post) {
@@ -542,17 +516,7 @@
         var editHeader = document.createElement('div');
         editHeader.className = 'posteditor-edit-header';
         
-        // Use PostModule if available, otherwise fallback to simple display
-        var cardEl = null;
-        if (window.PostModule && typeof PostModule.renderPostCard === 'function') {
-            cardEl = PostModule.renderPostCard(post);
-        } else {
-            cardEl = document.createElement('div');
-            cardEl.className = 'post-card';
-            var fallbackTitle = post.checkout_title || 'Post #' + post.id;
-            if (fallbackTitle === 'Array') fallbackTitle = 'Post #' + post.id;
-            cardEl.textContent = fallbackTitle;
-        }
+        var cardEl = PostModule.renderPostCard(post);
 
         // Status bar above the post card
         var statusBar = buildStatusBar(post);
@@ -793,13 +757,10 @@
                     renderEditForm(editingPostsData[postId].original, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn, editToggleBtn, pendingPaymentMsg);
                 } else {
                     editAccordionContent.innerHTML = '<p class="posteditor-status">Loading post data...</p>';
-                    var user = getCurrentUser();
-                    var memberId = user ? parseInt(user.id, 10) : 0;
                     ensureCategoriesLoaded().then(function() {
-                        return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId + '&member_id=' + memberId);
-                    }).then(function(r) { return r.json(); }).then(function(res) {
-                        if (res && res.success && res.posts && res.posts.length > 0) {
-                            var post = res.posts[0];
+                        return PostModule.loadPostById(postId);
+                    }).then(function(post) {
+                        if (post) {
                             editingPostsData[postId] = { original: post, current: {} };
                             editAccordionContent.innerHTML = '';
                             renderEditForm(post, editAccordionContent, collapseAccordion, editTopSaveBtn, editTopCloseBtn, editToggleBtn, pendingPaymentMsg);
@@ -3156,10 +3117,8 @@
                     });
                 }
             } else {
-                // Active — open the post synchronously so TopSlack can anchor.
-                // Fly-to is handled by the location menu inside the post instead.
-                if (window.PostModule && typeof PostModule.openPost === 'function') {
-                    PostModule.openPost(post, { source: 'posteditor', originEl: postCard });
+                if (window.PostModule && typeof PostModule.openPostById === 'function') {
+                    PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
                 }
             }
         });
