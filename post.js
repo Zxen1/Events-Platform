@@ -1885,8 +1885,6 @@ const PostModule = (function() {
       } else if (markerData && markerData.id !== undefined && markerData.id !== null) {
         ids = [String(markerData.id)];
       }
-      var pf = (markerData && markerData._mapCard && markerData._mapCard.passes_filter != null)
-        ? String(markerData._mapCard.passes_filter) : '';
       return [
         markerData && markerData.isMultiPost ? '1' : '0',
         ids.join(','),
@@ -1894,8 +1892,7 @@ const PostModule = (function() {
         markerData && markerData.venue ? String(markerData.venue) : '',
         markerData && markerData.sub ? String(markerData.sub) : '',
         markerData && markerData.iconUrl ? String(markerData.iconUrl) : '',
-        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : '',
-        pf
+        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : ''
       ].join('|');
     }
 

@@ -434,6 +434,19 @@ When closing modals, prevent the click/tap from activating elements behind:
 
 ---
 
+## SCOPE CONTROL
+
+### Do Only What Was Asked
+If the user says "change the location menu," you change the location menu. Nothing else. Not the map. Not the post panel. Not "related" systems. If you think something else needs changing, ASK first. Do not touch it.
+
+### No Ripple Chasing
+Never preemptively fix things you weren't asked to fix. Do the one thing that was asked. If you believe a change might affect something else, TELL the user and ask — do not silently go and change it.
+
+### 5-Minute Rule
+If a task sounds simple but you've been working for 30+ minutes, STOP. Tell the user what's happening. You have lost the plot.
+
+---
+
 ## NOTES
 
 **Backdrop**: Ghost postcards — repeating placeholder postcard rows in light gray that fill TopSlack/BottomSlack empty space in the post panel.

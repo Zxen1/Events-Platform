@@ -2615,7 +2615,7 @@
 }
 
 .component-toast--warning {
-    background: #ff9800;
+    background: var(--filter-active-color);
     color: #fff;
 }
 
@@ -3303,6 +3303,11 @@ body.image-modal-open > *:not(.image-modal) {
 .post-location-map-marker--current.post-location-map-marker--hover,
 .post-location-map-marker--current.post-location-map-marker--active {
   box-shadow: 0 0 0 2px var(--pl-border-focus);
+}
+
+.post-location-map-marker--filtered {
+  filter: grayscale(1);
+  opacity: 0.4;
 }
 
 /* Location option (70px row) */

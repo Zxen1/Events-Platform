@@ -8982,12 +8982,15 @@ var MiniMap = (function() {
                         if (index === activeIndex) {
                             el.className += ' post-location-map-marker--current';
                         }
+                        if (loc.filtered) {
+                            el.className += ' post-location-map-marker--filtered';
+                        }
                         el.style.width = iconSize + 'px';
                         el.style.height = iconSize + 'px';
                         el.style.backgroundImage = 'url(' + iconUrl + ')';
                         el.style.backgroundSize = 'contain';
                         el.style.backgroundRepeat = 'no-repeat';
-                        el.style.cursor = 'pointer';
+                        el.style.cursor = loc.filtered ? 'default' : 'pointer';
                         el.setAttribute('data-index', index);
 
                         // Hover events
@@ -10434,6 +10437,7 @@ const PostLocationMapComponent = (function() {
         var ownerId = 'post-location-map-' + postId + '-' + instanceCounter;
 
         // Filter valid locations
+        var isLocationFiltered = options.isLocationFiltered || null;
         var validLocs = [];
         for (var i = 0; i < locations.length; i++) {
             var loc = locations[i];
@@ -10443,7 +10447,8 @@ const PostLocationMapComponent = (function() {
                 validLocs.push({
                     lat: lat,
                     lng: lng,
-                    label: loc.venue_name || ''
+                    label: loc.venue_name || '',
+                    filtered: isLocationFiltered ? isLocationFiltered(loc) : false
                 });
             }
         }
@@ -10707,6 +10712,7 @@ const PostLocationComponent = (function() {
                         locations: locationList,
                         iconUrl: iconUrl,
                         activeIndex: locationSelectedIndex,
+                        isLocationFiltered: callbacks && callbacks.isLocationFiltered ? callbacks.isLocationFiltered : null,
                         onMarkerClick: function(index) {
                             var opt = locationOptions[index];
                             if (opt) opt.click();
