@@ -1657,6 +1657,32 @@ const PostModule = (function() {
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
         postListEl.appendChild(preservedOpenSlot);
+
+        try {
+          var openWrap = preservedOpenSlot.querySelector('.post');
+          var storedList = openWrap ? openWrap.__postLocationList : null;
+          if (storedList && post.map_cards) {
+            var freshById = {};
+            post.map_cards.forEach(function(mc) { if (mc && mc.id != null) freshById[mc.id] = mc; });
+            storedList.forEach(function(loc) {
+              var fresh = freshById[loc.id];
+              if (fresh) loc.passes_filter = fresh.passes_filter;
+            });
+          }
+          var locContainer = openWrap ? openWrap.querySelector('.post-location-container') : null;
+          if (locContainer) {
+            locContainer.querySelectorAll('.post-location-option').forEach(function(opt) {
+              var idx = parseInt(opt.dataset.index, 10);
+              var loc = storedList && storedList[idx];
+              if (!loc) return;
+              if (loc.passes_filter === 0) {
+                opt.classList.add('post-location-option--filtered');
+              } else {
+                opt.classList.remove('post-location-option--filtered');
+              }
+            });
+          }
+        } catch (_eSyncFilter) {}
         return;
       }
       var card = renderPostCard(post);
@@ -2971,6 +2997,10 @@ const PostModule = (function() {
       locationList = [activeLoc].concat(rest);
     }
 
+    function isLocationFiltered(loc) {
+      return loc.passes_filter === 0;
+    }
+
     // Get display data from first location
     var title = activeLoc.title || post.checkout_title || '';
     var description = activeLoc.description || '';
@@ -3139,7 +3169,8 @@ const PostModule = (function() {
         PostLocationComponent.render({
           postId: post.id,
           locationList: locationList,
-          escapeHtml: escapeHtml
+          escapeHtml: escapeHtml,
+          isLocationFiltered: isLocationFiltered
         }),
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
@@ -3396,7 +3427,8 @@ const PostModule = (function() {
       loadPostById: loadPostById,
       getModeButton: getModeButton,
       getCurrentMode: function() { return currentMode; },
-      isPostsEnabled: function() { return postsEnabled; }
+      isPostsEnabled: function() { return postsEnabled; },
+      isLocationFiltered: isLocationFiltered
     });
 
     // Session component initialization
