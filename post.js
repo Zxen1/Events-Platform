@@ -889,6 +889,9 @@ const PostModule = (function() {
     var isShown = panelEl.classList.contains(panelShowClass);
     var isVisible = contentEl.classList.contains(visibleClass);
 
+    if (document.activeElement && panelEl.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
     panelEl.setAttribute('aria-hidden', 'true');
 
     // If not shown/visible, there's nothing to animate (already off-screen).
@@ -4971,12 +4974,28 @@ const PostModule = (function() {
    * @param {number|string} postId - Post ID
    * @returns {Promise<Object|null>} Post data or null
    */
+  function buildFilterQueryString() {
+    var f = currentFilters;
+    if (!f || typeof f !== 'object') return '';
+    var parts = [];
+    if (f.keyword) parts.push('keyword=' + encodeURIComponent(f.keyword));
+    if (f.minPrice) parts.push('min_price=' + encodeURIComponent(f.minPrice));
+    if (f.maxPrice) parts.push('max_price=' + encodeURIComponent(f.maxPrice));
+    if (f.dateStart) parts.push('date_start=' + encodeURIComponent(f.dateStart));
+    if (f.dateEnd) parts.push('date_end=' + encodeURIComponent(f.dateEnd));
+    if (f.expired) parts.push('expired=1');
+    if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
+      parts.push('subcategory_keys=' + encodeURIComponent(f.subcategoryKeys.map(String).join(',')));
+    }
+    return parts.length ? '&' + parts.join('&') : '';
+  }
+
   function loadPostById(postId) {
     var authOpts = {};
     if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
       authOpts.headers = { 'X-Member-Auth': '1' };
     }
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1', authOpts)
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId + '&full=1' + buildFilterQueryString(), authOpts)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
