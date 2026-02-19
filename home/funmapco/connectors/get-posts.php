@@ -115,9 +115,6 @@ try {
         fail(500, 'Database connection unavailable.');
     }
 
-    // Auto-expire posts whose expires_at has passed
-    $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
-
     // Parse query parameters
     //
     // IMPORTANT (Developer Note):
@@ -156,6 +153,11 @@ try {
     // 2. Filtering by member_id (Post Editor fetching own posts for editing)
     // This ensures the post owner can always see their own contact details in the editor
     $showContactDetails = $isLoggedIn || ($memberId > 0);
+
+    // Auto-expire: only when post editor is fetching (lazy — not on public reads)
+    if ($memberId > 0) {
+        $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+    }
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -191,6 +193,7 @@ try {
             $where[] = 'p.visibility = ?';
             $params[] = $visibility;
             $types .= 's';
+            $where[] = '(p.expires_at IS NULL OR p.expires_at > NOW())';
         }
 
         // Payment status (only show paid posts to public)
