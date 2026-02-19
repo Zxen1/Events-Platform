@@ -2997,10 +2997,6 @@ const PostModule = (function() {
       locationList = [activeLoc].concat(rest);
     }
 
-    function isLocationFiltered(loc) {
-      return loc.passes_filter === 0;
-    }
-
     // Get display data from first location
     var title = activeLoc.title || post.checkout_title || '';
     var description = activeLoc.description || '';
@@ -3170,7 +3166,7 @@ const PostModule = (function() {
           postId: post.id,
           locationList: locationList,
           escapeHtml: escapeHtml,
-          isLocationFiltered: isLocationFiltered
+          isLocationFiltered: function(loc) { return loc.passes_filter === 0; }
         }),
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
@@ -3428,7 +3424,7 @@ const PostModule = (function() {
       getModeButton: getModeButton,
       getCurrentMode: function() { return currentMode; },
       isPostsEnabled: function() { return postsEnabled; },
-      isLocationFiltered: isLocationFiltered
+      isLocationFiltered: function(loc) { return loc.passes_filter === 0; }
     });
 
     // Session component initialization
