@@ -10701,6 +10701,19 @@ const PostLocationComponent = (function() {
                 closeLocationDropdown();
             } else {
                 refreshFilterState();
+                if (callbacks && callbacks.loadPostById) {
+                    callbacks.loadPostById(post.id).then(function(freshPost) {
+                        if (!freshPost || !freshPost.map_cards) return;
+                        var locationList = getLocationListForUi();
+                        var freshById = {};
+                        freshPost.map_cards.forEach(function(mc) { if (mc && mc.id != null) freshById[mc.id] = mc; });
+                        locationList.forEach(function(loc) {
+                            var fresh = freshById[loc.id];
+                            if (fresh) loc.passes_filter = fresh.passes_filter;
+                        });
+                        refreshFilterState();
+                    });
+                }
                 locationBtn.classList.add('post-location-button--open');
                 if (locationArrow) locationArrow.classList.add('post-location-arrow--open');
                 
