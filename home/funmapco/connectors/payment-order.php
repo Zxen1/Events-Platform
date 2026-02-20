@@ -137,30 +137,18 @@ function paypal_create_order(array $paymentConfig, string $accessToken, float $a
             'value'         => number_format($amount, 2, '.', ''),
         ],
         'description' => $description,
-        'items'       => [[
-            'name'        => $description,
-            'unit_amount' => [
-                'currency_code' => strtoupper($currency),
-                'value'         => number_format($amount, 2, '.', ''),
-            ],
-            'quantity'  => '1',
-            'category'  => 'DIGITAL_GOODS',
-        ]],
     ];
     if ($softDescriptor !== '') {
         $purchaseUnit['soft_descriptor'] = substr($softDescriptor, 0, 22);
     }
 
-    $appContext = ['shipping_preference' => 'NO_SHIPPING'];
-    if ($brandName !== '') {
-        $appContext['brand_name'] = $brandName;
-    }
-
     $orderBody = [
-        'intent'              => 'CAPTURE',
-        'purchase_units'      => [$purchaseUnit],
-        'application_context' => $appContext,
+        'intent'         => 'CAPTURE',
+        'purchase_units' => [$purchaseUnit],
     ];
+    if ($brandName !== '') {
+        $orderBody['application_context'] = ['brand_name' => $brandName];
+    }
 
     $body = json_encode($orderBody);
 
