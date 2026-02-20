@@ -7000,9 +7000,7 @@ const MobileSlack = (function() {
         var topSlackPx = 0;
         var bottomSlackPx = 0;
         var pendingAnchor = null;
-        var anchorObserver = null;
         var anchorApplied = false;
-        var anchorDirty = false;
 
         function applyTopSlack(px) {
             px = Math.max(0, Math.round(px));
@@ -7053,6 +7051,18 @@ const MobileSlack = (function() {
             } catch (e) {}
         }
 
+        function trimBottomSlack() {
+            try {
+                if (bottomSlackPx <= 0) return;
+                var docHeight = document.documentElement.scrollHeight || document.body.scrollHeight || 0;
+                var scrollY = window.scrollY || window.pageYOffset || 0;
+                var viewEnd = scrollY + window.innerHeight;
+                var realEnd = docHeight - bottomSlackPx;
+                var needed = Math.max(0, Math.ceil(viewEnd - realEnd));
+                applyBottomSlack(needed);
+            } catch (e) {}
+        }
+
         function applyAnchorAdjustment() {
             if (!pendingAnchor) return;
             var a = pendingAnchor;
@@ -7083,30 +7093,6 @@ const MobileSlack = (function() {
             }
         }
 
-        function startAnchorObserver() {
-            if (anchorObserver) return;
-            try {
-                anchorObserver = new MutationObserver(function() {
-                    if (anchorApplied) return;
-                    anchorDirty = true;
-                });
-                anchorObserver.observe(containerEl, {
-                    subtree: true,
-                    childList: true,
-                    attributes: true,
-                    characterData: false
-                });
-            } catch (e) {
-                anchorObserver = null;
-            }
-        }
-
-        function stopAnchorObserver() {
-            if (!anchorObserver) return;
-            try { anchorObserver.disconnect(); } catch (e) {}
-            anchorObserver = null;
-        }
-
         // Capture anchor on pointerdown (before click handlers run).
         containerEl.addEventListener('pointerdown', function(e) {
             try {
@@ -7120,14 +7106,9 @@ const MobileSlack = (function() {
                     if (t.closest && t.closest('[role="tab"]')) return;
                 } catch (_eTab) {}
 
-                stopAnchorObserver();
-
                 var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
                 anchorApplied = false;
-                anchorDirty = false;
-
-                startAnchorObserver();
             } catch (e0) {}
         }, { passive: true, capture: true });
 
@@ -7157,11 +7138,8 @@ const MobileSlack = (function() {
                 queueMicrotask(function() {
                     if (anchorApplied) return;
                     anchorApplied = true;
-                    stopAnchorObserver();
-                    if (anchorDirty) {
-                        applyAnchorAdjustment();
-                    }
-                    ratchetBottomSlack();
+                    applyAnchorAdjustment();
+                    trimBottomSlack();
                 });
             } catch (e0) {}
         }, false);
@@ -7174,7 +7152,6 @@ const MobileSlack = (function() {
             forceOff: function() {
                 pendingAnchor = null;
                 anchorApplied = true;
-                stopAnchorObserver();
                 applyTopSlack(0);
                 applyBottomSlack(0);
             }
