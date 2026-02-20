@@ -1777,6 +1777,7 @@
         // Check the checkbox when user clicks Agree in the terms modal
         var termsAgreedHandler = function() {
             termsCheckbox.checked = true;
+            recalcPricing();
         };
         if (window.App && typeof App.on === 'function') {
             App.on('terms:agreed', termsAgreedHandler);
