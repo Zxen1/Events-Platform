@@ -753,9 +753,10 @@ const App = (function() {
         // iOS: nudge scroll position off boundaries to prevent scroll lock.
         try { fixIOSScrollBoundary(el); } catch (_eIOSFix) {}
 
-        // Mobile: DO NOT attach slack systems.
-        // They can block scroll direction at edges (the exact bug Paul described).
-        if (isMobile) return;
+        if (isMobile) {
+          MobileSlack.attach(el);
+          return;
+        }
 
         // Desktop: Attach both slack systems - they check data attributes internally
         BottomSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });

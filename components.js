@@ -6863,6 +6863,118 @@ const TopSlack = (function() {
 
 
 /* ============================================================================
+   MOBILE SLACK
+   Mobile equivalent of TopSlack + BottomSlack for body-scroll layouts.
+   On desktop, each panel is its own scroll container and slack spacers absorb
+   layout shifts. On mobile the body scrolls everything, so no spacer is needed —
+   we just capture the tapped element's viewport position before DOM changes and
+   adjust window.scrollBy after they settle.
+   Attaches per-container (same selectors as desktop slack) so only clicks
+   inside registered containers trigger compensation.
+   Respects data-topslack="false" / data-bottomslack="false" opt-out attributes.
+   ============================================================================ */
+
+const MobileSlack = (function() {
+    var attached = new WeakMap();
+
+    function attach(containerEl) {
+        if (!(containerEl instanceof Element)) {
+            throw new Error('MobileSlack.attach: containerEl must be an Element');
+        }
+
+        var existing = null;
+        try { existing = attached.get(containerEl); } catch (e) { existing = null; }
+        if (existing) return existing;
+
+        var pendingAnchor = null;
+        var anchorObserver = null;
+        var anchorApplied = false;
+        var anchorDirty = false;
+
+        function applyAnchorAdjustment() {
+            if (!pendingAnchor) return;
+            var a = pendingAnchor;
+            pendingAnchor = null;
+            if (!a || !a.el || !a.el.isConnected) return;
+
+            try {
+                if (a.el.closest && a.el.closest('[data-topslack="false"]')) return;
+            } catch (_eAttr) {}
+
+            try {
+                var afterTop = a.el.getBoundingClientRect().top;
+                var delta = afterTop - a.topBefore;
+                if (!delta) return;
+                window.scrollBy(0, delta);
+            } catch (e) {}
+        }
+
+        function startAnchorObserver() {
+            if (anchorObserver) return;
+            try {
+                anchorObserver = new MutationObserver(function() {
+                    if (anchorApplied) return;
+                    anchorDirty = true;
+                });
+                anchorObserver.observe(containerEl, {
+                    subtree: true,
+                    childList: true,
+                    attributes: true,
+                    characterData: false
+                });
+            } catch (e) {
+                anchorObserver = null;
+            }
+        }
+
+        function stopAnchorObserver() {
+            if (!anchorObserver) return;
+            try { anchorObserver.disconnect(); } catch (e) {}
+            anchorObserver = null;
+        }
+
+        containerEl.addEventListener('pointerdown', function(e) {
+            try {
+                var t = e && e.target;
+                if (!(t instanceof Element)) return;
+                if (!containerEl.contains(t)) return;
+                var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
+                pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
+                anchorApplied = false;
+                anchorDirty = false;
+                startAnchorObserver();
+            } catch (e0) {}
+        }, { passive: true, capture: true });
+
+        containerEl.addEventListener('click', function() {
+            try {
+                queueMicrotask(function() {
+                    if (anchorApplied) return;
+                    anchorApplied = true;
+                    stopAnchorObserver();
+                    if (!anchorDirty) return;
+                    applyAnchorAdjustment();
+                });
+            } catch (e0) {}
+        }, false);
+
+        var controller = {
+            forceOff: function() {
+                pendingAnchor = null;
+                anchorApplied = true;
+                stopAnchorObserver();
+            }
+        };
+
+        try { attached.set(containerEl, controller); } catch (e) {}
+        return controller;
+    }
+
+    return { attach: attach };
+})();
+
+
+/* ============================================================================
    AVATAR CROPPER COMPONENT
    Standalone reusable avatar cropper (destructive - outputs cropped blob).
    Used by: AvatarPickerComponent
