@@ -181,6 +181,7 @@ if (empty($ogTitle)) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
   
   <!-- PWA: iOS standalone mode -->
   <meta name="apple-mobile-web-app-capable" content="yes">
