@@ -6871,6 +6871,15 @@ const TopSlack = (function() {
    Same .topSlack / .bottomSlack elements + CSS vars as desktop.
    Attaches per-container (same selectors as desktop slack).
    Respects data-topslack="false" / data-bottomslack="false" opt-out attributes.
+
+   Key difference from desktop: no scroll blocking (preventDefault doesn't work
+   with mobile momentum scrolling). Instead, spacers are sized to exact need
+   and ratcheted away on scroll — topSlack shrinks gradually with scroll
+   compensation, bottomSlack collapses when fully offscreen below.
+
+   BottomSlack expands on click (capture phase, before DOM handlers) rather
+   than pointerdown. Click events don't fire during scroll gestures on mobile,
+   so no expansion happens during scrolls and no flash occurs.
    ============================================================================ */
 
 const MobileSlack = (function() {
@@ -6880,10 +6889,9 @@ const MobileSlack = (function() {
     var instances = [];
     var scrollListenerInstalled = false;
     var internalAdjust = false;
-    var expandedSlackPx = 4000;
-    var collapsedSlackPx = 0;
     var tabListenerInstalled = false;
     var registered = [];
+    var BOTTOM_SLACK_PX = 4000;
 
     function ensureStyles() {
         try {
@@ -6989,16 +6997,15 @@ const MobileSlack = (function() {
         var topSlackEl = ensureTopSlackEl(containerEl);
         var bottomSlackEl = ensureBottomSlackEl(containerEl);
 
-        var topSlackPx = collapsedSlackPx;
-        var bottomSlackPx = collapsedSlackPx;
-        var clickHoldMs = 250;
-        var clickHoldUntil = 0;
+        var topSlackPx = 0;
+        var bottomSlackPx = 0;
         var pendingAnchor = null;
         var anchorObserver = null;
         var anchorApplied = false;
         var anchorDirty = false;
 
         function applyTopSlack(px) {
+            px = Math.max(0, Math.round(px));
             if (topSlackPx === px) return;
             var oldPx = topSlackPx;
             topSlackPx = px;
@@ -7017,6 +7024,7 @@ const MobileSlack = (function() {
         }
 
         function applyBottomSlack(px) {
+            px = Math.max(0, Math.round(px));
             if (bottomSlackPx === px) return;
             bottomSlackPx = px;
             try {
@@ -7027,22 +7035,21 @@ const MobileSlack = (function() {
         function ratchetTopSlack() {
             try {
                 if (topSlackPx <= 0) return;
-                if (Date.now() < clickHoldUntil) return;
                 var rect = topSlackEl.getBoundingClientRect();
                 if (rect.bottom <= 0) { applyTopSlack(0); return; }
                 if (rect.top >= window.innerHeight) return;
                 var visible = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
                 if (visible > 0) {
-                    applyTopSlack(Math.max(0, topSlackPx - visible));
+                    applyTopSlack(topSlackPx - visible);
                 }
             } catch (e) {}
         }
 
-        function collapseBottomSlack() {
+        function ratchetBottomSlack() {
             try {
-                if (bottomSlackPx !== expandedSlackPx) return;
-                if (Date.now() < clickHoldUntil) return;
-                applyBottomSlack(collapsedSlackPx);
+                if (bottomSlackPx <= 0) return;
+                var rect = bottomSlackEl.getBoundingClientRect();
+                if (rect.top >= window.innerHeight) { applyBottomSlack(0); return; }
             } catch (e) {}
         }
 
@@ -7064,11 +7071,12 @@ const MobileSlack = (function() {
                 var scrollY = window.scrollY || window.pageYOffset || 0;
                 var desired = scrollY + delta;
                 if (desired < 0) {
-                    applyTopSlack(expandedSlackPx);
-                    desired += expandedSlackPx;
+                    var needed = Math.ceil(Math.abs(desired));
+                    applyTopSlack(needed);
+                    desired += needed;
                 }
                 internalAdjust = true;
-                window.scrollTo(0, desired);
+                window.scrollTo(0, Math.max(0, Math.round(desired)));
                 internalAdjust = false;
             } catch (e) {
                 internalAdjust = false;
@@ -7099,6 +7107,7 @@ const MobileSlack = (function() {
             anchorObserver = null;
         }
 
+        // Capture anchor on pointerdown (before click handlers run).
         containerEl.addEventListener('pointerdown', function(e) {
             try {
                 var t = e && e.target;
@@ -7111,44 +7120,38 @@ const MobileSlack = (function() {
                     if (t.closest && t.closest('[role="tab"]')) return;
                 } catch (_eTab) {}
 
-                try {
-                    if (t.closest && t.closest('[data-bottomslack="false"]')) {
-                        applyBottomSlack(collapsedSlackPx);
-                        return;
-                    }
-                } catch (_eAttr) {}
+                stopAnchorObserver();
 
                 var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
-                clickHoldUntil = Date.now() + clickHoldMs;
                 anchorApplied = false;
                 anchorDirty = false;
 
-                applyBottomSlack(expandedSlackPx);
                 startAnchorObserver();
-
-                var startX = e.clientX, startY = e.clientY;
-                function onPointerMove(me) {
-                    var dx = me.clientX - startX, dy = me.clientY - startY;
-                    if (dx * dx + dy * dy > 100) {
-                        applyBottomSlack(collapsedSlackPx);
-                        pendingAnchor = null;
-                        anchorApplied = true;
-                        stopAnchorObserver();
-                        pointerCleanup();
-                    }
-                }
-                function pointerCleanup() {
-                    containerEl.removeEventListener('pointermove', onPointerMove);
-                    containerEl.removeEventListener('pointerup', pointerCleanup);
-                    containerEl.removeEventListener('pointercancel', pointerCleanup);
-                }
-                containerEl.addEventListener('pointermove', onPointerMove, { passive: true });
-                containerEl.addEventListener('pointerup', pointerCleanup, { passive: true });
-                containerEl.addEventListener('pointercancel', pointerCleanup, { passive: true });
             } catch (e0) {}
         }, { passive: true, capture: true });
 
+        // Expand bottomSlack in capture phase — fires BEFORE post.js click handlers
+        // that close/open posts. Click doesn't fire during scroll gestures, so no
+        // expansion happens during scrolls and no flash occurs.
+        containerEl.addEventListener('click', function(e) {
+            try {
+                var t = e && e.target;
+                if (!(t instanceof Element)) return;
+
+                try {
+                    if (t.closest && t.closest('[role="tab"]')) return;
+                } catch (_eTab) {}
+
+                try {
+                    if (t.closest && t.closest('[data-bottomslack="false"]')) return;
+                } catch (_eAttr) {}
+
+                applyBottomSlack(BOTTOM_SLACK_PX);
+            } catch (e0) {}
+        }, true);
+
+        // Bubble phase: after all DOM changes have settled, apply anchor adjustment.
         containerEl.addEventListener('click', function() {
             try {
                 queueMicrotask(function() {
@@ -7158,27 +7161,22 @@ const MobileSlack = (function() {
                     if (anchorDirty) {
                         applyAnchorAdjustment();
                     }
-                    clickHoldUntil = 0;
-                    collapseBottomSlack();
+                    ratchetBottomSlack();
                 });
             } catch (e0) {}
         }, false);
 
-        applyTopSlack(collapsedSlackPx);
-        applyBottomSlack(collapsedSlackPx);
-
         var controller = {
             onWindowScroll: function() {
                 ratchetTopSlack();
-                collapseBottomSlack();
+                ratchetBottomSlack();
             },
             forceOff: function() {
                 pendingAnchor = null;
                 anchorApplied = true;
-                clickHoldUntil = 0;
                 stopAnchorObserver();
-                applyTopSlack(collapsedSlackPx);
-                applyBottomSlack(collapsedSlackPx);
+                applyTopSlack(0);
+                applyBottomSlack(0);
             }
         };
 
