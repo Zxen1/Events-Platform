@@ -1774,6 +1774,11 @@
   padding: 5px 0;
 }
 
+.admin-checkout-accordion-body-row--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 /* More button (3-dot menu) - inside edit panel */
 .admin-checkout-accordion-body-more {
   position: relative;

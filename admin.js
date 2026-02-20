@@ -3804,7 +3804,6 @@ const AdminModule = (function() {
                         '<span class="admin-checkout-accordion-body-more-item-text">Hide Tier</span>' +
                         '<label class="component-switch"><input class="component-switch-input" type="checkbox"' + (isHidden ? ' checked' : '') + '><span class="component-switch-slider' + (isHidden ? ' component-switch-slider--on-default' : '') + '"></span></label>' +
                     '</div>' +
-                    '<div class="admin-checkout-accordion-body-more-item admin-checkout-accordion-body-more-delete">Delete Tier</div>' +
                 '</div>';
 
             titleRow.appendChild(titleInput);
@@ -3818,9 +3817,9 @@ const AdminModule = (function() {
                     '<label class="admin-checkout-accordion-body-label">Description</label>' +
                     '<textarea class="admin-checkout-accordion-body-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-body-row admin-checkout-accordion-body-row--checkboxes">' +
-                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
-                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
+                '<div class="admin-checkout-accordion-body-row admin-checkout-accordion-body-row--checkboxes admin-checkout-accordion-body-row--disabled">' +
+                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-featured" disabled' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
+                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar" disabled' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Flagfall Price</label>' +
@@ -3890,32 +3889,6 @@ const AdminModule = (function() {
                 markDirty();
             });
 
-            // Delete option click
-            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-body-more-delete');
-            deleteOption.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (moreMenuEl) moreMenuEl.classList.remove('admin-checkout-accordion-body-more-menu--open');
-                var titleText = titleInput.value.trim();
-                if (!titleText) titleText = 'this checkout option';
-                
-                if (window.ConfirmDialogComponent) {
-                    ConfirmDialogComponent.show({
-                        titleText: 'Delete Checkout Option',
-                        messageText: 'Delete "' + titleText + '"?',
-                        confirmLabel: 'Delete',
-                        confirmClass: 'danger',
-                        focusCancel: true
-                    }).then(function(confirmed) {
-                        if (confirmed) {
-                            accordion.remove();
-                            markDirty();
-                        }
-                    });
-                } else {
-                    accordion.remove();
-                    markDirty();
-                }
-            });
 
             // Title input updates header text
             titleInput.addEventListener('input', function() {
@@ -4127,30 +4100,6 @@ const AdminModule = (function() {
             }
         });
 
-        // Add tier button handler
-        var addBtn = document.querySelector('.admin-checkout-options-add');
-        if (addBtn && !addBtn.dataset.initialized) {
-            addBtn.dataset.initialized = 'true';
-            addBtn.addEventListener('click', function() {
-                // Get current currency from settings (may have changed since render)
-                var currentCurrency = requireWebsiteCurrencyFromSettings(settingsData);
-                var newOption = {
-                    id: 'new-' + Date.now(),
-                    checkout_key: '',
-                    checkout_title: 'New Tier',
-                    checkout_description: '',
-                    checkout_flagfall_price: 0,
-                    checkout_basic_day_rate: null,
-                    checkout_discount_day_rate: null,
-                    checkout_currency: currentCurrency,
-                    checkout_featured: 0,
-                    checkout_sidebar_ad: false,
-                    hidden: 0
-                };
-                renderCheckoutOptions([].concat(getCheckoutOptionsFromUI(), [newOption]), currentCurrency);
-                markDirty();
-            });
-        }
     }
 
     function getCheckoutOptionsFromUI() {

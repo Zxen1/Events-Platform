@@ -1164,7 +1164,6 @@ if (empty($ogTitle)) {
             <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
               <!-- Checkout options will be populated by JavaScript -->
             </div>
-            <button type="button" class="admin-checkout-options-add">Add Tier</button>
           </div>
         </section>
         
