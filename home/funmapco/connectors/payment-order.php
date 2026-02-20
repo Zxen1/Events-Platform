@@ -1,4 +1,22 @@
 <?php
+set_exception_handler(function($e) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
+    exit;
+});
+ob_start();
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if (!$err) return;
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+    if (!in_array($err['type'], $fatalTypes, true)) return;
+    while (ob_get_level() > 0) { @ob_end_clean(); }
+    if (!headers_sent()) header('Content-Type: application/json; charset=utf-8');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => $err['message'], 'file' => basename($err['file']), 'line' => $err['line']]);
+});
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(403);
