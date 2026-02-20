@@ -4342,11 +4342,16 @@ const PaymentSubmitComponent = (function() {
         submitText.className = 'component-paymentsubmit-button-text';
         submitText.textContent = baseLabel;
 
+        var submitSpinner = document.createElement('span');
+        submitSpinner.className = 'component-paymentsubmit-button-spinner';
+        submitSpinner.setAttribute('aria-hidden', 'true');
+
         var submitIcons = document.createElement('span');
         submitIcons.className = 'component-paymentsubmit-button-icons';
         submitIcons.innerHTML = paymentIconsSvg;
 
         submitBtn.appendChild(submitText);
+        submitBtn.appendChild(submitSpinner);
         submitBtn.appendChild(submitIcons);
         container.appendChild(submitBtn);
 
@@ -4377,8 +4382,14 @@ const PaymentSubmitComponent = (function() {
         };
     }
 
+    function setLoading(btn, isLoading) {
+        if (!btn) return;
+        btn.classList.toggle('component-paymentsubmit-button--loading', !!isLoading);
+    }
+
     return {
-        create: create
+        create: create,
+        setLoading: setLoading
     };
 })();
 

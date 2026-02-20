@@ -3541,6 +3541,7 @@ const MemberModule = (function() {
                     });
                 }
                 if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                    if (submitBtn) PaymentSubmitComponent.setLoading(submitBtn, true);
                     PaymentModule.charge({
                         amount:          chargeAmount,
                         currency:        chargeCurrency,
@@ -3551,14 +3552,15 @@ const MemberModule = (function() {
                         checkoutKey:     chargeCheckoutKey,
                         lineItems:       [{ type: 'new_post', checkout_key: chargeCheckoutKey, days: sel ? sel.days : null, amount: chargeAmount }],
                         onSuccess: function(result) {
+                            if (submitBtn) PaymentSubmitComponent.setLoading(submitBtn, false);
                             handleCreatePostSubmit(isAdminFree, result.transactionId);
                         },
                         onCancel: function() {
-                            if (submitBtn) submitBtn.disabled = false;
+                            if (submitBtn) { PaymentSubmitComponent.setLoading(submitBtn, false); submitBtn.disabled = false; }
                             if (adminSubmitBtn) adminSubmitBtn.disabled = false;
                         },
                         onError: function() {
-                            if (submitBtn) submitBtn.disabled = false;
+                            if (submitBtn) { PaymentSubmitComponent.setLoading(submitBtn, false); submitBtn.disabled = false; }
                             if (adminSubmitBtn) adminSubmitBtn.disabled = false;
                         }
                     });
@@ -6364,6 +6366,7 @@ const MemberModule = (function() {
 
         if (supporterAmount > 0 && !_transactionId) {
             if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                if (registerSubmitBtn) PaymentSubmitComponent.setLoading(registerSubmitBtn, true);
                 PaymentModule.charge({
                     amount:          supporterAmount,
                     currency:        supporterCurrency,
@@ -6371,9 +6374,15 @@ const MemberModule = (function() {
                     memberId:        null,
                     transactionType: 'donation',
                     onSuccess: function(result) {
+                        if (registerSubmitBtn) PaymentSubmitComponent.setLoading(registerSubmitBtn, false);
                         handleRegister(result.transactionId);
                     },
-                    onCancel: function() {}
+                    onCancel: function() {
+                        if (registerSubmitBtn) { PaymentSubmitComponent.setLoading(registerSubmitBtn, false); registerSubmitBtn.disabled = false; }
+                    },
+                    onError: function() {
+                        if (registerSubmitBtn) { PaymentSubmitComponent.setLoading(registerSubmitBtn, false); registerSubmitBtn.disabled = false; }
+                    }
                 });
             }
             return;

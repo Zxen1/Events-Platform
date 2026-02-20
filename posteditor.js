@@ -2045,6 +2045,7 @@
             } // end doUpgradeSubmit
 
             if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                PaymentSubmitComponent.setLoading(manageSubmitBtn, true);
                 PaymentModule.charge({
                     amount:          pricing.total,
                     currency:        pricing.currency,
@@ -2055,9 +2056,17 @@
                     checkoutKey:     pricing.checkout_key,
                     lineItems:       pricing.line_items,
                     onSuccess: function(result) {
+                        PaymentSubmitComponent.setLoading(manageSubmitBtn, false);
                         doUpgradeSubmit(result.transactionId);
                     },
-                    onCancel: function() {}
+                    onCancel: function() {
+                        PaymentSubmitComponent.setLoading(manageSubmitBtn, false);
+                        manageSubmitBtn.disabled = false;
+                    },
+                    onError: function() {
+                        PaymentSubmitComponent.setLoading(manageSubmitBtn, false);
+                        manageSubmitBtn.disabled = false;
+                    }
                 });
             }
         });

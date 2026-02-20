@@ -4217,6 +4217,27 @@ body.image-modal-open > *:not(.image-modal) {
   gap: 4px;
 }
 
+.component-paymentsubmit-button-spinner {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  animation: paymentSubmitSpin 0.75s linear infinite;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.component-paymentsubmit-button--loading .component-paymentsubmit-button-spinner {
+  display: inline-block;
+}
+
+@keyframes paymentSubmitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .component-paymentsubmit-admin {
   width: 100%;
 }
