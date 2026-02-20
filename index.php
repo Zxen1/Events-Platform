@@ -1158,16 +1158,7 @@ if (empty($ogTitle)) {
         
         <!-- Checkout Tab -->
         <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
-          <div class="admin-checkout-paypal-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
-              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client ID" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
-              <input type="text" class="admin-settings-field-input admin-settings-field-input--secret" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client Secret" />
-            </div>
-          </div>
+          <div id="admin-checkout-paypal-info" class="admin-checkout-paypal-info" data-message-key="msg_checkout_paypal_info"></div>
           <div class="admin-checkout-options-container">
             <span class="admin-checkout-options-header-label">Checkout Options</span>
             <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">

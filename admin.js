@@ -2832,18 +2832,15 @@ const AdminModule = (function() {
     function attachCheckoutTabHandlers() {
         if (!checkoutTabContainer) return;
         
-        // Attach to PayPal inputs
-        checkoutTabContainer.querySelectorAll('.admin-settings-field-input[data-setting-key]').forEach(function(input) {
-            var key = input.dataset.settingKey;
-            var initialValue = settingsData[key] || '';
-            input.value = initialValue;
-            
-            registerField('checkout.' + key, initialValue);
-            
-            input.addEventListener('input', function() {
-                updateField('checkout.' + key, input.value);
-            });
-        });
+        var paypalInfoEl = document.getElementById('admin-checkout-paypal-info');
+        if (paypalInfoEl && paypalInfoEl.dataset.messageKey && typeof window.getMessage === 'function') {
+            var key = String(paypalInfoEl.dataset.messageKey || '').trim();
+            if (key) {
+                window.getMessage(key, {}, false).then(function(message) {
+                    if (message) paypalInfoEl.textContent = message;
+                }).catch(function() {});
+            }
+        }
     }
 
     /* --------------------------------------------------------------------------
