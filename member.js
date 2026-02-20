@@ -3551,8 +3551,10 @@ const MemberModule = (function() {
                         transactionType: 'new_post',
                         checkoutKey:     chargeCheckoutKey,
                         lineItems:       [{ type: 'new_post', checkout_key: chargeCheckoutKey, days: sel ? sel.days : null, amount: chargeAmount }],
-                        onSuccess: function(result) {
+                        onReady: function() {
                             if (submitBtn) PaymentSubmitComponent.setLoading(submitBtn, false);
+                        },
+                        onSuccess: function(result) {
                             handleCreatePostSubmit(isAdminFree, result.transactionId);
                         },
                         onCancel: function() {
@@ -6373,8 +6375,10 @@ const MemberModule = (function() {
                     description:     'Support FunMap',
                     memberId:        null,
                     transactionType: 'donation',
-                    onSuccess: function(result) {
+                    onReady: function() {
                         if (registerSubmitBtn) PaymentSubmitComponent.setLoading(registerSubmitBtn, false);
+                    },
+                    onSuccess: function(result) {
                         handleRegister(result.transactionId);
                     },
                     onCancel: function() {

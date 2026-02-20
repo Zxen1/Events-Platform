@@ -12734,12 +12734,13 @@ const PaymentModule = (function () {
 
     // Gateway handlers — keyed by gateway name returned from server
     var _gateways = {
-        paypal: function (opts, clientId, orderId, transactionId, onSuccess, onCancel, onError) {
+        paypal: function (opts, clientId, orderId, transactionId, onSuccess, onCancel, onError, onReady) {
             var sdkUrl = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId) + '&intent=capture';
             _loadSdk('paypal', sdkUrl, function (err) {
                 if (err) { onError(err); return; }
 
                 var buttonsContainer = _showOverlay(onCancel);
+                onReady();
 
                 /* global paypal */
                 paypal.Buttons({
@@ -12811,6 +12812,7 @@ const PaymentModule = (function () {
         var onSuccess       = typeof options.onSuccess === 'function' ? options.onSuccess : function () {};
         var onCancel        = typeof options.onCancel  === 'function' ? options.onCancel  : function () {};
         var onError         = typeof options.onError   === 'function' ? options.onError   : function (e) { console.error('[PaymentModule]', e); };
+        var onReady         = typeof options.onReady   === 'function' ? options.onReady   : function () {};
 
         if (amount <= 0) { throw new Error('PaymentModule.charge: amount must be positive'); }
 
@@ -12845,7 +12847,7 @@ const PaymentModule = (function () {
                 onError(new Error('Unknown payment gateway: ' + gateway));
                 return;
             }
-            handler(options, clientId, orderId, transactionId, onSuccess, onCancel, onError);
+            handler(options, clientId, orderId, transactionId, onSuccess, onCancel, onError, onReady);
         })
         .catch(onError);
     }

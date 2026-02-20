@@ -2055,8 +2055,10 @@
                     transactionType: 'edit',
                     checkoutKey:     pricing.checkout_key,
                     lineItems:       pricing.line_items,
-                    onSuccess: function(result) {
+                    onReady: function() {
                         PaymentSubmitComponent.setLoading(manageSubmitBtn, false);
+                    },
+                    onSuccess: function(result) {
                         doUpgradeSubmit(result.transactionId);
                     },
                     onCancel: function() {
