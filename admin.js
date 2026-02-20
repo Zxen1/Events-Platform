@@ -2832,19 +2832,6 @@ const AdminModule = (function() {
     function attachCheckoutTabHandlers() {
         if (!checkoutTabContainer) return;
         
-        var paypalInfoEl = document.getElementById('admin-checkout-paypal-info');
-        if (paypalInfoEl) {
-            try {
-                var key = paypalInfoEl.getAttribute('data-message-key') || '';
-                key = String(key || '').trim();
-                if (!key) return;
-                if (typeof window.getMessage !== 'function') return;
-                window.getMessage(key, {}, true).then(function(message) {
-                    if (!message) return;
-                    paypalInfoEl.textContent = message;
-                }).catch(function() {});
-            } catch (e) {}
-        }
     }
 
     /* --------------------------------------------------------------------------
