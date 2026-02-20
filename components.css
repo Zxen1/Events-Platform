@@ -4236,12 +4236,14 @@ body.image-modal-open > *:not(.image-modal) {
 }
 
 .component-payment-box {
-  background: var(--color-panel-bg, #1a1a2e);
-  border: 1px solid var(--color-border, rgba(255,255,255,0.12));
+  background: #fff;
+  border: 1px solid #ccc;
   border-radius: 5px;
   padding: 10px 10px 0;
-  width: 340px;
+  width: 380px;
   max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -4249,7 +4251,7 @@ body.image-modal-open > *:not(.image-modal) {
 .component-payment-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-text, #fff);
+  color: #111;
   margin-bottom: 10px;
 }
 
@@ -4260,5 +4262,8 @@ body.image-modal-open > *:not(.image-modal) {
 .component-payment-cancel {
   width: 100%;
   margin-bottom: 10px;
+  color: #333;
+  background: #f0f0f0;
+  border-color: #ccc;
 }
 
