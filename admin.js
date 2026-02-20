@@ -2833,13 +2833,17 @@ const AdminModule = (function() {
         if (!checkoutTabContainer) return;
         
         var paypalInfoEl = document.getElementById('admin-checkout-paypal-info');
-        if (paypalInfoEl && paypalInfoEl.dataset.messageKey && typeof window.getMessage === 'function') {
-            var key = String(paypalInfoEl.dataset.messageKey || '').trim();
-            if (key) {
-                window.getMessage(key, {}, false).then(function(message) {
-                    if (message) paypalInfoEl.textContent = message;
+        if (paypalInfoEl) {
+            try {
+                var key = paypalInfoEl.getAttribute('data-message-key') || '';
+                key = String(key || '').trim();
+                if (!key) return;
+                if (typeof window.getMessage !== 'function') return;
+                window.getMessage(key, {}, true).then(function(message) {
+                    if (!message) return;
+                    paypalInfoEl.textContent = message;
                 }).catch(function() {});
-            }
+            } catch (e) {}
         }
     }
 
