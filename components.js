@@ -6904,6 +6904,7 @@ const MobileSlack = (function() {
                     'flex:0 0 auto;' +
                     'pointer-events:none;' +
                     'transition:none;' +
+                    'background:rgb(0,0,0);' +
                     '}';
                 document.head.appendChild(s1);
             }
@@ -6919,6 +6920,7 @@ const MobileSlack = (function() {
                     'flex:0 0 auto;' +
                     'pointer-events:none;' +
                     'transition:none;' +
+                    'background:rgb(0,0,0);' +
                     '}';
                 document.head.appendChild(s2);
             }
