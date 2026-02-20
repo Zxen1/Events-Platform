@@ -142,13 +142,16 @@ function paypal_create_order(array $paymentConfig, string $accessToken, float $a
         $purchaseUnit['soft_descriptor'] = substr($softDescriptor, 0, 22);
     }
 
-    $orderBody = [
-        'intent'         => 'CAPTURE',
-        'purchase_units' => [$purchaseUnit],
-    ];
+    $appContext = ['shipping_preference' => 'NO_SHIPPING'];
     if ($brandName !== '') {
-        $orderBody['application_context'] = ['brand_name' => $brandName];
+        $appContext['brand_name'] = $brandName;
     }
+
+    $orderBody = [
+        'intent'              => 'CAPTURE',
+        'purchase_units'      => [$purchaseUnit],
+        'application_context' => $appContext,
+    ];
 
     $body = json_encode($orderBody);
 
