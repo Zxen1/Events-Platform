@@ -2043,13 +2043,6 @@
             });
             } // end doUpgradeSubmit
 
-            // Admin bypass: skip payment
-            if (user && user.isAdmin) {
-                doUpgradeSubmit(null);
-                return;
-            }
-
-            // Payment required
             if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
                 PaymentModule.charge({
                     amount:          pricing.total,
