@@ -6943,76 +6943,15 @@ const MobileSlack = (function() {
         return el;
     }
 
-    function anyTopSlackVisible() {
-        for (var i = 0; i < instances.length; i++) {
-            try { if (instances[i].isTopVisible()) return true; } catch (e) {}
-        }
-        return false;
-    }
-
-    function anyBottomSlackVisible() {
-        for (var i = 0; i < instances.length; i++) {
-            try { if (instances[i].isBottomVisible()) return true; } catch (e) {}
-        }
-        return false;
-    }
-
-    function collapseAllOffscreen() {
-        for (var i = 0; i < instances.length; i++) {
-            try { instances[i].onWindowScroll(); } catch (e) {}
-        }
-    }
-
     function installWindowScrollListener() {
         if (scrollListenerInstalled) return;
         scrollListenerInstalled = true;
-
         window.addEventListener('scroll', function() {
             if (internalAdjust) return;
-            collapseAllOffscreen();
+            for (var i = 0; i < instances.length; i++) {
+                try { instances[i].onWindowScroll(); } catch (e) {}
+            }
         }, { passive: true });
-
-        var lastTouchY = null;
-        window.addEventListener('touchstart', function(e) {
-            try {
-                var t = e && e.touches && e.touches[0];
-                lastTouchY = t ? t.clientY : null;
-            } catch (e0) { lastTouchY = null; }
-        }, { passive: true });
-
-        window.addEventListener('touchmove', function(e) {
-            try {
-                var t = e && e.touches && e.touches[0];
-                if (!t) return;
-                var y = t.clientY;
-                if (lastTouchY === null) lastTouchY = y;
-                var dy = y - lastTouchY;
-                lastTouchY = y;
-
-                if (dy < 0 && anyBottomSlackVisible()) {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    return;
-                }
-                if (dy > 0 && anyTopSlackVisible()) {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    return;
-                }
-            } catch (e1) {}
-        }, { passive: false });
-
-        window.addEventListener('wheel', function(e) {
-            try {
-                var deltaY = Number(e && e.deltaY) || 0;
-                if (deltaY > 0 && anyBottomSlackVisible()) {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    return;
-                }
-                if (deltaY < 0 && anyTopSlackVisible()) {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    return;
-                }
-            } catch (e0) {}
-        }, { passive: false });
     }
 
     function installTabSwitchListener() {
@@ -7085,40 +7024,18 @@ const MobileSlack = (function() {
             } catch (e) {}
         }
 
-        function isTopSlackOnScreen() {
-            if (!topSlackEl) return false;
-            try {
-                var h = topSlackEl.offsetHeight || 0;
-                if (h <= 0) return false;
-                var rect = topSlackEl.getBoundingClientRect();
-                return rect.bottom > 0 && rect.top < window.innerHeight;
-            } catch (e) { return false; }
-        }
-
-        function isBottomSlackOnScreen() {
-            if (!bottomSlackEl) return false;
-            try {
-                var h = bottomSlackEl.offsetHeight || 0;
-                if (h <= 0) return false;
-                var rect = bottomSlackEl.getBoundingClientRect();
-                return rect.bottom > 0 && rect.top < window.innerHeight;
-            } catch (e) { return false; }
-        }
-
-        function collapseTopIfOffscreen() {
+        function collapseTopSlack() {
             try {
                 if (topSlackPx !== expandedSlackPx) return;
                 if (Date.now() < clickHoldUntil) return;
-                if (isTopSlackOnScreen()) return;
                 applyTopSlack(collapsedSlackPx);
             } catch (e) {}
         }
 
-        function collapseBottomIfOffscreen() {
+        function collapseBottomSlack() {
             try {
                 if (bottomSlackPx !== expandedSlackPx) return;
                 if (Date.now() < clickHoldUntil) return;
-                if (isBottomSlackOnScreen()) return;
                 applyBottomSlack(collapsedSlackPx);
             } catch (e) {}
         }
@@ -7212,8 +7129,12 @@ const MobileSlack = (function() {
                     if (anchorApplied) return;
                     anchorApplied = true;
                     stopAnchorObserver();
-                    if (!anchorDirty) return;
-                    applyAnchorAdjustment();
+                    if (anchorDirty) {
+                        applyAnchorAdjustment();
+                    }
+                    clickHoldUntil = 0;
+                    collapseTopSlack();
+                    collapseBottomSlack();
                 });
             } catch (e0) {}
         }, false);
@@ -7223,14 +7144,8 @@ const MobileSlack = (function() {
 
         var controller = {
             onWindowScroll: function() {
-                collapseTopIfOffscreen();
-                collapseBottomIfOffscreen();
-            },
-            isTopVisible: function() {
-                return isTopSlackOnScreen();
-            },
-            isBottomVisible: function() {
-                return isBottomSlackOnScreen();
+                collapseTopSlack();
+                collapseBottomSlack();
             },
             forceOff: function() {
                 pendingAnchor = null;
