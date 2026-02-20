@@ -6866,16 +6866,114 @@ const TopSlack = (function() {
    MOBILE SLACK
    Mobile equivalent of TopSlack + BottomSlack for body-scroll layouts.
    On desktop, each panel is its own scroll container and slack spacers absorb
-   layout shifts. On mobile the body scrolls everything, so no spacer is needed —
-   we just capture the tapped element's viewport position before DOM changes and
-   adjust window.scrollBy after they settle.
-   Attaches per-container (same selectors as desktop slack) so only clicks
-   inside registered containers trigger compensation.
+   layout shifts. On mobile the body scrolls everything, so spacer elements
+   inside each container absorb the shift and window.scrollBy compensates.
+   Same .topSlack / .bottomSlack elements + CSS vars as desktop.
+   Attaches per-container (same selectors as desktop slack).
    Respects data-topslack="false" / data-bottomslack="false" opt-out attributes.
    ============================================================================ */
 
 const MobileSlack = (function() {
+    var TOP_STYLE_ID = 'topSlackStyle';
+    var BOT_STYLE_ID = 'bottomSlackStyle';
     var attached = new WeakMap();
+    var instances = [];
+    var scrollListenerInstalled = false;
+    var internalAdjust = false;
+    var expandedSlackPx = 4000;
+    var collapsedSlackPx = 0;
+    var tabListenerInstalled = false;
+    var registered = [];
+
+    function ensureStyles() {
+        try {
+            if (!document.getElementById(TOP_STYLE_ID)) {
+                var s1 = document.createElement('style');
+                s1.id = TOP_STYLE_ID;
+                s1.textContent =
+                    '.topSlack{' +
+                    'height:var(--topSlack,0px);' +
+                    'flex:0 0 auto;' +
+                    'pointer-events:none;' +
+                    'transition:none;' +
+                    '}';
+                document.head.appendChild(s1);
+            }
+        } catch (e) {}
+        try {
+            if (!document.getElementById(BOT_STYLE_ID)) {
+                var s2 = document.createElement('style');
+                s2.id = BOT_STYLE_ID;
+                s2.textContent =
+                    '.bottomSlack{' +
+                    'height:var(--bottomSlack,0px);' +
+                    'min-height:var(--bottomSlack,0px);' +
+                    'flex:0 0 auto;' +
+                    'pointer-events:none;' +
+                    'transition:none;' +
+                    '}';
+                document.head.appendChild(s2);
+            }
+        } catch (e) {}
+    }
+
+    function ensureTopSlackEl(containerEl) {
+        var el = null;
+        try { el = containerEl.querySelector('.topSlack'); } catch (e) { el = null; }
+        if (el) return el;
+        try {
+            el = document.createElement('div');
+            el.className = 'topSlack';
+            el.setAttribute('aria-hidden', 'true');
+            containerEl.insertBefore(el, containerEl.firstChild);
+        } catch (e) {}
+        return el;
+    }
+
+    function ensureBottomSlackEl(containerEl) {
+        var el = null;
+        try { el = containerEl.querySelector('.bottomSlack'); } catch (e) { el = null; }
+        if (el) return el;
+        try {
+            el = document.createElement('div');
+            el.className = 'bottomSlack';
+            el.setAttribute('aria-hidden', 'true');
+            containerEl.appendChild(el);
+        } catch (e) {}
+        return el;
+    }
+
+    function installWindowScrollListener() {
+        if (scrollListenerInstalled) return;
+        scrollListenerInstalled = true;
+        window.addEventListener('scroll', function() {
+            if (internalAdjust) return;
+            for (var i = 0; i < instances.length; i++) {
+                try { instances[i].onWindowScroll(); } catch (e) {}
+            }
+        }, { passive: true });
+    }
+
+    function installTabSwitchListener() {
+        if (tabListenerInstalled) return;
+        tabListenerInstalled = true;
+        document.addEventListener('click', function(e) {
+            var t = e && e.target;
+            if (!t || !t.closest) return;
+            var tabBtn = t.closest('[role="tab"]');
+            if (!tabBtn) return;
+            var panel = tabBtn.closest('.admin-panel, .member-panel');
+            if (!panel) return;
+            for (var i = 0; i < registered.length; i++) {
+                var r = registered[i];
+                if (!r || !r.panelEl || !r.controller) continue;
+                if (r.panelEl === panel) {
+                    try { r.controller.forceOff(); } catch (e0) {}
+                    return;
+                }
+            }
+        }, true);
+    }
 
     function attach(containerEl) {
         if (!(containerEl instanceof Element)) {
@@ -6886,10 +6984,83 @@ const MobileSlack = (function() {
         try { existing = attached.get(containerEl); } catch (e) { existing = null; }
         if (existing) return existing;
 
+        ensureStyles();
+
+        var topSlackEl = ensureTopSlackEl(containerEl);
+        var bottomSlackEl = ensureBottomSlackEl(containerEl);
+
+        var topSlackPx = collapsedSlackPx;
+        var bottomSlackPx = collapsedSlackPx;
+        var clickHoldMs = 250;
+        var clickHoldUntil = 0;
         var pendingAnchor = null;
         var anchorObserver = null;
         var anchorApplied = false;
         var anchorDirty = false;
+
+        function applyTopSlack(px) {
+            if (topSlackPx === px) return;
+            var oldPx = topSlackPx;
+            topSlackPx = px;
+            internalAdjust = true;
+            try {
+                containerEl.style.setProperty('--topSlack', px + 'px');
+                if (px > oldPx) {
+                    window.scrollBy(0, px - oldPx);
+                } else {
+                    var adj = oldPx - px;
+                    var scrollY = window.scrollY || window.pageYOffset || 0;
+                    window.scrollTo(0, Math.max(0, scrollY - adj));
+                }
+            } catch (e) {}
+            internalAdjust = false;
+        }
+
+        function applyBottomSlack(px) {
+            if (bottomSlackPx === px) return;
+            bottomSlackPx = px;
+            try {
+                containerEl.style.setProperty('--bottomSlack', px + 'px');
+            } catch (e) {}
+        }
+
+        function isTopSlackOnScreen() {
+            if (!topSlackEl) return false;
+            try {
+                var h = topSlackEl.offsetHeight || 0;
+                if (h <= 0) return false;
+                var rect = topSlackEl.getBoundingClientRect();
+                return rect.bottom > 0 && rect.top < window.innerHeight;
+            } catch (e) { return false; }
+        }
+
+        function isBottomSlackOnScreen() {
+            if (!bottomSlackEl) return false;
+            try {
+                var h = bottomSlackEl.offsetHeight || 0;
+                if (h <= 0) return false;
+                var rect = bottomSlackEl.getBoundingClientRect();
+                return rect.bottom > 0 && rect.top < window.innerHeight;
+            } catch (e) { return false; }
+        }
+
+        function collapseTopIfOffscreen() {
+            try {
+                if (topSlackPx !== expandedSlackPx) return;
+                if (Date.now() < clickHoldUntil) return;
+                if (isTopSlackOnScreen()) return;
+                applyTopSlack(collapsedSlackPx);
+            } catch (e) {}
+        }
+
+        function collapseBottomIfOffscreen() {
+            try {
+                if (bottomSlackPx !== expandedSlackPx) return;
+                if (Date.now() < clickHoldUntil) return;
+                if (isBottomSlackOnScreen()) return;
+                applyBottomSlack(collapsedSlackPx);
+            } catch (e) {}
+        }
 
         function applyAnchorAdjustment() {
             if (!pendingAnchor) return;
@@ -6905,8 +7076,19 @@ const MobileSlack = (function() {
                 var afterTop = a.el.getBoundingClientRect().top;
                 var delta = afterTop - a.topBefore;
                 if (!delta) return;
-                window.scrollBy(0, delta);
-            } catch (e) {}
+
+                var scrollY = window.scrollY || window.pageYOffset || 0;
+                var desired = scrollY + delta;
+                if (desired < 0) {
+                    applyTopSlack(expandedSlackPx);
+                    desired += expandedSlackPx;
+                }
+                internalAdjust = true;
+                window.scrollTo(0, desired);
+                internalAdjust = false;
+            } catch (e) {
+                internalAdjust = false;
+            }
         }
 
         function startAnchorObserver() {
@@ -6937,11 +7119,28 @@ const MobileSlack = (function() {
             try {
                 var t = e && e.target;
                 if (!(t instanceof Element)) return;
+                if (topSlackEl && (t === topSlackEl || topSlackEl.contains(t))) return;
+                if (bottomSlackEl && (t === bottomSlackEl || bottomSlackEl.contains(t))) return;
                 if (!containerEl.contains(t)) return;
+
+                try {
+                    if (t.closest && t.closest('[role="tab"]')) return;
+                } catch (_eTab) {}
+
+                try {
+                    if (t.closest && t.closest('[data-bottomslack="false"]')) {
+                        applyBottomSlack(collapsedSlackPx);
+                        return;
+                    }
+                } catch (_eAttr) {}
+
                 var anchorEl = t.closest('[data-slack-anchor]') || t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
+                clickHoldUntil = Date.now() + clickHoldMs;
                 anchorApplied = false;
                 anchorDirty = false;
+
+                applyBottomSlack(expandedSlackPx);
                 startAnchorObserver();
             } catch (e0) {}
         }, { passive: true, capture: true });
@@ -6958,13 +7157,32 @@ const MobileSlack = (function() {
             } catch (e0) {}
         }, false);
 
+        applyTopSlack(collapsedSlackPx);
+        applyBottomSlack(collapsedSlackPx);
+
         var controller = {
+            onWindowScroll: function() {
+                collapseTopIfOffscreen();
+                collapseBottomIfOffscreen();
+            },
             forceOff: function() {
                 pendingAnchor = null;
                 anchorApplied = true;
+                clickHoldUntil = 0;
                 stopAnchorObserver();
+                applyTopSlack(collapsedSlackPx);
+                applyBottomSlack(collapsedSlackPx);
             }
         };
+
+        instances.push(controller);
+        installWindowScrollListener();
+
+        try {
+            var panelEl = containerEl.closest('.admin-panel, .member-panel');
+            if (panelEl) registered.push({ panelEl: panelEl, scrollEl: containerEl, controller: controller });
+            installTabSwitchListener();
+        } catch (e) {}
 
         try { attached.set(containerEl, controller); } catch (e) {}
         return controller;
