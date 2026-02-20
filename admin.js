@@ -4113,8 +4113,8 @@ const AdminModule = (function() {
             var priceInput = accordion.querySelector('.admin-checkout-option-price');
 
             var flagfallPrice = priceInput ? Math.round((parseFloat(priceInput.value) || 0) * 100) / 100 : 0;
-            var basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : null;
-            var discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : null;
+            var basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : 0;
+            var discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : 0;
 
             var titleInput = accordion.querySelector('.admin-checkout-option-title');
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
