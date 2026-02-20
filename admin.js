@@ -2832,6 +2832,12 @@ const AdminModule = (function() {
     function attachCheckoutTabHandlers() {
         if (!checkoutTabContainer) return;
         
+        var checkoutMsgEl = checkoutTabContainer.querySelector('[data-message-key="msg_checkout_settings"]');
+        if (checkoutMsgEl && typeof window.getMessage === 'function') {
+            window.getMessage('msg_checkout_settings', {}, true).then(function(message) {
+                if (message) checkoutMsgEl.textContent = message;
+            }).catch(function() {});
+        }
     }
 
     /* --------------------------------------------------------------------------

@@ -1158,6 +1158,7 @@ if (empty($ogTitle)) {
         
         <!-- Checkout Tab -->
         <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
+          <div class="admin-checkout-settings-message" data-message-key="msg_checkout_settings"></div>
           <div class="admin-checkout-options-container">
             <span class="admin-checkout-options-header-label">Checkout Options</span>
             <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
