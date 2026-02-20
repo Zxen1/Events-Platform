@@ -6429,7 +6429,24 @@ const BottomSlack = (function() {
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
-        
+
+        function trimSlack() {
+            try {
+                if (currentSlackPx <= 0) return;
+                var totalH = scrollEl.scrollHeight || 0;
+                var viewEnd = (scrollEl.scrollTop || 0) + (scrollEl.clientHeight || 0);
+                var realEnd = totalH - (currentSlackPx || 0);
+                var needed = Math.max(0, Math.ceil(viewEnd - realEnd));
+                applySlackPx(needed);
+            } catch (e) {}
+        }
+
+        scrollEl.addEventListener('click', function() {
+            requestAnimationFrame(function() {
+                trimSlack();
+            });
+        }, false);
+
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
         
