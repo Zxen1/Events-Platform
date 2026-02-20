@@ -3752,8 +3752,8 @@ const AdminModule = (function() {
             accordion.dataset.id = option.id;
 
             var flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
-            var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '';
-            var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
+            var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '0.00';
+            var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '0.00';
             var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
             var featuredBadgeText = isFeatured ? 'featured' : 'standard';
             var isHidden = option.hidden === 1 || option.hidden === true;
