@@ -3479,7 +3479,7 @@ const MemberModule = (function() {
        POST SUBMISSION
        -------------------------------------------------------------------------- */
     
-    function handleCreatePostSubmit(isAdminFree) {
+    function handleCreatePostSubmit(isAdminFree, _transactionId) {
         if (isSubmittingPost) return;
 
         // Posting requires a real member session (posts.member_id is NOT NULL).
@@ -3522,7 +3522,51 @@ const MemberModule = (function() {
             }
             return;
         }
-        
+
+        // Payment intercept: required for non-admin, non-free submissions
+        // _transactionId is set when re-entering after successful PayPal payment
+        if (!isAdminFree && !_transactionId) {
+            var sel = checkoutInstance && typeof checkoutInstance.getSelected === 'function'
+                ? checkoutInstance.getSelected() : null;
+            var chargeAmount = sel && sel.price !== null && isFinite(sel.price) ? parseFloat(sel.price) : 0;
+            if (chargeAmount > 0) {
+                var chargeCurrency = siteCurrency || 'USD';
+                // Extract checkout_key from the validated fields
+                var chargeCheckoutKey = null;
+                if (validation.payload && Array.isArray(validation.payload.fields)) {
+                    validation.payload.fields.forEach(function(f) {
+                        if (f && f.key === 'checkout' && f.value && f.value.checkout_key) {
+                            chargeCheckoutKey = f.value.checkout_key;
+                        }
+                    });
+                }
+                if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                    PaymentModule.charge({
+                        amount:          chargeAmount,
+                        currency:        chargeCurrency,
+                        description:     'New post',
+                        memberId:        currentUser ? currentUser.id : null,
+                        postId:          null,
+                        transactionType: 'new_post',
+                        checkoutKey:     chargeCheckoutKey,
+                        lineItems:       [{ type: 'new_post', checkout_key: chargeCheckoutKey, days: sel ? sel.days : null, amount: chargeAmount }],
+                        onSuccess: function(result) {
+                            handleCreatePostSubmit(isAdminFree, result.transactionId);
+                        },
+                        onCancel: function() {
+                            if (submitBtn) submitBtn.disabled = false;
+                            if (adminSubmitBtn) adminSubmitBtn.disabled = false;
+                        },
+                        onError: function() {
+                            if (submitBtn) submitBtn.disabled = false;
+                            if (adminSubmitBtn) adminSubmitBtn.disabled = false;
+                        }
+                    });
+                }
+                return;
+            }
+        }
+
         // Start submission
         isSubmittingPost = true;
         if (submitBtn) submitBtn.disabled = true;
@@ -3545,7 +3589,7 @@ const MemberModule = (function() {
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
             console.log('[TRACK] Map images collected:', mapImageData.files.length);
             
-            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData)
+            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId)
             .then(function(result) {
                 isSubmittingPost = false;
                 updateSubmitButtonState();
@@ -4732,7 +4776,7 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData) {
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData, transactionId) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
@@ -4760,6 +4804,7 @@ const MemberModule = (function() {
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
+                transaction_id: transactionId || null,
                 loc_qty: payload.loc_qty || window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
@@ -6192,7 +6237,7 @@ const MemberModule = (function() {
         });
     }
 
-    function handleRegister() {
+    function handleRegister(_transactionId) {
         // Hard block register submit until all required registration fieldsets are complete
         // (also prevents Enter-key submit from bypassing the disabled button).
         if (!isRegisterFormComplete()) {
@@ -6314,12 +6359,26 @@ const MemberModule = (function() {
         }
 
         // IMPORTANT: Do not store ANY registration data (including avatar uploads) unless payment has gone through.
-        // For now, allow free testing ONLY for admins (payment gateway placeholder).
-        if (!isSupporterPaymentApprovedForTesting()) {
-            showSupporterPaymentRequiredMessage();
+        var supporterAmount   = parseFloat(supporterAmountHiddenInput ? supporterAmountHiddenInput.value : '0') || 0;
+        var supporterCurrency = siteCurrency || 'USD';
+
+        if (supporterAmount > 0 && !_transactionId) {
+            if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                PaymentModule.charge({
+                    amount:          supporterAmount,
+                    currency:        supporterCurrency,
+                    description:     'Support FunMap',
+                    memberId:        null,
+                    transactionType: 'donation',
+                    onSuccess: function(result) {
+                        handleRegister(result.transactionId);
+                    },
+                    onCancel: function() {}
+                });
+            }
             return;
         }
-        
+
         function prepareRegisterAvatarBlob() {
             if (pendingRegisterAvatarBlob) return Promise.resolve(pendingRegisterAvatarBlob);
             if (pendingRegisterSiteUrl) {

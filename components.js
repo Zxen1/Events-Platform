@@ -12637,6 +12637,212 @@ window.SwitchComponent = SwitchComponent;
 window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;
 window.LanguageMenuComponent = LanguageMenuComponent;
+/* ============================================================================
+   PAYMENT MODULE
+
+   Generic payment gateway layer. Callers use PaymentModule.charge() without
+   knowing which gateway is active. The server determines the gateway from
+   config and returns the gateway name + credentials needed to load its SDK.
+
+   Adding a new gateway (e.g. Stripe):
+     1. Add a code path in the `_gateways` map below.
+     2. Add the gateway's PHP handling in payment-order.php.
+     Callers need no changes.
+   ============================================================================ */
+
+const PaymentModule = (function () {
+
+    var _sdkState = {};   // keyed by gateway name: { loaded, loading, callbacks[] }
+    var _activeOverlay = null;
+
+    function _loadSdk(gateway, url, callback) {
+        if (!_sdkState[gateway]) _sdkState[gateway] = { loaded: false, loading: false, callbacks: [] };
+        var state = _sdkState[gateway];
+        if (state.loaded) { callback(null); return; }
+        state.callbacks.push(callback);
+        if (state.loading) return;
+        state.loading = true;
+        var script = document.createElement('script');
+        script.src = url;
+        script.onload = function () {
+            state.loaded = true;
+            state.loading = false;
+            var cbs = state.callbacks.splice(0);
+            cbs.forEach(function (cb) { cb(null); });
+        };
+        script.onerror = function () {
+            state.loading = false;
+            var cbs = state.callbacks.splice(0);
+            cbs.forEach(function (cb) { cb(new Error('Payment SDK failed to load (' + gateway + ')')); });
+        };
+        document.head.appendChild(script);
+    }
+
+    function _showOverlay(onCancel) {
+        var overlay = document.createElement('div');
+        overlay.className = 'component-payment-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', 'Complete payment');
+
+        var box = document.createElement('div');
+        box.className = 'component-payment-box';
+
+        var title = document.createElement('div');
+        title.className = 'component-payment-title';
+        title.textContent = 'Complete Payment';
+
+        var buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'component-payment-buttons';
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-payment-cancel button-class-3';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            setTimeout(function () { _removeOverlay(); onCancel(); }, 0);
+        });
+
+        box.appendChild(title);
+        box.appendChild(buttonsContainer);
+        box.appendChild(cancelBtn);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        _activeOverlay = overlay;
+        return buttonsContainer;
+    }
+
+    function _removeOverlay() {
+        if (_activeOverlay && _activeOverlay.parentNode) {
+            _activeOverlay.parentNode.removeChild(_activeOverlay);
+        }
+        _activeOverlay = null;
+    }
+
+    // Gateway handlers — keyed by gateway name returned from server
+    var _gateways = {
+        paypal: function (opts, clientId, orderId, transactionId, onSuccess, onCancel, onError) {
+            var sdkUrl = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId) + '&intent=capture';
+            _loadSdk('paypal', sdkUrl, function (err) {
+                if (err) { onError(err); return; }
+
+                var buttonsContainer = _showOverlay(onCancel);
+
+                /* global paypal */
+                paypal.Buttons({
+                    createOrder: function () {
+                        return orderId;
+                    },
+                    onApprove: function (data) {
+                        _removeOverlay();
+                        fetch('/gateway.php?action=payment-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sub_action: 'capture',
+                                order_id: data.orderID,
+                                transaction_id: transactionId,
+                                gateway: 'paypal'
+                            })
+                        })
+                        .then(function (r) { return r.json(); })
+                        .then(function (res) {
+                            if (res && res.success) {
+                                onSuccess({ transactionId: transactionId });
+                            } else {
+                                onError(new Error('Payment capture failed'));
+                            }
+                        })
+                        .catch(onError);
+                    },
+                    onCancel: function () {
+                        _removeOverlay();
+                        onCancel();
+                    },
+                    onError: function (paypalErr) {
+                        _removeOverlay();
+                        onError(paypalErr || new Error('PayPal error'));
+                    }
+                }).render(buttonsContainer);
+            });
+        }
+    };
+
+    /**
+     * Charge the user via the configured payment gateway.
+     *
+     * @param {Object} options
+     * @param {number}   options.amount           - Charge amount (positive)
+     * @param {string}   options.currency         - ISO currency code e.g. 'USD'
+     * @param {string}   options.description      - Human-readable description
+     * @param {number}   options.memberId         - Logged-in member ID
+     * @param {number}  [options.postId]          - Post ID (null for new posts)
+     * @param {string}  [options.transactionType] - 'new_post' | 'edit' | 'donation'
+     * @param {string}  [options.checkoutKey]     - e.g. 'premium'
+     * @param {Array}   [options.lineItems]       - Line item array for transactions record
+     * @param {Function} options.onSuccess        - Called with { transactionId } on success
+     * @param {Function} options.onCancel         - Called when user cancels
+     * @param {Function} [options.onError]        - Called with Error on failure
+     */
+    function charge(options) {
+        if (!options || typeof options !== 'object') throw new Error('PaymentModule.charge: options required');
+
+        var amount          = parseFloat(options.amount) || 0;
+        var currency        = String(options.currency || 'USD').toUpperCase();
+        var description     = String(options.description || 'Payment');
+        var memberId        = options.memberId || null;
+        var postId          = options.postId || null;
+        var transactionType = String(options.transactionType || 'new_post');
+        var checkoutKey     = options.checkoutKey || null;
+        var lineItems       = options.lineItems || null;
+        var onSuccess       = typeof options.onSuccess === 'function' ? options.onSuccess : function () {};
+        var onCancel        = typeof options.onCancel  === 'function' ? options.onCancel  : function () {};
+        var onError         = typeof options.onError   === 'function' ? options.onError   : function (e) { console.error('[PaymentModule]', e); };
+
+        if (amount <= 0) { throw new Error('PaymentModule.charge: amount must be positive'); }
+
+        fetch('/gateway.php?action=payment-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sub_action:        'create',
+                amount:            amount,
+                currency:          currency,
+                description:       description,
+                member_id:         memberId,
+                post_id:           postId,
+                transaction_type:  transactionType,
+                checkout_key:      checkoutKey,
+                line_items:        lineItems
+            })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (!res || !res.success) {
+                onError(new Error(res && res.message ? res.message : 'Failed to create payment order'));
+                return;
+            }
+            var gateway       = res.gateway;
+            var clientId      = res.client_id;
+            var orderId       = res.order_id;
+            var transactionId = res.transaction_id;
+
+            var handler = _gateways[gateway];
+            if (!handler) {
+                onError(new Error('Unknown payment gateway: ' + gateway));
+                return;
+            }
+            handler(options, clientId, orderId, transactionId, onSuccess, onCancel, onError);
+        })
+        .catch(onError);
+    }
+
+    return { charge: charge };
+
+})();
+
 window.PhonePrefixComponent = PhonePrefixComponent;
 window.CountryComponent = CountryComponent;
 window.MemberAuthFieldsetsComponent = MemberAuthFieldsetsComponent;
@@ -12647,6 +12853,7 @@ window.AgeRatingComponent = AgeRatingComponent;
 window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.PaymentSubmitComponent = PaymentSubmitComponent;
+window.PaymentModule = PaymentModule;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
 window.ThreeButtonDialogComponent = ThreeButtonDialogComponent;
 window.ToastComponent = ToastComponent;

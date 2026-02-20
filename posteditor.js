@@ -1986,24 +1986,27 @@
             }
             var pricing = buildLineItems();
             if (pricing.total <= 0) return;
-            manageSubmitBtn.disabled = true;
 
             var user = getCurrentUser();
-            var payload = {
-                post_id: postId,
-                member_id: user ? user.id : null,
-                member_name: user ? (user.username || user.name || '') : '',
-                member_type: user && user.isAdmin ? 'admin' : 'member',
-                manage_action: 'upgrade_checkout',
-                checkout_key: pricing.checkout_key,
-                currency: pricing.currency,
-                amount: pricing.total,
-                line_items: pricing.line_items,
-                add_days: parseInt(durationAddInput.value, 10) || 0,
-                loc_qty: pricingLocUsed
-            };
 
-            fetch('/gateway.php?action=edit-post', {
+            function doUpgradeSubmit(transactionId) {
+                manageSubmitBtn.disabled = true;
+                var payload = {
+                    post_id: postId,
+                    member_id: user ? user.id : null,
+                    member_name: user ? (user.username || user.name || '') : '',
+                    member_type: user && user.isAdmin ? 'admin' : 'member',
+                    manage_action: 'upgrade_checkout',
+                    checkout_key: pricing.checkout_key,
+                    currency: pricing.currency,
+                    amount: pricing.total,
+                    line_items: pricing.line_items,
+                    transaction_id: transactionId || null,
+                    add_days: parseInt(durationAddInput.value, 10) || 0,
+                    loc_qty: pricingLocUsed
+                };
+
+                fetch('/gateway.php?action=edit-post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -2038,6 +2041,31 @@
                     });
                 }
             });
+            } // end doUpgradeSubmit
+
+            // Admin bypass: skip payment
+            if (user && user.isAdmin) {
+                doUpgradeSubmit(null);
+                return;
+            }
+
+            // Payment required
+            if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
+                PaymentModule.charge({
+                    amount:          pricing.total,
+                    currency:        pricing.currency,
+                    description:     'Post #' + postId + ' upgrade',
+                    memberId:        user ? user.id : null,
+                    postId:          postId,
+                    transactionType: 'edit',
+                    checkoutKey:     pricing.checkout_key,
+                    lineItems:       pricing.line_items,
+                    onSuccess: function(result) {
+                        doUpgradeSubmit(result.transactionId);
+                    },
+                    onCancel: function() {}
+                });
+            }
         });
 
         body.appendChild(manageActionsWrapper);

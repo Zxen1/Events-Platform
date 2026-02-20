@@ -348,12 +348,13 @@ if ($manageAction !== '') {
 
     case 'upgrade_checkout':
       // Validate required fields
-      $checkoutKey = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : '';
-      $currency    = isset($data['currency']) ? trim((string)$data['currency']) : 'USD';
-      $amount      = isset($data['amount']) ? round((float)$data['amount'], 2) : 0.00;
-      $lineItems   = isset($data['line_items']) && is_array($data['line_items']) ? $data['line_items'] : [];
-      $addDays     = isset($data['add_days']) ? (int)$data['add_days'] : 0;
-      $newLocQty   = isset($data['loc_qty']) ? (int)$data['loc_qty'] : 0;
+      $checkoutKey   = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : '';
+      $currency      = isset($data['currency']) ? trim((string)$data['currency']) : 'USD';
+      $amount        = isset($data['amount']) ? round((float)$data['amount'], 2) : 0.00;
+      $lineItems     = isset($data['line_items']) && is_array($data['line_items']) ? $data['line_items'] : [];
+      $addDays       = isset($data['add_days']) ? (int)$data['add_days'] : 0;
+      $newLocQty     = isset($data['loc_qty']) ? (int)$data['loc_qty'] : 0;
+      $transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : null;
 
       if ($checkoutKey === '' || $amount <= 0 || empty($lineItems)) {
         fail_key(400, 'msg_post_edit_error');
@@ -361,7 +362,24 @@ if ($manageAction !== '') {
       if ($addDays < 0) $addDays = 0;
       if ($newLocQty < 1) $newLocQty = 1;
 
-      $lineItemsJson = json_encode($lineItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+      // Verify payment transaction (admin bypass allowed)
+      if (!$isAdmin) {
+        if (!$transactionId) {
+          fail_key(402, 'msg_post_edit_error', null, ['stage' => 'payment_required']);
+        }
+        $stmtTxCheck = $mysqli->prepare(
+          "SELECT status FROM transactions WHERE id = ? AND post_id = ? AND member_id = ? LIMIT 1"
+        );
+        if (!$stmtTxCheck) fail_key(500, 'msg_post_edit_error');
+        $stmtTxCheck->bind_param('iii', $transactionId, $postId, $memberId);
+        $stmtTxCheck->execute();
+        $stmtTxCheck->bind_result($txStatus);
+        $txFound = $stmtTxCheck->fetch();
+        $stmtTxCheck->close();
+        if (!$txFound || $txStatus !== 'paid') {
+          fail_key(402, 'msg_post_edit_error', null, ['stage' => 'payment_verification', 'status' => $txStatus ?? 'not_found']);
+        }
+      }
 
       // Fetch current post state for safe updates
       $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
@@ -385,19 +403,7 @@ if ($manageAction !== '') {
       if (!$mysqli->begin_transaction()) fail_key(500, 'msg_post_edit_error');
       $upgradeActive = true;
 
-      // 1. Insert transaction record (status pending until payment confirmed)
-      $description = 'Post #' . $postId . ' upgrade';
-      $stmtTx = $mysqli->prepare(
-        "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, amount, currency, line_items, description, status, created_at, updated_at)
-         VALUES (?, ?, 'edit', ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
-      );
-      if (!$stmtTx) { $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
-      $stmtTx->bind_param('iisdsss', $memberId, $postId, $checkoutKey, $amount, $currency, $lineItemsJson, $description);
-      if (!$stmtTx->execute()) { $stmtTx->close(); $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
-      $transactionId = $stmtTx->insert_id;
-      $stmtTx->close();
-
-      // 2. Update post: checkout_key, days_purchased, loc_paid, expires_at
+      // Update post: checkout_key, days_purchased, loc_paid, expires_at
       $newDaysPurchased = (int)$curDaysPurchased + $addDays;
 
       // Calculate new expiry: add days to current expires_at (or from now if expired)
@@ -426,7 +432,6 @@ if ($manageAction !== '') {
       echo json_encode([
         'success'        => true,
         'manage_action'  => 'upgrade_checkout',
-        'transaction_id' => $transactionId,
         'checkout_key'   => $checkoutKey,
         'days_purchased' => $newDaysPurchased,
         'loc_paid'       => $newLocPaid,

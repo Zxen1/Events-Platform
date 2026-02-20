@@ -4221,3 +4221,44 @@ body.image-modal-open > *:not(.image-modal) {
   width: 100%;
 }
 
+/* ============================================================
+   PAYMENT OVERLAY (PaymentModule)
+   ============================================================ */
+
+.component-payment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: var(--layer-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.component-payment-box {
+  background: var(--color-panel-bg, #1a1a2e);
+  border: 1px solid var(--color-border, rgba(255,255,255,0.12));
+  border-radius: 5px;
+  padding: 10px 10px 0;
+  width: 340px;
+  max-width: calc(100vw - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.component-payment-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text, #fff);
+  margin-bottom: 10px;
+}
+
+.component-payment-buttons {
+  margin-bottom: 10px;
+}
+
+.component-payment-cancel {
+  width: 100%;
+  margin-bottom: 10px;
+}
+

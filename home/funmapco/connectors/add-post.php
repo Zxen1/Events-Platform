@@ -254,6 +254,9 @@ $isAdmin = strtolower($memberType) === 'admin' ||
 // Check if admin requested to skip payment
 $skipPayment = $isAdmin && !empty($data['skip_payment']);
 
+// Payment gateway transaction ID (required for non-admin, non-free submissions)
+$transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : null;
+
 // IMPORTANT: posts are keyed by subcategory_key, NOT numeric subcategory_id.
 // subcategory_id may exist in the system DB for admin organization, but must NOT be required here.
 if ($subcategoryKey === '') {
@@ -265,6 +268,25 @@ if ($memberId === null || $memberId <= 0) {
 }
 // member_name is optional (DB allows NULL); do not block post creation on it.
 
+// Verify transaction for non-admin, non-free submissions
+if (!$skipPayment && $transactionId !== null && $transactionId > 0) {
+  $stmtTx = $mysqli->prepare("SELECT status FROM transactions WHERE id = ? AND member_id = ? LIMIT 1");
+  if (!$stmtTx) {
+    fail_key(500, 'msg_post_create_error');
+  }
+  $stmtTx->bind_param('ii', $transactionId, $memberId);
+  $stmtTx->execute();
+  $stmtTx->bind_result($txStatus);
+  $txFound = $stmtTx->fetch();
+  $stmtTx->close();
+  if (!$txFound || $txStatus !== 'paid') {
+    fail_key(402, 'msg_post_create_error', null, ['stage' => 'payment_verification', 'status' => $txStatus ?? 'not_found']);
+  }
+} elseif (!$skipPayment && ($transactionId === null || $transactionId <= 0)) {
+  // No transaction ID supplied for a paid submission — block it
+  fail_key(402, 'msg_post_create_error', null, ['stage' => 'payment_required']);
+}
+
 $transactionActive = false;
 
 if (!$mysqli->begin_transaction()) {
@@ -273,16 +295,12 @@ if (!$mysqli->begin_transaction()) {
 
 $transactionActive = true;
 
-// Determine payment status - admins can skip payment if requested, others get 'pending'
-// TEMPORARY: No payment gateway yet - all posts go live immediately
-// TODO: Revert to ($skipPayment ? 'paid' : 'pending') when payment gateway is ready
-$paymentStatus = 'paid';
+// Determine payment status - admins skip payment, others require payment confirmation
+$paymentStatus = $skipPayment ? 'paid' : 'pending';
 
 // Admin free submit: post goes live immediately
-// Regular member: post stays paused until payment received
-// TEMPORARY: No payment gateway yet - all posts go live immediately
-// TODO: Revert to ($skipPayment ? 'active' : 'paused') when payment gateway is ready
-$visibility = 'active';
+// Regular member: post stays hidden until payment confirmed by payment gateway
+$visibility = $skipPayment ? 'active' : 'hidden';
 
 // Moderation status: 'clean' for all new posts
 // Moderation system only deals with flagged/reported content later, not initial submission
@@ -1390,6 +1408,16 @@ if (!$mysqli->commit()) {
   abort_with_error($mysqli, 500, 'Failed to finalize post.', $transactionActive);
 }
 $transactionActive = false;
+
+// Link transaction to the newly created post
+if ($transactionId !== null && $transactionId > 0) {
+  $stmtTxLink = $mysqli->prepare("UPDATE transactions SET post_id = ?, updated_at = NOW() WHERE id = ? AND post_id IS NULL");
+  if ($stmtTxLink) {
+    $stmtTxLink->bind_param('ii', $insertId, $transactionId);
+    $stmtTxLink->execute();
+    $stmtTxLink->close();
+  }
+}
 
 $msgKey = $mediaIds ? 'msg_post_create_with_images' : 'msg_post_create_success';
 echo json_encode(['success'=>true, 'insert_id'=>$insertId, 'message_key'=>$msgKey]);
