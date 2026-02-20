@@ -7024,11 +7024,17 @@ const MobileSlack = (function() {
             } catch (e) {}
         }
 
-        function collapseTopSlack() {
+        function ratchetTopSlack() {
             try {
-                if (topSlackPx !== expandedSlackPx) return;
+                if (topSlackPx <= 0) return;
                 if (Date.now() < clickHoldUntil) return;
-                applyTopSlack(collapsedSlackPx);
+                var rect = topSlackEl.getBoundingClientRect();
+                if (rect.bottom <= 0) { applyTopSlack(0); return; }
+                if (rect.top >= window.innerHeight) return;
+                var visible = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+                if (visible > 0) {
+                    applyTopSlack(Math.max(0, topSlackPx - visible));
+                }
             } catch (e) {}
         }
 
@@ -7120,6 +7126,26 @@ const MobileSlack = (function() {
 
                 applyBottomSlack(expandedSlackPx);
                 startAnchorObserver();
+
+                var startX = e.clientX, startY = e.clientY;
+                function onPointerMove(me) {
+                    var dx = me.clientX - startX, dy = me.clientY - startY;
+                    if (dx * dx + dy * dy > 100) {
+                        applyBottomSlack(collapsedSlackPx);
+                        pendingAnchor = null;
+                        anchorApplied = true;
+                        stopAnchorObserver();
+                        pointerCleanup();
+                    }
+                }
+                function pointerCleanup() {
+                    containerEl.removeEventListener('pointermove', onPointerMove);
+                    containerEl.removeEventListener('pointerup', pointerCleanup);
+                    containerEl.removeEventListener('pointercancel', pointerCleanup);
+                }
+                containerEl.addEventListener('pointermove', onPointerMove, { passive: true });
+                containerEl.addEventListener('pointerup', pointerCleanup, { passive: true });
+                containerEl.addEventListener('pointercancel', pointerCleanup, { passive: true });
             } catch (e0) {}
         }, { passive: true, capture: true });
 
@@ -7133,7 +7159,6 @@ const MobileSlack = (function() {
                         applyAnchorAdjustment();
                     }
                     clickHoldUntil = 0;
-                    collapseTopSlack();
                     collapseBottomSlack();
                 });
             } catch (e0) {}
@@ -7144,7 +7169,7 @@ const MobileSlack = (function() {
 
         var controller = {
             onWindowScroll: function() {
-                collapseTopSlack();
+                ratchetTopSlack();
                 collapseBottomSlack();
             },
             forceOff: function() {
