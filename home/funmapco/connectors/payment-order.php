@@ -275,7 +275,7 @@ if ($subAction === 'create') {
         echo json_encode(['success' => false, 'message' => 'DB prepare failed']);
         exit;
     }
-    $stmt->bind_param('iissssdss', $memberId, $postId, $transactionType, $checkoutKey, $orderId, $gateway, $amount, $currency, $lineItemsJson, $description);
+    $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $orderId, $gateway, $amount, $currency, $lineItemsJson, $description);
     if (!$stmt->execute()) {
         $stmt->close();
         http_response_code(500);
