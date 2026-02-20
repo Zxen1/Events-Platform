@@ -137,6 +137,15 @@ function paypal_create_order(array $paymentConfig, string $accessToken, float $a
             'value'         => number_format($amount, 2, '.', ''),
         ],
         'description' => $description,
+        'items'       => [[
+            'name'        => $description,
+            'unit_amount' => [
+                'currency_code' => strtoupper($currency),
+                'value'         => number_format($amount, 2, '.', ''),
+            ],
+            'quantity'  => '1',
+            'category'  => 'DIGITAL_GOODS',
+        ]],
     ];
     if ($softDescriptor !== '') {
         $purchaseUnit['soft_descriptor'] = substr($softDescriptor, 0, 22);
