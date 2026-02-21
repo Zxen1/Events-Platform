@@ -993,6 +993,10 @@ const App = (function() {
      -------------------------------------------------------------------------- */
 
   (function initResizeBlurOverlay() {
+    // Full-screen backdrop-filter blur shown during window resize to hide layout jitter.
+    // Set to true to re-enable.
+    var ENABLED = false;
+
     var overlay      = null;
     var hideTimer    = null;
     var overlayShown = false;
@@ -1007,6 +1011,8 @@ const App = (function() {
     }
 
     window.addEventListener('resize', function() {
+      if (!ENABLED) return;
+
       var el = getOverlay();
 
       if (!overlayShown) {
