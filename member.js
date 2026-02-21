@@ -323,6 +323,14 @@ const MemberModule = (function() {
                 panelContent.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+
+                // If dragged back to the right edge, restore CSS right: 0 lock
+                var atRightEdge = parseFloat(panelContent.style.left) >= window.innerWidth - panelContent.offsetWidth - 20;
+                if (atRightEdge) {
+                    panelDragged = false;
+                    panelContent.style.left  = '';
+                    panelContent.style.right = '';
+                }
             }
             
             document.addEventListener('mousemove', onMove);

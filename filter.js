@@ -1817,6 +1817,14 @@ const FilterModule = (function() {
                 contentEl.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+
+                // If dragged back to the left edge, restore CSS left: 0 lock
+                var atLeftEdge = parseFloat(contentEl.style.left) <= 20;
+                if (atLeftEdge) {
+                    panelDragged = false;
+                    contentEl.style.left  = '';
+                    contentEl.style.right = '';
+                }
             }
             
             document.addEventListener('mousemove', onMove);
