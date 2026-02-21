@@ -1829,8 +1829,8 @@ const FilterModule = (function() {
         // RESIZE_CLOSE:     panel closes with its normal animation when resize starts.
         // Default (all false): no intervention — browser renders as normal.
         var RESIZE_SMOOTHING = false;
-        var RESIZE_TELEPORT  = true;
-        var RESIZE_CLOSE     = false;
+        var RESIZE_TELEPORT  = false;
+        var RESIZE_CLOSE     = true;
 
         var resizeTimer  = null;
         var resizeFading = false;
