@@ -382,12 +382,7 @@ const AdminModule = (function() {
                     panelContent.style.left = newLeft + 'px';
                     panelContent.style.opacity = '1';
                     panelContent.style.transition = '';
-                    panelContent.classList.remove('admin-panel-contents--visible');
-                    void panelContent.offsetWidth;
-                    requestAnimationFrame(function() {
-                        panelContent.classList.add('admin-panel-contents--visible');
-                        resizeFading = false;
-                    });
+                    resizeFading = false;
                 } else if (RESIZE_SMOOTHING) {
                     panelContent.style.left = newLeft + 'px';
                 }

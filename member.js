@@ -360,12 +360,7 @@ const MemberModule = (function() {
                     panelContent.style.left = newLeft + 'px';
                     panelContent.style.opacity = '1';
                     panelContent.style.transition = '';
-                    panelContent.classList.remove('member-panel-contents--visible');
-                    void panelContent.offsetWidth;
-                    requestAnimationFrame(function() {
-                        panelContent.classList.add('member-panel-contents--visible');
-                        resizeFading = false;
-                    });
+                    resizeFading = false;
                 } else if (RESIZE_SMOOTHING) {
                     panelContent.style.left = newLeft + 'px';
                 }

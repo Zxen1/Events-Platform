@@ -1854,12 +1854,7 @@ const FilterModule = (function() {
                     contentEl.style.left = newLeft + 'px';
                     contentEl.style.opacity = '1';
                     contentEl.style.transition = '';
-                    contentEl.classList.remove('panel-visible');
-                    void contentEl.offsetWidth;
-                    requestAnimationFrame(function() {
-                        contentEl.classList.add('panel-visible');
-                        resizeFading = false;
-                    });
+                    resizeFading = false;
                 } else if (RESIZE_SMOOTHING) {
                     contentEl.style.left = newLeft + 'px';
                 }
