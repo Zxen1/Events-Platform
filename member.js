@@ -337,7 +337,7 @@ const MemberModule = (function() {
                 } else {
                     panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
                 }
-            }, 50);
+            }, 100);
         });
     }
 
