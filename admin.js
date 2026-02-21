@@ -359,16 +359,10 @@ const AdminModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
-        // ---- Resize Smoothing / Resize Teleport ----
         // ---- Resize Modes ----
-        // The position snap always runs — once openPanel sets style.left the browser no longer
-        // tracks the right edge automatically, so the resize handler must always reposition.
-        // RESIZE_SMOOTHING: snap only, no visual effect during resize.
-        // RESIZE_TELEPORT:  panel hides instantly on resize start, reappears at correct position.
-        // Both false = bare snap with no label (same visual result as RESIZE_SMOOTHING).
-        var RESIZE_SMOOTHING = false;
-        var RESIZE_TELEPORT  = false;
-
+        // Controlled via Admin Settings → Resize Anti-Jitter (window._resizeAntiJitter).
+        // Values: 'off' | 'smoothing' | 'teleport' | 'blur'
+        // Position snap always runs regardless of mode.
         var resizeTimer  = null;
         var resizeFading = false;
 
@@ -376,7 +370,9 @@ const AdminModule = (function() {
             if (!panelContent || !panelContent.style.left) return;
             if (window.innerWidth <= 530) return;
 
-            if (RESIZE_TELEPORT && !resizeFading) {
+            var mode = window._resizeAntiJitter || 'off';
+
+            if (mode === 'teleport' && !resizeFading) {
                 resizeFading = true;
                 panelContent.style.transition = 'none';
                 panelContent.style.opacity = '0';
@@ -393,7 +389,7 @@ const AdminModule = (function() {
                 void panelContent.offsetWidth;
                 panelContent.style.transition = '';
 
-                if (RESIZE_TELEPORT) {
+                if (mode === 'teleport') {
                     panelContent.style.opacity = '1';
                     resizeFading = false;
                 }
@@ -3466,6 +3462,25 @@ const AdminModule = (function() {
             });
         }
         
+        // Resize Anti-Jitter radio buttons
+        var resizeAntiJitterRadios = settingsContainer.querySelectorAll('input[name="adminResizeAntiJitter"]');
+        if (resizeAntiJitterRadios.length) {
+            var initialResizeMode = settingsData.resize_antijitter || 'off';
+            resizeAntiJitterRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialResizeMode);
+            });
+            registerField('settings.resize_antijitter', initialResizeMode);
+            applyResizeAntiJitter(initialResizeMode);
+            resizeAntiJitterRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('settings.resize_antijitter', radio.value);
+                        applyResizeAntiJitter(radio.value);
+                    }
+                });
+            });
+        }
+
         // Grey out welcome load type when welcome message is off
         var welcomeEnabledCheckbox = document.getElementById('adminWelcomeEnabled');
         var welcomeLoadTypeContainer = document.getElementById('adminWelcomeLoadType');
@@ -3551,6 +3566,10 @@ const AdminModule = (function() {
         addImageSyncExplanation();
     }
 
+    function applyResizeAntiJitter(mode) {
+        window._resizeAntiJitter = mode || 'off';
+    }
+
     function syncSettingsToggleUi(checkbox) {
         if (!checkbox) return;
         var wrapper = checkbox.closest('.component-switch');
@@ -3594,8 +3613,9 @@ const AdminModule = (function() {
         var countdownTooltipEls = document.querySelectorAll('.admin-countdown-tooltip');
         var mapCardTooltipEl = document.querySelector('.admin-map-card-breakpoint-tooltip');
         var mapCardPriorityTooltipEl = document.querySelector('.admin-map-card-priority-tooltip');
+        var resizeAntiJitterTooltipEl = document.querySelector('.admin-resize-antijitter-tooltip');
         
-        if (!countdownTooltipEls.length && !mapCardTooltipEl && !mapCardPriorityTooltipEl) return;
+        if (!countdownTooltipEls.length && !mapCardTooltipEl && !mapCardPriorityTooltipEl && !resizeAntiJitterTooltipEl) return;
         
         // Fetch messages from admin_messages
         fetch('/gateway.php?action=get-admin-settings&include_messages=true')
@@ -3605,6 +3625,7 @@ const AdminModule = (function() {
                     var timezoneMsg = null;
                     var mapCardMsg = null;
                     var mapCardPriorityMsg = null;
+                    var resizeAntiJitterMsg = null;
                     
                     // Messages are grouped by container
                     for (var containerKey in data.messages) {
@@ -3620,6 +3641,9 @@ const AdminModule = (function() {
                                 }
                                 if (msg.message_key === 'msg_map_card_priority_info') {
                                     mapCardPriorityMsg = msg;
+                                }
+                                if (msg.message_key === 'msg_resize_antijitter_info') {
+                                    resizeAntiJitterMsg = msg;
                                 }
                             }
                         }
@@ -3640,6 +3664,11 @@ const AdminModule = (function() {
                     // Populate map card priority tooltip
                     if (mapCardPriorityMsg && mapCardPriorityMsg.message_text && mapCardPriorityTooltipEl) {
                         mapCardPriorityTooltipEl.textContent = mapCardPriorityMsg.message_text;
+                    }
+
+                    // Populate resize anti-jitter tooltip
+                    if (resizeAntiJitterMsg && resizeAntiJitterMsg.message_text && resizeAntiJitterTooltipEl) {
+                        resizeAntiJitterTooltipEl.textContent = resizeAntiJitterMsg.message_text;
                     }
                 }
             })

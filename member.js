@@ -338,14 +338,9 @@ const MemberModule = (function() {
         });
 
         // ---- Resize Modes ----
-        // The position snap always runs — once openPanel sets style.left the browser no longer
-        // tracks the right edge automatically, so the resize handler must always reposition.
-        // RESIZE_SMOOTHING: snap only, no visual effect during resize.
-        // RESIZE_TELEPORT:  panel hides instantly on resize start, reappears at correct position.
-        // Both false = bare snap with no label (same visual result as RESIZE_SMOOTHING).
-        var RESIZE_SMOOTHING = false;
-        var RESIZE_TELEPORT  = false;
-
+        // Controlled via Admin Settings → Resize Anti-Jitter (window._resizeAntiJitter).
+        // Values: 'off' | 'smoothing' | 'teleport' | 'blur'
+        // Position snap always runs regardless of mode.
         var resizeTimer  = null;
         var resizeFading = false;
 
@@ -353,7 +348,9 @@ const MemberModule = (function() {
             if (!panelContent || !panelContent.style.left) return;
             if (window.innerWidth <= 530) return;
 
-            if (RESIZE_TELEPORT && !resizeFading) {
+            var mode = window._resizeAntiJitter || 'off';
+
+            if (mode === 'teleport' && !resizeFading) {
                 resizeFading = true;
                 panelContent.style.transition = 'none';
                 panelContent.style.opacity = '0';
@@ -370,7 +367,7 @@ const MemberModule = (function() {
                 void panelContent.offsetWidth;
                 panelContent.style.transition = '';
 
-                if (RESIZE_TELEPORT) {
+                if (mode === 'teleport') {
                     panelContent.style.opacity = '1';
                     resizeFading = false;
                 }

@@ -994,9 +994,7 @@ const App = (function() {
 
   (function initResizeBlurOverlay() {
     // Full-screen backdrop-filter blur shown during window resize to hide layout jitter.
-    // Set to true to re-enable.
-    var ENABLED = false;
-
+    // Active when Admin Settings → Resize Anti-Jitter is set to 'blur' (window._resizeAntiJitter).
     var overlay      = null;
     var hideTimer    = null;
     var overlayShown = false;
@@ -1011,7 +1009,7 @@ const App = (function() {
     }
 
     window.addEventListener('resize', function() {
-      if (!ENABLED) return;
+      if ((window._resizeAntiJitter || 'off') !== 'blur') return;
 
       var el = getOverlay();
 
