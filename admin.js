@@ -351,32 +351,24 @@ const AdminModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
-        // ---- Resize Smoothing / Resize Teleport / Resize Close ----
+        // ---- Resize Smoothing / Resize Teleport ----
         // RESIZE_SMOOTHING: panel holds position during resize, then glides back via CSS transition.
-        // RESIZE_TELEPORT:  panel fades out on resize start, snaps to correct position, fades back in.
-        // RESIZE_CLOSE:     panel closes with its normal animation when resize starts.
-        // Default (all false): no intervention — browser renders as normal.
+        // RESIZE_TELEPORT:  panel hides instantly on resize start, snaps to correct position,
+        //                   then slides back in using the normal open animation.
+        // Default (both false): no intervention — browser renders as normal.
         var RESIZE_SMOOTHING = false;
-        var RESIZE_TELEPORT  = false;
-        var RESIZE_CLOSE     = true;
+        var RESIZE_TELEPORT  = true;
 
         var resizeTimer  = null;
         var resizeFading = false;
-        var resizeClosed = false;
 
         window.addEventListener('resize', function() {
             if (!panelContent || !panelContent.style.left) return;
             if (window.innerWidth <= 530) return;
 
-            if (RESIZE_CLOSE && !resizeClosed) {
-                resizeClosed = true;
-                closePanel();
-                return;
-            }
-
             if (RESIZE_TELEPORT && !resizeFading) {
                 resizeFading = true;
-                panelContent.style.transition = 'opacity 0.15s ease';
+                panelContent.style.transition = 'none';
                 panelContent.style.opacity = '0';
             }
 
@@ -387,28 +379,19 @@ const AdminModule = (function() {
                     : window.innerWidth - panelContent.offsetWidth;
 
                 if (RESIZE_TELEPORT) {
-                    panelContent.style.transition = 'none';
                     panelContent.style.left = newLeft + 'px';
-                    void panelContent.offsetWidth;
-                    panelContent.style.transition = 'opacity 0.2s ease';
                     panelContent.style.opacity = '1';
-                    setTimeout(function() {
-                        panelContent.style.transition = '';
+                    panelContent.style.transition = '';
+                    panelContent.classList.remove('admin-panel-contents--visible');
+                    void panelContent.offsetWidth;
+                    requestAnimationFrame(function() {
+                        panelContent.classList.add('admin-panel-contents--visible');
                         resizeFading = false;
-                    }, 250);
+                    });
                 } else if (RESIZE_SMOOTHING) {
                     panelContent.style.left = newLeft + 'px';
                 }
             }, 100);
-        });
-
-        var resizeCloseResetTimer = null;
-        window.addEventListener('resize', function() {
-            if (!RESIZE_CLOSE) return;
-            clearTimeout(resizeCloseResetTimer);
-            resizeCloseResetTimer = setTimeout(function() {
-                resizeClosed = false;
-            }, 500);
         });
     }
 
