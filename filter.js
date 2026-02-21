@@ -40,6 +40,7 @@ const FilterModule = (function() {
     var contentEl = null;
     var panelDragged = false;
     var panelHome    = 'left'; // 'left' | 'right' — which edge the panel is currently locked to
+    var dragJustEnded = false;
     var headerEl = null;
     var bodyEl = null;
     var summaryEl = null;
@@ -469,12 +470,12 @@ const FilterModule = (function() {
         // - It plays nicely with DevTools inspection
         // - It won't fight the header filter toggle button
         document.addEventListener('click', function(e) {
+            if (dragJustEnded) return;
             if (!panelEl || !contentEl) return;
             if (!panelEl.classList.contains('show')) return;
             if (!e || !e.target) return;
             if (e.target.closest && e.target.closest('.header-filter')) return;
             if (contentEl.contains(e.target)) return;
-            
             closePanel();
         }, false);
     }
@@ -1810,12 +1811,14 @@ const FilterModule = (function() {
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 if (newLeft < 0) newLeft = 0;
-                if (newLeft > window.innerWidth - rect.width) newLeft = window.innerWidth - rect.width;
+                if (newLeft > window.innerWidth - contentEl.offsetWidth) newLeft = window.innerWidth - contentEl.offsetWidth;
                 contentEl.style.left = newLeft + 'px';
                 contentEl.style.right = 'auto';
             }
             
             function onUp() {
+                dragJustEnded = true;
+                setTimeout(function() { dragJustEnded = false; }, 0);
                 contentEl.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
