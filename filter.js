@@ -1825,11 +1825,11 @@ const FilterModule = (function() {
 
         // ---- Resize Smoothing / Resize Teleport ----
         // ---- Resize Modes ----
-        // RESIZE_SMOOTHING: panel holds its position during resize, then snaps to the correct
-        //                   edge 100ms after resize stops (no visible animation during resize).
-        // RESIZE_TELEPORT:  panel hides instantly on resize start, snaps to correct position,
-        //                   then reappears instantly 100ms after resize stops.
-        // Default (both false): pure browser default — no JS intervention during resize.
+        // The position snap always runs — once openPanel sets style.left the browser no longer
+        // tracks the left edge automatically, so the resize handler must always reposition.
+        // RESIZE_SMOOTHING: snap only, no visual effect during resize.
+        // RESIZE_TELEPORT:  panel hides instantly on resize start, reappears at correct position.
+        // Both false = bare snap with no label (same visual result as RESIZE_SMOOTHING).
         var RESIZE_SMOOTHING = false;
         var RESIZE_TELEPORT  = false;
 
@@ -1837,7 +1837,6 @@ const FilterModule = (function() {
         var resizeFading = false;
 
         window.addEventListener('resize', function() {
-            if (!RESIZE_SMOOTHING && !RESIZE_TELEPORT) return;
             if (!contentEl || !contentEl.style.left) return;
             if (window.innerWidth <= 530) return;
 
@@ -1853,18 +1852,14 @@ const FilterModule = (function() {
                     ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
                     : 0;
 
+                contentEl.style.transition = 'none';
+                contentEl.style.left = newLeft + 'px';
+                void contentEl.offsetWidth;
+                contentEl.style.transition = '';
+
                 if (RESIZE_TELEPORT) {
-                    contentEl.style.transition = 'none';
-                    contentEl.style.left = newLeft + 'px';
-                    void contentEl.offsetWidth;
-                    contentEl.style.transition = '';
                     contentEl.style.opacity = '1';
                     resizeFading = false;
-                } else if (RESIZE_SMOOTHING) {
-                    contentEl.style.transition = 'none';
-                    contentEl.style.left = newLeft + 'px';
-                    void contentEl.offsetWidth;
-                    contentEl.style.transition = '';
                 }
             }, 100);
         });
