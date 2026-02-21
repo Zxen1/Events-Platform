@@ -1882,7 +1882,7 @@ const FilterModule = (function() {
                     contentEl.style.opacity = '1';
                     resizeFading = false;
                 }
-            }, 100);
+            }, mode === 'smoothing' ? 0 : 100);
         });
     }
 
