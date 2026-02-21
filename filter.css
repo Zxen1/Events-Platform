@@ -37,7 +37,7 @@
   flex-direction: column;
   overflow: hidden;
   pointer-events: auto;
-  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  transition: transform var(--panel-transition-duration, 0.3s) ease, left 0.15s ease;
   will-change: transform;
   box-sizing: border-box;
   background: #222222;

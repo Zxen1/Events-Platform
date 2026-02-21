@@ -320,6 +320,14 @@ const MemberModule = (function() {
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
+
+        window.addEventListener('resize', function() {
+            if (!panelContent.style.left) return;
+            var currentLeft = parseFloat(panelContent.style.left);
+            if (isNaN(currentLeft)) return;
+            var maxLeft = window.innerWidth - 40;
+            if (currentLeft > maxLeft) panelContent.style.left = maxLeft + 'px';
+        });
     }
 
     function cacheElements() {
