@@ -38,6 +38,7 @@ const FilterModule = (function() {
     
     var panelEl = null;
     var contentEl = null;
+    var panelDragged = false;
     var headerEl = null;
     var bodyEl = null;
     var summaryEl = null;
@@ -525,6 +526,10 @@ const FilterModule = (function() {
         // always transitions at the same speed as slide-out)
         contentEl.classList.remove('panel-visible');
         try { void contentEl.offsetWidth; } catch (e) {}
+        if (!panelDragged && window.innerWidth > 530) {
+            contentEl.style.left = '0px';
+            contentEl.style.right = 'auto';
+        }
         requestAnimationFrame(function() {
             contentEl.classList.add('panel-visible');
         });
@@ -1785,6 +1790,10 @@ const FilterModule = (function() {
     function initHeaderDrag() {
         if (!headerEl || !contentEl) return;
         
+        // ---- Panel Drag ----
+        // Moves the panel freely within the viewport. Left transition is suppressed
+        // during drag for instant response, then restored on release.
+        // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
             
@@ -1792,16 +1801,20 @@ const FilterModule = (function() {
             var startX = e.clientX;
             var startLeft = rect.left;
             
+            contentEl.style.transitionProperty = 'transform';
+            
             function onMove(ev) {
+                panelDragged = true;
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 if (newLeft < 0) newLeft = 0;
-                if (newLeft > window.innerWidth - 40) newLeft = window.innerWidth - 40;
+                if (newLeft > window.innerWidth - rect.width) newLeft = window.innerWidth - rect.width;
                 contentEl.style.left = newLeft + 'px';
                 contentEl.style.right = 'auto';
             }
             
             function onUp() {
+                contentEl.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
             }
@@ -1810,12 +1823,26 @@ const FilterModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
+        // ---- Resize Smoothing ----
+        // Fires 100ms after the window stops resizing. Panel holds its position
+        // during the resize, then glides smoothly to the correct position via the
+        // left transition defined in CSS. Dragged panels are clamped to keep
+        // 40px visible; default-position panels return to their default edge.
+        var resizeTimer = null;
         window.addEventListener('resize', function() {
-            if (!contentEl.style.left) return;
-            var currentLeft = parseFloat(contentEl.style.left);
-            if (isNaN(currentLeft)) return;
-            var maxLeft = window.innerWidth - 40;
-            if (currentLeft > maxLeft) contentEl.style.left = maxLeft + 'px';
+            if (!contentEl || !contentEl.style.left) return;
+            if (window.innerWidth <= 530) return;
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (panelDragged) {
+                    var currentLeft = parseFloat(contentEl.style.left);
+                    if (!isNaN(currentLeft) && currentLeft > window.innerWidth - 40) {
+                        contentEl.style.left = (window.innerWidth - 40) + 'px';
+                    }
+                } else {
+                    contentEl.style.left = '0px';
+                }
+            }, 100);
         });
     }
 

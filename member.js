@@ -296,7 +296,10 @@ const MemberModule = (function() {
         var headerEl = panel.querySelector('.member-panel-header');
         if (!headerEl || !panelContent) return;
         
-        // Drag via header
+        // ---- Panel Drag ----
+        // Moves the panel freely within the viewport. Left transition is suppressed
+        // during drag for instant response, then restored on release.
+        // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
             
@@ -304,17 +307,20 @@ const MemberModule = (function() {
             var startX = e.clientX;
             var startLeft = rect.left;
             
+            panelContent.style.transitionProperty = 'transform';
+            
             function onMove(ev) {
                 panelDragged = true;
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 if (newLeft < 0) newLeft = 0;
-                if (newLeft > window.innerWidth - 40) newLeft = window.innerWidth - 40;
+                if (newLeft > window.innerWidth - rect.width) newLeft = window.innerWidth - rect.width;
                 panelContent.style.left = newLeft + 'px';
                 panelContent.style.right = 'auto';
             }
             
             function onUp() {
+                panelContent.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
             }
@@ -323,6 +329,11 @@ const MemberModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
+        // ---- Resize Smoothing ----
+        // Fires 100ms after the window stops resizing. Panel holds its position
+        // during the resize, then glides smoothly to the correct position via the
+        // left transition defined in CSS. Dragged panels are clamped to keep
+        // 40px visible; default-position panels track the right edge.
         var resizeTimer = null;
         window.addEventListener('resize', function() {
             if (!panelContent || !panelContent.style.left) return;
