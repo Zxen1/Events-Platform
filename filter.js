@@ -551,8 +551,8 @@ const FilterModule = (function() {
         function finalizeClose() {
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
+            panelHome = 'left';
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
-            // Always notify header/state sync. This prevents "button stays blue when closed".
             try { App.emit('filter:closed'); } catch (_eEmit) {}
         }
         

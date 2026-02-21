@@ -637,6 +637,7 @@ const AdminModule = (function() {
                 try { document.activeElement.blur(); } catch (_eBlur) {}
             }
             panel.setAttribute('aria-hidden', 'true');
+            panelHome = 'right';
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }
         
