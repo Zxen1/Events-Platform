@@ -355,7 +355,7 @@ const AdminModule = (function() {
         // RESIZE_SMOOTHING: panel holds position during resize, then glides back via CSS transition.
         // RESIZE_TELEPORT:  panel hides instantly on resize start, snaps to correct position,
         //                   then slides back in using the normal open animation.
-        // Default (both false): no intervention — browser renders as normal.
+        // Default (both false): panel repositions instantly with no visual effect.
         var RESIZE_SMOOTHING = false;
         var RESIZE_TELEPORT  = false;
 
@@ -385,7 +385,7 @@ const AdminModule = (function() {
                     panelContent.style.transition = '';
                     panelContent.style.opacity = '1';
                     resizeFading = false;
-                } else if (RESIZE_SMOOTHING) {
+                } else {
                     panelContent.style.left = newLeft + 'px';
                 }
             }, 100);
