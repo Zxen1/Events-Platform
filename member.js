@@ -323,17 +323,21 @@ const MemberModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
+        var resizeTimer = null;
         window.addEventListener('resize', function() {
             if (!panelContent || !panelContent.style.left) return;
             if (window.innerWidth <= 530) return;
-            if (panelDragged) {
-                var currentLeft = parseFloat(panelContent.style.left);
-                if (!isNaN(currentLeft) && currentLeft > window.innerWidth - 40) {
-                    panelContent.style.left = (window.innerWidth - 40) + 'px';
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (panelDragged) {
+                    var currentLeft = parseFloat(panelContent.style.left);
+                    if (!isNaN(currentLeft) && currentLeft > window.innerWidth - 40) {
+                        panelContent.style.left = (window.innerWidth - 40) + 'px';
+                    }
+                } else {
+                    panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
                 }
-            } else {
-                panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
-            }
+            }, 150);
         });
     }
 
