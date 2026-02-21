@@ -680,6 +680,7 @@ const MapModule = (function() {
         display: flex;
         align-items: center;
         background-repeat: no-repeat;
+        transform: translateZ(0);
         transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, background-image 0.2s ease;
       }
       
