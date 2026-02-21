@@ -1161,7 +1161,7 @@
 }
 
 /* Resize Anti-Jitter Toggles */
-.admin-antijitter-buttons {
+.admin-settings-antijitter-buttons {
   grid-template-columns: repeat(4, 1fr);
 }
 

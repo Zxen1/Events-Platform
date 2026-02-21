@@ -530,12 +530,12 @@ if (empty($ogTitle)) {
               <div id="adminCurrencyPicker" data-setting-key="website_currency"></div>
             </div>
             <div class="admin-settings-field">
-              <span class="admin-settings-field-label admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Resize Anti-Jitter</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-antijitter-tooltip"></div></span>
-              <div id="adminAntijitter" class="admin-antijitter-buttons toggle-class-1">
-                <button type="button" class="admin-antijitter-button toggle-button" data-value="off" aria-pressed="true">Off</button>
-                <button type="button" class="admin-antijitter-button toggle-button" data-value="blur" aria-pressed="false">Blur</button>
-                <button type="button" class="admin-antijitter-button toggle-button" data-value="teleport" aria-pressed="false">Teleport</button>
-                <button type="button" class="admin-antijitter-button toggle-button" data-value="smoothing" aria-pressed="false">Smoothing</button>
+              <span class="admin-settings-field-label admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Resize Anti-Jitter</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-settings-antijitter-tooltip"></div></span>
+              <div id="adminAntijitter" class="admin-settings-antijitter-buttons toggle-class-1">
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="off" aria-pressed="true">Off</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="blur" aria-pressed="false">Blur</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="teleport" aria-pressed="false">Teleport</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="smoothing" aria-pressed="false">Smoothing</button>
               </div>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
