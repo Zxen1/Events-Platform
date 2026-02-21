@@ -1856,10 +1856,14 @@ const FilterModule = (function() {
                     ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
                     : 0;
 
-                contentEl.style.transition = 'none';
+                if (mode !== 'smoothing') {
+                    contentEl.style.transition = 'none';
+                }
                 contentEl.style.left = newLeft + 'px';
-                void contentEl.offsetWidth;
-                contentEl.style.transition = '';
+                if (mode !== 'smoothing') {
+                    void contentEl.offsetWidth;
+                    contentEl.style.transition = '';
+                }
 
                 if (mode === 'teleport') {
                     contentEl.style.opacity = '1';

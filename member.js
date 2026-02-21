@@ -362,10 +362,14 @@ const MemberModule = (function() {
                     ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
                     : window.innerWidth - panelContent.offsetWidth;
 
-                panelContent.style.transition = 'none';
+                if (mode !== 'smoothing') {
+                    panelContent.style.transition = 'none';
+                }
                 panelContent.style.left = newLeft + 'px';
-                void panelContent.offsetWidth;
-                panelContent.style.transition = '';
+                if (mode !== 'smoothing') {
+                    void panelContent.offsetWidth;
+                    panelContent.style.transition = '';
+                }
 
                 if (mode === 'teleport') {
                     panelContent.style.opacity = '1';
