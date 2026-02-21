@@ -3,8 +3,9 @@
    ============================================================================
    
    Z-INDEX REFERENCE (max 100):
-   --layer-devtools: 100  (developer tools)
-   --layer-modal: 90      (full-screen modals)
+   --layer-devtools: 100        (developer tools)
+   --layer-resize-overlay: 101  (resize blur overlay — above everything)
+   --layer-modal: 90            (full-screen modals)
    --layer-image-modal: 88 (lightbox)
    --layer-dialog: 86     (confirmations, toasts)
    --layer-menu: 85       (dropdowns, tooltips)
@@ -27,6 +28,7 @@
 :root {
   /* Z-index layers */
   --layer-devtools: 100;
+  --layer-resize-overlay: 101;
   --layer-modal: 90;
   --layer-image-modal: 88;
   --layer-dialog: 86;
@@ -212,6 +214,11 @@
   --scrollbar-thumb: rgba(255,255,255,0.4);
   --scrollbar-thumb-hover: rgba(255,255,255,0.6);
   --scrollbar-h: 8px;
+
+  /* Resize blur overlay */
+  --resize-overlay-blur: 18px;
+  --resize-overlay-bg: rgba(0, 0, 0, 0.25);
+  --resize-overlay-fade: 0.15s;
 }
 
 /* ============================================================================
@@ -1770,3 +1777,27 @@ body {
 }
 
 /* Post Editor item styling moved to member.css */
+
+/* ==========================================================================
+   RESIZE BLUR OVERLAY
+   Full-screen overlay shown during window resize to hide layout jitter.
+   GPU-composited independently of page content — jitter beneath it is invisible.
+   ========================================================================== */
+
+.resize-blur-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--layer-resize-overlay);
+  background: var(--resize-overlay-bg);
+  backdrop-filter: blur(var(--resize-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--resize-overlay-blur));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--resize-overlay-fade) ease;
+  will-change: opacity;
+}
+
+.resize-blur-overlay--active {
+  opacity: 1;
+  transition: none;
+}

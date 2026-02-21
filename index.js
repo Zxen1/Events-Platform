@@ -985,6 +985,45 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     RESIZE BLUR OVERLAY
+     Covers the entire viewport during window resize so background jitter is
+     hidden behind a GPU-composited blur. Appears instantly on the first resize
+     event; fades out 200ms after the last resize event (panels have already
+     snapped to their new positions by then via the 100ms teleport debounce).
+     -------------------------------------------------------------------------- */
+
+  (function initResizeBlurOverlay() {
+    var overlay      = null;
+    var hideTimer    = null;
+    var overlayShown = false;
+
+    function getOverlay() {
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'resize-blur-overlay';
+        document.body.appendChild(overlay);
+      }
+      return overlay;
+    }
+
+    window.addEventListener('resize', function() {
+      var el = getOverlay();
+
+      if (!overlayShown) {
+        overlayShown = true;
+        el.classList.add('resize-blur-overlay--active');
+      }
+
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function() {
+        el.classList.remove('resize-blur-overlay--active');
+        overlayShown = false;
+      }, 200);
+    });
+  }());
+
+
+  /* --------------------------------------------------------------------------
      DOM READY
      -------------------------------------------------------------------------- */
   if (document.readyState === 'loading') {
