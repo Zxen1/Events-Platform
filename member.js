@@ -350,6 +350,18 @@ const MemberModule = (function() {
 
             var mode = window._resizeAntiJitter || 'off';
 
+            // Off: instant update on every resize event — mimics CSS right:0 gripping
+            if (mode === 'off') {
+                var newLeft = panelDragged
+                    ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
+                    : window.innerWidth - panelContent.offsetWidth;
+                panelContent.style.transition = 'none';
+                panelContent.style.left = newLeft + 'px';
+                void panelContent.offsetWidth;
+                panelContent.style.transition = '';
+                return;
+            }
+
             if (mode === 'teleport' && !resizeFading) {
                 resizeFading = true;
                 panelContent.style.transition = 'none';

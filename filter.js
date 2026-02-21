@@ -1844,6 +1844,18 @@ const FilterModule = (function() {
 
             var mode = window._resizeAntiJitter || 'off';
 
+            // Off: instant update on every resize event — mimics CSS left:0 gripping
+            if (mode === 'off') {
+                var newLeft = panelDragged
+                    ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
+                    : 0;
+                contentEl.style.transition = 'none';
+                contentEl.style.left = newLeft + 'px';
+                void contentEl.offsetWidth;
+                contentEl.style.transition = '';
+                return;
+            }
+
             if (mode === 'teleport' && !resizeFading) {
                 resizeFading = true;
                 contentEl.style.transition = 'none';
