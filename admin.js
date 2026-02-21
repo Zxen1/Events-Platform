@@ -4332,6 +4332,25 @@ const AdminModule = (function() {
             });
         }
         
+        // Reset antijitter toggle buttons
+        var antijitterEntry = fieldRegistry['settings.resize_antijitter'];
+        if (antijitterEntry && antijitterEntry.type === 'simple') {
+            var antijitterResetContainer = document.getElementById('adminAntijitter');
+            if (antijitterResetContainer) {
+                var antijitterResetBtns = antijitterResetContainer.querySelectorAll('.admin-settings-antijitter-button');
+                var antijitterTargetBtn = null;
+                antijitterResetBtns.forEach(function(btn) {
+                    var isActive = btn.dataset.value === antijitterEntry.original;
+                    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    if (isActive) antijitterTargetBtn = btn;
+                });
+                if (antijitterTargetBtn) {
+                    antijitterTargetBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                }
+                applyResizeAntiJitter(antijitterEntry.original);
+            }
+        }
+
         // Reset welcome load type radio buttons
         var welcomeLoadTypeEntry = fieldRegistry['settings.welcome_load_type'];
         if (welcomeLoadTypeEntry && welcomeLoadTypeEntry.type === 'simple') {
