@@ -1851,9 +1851,11 @@ const FilterModule = (function() {
                     : 0;
 
                 if (RESIZE_TELEPORT) {
+                    contentEl.style.transition = 'none';
                     contentEl.style.left = newLeft + 'px';
-                    contentEl.style.opacity = '1';
+                    void contentEl.offsetWidth;
                     contentEl.style.transition = '';
+                    contentEl.style.opacity = '1';
                     resizeFading = false;
                 } else if (RESIZE_SMOOTHING) {
                     contentEl.style.left = newLeft + 'px';

@@ -357,9 +357,11 @@ const MemberModule = (function() {
                     : window.innerWidth - panelContent.offsetWidth;
 
                 if (RESIZE_TELEPORT) {
+                    panelContent.style.transition = 'none';
                     panelContent.style.left = newLeft + 'px';
-                    panelContent.style.opacity = '1';
+                    void panelContent.offsetWidth;
                     panelContent.style.transition = '';
+                    panelContent.style.opacity = '1';
                     resizeFading = false;
                 } else if (RESIZE_SMOOTHING) {
                     panelContent.style.left = newLeft + 'px';
