@@ -3480,7 +3480,7 @@ const AdminModule = (function() {
             applyResizeAntiJitter(initialResizeMode);
             antijitterContainer.addEventListener('click', function(e) {
                 var btn = e.target.closest('.admin-settings-antijitter-button');
-                if (!btn || btn.getAttribute('aria-pressed') === 'true') return;
+                if (!btn) return;
                 updateField('settings.resize_antijitter', btn.dataset.value);
                 applyResizeAntiJitter(btn.dataset.value);
             });
