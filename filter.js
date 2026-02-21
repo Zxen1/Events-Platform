@@ -1795,9 +1795,8 @@ const FilterModule = (function() {
             function onMove(ev) {
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
-                var maxLeft = window.innerWidth - rect.width;
                 if (newLeft < 0) newLeft = 0;
-                if (newLeft > maxLeft) newLeft = maxLeft;
+                if (newLeft > window.innerWidth - 40) newLeft = window.innerWidth - 40;
                 contentEl.style.left = newLeft + 'px';
                 contentEl.style.right = 'auto';
             }
@@ -1809,14 +1808,6 @@ const FilterModule = (function() {
             
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
-        });
-
-        window.addEventListener('resize', function() {
-            if (!contentEl.style.left) return;
-            var currentLeft = parseFloat(contentEl.style.left);
-            if (isNaN(currentLeft)) return;
-            var maxLeft = window.innerWidth - 40;
-            if (currentLeft > maxLeft) contentEl.style.left = maxLeft + 'px';
         });
     }
 

@@ -328,9 +328,8 @@ const AdminModule = (function() {
             function onMove(ev) {
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
-                var maxLeft = window.innerWidth - rect.width;
                 if (newLeft < 0) newLeft = 0;
-                if (newLeft > maxLeft) newLeft = maxLeft;
+                if (newLeft > window.innerWidth - 40) newLeft = window.innerWidth - 40;
                 panelContent.style.left = newLeft + 'px';
                 panelContent.style.right = 'auto';
             }
@@ -342,14 +341,6 @@ const AdminModule = (function() {
             
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
-        });
-
-        window.addEventListener('resize', function() {
-            if (!panelContent.style.left) return;
-            var currentLeft = parseFloat(panelContent.style.left);
-            if (isNaN(currentLeft)) return;
-            var maxLeft = window.innerWidth - 40;
-            if (currentLeft > maxLeft) panelContent.style.left = maxLeft + 'px';
         });
     }
 
