@@ -542,10 +542,88 @@ const FilterModule = (function() {
         // Authoritative counts (worldwide + in-area)
         try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
     }
+
+    function getPanelLeftPx() {
+        if (!contentEl) return 0;
+        var inlineLeft = parseFloat(contentEl.style.left);
+        if (isFinite(inlineLeft)) return inlineLeft;
+        try {
+            var rect = contentEl.getBoundingClientRect();
+            if (rect && isFinite(rect.left)) return rect.left;
+        } catch (_eRect) {}
+        return 0;
+    }
+
+    function getClosestScreenSide() {
+        if (!contentEl) return 'left';
+        try {
+            var rect = contentEl.getBoundingClientRect();
+            if (!rect) return 'left';
+            var distLeft = Math.max(0, rect.left);
+            var distRight = Math.max(0, window.innerWidth - rect.right);
+            return distLeft <= distRight ? 'left' : 'right';
+        } catch (_eSide) {
+            return 'left';
+        }
+    }
+
+    function animateToDefaultPosition() {
+        panelHome = 'left';
+        panelDragged = false;
+        if (!contentEl) return;
+
+        contentEl.setAttribute('data-side', 'left');
+
+        // Mobile has transitions disabled by design; reset immediately.
+        if (window.innerWidth <= 530) {
+            contentEl.style.left = '';
+            contentEl.style.right = '';
+            return;
+        }
+
+        var startLeft = Math.max(0, getPanelLeftPx());
+        contentEl.style.left = startLeft + 'px';
+        contentEl.style.right = 'auto';
+        try { void contentEl.offsetWidth; } catch (_eFlush) {}
+        contentEl.style.left = '0px';
+
+        var finished = false;
+        function cleanup() {
+            if (finished) return;
+            finished = true;
+            contentEl.style.left = '';
+            contentEl.style.right = '';
+        }
+
+        var durationMs = getContentTransitionDurationMs(contentEl);
+        if (durationMs <= 0) {
+            cleanup();
+            return;
+        }
+
+        contentEl.addEventListener('transitionend', function handler(ev) {
+            if (ev && ev.target !== contentEl) return;
+            if (ev && ev.propertyName && ev.propertyName !== 'left') return;
+            contentEl.removeEventListener('transitionend', handler);
+            cleanup();
+        }, { once: true });
+
+        setTimeout(cleanup, durationMs + 60);
+    }
     
     function closePanel() {
         if (!panelEl || !contentEl) return;
-        
+
+        var closeSide = getClosestScreenSide();
+        contentEl.setAttribute('data-side', closeSide);
+
+        // Keep current x-position locked while transform slides out to nearest side.
+        if (window.innerWidth > 530) {
+            var currentLeft = Math.max(0, getPanelLeftPx());
+            contentEl.style.left = currentLeft + 'px';
+            contentEl.style.right = 'auto';
+        }
+
         panelEl.setAttribute('inert', '');
         contentEl.classList.remove('panel-visible');
         
@@ -553,6 +631,10 @@ const FilterModule = (function() {
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
             panelHome = 'left';
+            panelDragged = false;
+            contentEl.setAttribute('data-side', 'left');
+            contentEl.style.left = '';
+            contentEl.style.right = '';
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
             try { App.emit('filter:closed'); } catch (_eEmit) {}
         }
@@ -570,7 +652,9 @@ const FilterModule = (function() {
             return;
         }
         
-        contentEl.addEventListener('transitionend', function handler() {
+        contentEl.addEventListener('transitionend', function handler(ev) {
+            if (ev && ev.target !== contentEl) return;
+            if (ev && ev.propertyName && ev.propertyName !== 'transform') return;
             contentEl.removeEventListener('transitionend', handler);
             finalizeClose();
         }, { once: true });
@@ -1791,6 +1875,7 @@ const FilterModule = (function() {
     
     function initHeaderDrag() {
         if (!headerEl || !contentEl) return;
+        var dragInProgress = false;
         
         // ---- Panel Drag ----
         // Moves the panel freely within the viewport. Left transition is suppressed
@@ -1798,7 +1883,9 @@ const FilterModule = (function() {
         // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
+            if (e.button !== 0) return;
             e.preventDefault();
+            dragInProgress = true;
             
             var rect = contentEl.getBoundingClientRect();
             var startX = e.clientX;
@@ -1807,6 +1894,11 @@ const FilterModule = (function() {
             contentEl.style.transitionProperty = 'transform';
             
             function onMove(ev) {
+                if (!dragInProgress) return;
+                if ((ev.buttons & 1) !== 1) {
+                    endDrag();
+                    return;
+                }
                 panelDragged = true;
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
@@ -1816,12 +1908,16 @@ const FilterModule = (function() {
                 contentEl.style.right = 'auto';
             }
             
-            function onUp() {
+            function endDrag() {
+                if (!dragInProgress) return;
+                dragInProgress = false;
                 dragJustEnded = true;
                 setTimeout(function() { dragJustEnded = false; }, 0);
                 contentEl.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+                window.removeEventListener('blur', onWindowBlur);
+                document.removeEventListener('visibilitychange', onVisibilityChange);
 
                 var currentLeft = parseFloat(contentEl.style.left) || 0;
                 var atLeftEdge  = currentLeft <= 20;
@@ -1839,9 +1935,25 @@ const FilterModule = (function() {
                     contentEl.style.right = 'auto';
                 }
             }
+
+            function onUp() {
+                endDrag();
+            }
+
+            function onWindowBlur() {
+                endDrag();
+            }
+
+            function onVisibilityChange() {
+                if (document.visibilityState === 'hidden') {
+                    endDrag();
+                }
+            }
             
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
+            window.addEventListener('blur', onWindowBlur);
+            document.addEventListener('visibilitychange', onVisibilityChange);
         });
 
         // ---- Resize Modes ----
@@ -2187,12 +2299,16 @@ const FilterModule = (function() {
         togglePanel: togglePanel,
         isPanelDragged: function() { return panelDragged || panelHome !== 'left'; },
         resetToDefault: function() {
-            panelHome    = 'left';
-            panelDragged = false;
-            if (contentEl) {
-                contentEl.style.left  = '';
-                contentEl.style.right = '';
+            if (!panelEl || !contentEl || !panelEl.classList.contains('show')) {
+                panelHome = 'left';
+                panelDragged = false;
+                if (contentEl) {
+                    contentEl.style.left = '';
+                    contentEl.style.right = '';
+                }
+                return;
             }
+            animateToDefaultPosition();
         },
         updateSummary: updateSummary,
         clearGeocoder: clearGeocoder,
