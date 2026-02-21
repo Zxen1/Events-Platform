@@ -62,6 +62,7 @@ const MemberModule = (function() {
     // DOM references
     var panel = null;
     var panelContent = null;
+    var panelDragged = false;
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
@@ -304,6 +305,7 @@ const MemberModule = (function() {
             var startLeft = rect.left;
             
             function onMove(ev) {
+                panelDragged = true;
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 if (newLeft < 0) newLeft = 0;
@@ -322,11 +324,16 @@ const MemberModule = (function() {
         });
 
         window.addEventListener('resize', function() {
-            if (!panelContent.style.left) return;
-            var currentLeft = parseFloat(panelContent.style.left);
-            if (isNaN(currentLeft)) return;
-            var maxLeft = window.innerWidth - 40;
-            if (currentLeft > maxLeft) panelContent.style.left = maxLeft + 'px';
+            if (!panelContent || !panelContent.style.left) return;
+            if (window.innerWidth <= 530) return;
+            if (panelDragged) {
+                var currentLeft = parseFloat(panelContent.style.left);
+                if (!isNaN(currentLeft) && currentLeft > window.innerWidth - 40) {
+                    panelContent.style.left = (window.innerWidth - 40) + 'px';
+                }
+            } else {
+                panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+            }
         });
     }
 
@@ -2248,6 +2255,10 @@ const MemberModule = (function() {
         panelContent.classList.remove('member-panel-contents--visible');
         panelContent.classList.add('member-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
+        if (!panelDragged && window.innerWidth > 530) {
+            panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+            panelContent.style.right = 'auto';
+        }
         requestAnimationFrame(function() {
             panelContent.classList.remove('member-panel-contents--hidden');
             panelContent.classList.add('member-panel-contents--visible');
