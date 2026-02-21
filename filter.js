@@ -1824,10 +1824,12 @@ const FilterModule = (function() {
         });
 
         // ---- Resize Smoothing / Resize Teleport ----
-        // RESIZE_SMOOTHING: panel holds position during resize, then glides back via CSS transition.
+        // ---- Resize Modes ----
+        // RESIZE_SMOOTHING: panel holds its position during resize, then snaps to the correct
+        //                   edge 100ms after resize stops (no visible animation during resize).
         // RESIZE_TELEPORT:  panel hides instantly on resize start, snaps to correct position,
-        //                   then slides back in using the normal open animation.
-        // Default (both false): panel repositions instantly with no visual effect.
+        //                   then reappears instantly 100ms after resize stops.
+        // Default (both false): pure browser default — no JS intervention during resize.
         var RESIZE_SMOOTHING = false;
         var RESIZE_TELEPORT  = false;
 
@@ -1835,6 +1837,7 @@ const FilterModule = (function() {
         var resizeFading = false;
 
         window.addEventListener('resize', function() {
+            if (!RESIZE_SMOOTHING && !RESIZE_TELEPORT) return;
             if (!contentEl || !contentEl.style.left) return;
             if (window.innerWidth <= 530) return;
 
@@ -1857,7 +1860,7 @@ const FilterModule = (function() {
                     contentEl.style.transition = '';
                     contentEl.style.opacity = '1';
                     resizeFading = false;
-                } else {
+                } else if (RESIZE_SMOOTHING) {
                     contentEl.style.transition = 'none';
                     contentEl.style.left = newLeft + 'px';
                     void contentEl.offsetWidth;
