@@ -39,6 +39,7 @@ const FilterModule = (function() {
     var panelEl = null;
     var contentEl = null;
     var panelDragged = false;
+    var panelHome    = 'left'; // 'left' | 'right' — which edge the panel is currently locked to
     var headerEl = null;
     var bodyEl = null;
     var summaryEl = null;
@@ -1819,12 +1820,20 @@ const FilterModule = (function() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
 
-                // If dragged back to the left edge, restore CSS left: 0 lock
-                var atLeftEdge = parseFloat(contentEl.style.left) <= 20;
+                var currentLeft = parseFloat(contentEl.style.left) || 0;
+                var atLeftEdge  = currentLeft <= 20;
+                var atRightEdge = currentLeft >= window.innerWidth - contentEl.offsetWidth - 20;
+
                 if (atLeftEdge) {
+                    panelHome    = 'left';
                     panelDragged = false;
                     contentEl.style.left  = '';
                     contentEl.style.right = '';
+                } else if (atRightEdge) {
+                    panelHome    = 'right';
+                    panelDragged = false;
+                    contentEl.style.left  = (window.innerWidth - contentEl.offsetWidth) + 'px';
+                    contentEl.style.right = 'auto';
                 }
             }
             
@@ -1850,7 +1859,7 @@ const FilterModule = (function() {
             if (mode === 'off' || mode === 'blur') {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
-                    : 0;
+                    : panelHome === 'right' ? window.innerWidth - contentEl.offsetWidth : 0;
                 contentEl.style.transition = 'none';
                 contentEl.style.left = newLeft + 'px';
                 void contentEl.offsetWidth;
@@ -1868,7 +1877,7 @@ const FilterModule = (function() {
             resizeTimer = setTimeout(function() {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
-                    : 0;
+                    : panelHome === 'right' ? window.innerWidth - contentEl.offsetWidth : 0;
 
                 if (mode !== 'smoothing') {
                     contentEl.style.transition = 'none';
@@ -2173,12 +2182,13 @@ const FilterModule = (function() {
         openPanel: openPanel,
         closePanel: closePanel,
         togglePanel: togglePanel,
-        isPanelDragged: function() { return panelDragged; },
+        isPanelDragged: function() { return panelDragged || panelHome !== 'left'; },
         resetToDefault: function() {
+            panelHome    = 'left';
             panelDragged = false;
-            if (contentEl && window.innerWidth > 530) {
-                contentEl.style.left = '0px';
-                contentEl.style.right = 'auto';
+            if (contentEl) {
+                contentEl.style.left  = '';
+                contentEl.style.right = '';
             }
         },
         updateSummary: updateSummary,

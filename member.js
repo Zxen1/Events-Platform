@@ -63,6 +63,7 @@ const MemberModule = (function() {
     var panel = null;
     var panelContent = null;
     var panelDragged = false;
+    var panelHome    = 'right'; // 'left' | 'right' — which edge the panel is currently locked to
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
@@ -325,12 +326,20 @@ const MemberModule = (function() {
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
 
-                // If dragged back to the right edge, restore CSS right: 0 lock
-                var atRightEdge = parseFloat(panelContent.style.left) >= window.innerWidth - panelContent.offsetWidth - 20;
+                var currentLeft = parseFloat(panelContent.style.left) || 0;
+                var atRightEdge = currentLeft >= window.innerWidth - panelContent.offsetWidth - 20;
+                var atLeftEdge  = currentLeft <= 20;
+
                 if (atRightEdge) {
+                    panelHome    = 'right';
                     panelDragged = false;
                     panelContent.style.left  = '';
                     panelContent.style.right = '';
+                } else if (atLeftEdge) {
+                    panelHome    = 'left';
+                    panelDragged = false;
+                    panelContent.style.left  = '0px';
+                    panelContent.style.right = 'auto';
                 }
             }
             
@@ -356,7 +365,7 @@ const MemberModule = (function() {
             if (mode === 'off' || mode === 'blur') {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
-                    : window.innerWidth - panelContent.offsetWidth;
+                    : panelHome === 'left' ? 0 : window.innerWidth - panelContent.offsetWidth;
                 panelContent.style.transition = 'none';
                 panelContent.style.left = newLeft + 'px';
                 void panelContent.offsetWidth;
@@ -374,7 +383,7 @@ const MemberModule = (function() {
             resizeTimer = setTimeout(function() {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
-                    : window.innerWidth - panelContent.offsetWidth;
+                    : panelHome === 'left' ? 0 : window.innerWidth - panelContent.offsetWidth;
 
                 if (mode !== 'smoothing') {
                     panelContent.style.transition = 'none';
@@ -7117,12 +7126,13 @@ const MemberModule = (function() {
         loadEarlySession: loadEarlySession,
         openPanel: openPanel,
         closePanel: closePanel,
-        isPanelDragged: function() { return panelDragged; },
+        isPanelDragged: function() { return panelDragged || panelHome !== 'right'; },
         resetToDefault: function() {
+            panelHome    = 'right';
             panelDragged = false;
-            if (panelContent && window.innerWidth > 530) {
-                panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
-                panelContent.style.right = 'auto';
+            if (panelContent) {
+                panelContent.style.left  = '';
+                panelContent.style.right = '';
             }
         },
         getCurrentUser: function() { return currentUser; },
