@@ -324,6 +324,7 @@ const AdminModule = (function() {
         // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button') || e.target.closest('label') || e.target.closest('input')) return;
+            e.preventDefault();
             
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
@@ -367,7 +368,7 @@ const AdminModule = (function() {
         var resizeFading = false;
 
         window.addEventListener('resize', function() {
-            if (!panelContent || !panelContent.style.left) return;
+            if (!panelContent || !panel.classList.contains('admin-panel--show')) return;
             if (window.innerWidth <= 530) return;
 
             var mode = window._resizeAntiJitter || 'off';
@@ -4516,6 +4517,14 @@ const AdminModule = (function() {
         init: init,
         openPanel: openPanel,
         closePanel: closePanel,
+        isPanelDragged: function() { return panelDragged; },
+        resetToDefault: function() {
+            panelDragged = false;
+            if (panelContent && window.innerWidth > 530) {
+                panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+                panelContent.style.right = 'auto';
+            }
+        },
         switchTab: switchTab,
 
         // Field-level tracking

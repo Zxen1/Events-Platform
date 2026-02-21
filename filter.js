@@ -1796,6 +1796,7 @@ const FilterModule = (function() {
         // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
+            e.preventDefault();
             
             var rect = contentEl.getBoundingClientRect();
             var startX = e.clientX;
@@ -1839,7 +1840,7 @@ const FilterModule = (function() {
         var resizeFading = false;
 
         window.addEventListener('resize', function() {
-            if (!contentEl || !contentEl.style.left) return;
+            if (!contentEl || !panelEl.classList.contains('show')) return;
             if (window.innerWidth <= 530) return;
 
             var mode = window._resizeAntiJitter || 'off';
@@ -2172,6 +2173,14 @@ const FilterModule = (function() {
         openPanel: openPanel,
         closePanel: closePanel,
         togglePanel: togglePanel,
+        isPanelDragged: function() { return panelDragged; },
+        resetToDefault: function() {
+            panelDragged = false;
+            if (contentEl && window.innerWidth > 530) {
+                contentEl.style.left = '0px';
+                contentEl.style.right = 'auto';
+            }
+        },
         updateSummary: updateSummary,
         clearGeocoder: clearGeocoder,
         setResetFiltersActive: setResetFiltersActive,

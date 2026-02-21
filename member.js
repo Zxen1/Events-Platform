@@ -302,6 +302,7 @@ const MemberModule = (function() {
         // Panel is clamped to stay fully on screen at all times.
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
+            e.preventDefault();
             
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
@@ -345,7 +346,7 @@ const MemberModule = (function() {
         var resizeFading = false;
 
         window.addEventListener('resize', function() {
-            if (!panelContent || !panelContent.style.left) return;
+            if (!panelContent || !panel.classList.contains('member-panel--show')) return;
             if (window.innerWidth <= 530) return;
 
             var mode = window._resizeAntiJitter || 'off';
@@ -7116,6 +7117,14 @@ const MemberModule = (function() {
         loadEarlySession: loadEarlySession,
         openPanel: openPanel,
         closePanel: closePanel,
+        isPanelDragged: function() { return panelDragged; },
+        resetToDefault: function() {
+            panelDragged = false;
+            if (panelContent && window.innerWidth > 530) {
+                panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+                panelContent.style.right = 'auto';
+            }
+        },
         getCurrentUser: function() { return currentUser; },
         isLoggedIn: function() { return !!currentUser; },
         isAdmin: function() { return currentUser && currentUser.isAdmin === true; },

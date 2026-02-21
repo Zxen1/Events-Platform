@@ -420,16 +420,17 @@ const HeaderModule = (function() {
             }
 
             // Read open/closed state from the DOM to avoid stale booleans.
-            try {
-                var filterPanelEl = document.querySelector('.filter-panel');
-                var isOpenNow = !!(filterPanelEl && filterPanelEl.classList.contains('show'));
-                filterPanelOpen = !isOpenNow;
-            } catch (_eState) {
-                filterPanelOpen = !filterPanelOpen;
+            var filterPanelEl = document.querySelector('.filter-panel');
+            var isOpenNow = !!(filterPanelEl && filterPanelEl.classList.contains('show'));
+
+            // If open and dragged from default: reset position (don't close)
+            if (isOpenNow && window.FilterModule && window.FilterModule.isPanelDragged()) {
+                window.FilterModule.resetToDefault();
+                return;
             }
-            
+
+            filterPanelOpen = !isOpenNow;
             filterBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
-            
             App.emit('panel:toggle', {
                 panel: 'filter',
                 show: filterPanelOpen
@@ -477,11 +478,23 @@ const HeaderModule = (function() {
                 } catch (e) {}
             }
 
-            // Always open, never close via header button
-            App.emit('panel:toggle', {
-                panel: 'member',
-                show: true
-            });
+            var memberPanelEl = document.querySelector('.member-panel');
+            var memberIsOpen = !!(memberPanelEl && memberPanelEl.classList.contains('member-panel--show'));
+
+            // If open and dragged: reset position (don't close)
+            if (memberIsOpen && window.MemberModule && window.MemberModule.isPanelDragged()) {
+                window.MemberModule.resetToDefault();
+                return;
+            }
+
+            // If open and at default: close
+            if (memberIsOpen) {
+                App.emit('panel:toggle', { panel: 'member', show: false });
+                return;
+            }
+
+            // Closed: open
+            App.emit('panel:toggle', { panel: 'member', show: true });
         });
         
         // Listen for member panel close events
@@ -523,11 +536,20 @@ const HeaderModule = (function() {
                 } catch (e) {}
             }
 
-            // Always open, never close via header button
-            App.emit('panel:toggle', {
-                panel: 'admin',
-                show: true
-            });
+            var adminPanelEl = document.querySelector('.admin-panel');
+            var adminIsOpen = !!(adminPanelEl && adminPanelEl.classList.contains('admin-panel--show'));
+
+            // If open and dragged: reset position (never close)
+            if (adminIsOpen && window.AdminModule && window.AdminModule.isPanelDragged()) {
+                window.AdminModule.resetToDefault();
+                return;
+            }
+
+            // If open and at default: no action (admin button never closes)
+            if (adminIsOpen) return;
+
+            // Closed: open
+            App.emit('panel:toggle', { panel: 'admin', show: true });
         });
         
         // Listen for admin panel close events
