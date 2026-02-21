@@ -479,10 +479,6 @@ const AdminModule = (function() {
         panelContent.classList.remove('admin-panel-contents--visible');
         panelContent.classList.add('admin-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
-        if (!panelDragged && window.innerWidth > 530) {
-            panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
-            panelContent.style.right = 'auto';
-        }
         requestAnimationFrame(function() {
             panelContent.classList.remove('admin-panel-contents--hidden');
             panelContent.classList.add('admin-panel-contents--visible');

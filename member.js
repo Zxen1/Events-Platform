@@ -2288,10 +2288,6 @@ const MemberModule = (function() {
         panelContent.classList.remove('member-panel-contents--visible');
         panelContent.classList.add('member-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
-        if (!panelDragged && window.innerWidth > 530) {
-            panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
-            panelContent.style.right = 'auto';
-        }
         requestAnimationFrame(function() {
             panelContent.classList.remove('member-panel-contents--hidden');
             panelContent.classList.add('member-panel-contents--visible');
