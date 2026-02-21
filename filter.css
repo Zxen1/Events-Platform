@@ -54,10 +54,14 @@
 }
 
 .filter-panel-content[data-side="left"] {
+  left: 0;
+  right: auto;
   transform: translateX(-100%);
 }
 
 .filter-panel-content[data-side="right"] {
+  left: auto;
+  right: 0;
   transform: translateX(100%);
 }
 

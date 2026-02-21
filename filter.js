@@ -530,12 +530,9 @@ const FilterModule = (function() {
         try { void contentEl.offsetWidth; } catch (e) {}
         if (!panelDragged && window.innerWidth > 530) {
             var openSide = panelHome === 'right' ? 'right' : 'left';
-            var openLeft = openSide === 'right'
-                ? Math.max(0, window.innerWidth - contentEl.offsetWidth)
-                : 0;
             contentEl.setAttribute('data-side', openSide);
-            contentEl.style.left = openLeft + 'px';
-            contentEl.style.right = 'auto';
+            contentEl.style.left = '';
+            contentEl.style.right = '';
         }
         requestAnimationFrame(function() {
             contentEl.classList.add('panel-visible');
@@ -599,11 +596,14 @@ const FilterModule = (function() {
         var closeSide = getClosestScreenSide();
         contentEl.setAttribute('data-side', closeSide);
 
-        // Keep current x-position locked while transform slides out to nearest side.
-        if (window.innerWidth > 530) {
+        // Keep current x-position locked while transform slides out from dragged positions.
+        if (window.innerWidth > 530 && panelDragged) {
             var currentLeft = Math.max(0, getPanelLeftPx());
             contentEl.style.left = currentLeft + 'px';
             contentEl.style.right = 'auto';
+        } else if (window.innerWidth > 530) {
+            contentEl.style.left = '';
+            contentEl.style.right = '';
         }
 
         panelEl.setAttribute('inert', '');
