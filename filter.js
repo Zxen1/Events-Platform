@@ -1858,7 +1858,10 @@ const FilterModule = (function() {
                     contentEl.style.opacity = '1';
                     resizeFading = false;
                 } else {
+                    contentEl.style.transition = 'none';
                     contentEl.style.left = newLeft + 'px';
+                    void contentEl.offsetWidth;
+                    contentEl.style.transition = '';
                 }
             }, 100);
         });

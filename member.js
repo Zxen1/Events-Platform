@@ -364,7 +364,10 @@ const MemberModule = (function() {
                     panelContent.style.opacity = '1';
                     resizeFading = false;
                 } else {
+                    panelContent.style.transition = 'none';
                     panelContent.style.left = newLeft + 'px';
+                    void panelContent.offsetWidth;
+                    panelContent.style.transition = '';
                 }
             }, 100);
         });
