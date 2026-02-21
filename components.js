@@ -12651,24 +12651,21 @@ window.LanguageMenuComponent = LanguageMenuComponent;
 /* ============================================================================
    PAYMENT MODULE
 
-   Generic payment gateway layer. Callers use PaymentModule.charge() without
-   knowing which gateway is active. The server determines the gateway from
-   config and returns the gateway name + credentials needed to load its SDK.
-
-   Adding a new gateway (e.g. Stripe):
-     1. Add a code path in the `_gateways` map below.
-     2. Add the gateway's PHP handling in payment-order.php.
-     Callers need no changes.
+   Shows a single modal with Stripe (cards, Apple Pay, Google Pay) on top
+   and a PayPal wallet button below a divider. Callers use PaymentModule.charge()
+   and receive onSuccess / onCancel / onError / onReady callbacks.
+   Adding a future gateway: add its UI to _buildOverlay and its server logic
+   to payment-order.php. Callers need no changes.
    ============================================================================ */
 
 const PaymentModule = (function () {
 
-    var _sdkState = {};   // keyed by gateway name: { loaded, loading, callbacks[] }
+    var _sdkState = {};
     var _activeOverlay = null;
 
-    function _loadSdk(gateway, url, callback) {
-        if (!_sdkState[gateway]) _sdkState[gateway] = { loaded: false, loading: false, callbacks: [] };
-        var state = _sdkState[gateway];
+    function _loadSdk(key, url, callback) {
+        if (!_sdkState[key]) _sdkState[key] = { loaded: false, loading: false, callbacks: [] };
+        var state = _sdkState[key];
         if (state.loaded) { callback(null); return; }
         state.callbacks.push(callback);
         if (state.loading) return;
@@ -12678,18 +12675,28 @@ const PaymentModule = (function () {
         script.onload = function () {
             state.loaded = true;
             state.loading = false;
-            var cbs = state.callbacks.splice(0);
-            cbs.forEach(function (cb) { cb(null); });
+            state.callbacks.splice(0).forEach(function (cb) { cb(null); });
         };
         script.onerror = function () {
             state.loading = false;
-            var cbs = state.callbacks.splice(0);
-            cbs.forEach(function (cb) { cb(new Error('Payment SDK failed to load (' + gateway + ')')); });
+            state.callbacks.splice(0).forEach(function (cb) { cb(new Error('SDK failed to load: ' + key)); });
         };
         document.head.appendChild(script);
     }
 
-    function _showOverlay(onCancel) {
+    function _loadSdks(sdks, callback) {
+        var remaining = sdks.length;
+        if (remaining === 0) { callback(null); return; }
+        var firstErr = null;
+        sdks.forEach(function (sdk) {
+            _loadSdk(sdk.key, sdk.url, function (err) {
+                if (err && !firstErr) firstErr = err;
+                if (--remaining === 0) callback(firstErr);
+            });
+        });
+    }
+
+    function _buildOverlay(opts) {
         var overlay = document.createElement('div');
         overlay.className = 'component-payment-overlay';
         overlay.setAttribute('role', 'dialog');
@@ -12702,9 +12709,42 @@ const PaymentModule = (function () {
         var title = document.createElement('div');
         title.className = 'component-payment-title';
         title.textContent = 'Complete Payment';
+        box.appendChild(title);
 
-        var buttonsContainer = document.createElement('div');
-        buttonsContainer.className = 'component-payment-buttons';
+        var stripeContainer = document.createElement('div');
+        stripeContainer.className = 'component-payment-stripe';
+        box.appendChild(stripeContainer);
+
+        var stripeErrorEl = document.createElement('div');
+        stripeErrorEl.className = 'component-payment-stripe-error';
+        stripeErrorEl.hidden = true;
+        box.appendChild(stripeErrorEl);
+
+        var stripeSubmitBtn = document.createElement('button');
+        stripeSubmitBtn.type = 'button';
+        stripeSubmitBtn.className = 'component-payment-stripe-submit button-class-2b';
+        try {
+            stripeSubmitBtn.textContent = 'Pay ' + new Intl.NumberFormat('en', { style: 'currency', currency: opts.currency }).format(opts.amount);
+        } catch (e) {
+            stripeSubmitBtn.textContent = 'Pay ' + opts.currency + ' ' + opts.amount.toFixed(2);
+        }
+        box.appendChild(stripeSubmitBtn);
+
+        var divider = document.createElement('div');
+        divider.className = 'component-payment-divider';
+        var dividerSpan = document.createElement('span');
+        dividerSpan.textContent = 'or';
+        divider.appendChild(dividerSpan);
+        box.appendChild(divider);
+
+        var paypalLabel = document.createElement('div');
+        paypalLabel.className = 'component-payment-paypal-label';
+        paypalLabel.textContent = 'Pay with PayPal';
+        box.appendChild(paypalLabel);
+
+        var paypalContainer = document.createElement('div');
+        paypalContainer.className = 'component-payment-paypal';
+        box.appendChild(paypalContainer);
 
         var cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
@@ -12713,16 +12753,20 @@ const PaymentModule = (function () {
         cancelBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            setTimeout(function () { _removeOverlay(); onCancel(); }, 0);
+            setTimeout(function () { _removeOverlay(); opts.onCancel(); }, 0);
         });
-
-        box.appendChild(title);
-        box.appendChild(buttonsContainer);
         box.appendChild(cancelBtn);
+
         overlay.appendChild(box);
         document.body.appendChild(overlay);
         _activeOverlay = overlay;
-        return buttonsContainer;
+
+        return {
+            stripeContainer:  stripeContainer,
+            stripeErrorEl:    stripeErrorEl,
+            stripeSubmitBtn:  stripeSubmitBtn,
+            paypalContainer:  paypalContainer,
+        };
     }
 
     function _removeOverlay() {
@@ -12732,71 +12776,22 @@ const PaymentModule = (function () {
         _activeOverlay = null;
     }
 
-    // Gateway handlers — keyed by gateway name returned from server
-    var _gateways = {
-        paypal: function (opts, clientId, orderId, transactionId, onSuccess, onCancel, onError, onReady) {
-            var sdkUrl = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId) + '&intent=capture';
-            _loadSdk('paypal', sdkUrl, function (err) {
-                if (err) { onError(err); return; }
-
-                var buttonsContainer = _showOverlay(onCancel);
-                onReady();
-
-                /* global paypal */
-                paypal.Buttons({
-                    createOrder: function () {
-                        return orderId;
-                    },
-                    onApprove: function (data) {
-                        _removeOverlay();
-                        fetch('/gateway.php?action=payment-order', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sub_action: 'capture',
-                                order_id: data.orderID,
-                                transaction_id: transactionId,
-                                gateway: 'paypal'
-                            })
-                        })
-                        .then(function (r) { return r.json(); })
-                        .then(function (res) {
-                            if (res && res.success) {
-                                onSuccess({ transactionId: transactionId });
-                            } else {
-                                onError(new Error('Payment capture failed'));
-                            }
-                        })
-                        .catch(onError);
-                    },
-                    onCancel: function () {
-                        _removeOverlay();
-                        onCancel();
-                    },
-                    onError: function (paypalErr) {
-                        _removeOverlay();
-                        onError(paypalErr || new Error('PayPal error'));
-                    }
-                }).render(buttonsContainer);
-            });
-        }
-    };
-
     /**
-     * Charge the user via the configured payment gateway.
+     * Charge the user. Shows a modal with Stripe on top and PayPal below.
      *
-     * @param {Object} options
-     * @param {number}   options.amount           - Charge amount (positive)
-     * @param {string}   options.currency         - ISO currency code e.g. 'USD'
-     * @param {string}   options.description      - Human-readable description
-     * @param {number}   options.memberId         - Logged-in member ID
-     * @param {number}  [options.postId]          - Post ID (null for new posts)
-     * @param {string}  [options.transactionType] - 'new_post' | 'edit' | 'donation'
-     * @param {string}  [options.checkoutKey]     - e.g. 'premium'
-     * @param {Array}   [options.lineItems]       - Line item array for transactions record
-     * @param {Function} options.onSuccess        - Called with { transactionId } on success
-     * @param {Function} options.onCancel         - Called when user cancels
-     * @param {Function} [options.onError]        - Called with Error on failure
+     * @param {Object}   options
+     * @param {number}   options.amount
+     * @param {string}   options.currency
+     * @param {string}   options.description
+     * @param {number}   options.memberId
+     * @param {number}  [options.postId]
+     * @param {string}  [options.transactionType]
+     * @param {string}  [options.checkoutKey]
+     * @param {Array}   [options.lineItems]
+     * @param {Function} options.onSuccess   — called with { transactionId }
+     * @param {Function} options.onCancel
+     * @param {Function} options.onError
+     * @param {Function} options.onReady     — called when overlay is visible
      */
     function charge(options) {
         if (!options || typeof options !== 'object') throw new Error('PaymentModule.charge: options required');
@@ -12804,50 +12799,167 @@ const PaymentModule = (function () {
         var amount          = parseFloat(options.amount) || 0;
         var currency        = String(options.currency || 'USD').toUpperCase();
         var description     = String(options.description || 'Payment');
-        var memberId        = options.memberId || null;
-        var postId          = options.postId || null;
+        var memberId        = options.memberId  || null;
+        var postId          = options.postId    || null;
         var transactionType = String(options.transactionType || 'new_post');
         var checkoutKey     = options.checkoutKey || null;
-        var lineItems       = options.lineItems || null;
-        var onSuccess       = typeof options.onSuccess === 'function' ? options.onSuccess : function () {};
-        var onCancel        = typeof options.onCancel  === 'function' ? options.onCancel  : function () {};
-        var onError         = typeof options.onError   === 'function' ? options.onError   : function (e) { console.error('[PaymentModule]', e); };
-        var onReady         = typeof options.onReady   === 'function' ? options.onReady   : function () {};
+        var lineItems       = options.lineItems   || null;
+        var onSuccess = typeof options.onSuccess === 'function' ? options.onSuccess : function () {};
+        var onCancel  = typeof options.onCancel  === 'function' ? options.onCancel  : function () {};
+        var onError   = typeof options.onError   === 'function' ? options.onError   : function (e) { console.error('[PaymentModule]', e); };
+        var onReady   = typeof options.onReady   === 'function' ? options.onReady   : function () {};
 
-        if (amount <= 0) { throw new Error('PaymentModule.charge: amount must be positive'); }
+        if (amount <= 0) throw new Error('PaymentModule.charge: amount must be positive');
 
-        fetch('/gateway.php?action=payment-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sub_action:        'create',
-                amount:            amount,
-                currency:          currency,
-                description:       description,
-                member_id:         memberId,
-                post_id:           postId,
-                transaction_type:  transactionType,
-                checkout_key:      checkoutKey,
-                line_items:        lineItems
-            })
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-            if (!res || !res.success) {
-                onError(new Error(res && res.message ? res.message : 'Failed to create payment order'));
-                return;
-            }
-            var gateway       = res.gateway;
-            var clientId      = res.client_id;
-            var orderId       = res.order_id;
-            var transactionId = res.transaction_id;
+        var chargePayload = {
+            amount:           amount,
+            currency:         currency,
+            description:      description,
+            member_id:        memberId,
+            post_id:          postId,
+            transaction_type: transactionType,
+            checkout_key:     checkoutKey,
+            line_items:       lineItems,
+        };
 
-            var handler = _gateways[gateway];
-            if (!handler) {
-                onError(new Error('Unknown payment gateway: ' + gateway));
-                return;
-            }
-            handler(options, clientId, orderId, transactionId, onSuccess, onCancel, onError, onReady);
+        function post(body) {
+            return fetch('/gateway.php?action=payment-order', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(body),
+            }).then(function (r) { return r.json(); });
+        }
+
+        // Step 1: get credentials
+        post({ sub_action: 'config' })
+        .then(function (cfg) {
+            if (!cfg || !cfg.success) throw new Error('Failed to load payment config');
+            var stripeKey    = cfg.stripe_publishable_key || '';
+            var paypalClient = cfg.paypal_client_id       || '';
+
+            // Step 2: load SDKs in parallel
+            var sdks = [];
+            if (stripeKey)    sdks.push({ key: 'stripe', url: 'https://js.stripe.com/v3/' });
+            if (paypalClient) sdks.push({ key: 'paypal', url: 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(paypalClient) + '&intent=capture&components=buttons' });
+
+            _loadSdks(sdks, function (err) {
+                if (err) { onError(err); return; }
+
+                // Step 3: create Stripe PaymentIntent upfront
+                post(Object.assign({}, chargePayload, { sub_action: 'create', gateway: 'stripe' }))
+                .then(function (res) {
+                    if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Failed to initialise payment');
+                    var clientSecret        = res.client_secret;
+                    var stripeTransactionId = res.transaction_id;
+
+                    // Step 4: show overlay
+                    var els = _buildOverlay({ amount: amount, currency: currency, onCancel: onCancel });
+                    onReady();
+
+                    // Step 5: mount Stripe Payment Element
+                    /* global Stripe */
+                    var stripe = Stripe(stripeKey);
+                    var stripeElements = stripe.elements({
+                        clientSecret: clientSecret,
+                        appearance: {
+                            theme: 'night',
+                            variables: {
+                                colorPrimary:          '#5C6FB1',
+                                colorBackground:       '#111111',
+                                colorText:             '#ffffff',
+                                colorTextSecondary:    'rgba(255,255,255,0.55)',
+                                colorIcon:             '#9ca3af',
+                                borderRadius:          '5px',
+                                fontSizeBase:          '13px',
+                            },
+                        },
+                    });
+                    stripeElements.create('payment', { layout: 'auto' }).mount(els.stripeContainer);
+
+                    // Step 6: Stripe submit
+                    var stripeSubmitting = false;
+                    els.stripeSubmitBtn.addEventListener('click', function () {
+                        if (stripeSubmitting) return;
+                        stripeSubmitting = true;
+                        els.stripeSubmitBtn.disabled = true;
+                        els.stripeErrorEl.hidden = true;
+
+                        stripe.confirmPayment({
+                            elements:      stripeElements,
+                            confirmParams: { return_url: window.location.href },
+                            redirect:      'if_required',
+                        })
+                        .then(function (result) {
+                            if (result.error) {
+                                stripeSubmitting = false;
+                                els.stripeSubmitBtn.disabled = false;
+                                els.stripeErrorEl.textContent = result.error.message || 'Payment failed';
+                                els.stripeErrorEl.hidden = false;
+                                return;
+                            }
+                            // Verify server-side then finish
+                            post({
+                                sub_action:     'capture',
+                                gateway:        'stripe',
+                                order_id:       result.paymentIntent.id,
+                                transaction_id: stripeTransactionId,
+                            })
+                            .then(function (capRes) {
+                                _removeOverlay();
+                                if (capRes && capRes.success) {
+                                    onSuccess({ transactionId: stripeTransactionId });
+                                } else {
+                                    onError(new Error(capRes && capRes.message ? capRes.message : 'Stripe capture failed'));
+                                }
+                            })
+                            .catch(function (e) { _removeOverlay(); onError(e); });
+                        })
+                        .catch(function (e) {
+                            stripeSubmitting = false;
+                            els.stripeSubmitBtn.disabled = false;
+                            els.stripeErrorEl.textContent = e.message || 'Payment error';
+                            els.stripeErrorEl.hidden = false;
+                        });
+                    });
+
+                    // Step 7: PayPal button (wallet only, lazy order creation)
+                    if (paypalClient) {
+                        /* global paypal */
+                        var paypalTransactionId = null;
+                        paypal.Buttons({
+                            fundingSource: paypal.FUNDING.PAYPAL,
+                            createOrder: function () {
+                                return post(Object.assign({}, chargePayload, { sub_action: 'create', gateway: 'paypal' }))
+                                .then(function (res) {
+                                    if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Failed to create PayPal order');
+                                    paypalTransactionId = res.transaction_id;
+                                    return res.order_id;
+                                });
+                            },
+                            onApprove: function (data) {
+                                _removeOverlay();
+                                post({
+                                    sub_action:     'capture',
+                                    gateway:        'paypal',
+                                    order_id:       data.orderID,
+                                    transaction_id: paypalTransactionId,
+                                })
+                                .then(function (res) {
+                                    if (res && res.success) {
+                                        onSuccess({ transactionId: paypalTransactionId });
+                                    } else {
+                                        onError(new Error(res && res.message ? res.message : 'PayPal capture failed'));
+                                    }
+                                })
+                                .catch(onError);
+                            },
+                            onCancel:  function () { /* user closed PayPal popup — keep overlay open so they can use Stripe */ },
+                            onError:   function (e) { onError(e || new Error('PayPal error')); },
+                        }).render(els.paypalContainer);
+                    }
+                })
+                .catch(onError);
+            });
         })
         .catch(onError);
     }

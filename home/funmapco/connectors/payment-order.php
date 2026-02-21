@@ -81,15 +81,8 @@ if (!is_array($data)) {
 $subAction = isset($data['sub_action']) ? trim((string)$data['sub_action']) : '';
 
 // ============================================================
-// GATEWAY ROUTER — add new gateways here in future
+// HELPER FUNCTIONS — PAYPAL
 // ============================================================
-
-function get_active_gateway(array $paymentConfig): string {
-    if (!empty($paymentConfig['paypal_client_id']) && !empty($paymentConfig['paypal_secret'])) {
-        return 'paypal';
-    }
-    return '';
-}
 
 function paypal_get_base_url(array $paymentConfig): string {
     $mode = isset($paymentConfig['paypal_mode']) ? strtolower(trim($paymentConfig['paypal_mode'])) : 'sandbox';
@@ -98,8 +91,8 @@ function paypal_get_base_url(array $paymentConfig): string {
 
 function paypal_get_access_token(array $paymentConfig, string &$error): ?string {
     $baseUrl  = paypal_get_base_url($paymentConfig);
-    $clientId = $paymentConfig['paypal_client_id'];
-    $secret   = $paymentConfig['paypal_secret'];
+    $clientId = $paymentConfig['paypal_client_id'] ?? '';
+    $secret   = $paymentConfig['paypal_secret'] ?? '';
 
     $ch = curl_init($baseUrl . '/v1/oauth2/token');
     curl_setopt_array($ch, [
@@ -127,9 +120,9 @@ function paypal_get_access_token(array $paymentConfig, string &$error): ?string 
 }
 
 function paypal_create_order(array $paymentConfig, string $accessToken, float $amount, string $currency, string $description, string &$error): ?string {
-    $baseUrl = paypal_get_base_url($paymentConfig);
-    $brandName      = isset($paymentConfig['paypal_brand_name'])      ? trim((string)$paymentConfig['paypal_brand_name'])      : '';
-    $softDescriptor = isset($paymentConfig['paypal_soft_descriptor']) ? trim((string)$paymentConfig['paypal_soft_descriptor']) : '';
+    $baseUrl        = paypal_get_base_url($paymentConfig);
+    $brandName      = isset($paymentConfig['paypal_brand_name'])       ? trim((string)$paymentConfig['paypal_brand_name'])      : '';
+    $softDescriptor = isset($paymentConfig['paypal_soft_descriptor'])  ? trim((string)$paymentConfig['paypal_soft_descriptor']) : '';
 
     $purchaseUnit = [
         'amount'      => [
@@ -150,12 +143,10 @@ function paypal_create_order(array $paymentConfig, string $accessToken, float $a
         $orderBody['application_context'] = ['brand_name' => $brandName];
     }
 
-    $body = json_encode($orderBody);
-
     $ch = curl_init($baseUrl . '/v2/checkout/orders');
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_POSTFIELDS     => json_encode($orderBody),
         CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $accessToken,
@@ -208,7 +199,7 @@ function paypal_capture_order(array $paymentConfig, string $accessToken, string 
     return $json;
 }
 
-function extract_payment_method(array $captureResponse): string {
+function extract_paypal_payment_method(array $captureResponse): string {
     $src = $captureResponse['payment_source'] ?? [];
     if (!empty($src['card']['brand'])) return strtoupper($src['card']['brand']);
     if (!empty($src['paypal']))        return 'PAYPAL';
@@ -219,17 +210,94 @@ function extract_payment_method(array $captureResponse): string {
 }
 
 // ============================================================
-// CREATE
+// HELPER FUNCTIONS — STRIPE
+// ============================================================
+
+function stripe_create_payment_intent(array $paymentConfig, float $amount, string $currency, string $description, string &$error): ?array {
+    $secretKey = trim($paymentConfig['stripe_secret_key'] ?? '');
+    if ($secretKey === '') { $error = 'Stripe not configured'; return null; }
+
+    $params = http_build_query([
+        'amount'                     => (int)round($amount * 100),
+        'currency'                   => strtolower($currency),
+        'description'                => $description,
+        'automatic_payment_methods'  => ['enabled' => 'true', 'allow_redirects' => 'never'],
+    ]);
+
+    $ch = curl_init('https://api.stripe.com/v1/payment_intents');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $params,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $secretKey],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+    ]);
+    $resp     = curl_exec($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$resp) { $error = 'Stripe create failed (HTTP ' . $httpCode . ')'; return null; }
+    $json = json_decode($resp, true);
+    if (!empty($json['error'])) { $error = $json['error']['message'] ?? 'Stripe error'; return null; }
+    if (empty($json['id']) || empty($json['client_secret'])) { $error = 'Stripe response missing fields'; return null; }
+    return ['id' => $json['id'], 'client_secret' => $json['client_secret']];
+}
+
+function stripe_retrieve_payment_intent(array $paymentConfig, string $intentId, string &$error): ?array {
+    $secretKey = trim($paymentConfig['stripe_secret_key'] ?? '');
+    $ch = curl_init('https://api.stripe.com/v1/payment_intents/' . urlencode($intentId));
+    curl_setopt_array($ch, [
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $secretKey],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+    ]);
+    $resp     = curl_exec($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$resp) { $error = 'Stripe retrieve failed (HTTP ' . $httpCode . ')'; return null; }
+    $json = json_decode($resp, true);
+    if (!empty($json['error'])) { $error = $json['error']['message'] ?? 'Stripe error'; return null; }
+    return $json;
+}
+
+function extract_stripe_payment_method(array $pi): string {
+    $map = [
+        'card'               => 'CARD',
+        'apple_pay'          => 'APPLE_PAY',
+        'google_pay'         => 'GOOGLE_PAY',
+        'afterpay_clearpay'  => 'AFTERPAY',
+        'link'               => 'LINK',
+    ];
+    $type = $pi['payment_method_types'][0] ?? '';
+    return $map[$type] ?? (strtoupper($type) ?: 'UNKNOWN');
+}
+
+// ============================================================
+// CONFIG — return publishable credentials only (no DB writes)
+// ============================================================
+if ($subAction === 'config') {
+    echo json_encode([
+        'success'                => true,
+        'stripe_publishable_key' => trim($paymentConfig['stripe_publishable_key'] ?? ''),
+        'paypal_client_id'       => trim($paymentConfig['paypal_client_id'] ?? ''),
+    ]);
+    exit;
+}
+
+// ============================================================
+// CREATE — create a gateway order/intent + pending transaction
 // ============================================================
 if ($subAction === 'create') {
+    $gateway         = trim((string)($data['gateway'] ?? 'paypal'));
     $amount          = round((float)($data['amount'] ?? 0), 2);
     $currency        = strtoupper(trim((string)($data['currency'] ?? 'USD')));
     $description     = trim((string)($data['description'] ?? 'Payment'));
-    $memberId        = isset($data['member_id']) ? (int)$data['member_id'] : null;
-    $postId          = isset($data['post_id']) && $data['post_id'] !== null ? (int)$data['post_id'] : null;
+    $memberId        = isset($data['member_id']) && $data['member_id'] !== null ? (int)$data['member_id'] : null;
+    $postId          = isset($data['post_id'])   && $data['post_id']   !== null ? (int)$data['post_id']   : null;
     $transactionType = trim((string)($data['transaction_type'] ?? 'new_post'));
     $checkoutKey     = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : null;
-    $lineItems       = isset($data['line_items']) ? $data['line_items'] : null;
+    $lineItems       = $data['line_items'] ?? null;
     $lineItemsJson   = $lineItems !== null ? json_encode($lineItems, JSON_UNESCAPED_UNICODE) : null;
 
     if ($amount <= 0) {
@@ -237,131 +305,132 @@ if ($subAction === 'create') {
         echo json_encode(['success' => false, 'message' => 'Invalid amount']);
         exit;
     }
-    if (!$memberId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'member_id required']);
-        exit;
-    }
 
-    $gateway = get_active_gateway($paymentConfig);
-    if ($gateway === '') {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'No payment gateway configured']);
-        exit;
-    }
+    // ---- Stripe ----
+    if ($gateway === 'stripe') {
+        $err      = '';
+        $piResult = stripe_create_payment_intent($paymentConfig, $amount, $currency, $description, $err);
+        if ($piResult === null) {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'message' => $err]);
+            exit;
+        }
+        $paymentId    = $piResult['id'];
+        $clientSecret = $piResult['client_secret'];
 
-    $err = '';
-    $accessToken = paypal_get_access_token($paymentConfig, $err);
-    if ($accessToken === null) {
-        http_response_code(502);
-        echo json_encode(['success' => false, 'message' => $err]);
-        exit;
-    }
-
-    $orderId = paypal_create_order($paymentConfig, $accessToken, $amount, $currency, $description, $err);
-    if ($orderId === null) {
-        http_response_code(502);
-        echo json_encode(['success' => false, 'message' => $err]);
-        exit;
-    }
-
-    // Insert pending transaction
-    $stmt = $mysqli->prepare(
-        "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, amount, currency, line_items, description, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
-    );
-    if (!$stmt) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'DB prepare failed']);
-        exit;
-    }
-    $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $orderId, $gateway, $amount, $currency, $lineItemsJson, $description);
-    if (!$stmt->execute()) {
+        $stmt = $mysqli->prepare(
+            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
+        );
+        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
+        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $gateway, $amount, $currency, $lineItemsJson, $description);
+        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $transactionId = (int)$stmt->insert_id;
         $stmt->close();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'DB insert failed']);
+
+        echo json_encode(['success' => true, 'gateway' => 'stripe', 'client_secret' => $clientSecret, 'transaction_id' => $transactionId]);
         exit;
     }
-    $transactionId = (int)$stmt->insert_id;
-    $stmt->close();
 
-    echo json_encode([
-        'success'        => true,
-        'gateway'        => $gateway,
-        'client_id'      => $paymentConfig['paypal_client_id'],
-        'order_id'       => $orderId,
-        'transaction_id' => $transactionId,
-    ]);
+    // ---- PayPal ----
+    if ($gateway === 'paypal') {
+        $err         = '';
+        $accessToken = paypal_get_access_token($paymentConfig, $err);
+        if ($accessToken === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
+
+        $orderId = paypal_create_order($paymentConfig, $accessToken, $amount, $currency, $description, $err);
+        if ($orderId === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
+
+        $stmt = $mysqli->prepare(
+            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
+        );
+        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
+        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $orderId, $gateway, $amount, $currency, $lineItemsJson, $description);
+        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $transactionId = (int)$stmt->insert_id;
+        $stmt->close();
+
+        echo json_encode([
+            'success'        => true,
+            'gateway'        => 'paypal',
+            'client_id'      => $paymentConfig['paypal_client_id'],
+            'order_id'       => $orderId,
+            'transaction_id' => $transactionId,
+        ]);
+        exit;
+    }
+
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Unknown gateway: ' . $gateway]);
     exit;
 }
 
 // ============================================================
-// CAPTURE
+// CAPTURE — verify payment and mark transaction paid
 // ============================================================
 if ($subAction === 'capture') {
-    $orderId       = trim((string)($data['order_id'] ?? ''));
+    $paymentId     = trim((string)($data['order_id'] ?? ''));
     $transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : 0;
     $gateway       = trim((string)($data['gateway'] ?? ''));
 
-    if ($orderId === '' || $transactionId <= 0 || $gateway === '') {
+    if ($paymentId === '' || $transactionId <= 0 || $gateway === '') {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Missing capture parameters']);
         exit;
     }
 
-    // Verify transaction exists and is pending
     $stmtCheck = $mysqli->prepare("SELECT id, status FROM transactions WHERE id = ? AND payment_id = ? LIMIT 1");
-    if (!$stmtCheck) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'DB prepare failed']);
-        exit;
-    }
-    $stmtCheck->bind_param('is', $transactionId, $orderId);
+    if (!$stmtCheck) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
+    $stmtCheck->bind_param('is', $transactionId, $paymentId);
     $stmtCheck->execute();
     $stmtCheck->bind_result($txId, $txStatus);
     $found = $stmtCheck->fetch();
     $stmtCheck->close();
 
-    if (!$found) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Transaction not found']);
-        exit;
-    }
-    if ($txStatus === 'paid') {
-        // Already captured — idempotent success
+    if (!$found) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'Transaction not found']); exit; }
+    if ($txStatus === 'paid') { echo json_encode(['success' => true, 'transaction_id' => $transactionId]); exit; }
+
+    // ---- Stripe capture ----
+    if ($gateway === 'stripe') {
+        $err = '';
+        $pi  = stripe_retrieve_payment_intent($paymentConfig, $paymentId, $err);
+        if ($pi === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
+        if (($pi['status'] ?? '') !== 'succeeded') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Payment not completed (status: ' . ($pi['status'] ?? 'unknown') . ')']);
+            exit;
+        }
+        $paymentMethod = extract_stripe_payment_method($pi);
+
+        $stmtUpdate = $mysqli->prepare("UPDATE transactions SET status = 'paid', payment_method = ?, updated_at = NOW() WHERE id = ?");
+        if (!$stmtUpdate) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB update failed']); exit; }
+        $stmtUpdate->bind_param('si', $paymentMethod, $transactionId);
+        $stmtUpdate->execute();
+        $stmtUpdate->close();
+
         echo json_encode(['success' => true, 'transaction_id' => $transactionId]);
         exit;
     }
 
+    // ---- PayPal capture ----
     if ($gateway === 'paypal') {
-        $err = '';
+        $err         = '';
         $accessToken = paypal_get_access_token($paymentConfig, $err);
-        if ($accessToken === null) {
-            http_response_code(502);
-            echo json_encode(['success' => false, 'message' => $err]);
-            exit;
-        }
+        if ($accessToken === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
 
-        $captureResponse = paypal_capture_order($paymentConfig, $accessToken, $orderId, $err);
+        $captureResponse = paypal_capture_order($paymentConfig, $accessToken, $paymentId, $err);
         if ($captureResponse === null) {
-            // Mark transaction as failed
             $stmtFail = $mysqli->prepare("UPDATE transactions SET status = 'failed', updated_at = NOW() WHERE id = ?");
             if ($stmtFail) { $stmtFail->bind_param('i', $transactionId); $stmtFail->execute(); $stmtFail->close(); }
             http_response_code(502);
             echo json_encode(['success' => false, 'message' => $err]);
             exit;
         }
+        $paymentMethod = extract_paypal_payment_method($captureResponse);
 
-        $paymentMethod = extract_payment_method($captureResponse);
-
-        $stmtUpdate = $mysqli->prepare(
-            "UPDATE transactions SET status = 'paid', payment_method = ?, updated_at = NOW() WHERE id = ?"
-        );
-        if (!$stmtUpdate) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'DB update failed']);
-            exit;
-        }
+        $stmtUpdate = $mysqli->prepare("UPDATE transactions SET status = 'paid', payment_method = ?, updated_at = NOW() WHERE id = ?");
+        if (!$stmtUpdate) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB update failed']); exit; }
         $stmtUpdate->bind_param('si', $paymentMethod, $transactionId);
         $stmtUpdate->execute();
         $stmtUpdate->close();
