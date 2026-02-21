@@ -3467,18 +3467,20 @@ const AdminModule = (function() {
         var antijitterBtns = antijitterContainer ? antijitterContainer.querySelectorAll('.admin-settings-antijitter-button') : [];
         if (antijitterBtns.length) {
             var initialResizeMode = settingsData.resize_antijitter || 'off';
+            var antijitterInitialBtn = null;
             antijitterBtns.forEach(function(btn) {
-                btn.setAttribute('aria-pressed', btn.dataset.value === initialResizeMode ? 'true' : 'false');
+                var isActive = btn.dataset.value === initialResizeMode;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                if (isActive) antijitterInitialBtn = btn;
             });
+            if (antijitterInitialBtn) {
+                antijitterInitialBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            }
             registerField('settings.resize_antijitter', initialResizeMode);
             applyResizeAntiJitter(initialResizeMode);
             antijitterContainer.addEventListener('click', function(e) {
                 var btn = e.target.closest('.admin-settings-antijitter-button');
                 if (!btn || btn.getAttribute('aria-pressed') === 'true') return;
-                antijitterBtns.forEach(function(b) {
-                    b.setAttribute('aria-pressed', 'false');
-                });
-                btn.setAttribute('aria-pressed', 'true');
                 updateField('settings.resize_antijitter', btn.dataset.value);
                 applyResizeAntiJitter(btn.dataset.value);
             });

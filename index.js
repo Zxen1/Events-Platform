@@ -655,6 +655,10 @@ const App = (function() {
       container.addEventListener('click', function(e) {
         var btn = e.target.closest('.toggle-button');
         if (!btn || btn.disabled) return;
+        container.querySelectorAll('.toggle-button').forEach(function(b) {
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.setAttribute('aria-pressed', 'true');
         moveSlider(btn, true);
         applyTierColor(btn);
       });
