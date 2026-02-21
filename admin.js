@@ -351,24 +351,44 @@ const AdminModule = (function() {
             document.addEventListener('mouseup', onUp);
         });
 
-        // ---- Resize Smoothing ----
-        // Fires 100ms after the window stops resizing. Panel holds its position
-        // during the resize, then glides smoothly to the correct position via the
-        // left transition defined in CSS. Dragged panels are clamped to keep
-        // 40px visible; default-position panels track the right edge.
-        var resizeTimer = null;
+        // ---- Resize Smoothing / Resize Teleport ----
+        // RESIZE_SMOOTHING: panel holds position during resize, then glides back via CSS transition.
+        // RESIZE_TELEPORT:  panel fades out on resize start, snaps to correct position, fades back in.
+        // Default (both false): no intervention — browser renders as normal.
+        var RESIZE_SMOOTHING = false;
+        var RESIZE_TELEPORT  = true;
+
+        var resizeTimer  = null;
+        var resizeFading = false;
+
         window.addEventListener('resize', function() {
             if (!panelContent || !panelContent.style.left) return;
             if (window.innerWidth <= 530) return;
+
+            if (RESIZE_TELEPORT && !resizeFading) {
+                resizeFading = true;
+                panelContent.style.transition = 'opacity 0.15s ease';
+                panelContent.style.opacity = '0';
+            }
+
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(function() {
-                if (panelDragged) {
-                    var currentLeft = parseFloat(panelContent.style.left);
-                    if (!isNaN(currentLeft) && currentLeft > window.innerWidth - 40) {
-                        panelContent.style.left = (window.innerWidth - 40) + 'px';
-                    }
-                } else {
-                    panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+                var newLeft = panelDragged
+                    ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
+                    : window.innerWidth - panelContent.offsetWidth;
+
+                if (RESIZE_TELEPORT) {
+                    panelContent.style.transition = 'none';
+                    panelContent.style.left = newLeft + 'px';
+                    void panelContent.offsetWidth;
+                    panelContent.style.transition = 'opacity 0.2s ease';
+                    panelContent.style.opacity = '1';
+                    setTimeout(function() {
+                        panelContent.style.transition = '';
+                        resizeFading = false;
+                    }, 250);
+                } else if (RESIZE_SMOOTHING) {
+                    panelContent.style.left = newLeft + 'px';
                 }
             }, 100);
         });
