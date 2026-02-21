@@ -529,7 +529,12 @@ const FilterModule = (function() {
         contentEl.classList.remove('panel-visible');
         try { void contentEl.offsetWidth; } catch (e) {}
         if (!panelDragged && window.innerWidth > 530) {
-            contentEl.style.left = '0px';
+            var openSide = panelHome === 'right' ? 'right' : 'left';
+            var openLeft = openSide === 'right'
+                ? Math.max(0, window.innerWidth - contentEl.offsetWidth)
+                : 0;
+            contentEl.setAttribute('data-side', openSide);
+            contentEl.style.left = openLeft + 'px';
             contentEl.style.right = 'auto';
         }
         requestAnimationFrame(function() {
@@ -586,29 +591,6 @@ const FilterModule = (function() {
         contentEl.style.right = 'auto';
         try { void contentEl.offsetWidth; } catch (_eFlush) {}
         contentEl.style.left = '0px';
-
-        var finished = false;
-        function cleanup() {
-            if (finished) return;
-            finished = true;
-            contentEl.style.left = '';
-            contentEl.style.right = '';
-        }
-
-        var durationMs = getContentTransitionDurationMs(contentEl);
-        if (durationMs <= 0) {
-            cleanup();
-            return;
-        }
-
-        contentEl.addEventListener('transitionend', function handler(ev) {
-            if (ev && ev.target !== contentEl) return;
-            if (ev && ev.propertyName && ev.propertyName !== 'left') return;
-            contentEl.removeEventListener('transitionend', handler);
-            cleanup();
-        }, { once: true });
-
-        setTimeout(cleanup, durationMs + 60);
     }
     
     function closePanel() {
@@ -630,9 +612,9 @@ const FilterModule = (function() {
         function finalizeClose() {
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
-            panelHome = 'left';
+            panelHome = closeSide;
             panelDragged = false;
-            contentEl.setAttribute('data-side', 'left');
+            contentEl.setAttribute('data-side', panelHome === 'right' ? 'right' : 'left');
             contentEl.style.left = '';
             contentEl.style.right = '';
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
