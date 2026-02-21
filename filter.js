@@ -1829,7 +1829,7 @@ const FilterModule = (function() {
         //                   then slides back in using the normal open animation.
         // Default (both false): no intervention — browser renders as normal.
         var RESIZE_SMOOTHING = false;
-        var RESIZE_TELEPORT  = true;
+        var RESIZE_TELEPORT  = false;
 
         var resizeTimer  = null;
         var resizeFading = false;
