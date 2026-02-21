@@ -1810,6 +1810,14 @@ const FilterModule = (function() {
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
+
+        window.addEventListener('resize', function() {
+            if (!contentEl.style.left) return;
+            var currentLeft = parseFloat(contentEl.style.left);
+            if (isNaN(currentLeft)) return;
+            var maxLeft = window.innerWidth - 40;
+            if (currentLeft > maxLeft) contentEl.style.left = maxLeft + 'px';
+        });
     }
 
 
