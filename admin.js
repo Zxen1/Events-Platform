@@ -3463,19 +3463,19 @@ const AdminModule = (function() {
         }
         
         // Resize Anti-Jitter toggle buttons
-        var resizeAntiJitterContainer = document.getElementById('adminResizeAntiJitter');
-        var resizeAntiJitterBtns = resizeAntiJitterContainer ? resizeAntiJitterContainer.querySelectorAll('.admin-resize-antijitter-button') : [];
-        if (resizeAntiJitterBtns.length) {
+        var antijitterContainer = document.getElementById('adminAntijitter');
+        var antijitterBtns = antijitterContainer ? antijitterContainer.querySelectorAll('.admin-antijitter-button') : [];
+        if (antijitterBtns.length) {
             var initialResizeMode = settingsData.resize_antijitter || 'off';
-            resizeAntiJitterBtns.forEach(function(btn) {
+            antijitterBtns.forEach(function(btn) {
                 btn.setAttribute('aria-pressed', btn.dataset.value === initialResizeMode ? 'true' : 'false');
             });
             registerField('settings.resize_antijitter', initialResizeMode);
             applyResizeAntiJitter(initialResizeMode);
-            resizeAntiJitterContainer.addEventListener('click', function(e) {
-                var btn = e.target.closest('.admin-resize-antijitter-button');
+            antijitterContainer.addEventListener('click', function(e) {
+                var btn = e.target.closest('.admin-antijitter-button');
                 if (!btn || btn.getAttribute('aria-pressed') === 'true') return;
-                resizeAntiJitterBtns.forEach(function(b) {
+                antijitterBtns.forEach(function(b) {
                     b.setAttribute('aria-pressed', 'false');
                 });
                 btn.setAttribute('aria-pressed', 'true');
@@ -3616,7 +3616,7 @@ const AdminModule = (function() {
         var countdownTooltipEls = document.querySelectorAll('.admin-countdown-tooltip');
         var mapCardTooltipEl = document.querySelector('.admin-map-card-breakpoint-tooltip');
         var mapCardPriorityTooltipEl = document.querySelector('.admin-map-card-priority-tooltip');
-        var resizeAntiJitterTooltipEl = document.querySelector('.admin-resize-antijitter-tooltip');
+        var resizeAntiJitterTooltipEl = document.querySelector('.admin-antijitter-tooltip');
         
         if (!countdownTooltipEls.length && !mapCardTooltipEl && !mapCardPriorityTooltipEl && !resizeAntiJitterTooltipEl) return;
         
