@@ -350,8 +350,9 @@ const MemberModule = (function() {
 
             var mode = window._resizeAntiJitter || 'off';
 
-            // Off: instant update on every resize event — mimics CSS right:0 gripping
-            if (mode === 'off') {
+            // Off / Blur: instant update on every resize event — mimics CSS right:0 gripping
+            // Blur adds a full-screen overlay on top (handled by index.js) to hide the jitter
+            if (mode === 'off' || mode === 'blur') {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
                     : window.innerWidth - panelContent.offsetWidth;

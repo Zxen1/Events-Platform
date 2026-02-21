@@ -1844,8 +1844,9 @@ const FilterModule = (function() {
 
             var mode = window._resizeAntiJitter || 'off';
 
-            // Off: instant update on every resize event — mimics CSS left:0 gripping
-            if (mode === 'off') {
+            // Off / Blur: instant update on every resize event — mimics CSS left:0 gripping
+            // Blur adds a full-screen overlay on top (handled by index.js) to hide the jitter
+            if (mode === 'off' || mode === 'blur') {
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
                     : 0;
