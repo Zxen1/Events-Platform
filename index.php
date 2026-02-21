@@ -531,23 +531,11 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field">
               <span class="admin-settings-field-label admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Resize Anti-Jitter</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-resize-antijitter-tooltip"></div></span>
-              <div id="adminResizeAntiJitter" class="admin-settings-resize-antijitter-toggles">
-                <label class="admin-settings-resize-antijitter-option">
-                  <input type="radio" name="adminResizeAntiJitter" value="off" class="admin-settings-resize-antijitter-option-input" />
-                  <span class="admin-settings-resize-antijitter-option-label">Off</span>
-                </label>
-                <label class="admin-settings-resize-antijitter-option">
-                  <input type="radio" name="adminResizeAntiJitter" value="blur" class="admin-settings-resize-antijitter-option-input" />
-                  <span class="admin-settings-resize-antijitter-option-label">Blur</span>
-                </label>
-                <label class="admin-settings-resize-antijitter-option">
-                  <input type="radio" name="adminResizeAntiJitter" value="teleport" class="admin-settings-resize-antijitter-option-input" />
-                  <span class="admin-settings-resize-antijitter-option-label">Teleport</span>
-                </label>
-                <label class="admin-settings-resize-antijitter-option">
-                  <input type="radio" name="adminResizeAntiJitter" value="smoothing" class="admin-settings-resize-antijitter-option-input" />
-                  <span class="admin-settings-resize-antijitter-option-label">Smoothing</span>
-                </label>
+              <div id="adminResizeAntiJitter" class="admin-settings-resize-antijitter-toggles toggle-class-1">
+                <button type="button" class="admin-resize-antijitter-button toggle-button" data-value="off" aria-pressed="true">Off</button>
+                <button type="button" class="admin-resize-antijitter-button toggle-button" data-value="blur" aria-pressed="false">Blur</button>
+                <button type="button" class="admin-resize-antijitter-button toggle-button" data-value="teleport" aria-pressed="false">Teleport</button>
+                <button type="button" class="admin-resize-antijitter-button toggle-button" data-value="smoothing" aria-pressed="false">Smoothing</button>
               </div>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">

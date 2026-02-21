@@ -3462,22 +3462,25 @@ const AdminModule = (function() {
             });
         }
         
-        // Resize Anti-Jitter radio buttons
-        var resizeAntiJitterRadios = settingsContainer.querySelectorAll('input[name="adminResizeAntiJitter"]');
-        if (resizeAntiJitterRadios.length) {
+        // Resize Anti-Jitter toggle buttons
+        var resizeAntiJitterContainer = document.getElementById('adminResizeAntiJitter');
+        var resizeAntiJitterBtns = resizeAntiJitterContainer ? resizeAntiJitterContainer.querySelectorAll('.admin-resize-antijitter-button') : [];
+        if (resizeAntiJitterBtns.length) {
             var initialResizeMode = settingsData.resize_antijitter || 'off';
-            resizeAntiJitterRadios.forEach(function(radio) {
-                radio.checked = (radio.value === initialResizeMode);
+            resizeAntiJitterBtns.forEach(function(btn) {
+                btn.setAttribute('aria-pressed', btn.dataset.value === initialResizeMode ? 'true' : 'false');
             });
             registerField('settings.resize_antijitter', initialResizeMode);
             applyResizeAntiJitter(initialResizeMode);
-            resizeAntiJitterRadios.forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    if (radio.checked) {
-                        updateField('settings.resize_antijitter', radio.value);
-                        applyResizeAntiJitter(radio.value);
-                    }
+            resizeAntiJitterContainer.addEventListener('click', function(e) {
+                var btn = e.target.closest('.admin-resize-antijitter-button');
+                if (!btn || btn.getAttribute('aria-pressed') === 'true') return;
+                resizeAntiJitterBtns.forEach(function(b) {
+                    b.setAttribute('aria-pressed', 'false');
                 });
+                btn.setAttribute('aria-pressed', 'true');
+                updateField('settings.resize_antijitter', btn.dataset.value);
+                applyResizeAntiJitter(btn.dataset.value);
             });
         }
 
