@@ -485,7 +485,13 @@ const HeaderModule = (function() {
             }
 
             var memberPanelEl = document.querySelector('.member-panel');
-            var memberIsOpen = !!(memberPanelEl && memberPanelEl.classList.contains('member-panel--show'));
+            var memberPanelContentEl = document.querySelector('.member-panel-contents');
+            var memberIsOpen = !!(
+                memberPanelEl &&
+                memberPanelEl.classList.contains('member-panel--show') &&
+                memberPanelContentEl &&
+                memberPanelContentEl.classList.contains('member-panel-contents--visible')
+            );
 
             // If open and dragged: reset position (don't close)
             if (memberIsOpen && window.MemberModule && window.MemberModule.isPanelDragged()) {
@@ -543,7 +549,13 @@ const HeaderModule = (function() {
             }
 
             var adminPanelEl = document.querySelector('.admin-panel');
-            var adminIsOpen = !!(adminPanelEl && adminPanelEl.classList.contains('admin-panel--show'));
+            var adminPanelContentEl = document.querySelector('.admin-panel-contents');
+            var adminIsOpen = !!(
+                adminPanelEl &&
+                adminPanelEl.classList.contains('admin-panel--show') &&
+                adminPanelContentEl &&
+                adminPanelContentEl.classList.contains('admin-panel-contents--visible')
+            );
 
             // If open and dragged: reset position (never close)
             if (adminIsOpen && window.AdminModule && window.AdminModule.isPanelDragged()) {

@@ -64,6 +64,9 @@ const MemberModule = (function() {
     var panelContent = null;
     var panelDragged = false;
     var panelHome    = 'right'; // 'left' | 'right' — which edge the panel is currently locked to
+    var panelLastLeft = null;   // last desktop x-position to restore on reopen
+    var closeTimer = null;      // pending close finalize timer
+    var closeToken = 0;         // invalidates stale close finalizers
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
@@ -296,6 +299,12 @@ const MemberModule = (function() {
     function initHeaderDrag() {
         var headerEl = panel.querySelector('.member-panel-header');
         if (!headerEl || !panelContent) return;
+
+        function setPanelSideClass(side) {
+            var useRight = side === 'right';
+            panelContent.classList.toggle('member-panel-contents--side-right', useRight);
+            panelContent.classList.toggle('member-panel-contents--side-left', !useRight);
+        }
         
         // ---- Panel Drag ----
         // Moves the panel freely within the viewport. Left transition is suppressed
@@ -333,11 +342,13 @@ const MemberModule = (function() {
                 if (atRightEdge) {
                     panelHome    = 'right';
                     panelDragged = false;
+                    setPanelSideClass('right');
                     panelContent.style.left  = '';
                     panelContent.style.right = '';
                 } else if (atLeftEdge) {
                     panelHome    = 'left';
                     panelDragged = false;
+                    setPanelSideClass('left');
                     panelContent.style.left  = '0px';
                     panelContent.style.right = 'auto';
                 }
@@ -2311,6 +2322,11 @@ const MemberModule = (function() {
     
     function openPanel() {
         if (!panel || !panelContent) return;
+        closeToken++;
+        if (closeTimer) {
+            clearTimeout(closeTimer);
+            closeTimer = null;
+        }
         
         panel.classList.add('member-panel--show');
         panel.setAttribute('aria-hidden', 'false');
@@ -2321,8 +2337,21 @@ const MemberModule = (function() {
         panelContent.classList.add('member-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
         if (!panelDragged && window.innerWidth > 530) {
-            panelContent.style.left = (window.innerWidth - panelContent.offsetWidth) + 'px';
+            var maxLeft = Math.max(0, window.innerWidth - panelContent.offsetWidth);
+            var openLeftRaw = (panelLastLeft === null || panelLastLeft === undefined) ? maxLeft : panelLastLeft;
+            var openLeft = Math.max(0, Math.min(maxLeft, openLeftRaw));
+            var openSide = panelHome === 'left' ? 'left' : 'right';
+            if (openLeft <= 20) {
+                openSide = 'left';
+            } else if (openLeft >= (maxLeft - 20)) {
+                openSide = 'right';
+            }
+            panelHome = openSide;
+            panelContent.classList.toggle('member-panel-contents--side-right', openSide === 'right');
+            panelContent.classList.toggle('member-panel-contents--side-left', openSide === 'left');
+            panelContent.style.left = openLeft + 'px';
             panelContent.style.right = 'auto';
+            panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
         requestAnimationFrame(function() {
             panelContent.classList.remove('member-panel-contents--hidden');
@@ -2356,34 +2385,60 @@ const MemberModule = (function() {
             closeBtn.blur();
         }
         
+        closeToken++;
+        var myCloseToken = closeToken;
+        
+        var rect = panelContent.getBoundingClientRect();
+        var currentLeft = Math.max(0, rect && isFinite(rect.left) ? rect.left : (parseFloat(panelContent.style.left) || 0));
+        panelLastLeft = currentLeft;
+        var distLeft = Math.max(0, currentLeft);
+        var distRight = Math.max(0, window.innerWidth - (currentLeft + panelContent.offsetWidth));
+        var closeSide = distLeft <= distRight ? 'left' : 'right';
+
+        panelContent.classList.toggle('member-panel-contents--side-right', closeSide === 'right');
+        panelContent.classList.toggle('member-panel-contents--side-left', closeSide === 'left');
+
+        if (window.innerWidth > 530) {
+            var maxLeft = Math.max(0, window.innerWidth - panelContent.offsetWidth);
+            var edgeLeft = closeSide === 'right' ? maxLeft : 0;
+            panelContent.style.left = edgeLeft + 'px';
+            panelContent.style.right = 'auto';
+        }
+
+        var wasVisible = panelContent.classList.contains('member-panel-contents--visible');
         panelContent.classList.remove('member-panel-contents--visible');
         panelContent.classList.add('member-panel-contents--hidden');
         
         function finalizeClose() {
+            if (myCloseToken !== closeToken) return;
+            if (panelContent.classList.contains('member-panel-contents--visible')) return;
             panel.classList.remove('member-panel--show');
             if (document.activeElement && panel.contains(document.activeElement)) {
                 try { document.activeElement.blur(); } catch (_eBlur) {}
             }
             panel.setAttribute('aria-hidden', 'true');
-            panelHome = 'right';
+            panelHome = closeSide;
+            panelDragged = false;
+            panelContent.classList.toggle('member-panel-contents--side-right', panelHome === 'right');
+            panelContent.classList.toggle('member-panel-contents--side-left', panelHome === 'left');
+            panelContent.style.left  = '';
+            panelContent.style.right = '';
+            closeTimer = null;
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }
         
-        // With transitions disabled, transitionend will never fire. Close immediately.
+        var closeMs = 0;
         try {
             var cs = window.getComputedStyle ? window.getComputedStyle(panelContent) : null;
             var dur = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
-            if (dur === '0s' || dur === '0ms') {
-                finalizeClose();
-            } else {
-                // Wait for transition to complete before hiding
-                panelContent.addEventListener('transitionend', function handler() {
-                    panelContent.removeEventListener('transitionend', handler);
-                    finalizeClose();
-                }, { once: true });
-            }
-        } catch (_eDur) {
+            if (dur.endsWith('ms')) closeMs = Math.max(0, parseFloat(dur) || 0);
+            else if (dur.endsWith('s')) closeMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+        } catch (_eDur) {}
+
+        if (!wasVisible || closeMs === 0) {
             finalizeClose();
+        } else {
+            closeTimer = setTimeout(finalizeClose, Math.ceil(closeMs));
         }
         
         // Update header button
@@ -7131,7 +7186,10 @@ const MemberModule = (function() {
         resetToDefault: function() {
             panelHome    = 'right';
             panelDragged = false;
+            panelLastLeft = null;
             if (panelContent) {
+                panelContent.classList.add('member-panel-contents--side-right');
+                panelContent.classList.remove('member-panel-contents--side-left');
                 panelContent.style.left  = '';
                 panelContent.style.right = '';
             }
