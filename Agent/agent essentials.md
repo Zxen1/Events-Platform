@@ -99,6 +99,10 @@ Showing code in chat is NOT saving it. Use `search_replace` or `write` to actual
 ### Always Copy Existing Patterns
 Before implementing ANYTHING, search the codebase for how it's already done. Copy that pattern exactly.
 
+### Brand Logos: Simple Icons Only
+When asked for a brand logo: use the `simple-icons/simple-icons` GitHub `icons/` folder, open the exact `{brand}.svg`, and use the **Raw** SVG code verbatim to create the local `.svg` file.
+Crucial: do **not** use search engines or "memory" to generate/redraw icons—only this GitHub source (exact path data/official shapes/colors).
+
 ### The Live Site Is Your Reference
 The live site code (index.js, etc.) contains working implementations. USE THEM.
 
