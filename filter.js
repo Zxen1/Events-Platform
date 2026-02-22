@@ -609,9 +609,11 @@ const FilterModule = (function() {
         panelLastLeft = currentLeft;
         contentEl.setAttribute('data-side', closeSide);
 
-        // Keep current x-position locked while transform slides out.
+        // Keep remembered position, but close from the selected edge so it fully exits.
         if (window.innerWidth > 530) {
-            contentEl.style.left = currentLeft + 'px';
+            var maxLeft = Math.max(0, window.innerWidth - contentEl.offsetWidth);
+            var edgeLeft = closeSide === 'right' ? maxLeft : 0;
+            contentEl.style.left = edgeLeft + 'px';
             contentEl.style.right = 'auto';
         }
 
