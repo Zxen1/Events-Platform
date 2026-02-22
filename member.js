@@ -4237,6 +4237,8 @@ const MemberModule = (function() {
                         var inp = row.querySelector('input.fieldset-links-url');
                         var urlVal = inp ? String(inp.value || '').trim() : '';
                         if (!typeVal && !urlVal) continue;
+                        // Only store complete rows.
+                        if (!typeVal || !urlVal) continue;
                         out.push({ link_type: typeVal, link_url: urlVal });
                     }
                     return out;

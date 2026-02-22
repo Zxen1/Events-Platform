@@ -1034,19 +1034,28 @@
 
 .fieldset-links-row {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    align-items: center;
     margin-bottom: 10px;
 }
 
+.fieldset-links-toprow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.fieldset-links-bottomrow {
+    display: block;
+}
+
 .fieldset-links-type-menu {
-    flex: 0 0 220px;
-    min-width: 180px;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .fieldset-links-url {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: 100%;
 }
 
 .fieldset-links-button-icon {

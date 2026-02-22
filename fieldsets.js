@@ -1768,17 +1768,32 @@ const FieldsetBuilder = (function(){
 
                 function createLinksRow() {
                     var row = document.createElement('div');
-                    row.className = 'fieldset-row fieldset-links-row';
+                    row.className = 'fieldset-links-row';
                     row.style.marginBottom = '10px';
+
+                    var topRow = document.createElement('div');
+                    topRow.className = 'fieldset-row fieldset-links-toprow';
+
+                    var bottomRow = document.createElement('div');
+                    bottomRow.className = 'fieldset-row fieldset-links-bottomrow';
+                    bottomRow.style.display = 'none'; // hidden until link type selected
 
                     // Link type menu
                     var menuEl = document.createElement('div');
                     var menuSetValue = function() {};
                     if (typeof LinksComponent !== 'undefined' && LinksComponent && typeof LinksComponent.buildMenu === 'function') {
+                        function revealUrlRow(focus) {
+                            bottomRow.style.display = '';
+                            if (focus) {
+                                try { linkUrlInput && linkUrlInput.focus(); } catch (eF) {}
+                            }
+                        }
                         var menuResult = LinksComponent.buildMenu({
                             initialValue: null,
                             container: container,
                             onSelect: function() {
+                                revealUrlRow(true);
+                                updateLinksButtons();
                                 try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                             }
                         });
@@ -1789,7 +1804,7 @@ const FieldsetBuilder = (function(){
                     }
                     menuEl.classList.add('fieldset-links-type-menu');
                     menuEl._linksSetValue = menuSetValue;
-                    row.appendChild(menuEl);
+                    topRow.appendChild(menuEl);
 
                     // URL input
                     var linkUrlInput = document.createElement('input');
@@ -1803,7 +1818,7 @@ const FieldsetBuilder = (function(){
                         if (!s) return true;
                         return isValidUrl(s);
                     });
-                    row.appendChild(linkUrlInput);
+                    bottomRow.appendChild(linkUrlInput);
 
                     // + button
                     var addBtn = document.createElement('button');
@@ -1821,11 +1836,13 @@ const FieldsetBuilder = (function(){
                         var newRow = createLinksRow();
                         linksRowsContainer.appendChild(newRow);
                         updateLinksButtons();
-                        var inp = newRow.querySelector('input.fieldset-links-url');
-                        if (inp) inp.focus();
+                        var menuBtn = newRow.querySelector('.component-linkpicker-menu-button');
+                        if (menuBtn) {
+                            try { menuBtn.focus(); } catch (eF) {}
+                        }
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    row.appendChild(addBtn);
+                    topRow.appendChild(addBtn);
 
                     // - button
                     var removeBtn = document.createElement('button');
@@ -1840,33 +1857,85 @@ const FieldsetBuilder = (function(){
                         removeBtn.appendChild(minusImg);
                     }
                     removeBtn.addEventListener('click', function() {
-                        row.remove();
+                        // If this is the only row, "remove" means "clear" (so users can undo a selection)
+                        // and return the optional fieldset to an empty/complete state.
+                        try {
+                            var allRows = linksRowsContainer.querySelectorAll('.fieldset-links-row');
+                            if (allRows && allRows.length === 1) {
+                                if (menuEl && typeof menuEl._linksSetValue === 'function') {
+                                    menuEl._linksSetValue(null);
+                                }
+                                if (linkUrlInput) linkUrlInput.value = '';
+                                if (bottomRow) bottomRow.style.display = 'none';
+                            } else {
+                                row.remove();
+                            }
+                        } catch (eR) {
+                            row.remove();
+                        }
                         updateLinksButtons();
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    row.appendChild(removeBtn);
+                    topRow.appendChild(removeBtn);
 
-                    applyFieldsetRowItemClasses(row);
+                    applyFieldsetRowItemClasses(topRow);
+
+                    // If the menu already has a selected value (e.g. setValue during edit), reveal URL row.
+                    try {
+                        var initialSelected = menuEl && menuEl.dataset ? String(menuEl.dataset.value || '').trim() : '';
+                        if (initialSelected) {
+                            bottomRow.style.display = '';
+                        }
+                    } catch (eI) {}
+
+                    row.appendChild(topRow);
+                    row.appendChild(bottomRow);
                     return row;
                 }
 
                 function updateLinksButtons() {
                     var rows = linksRowsContainer.querySelectorAll('.fieldset-links-row');
                     var atMax = rows.length >= 10;
+                    // Lock add/remove until first row has a link type selected.
+                    var firstTypeSelected = false;
+                    try {
+                        var firstRow = rows && rows.length ? rows[0] : null;
+                        var firstMenu = firstRow ? firstRow.querySelector('.component-linkpicker-menu') : null;
+                        var firstVal = firstMenu ? String(firstMenu.dataset.value || '').trim() : '';
+                        firstTypeSelected = !!firstVal;
+                    } catch (eFirst) {
+                        firstTypeSelected = false;
+                    }
+                    var lockRowControls = !firstTypeSelected;
                     rows.forEach(function(r, idx) {
                         r.style.marginBottom = (idx === rows.length - 1) ? '0' : '10px';
                         var addBtn = r.querySelector('.fieldset-links-button-add');
                         var removeBtn = r.querySelector('.fieldset-links-button-remove');
                         if (addBtn) {
-                            addBtn.disabled = !!atMax;
-                            addBtn.style.opacity = atMax ? '0.3' : '1';
-                            addBtn.style.cursor = atMax ? 'not-allowed' : 'pointer';
+                            var addDisabled = !!atMax || !!lockRowControls;
+                            addBtn.disabled = addDisabled;
+                            addBtn.style.opacity = addDisabled ? '0.3' : '1';
+                            addBtn.style.cursor = addDisabled ? 'not-allowed' : 'pointer';
                         }
                         if (removeBtn) {
                             var onlyOne = rows.length === 1;
-                            removeBtn.disabled = !!onlyOne;
-                            removeBtn.style.opacity = onlyOne ? '0.3' : '1';
-                            removeBtn.style.cursor = onlyOne ? 'not-allowed' : 'pointer';
+                            // When there's only one row:
+                            // - disable remove if the row is empty (type+url empty) and we're still locked
+                            // - enable remove to allow clearing a selection / partial entry
+                            var hasType = false;
+                            var hasUrl = false;
+                            try {
+                                var m = r.querySelector('.component-linkpicker-menu');
+                                hasType = !!(m && String(m.dataset.value || '').trim());
+                                var inp = r.querySelector('input.fieldset-links-url');
+                                hasUrl = !!(inp && String(inp.value || '').trim());
+                            } catch (eRow) {}
+                            var rowHasAny = hasType || hasUrl;
+
+                            var removeDisabled = (!!onlyOne && !rowHasAny) || !!lockRowControls;
+                            removeBtn.disabled = removeDisabled;
+                            removeBtn.style.opacity = removeDisabled ? '0.3' : '1';
+                            removeBtn.style.cursor = removeDisabled ? 'not-allowed' : 'pointer';
                         }
                     });
                 }
@@ -1883,6 +1952,12 @@ const FieldsetBuilder = (function(){
                             }
                             var inp = row.querySelector('input.fieldset-links-url');
                             if (inp) inp.value = (item.link_url || item.url || '').trim();
+                            // Reveal URL row if a type is present.
+                            try {
+                                var hasType = (item.link_type || item.type || item.value) ? true : false;
+                                var bottomRow = row.querySelector('.fieldset-links-bottomrow');
+                                if (hasType && bottomRow) bottomRow.style.display = '';
+                            } catch (eR) {}
                             linksRowsContainer.appendChild(row);
                         });
                     }
