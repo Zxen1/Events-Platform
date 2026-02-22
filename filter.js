@@ -1908,11 +1908,13 @@ const FilterModule = (function() {
                 if (atLeftEdge) {
                     panelHome    = 'left';
                     panelDragged = false;
+                    contentEl.setAttribute('data-side', 'left');
                     contentEl.style.left  = '';
                     contentEl.style.right = '';
                 } else if (atRightEdge) {
                     panelHome    = 'right';
                     panelDragged = false;
+                    contentEl.setAttribute('data-side', 'right');
                     contentEl.style.left  = (window.innerWidth - contentEl.offsetWidth) + 'px';
                     contentEl.style.right = 'auto';
                 }
