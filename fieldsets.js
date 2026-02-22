@@ -1728,8 +1728,15 @@ const FieldsetBuilder = (function(){
                 };
                 break;
                 
-            case 'links':
-                fieldset.appendChild(buildLabel(name, tooltip, null, 500, instruction));
+            case 'links': {
+                // URL specs come from the link-url field (fields table).
+                // This fieldset also includes a link-type menu (component, not a fields-table field).
+                var linkUrlSpec = (fields && fields['link-url'] && typeof fields['link-url'] === 'object') ? fields['link-url'] : null;
+                var linkUrlMin = (linkUrlSpec && typeof linkUrlSpec.min_length === 'number') ? linkUrlSpec.min_length : null;
+                var linkUrlMax = (linkUrlSpec && typeof linkUrlSpec.max_length === 'number') ? linkUrlSpec.max_length : 500;
+                var linkUrlPlaceholder = getSubfieldPlaceholder('link-url');
+
+                fieldset.appendChild(buildLabel(name, tooltip, linkUrlMin, linkUrlMax, instruction));
 
                 function linksGetSystemPlusIconUrl() {
                     try {
@@ -1788,9 +1795,10 @@ const FieldsetBuilder = (function(){
                     var linkUrlInput = document.createElement('input');
                     linkUrlInput.type = 'text';
                     linkUrlInput.className = 'fieldset-input fieldset-links-url input-class-1';
-                    linkUrlInput.placeholder = 'https://';
+                    // Use link-url field placeholder from DB when available.
+                    applyPlaceholder(linkUrlInput, (typeof linkUrlPlaceholder === 'string' && linkUrlPlaceholder.trim()) ? linkUrlPlaceholder : 'https://');
                     autoUrlProtocol(linkUrlInput);
-                    addInputValidation(linkUrlInput, null, 500, function(v) {
+                    addInputValidation(linkUrlInput, linkUrlMin, linkUrlMax, function(v) {
                         var s = (typeof v === 'string') ? v.trim() : '';
                         if (!s) return true;
                         return isValidUrl(s);
@@ -1889,6 +1897,7 @@ const FieldsetBuilder = (function(){
                 linksRowsContainer.appendChild(createLinksRow());
                 updateLinksButtons();
                 break;
+            }
 
             case 'website-url':
             case 'tickets-url':
