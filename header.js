@@ -29,6 +29,9 @@ const HeaderModule = (function() {
     var adminBtn = null;
     var fullscreenBtn = null;
     var logoBtn = null;
+    var headerResizeTimer = null;
+    var headerTeleportFadeTimer = null;
+    var headerResizeFading = false;
 
     /* --------------------------------------------------------------------------
        FILTER ACTIVE VISUAL
@@ -154,9 +157,70 @@ const HeaderModule = (function() {
         initMemberButton();
         initAdminButton();
         initFullscreenButton();
+        initHeaderRightResizeAntiJitter();
         
         // Load logo from settings on startup
         loadLogoFromSettings();
+    }
+
+    function getHeaderRightResizeTargets() {
+        return [memberBtn, adminBtn, fullscreenBtn].filter(function(el) {
+            return !!(el && el.offsetParent !== null);
+        });
+    }
+
+    function initHeaderRightResizeAntiJitter() {
+        if (initHeaderRightResizeAntiJitter._bound) return;
+        initHeaderRightResizeAntiJitter._bound = true;
+
+        window.addEventListener('resize', function() {
+            var mode = window._resizeAntiJitter || 'off';
+            var targets = getHeaderRightResizeTargets();
+            if (!targets.length) return;
+
+            if (mode === 'off' || mode === 'blur') {
+                if (headerTeleportFadeTimer) {
+                    clearTimeout(headerTeleportFadeTimer);
+                    headerTeleportFadeTimer = null;
+                }
+                headerResizeFading = false;
+                targets.forEach(function(el) {
+                    el.style.transition = '';
+                    el.style.opacity = '1';
+                });
+                return;
+            }
+
+            if (mode === 'teleport' && !headerResizeFading) {
+                headerResizeFading = true;
+                targets.forEach(function(el) {
+                    el.style.transition = 'none';
+                    el.style.opacity = '0';
+                });
+            }
+
+            if (headerResizeTimer) clearTimeout(headerResizeTimer);
+            headerResizeTimer = setTimeout(function() {
+                if (headerTeleportFadeTimer) {
+                    clearTimeout(headerTeleportFadeTimer);
+                    headerTeleportFadeTimer = null;
+                }
+                if (mode === 'teleport') {
+                    targets.forEach(function(el) {
+                        el.style.transition = 'opacity 0.3s ease';
+                        void el.offsetWidth;
+                        el.style.opacity = '1';
+                    });
+                    headerTeleportFadeTimer = setTimeout(function() {
+                        targets.forEach(function(el) {
+                            el.style.transition = '';
+                        });
+                        headerResizeFading = false;
+                        headerTeleportFadeTimer = null;
+                    }, 300);
+                }
+            }, mode === 'smoothing' ? 0 : 100);
+        });
     }
     
     

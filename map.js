@@ -934,8 +934,10 @@ const MapModule = (function() {
       bearing: startBearing,
       attributionControl: false, // Disabled to fix null dataset errors
       renderWorldCopies: false, // Reduce initial rendering load
-      antialias: false // Disable antialiasing for better performance (can enable if quality needed)
+      antialias: false, // Disable antialiasing for better performance (can enable if quality needed)
+      trackResize: false
     });
+    bindMapViewportResize();
 
     // Apply lighting and start spin on style.load (BEFORE tiles finish loading)
     // This means the map is already spinning while tiles load in the background
@@ -1272,6 +1274,11 @@ const MapModule = (function() {
   let mapControlsHomeParent = null;
   let mapControlsHomeNextSibling = null;
   let mapControlsResizeTimer = null;
+  let mapControlsResizeFading = false;
+  let mapControlsFadeTimer = null;
+  let mapViewportResizeTimer = null;
+  let mapViewportResizeFading = false;
+  let mapViewportFadeTimer = null;
   const HEADER_CONTROLS_BREAKPOINT_PX = 900;
   
   /**
@@ -1323,12 +1330,100 @@ const MapModule = (function() {
     return window.innerWidth >= HEADER_CONTROLS_BREAKPOINT_PX;
   }
 
+  function getResizeAntiJitterMode() {
+    return window._resizeAntiJitter || 'off';
+  }
+
   function bindMapControlsResize() {
     if (bindMapControlsResize._bound) return;
     bindMapControlsResize._bound = true;
     window.addEventListener('resize', function() {
+      if (!mapControlsEl) mapControlsEl = document.querySelector('.map-controls');
+      if (!mapControlsEl) return;
+
+      const mode = getResizeAntiJitterMode();
       if (mapControlsResizeTimer) clearTimeout(mapControlsResizeTimer);
-      mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
+
+      if (mode === 'off' || mode === 'blur') {
+        if (mapControlsFadeTimer) {
+          clearTimeout(mapControlsFadeTimer);
+          mapControlsFadeTimer = null;
+        }
+        mapControlsResizeFading = false;
+        mapControlsEl.style.transition = '';
+        mapControlsEl.style.opacity = '1';
+        mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
+        return;
+      }
+
+      if (mode === 'teleport' && !mapControlsResizeFading) {
+        mapControlsResizeFading = true;
+        mapControlsEl.style.transition = 'none';
+        mapControlsEl.style.opacity = '0';
+      }
+
+      mapControlsResizeTimer = setTimeout(function() {
+        syncMapControlsPlacement();
+        if (mode === 'teleport') {
+          if (mapControlsFadeTimer) clearTimeout(mapControlsFadeTimer);
+          mapControlsEl.style.transition = 'opacity 0.3s ease';
+          void mapControlsEl.offsetWidth;
+          mapControlsEl.style.opacity = '1';
+          mapControlsFadeTimer = setTimeout(function() {
+            if (!mapControlsEl) return;
+            mapControlsEl.style.transition = '';
+            mapControlsResizeFading = false;
+            mapControlsFadeTimer = null;
+          }, 300);
+        }
+      }, mode === 'smoothing' ? 0 : 100);
+    });
+  }
+
+  function bindMapViewportResize() {
+    if (bindMapViewportResize._bound) return;
+    bindMapViewportResize._bound = true;
+
+    window.addEventListener('resize', function() {
+      if (!map) return;
+      const mapEl = document.querySelector('.map-container');
+      if (!mapEl) return;
+
+      const mode = getResizeAntiJitterMode();
+      if (mapViewportResizeTimer) clearTimeout(mapViewportResizeTimer);
+
+      if (mode === 'off' || mode === 'blur') {
+        if (mapViewportFadeTimer) {
+          clearTimeout(mapViewportFadeTimer);
+          mapViewportFadeTimer = null;
+        }
+        mapViewportResizeFading = false;
+        mapEl.style.transition = '';
+        mapEl.style.opacity = '1';
+        try { map.resize(); } catch (_eResize) {}
+        return;
+      }
+
+      if (mode === 'teleport' && !mapViewportResizeFading) {
+        mapViewportResizeFading = true;
+        mapEl.style.transition = 'none';
+        mapEl.style.opacity = '0';
+      }
+
+      mapViewportResizeTimer = setTimeout(function() {
+        try { map.resize(); } catch (_eResize3) {}
+        if (mode === 'teleport') {
+          if (mapViewportFadeTimer) clearTimeout(mapViewportFadeTimer);
+          mapEl.style.transition = 'opacity 0.3s ease';
+          void mapEl.offsetWidth;
+          mapEl.style.opacity = '1';
+          mapViewportFadeTimer = setTimeout(function() {
+            mapEl.style.transition = '';
+            mapViewportResizeFading = false;
+            mapViewportFadeTimer = null;
+          }, 300);
+        }
+      }, 100);
     });
   }
 
