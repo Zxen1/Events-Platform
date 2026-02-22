@@ -4589,8 +4589,22 @@ const AdminModule = (function() {
             if (panelContent) {
                 panelContent.classList.add('admin-panel-contents--side-right');
                 panelContent.classList.remove('admin-panel-contents--side-left');
-                panelContent.style.left  = '';
-                panelContent.style.right = '';
+                if (!panel || !panel.classList.contains('admin-panel--show') || window.innerWidth <= 530) {
+                    panelContent.style.left  = '';
+                    panelContent.style.right = '';
+                } else {
+                    var maxLeft = Math.max(0, window.innerWidth - panelContent.offsetWidth);
+                    var currentLeft = parseFloat(panelContent.style.left);
+                    if (!isFinite(currentLeft)) {
+                        var rect = panelContent.getBoundingClientRect();
+                        currentLeft = rect && isFinite(rect.left) ? rect.left : maxLeft;
+                    }
+                    currentLeft = Math.max(0, Math.min(maxLeft, currentLeft));
+                    panelContent.style.left = currentLeft + 'px';
+                    panelContent.style.right = 'auto';
+                    try { void panelContent.offsetWidth; } catch (_eFlush) {}
+                    panelContent.style.left = maxLeft + 'px';
+                }
             }
         },
         switchTab: switchTab,
