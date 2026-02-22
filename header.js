@@ -421,7 +421,13 @@ const HeaderModule = (function() {
 
             // Read open/closed state from the DOM to avoid stale booleans.
             var filterPanelEl = document.querySelector('.filter-panel');
-            var isOpenNow = !!(filterPanelEl && filterPanelEl.classList.contains('show'));
+            var filterPanelContentEl = document.querySelector('.filter-panel-content');
+            var isOpenNow = !!(
+                filterPanelEl &&
+                filterPanelEl.classList.contains('show') &&
+                filterPanelContentEl &&
+                filterPanelContentEl.classList.contains('panel-visible')
+            );
 
             // If open and dragged from default: reset position (don't close)
             if (isOpenNow && window.FilterModule && window.FilterModule.isPanelDragged()) {

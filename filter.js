@@ -41,6 +41,8 @@ const FilterModule = (function() {
     var panelDragged = false;
     var panelHome    = 'left'; // 'left' | 'right' — which edge the panel is currently locked to
     var panelLastLeft = 0;     // last desktop x-position to restore on reopen
+    var closeTimer = null;     // pending close finalize timer
+    var closeToken = 0;        // invalidates stale close finalizers
     var dragJustEnded = false;
     var headerEl = null;
     var bodyEl = null;
@@ -497,6 +499,11 @@ const FilterModule = (function() {
     
     function openPanel() {
         if (!panelEl || !contentEl) return;
+        closeToken++;
+        if (closeTimer) {
+            clearTimeout(closeTimer);
+            closeTimer = null;
+        }
 
         // Avoid "jolt": reserve the summary line before the slide-in finishes.
         // Show last known counts immediately if we have them.
@@ -603,6 +610,8 @@ const FilterModule = (function() {
     
     function closePanel() {
         if (!panelEl || !contentEl) return;
+        closeToken++;
+        var myCloseToken = closeToken;
 
         var closeSide = getClosestScreenSide();
         var currentLeft = Math.max(0, getPanelLeftPx());
@@ -620,8 +629,11 @@ const FilterModule = (function() {
         panelEl.setAttribute('inert', '');
         var wasVisible = contentEl.classList.contains('panel-visible');
         contentEl.classList.remove('panel-visible');
+        try { App.emit('filter:closed'); } catch (_eEmitEarly) {}
         
         function finalizeClose() {
+            if (myCloseToken !== closeToken) return;
+            if (contentEl.classList.contains('panel-visible')) return;
             panelEl.classList.remove('show');
             panelEl.setAttribute('aria-hidden', 'true');
             panelHome = closeSide;
@@ -629,8 +641,8 @@ const FilterModule = (function() {
             contentEl.setAttribute('data-side', panelHome === 'right' ? 'right' : 'left');
             contentEl.style.left = '';
             contentEl.style.right = '';
+            closeTimer = null;
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
-            try { App.emit('filter:closed'); } catch (_eEmit) {}
         }
         
         var closeMs = getContentTransitionDurationMs(contentEl);
@@ -639,7 +651,7 @@ const FilterModule = (function() {
             return;
         }
 
-        setTimeout(finalizeClose, closeMs);
+        closeTimer = setTimeout(finalizeClose, closeMs);
     }
     
     function togglePanel(show) {
