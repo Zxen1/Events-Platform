@@ -168,24 +168,6 @@ function table_exists(mysqli $mysqli, string $table): bool
   return $exists;
 }
 
-function load_valid_link_types(mysqli $mysqli): array
-{
-  // Returns a set: [option_value => true] from list_links (active only).
-  if (!table_exists($mysqli, 'list_links')) {
-    return [];
-  }
-  $out = [];
-  $res = $mysqli->query("SELECT option_value FROM list_links WHERE is_active = 1");
-  if ($res) {
-    while ($row = $res->fetch_assoc()) {
-      $v = isset($row['option_value']) ? strtolower(trim((string)$row['option_value'])) : '';
-      if ($v !== '') $out[$v] = true;
-    }
-    $res->free();
-  }
-  return $out;
-}
-
 function normalize_currency($currency): string
 {
   if (!is_string($currency) && !is_numeric($currency)) {
@@ -915,8 +897,6 @@ foreach ($byLoc as $locNum => $entries) {
   // Insert links into post_links subtable (repeatable)
   if (is_array($card['links_data']) && count($card['links_data']) > 0) {
     if (table_exists($mysqli, 'post_links')) {
-      $validLinkTypes = load_valid_link_types($mysqli);
-      $enforceLinkTypes = !empty($validLinkTypes);
       $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, link_url, sort_order, is_active, created_at, updated_at)
         VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
       if ($stmtLinks) {
@@ -928,7 +908,6 @@ foreach ($byLoc as $locNum => $entries) {
           $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
           $t = trim($t, '_');
           if ($t === '' || $u === '') continue;
-          if ($enforceLinkTypes && !isset($validLinkTypes[$t])) continue;
           if ($sortOrder >= 10) break;
           $stmtLinks->bind_param('issi', $mapCardId, $t, $u, $sortOrder);
           $stmtLinks->execute();
