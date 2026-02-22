@@ -934,10 +934,8 @@ const MapModule = (function() {
       bearing: startBearing,
       attributionControl: false, // Disabled to fix null dataset errors
       renderWorldCopies: false, // Reduce initial rendering load
-      antialias: false, // Disable antialiasing for better performance (can enable if quality needed)
-      trackResize: false
+      antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
-    bindMapViewportResize();
 
     // Apply lighting and start spin on style.load (BEFORE tiles finish loading)
     // This means the map is already spinning while tiles load in the background
@@ -1274,13 +1272,6 @@ const MapModule = (function() {
   let mapControlsHomeParent = null;
   let mapControlsHomeNextSibling = null;
   let mapControlsResizeTimer = null;
-  let mapControlsResizeFading = false;
-  let mapControlsFadeTimer = null;
-  let mapControlsSmoothingLock = null;
-  let mapControlsSmoothingReleaseTimer = null;
-  let mapViewportResizeTimer = null;
-  let mapViewportResizeFading = false;
-  let mapViewportFadeTimer = null;
   const HEADER_CONTROLS_BREAKPOINT_PX = 900;
   
   /**
@@ -1332,186 +1323,12 @@ const MapModule = (function() {
     return window.innerWidth >= HEADER_CONTROLS_BREAKPOINT_PX;
   }
 
-  function getResizeAntiJitterMode() {
-    return window._resizeAntiJitter || 'off';
-  }
-
-  function applyMapControlsSmoothingFixedStyles(el, left, top, width, height) {
-    if (!el) return;
-    el.style.position = 'fixed';
-    el.style.left = left + 'px';
-    el.style.top = top + 'px';
-    el.style.width = width + 'px';
-    el.style.height = height + 'px';
-    el.style.margin = '0';
-    el.style.transform = 'none';
-    el.style.zIndex = '65';
-  }
-
-  function clearMapControlsSmoothingFixedStyles(el) {
-    if (!el) return;
-    el.style.position = '';
-    el.style.left = '';
-    el.style.top = '';
-    el.style.width = '';
-    el.style.height = '';
-    el.style.margin = '';
-    el.style.transform = '';
-    el.style.zIndex = '';
-  }
-
-  function clearMapControlsSmoothingLockImmediate() {
-    if (mapControlsSmoothingReleaseTimer) {
-      clearTimeout(mapControlsSmoothingReleaseTimer);
-      mapControlsSmoothingReleaseTimer = null;
-    }
-    if (!mapControlsSmoothingLock || !mapControlsSmoothingLock.el) {
-      mapControlsSmoothingLock = null;
-      return;
-    }
-    mapControlsSmoothingLock.el.style.transition = '';
-    clearMapControlsSmoothingFixedStyles(mapControlsSmoothingLock.el);
-    mapControlsSmoothingLock = null;
-  }
-
-  function startMapControlsSmoothingLock() {
-    if (!mapControlsEl || mapControlsSmoothingLock) return;
-    const rect = mapControlsEl.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || rect.height <= 0) return;
-    applyMapControlsSmoothingFixedStyles(mapControlsEl, rect.left, rect.top, rect.width, rect.height);
-    mapControlsSmoothingLock = {
-      el: mapControlsEl,
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height
-    };
-  }
-
-  function finishMapControlsSmoothingLock() {
-    if (!mapControlsSmoothingLock || !mapControlsSmoothingLock.el) return;
-    const lock = mapControlsSmoothingLock;
-    const el = lock.el;
-    mapControlsSmoothingLock = null;
-
-    clearMapControlsSmoothingFixedStyles(el);
-    syncMapControlsPlacement();
-    const targetRect = el.getBoundingClientRect();
-
-    applyMapControlsSmoothingFixedStyles(el, lock.left, lock.top, lock.width, lock.height);
-    el.style.transition = 'left 0.3s ease, top 0.3s ease';
-    void el.offsetWidth;
-    el.style.left = targetRect.left + 'px';
-    el.style.top = targetRect.top + 'px';
-
-    if (mapControlsSmoothingReleaseTimer) clearTimeout(mapControlsSmoothingReleaseTimer);
-    mapControlsSmoothingReleaseTimer = setTimeout(function() {
-      el.style.transition = '';
-      clearMapControlsSmoothingFixedStyles(el);
-      mapControlsSmoothingReleaseTimer = null;
-    }, 300);
-  }
-
   function bindMapControlsResize() {
     if (bindMapControlsResize._bound) return;
     bindMapControlsResize._bound = true;
     window.addEventListener('resize', function() {
-      if (!mapControlsEl) mapControlsEl = document.querySelector('.map-controls');
-      if (!mapControlsEl) return;
-
-      const mode = getResizeAntiJitterMode();
       if (mapControlsResizeTimer) clearTimeout(mapControlsResizeTimer);
-
-      if (mode === 'off' || mode === 'blur') {
-        if (mapControlsFadeTimer) {
-          clearTimeout(mapControlsFadeTimer);
-          mapControlsFadeTimer = null;
-        }
-        mapControlsResizeFading = false;
-        clearMapControlsSmoothingLockImmediate();
-        mapControlsEl.style.transition = '';
-        mapControlsEl.style.opacity = '1';
-        mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
-        return;
-      }
-
-      if (mode === 'smoothing') {
-        startMapControlsSmoothingLock();
-        mapControlsResizeTimer = setTimeout(function() {
-          finishMapControlsSmoothingLock();
-        }, 100);
-        return;
-      }
-
-      if (mode === 'teleport' && !mapControlsResizeFading) {
-        clearMapControlsSmoothingLockImmediate();
-        mapControlsResizeFading = true;
-        mapControlsEl.style.transition = 'none';
-        mapControlsEl.style.opacity = '0';
-      }
-
-      mapControlsResizeTimer = setTimeout(function() {
-        syncMapControlsPlacement();
-        if (mode === 'teleport') {
-          if (mapControlsFadeTimer) clearTimeout(mapControlsFadeTimer);
-          mapControlsEl.style.transition = 'opacity 0.3s ease';
-          void mapControlsEl.offsetWidth;
-          mapControlsEl.style.opacity = '1';
-          mapControlsFadeTimer = setTimeout(function() {
-            if (!mapControlsEl) return;
-            mapControlsEl.style.transition = '';
-            mapControlsResizeFading = false;
-            mapControlsFadeTimer = null;
-          }, 300);
-        }
-      }, 100);
-    });
-  }
-
-  function bindMapViewportResize() {
-    if (bindMapViewportResize._bound) return;
-    bindMapViewportResize._bound = true;
-
-    window.addEventListener('resize', function() {
-      if (!map) return;
-      const mapEl = document.querySelector('.map-container');
-      if (!mapEl) return;
-
-      const mode = getResizeAntiJitterMode();
-      if (mapViewportResizeTimer) clearTimeout(mapViewportResizeTimer);
-
-      if (mode === 'off' || mode === 'blur') {
-        if (mapViewportFadeTimer) {
-          clearTimeout(mapViewportFadeTimer);
-          mapViewportFadeTimer = null;
-        }
-        mapViewportResizeFading = false;
-        mapEl.style.transition = '';
-        mapEl.style.opacity = '1';
-        try { map.resize(); } catch (_eResize) {}
-        return;
-      }
-
-      if (mode === 'teleport' && !mapViewportResizeFading) {
-        mapViewportResizeFading = true;
-        mapEl.style.transition = 'none';
-        mapEl.style.opacity = '0';
-      }
-
-      mapViewportResizeTimer = setTimeout(function() {
-        try { map.resize(); } catch (_eResize3) {}
-        if (mode === 'teleport') {
-          if (mapViewportFadeTimer) clearTimeout(mapViewportFadeTimer);
-          mapEl.style.transition = 'opacity 0.3s ease';
-          void mapEl.offsetWidth;
-          mapEl.style.opacity = '1';
-          mapViewportFadeTimer = setTimeout(function() {
-            mapEl.style.transition = '';
-            mapViewportResizeFading = false;
-            mapViewportFadeTimer = null;
-          }, 300);
-        }
-      }, 100);
+      mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
     });
   }
 
