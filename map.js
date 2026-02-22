@@ -1276,7 +1276,8 @@ const MapModule = (function() {
   let mapControlsResizeTimer = null;
   let mapControlsResizeFading = false;
   let mapControlsFadeTimer = null;
-  let mapControlsSmoothingFreeze = null;
+  let mapControlsSmoothingLock = null;
+  let mapControlsSmoothingReleaseTimer = null;
   let mapViewportResizeTimer = null;
   let mapViewportResizeFading = false;
   let mapViewportFadeTimer = null;
@@ -1335,37 +1336,80 @@ const MapModule = (function() {
     return window._resizeAntiJitter || 'off';
   }
 
-  function clearMapControlsSmoothingFreeze() {
-    if (!mapControlsSmoothingFreeze) return;
-    try {
-      if (mapControlsSmoothingFreeze.clone && mapControlsSmoothingFreeze.clone.parentNode) {
-        mapControlsSmoothingFreeze.clone.parentNode.removeChild(mapControlsSmoothingFreeze.clone);
-      }
-    } catch (_eClone) {}
-    try {
-      if (mapControlsSmoothingFreeze.el) mapControlsSmoothingFreeze.el.style.opacity = '';
-    } catch (_eEl) {}
-    mapControlsSmoothingFreeze = null;
+  function applyMapControlsSmoothingFixedStyles(el, left, top, width, height) {
+    if (!el) return;
+    el.style.position = 'fixed';
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+    el.style.width = width + 'px';
+    el.style.height = height + 'px';
+    el.style.margin = '0';
+    el.style.transform = 'none';
+    el.style.zIndex = '65';
   }
 
-  function startMapControlsSmoothingFreeze() {
-    if (!mapControlsEl || mapControlsSmoothingFreeze) return;
+  function clearMapControlsSmoothingFixedStyles(el) {
+    if (!el) return;
+    el.style.position = '';
+    el.style.left = '';
+    el.style.top = '';
+    el.style.width = '';
+    el.style.height = '';
+    el.style.margin = '';
+    el.style.transform = '';
+    el.style.zIndex = '';
+  }
+
+  function clearMapControlsSmoothingLockImmediate() {
+    if (mapControlsSmoothingReleaseTimer) {
+      clearTimeout(mapControlsSmoothingReleaseTimer);
+      mapControlsSmoothingReleaseTimer = null;
+    }
+    if (!mapControlsSmoothingLock || !mapControlsSmoothingLock.el) {
+      mapControlsSmoothingLock = null;
+      return;
+    }
+    mapControlsSmoothingLock.el.style.transition = '';
+    clearMapControlsSmoothingFixedStyles(mapControlsSmoothingLock.el);
+    mapControlsSmoothingLock = null;
+  }
+
+  function startMapControlsSmoothingLock() {
+    if (!mapControlsEl || mapControlsSmoothingLock) return;
     const rect = mapControlsEl.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) return;
-    const clone = mapControlsEl.cloneNode(true);
-    clone.setAttribute('aria-hidden', 'true');
-    clone.style.position = 'fixed';
-    clone.style.left = rect.left + 'px';
-    clone.style.top = rect.top + 'px';
-    clone.style.width = rect.width + 'px';
-    clone.style.height = rect.height + 'px';
-    clone.style.margin = '0';
-    clone.style.transform = 'none';
-    clone.style.pointerEvents = 'none';
-    clone.style.zIndex = '65';
-    document.body.appendChild(clone);
-    mapControlsEl.style.opacity = '0';
-    mapControlsSmoothingFreeze = { el: mapControlsEl, clone: clone };
+    applyMapControlsSmoothingFixedStyles(mapControlsEl, rect.left, rect.top, rect.width, rect.height);
+    mapControlsSmoothingLock = {
+      el: mapControlsEl,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function finishMapControlsSmoothingLock() {
+    if (!mapControlsSmoothingLock || !mapControlsSmoothingLock.el) return;
+    const lock = mapControlsSmoothingLock;
+    const el = lock.el;
+    mapControlsSmoothingLock = null;
+
+    clearMapControlsSmoothingFixedStyles(el);
+    syncMapControlsPlacement();
+    const targetRect = el.getBoundingClientRect();
+
+    applyMapControlsSmoothingFixedStyles(el, lock.left, lock.top, lock.width, lock.height);
+    el.style.transition = 'left 0.3s ease, top 0.3s ease';
+    void el.offsetWidth;
+    el.style.left = targetRect.left + 'px';
+    el.style.top = targetRect.top + 'px';
+
+    if (mapControlsSmoothingReleaseTimer) clearTimeout(mapControlsSmoothingReleaseTimer);
+    mapControlsSmoothingReleaseTimer = setTimeout(function() {
+      el.style.transition = '';
+      clearMapControlsSmoothingFixedStyles(el);
+      mapControlsSmoothingReleaseTimer = null;
+    }, 300);
   }
 
   function bindMapControlsResize() {
@@ -1384,7 +1428,7 @@ const MapModule = (function() {
           mapControlsFadeTimer = null;
         }
         mapControlsResizeFading = false;
-        clearMapControlsSmoothingFreeze();
+        clearMapControlsSmoothingLockImmediate();
         mapControlsEl.style.transition = '';
         mapControlsEl.style.opacity = '1';
         mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
@@ -1392,28 +1436,18 @@ const MapModule = (function() {
       }
 
       if (mode === 'smoothing') {
-        // Keep controls in their current parent during live resize.
-        // Apply header/map handoff once resize settles to avoid breakpoint jump-thrash.
+        startMapControlsSmoothingLock();
         mapControlsResizeTimer = setTimeout(function() {
-          syncMapControlsPlacement();
+          finishMapControlsSmoothingLock();
         }, 100);
         return;
       }
 
       if (mode === 'teleport' && !mapControlsResizeFading) {
-        clearMapControlsSmoothingFreeze();
+        clearMapControlsSmoothingLockImmediate();
         mapControlsResizeFading = true;
         mapControlsEl.style.transition = 'none';
         mapControlsEl.style.opacity = '0';
-      }
-
-      if (mode === 'smoothing') {
-        startMapControlsSmoothingFreeze();
-        mapControlsResizeTimer = setTimeout(function() {
-          clearMapControlsSmoothingFreeze();
-          syncMapControlsPlacement();
-        }, 100);
-        return;
       }
 
       mapControlsResizeTimer = setTimeout(function() {

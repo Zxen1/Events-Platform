@@ -32,7 +32,8 @@ const HeaderModule = (function() {
     var headerResizeTimer = null;
     var headerTeleportFadeTimer = null;
     var headerResizeFading = false;
-    var headerSmoothingFreezeItems = [];
+    var headerSmoothingLocks = [];
+    var headerSmoothingReleaseTimer = null;
 
     /* --------------------------------------------------------------------------
        FILTER ACTIVE VISUAL
@@ -170,38 +171,89 @@ const HeaderModule = (function() {
         });
     }
 
-    function clearHeaderSmoothingFreeze() {
-        while (headerSmoothingFreezeItems.length) {
-            var item = headerSmoothingFreezeItems.pop();
-            try {
-                if (item.clone && item.clone.parentNode) item.clone.parentNode.removeChild(item.clone);
-            } catch (_eClone) {}
-            try {
-                if (item.el) item.el.style.opacity = '';
-            } catch (_eEl) {}
+    function applyHeaderSmoothingFixedStyles(el, left, top, width, height) {
+        if (!el) return;
+        el.style.position = 'fixed';
+        el.style.left = left + 'px';
+        el.style.top = top + 'px';
+        el.style.width = width + 'px';
+        el.style.height = height + 'px';
+        el.style.margin = '0';
+        el.style.transform = 'none';
+        el.style.zIndex = '65';
+    }
+
+    function clearHeaderSmoothingFixedStyles(el) {
+        if (!el) return;
+        el.style.position = '';
+        el.style.left = '';
+        el.style.top = '';
+        el.style.width = '';
+        el.style.height = '';
+        el.style.margin = '';
+        el.style.transform = '';
+        el.style.zIndex = '';
+    }
+
+    function clearHeaderSmoothingLocksImmediate() {
+        if (headerSmoothingReleaseTimer) {
+            clearTimeout(headerSmoothingReleaseTimer);
+            headerSmoothingReleaseTimer = null;
+        }
+        while (headerSmoothingLocks.length) {
+            var lock = headerSmoothingLocks.pop();
+            if (!lock || !lock.el) continue;
+            lock.el.style.transition = '';
+            lock.el.style.opacity = '';
+            clearHeaderSmoothingFixedStyles(lock.el);
         }
     }
 
-    function startHeaderSmoothingFreeze(targets) {
-        if (headerSmoothingFreezeItems.length || !targets || !targets.length) return;
+    function startHeaderSmoothingLock(targets) {
+        if (headerSmoothingLocks.length || !targets || !targets.length) return;
         targets.forEach(function(el) {
             var rect = el.getBoundingClientRect();
             if (!rect || rect.width <= 0 || rect.height <= 0) return;
-            var clone = el.cloneNode(true);
-            clone.setAttribute('aria-hidden', 'true');
-            clone.style.position = 'fixed';
-            clone.style.left = rect.left + 'px';
-            clone.style.top = rect.top + 'px';
-            clone.style.width = rect.width + 'px';
-            clone.style.height = rect.height + 'px';
-            clone.style.margin = '0';
-            clone.style.transform = 'none';
-            clone.style.pointerEvents = 'none';
-            clone.style.zIndex = '65';
-            document.body.appendChild(clone);
-            el.style.opacity = '0';
-            headerSmoothingFreezeItems.push({ el: el, clone: clone });
+            applyHeaderSmoothingFixedStyles(el, rect.left, rect.top, rect.width, rect.height);
+            headerSmoothingLocks.push({
+                el: el,
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            });
         });
+    }
+
+    function finishHeaderSmoothingLock() {
+        if (!headerSmoothingLocks.length) return;
+        var locks = headerSmoothingLocks.slice();
+        headerSmoothingLocks = [];
+
+        locks.forEach(function(lock) {
+            if (!lock || !lock.el) return;
+            clearHeaderSmoothingFixedStyles(lock.el);
+        });
+
+        locks.forEach(function(lock) {
+            if (!lock || !lock.el) return;
+            var targetRect = lock.el.getBoundingClientRect();
+            applyHeaderSmoothingFixedStyles(lock.el, lock.left, lock.top, lock.width, lock.height);
+            lock.el.style.transition = 'left 0.3s ease, top 0.3s ease';
+            void lock.el.offsetWidth;
+            lock.el.style.left = targetRect.left + 'px';
+            lock.el.style.top = targetRect.top + 'px';
+        });
+
+        if (headerSmoothingReleaseTimer) clearTimeout(headerSmoothingReleaseTimer);
+        headerSmoothingReleaseTimer = setTimeout(function() {
+            locks.forEach(function(lock) {
+                if (!lock || !lock.el) return;
+                lock.el.style.transition = '';
+                clearHeaderSmoothingFixedStyles(lock.el);
+            });
+            headerSmoothingReleaseTimer = null;
+        }, 300);
     }
 
     function initHeaderRightResizeAntiJitter() {
@@ -219,7 +271,7 @@ const HeaderModule = (function() {
                     headerTeleportFadeTimer = null;
                 }
                 headerResizeFading = false;
-                clearHeaderSmoothingFreeze();
+                clearHeaderSmoothingLocksImmediate();
                 targets.forEach(function(el) {
                     el.style.transition = '';
                     el.style.opacity = '1';
@@ -228,7 +280,7 @@ const HeaderModule = (function() {
             }
 
             if (mode === 'teleport' && !headerResizeFading) {
-                clearHeaderSmoothingFreeze();
+                clearHeaderSmoothingLocksImmediate();
                 headerResizeFading = true;
                 targets.forEach(function(el) {
                     el.style.transition = 'none';
@@ -237,10 +289,10 @@ const HeaderModule = (function() {
             }
 
             if (mode === 'smoothing') {
-                startHeaderSmoothingFreeze(targets);
+                startHeaderSmoothingLock(targets);
                 if (headerResizeTimer) clearTimeout(headerResizeTimer);
                 headerResizeTimer = setTimeout(function() {
-                    clearHeaderSmoothingFreeze();
+                    finishHeaderSmoothingLock();
                 }, 100);
                 return;
             }
