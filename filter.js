@@ -40,6 +40,7 @@ const FilterModule = (function() {
     var contentEl = null;
     var panelDragged = false;
     var panelHome    = 'left'; // 'left' | 'right' — which edge the panel is currently locked to
+    var panelLastLeft = 0;     // last desktop x-position to restore on reopen
     var dragJustEnded = false;
     var headerEl = null;
     var bodyEl = null;
@@ -529,10 +530,19 @@ const FilterModule = (function() {
         contentEl.classList.remove('panel-visible');
         try { void contentEl.offsetWidth; } catch (e) {}
         if (!panelDragged && window.innerWidth > 530) {
+            var maxLeft = Math.max(0, window.innerWidth - contentEl.offsetWidth);
+            var openLeft = Math.max(0, Math.min(maxLeft, panelLastLeft || 0));
             var openSide = panelHome === 'right' ? 'right' : 'left';
+            if (openLeft <= 20) {
+                openSide = 'left';
+            } else if (openLeft >= (maxLeft - 20)) {
+                openSide = 'right';
+            }
+            panelHome = openSide;
             contentEl.setAttribute('data-side', openSide);
-            contentEl.style.left = '';
-            contentEl.style.right = '';
+            contentEl.style.left = openLeft + 'px';
+            contentEl.style.right = 'auto';
+            panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
         requestAnimationFrame(function() {
             contentEl.classList.add('panel-visible');
@@ -572,6 +582,7 @@ const FilterModule = (function() {
     function animateToDefaultPosition() {
         panelHome = 'left';
         panelDragged = false;
+        panelLastLeft = 0;
         if (!contentEl) return;
 
         contentEl.setAttribute('data-side', 'left');
@@ -594,16 +605,14 @@ const FilterModule = (function() {
         if (!panelEl || !contentEl) return;
 
         var closeSide = getClosestScreenSide();
+        var currentLeft = Math.max(0, getPanelLeftPx());
+        panelLastLeft = currentLeft;
         contentEl.setAttribute('data-side', closeSide);
 
-        // Keep current x-position locked while transform slides out from dragged positions.
-        if (window.innerWidth > 530 && panelDragged) {
-            var currentLeft = Math.max(0, getPanelLeftPx());
+        // Keep current x-position locked while transform slides out.
+        if (window.innerWidth > 530) {
             contentEl.style.left = currentLeft + 'px';
             contentEl.style.right = 'auto';
-        } else if (window.innerWidth > 530) {
-            contentEl.style.left = '';
-            contentEl.style.right = '';
         }
 
         panelEl.setAttribute('inert', '');
