@@ -607,6 +607,7 @@ const FilterModule = (function() {
         }
 
         panelEl.setAttribute('inert', '');
+        var wasVisible = contentEl.classList.contains('panel-visible');
         contentEl.classList.remove('panel-visible');
         
         function finalizeClose() {
@@ -625,7 +626,7 @@ const FilterModule = (function() {
         try {
             var cs = window.getComputedStyle ? window.getComputedStyle(contentEl) : null;
             var dur = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
-            if (dur === '0s' || dur === '0ms') {
+            if (!wasVisible || dur === '0s' || dur === '0ms') {
                 finalizeClose();
                 return;
             }
@@ -636,7 +637,6 @@ const FilterModule = (function() {
         
         contentEl.addEventListener('transitionend', function handler(ev) {
             if (ev && ev.target !== contentEl) return;
-            if (ev && ev.propertyName && ev.propertyName !== 'transform') return;
             contentEl.removeEventListener('transitionend', handler);
             finalizeClose();
         }, { once: true });
@@ -1954,11 +1954,20 @@ const FilterModule = (function() {
             // Off / Blur: instant update on every resize event — mimics CSS left:0 gripping
             // Blur adds a full-screen overlay on top (handled by index.js) to hide the jitter
             if (mode === 'off' || mode === 'blur') {
-                var newLeft = panelDragged
-                    ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
-                    : panelHome === 'right' ? window.innerWidth - contentEl.offsetWidth : 0;
+                var newLeft = Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40);
                 contentEl.style.transition = 'none';
-                contentEl.style.left = newLeft + 'px';
+                if (panelDragged) {
+                    contentEl.style.left = newLeft + 'px';
+                    contentEl.style.right = 'auto';
+                } else if (panelHome === 'right') {
+                    contentEl.setAttribute('data-side', 'right');
+                    contentEl.style.left = '';
+                    contentEl.style.right = '0px';
+                } else {
+                    contentEl.setAttribute('data-side', 'left');
+                    contentEl.style.left = '0px';
+                    contentEl.style.right = 'auto';
+                }
                 void contentEl.offsetWidth;
                 contentEl.style.transition = '';
                 return;
@@ -1972,14 +1981,23 @@ const FilterModule = (function() {
 
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(function() {
-                var newLeft = panelDragged
-                    ? Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40)
-                    : panelHome === 'right' ? window.innerWidth - contentEl.offsetWidth : 0;
+                var newLeft = Math.min(parseFloat(contentEl.style.left) || 0, window.innerWidth - 40);
 
                 if (mode !== 'smoothing') {
                     contentEl.style.transition = 'none';
                 }
-                contentEl.style.left = newLeft + 'px';
+                if (panelDragged) {
+                    contentEl.style.left = newLeft + 'px';
+                    contentEl.style.right = 'auto';
+                } else if (panelHome === 'right') {
+                    contentEl.setAttribute('data-side', 'right');
+                    contentEl.style.left = '';
+                    contentEl.style.right = '0px';
+                } else {
+                    contentEl.setAttribute('data-side', 'left');
+                    contentEl.style.left = '0px';
+                    contentEl.style.right = 'auto';
+                }
                 if (mode !== 'smoothing') {
                     void contentEl.offsetWidth;
                     contentEl.style.transition = '';
