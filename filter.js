@@ -633,24 +633,13 @@ const FilterModule = (function() {
             try { App.emit('filter:closed'); } catch (_eEmit) {}
         }
         
-        // With transitions disabled, transitionend will never fire. Close immediately.
-        try {
-            var cs = window.getComputedStyle ? window.getComputedStyle(contentEl) : null;
-            var dur = cs ? String(cs.transitionDuration || '0s').split(',')[0].trim() : '0s';
-            if (!wasVisible || dur === '0s' || dur === '0ms') {
-                finalizeClose();
-                return;
-            }
-        } catch (_eDur) {
+        var closeMs = getContentTransitionDurationMs(contentEl);
+        if (!wasVisible || closeMs === 0) {
             finalizeClose();
             return;
         }
-        
-        contentEl.addEventListener('transitionend', function handler(ev) {
-            if (ev && ev.target !== contentEl) return;
-            contentEl.removeEventListener('transitionend', handler);
-            finalizeClose();
-        }, { once: true });
+
+        setTimeout(finalizeClose, closeMs);
     }
     
     function togglePanel(show) {
