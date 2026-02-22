@@ -386,6 +386,7 @@ const AdminModule = (function() {
         // Position snap always runs regardless of mode.
         var resizeTimer  = null;
         var resizeFading = false;
+        var resizeFadeTimer = null;
 
         window.addEventListener('resize', function() {
             if (!panelContent || !panel.classList.contains('admin-panel--show')) return;
@@ -396,6 +397,12 @@ const AdminModule = (function() {
             // Off / Blur: instant update on every resize event — mimics CSS right:0 gripping
             // Blur adds a full-screen overlay on top (handled by index.js) to hide the jitter
             if (mode === 'off' || mode === 'blur') {
+                if (resizeFadeTimer) {
+                    clearTimeout(resizeFadeTimer);
+                    resizeFadeTimer = null;
+                }
+                resizeFading = false;
+                panelContent.style.opacity = '1';
                 var newLeft = panelDragged
                     ? Math.min(parseFloat(panelContent.style.left) || 0, window.innerWidth - 40)
                     : panelHome === 'left' ? 0 : window.innerWidth - panelContent.offsetWidth;
@@ -428,8 +435,18 @@ const AdminModule = (function() {
                 }
 
                 if (mode === 'teleport') {
+                    if (resizeFadeTimer) {
+                        clearTimeout(resizeFadeTimer);
+                        resizeFadeTimer = null;
+                    }
+                    panelContent.style.transition = 'opacity 0.3s ease';
+                    void panelContent.offsetWidth;
                     panelContent.style.opacity = '1';
-                    resizeFading = false;
+                    resizeFadeTimer = setTimeout(function() {
+                        panelContent.style.transition = '';
+                        resizeFading = false;
+                        resizeFadeTimer = null;
+                    }, 300);
                 }
             }, mode === 'smoothing' ? 0 : 100);
         });
