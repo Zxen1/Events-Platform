@@ -702,7 +702,7 @@
             fields.push({ fieldsetKey: 'images', name: 'Images', required: true, location_specific: false });
             fields.push({ fieldsetKey: 'public-phone', name: 'Public Phone', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'public-email', name: 'Public Email', required: false, location_specific: false });
-            fields.push({ fieldsetKey: 'website-url', name: 'Website (URL)', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'links', name: 'Links', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'tickets-url', name: 'Tickets (URL)', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'ticket-pricing', name: 'Ticket Pricing', required: true, location_specific: false });
             // Below the line (location-specific)
@@ -716,7 +716,7 @@
             fields.push({ fieldsetKey: 'images', name: 'Images', required: true, location_specific: false });
             fields.push({ fieldsetKey: 'public-phone', name: 'Public Phone', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'public-email', name: 'Public Email', required: false, location_specific: false });
-            fields.push({ fieldsetKey: 'website-url', name: 'Website (URL)', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'links', name: 'Links', required: false, location_specific: false });
             // Below the line (location-specific)
             fields.push({ fieldsetKey: 'city', name: 'City', required: true, location_specific: true });
         }

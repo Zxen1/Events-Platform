@@ -626,6 +626,7 @@ foreach ($byLoc as $locNum => $entries) {
     'longitude' => null,
     'country_code' => null,
     'website_url' => null,
+    'links_data' => null,
     'tickets_url' => null,
     'coupon_code' => null,
     'amenity_summary' => null,
@@ -728,6 +729,20 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
+    if ($baseType === 'links' && is_array($val)) {
+      $card['links_data'] = $val;
+      // Derive website_url cache from the "website" link type if present.
+      foreach ($val as $lnk) {
+        if (!is_array($lnk)) continue;
+        $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
+        $u = isset($lnk['link_url']) ? trim((string)$lnk['link_url']) : (isset($lnk['url']) ? trim((string)$lnk['url']) : '');
+        if ($t === 'website' && $u !== '') {
+          $card['website_url'] = $u;
+          break;
+        }
+      }
+      continue;
+    }
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
@@ -877,6 +892,30 @@ foreach ($byLoc as $locNum => $entries) {
   $mapCardIds[$locNum] = $mapCardId;
   if ($primaryTitle === '') {
     $primaryTitle = (string) $titleParam;
+  }
+
+  // Insert links into post_links subtable (repeatable)
+  if (is_array($card['links_data']) && count($card['links_data']) > 0) {
+    if (table_exists($mysqli, 'post_links')) {
+      $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, link_url, sort_order, is_active, created_at, updated_at)
+        VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
+      if ($stmtLinks) {
+        $sortOrder = 0;
+        foreach ($card['links_data'] as $lnk) {
+          if (!is_array($lnk)) continue;
+          $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
+          $u = isset($lnk['link_url']) ? trim((string)$lnk['link_url']) : (isset($lnk['url']) ? trim((string)$lnk['url']) : '');
+          $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
+          $t = trim($t, '_');
+          if ($t === '' || $u === '') continue;
+          if ($sortOrder >= 10) break;
+          $stmtLinks->bind_param('issi', $mapCardId, $t, $u, $sortOrder);
+          $stmtLinks->execute();
+          $sortOrder++;
+        }
+        $stmtLinks->close();
+      }
+    }
   }
 
   // Insert amenities into post_amenities subtable
@@ -1356,7 +1395,8 @@ $creationSnapshot = [
   'post_sessions' => [],
   'post_ticket_pricing' => [],
   'post_item_pricing' => [],
-  'post_amenities' => []
+  'post_amenities' => [],
+  'post_links' => []
 ];
 $creationMapCardIds = [];
 $crMcResult = $mysqli->query("SELECT * FROM post_map_cards WHERE post_id = $insertId");
@@ -1377,6 +1417,10 @@ if (!empty($creationMapCardIds)) {
   if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_item_pricing'][] = $row; $r->free(); }
   $r = $mysqli->query("SELECT * FROM post_amenities WHERE post_map_card_id IN ($crIdList)");
   if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_amenities'][] = $row; $r->free(); }
+  if (table_exists($mysqli, 'post_links')) {
+    $r = $mysqli->query("SELECT * FROM post_links WHERE post_map_card_id IN ($crIdList)");
+    if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_links'][] = $row; $r->free(); }
+  }
 }
 $creationJson = json_encode($creationSnapshot, JSON_UNESCAPED_UNICODE);
 $stmtRev = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at)

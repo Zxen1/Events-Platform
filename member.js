@@ -4224,6 +4224,26 @@ const MemberModule = (function() {
                 var ageRatingMenu = el.querySelector('.component-ageratingpicker-menu');
                 return ageRatingMenu ? String(ageRatingMenu.dataset.value || '').trim() : '';
 
+            case 'links':
+                try {
+                    var rows = el.querySelectorAll('.fieldset-links-row');
+                    if (!rows || rows.length === 0) return [];
+                    var out = [];
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i];
+                        if (!row) continue;
+                        var menu = row.querySelector('.component-linkpicker-menu');
+                        var typeVal = menu ? String(menu.dataset.value || '').trim() : '';
+                        var inp = row.querySelector('input.fieldset-links-url');
+                        var urlVal = inp ? String(inp.value || '').trim() : '';
+                        if (!typeVal && !urlVal) continue;
+                        out.push({ link_type: typeVal, link_url: urlVal });
+                    }
+                    return out;
+                } catch (eL) {
+                    return [];
+                }
+
             case 'public-phone':
                 // Store atomically (DB has phone_prefix + public_phone).
                 // No fallbacks: if either part is missing, return empty so required validation blocks submit.

@@ -990,6 +990,9 @@ const FieldsetBuilder = (function(){
         if (data && data['age-rating'] && typeof AgeRatingComponent !== 'undefined') {
             AgeRatingComponent.setData(data['age-rating']);
         }
+        if (data && data.link && typeof LinksComponent !== 'undefined') {
+            LinksComponent.setData(data.link);
+        }
     }
     
     /**
@@ -1725,6 +1728,168 @@ const FieldsetBuilder = (function(){
                 };
                 break;
                 
+            case 'links':
+                fieldset.appendChild(buildLabel(name, tooltip, null, 500, instruction));
+
+                function linksGetSystemPlusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_plus ? String(sys.icon_plus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function linksGetSystemMinusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_minus ? String(sys.icon_minus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                var linksRowsContainer = document.createElement('div');
+                linksRowsContainer.className = 'fieldset-links-rows';
+                fieldset.appendChild(linksRowsContainer);
+
+                function createLinksRow() {
+                    var row = document.createElement('div');
+                    row.className = 'fieldset-row fieldset-links-row';
+                    row.style.marginBottom = '10px';
+
+                    // Link type menu
+                    var menuEl = document.createElement('div');
+                    var menuSetValue = function() {};
+                    if (typeof LinksComponent !== 'undefined' && LinksComponent && typeof LinksComponent.buildMenu === 'function') {
+                        var menuResult = LinksComponent.buildMenu({
+                            initialValue: null,
+                            container: container,
+                            onSelect: function() {
+                                try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                            }
+                        });
+                        if (menuResult && menuResult.element) {
+                            menuEl = menuResult.element;
+                            menuSetValue = menuResult.setValue || menuSetValue;
+                        }
+                    }
+                    menuEl.classList.add('fieldset-links-type-menu');
+                    menuEl._linksSetValue = menuSetValue;
+                    row.appendChild(menuEl);
+
+                    // URL input
+                    var linkUrlInput = document.createElement('input');
+                    linkUrlInput.type = 'text';
+                    linkUrlInput.className = 'fieldset-input fieldset-links-url input-class-1';
+                    linkUrlInput.placeholder = 'https://';
+                    autoUrlProtocol(linkUrlInput);
+                    addInputValidation(linkUrlInput, null, 500, function(v) {
+                        var s = (typeof v === 'string') ? v.trim() : '';
+                        if (!s) return true;
+                        return isValidUrl(s);
+                    });
+                    row.appendChild(linkUrlInput);
+
+                    // + button
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-links-button-add';
+                    var plusUrl = linksGetSystemPlusIconUrl();
+                    if (plusUrl) {
+                        var plusImg = document.createElement('img');
+                        plusImg.className = 'fieldset-links-button-icon fieldset-links-button-icon--plus';
+                        plusImg.alt = '';
+                        plusImg.src = plusUrl;
+                        addBtn.appendChild(plusImg);
+                    }
+                    addBtn.addEventListener('click', function() {
+                        var newRow = createLinksRow();
+                        linksRowsContainer.appendChild(newRow);
+                        updateLinksButtons();
+                        var inp = newRow.querySelector('input.fieldset-links-url');
+                        if (inp) inp.focus();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    row.appendChild(addBtn);
+
+                    // - button
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-links-button-remove';
+                    var minusUrl = linksGetSystemMinusIconUrl();
+                    if (minusUrl) {
+                        var minusImg = document.createElement('img');
+                        minusImg.className = 'fieldset-links-button-icon fieldset-links-button-icon--minus';
+                        minusImg.alt = '';
+                        minusImg.src = minusUrl;
+                        removeBtn.appendChild(minusImg);
+                    }
+                    removeBtn.addEventListener('click', function() {
+                        row.remove();
+                        updateLinksButtons();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    row.appendChild(removeBtn);
+
+                    applyFieldsetRowItemClasses(row);
+                    return row;
+                }
+
+                function updateLinksButtons() {
+                    var rows = linksRowsContainer.querySelectorAll('.fieldset-links-row');
+                    var atMax = rows.length >= 10;
+                    rows.forEach(function(r, idx) {
+                        r.style.marginBottom = (idx === rows.length - 1) ? '0' : '10px';
+                        var addBtn = r.querySelector('.fieldset-links-button-add');
+                        var removeBtn = r.querySelector('.fieldset-links-button-remove');
+                        if (addBtn) {
+                            addBtn.disabled = !!atMax;
+                            addBtn.style.opacity = atMax ? '0.3' : '1';
+                            addBtn.style.cursor = atMax ? 'not-allowed' : 'pointer';
+                        }
+                        if (removeBtn) {
+                            var onlyOne = rows.length === 1;
+                            removeBtn.disabled = !!onlyOne;
+                            removeBtn.style.opacity = onlyOne ? '0.3' : '1';
+                            removeBtn.style.cursor = onlyOne ? 'not-allowed' : 'pointer';
+                        }
+                    });
+                }
+
+                fieldset._setValue = function(val) {
+                    linksRowsContainer.innerHTML = '';
+                    if (Array.isArray(val)) {
+                        val.forEach(function(item) {
+                            if (!item || typeof item !== 'object') return;
+                            var row = createLinksRow();
+                            var menu = row.querySelector('.fieldset-links-type-menu');
+                            if (menu && typeof menu._linksSetValue === 'function') {
+                                menu._linksSetValue(item.link_type || item.type || item.value || null);
+                            }
+                            var inp = row.querySelector('input.fieldset-links-url');
+                            if (inp) inp.value = (item.link_url || item.url || '').trim();
+                            linksRowsContainer.appendChild(row);
+                        });
+                    }
+                    if (linksRowsContainer.children.length === 0) {
+                        linksRowsContainer.appendChild(createLinksRow());
+                    }
+                    updateLinksButtons();
+                    updateCompleteFromDom();
+                };
+
+                // Always start with 1 row
+                linksRowsContainer.appendChild(createLinksRow());
+                updateLinksButtons();
+                break;
+
             case 'website-url':
             case 'tickets-url':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
@@ -6875,6 +7040,19 @@ const FieldsetBuilder = (function(){
                             var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                             return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                         }
+                        case 'links': {
+                            var rows = fieldset.querySelectorAll('.fieldset-links-row');
+                            for (var i = 0; i < rows.length; i++) {
+                                var row = rows[i];
+                                if (!row) continue;
+                                var menu = row.querySelector('.component-linkpicker-menu');
+                                var typeVal = menu ? String(menu.dataset.value || '').trim() : '';
+                                var inp = row.querySelector('input.fieldset-links-url');
+                                var urlVal = inp ? String(inp.value || '').trim() : '';
+                                if (typeVal || urlVal) return true;
+                            }
+                            return false;
+                        }
                         case 'public-phone': {
                             // Only check the phone number input, NOT the prefix selector
                             // Selecting a prefix alone should not trigger incomplete state
@@ -7030,6 +7208,24 @@ const FieldsetBuilder = (function(){
                     if (!e) return false;
                     if (!strLenOk(e.value, minLength, maxLength)) return false;
                     return isValidEmail(e.value);
+                }
+                case 'links': {
+                    var rows = fieldset.querySelectorAll('.fieldset-links-row');
+                    if (!rows || rows.length === 0) return false;
+                    var hasAny = false;
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i];
+                        if (!row) continue;
+                        var menu = row.querySelector('.component-linkpicker-menu');
+                        var typeVal = menu ? String(menu.dataset.value || '').trim() : '';
+                        var inp = row.querySelector('input.fieldset-links-url');
+                        var urlVal = inp ? String(inp.value || '').trim() : '';
+                        if (!typeVal && !urlVal) continue;
+                        if (!typeVal || !urlVal) return false;
+                        if (!isValidUrl(urlVal)) return false;
+                        hasAny = true;
+                    }
+                    return hasAny;
                 }
                 case 'website-url':
                 case 'tickets-url': {

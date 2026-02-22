@@ -2771,6 +2771,7 @@
                         break;
                     case 'custom-radio': val = stripLabelPrefix(mapCard.custom_radio); break;
                     case 'age-rating': val = mapCard.age_rating; break;
+                    case 'links': val = mapCard.links || []; break;
                     
                     case 'session-pricing':
                         val = {

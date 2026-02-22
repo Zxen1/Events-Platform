@@ -619,7 +619,8 @@ try {
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below
                 'pricing_groups' => [], // Will be populated below
-                'age_ratings' => [] // Will be populated below
+                'age_ratings' => [], // Will be populated below
+                'links' => [] // Will be populated below
             ];
         }
     }
@@ -712,6 +713,7 @@ try {
     $ageRatingsByCard = [];
     $itemsByCard = [];
     $amenitiesByCard = [];
+    $linksByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -817,6 +819,29 @@ try {
             }
         }
 
+        // Links
+        $linksTableExists = false;
+        $chkLinks = $mysqli->query("SHOW TABLES LIKE 'post_links'");
+        if ($chkLinks && $chkLinks->num_rows > 0) {
+            $linksTableExists = true;
+        }
+        if ($linksTableExists) {
+            $linksRes = $mysqli->query("SELECT post_map_card_id, link_type, link_url, sort_order FROM post_links WHERE post_map_card_id IN ($cardIdsCsv) AND is_active = 1 ORDER BY post_map_card_id ASC, sort_order ASC");
+            if ($linksRes) {
+                while ($lRow = $linksRes->fetch_assoc()) {
+                    $cid = (int)($lRow['post_map_card_id'] ?? 0);
+                    if (!$cid) continue;
+                    if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
+                    $linksByCard[$cid][] = [
+                        'link_type' => (string)($lRow['link_type'] ?? ''),
+                        'link_url' => (string)($lRow['link_url'] ?? ''),
+                        'sort_order' => (int)($lRow['sort_order'] ?? 0),
+                    ];
+                }
+                $linksRes->free();
+            }
+        }
+
     }
 
     // Attach to map cards
@@ -880,6 +905,11 @@ try {
                 // Attach Amenities (from subtable, overrides amenity_summary)
                 if (isset($amenitiesByCard[$cid])) {
                     $mapCard['amenities'] = json_encode($amenitiesByCard[$cid]);
+                }
+
+                // Attach Links
+                if (isset($linksByCard[$cid])) {
+                    $mapCard['links'] = $linksByCard[$cid];
                 }
             }
         }

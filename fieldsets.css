@@ -1024,6 +1024,74 @@
 }
 
 /* ============================================================================
+   LINKS FIELDSET
+   ============================================================================ */
+
+.fieldset-links-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.fieldset-links-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.fieldset-links-type-menu {
+    flex: 0 0 220px;
+    min-width: 180px;
+}
+
+.fieldset-links-url {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fieldset-links-button-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.fieldset-links-button-add,
+.fieldset-links-button-remove {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #666;
+    cursor: pointer;
+    font-size: 18px;
+    flex: 0 0 36px;
+}
+
+.fieldset-links-button-add:hover {
+    border-color: var(--blue-500);
+    color: var(--blue-500);
+}
+
+.fieldset-links-button-remove:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+.fieldset-links-button-add:active,
+.fieldset-links-button-remove:active {
+    background: var(--blue-600);
+    border-color: var(--blue-500);
+    color: #fff;
+}
+
+/* ============================================================================
    LOCATION FIELDSET
    ============================================================================ */
 

@@ -664,6 +664,9 @@ if (!empty($oldMapCardIds)) {
   $mysqli->query("DELETE FROM post_item_pricing WHERE post_map_card_id IN ($mcIdList)");
   $mysqli->query("DELETE FROM post_sessions WHERE post_map_card_id IN ($mcIdList)");
   $mysqli->query("DELETE FROM post_amenities WHERE post_map_card_id IN ($mcIdList)");
+  if (table_exists($mysqli, 'post_links')) {
+    $mysqli->query("DELETE FROM post_links WHERE post_map_card_id IN ($mcIdList)");
+  }
 }
 // Now delete the map cards themselves
 $mysqli->query("DELETE FROM post_map_cards WHERE post_id = $postId");
@@ -739,7 +742,7 @@ foreach ($byLoc as $locNum => $entries) {
     'public_email' => null, 'phone_prefix' => null, 'public_phone' => null,
     'location_type' => 'venue', 'venue_name' => null, 'address_line' => null, 'city' => null,
     'latitude' => null, 'longitude' => null, 'country_code' => null,
-    'website_url' => null, 'tickets_url' => null, 'coupon_code' => null,
+    'website_url' => null, 'links_data' => null, 'tickets_url' => null, 'coupon_code' => null,
     'amenity_summary' => null, 'amenities_data' => null, 'age_rating' => null,
     'session_summary' => null, 'price_summary' => null,
   ];
@@ -820,6 +823,20 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
+    if ($baseType === 'links' && is_array($val)) {
+      $card['links_data'] = $val;
+      // Derive website_url cache from the "website" link type if present.
+      foreach ($val as $lnk) {
+        if (!is_array($lnk)) continue;
+        $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
+        $u = isset($lnk['link_url']) ? trim((string)$lnk['link_url']) : (isset($lnk['url']) ? trim((string)$lnk['url']) : '');
+        if ($t === 'website' && $u !== '') {
+          $card['website_url'] = $u;
+          break;
+        }
+      }
+      continue;
+    }
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
@@ -915,6 +932,29 @@ foreach ($byLoc as $locNum => $entries) {
     $stmtCard->close();
     
     if ($primaryTitle === '') $primaryTitle = $card['title'];
+
+    // Links
+    if (is_array($card['links_data']) && count($card['links_data']) > 0) {
+      if (table_exists($mysqli, 'post_links')) {
+        $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, link_url, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
+        if ($stmtLinks) {
+          $sortOrder = 0;
+          foreach ($card['links_data'] as $lnk) {
+            if (!is_array($lnk)) continue;
+            $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
+            $u = isset($lnk['link_url']) ? trim((string)$lnk['link_url']) : (isset($lnk['url']) ? trim((string)$lnk['url']) : '');
+            $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
+            $t = trim($t, '_');
+            if ($t === '' || $u === '') continue;
+            if ($sortOrder >= 10) break;
+            $stmtLinks->bind_param('issi', $mapCardId, $t, $u, $sortOrder);
+            $stmtLinks->execute();
+            $sortOrder++;
+          }
+          $stmtLinks->close();
+        }
+      }
+    }
 
     // Amenities
     if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
@@ -1065,7 +1105,8 @@ $savedSnapshot = [
   'post_sessions' => [],
   'post_ticket_pricing' => [],
   'post_item_pricing' => [],
-  'post_amenities' => []
+  'post_amenities' => [],
+  'post_links' => []
 ];
 $savedMapCardIds = [];
 $smcResult = $mysqli->query("SELECT * FROM post_map_cards WHERE post_id = $postId");
@@ -1086,6 +1127,10 @@ if (!empty($savedMapCardIds)) {
   if ($r) { while ($row = $r->fetch_assoc()) $savedSnapshot['post_item_pricing'][] = $row; $r->free(); }
   $r = $mysqli->query("SELECT * FROM post_amenities WHERE post_map_card_id IN ($sIdList)");
   if ($r) { while ($row = $r->fetch_assoc()) $savedSnapshot['post_amenities'][] = $row; $r->free(); }
+  if (table_exists($mysqli, 'post_links')) {
+    $r = $mysqli->query("SELECT * FROM post_links WHERE post_map_card_id IN ($sIdList)");
+    if ($r) { while ($row = $r->fetch_assoc()) $savedSnapshot['post_links'][] = $row; $r->free(); }
+  }
 }
 $savedJson = json_encode($savedSnapshot, JSON_UNESCAPED_UNICODE);
 if ($savedJson === false) {
