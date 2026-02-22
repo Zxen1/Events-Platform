@@ -1356,6 +1356,15 @@ const MapModule = (function() {
         return;
       }
 
+      if (mode === 'smoothing') {
+        // Keep controls in their current parent during live resize.
+        // Apply header/map handoff once resize settles to avoid breakpoint jump-thrash.
+        mapControlsResizeTimer = setTimeout(function() {
+          syncMapControlsPlacement();
+        }, 100);
+        return;
+      }
+
       if (mode === 'teleport' && !mapControlsResizeFading) {
         mapControlsResizeFading = true;
         mapControlsEl.style.transition = 'none';
@@ -1376,7 +1385,7 @@ const MapModule = (function() {
             mapControlsFadeTimer = null;
           }, 300);
         }
-      }, mode === 'smoothing' ? 0 : 100);
+      }, 100);
     });
   }
 
