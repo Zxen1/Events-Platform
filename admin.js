@@ -3437,6 +3437,11 @@ const AdminModule = (function() {
                         AgeRatingComponent.setData(data.dropdown_options['age-rating']);
                     }
 
+                    // Initialize LinksComponent data if available
+                    if (window.LinksComponent && data.dropdown_options && data.dropdown_options.link) {
+                        LinksComponent.setData(data.dropdown_options.link);
+                    }
+
                     // Render checkout options and register for tracking
                     if (data.checkout_options && Array.isArray(data.checkout_options)) {
                         renderCheckoutOptions(data.checkout_options, requireWebsiteCurrencyFromSettings(settingsData));

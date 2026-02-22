@@ -230,6 +230,7 @@ const App = (function() {
     countries: 'folder_countries',
     dummyImages: 'folder_dummy_images',
     currencies: 'folder_currencies',
+    links: 'folder_links',
     phonePrefixes: 'folder_phone_prefixes',
     postImages: 'folder_post_images',
     postSystemImages: 'folder_post_system_images',

@@ -8581,6 +8581,246 @@ const AgeRatingComponent = (function(){
 
 
 /* ============================================================================
+   LINKS COMPONENT
+   
+   Dropdown menu for selecting a link type (Official website, Facebook, etc.).
+   Data loaded from list_links table via get-admin-settings API.
+   ============================================================================ */
+
+const LinksComponent = (function(){
+    
+    var linksData = [];
+    var dataLoaded = false;
+    
+    function getData() {
+        return linksData;
+    }
+    
+    function setData(data) {
+        linksData = data || [];
+        dataLoaded = true;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    function getImageUrl(filename) {
+        if (!filename) return '';
+        if (window.App && typeof window.App.getImageUrl === 'function') {
+            return window.App.getImageUrl('links', filename);
+        }
+        return '';
+    }
+    
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options && res.dropdown_options.link) {
+                    linksData = res.dropdown_options.link;
+                    dataLoaded = true;
+                }
+                return linksData;
+            });
+    }
+    
+    // Build links dropdown menu
+    // options: { onSelect, initialValue }
+    function buildMenu(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var initialValue = options.initialValue || null;
+        var selectedValue = initialValue;
+        
+        var menu = document.createElement('div');
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-linkpicker-menu menu-class-1';
+        
+        // Button
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'component-linkpicker-menu-button menu-button';
+        
+        var buttonImage = document.createElement('img');
+        buttonImage.className = 'component-linkpicker-menu-button-image';
+        buttonImage.src = '';
+        buttonImage.alt = '';
+        buttonImage.style.display = 'none';
+        
+        var buttonText = document.createElement('span');
+        buttonText.className = 'component-linkpicker-menu-button-text menu-text';
+        buttonText.textContent = 'Select link type';
+        
+        var buttonArrow = document.createElement('span');
+        buttonArrow.className = 'component-linkpicker-menu-button-arrow menu-arrow';
+        
+        button.appendChild(buttonImage);
+        button.appendChild(buttonText);
+        button.appendChild(buttonArrow);
+        menu.appendChild(button);
+        
+        // Options dropdown
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'component-linkpicker-menu-options menu-options';
+        menu.appendChild(optionsDiv);
+        
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('component-linkpicker-menu--open', !!isOpen);
+            button.classList.toggle('component-linkpicker-menu-button--open', !!isOpen);
+            button.classList.toggle('menu-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-linkpicker-menu-button-arrow--open', !!isOpen);
+            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-linkpicker-menu-options--open', !!isOpen);
+            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
+        }
+        
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-linkpicker-menu--open'); };
+        menu.__menuApplyOpenState = applyOpenState;
+        
+        // Register with MenuManager
+        MenuManager.register(menu);
+        menu.__menuGetOptionsEl = function() { return optionsDiv; };
+        menu.__menuOptionSelector = '.component-linkpicker-menu-option';
+        
+        function setValue(value) {
+            if (!value) {
+                buttonImage.src = '';
+                buttonImage.style.display = 'none';
+                buttonText.textContent = 'Select link type';
+                selectedValue = null;
+                menu.dataset.value = '';
+                return;
+            }
+            var found = linksData.find(function(item) {
+                return item.value === value;
+            });
+            if (found) {
+                selectedValue = value;
+                buttonText.textContent = found.label;
+                menu.dataset.value = value;
+                var imgUrl = getImageUrl(found.filename);
+                if (imgUrl) {
+                    buttonImage.src = imgUrl;
+                    buttonImage.style.display = '';
+                } else {
+                    buttonImage.style.display = 'none';
+                }
+            }
+        }
+        
+        function renderOptions() {
+            optionsDiv.innerHTML = '';
+            
+            linksData.forEach(function(item) {
+                var option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'component-linkpicker-menu-option menu-option';
+                option.setAttribute('data-value', item.value);
+                
+                var optImg = document.createElement('img');
+                optImg.className = 'component-linkpicker-menu-option-image';
+                var itemImgUrl = getImageUrl(item.filename);
+                if (itemImgUrl) {
+                    optImg.src = itemImgUrl;
+                }
+                optImg.alt = '';
+                
+                var optText = document.createElement('span');
+                optText.className = 'component-linkpicker-menu-option-text menu-text';
+                optText.textContent = item.label;
+                
+                option.appendChild(optImg);
+                option.appendChild(optText);
+                
+                option.onclick = function(ev) {
+                    ev.stopPropagation();
+                    setValue(item.value);
+                    applyOpenState(false);
+                    onSelect(item.value, item.label, item.filename);
+                    try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                };
+                
+                optionsDiv.appendChild(option);
+            });
+        }
+        
+        function openMenu() {
+            MenuManager.closeAll(menu);
+            applyOpenState(true);
+            
+            // Load data if not loaded
+            if (!dataLoaded || linksData.length === 0) {
+                loadFromDatabase().then(function() {
+                    renderOptions();
+                    if (initialValue) setValue(initialValue);
+                });
+            } else {
+                renderOptions();
+            }
+        }
+        
+        function closeMenu() {
+            applyOpenState(false);
+        }
+        
+        function onKeyDown(e) {
+            if (!e) return;
+            var key = e.key;
+            var isOpen = menu.classList.contains('component-linkpicker-menu--open');
+            
+            if (key === 'Escape') {
+                if (isOpen) {
+                    closeMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                return;
+            }
+            
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
+                if (!isOpen) {
+                    openMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                menuArrowKeyNav(e, optionsDiv, '.component-linkpicker-menu-option', function(opt) { opt.click(); });
+            }
+        }
+        menu.addEventListener('keydown', onKeyDown, true);
+        
+        // Toggle menu (mouse)
+        button.onclick = function(e) {
+            e.stopPropagation();
+            var isOpen = menu.classList.contains('component-linkpicker-menu--open');
+            if (isOpen) closeMenu();
+            else openMenu();
+        };
+        
+        if (dataLoaded && linksData.length > 0) {
+            if (initialValue) setValue(initialValue);
+        }
+        
+        return {
+            element: menu,
+            getValue: function() {
+                return selectedValue;
+            },
+            setValue: setValue
+        };
+    }
+    
+    return {
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        loadFromDatabase: loadFromDatabase,
+        buildMenu: buildMenu
+    };
+})();
+
+
+/* ============================================================================
    LOCATION WALLPAPER - Standalone wallpaper component for any container.
    Reads lat/lng from context (posts: post_map_cards, forms: Google Places inputs).
    Modes: off, still (static), basic (4-image pan), orbit (live map in container).
@@ -12975,6 +13215,7 @@ window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;
 window.AgeRatingComponent = AgeRatingComponent;
+window.LinksComponent = LinksComponent;
 window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.PaymentSubmitComponent = PaymentSubmitComponent;
