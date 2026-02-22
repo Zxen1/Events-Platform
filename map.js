@@ -1276,6 +1276,7 @@ const MapModule = (function() {
   let mapControlsResizeTimer = null;
   let mapControlsResizeFading = false;
   let mapControlsFadeTimer = null;
+  let mapControlsSmoothingFreeze = null;
   let mapViewportResizeTimer = null;
   let mapViewportResizeFading = false;
   let mapViewportFadeTimer = null;
@@ -1334,6 +1335,39 @@ const MapModule = (function() {
     return window._resizeAntiJitter || 'off';
   }
 
+  function clearMapControlsSmoothingFreeze() {
+    if (!mapControlsSmoothingFreeze) return;
+    try {
+      if (mapControlsSmoothingFreeze.clone && mapControlsSmoothingFreeze.clone.parentNode) {
+        mapControlsSmoothingFreeze.clone.parentNode.removeChild(mapControlsSmoothingFreeze.clone);
+      }
+    } catch (_eClone) {}
+    try {
+      if (mapControlsSmoothingFreeze.el) mapControlsSmoothingFreeze.el.style.opacity = '';
+    } catch (_eEl) {}
+    mapControlsSmoothingFreeze = null;
+  }
+
+  function startMapControlsSmoothingFreeze() {
+    if (!mapControlsEl || mapControlsSmoothingFreeze) return;
+    const rect = mapControlsEl.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+    const clone = mapControlsEl.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    clone.style.position = 'fixed';
+    clone.style.left = rect.left + 'px';
+    clone.style.top = rect.top + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.margin = '0';
+    clone.style.transform = 'none';
+    clone.style.pointerEvents = 'none';
+    clone.style.zIndex = '65';
+    document.body.appendChild(clone);
+    mapControlsEl.style.opacity = '0';
+    mapControlsSmoothingFreeze = { el: mapControlsEl, clone: clone };
+  }
+
   function bindMapControlsResize() {
     if (bindMapControlsResize._bound) return;
     bindMapControlsResize._bound = true;
@@ -1350,6 +1384,7 @@ const MapModule = (function() {
           mapControlsFadeTimer = null;
         }
         mapControlsResizeFading = false;
+        clearMapControlsSmoothingFreeze();
         mapControlsEl.style.transition = '';
         mapControlsEl.style.opacity = '1';
         mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
@@ -1366,9 +1401,19 @@ const MapModule = (function() {
       }
 
       if (mode === 'teleport' && !mapControlsResizeFading) {
+        clearMapControlsSmoothingFreeze();
         mapControlsResizeFading = true;
         mapControlsEl.style.transition = 'none';
         mapControlsEl.style.opacity = '0';
+      }
+
+      if (mode === 'smoothing') {
+        startMapControlsSmoothingFreeze();
+        mapControlsResizeTimer = setTimeout(function() {
+          clearMapControlsSmoothingFreeze();
+          syncMapControlsPlacement();
+        }, 100);
+        return;
       }
 
       mapControlsResizeTimer = setTimeout(function() {

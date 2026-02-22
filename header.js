@@ -32,6 +32,7 @@ const HeaderModule = (function() {
     var headerResizeTimer = null;
     var headerTeleportFadeTimer = null;
     var headerResizeFading = false;
+    var headerSmoothingFreezeItems = [];
 
     /* --------------------------------------------------------------------------
        FILTER ACTIVE VISUAL
@@ -169,6 +170,40 @@ const HeaderModule = (function() {
         });
     }
 
+    function clearHeaderSmoothingFreeze() {
+        while (headerSmoothingFreezeItems.length) {
+            var item = headerSmoothingFreezeItems.pop();
+            try {
+                if (item.clone && item.clone.parentNode) item.clone.parentNode.removeChild(item.clone);
+            } catch (_eClone) {}
+            try {
+                if (item.el) item.el.style.opacity = '';
+            } catch (_eEl) {}
+        }
+    }
+
+    function startHeaderSmoothingFreeze(targets) {
+        if (headerSmoothingFreezeItems.length || !targets || !targets.length) return;
+        targets.forEach(function(el) {
+            var rect = el.getBoundingClientRect();
+            if (!rect || rect.width <= 0 || rect.height <= 0) return;
+            var clone = el.cloneNode(true);
+            clone.setAttribute('aria-hidden', 'true');
+            clone.style.position = 'fixed';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.margin = '0';
+            clone.style.transform = 'none';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '65';
+            document.body.appendChild(clone);
+            el.style.opacity = '0';
+            headerSmoothingFreezeItems.push({ el: el, clone: clone });
+        });
+    }
+
     function initHeaderRightResizeAntiJitter() {
         if (initHeaderRightResizeAntiJitter._bound) return;
         initHeaderRightResizeAntiJitter._bound = true;
@@ -184,6 +219,7 @@ const HeaderModule = (function() {
                     headerTeleportFadeTimer = null;
                 }
                 headerResizeFading = false;
+                clearHeaderSmoothingFreeze();
                 targets.forEach(function(el) {
                     el.style.transition = '';
                     el.style.opacity = '1';
@@ -192,11 +228,21 @@ const HeaderModule = (function() {
             }
 
             if (mode === 'teleport' && !headerResizeFading) {
+                clearHeaderSmoothingFreeze();
                 headerResizeFading = true;
                 targets.forEach(function(el) {
                     el.style.transition = 'none';
                     el.style.opacity = '0';
                 });
+            }
+
+            if (mode === 'smoothing') {
+                startHeaderSmoothingFreeze(targets);
+                if (headerResizeTimer) clearTimeout(headerResizeTimer);
+                headerResizeTimer = setTimeout(function() {
+                    clearHeaderSmoothingFreeze();
+                }, 100);
+                return;
             }
 
             if (headerResizeTimer) clearTimeout(headerResizeTimer);
