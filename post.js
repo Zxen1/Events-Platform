@@ -3147,7 +3147,7 @@ const PostModule = (function() {
 
         var active = false;
         try { active = !!(a.value === 1 || a.value === '1' || a.value === true); } catch (_eAct) { active = false; }
-        var yn = active ? 'yes' : 'no';
+        var yn = active ? 'Yes' : 'No';
 
         partsAmen.push(
           '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" title="' + escapeHtml(label + ': ' + yn) + '" aria-label="' + escapeHtml(label + ': ' + yn) + '">' +
@@ -3275,6 +3275,8 @@ const PostModule = (function() {
           escapeHtml: escapeHtml,
           isLocationFiltered: isLocationFiltered
         }),
+        // Amenities (icon strip) — location-specific, so it sits under the location menu
+        amenitiesStripRowHtml || '',
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
           postId: post.id,
@@ -3291,8 +3293,6 @@ const PostModule = (function() {
         }),
         // Links (icon strip; replaces Website URL when present)
         linksStripRowHtml || '',
-        // Amenities (icon strip)
-        amenitiesStripRowHtml || '',
         // Website URL
         (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
           '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
