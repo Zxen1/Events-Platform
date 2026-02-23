@@ -846,11 +846,11 @@ try {
         $amenityRes->free();
 
         // Links (required: post_links + list_links)
-        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
+        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.external_url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
                      FROM post_links pl
                      LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
                      WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
-                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.url ASC";
+                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.external_url ASC";
 
         $linksRes = $mysqli->query($linksSql);
         if (!$linksRes) {
@@ -862,7 +862,7 @@ try {
             if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
             $linksByCard[$cid][] = [
                 'link_type' => (string)($lRow['link_type'] ?? ''),
-                'url' => (string)($lRow['url'] ?? ''),
+                'external_url' => (string)($lRow['external_url'] ?? ''),
                 'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
                 'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
                 'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,

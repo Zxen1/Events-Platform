@@ -1729,12 +1729,12 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'links': {
-                // URL specs come from the url field (fields table).
+                // URL specs come from the external-url field (fields table).
                 // This fieldset also includes a link-type menu (component, not a fields-table field).
-                var linkUrlSpec = (fields && fields['url'] && typeof fields['url'] === 'object') ? fields['url'] : null;
+                var linkUrlSpec = (fields && fields['external-url'] && typeof fields['external-url'] === 'object') ? fields['external-url'] : null;
                 var linkUrlMin = (linkUrlSpec && typeof linkUrlSpec.min_length === 'number') ? linkUrlSpec.min_length : null;
                 var linkUrlMax = (linkUrlSpec && typeof linkUrlSpec.max_length === 'number') ? linkUrlSpec.max_length : 500;
-                var linkUrlPlaceholder = getSubfieldPlaceholder('url');
+                var linkUrlPlaceholder = getSubfieldPlaceholder('external-url');
 
                 fieldset.appendChild(buildLabel(name, tooltip, linkUrlMin, linkUrlMax, instruction));
 
@@ -1810,7 +1810,7 @@ const FieldsetBuilder = (function(){
                     var linkUrlInput = document.createElement('input');
                     linkUrlInput.type = 'text';
                     linkUrlInput.className = 'fieldset-input fieldset-links-url input-class-1';
-                    // Use url field placeholder from DB when available.
+                    // Use external-url field placeholder from DB when available.
                     applyPlaceholder(linkUrlInput, (typeof linkUrlPlaceholder === 'string' && linkUrlPlaceholder.trim()) ? linkUrlPlaceholder : 'https://');
                     autoUrlProtocol(linkUrlInput);
                     addInputValidation(linkUrlInput, linkUrlMin, linkUrlMax, function(v) {
@@ -1941,7 +1941,7 @@ const FieldsetBuilder = (function(){
                                 menu._linksSetValue(item.link_type || item.type || item.value || null);
                             }
                             var inp = row.querySelector('input.fieldset-links-url');
-                            if (inp) inp.value = (item.url || '').trim();
+                            if (inp) inp.value = (item.external_url || '').trim();
                             // Reveal URL row if a type is present.
                             try {
                                 var hasType = (item.link_type || item.type || item.value) ? true : false;

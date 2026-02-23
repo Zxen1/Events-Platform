@@ -4255,7 +4255,7 @@ const MemberModule = (function() {
                         if (!typeVal && !urlVal) continue;
                         // Only store complete rows.
                         if (!typeVal || !urlVal) continue;
-                        out.push({ link_type: typeVal, url: urlVal });
+                        out.push({ link_type: typeVal, external_url: urlVal });
                     }
                     return out;
                 } catch (eL) {

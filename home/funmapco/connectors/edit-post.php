@@ -925,13 +925,13 @@ foreach ($byLoc as $locNum => $entries) {
     // Links
     if (is_array($card['links_data']) && count($card['links_data']) > 0) {
       if (table_exists($mysqli, 'post_links')) {
-        $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, url, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
+        $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, external_url, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
         if ($stmtLinks) {
           $sortOrder = 0;
           foreach ($card['links_data'] as $lnk) {
             if (!is_array($lnk)) continue;
             $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
-            $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
+            $u = isset($lnk['external_url']) ? trim((string)$lnk['external_url']) : '';
             $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
             $t = trim($t, '_');
             if ($t === '' || $u === '') continue;
