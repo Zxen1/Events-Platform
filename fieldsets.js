@@ -1910,9 +1910,10 @@ const FieldsetBuilder = (function(){
                         } catch (eRow) {}
                         var rowHasAny = hasType || hasUrl;
                         if (addBtn) {
-                            // Per-row: don't allow chaining blank rows.
-                            // + is disabled until THIS row has a type selected.
-                            var addDisabled = !!atMax || !hasType;
+                            // Only the LAST row's + is usable (prevents chaining blank rows by clicking row 1 repeatedly).
+                            // + is enabled only when that last row has a type selected, and we're not at max rows.
+                            var isLast = (idx === rows.length - 1);
+                            var addDisabled = !!atMax || !isLast || !hasType;
                             addBtn.disabled = addDisabled;
                             addBtn.style.opacity = addDisabled ? '0.3' : '1';
                             addBtn.style.cursor = addDisabled ? 'not-allowed' : 'pointer';
