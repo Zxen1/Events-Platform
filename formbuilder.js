@@ -1852,6 +1852,80 @@
                 fieldsContainer.insertBefore(divider, locationFieldsetWrapper);
             }
             
+            // Hard rules around divider containers:
+            // - Amenities + Sessions are Location-only (must be below divider)
+            // - Ticket Pricing is Primary-only (must be above divider)
+            if (isLocationTypeSelected && locationFieldsetWrapper) {
+                var dividerElHard = fieldsContainer.querySelector('.member-postform-location-divider');
+                if (dividerElHard) {
+                    var wrappersHard = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+                    var ticketPricingWrapper = null;
+                    var sessionsWrapper = null;
+                    var amenitiesWrapper = null;
+                    for (var hi = 0; hi < wrappersHard.length; hi++) {
+                        var wHard = wrappersHard[hi];
+                        if (!wHard) continue;
+                        var fsIdHard = wHard.getAttribute('data-fieldset-id') || '';
+                        if (!fsIdHard) continue;
+                        var fsHard = fieldsets.find(function(fs) {
+                            if (fs.id && String(fs.id) === fsIdHard) return true;
+                            if (fs.fieldset_key && String(fs.fieldset_key) === fsIdHard) return true;
+                            if (fs.key && String(fs.key) === fsIdHard) return true;
+                            if (fs.name && String(fs.name) === fsIdHard) return true;
+                            return false;
+                        });
+                        if (!fsHard || !fsHard.fieldset_key) continue;
+                        var keyLowerHard = String(fsHard.fieldset_key).toLowerCase();
+                        if (keyLowerHard === 'ticket-pricing') ticketPricingWrapper = wHard;
+                        if (keyLowerHard === 'sessions') sessionsWrapper = wHard;
+                        if (keyLowerHard === 'amenities') amenitiesWrapper = wHard;
+                    }
+
+                    var childrenHard = Array.from(fieldsContainer.children);
+                    var dividerPosHard = childrenHard.indexOf(dividerElHard);
+
+                    // Ticket Pricing must be above divider (Primary)
+                    if (ticketPricingWrapper) {
+                        var tpPos = childrenHard.indexOf(ticketPricingWrapper);
+                        if (tpPos !== -1 && dividerPosHard !== -1 && tpPos > dividerPosHard) {
+                            fieldsContainer.insertBefore(ticketPricingWrapper, dividerElHard);
+                        }
+                    }
+
+                    // Sessions must be below divider (Location)
+                    if (sessionsWrapper) {
+                        childrenHard = Array.from(fieldsContainer.children);
+                        var sPos = childrenHard.indexOf(sessionsWrapper);
+                        dividerPosHard = childrenHard.indexOf(dividerElHard);
+                        if (sPos !== -1 && dividerPosHard !== -1 && sPos < dividerPosHard) {
+                            // Place directly after the location fieldset wrapper for clarity.
+                            var insertAfterLoc = locationFieldsetWrapper.nextSibling;
+                            if (insertAfterLoc) {
+                                fieldsContainer.insertBefore(sessionsWrapper, insertAfterLoc);
+                            } else {
+                                fieldsContainer.appendChild(sessionsWrapper);
+                            }
+                        }
+                    }
+
+                    // Amenities must be below divider (Location)
+                    if (amenitiesWrapper) {
+                        childrenHard = Array.from(fieldsContainer.children);
+                        var aPos = childrenHard.indexOf(amenitiesWrapper);
+                        dividerPosHard = childrenHard.indexOf(dividerElHard);
+                        if (aPos !== -1 && dividerPosHard !== -1 && aPos < dividerPosHard) {
+                            // Place directly after the location fieldset wrapper (keeps it near the location context).
+                            var insertAfterLoc2 = locationFieldsetWrapper.nextSibling;
+                            if (insertAfterLoc2) {
+                                fieldsContainer.insertBefore(amenitiesWrapper, insertAfterLoc2);
+                            } else {
+                                fieldsContainer.appendChild(amenitiesWrapper);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Hard rule: amenities must be location-specific (below the divider).
             // If an admin drags Amenities above the divider, snap it back under the location fieldset.
             if (isLocationTypeSelected && locationFieldsetWrapper) {
@@ -1943,13 +2017,20 @@
                                             fieldsetKeyLower === 'address' || 
                                             fieldsetKeyLower === 'location';
                     var isAmenitiesFieldset = fieldsetKeyLower === 'amenities';
+                    var isSessionsFieldset = fieldsetKeyLower === 'sessions';
+                    var isTicketPricingFieldset = fieldsetKeyLower === 'ticket-pricing';
                     
                     // Skip locked location fieldsets (they're always on)
                     if (isLocationFieldset) continue;
                     
                     // Fieldsets below the divider (index >= dividerIndex) are location-specific
                     // Fieldsets above the divider (index < dividerIndex) are common/shared
-                    if (isAmenitiesFieldset || i >= dividerIndex) {
+                    if (isTicketPricingFieldset) {
+                        // Primary-only
+                        wrapper.classList.remove('formbuilder-field-wrapper--location-specific');
+                        syncFieldWrapperUi(wrapper);
+                        notifyChange();
+                    } else if (isAmenitiesFieldset || isSessionsFieldset || i >= dividerIndex) {
                         // Below divider - location-specific
                         wrapper.classList.add('formbuilder-field-wrapper--location-specific');
                         syncFieldWrapperUi(wrapper);
