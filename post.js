@@ -3084,8 +3084,8 @@ const PostModule = (function() {
         var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
         var bm = (b && b.menu_sort_order !== null && b.menu_sort_order !== undefined && isFinite(b.menu_sort_order)) ? parseInt(b.menu_sort_order, 10) : 9999;
         if (am !== bm) return am - bm;
-        var au = (a && a.link_url !== null && a.link_url !== undefined) ? String(a.link_url).trim().toLowerCase() : '';
-        var bu = (b && b.link_url !== null && b.link_url !== undefined) ? String(b.link_url).trim().toLowerCase() : '';
+        var au = (a && a.url !== null && a.url !== undefined) ? String(a.url).trim().toLowerCase() : '';
+        var bu = (b && b.url !== null && b.url !== undefined) ? String(b.url).trim().toLowerCase() : '';
         if (au < bu) return -1;
         if (au > bu) return 1;
         return 0;
@@ -3094,7 +3094,7 @@ const PostModule = (function() {
       var iconLinks = [];
       sortedLinks.forEach(function(l) {
         var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
-        var url = (l.link_url === null || l.link_url === undefined) ? '' : String(l.link_url).trim();
+        var url = (l.url === null || l.url === undefined) ? '' : String(l.url).trim();
         if (!type && !url) return;
         if (type.toLowerCase() === 'website' && url) hasWebsiteLink = true;
         if (!url) return;
