@@ -1484,6 +1484,10 @@
 }
 
 /* Info row - each line of info */
+.post-cta-button {
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
 .post-info-row {
   display: flex;
   align-items: center;

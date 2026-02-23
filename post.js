@@ -3048,6 +3048,7 @@ const PostModule = (function() {
     // Additional info fields from map card
     var city = activeLoc.city || '';
     var ticketsUrl = activeLoc.ticket_url || '';
+    var itemUrl = activeLoc.item_url || '';
     var linksArr = (activeLoc && Array.isArray(activeLoc.links)) ? activeLoc.links : [];
     var publicEmail = activeLoc.public_email || '';
     var phonePrefix = activeLoc.phone_prefix || '';
@@ -3290,12 +3291,11 @@ const PostModule = (function() {
           mapCard: activeLoc,
           escapeHtml: escapeHtml
         }),
+        // CTA buttons
+        ticketsUrl ? '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Get Tickets</a>' : '',
+        itemUrl ? '<a href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Shop Now</a>' : '',
         // Links (icon strip)
         linksStripRowHtml || '',
-        // Tickets URL
-        ticketsUrl ? '<div class="post-info-row post-info-row-tickets">' +
-          '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer">🎟️ ' + escapeHtml(ticketsUrl) + '</a>' +
-        '</div>' : '',
         // Public email
         publicEmail ? '<div class="post-info-row post-info-row-email">' +
           '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
