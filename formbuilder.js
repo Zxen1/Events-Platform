@@ -1852,8 +1852,74 @@
                 fieldsContainer.insertBefore(divider, locationFieldsetWrapper);
             }
             
+            // Hard rule: amenities must be location-specific (below the divider).
+            // If an admin drags Amenities above the divider, snap it back under the location fieldset.
+            if (isLocationTypeSelected && locationFieldsetWrapper) {
+                var dividerEl = fieldsContainer.querySelector('.member-postform-location-divider');
+                if (dividerEl) {
+                    var allWrappersNow = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+                    var dividerPosNow = Array.from(fieldsContainer.children).indexOf(dividerEl);
+                    var amenitiesWrapper = null;
+                    for (var ai = 0; ai < allWrappersNow.length; ai++) {
+                        var w = allWrappersNow[ai];
+                        var fsId2 = w ? w.getAttribute('data-fieldset-id') : '';
+                        if (!fsId2) continue;
+                        var f2 = fieldsets.find(function(fs) {
+                            if (fs.id && String(fs.id) === fsId2) return true;
+                            if (fs.fieldset_key && String(fs.fieldset_key) === fsId2) return true;
+                            if (fs.key && String(fs.key) === fsId2) return true;
+                            if (fs.name && String(fs.name) === fsId2) return true;
+                            return false;
+                        });
+                        if (!f2 || !f2.fieldset_key) continue;
+                        if (String(f2.fieldset_key).toLowerCase() === 'amenities') {
+                            amenitiesWrapper = w;
+                            break;
+                        }
+                    }
+                    if (amenitiesWrapper) {
+                        var amenitiesPosNow = Array.from(fieldsContainer.children).indexOf(amenitiesWrapper);
+                        if (amenitiesPosNow !== -1 && dividerPosNow !== -1 && amenitiesPosNow < dividerPosNow) {
+                            // Move it directly after the location fieldset wrapper (keeps it near the location context).
+                            var insertBeforeEl = locationFieldsetWrapper.nextSibling;
+                            if (insertBeforeEl) {
+                                fieldsContainer.insertBefore(amenitiesWrapper, insertBeforeEl);
+                            } else {
+                                fieldsContainer.appendChild(amenitiesWrapper);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Update location repeat switches based on position relative to divider
             if (isLocationTypeSelected && locationFieldsetWrapper) {
+                // Recompute wrapper ordering in case we snapped amenities below the divider.
+                allFieldWrappers = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+                locationFieldsetIndex = allFieldWrappers.indexOf(locationFieldsetWrapper);
+                if (locationFieldsetIndex < 0) {
+                    // Re-find location fieldset wrapper if DOM changed unexpectedly.
+                    locationFieldsetIndex = -1;
+                    for (var li = 0; li < allFieldWrappers.length; li++) {
+                        var w2 = allFieldWrappers[li];
+                        var fsId3 = w2.getAttribute('data-fieldset-id');
+                        if (!fsId3) continue;
+                        var f3 = fieldsets.find(function(fs) {
+                            if (fs.id && String(fs.id) === fsId3) return true;
+                            if (fs.fieldset_key && String(fs.fieldset_key) === fsId3) return true;
+                            if (fs.key && String(fs.key) === fsId3) return true;
+                            if (fs.name && String(fs.name) === fsId3) return true;
+                            return false;
+                        });
+                        if (!f3 || !f3.fieldset_key) continue;
+                        var k3 = String(f3.fieldset_key).toLowerCase();
+                        if (k3 === 'venue' || k3 === 'city' || k3 === 'address' || k3 === 'location') {
+                            locationFieldsetWrapper = w2;
+                            locationFieldsetIndex = li;
+                            break;
+                        }
+                    }
+                }
                 var dividerIndex = locationFieldsetIndex; // Divider is right before location fieldset
                 
                 for (var i = 0; i < allFieldWrappers.length; i++) {
@@ -1876,13 +1942,14 @@
                                             fieldsetKeyLower === 'city' || 
                                             fieldsetKeyLower === 'address' || 
                                             fieldsetKeyLower === 'location';
+                    var isAmenitiesFieldset = fieldsetKeyLower === 'amenities';
                     
                     // Skip locked location fieldsets (they're always on)
                     if (isLocationFieldset) continue;
                     
                     // Fieldsets below the divider (index >= dividerIndex) are location-specific
                     // Fieldsets above the divider (index < dividerIndex) are common/shared
-                    if (i >= dividerIndex) {
+                    if (isAmenitiesFieldset || i >= dividerIndex) {
                         // Below divider - location-specific
                         wrapper.classList.add('formbuilder-field-wrapper--location-specific');
                         syncFieldWrapperUi(wrapper);
