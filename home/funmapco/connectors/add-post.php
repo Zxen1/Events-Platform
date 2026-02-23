@@ -625,7 +625,6 @@ foreach ($byLoc as $locNum => $entries) {
     'latitude' => null,
     'longitude' => null,
     'country_code' => null,
-    'website_url' => null,
     'links_data' => null,
     'tickets_url' => null,
     'coupon_code' => null,
@@ -728,19 +727,8 @@ foreach ($byLoc as $locNum => $entries) {
         $card['public_phone'] = $num;
       }
     }
-    if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'links' && is_array($val)) {
       $card['links_data'] = $val;
-      // Derive website_url cache from the "website" link type if present.
-      foreach ($val as $lnk) {
-        if (!is_array($lnk)) continue;
-        $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
-        $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
-        if ($t === 'website' && $u !== '') {
-          $card['website_url'] = $u;
-          break;
-        }
-      }
       continue;
     }
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
@@ -813,8 +801,8 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
   
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -843,7 +831,6 @@ foreach ($byLoc as $locNum => $entries) {
   $lngParam = (float)($card['longitude'] ?? 0);
   $timezoneParam = null;
   $ageRatingParam = $card['age_rating'];
-  $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
   $couponCodeParam = $card['coupon_code'];
   $sessSumParam = $card['session_summary'];
@@ -852,7 +839,7 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Bind + insert map card
   $stmtCard->bind_param(
-    'isssssssssssssssssssssddssssssss',
+    'isssssssssssssssssssssddsssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -879,7 +866,6 @@ foreach ($byLoc as $locNum => $entries) {
     $lngParam,
     $timezoneParam,
     $ageRatingParam,
-    $websiteParam,
     $ticketsParam,
     $couponCodeParam,
     $sessSumParam,

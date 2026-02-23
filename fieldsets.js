@@ -1964,7 +1964,6 @@ const FieldsetBuilder = (function(){
                 break;
             }
 
-            case 'website-url':
             case 'tickets-url':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var urlInput = document.createElement('input');
@@ -7301,7 +7300,6 @@ const FieldsetBuilder = (function(){
                     }
                     return hasAny;
                 }
-                case 'website-url':
                 case 'tickets-url': {
                     var u = fieldset.querySelector('input.fieldset-input');
                     if (!u) return false;

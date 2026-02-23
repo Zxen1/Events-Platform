@@ -2759,11 +2759,6 @@
                             public_phone: mapCard.public_phone || ''
                         };
                         break;
-                    case 'website_url':
-                    case 'website-url':
-                    case 'url':
-                        val = mapCard.website_url;
-                        break;
                     case 'tickets_url':
                     case 'tickets-url':
                         val = mapCard.tickets_url;

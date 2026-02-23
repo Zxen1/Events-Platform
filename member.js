@@ -3922,7 +3922,6 @@ const MemberModule = (function() {
             { key: 'city', value: mapCard.city },
             { key: 'public-email', value: mapCard.public_email },
             { key: 'public-phone', value: mapCard.public_phone },
-            { key: 'website_url', value: mapCard.website_url },
             { key: 'tickets_url', value: mapCard.tickets_url },
             { key: 'coupon_code', value: mapCard.coupon_code },
             { key: 'custom-text', value: mapCard.custom_text },

@@ -3047,7 +3047,6 @@ const PostModule = (function() {
 
     // Additional info fields from map card
     var city = activeLoc.city || '';
-    var websiteUrl = activeLoc.website_url || '';
     var ticketsUrl = activeLoc.tickets_url || '';
     var linksArr = (activeLoc && Array.isArray(activeLoc.links)) ? activeLoc.links : [];
     var publicEmail = activeLoc.public_email || '';
@@ -3291,12 +3290,8 @@ const PostModule = (function() {
           mapCard: activeLoc,
           escapeHtml: escapeHtml
         }),
-        // Links (icon strip; replaces Website URL when present)
+        // Links (icon strip)
         linksStripRowHtml || '',
-        // Website URL
-        (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
-          '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
-        '</div>' : '',
         // Tickets URL
         ticketsUrl ? '<div class="post-info-row post-info-row-tickets">' +
           '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer">🎟️ ' + escapeHtml(ticketsUrl) + '</a>' +
