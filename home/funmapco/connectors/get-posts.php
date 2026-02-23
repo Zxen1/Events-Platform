@@ -793,104 +793,89 @@ try {
             }
         }
 
-        // Amenities:
-        // - Build full catalog (for 100% display in Post UI)
-        // - Fetch per-card active values from post_amenities
-        $amenitiesCatalog = [];
+        // Amenities: build key -> meta mapping from list_amenities, then attach only the post's amenities.
         $amenityKeyToMeta = [];
         $listRes = $mysqli->query("SELECT option_value, option_filename, sort_order FROM list_amenities WHERE is_active = 1 ORDER BY sort_order ASC, option_value ASC");
-        if ($listRes) {
-            while ($lRow = $listRes->fetch_assoc()) {
-                $name = (string)($lRow['option_value'] ?? '');
-                if ($name === '') continue;
-                $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
-                $key = trim($key, '_');
-                $meta = [
-                    'key' => $key,
-                    'label' => $name,
-                    'filename' => (string)($lRow['option_filename'] ?? ''),
-                    'sort_order' => (int)($lRow['sort_order'] ?? 0),
-                ];
-                $amenitiesCatalog[] = $meta;
-                $amenityKeyToMeta[$key] = $meta;
-            }
-            $listRes->free();
+        if (!$listRes) {
+            fail(500, 'Failed to load amenities list.');
         }
+        while ($lRow = $listRes->fetch_assoc()) {
+            $name = (string)($lRow['option_value'] ?? '');
+            if ($name === '') continue;
+            $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
+            $key = trim($key, '_');
+            $amenityKeyToMeta[$key] = [
+                'key' => $key,
+                'label' => $name,
+                'filename' => (string)($lRow['option_filename'] ?? ''),
+                'menu_sort_order' => (int)($lRow['sort_order'] ?? 0),
+            ];
+        }
+        $listRes->free();
 
-        $amenityValuesByCard = [];
+        $amenitiesListByCard = [];
         $amenityRes = $mysqli->query("SELECT post_map_card_id, amenity_key, value FROM post_amenities WHERE post_map_card_id IN ($cardIdsCsv)");
-        if ($amenityRes) {
-            while ($aRow = $amenityRes->fetch_assoc()) {
-                $cid = (int)($aRow['post_map_card_id'] ?? 0);
-                if (!$cid) continue;
-                $key = (string)($aRow['amenity_key'] ?? '');
-                if ($key === '') continue;
-                $valRaw = $aRow['value'] ?? 0;
-                $val = ($valRaw === '1' || $valRaw === 1 || $valRaw === true) ? 1 : 0;
-                if (!isset($amenityValuesByCard[$cid])) $amenityValuesByCard[$cid] = [];
-                $amenityValuesByCard[$cid][$key] = $val;
-
-                // Backward compatible summary array (only amenities present in post_amenities)
-                $name = isset($amenityKeyToMeta[$key]) ? $amenityKeyToMeta[$key]['label'] : $key;
-                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
-                $amenitiesByCard[$cid][] = [
-                    'amenity' => $name,
-                    'value' => $val
-                ];
-            }
-            $amenityRes->free();
+        if (!$amenityRes) {
+            fail(500, 'Failed to load post amenities.');
         }
+        while ($aRow = $amenityRes->fetch_assoc()) {
+            $cid = (int)($aRow['post_map_card_id'] ?? 0);
+            if (!$cid) continue;
+            $key = (string)($aRow['amenity_key'] ?? '');
+            if ($key === '') continue;
+            $valRaw = $aRow['value'] ?? 0;
+            $val = ($valRaw === '1' || $valRaw === 1 || $valRaw === true) ? 1 : 0;
 
-        // Links
-        $linksTableExists = false;
-        $chkLinks = $mysqli->query("SHOW TABLES LIKE 'post_links'");
-        if ($chkLinks && $chkLinks->num_rows > 0) {
-            $linksTableExists = true;
+            // Backward compatible summary array (only amenities present in post_amenities)
+            $name = isset($amenityKeyToMeta[$key]) ? $amenityKeyToMeta[$key]['label'] : $key;
+            if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
+            $amenitiesByCard[$cid][] = [
+                'amenity' => $name,
+                'value' => $val
+            ];
+
+            // New: icon metadata for post UI (only this post's amenities)
+            if (!isset($amenitiesListByCard[$cid])) $amenitiesListByCard[$cid] = [];
+            $meta = $amenityKeyToMeta[$key] ?? null;
+            $amenitiesListByCard[$cid][] = [
+                'key' => $key,
+                'label' => $meta ? (string)($meta['label'] ?? $key) : $key,
+                'filename' => $meta ? (string)($meta['filename'] ?? '') : '',
+                'menu_sort_order' => $meta ? (int)($meta['menu_sort_order'] ?? 0) : null,
+                'value' => $val,
+            ];
         }
-        if ($linksTableExists) {
-            // Prefer menu order from list_links (same order as the Links dropdown).
-            // Fall back to post_links.sort_order if list_links is missing.
-            $linksHasList = false;
-            $chkListLinks = $mysqli->query("SHOW TABLES LIKE 'list_links'");
-            if ($chkListLinks && $chkListLinks->num_rows > 0) {
-                $linksHasList = true;
-            }
+        $amenityRes->free();
 
-            $linksSql = $linksHasList
-                ? "SELECT pl.post_map_card_id, pl.link_type, pl.link_url, pl.sort_order, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
-                   FROM post_links pl
-                   LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
-                   WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
-                   ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.sort_order ASC"
-                : "SELECT post_map_card_id, link_type, link_url, sort_order FROM post_links WHERE post_map_card_id IN ($cardIdsCsv) AND is_active = 1 ORDER BY post_map_card_id ASC, sort_order ASC";
+        // Links (required: post_links + list_links)
+        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.link_url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
+                     FROM post_links pl
+                     LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
+                     WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
+                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.link_url ASC";
 
-            $linksRes = $mysqli->query($linksSql);
-            if ($linksRes) {
-                while ($lRow = $linksRes->fetch_assoc()) {
-                    $cid = (int)($lRow['post_map_card_id'] ?? 0);
-                    if (!$cid) continue;
-                    if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
-                    $linksByCard[$cid][] = [
-                        'link_type' => (string)($lRow['link_type'] ?? ''),
-                        'link_url' => (string)($lRow['link_url'] ?? ''),
-                        'sort_order' => (int)($lRow['sort_order'] ?? 0),
-                        'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
-                        'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
-                        'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,
-                    ];
-                }
-                $linksRes->free();
-            }
+        $linksRes = $mysqli->query($linksSql);
+        if (!$linksRes) {
+            fail(500, 'Failed to load post links.');
         }
+        while ($lRow = $linksRes->fetch_assoc()) {
+            $cid = (int)($lRow['post_map_card_id'] ?? 0);
+            if (!$cid) continue;
+            if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
+            $linksByCard[$cid][] = [
+                'link_type' => (string)($lRow['link_type'] ?? ''),
+                'link_url' => (string)($lRow['link_url'] ?? ''),
+                'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
+                'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
+                'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,
+            ];
+        }
+        $linksRes->free();
 
     }
 
     // Attach to map cards
     foreach ($postsById as &$post) {
-        // Attach amenities catalog for Post UI (only meaningful for full=1 responses)
-        if ($full && isset($amenitiesCatalog) && is_array($amenitiesCatalog) && !empty($amenitiesCatalog)) {
-            $post['amenities_catalog'] = $amenitiesCatalog;
-        }
         foreach ($post['map_cards'] as &$mapCard) {
             $cid = $mapCard['id'];
             
@@ -951,8 +936,15 @@ try {
                 if (isset($amenitiesByCard[$cid])) {
                     $mapCard['amenities'] = json_encode($amenitiesByCard[$cid]);
                 }
-                if (isset($amenityValuesByCard[$cid])) {
-                    $mapCard['amenities_values'] = $amenityValuesByCard[$cid];
+                if (isset($amenitiesListByCard[$cid])) {
+                    // Keep stable order: menu sort first, then key (so duplicates/unknowns are stable)
+                    usort($amenitiesListByCard[$cid], function($a, $b) {
+                        $am = isset($a['menu_sort_order']) && $a['menu_sort_order'] !== null ? (int)$a['menu_sort_order'] : 9999;
+                        $bm = isset($b['menu_sort_order']) && $b['menu_sort_order'] !== null ? (int)$b['menu_sort_order'] : 9999;
+                        if ($am !== $bm) return $am <=> $bm;
+                        return strcmp((string)($a['key'] ?? ''), (string)($b['key'] ?? ''));
+                    });
+                    $mapCard['amenities_list'] = $amenitiesListByCard[$cid];
                 }
 
                 // Attach Links

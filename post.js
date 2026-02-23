@@ -3061,8 +3061,7 @@ const PostModule = (function() {
     var customChecklist = activeLoc.custom_checklist || '';
     var customRadio = activeLoc.custom_radio || '';
     var amenitySummary = activeLoc.amenity_summary || '';
-    var amenitiesCatalog = (post && Array.isArray(post.amenities_catalog)) ? post.amenities_catalog : [];
-    var amenitiesValues = (activeLoc && activeLoc.amenities_values && typeof activeLoc.amenities_values === 'object') ? activeLoc.amenities_values : {};
+    var amenitiesList = (activeLoc && Array.isArray(activeLoc.amenities_list)) ? activeLoc.amenities_list : [];
     var hasMultipleLocations = locationList.length > 1;
 
     function linkTypeToLabel(t) {
@@ -3085,9 +3084,11 @@ const PostModule = (function() {
         var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
         var bm = (b && b.menu_sort_order !== null && b.menu_sort_order !== undefined && isFinite(b.menu_sort_order)) ? parseInt(b.menu_sort_order, 10) : 9999;
         if (am !== bm) return am - bm;
-        var as = (a && a.sort_order !== null && a.sort_order !== undefined && isFinite(a.sort_order)) ? parseInt(a.sort_order, 10) : 0;
-        var bs = (b && b.sort_order !== null && b.sort_order !== undefined && isFinite(b.sort_order)) ? parseInt(b.sort_order, 10) : 0;
-        return as - bs;
+        var au = (a && a.link_url !== null && a.link_url !== undefined) ? String(a.link_url).trim().toLowerCase() : '';
+        var bu = (b && b.link_url !== null && b.link_url !== undefined) ? String(b.link_url).trim().toLowerCase() : '';
+        if (au < bu) return -1;
+        if (au > bu) return 1;
+        return 0;
       });
 
       var iconLinks = [];
@@ -3125,11 +3126,11 @@ const PostModule = (function() {
       }
     }
 
-    // Amenities strip (always show 100% of amenities; grey inactive, white active)
+    // Amenities strip (show only amenities for this post/location; grey inactive, white active)
     var amenitiesStripRowHtml = '';
-    if (amenitiesCatalog && amenitiesCatalog.length) {
+    if (amenitiesList && amenitiesList.length) {
       var partsAmen = [];
-      amenitiesCatalog.forEach(function(a) {
+      amenitiesList.forEach(function(a) {
         if (!a) return;
         var key = (a.key === null || a.key === undefined) ? '' : String(a.key).trim();
         if (!key) return;
@@ -3145,7 +3146,7 @@ const PostModule = (function() {
         if (!iconUrl) return;
 
         var active = false;
-        try { active = !!(amenitiesValues && amenitiesValues[key] === 1); } catch (_eAct) { active = false; }
+        try { active = !!(a.value === 1 || a.value === '1' || a.value === true); } catch (_eAct) { active = false; }
         var yn = active ? 'yes' : 'no';
 
         partsAmen.push(
@@ -3290,7 +3291,7 @@ const PostModule = (function() {
         }),
         // Links (icon strip; replaces Website URL when present)
         linksStripRowHtml || '',
-        // Amenities (icon strip; always show full set)
+        // Amenities (icon strip)
         amenitiesStripRowHtml || '',
         // Website URL
         (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
@@ -3308,10 +3309,7 @@ const PostModule = (function() {
         (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
           '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
         '</div>' : '',
-        // Amenities (legacy summary fallback only if strip isn't available)
-        (!amenitiesStripRowHtml && amenitySummary) ? '<div class="post-info-row post-info-row-amenities">' +
-          escapeHtml(amenitySummary) +
-        '</div>' : '',
+        // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +
           '🏷️ ' + escapeHtml(couponCode) +
