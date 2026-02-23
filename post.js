@@ -3109,7 +3109,7 @@ const PostModule = (function() {
         if (!iconUrl) return;
 
         iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '">' +
+          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label + ': ' + url) + '">' +
             '<img class="post-links-image" src="' + escapeHtml(iconUrl) + '" alt="">' +
           '</a>'
         );
