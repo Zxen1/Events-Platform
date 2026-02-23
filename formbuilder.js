@@ -703,7 +703,7 @@
             fields.push({ fieldsetKey: 'public-phone', name: 'Public Phone', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'public-email', name: 'Public Email', required: false, location_specific: false });
             fields.push({ fieldsetKey: 'links', name: 'Links', required: false, location_specific: false });
-            fields.push({ fieldsetKey: 'ticket-url', name: 'Ticket (URL)', required: false, location_specific: false });
+            fields.push({ fieldsetKey: 'ticket-url', name: 'Ticket URL', required: false, location_specific: true });
             fields.push({ fieldsetKey: 'ticket-pricing', name: 'Ticket Pricing', required: true, location_specific: false });
             // Below the line (location-specific)
             fields.push({ fieldsetKey: 'venue', name: 'Venue', required: true, location_specific: true });
@@ -2461,36 +2461,46 @@
                 fieldName = fieldData.key;
             }
             
-            // Location fieldsets are mandatory per-location and must never be configurable.
-            // Lock repeat settings and required checkbox for: Venue, City, Address
+            // ── Locked Fieldset Rules ─────────────────────────────────────────────
+            var LOCKED_FIELDSETS = {
+                'venue':          { container: 'location', required: 'forced-on',  subcategory_type: null      },
+                'city':           { container: 'location', required: 'forced-on',  subcategory_type: null      },
+                'address':        { container: 'location', required: 'forced-on',  subcategory_type: null      },
+                'amenities':      { container: 'location', required: 'forced-on',  subcategory_type: null      },
+                'ticket-url':     { container: 'location', required: null,         subcategory_type: null      },
+                'item-url':       { container: 'location', required: null,         subcategory_type: null      },
+                'ticket-pricing': { container: 'primary',  required: 'forced-on',  subcategory_type: 'Events'  },
+                'sessions':       { container: 'location', required: 'forced-on',  subcategory_type: 'Events'  },
+            };
+            // ─────────────────────────────────────────────────────────────────────
+
+            var lockedRule = null;
             var isLockedLocationFieldset = false;
-            if (fieldsetDef && fieldsetDef.fieldset_key) {
-                var fieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
-                isLockedLocationFieldset = (fieldsetKeyLower === 'venue' || fieldsetKeyLower === 'city' || fieldsetKeyLower === 'address');
-            }
-            
-            // Location fieldsets must always be required
-            if (isLockedLocationFieldset) {
-                isRequired = true;
-            }
-            
-            // Event fieldsets (ticket_pricing, sessions) are mandatory for Event subcategories
-            // ticket_pricing: above the line (not location_specific)
-            // sessions: below the line (location_specific)
+            var isLockedLocationOptionalFieldset = false;
             var isLockedEventFieldset = false;
             var isEventFieldsetTicketPricing = false;
             var isEventFieldsetSessions = false;
-            var isEventSubcategory = (currentType === 'Events') || (subFeeData && subFeeData.subcategory_type === 'Events');
-            if (isEventSubcategory && fieldsetDef && fieldsetDef.fieldset_key) {
-                var eventFieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
-                isEventFieldsetTicketPricing = (eventFieldsetKeyLower === 'ticket-pricing');
-                isEventFieldsetSessions = (eventFieldsetKeyLower === 'sessions');
-                isLockedEventFieldset = isEventFieldsetTicketPricing || isEventFieldsetSessions;
+
+            if (fieldsetDef && fieldsetDef.fieldset_key) {
+                var fieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
+                var currentSubcategoryType = (currentType) || (subFeeData && subFeeData.subcategory_type) || '';
+                var rule = LOCKED_FIELDSETS[fieldsetKeyLower];
+
+                if (rule && (rule.subcategory_type === null || rule.subcategory_type === currentSubcategoryType)) {
+                    lockedRule = rule;
+                    isLockedLocationFieldset        = rule.container === 'location' && rule.required === 'forced-on';
+                    isLockedLocationOptionalFieldset = rule.container === 'location' && rule.required !== 'forced-on';
+                    isEventFieldsetTicketPricing    = rule.container === 'primary'   && rule.subcategory_type === 'Events';
+                    isEventFieldsetSessions         = rule.container === 'location'  && rule.subcategory_type === 'Events';
+                    isLockedEventFieldset           = isEventFieldsetTicketPricing || isEventFieldsetSessions;
+                }
             }
-            
-            // Event fieldsets must always be required
-            if (isLockedEventFieldset) {
+
+            if (lockedRule && lockedRule.required === 'forced-on') {
                 isRequired = true;
+            }
+            if (lockedRule && lockedRule.required === 'forced-off') {
+                isRequired = false;
             }
             
             var fieldWrapper = document.createElement('div');
@@ -2589,7 +2599,7 @@
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
             // Lock more menu for location fieldsets and event fieldsets - prevent deletion
-            if (isLockedLocationFieldset || isLockedEventFieldset) {
+            if (isLockedLocationFieldset || isLockedLocationOptionalFieldset || isLockedEventFieldset) {
                 fieldMoreBtn.classList.add('disabled');
                 fieldMoreBtn.style.pointerEvents = 'none';
                 fieldMoreBtn.style.opacity = '0.5';
@@ -2637,8 +2647,8 @@
             }
             
             // Location-specific is now determined by position relative to divider line
-            // Force-lock for location fieldsets (Venue/City/Address)
-            if (isLockedLocationFieldset) {
+            // Force-lock for location fieldsets (Venue/City/Address) and optional location fieldsets (Ticket URL/Item URL)
+            if (isLockedLocationFieldset || isLockedLocationOptionalFieldset) {
                 fieldWrapper.classList.add('formbuilder-field-wrapper--location-specific');
             }
             
@@ -2648,7 +2658,7 @@
             }
             
             // Initialize location-specific state from fieldData (loaded from database)
-            if (!isLockedLocationFieldset && !isLockedEventFieldset && fieldData) {
+            if (!isLockedLocationFieldset && !isLockedLocationOptionalFieldset && !isLockedEventFieldset && fieldData) {
                 var initialLocationSpecific = false;
                 if (fieldData.location_specific !== undefined) {
                     initialLocationSpecific = !!fieldData.location_specific;
