@@ -3110,7 +3110,7 @@ const PostModule = (function() {
 
         iconLinks.push(
           '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label + ': ' + url) + '">' +
-            '<img class="post-links-image" src="' + escapeHtml(iconUrl) + '" alt="">' +
+            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
           '</a>'
         );
       });

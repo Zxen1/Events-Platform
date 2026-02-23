@@ -1510,23 +1510,35 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   flex: 0 0 auto;
 }
 
 .post-links-link:hover {
-  background: rgba(255, 255, 255, 0.12);
   text-decoration: none;
 }
 
-.post-links-image {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
+.post-links-icon {
+  width: 36px;
+  height: 36px;
   display: block;
+  background-color: #fff;
+  -webkit-mask-image: var(--post-links-mask);
+  mask-image: var(--post-links-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.post-links-link:hover .post-links-icon,
+.post-links-link:focus-visible .post-links-icon {
+  background-color: var(--blue-500);
 }
 
 .post-info-row:last-child {
