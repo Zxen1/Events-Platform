@@ -302,6 +302,19 @@
         
         // Insert at top of Post Editor panel
         container.insertBefore(placeholder, container.firstChild);
+
+        // Ensure the user sees the uploading placeholder immediately.
+        // Scroll container is .member-panel-body (same pattern used elsewhere in Post Editor).
+        try {
+            var scrollParent = container.closest('.member-panel-body');
+            if (scrollParent) {
+                if (typeof scrollParent.scrollTo === 'function') {
+                    scrollParent.scrollTo({ top: 0, behavior: 'auto' });
+                } else {
+                    scrollParent.scrollTop = 0;
+                }
+            }
+        } catch (e0) {}
     }
     
     function updateLoadingPlaceholder(status, result) {
