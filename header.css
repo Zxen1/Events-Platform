@@ -274,8 +274,8 @@
 
 /* Access button avatar (for logged-in member) */
 .header-access-button-avatar {
-  width: 28px;
-  height: 28px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.3);
   object-fit: cover;
