@@ -3685,6 +3685,23 @@ const MemberModule = (function() {
             var sel = checkoutInstance && typeof checkoutInstance.getSelected === 'function'
                 ? checkoutInstance.getSelected() : null;
             var chargeAmount = sel && sel.price !== null && isFinite(sel.price) ? parseFloat(sel.price) : 0;
+            
+            // Guard: never submit a paid create-post without a transaction id.
+            // If checkout isn't selected / priced yet, block and prompt the user instead of triggering backend 402.
+            if (!sel || sel.price === null || !isFinite(sel.price) || !(chargeAmount > 0)) {
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    getMessage('msg_post_validation_choose', {}, false).then(function(msg) {
+                        if (msg) ToastComponent.showError(msg);
+                    });
+                }
+                try {
+                    var checkoutFs = formFields ? formFields.querySelector('.member-checkout-wrapper') : null;
+                    if (checkoutFs && typeof checkoutFs.scrollIntoView === 'function') {
+                        checkoutFs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } catch (e0) {}
+                return;
+            }
             if (chargeAmount > 0) {
                 var chargeCurrency = siteCurrency || 'USD';
                 // Extract checkout_key from the validated fields
