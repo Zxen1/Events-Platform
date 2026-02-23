@@ -927,6 +927,13 @@
   margin-bottom: 0;
 }
 
+.formbuilder-field-adminnote {
+  margin-bottom: 10px;
+  color: #bbb;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 
 .formbuilder-field-required-label {
   display: flex;

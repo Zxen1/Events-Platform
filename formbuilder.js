@@ -2473,6 +2473,20 @@
             editRow.appendChild(requiredLabel);
             editRow.appendChild(fieldMoreBtn);
             fieldEditPanel.appendChild(editRow);
+
+            // Admin note (from fieldsets.admin_note) — displayed under edit row to keep Required aligned.
+            var adminNoteText = '';
+            try {
+                if (fieldsetDef && typeof fieldsetDef.admin_note === 'string') {
+                    adminNoteText = String(fieldsetDef.admin_note || '').trim();
+                }
+            } catch (e0) { adminNoteText = ''; }
+            if (adminNoteText) {
+                var adminNoteEl = document.createElement('div');
+                adminNoteEl.className = 'formbuilder-field-adminnote';
+                adminNoteEl.textContent = adminNoteText;
+                fieldEditPanel.appendChild(adminNoteEl);
+            }
             
             // Location-specific is now determined by position relative to divider line
             // Force-lock for location fieldsets (Venue/City/Address)
