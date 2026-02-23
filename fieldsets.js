@@ -1964,7 +1964,7 @@ const FieldsetBuilder = (function(){
                 break;
             }
 
-            case 'tickets-url':
+            case 'ticket-url':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
@@ -7300,7 +7300,7 @@ const FieldsetBuilder = (function(){
                     }
                     return hasAny;
                 }
-                case 'tickets-url': {
+                case 'ticket-url': {
                     var u = fieldset.querySelector('input.fieldset-input');
                     if (!u) return false;
                     if (!strLenOk(u.value, minLength, maxLength)) return false;

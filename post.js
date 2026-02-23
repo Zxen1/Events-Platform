@@ -3047,7 +3047,7 @@ const PostModule = (function() {
 
     // Additional info fields from map card
     var city = activeLoc.city || '';
-    var ticketsUrl = activeLoc.tickets_url || '';
+    var ticketsUrl = activeLoc.ticket_url || '';
     var linksArr = (activeLoc && Array.isArray(activeLoc.links)) ? activeLoc.links : [];
     var publicEmail = activeLoc.public_email || '';
     var phonePrefix = activeLoc.phone_prefix || '';
