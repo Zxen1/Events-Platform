@@ -1896,43 +1896,32 @@ const FieldsetBuilder = (function(){
                 function updateLinksButtons() {
                     var rows = linksRowsContainer.querySelectorAll('.fieldset-links-row');
                     var atMax = rows.length >= 10;
-                    // Lock add/remove until first row has a link type selected.
-                    var firstTypeSelected = false;
-                    try {
-                        var firstRow = rows && rows.length ? rows[0] : null;
-                        var firstMenu = firstRow ? firstRow.querySelector('.component-linkpicker-menu') : null;
-                        var firstVal = firstMenu ? String(firstMenu.dataset.value || '').trim() : '';
-                        firstTypeSelected = !!firstVal;
-                    } catch (eFirst) {
-                        firstTypeSelected = false;
-                    }
-                    var lockRowControls = !firstTypeSelected;
                     rows.forEach(function(r, idx) {
                         r.style.marginBottom = (idx === rows.length - 1) ? '0' : '10px';
                         var addBtn = r.querySelector('.fieldset-links-button-add');
                         var removeBtn = r.querySelector('.fieldset-links-button-remove');
+                        var hasType = false;
+                        var hasUrl = false;
+                        try {
+                            var m = r.querySelector('.component-linkpicker-menu');
+                            hasType = !!(m && String(m.dataset.value || '').trim());
+                            var inp = r.querySelector('input.fieldset-links-url');
+                            hasUrl = !!(inp && String(inp.value || '').trim());
+                        } catch (eRow) {}
+                        var rowHasAny = hasType || hasUrl;
                         if (addBtn) {
-                            var addDisabled = !!atMax || !!lockRowControls;
+                            // Per-row: don't allow chaining blank rows.
+                            // + is disabled until THIS row has a type selected.
+                            var addDisabled = !!atMax || !hasType;
                             addBtn.disabled = addDisabled;
                             addBtn.style.opacity = addDisabled ? '0.3' : '1';
                             addBtn.style.cursor = addDisabled ? 'not-allowed' : 'pointer';
                         }
                         if (removeBtn) {
                             var onlyOne = rows.length === 1;
-                            // When there's only one row:
-                            // - disable remove if the row is empty (type+url empty) and we're still locked
-                            // - enable remove to allow clearing a selection / partial entry
-                            var hasType = false;
-                            var hasUrl = false;
-                            try {
-                                var m = r.querySelector('.component-linkpicker-menu');
-                                hasType = !!(m && String(m.dataset.value || '').trim());
-                                var inp = r.querySelector('input.fieldset-links-url');
-                                hasUrl = !!(inp && String(inp.value || '').trim());
-                            } catch (eRow) {}
-                            var rowHasAny = hasType || hasUrl;
-
-                            var removeDisabled = (!!onlyOne && !rowHasAny) || !!lockRowControls;
+                            // Disable remove only when there's one row AND it's empty.
+                            // Otherwise allow clearing/removing.
+                            var removeDisabled = (!!onlyOne && !rowHasAny);
                             removeBtn.disabled = removeDisabled;
                             removeBtn.style.opacity = removeDisabled ? '0.3' : '1';
                             removeBtn.style.cursor = removeDisabled ? 'not-allowed' : 'pointer';
