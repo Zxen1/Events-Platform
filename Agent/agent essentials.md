@@ -21,6 +21,8 @@ Never create CSS or JS that overrides styles/behavior globally. All styles must 
 ### No Hardcode
 Never hardcode values. Everything must be configurable/dynamic. This platform will power multiple websites.
 
+**Exception:** `LOCKED_FIELDSETS` registry in `formbuilder.js` — hardcoded by design. Lock rules must never be admin-configurable as changing them would break the site.
+
 ### No Fallbacks
 Never create fallback chains (if X fails, try Y). If something fails, throw an error - don't silently fall back.
 
