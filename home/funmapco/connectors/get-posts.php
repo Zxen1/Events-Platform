@@ -793,30 +793,52 @@ try {
             }
         }
 
-        // Amenities: build key-to-name mapping from list_amenities, then fetch from post_amenities
-        $amenityKeyToName = [];
-        $listRes = $mysqli->query("SELECT option_value FROM list_amenities WHERE is_active = 1");
+        // Amenities:
+        // - Build full catalog (for 100% display in Post UI)
+        // - Fetch per-card active values from post_amenities
+        $amenitiesCatalog = [];
+        $amenityKeyToMeta = [];
+        $listRes = $mysqli->query("SELECT option_value, option_filename, sort_order FROM list_amenities WHERE is_active = 1 ORDER BY sort_order ASC, option_value ASC");
         if ($listRes) {
             while ($lRow = $listRes->fetch_assoc()) {
-                $name = $lRow['option_value'];
+                $name = (string)($lRow['option_value'] ?? '');
+                if ($name === '') continue;
                 $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
                 $key = trim($key, '_');
-                $amenityKeyToName[$key] = $name;
+                $meta = [
+                    'key' => $key,
+                    'label' => $name,
+                    'filename' => (string)($lRow['option_filename'] ?? ''),
+                    'sort_order' => (int)($lRow['sort_order'] ?? 0),
+                ];
+                $amenitiesCatalog[] = $meta;
+                $amenityKeyToMeta[$key] = $meta;
             }
+            $listRes->free();
         }
-        
+
+        $amenityValuesByCard = [];
         $amenityRes = $mysqli->query("SELECT post_map_card_id, amenity_key, value FROM post_amenities WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($amenityRes) {
             while ($aRow = $amenityRes->fetch_assoc()) {
-                $cid = (int)$aRow['post_map_card_id'];
-                $key = $aRow['amenity_key'];
-                $name = isset($amenityKeyToName[$key]) ? $amenityKeyToName[$key] : $key;
+                $cid = (int)($aRow['post_map_card_id'] ?? 0);
+                if (!$cid) continue;
+                $key = (string)($aRow['amenity_key'] ?? '');
+                if ($key === '') continue;
+                $valRaw = $aRow['value'] ?? 0;
+                $val = ($valRaw === '1' || $valRaw === 1 || $valRaw === true) ? 1 : 0;
+                if (!isset($amenityValuesByCard[$cid])) $amenityValuesByCard[$cid] = [];
+                $amenityValuesByCard[$cid][$key] = $val;
+
+                // Backward compatible summary array (only amenities present in post_amenities)
+                $name = isset($amenityKeyToMeta[$key]) ? $amenityKeyToMeta[$key]['label'] : $key;
                 if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
                 $amenitiesByCard[$cid][] = [
                     'amenity' => $name,
-                    'value' => $aRow['value']
+                    'value' => $val
                 ];
             }
+            $amenityRes->free();
         }
 
         // Links
@@ -865,6 +887,10 @@ try {
 
     // Attach to map cards
     foreach ($postsById as &$post) {
+        // Attach amenities catalog for Post UI (only meaningful for full=1 responses)
+        if ($full && isset($amenitiesCatalog) && is_array($amenitiesCatalog) && !empty($amenitiesCatalog)) {
+            $post['amenities_catalog'] = $amenitiesCatalog;
+        }
         foreach ($post['map_cards'] as &$mapCard) {
             $cid = $mapCard['id'];
             
@@ -924,6 +950,9 @@ try {
                 // Attach Amenities (from subtable, overrides amenity_summary)
                 if (isset($amenitiesByCard[$cid])) {
                     $mapCard['amenities'] = json_encode($amenitiesByCard[$cid]);
+                }
+                if (isset($amenityValuesByCard[$cid])) {
+                    $mapCard['amenities_values'] = $amenityValuesByCard[$cid];
                 }
 
                 // Attach Links

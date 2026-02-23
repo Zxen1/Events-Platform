@@ -3061,6 +3061,8 @@ const PostModule = (function() {
     var customChecklist = activeLoc.custom_checklist || '';
     var customRadio = activeLoc.custom_radio || '';
     var amenitySummary = activeLoc.amenity_summary || '';
+    var amenitiesCatalog = (post && Array.isArray(post.amenities_catalog)) ? post.amenities_catalog : [];
+    var amenitiesValues = (activeLoc && activeLoc.amenities_values && typeof activeLoc.amenities_values === 'object') ? activeLoc.amenities_values : {};
     var hasMultipleLocations = locationList.length > 1;
 
     function linkTypeToLabel(t) {
@@ -3119,6 +3121,44 @@ const PostModule = (function() {
         linksStripRowHtml =
           '<div class="post-info-row post-info-row-links">' +
             '<div class="post-links-strip">' + iconLinks.join('') + '</div>' +
+          '</div>';
+      }
+    }
+
+    // Amenities strip (always show 100% of amenities; grey inactive, white active)
+    var amenitiesStripRowHtml = '';
+    if (amenitiesCatalog && amenitiesCatalog.length) {
+      var partsAmen = [];
+      amenitiesCatalog.forEach(function(a) {
+        if (!a) return;
+        var key = (a.key === null || a.key === undefined) ? '' : String(a.key).trim();
+        if (!key) return;
+        var label = (a.label === null || a.label === undefined) ? '' : String(a.label).trim();
+        if (!label) label = key;
+        var filename = (a.filename === null || a.filename === undefined) ? '' : String(a.filename).trim();
+        if (!filename) return;
+
+        var iconUrl = '';
+        if (window.App && typeof App.getImageUrl === 'function') {
+          iconUrl = App.getImageUrl('amenities', filename);
+        }
+        if (!iconUrl) return;
+
+        var active = false;
+        try { active = !!(amenitiesValues && amenitiesValues[key] === 1); } catch (_eAct) { active = false; }
+        var yn = active ? 'yes' : 'no';
+
+        partsAmen.push(
+          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" title="' + escapeHtml(label + ': ' + yn) + '" aria-label="' + escapeHtml(label + ': ' + yn) + '">' +
+            '<span class="post-amenities-icon" style="--post-amenities-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
+          '</span>'
+        );
+      });
+
+      if (partsAmen.length) {
+        amenitiesStripRowHtml =
+          '<div class="post-info-row post-info-row-amenitiesstrip">' +
+            '<div class="post-amenities-strip">' + partsAmen.join('') + '</div>' +
           '</div>';
       }
     }
@@ -3250,6 +3290,8 @@ const PostModule = (function() {
         }),
         // Links (icon strip; replaces Website URL when present)
         linksStripRowHtml || '',
+        // Amenities (icon strip; always show full set)
+        amenitiesStripRowHtml || '',
         // Website URL
         (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
           '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
@@ -3266,8 +3308,8 @@ const PostModule = (function() {
         (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
           '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
         '</div>' : '',
-        // Amenities
-        amenitySummary ? '<div class="post-info-row post-info-row-amenities">' +
+        // Amenities (legacy summary fallback only if strip isn't available)
+        (!amenitiesStripRowHtml && amenitySummary) ? '<div class="post-info-row post-info-row-amenities">' +
           escapeHtml(amenitySummary) +
         '</div>' : '',
         // Coupon code

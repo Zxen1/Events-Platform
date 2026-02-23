@@ -1497,6 +1497,11 @@
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
+.post-info-row-amenitiesstrip {
+  min-height: 36px;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
 .post-links-strip {
   display: flex;
   align-items: center;
@@ -1539,6 +1544,45 @@
 .post-links-link:hover .post-links-icon,
 .post-links-link:focus-visible .post-links-icon {
   background-color: var(--blue-500);
+}
+
+.post-amenities-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.post-amenities-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.post-amenities-icon {
+  width: 30px;
+  height: 30px;
+  display: block;
+  background-color: rgba(255, 255, 255, 0.35);
+  -webkit-mask-image: var(--post-amenities-mask);
+  mask-image: var(--post-amenities-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.post-amenities-item--active .post-amenities-icon {
+  background-color: #fff;
 }
 
 .post-info-row:last-child {
