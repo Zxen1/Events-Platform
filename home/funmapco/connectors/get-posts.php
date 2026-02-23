@@ -826,7 +826,23 @@ try {
             $linksTableExists = true;
         }
         if ($linksTableExists) {
-            $linksRes = $mysqli->query("SELECT post_map_card_id, link_type, link_url, sort_order FROM post_links WHERE post_map_card_id IN ($cardIdsCsv) AND is_active = 1 ORDER BY post_map_card_id ASC, sort_order ASC");
+            // Prefer menu order from list_links (same order as the Links dropdown).
+            // Fall back to post_links.sort_order if list_links is missing.
+            $linksHasList = false;
+            $chkListLinks = $mysqli->query("SHOW TABLES LIKE 'list_links'");
+            if ($chkListLinks && $chkListLinks->num_rows > 0) {
+                $linksHasList = true;
+            }
+
+            $linksSql = $linksHasList
+                ? "SELECT pl.post_map_card_id, pl.link_type, pl.link_url, pl.sort_order, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
+                   FROM post_links pl
+                   LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
+                   WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
+                   ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.sort_order ASC"
+                : "SELECT post_map_card_id, link_type, link_url, sort_order FROM post_links WHERE post_map_card_id IN ($cardIdsCsv) AND is_active = 1 ORDER BY post_map_card_id ASC, sort_order ASC";
+
+            $linksRes = $mysqli->query($linksSql);
             if ($linksRes) {
                 while ($lRow = $linksRes->fetch_assoc()) {
                     $cid = (int)($lRow['post_map_card_id'] ?? 0);
@@ -836,6 +852,9 @@ try {
                         'link_type' => (string)($lRow['link_type'] ?? ''),
                         'link_url' => (string)($lRow['link_url'] ?? ''),
                         'sort_order' => (int)($lRow['sort_order'] ?? 0),
+                        'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
+                        'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
+                        'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,
                     ];
                 }
                 $linksRes->free();

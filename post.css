@@ -1492,6 +1492,43 @@
   margin-bottom: 6px; /* 10-12-6 Rule: 6px between rows of info */
 }
 
+.post-info-row-links {
+  min-height: 36px;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+}
+
+.post-links-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.post-links-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.post-links-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+}
+
+.post-links-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
 .post-info-row:last-child {
   margin-bottom: 0;
 }

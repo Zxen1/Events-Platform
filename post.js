@@ -3049,6 +3049,7 @@ const PostModule = (function() {
     var city = activeLoc.city || '';
     var websiteUrl = activeLoc.website_url || '';
     var ticketsUrl = activeLoc.tickets_url || '';
+    var linksArr = (activeLoc && Array.isArray(activeLoc.links)) ? activeLoc.links : [];
     var publicEmail = activeLoc.public_email || '';
     var phonePrefix = activeLoc.phone_prefix || '';
     var publicPhone = activeLoc.public_phone || '';
@@ -3061,6 +3062,66 @@ const PostModule = (function() {
     var customRadio = activeLoc.custom_radio || '';
     var amenitySummary = activeLoc.amenity_summary || '';
     var hasMultipleLocations = locationList.length > 1;
+
+    function linkTypeToLabel(t) {
+      var raw = (t === null || t === undefined) ? '' : String(t).trim();
+      if (!raw) return 'Link';
+      var lower = raw.toLowerCase();
+      if (lower === 'x') return 'X';
+      var words = lower.replace(/[-_]+/g, ' ').split(' ').filter(Boolean);
+      for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        words[i] = w ? (w.charAt(0).toUpperCase() + w.slice(1)) : w;
+      }
+      return words.join(' ');
+    }
+
+    var hasWebsiteLink = false;
+    var linksStripRowHtml = '';
+    if (linksArr && linksArr.length) {
+      var sortedLinks = linksArr.slice().filter(function(l) { return !!l; }).sort(function(a, b) {
+        var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
+        var bm = (b && b.menu_sort_order !== null && b.menu_sort_order !== undefined && isFinite(b.menu_sort_order)) ? parseInt(b.menu_sort_order, 10) : 9999;
+        if (am !== bm) return am - bm;
+        var as = (a && a.sort_order !== null && a.sort_order !== undefined && isFinite(a.sort_order)) ? parseInt(a.sort_order, 10) : 0;
+        var bs = (b && b.sort_order !== null && b.sort_order !== undefined && isFinite(b.sort_order)) ? parseInt(b.sort_order, 10) : 0;
+        return as - bs;
+      });
+
+      var iconLinks = [];
+      sortedLinks.forEach(function(l) {
+        var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
+        var url = (l.link_url === null || l.link_url === undefined) ? '' : String(l.link_url).trim();
+        if (!type && !url) return;
+        if (type.toLowerCase() === 'website' && url) hasWebsiteLink = true;
+        if (!url) return;
+
+        var label = (l.label === null || l.label === undefined) ? '' : String(l.label).trim();
+        if (!label) label = linkTypeToLabel(type);
+
+        var filename = (l.filename === null || l.filename === undefined) ? '' : String(l.filename).trim();
+        if (!filename) return; // icon-strip requires an icon filename
+
+        var iconUrl = '';
+        if (window.App && typeof App.getImageUrl === 'function') {
+          iconUrl = App.getImageUrl('links', filename);
+        }
+        if (!iconUrl) return;
+
+        iconLinks.push(
+          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '">' +
+            '<img class="post-links-image" src="' + escapeHtml(iconUrl) + '" alt="">' +
+          '</a>'
+        );
+      });
+
+      if (iconLinks.length) {
+        linksStripRowHtml =
+          '<div class="post-info-row post-info-row-links">' +
+            '<div class="post-links-strip">' + iconLinks.join('') + '</div>' +
+          '</div>';
+      }
+    }
 
     // Check favorite status
     var isFav = isFavorite(post.id);
@@ -3187,8 +3248,10 @@ const PostModule = (function() {
           mapCard: activeLoc,
           escapeHtml: escapeHtml
         }),
+        // Links (icon strip; replaces Website URL when present)
+        linksStripRowHtml || '',
         // Website URL
-        websiteUrl ? '<div class="post-info-row post-info-row-website">' +
+        (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
           '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
         '</div>' : '',
         // Tickets URL
