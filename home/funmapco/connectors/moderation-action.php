@@ -123,9 +123,10 @@ switch ($action) {
     $logId = isset($input['log_id']) ? intval($input['log_id']) : 0;
     if ($logId <= 0) fail(400, 'Missing log_id');
     
-    $stmt = $mysqli->prepare('DELETE FROM `moderation_log` WHERE id = ? AND action = "missing_map_images"');
-    if (!$stmt) fail(500, 'Prepare failed');
-    $stmt->bind_param('i', $logId);
+    $actionVal = 'missing_map_images';
+    $stmt = $mysqli->prepare('DELETE FROM `moderation_log` WHERE id = ? AND action = ?');
+    if (!$stmt) fail(500, 'Prepare failed: ' . $mysqli->error);
+    $stmt->bind_param('is', $logId, $actionVal);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Delete failed'); }
     $affected = $stmt->affected_rows;
     $stmt->close();
@@ -139,9 +140,10 @@ switch ($action) {
     $lng = isset($input['lng']) ? floatval($input['lng']) : null;
     
     // Check if already flagged
-    $stmt = $mysqli->prepare('SELECT id FROM `moderation_log` WHERE post_id = ? AND action = "missing_map_images" LIMIT 1');
-    if (!$stmt) fail(500, 'Prepare failed');
-    $stmt->bind_param('i', $postId);
+    $actionVal = 'missing_map_images';
+    $stmt = $mysqli->prepare('SELECT id FROM `moderation_log` WHERE post_id = ? AND action = ? LIMIT 1');
+    if (!$stmt) fail(500, 'Prepare failed: ' . $mysqli->error);
+    $stmt->bind_param('is', $postId, $actionVal);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->fetch_assoc()) {
@@ -164,9 +166,9 @@ switch ($action) {
     
     // Insert flag
     $reason = json_encode(['lat' => $lat, 'lng' => $lng, 'flagged_at' => date('Y-m-d H:i:s')]);
-    $stmt = $mysqli->prepare('INSERT INTO `moderation_log` (post_id, post_title, action, reason, created_at) VALUES (?, ?, "missing_map_images", ?, NOW())');
-    if (!$stmt) fail(500, 'Prepare failed');
-    $stmt->bind_param('iss', $postId, $postTitle, $reason);
+    $stmt = $mysqli->prepare('INSERT INTO `moderation_log` (post_id, post_title, action, reason, created_at) VALUES (?, ?, ?, ?, NOW())');
+    if (!$stmt) fail(500, 'Prepare failed: ' . $mysqli->error);
+    $stmt->bind_param('isss', $postId, $postTitle, $actionVal, $reason);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Insert failed'); }
     $stmt->close();
     

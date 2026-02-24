@@ -9,7 +9,7 @@
  * POST: Syncs separate table basket entries with API results
  * 
  * SYNC PROCESS (POST):
- * This syncs ALL picklist types (system-image, category-icon, currency, phone-prefix, amenity)
+ * This syncs ALL picklist types (system-image, category-icon, currency, phone-prefix, amenity, fieldset-icon)
  * from their corresponding Bunny CDN folders to their respective separate tables.
  * 
  * Steps:
@@ -59,8 +59,8 @@ try {
             return;
         }
 
-        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country'
-        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country', 'age-rating'];
+        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country', 'age-rating', 'link', 'fieldset-icon'
+        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country', 'age-rating', 'link', 'fieldset-icon'];
         if (!in_array($optionGroup, $validGroups)) {
             http_response_code(400);
             echo json_encode([
@@ -78,7 +78,9 @@ try {
             'phone-prefix' => 'list_phone_prefixes',
             'amenity' => 'list_amenities',
             'country' => 'list_countries',
-            'age-rating' => 'list_age_ratings'
+            'age-rating' => 'list_age_ratings',
+            'link' => 'list_links',
+            'fieldset-icon' => 'list_fieldset_icons'
         ];
         $tableName = $tableMap[$optionGroup];
 

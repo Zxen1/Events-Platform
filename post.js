@@ -3047,8 +3047,8 @@ const PostModule = (function() {
 
     // Additional info fields from map card
     var city = activeLoc.city || '';
-    var websiteUrl = activeLoc.website_url || '';
-    var ticketsUrl = activeLoc.tickets_url || '';
+    var ticketsUrl = activeLoc.ticket_url || '';
+    var itemUrl = activeLoc.item_url || '';
     var linksArr = (activeLoc && Array.isArray(activeLoc.links)) ? activeLoc.links : [];
     var publicEmail = activeLoc.public_email || '';
     var phonePrefix = activeLoc.phone_prefix || '';
@@ -3084,8 +3084,8 @@ const PostModule = (function() {
         var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
         var bm = (b && b.menu_sort_order !== null && b.menu_sort_order !== undefined && isFinite(b.menu_sort_order)) ? parseInt(b.menu_sort_order, 10) : 9999;
         if (am !== bm) return am - bm;
-        var au = (a && a.url !== null && a.url !== undefined) ? String(a.url).trim().toLowerCase() : '';
-        var bu = (b && b.url !== null && b.url !== undefined) ? String(b.url).trim().toLowerCase() : '';
+        var au = (a && a.external_url !== null && a.external_url !== undefined) ? String(a.external_url).trim().toLowerCase() : '';
+        var bu = (b && b.external_url !== null && b.external_url !== undefined) ? String(b.external_url).trim().toLowerCase() : '';
         if (au < bu) return -1;
         if (au > bu) return 1;
         return 0;
@@ -3094,7 +3094,7 @@ const PostModule = (function() {
       var iconLinks = [];
       sortedLinks.forEach(function(l) {
         var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
-        var url = (l.url === null || l.url === undefined) ? '' : String(l.url).trim();
+        var url = (l.external_url === null || l.external_url === undefined) ? '' : String(l.external_url).trim();
         if (!type && !url) return;
         if (type.toLowerCase() === 'website' && url) hasWebsiteLink = true;
         if (!url) return;
@@ -3291,16 +3291,11 @@ const PostModule = (function() {
           mapCard: activeLoc,
           escapeHtml: escapeHtml
         }),
-        // Links (icon strip; replaces Website URL when present)
+        // CTA buttons
+        ticketsUrl ? '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Get Tickets</a>' : '',
+        itemUrl ? '<a href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Shop Now</a>' : '',
+        // Links (icon strip)
         linksStripRowHtml || '',
-        // Website URL
-        (!hasWebsiteLink && websiteUrl) ? '<div class="post-info-row post-info-row-website">' +
-          '<a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener noreferrer">🌐 ' + escapeHtml(websiteUrl) + '</a>' +
-        '</div>' : '',
-        // Tickets URL
-        ticketsUrl ? '<div class="post-info-row post-info-row-tickets">' +
-          '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer">🎟️ ' + escapeHtml(ticketsUrl) + '</a>' +
-        '</div>' : '',
         // Public email
         publicEmail ? '<div class="post-info-row post-info-row-email">' +
           '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +

@@ -327,6 +327,25 @@ try {
         } catch (Throwable $e) {
             // Table might not exist yet, continue
         }
+
+        // Fetch links (for Links fieldset / link logos)
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_links` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $linkRows = $stmt->fetchAll();
+            $dropdownOptions['link'] = [];
+            foreach ($linkRows as $row) {
+                if (empty($row['option_value']) || empty($row['option_label'])) {
+                    continue;
+                }
+                $dropdownOptions['link'][] = [
+                    'value' => $row['option_value'],
+                    'label' => $row['option_label'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
         
         if (!empty($dropdownOptions)) {
             $response['dropdown_options'] = $dropdownOptions;
@@ -374,6 +393,49 @@ try {
         }
     } catch (Throwable $checkoutError) {
         // If checkout options fail, don't break the whole response
+    }
+
+    // Fetch fieldset icons basket (list of available filenames from list_fieldset_icons)
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'list_fieldset_icons'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `option_filename` FROM `list_fieldset_icons` WHERE `is_active` = 1 ORDER BY `sort_order` ASC, `option_filename` ASC');
+            $fieldsetIconRows = $stmt->fetchAll();
+            $fieldsetIconsBasket = [];
+            foreach ($fieldsetIconRows as $row) {
+                if (!empty($row['option_filename'])) {
+                    $fieldsetIconsBasket[] = $row['option_filename'];
+                }
+            }
+            $response['fieldset_icons_basket'] = $fieldsetIconsBasket;
+        }
+    } catch (Throwable $e) {
+        // If query fails, don't break the whole response
+    }
+
+    // Fetch fieldsets for Site Customisation admin UI
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fieldsets'");
+        if ($stmt->rowCount() > 0) {
+            $colCheck = $pdo->query("SHOW COLUMNS FROM `fieldsets` LIKE 'fieldset_icon'");
+            $hasFieldsetIcon = $colCheck->rowCount() > 0;
+            $iconSelect = $hasFieldsetIcon ? ', `fieldset_icon`' : '';
+            $stmt = $pdo->query('SELECT `id`, `fieldset_name`, `fieldset_key`, `fieldset_type`' . $iconSelect . ' FROM `fieldsets` ORDER BY (`sort_order` IS NULL) ASC, `sort_order` ASC, `fieldset_name` ASC');
+            $fieldsetRows = $stmt->fetchAll();
+            $fieldsets = [];
+            foreach ($fieldsetRows as $row) {
+                $fieldsets[] = [
+                    'id'             => (int)$row['id'],
+                    'fieldset_name'  => $row['fieldset_name'],
+                    'fieldset_key'   => $row['fieldset_key'],
+                    'fieldset_type'  => $row['fieldset_type'],
+                    'fieldset_icon'  => $hasFieldsetIcon ? ($row['fieldset_icon'] ?? null) : null,
+                ];
+            }
+            $response['fieldsets'] = $fieldsets;
+        }
+    } catch (Throwable $e) {
+        // If fieldsets fail, don't break the whole response
     }
 
     // Optionally include admin messages if requested

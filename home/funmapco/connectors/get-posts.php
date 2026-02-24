@@ -3,7 +3,7 @@
  * get-posts.php - Fetch posts with map card data for display
  * 
  * Returns paginated posts with their associated map card data.
- * Used by post-new.js to render post cards and map markers.
+ * Used by post.js to render post cards and map markers.
  * 
  * Query Parameters:
  *   - limit (int): Max posts to return (default 50, max 200)
@@ -86,7 +86,7 @@ try {
     // Check if user is logged in (for contact detail protection)
     // Contact details (email/phone) are hidden from non-members to prevent bot scraping
     // Note: $showContactDetails is set after parsing $memberId below
-    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
+    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']) || !empty($_SERVER['HTTP_X_MEMBER_AUTH']);
 
     // Load database config
     $configCandidates = [
@@ -118,12 +118,12 @@ try {
     // Parse query parameters
     //
     // IMPORTANT (Developer Note):
-    // This endpoint is used by the HIGH-ZOOM pipeline (zoom >= postsLoadZoom; default 8) in `post-new.js`.
+    // This endpoint is used by the HIGH-ZOOM pipeline (zoom >= postsLoadZoom; default 8) in `post.js`.
     // It must respect BOTH:
     // - the saved filter state (keyword/date/price/subcategory keys/etc.)
     // - the map area filter (`bounds`)
     //
-    // LOW-ZOOM worldwide filtering is handled by the cluster pipeline in `map-new.js`
+    // LOW-ZOOM worldwide filtering is handled by the cluster pipeline in `map.js`
     // via `/gateway.php?action=get-clusters` (aggregated results).
     $limit = isset($_GET['limit']) ? min(200, max(1, intval($_GET['limit']))) : 50;
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;
@@ -147,12 +147,19 @@ try {
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
+
+    $hasUserFilters = ($keyword !== '' || $dateStart !== '' || $dateEnd !== '' || $minPrice !== null || $maxPrice !== null || $subcategoryKey !== '' || !empty($subcategoryKeys));
     
     // Show contact details if:
     // 1. User is logged in (cookie/header present), OR
     // 2. Filtering by member_id (Post Editor fetching own posts for editing)
     // This ensures the post owner can always see their own contact details in the editor
     $showContactDetails = $isLoggedIn || ($memberId > 0);
+
+    // Auto-expire: only when post editor is fetching (lazy — not on public reads)
+    if ($memberId > 0) {
+        $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+    }
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -169,12 +176,15 @@ try {
     }
 
     // Build WHERE conditions
-    $where = ['p.deleted_at IS NULL'];
+    $where = [];
     $params = [];
     $types = '';
 
-    // If filtering by member_id, we show all their posts regardless of status
-    if ($memberId <= 0) {
+    // If filtering by member_id or fetching a specific post by ID/key, skip public filters
+    if ($memberId <= 0 && $postId <= 0 && $postKey === '') {
+        // Exclude soft-deleted posts from public view
+        $where[] = 'p.deleted_at IS NULL';
+
         // Visibility filter (expired toggle can widen this)
         if ($includeExpired) {
             $where[] = 'p.visibility IN (?, ?)';
@@ -185,6 +195,7 @@ try {
             $where[] = 'p.visibility = ?';
             $params[] = $visibility;
             $types .= 's';
+            $where[] = '(p.expires_at IS NULL OR p.expires_at > NOW())';
         }
 
         // Payment status (only show paid posts to public)
@@ -231,7 +242,7 @@ try {
         $start = $dateStart !== '' ? $dateStart : $dateEnd;
         $end = $dateEnd !== '' ? $dateEnd : $dateStart;
         if ($start === '' || $end === '') { $start = $start ?: $end; $end = $start; }
-        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
+        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
         $params[] = $start;
         $params[] = $end;
         $types .= 'ss';
@@ -240,15 +251,15 @@ try {
     // Price range filter (correct: uses pricing tables)
     if ($minPrice !== null || $maxPrice !== null) {
         if ($minPrice !== null && $maxPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
             $params[] = $minPrice; $params[] = $maxPrice; $params[] = $minPrice; $params[] = $maxPrice;
             $types .= 'dddd';
         } elseif ($minPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price >= ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price >= ?))';
             $params[] = $minPrice; $params[] = $minPrice;
             $types .= 'dd';
         } elseif ($maxPrice !== null) {
-            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price <= ?))';
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price <= ?))';
             $params[] = $maxPrice; $params[] = $maxPrice;
             $types .= 'dd';
         }
@@ -275,6 +286,11 @@ try {
         $types .= 'i';
     }
 
+    // Snapshot user-facing filters (before bounds) for passes_filter check in Step 1b
+    $filterWhere = $where;
+    $filterParams = $params;
+    $filterTypes = $types;
+
     // Bounds filter (for map viewport)
     if ($bounds !== null) {
         $where[] = 'mc.latitude BETWEEN ? AND ?';
@@ -287,6 +303,7 @@ try {
     }
 
     $whereClause = implode(' AND ', $where);
+    $filterWhereClause = implode(' AND ', $filterWhere);
 
     // Count total matching posts
     $countSql = "
@@ -324,7 +341,115 @@ try {
         $folderStmt->close();
     }
 
-    // Fetch posts with map card data and subcategory icon
+    // ---------------------------------------------------------------------
+    // IMPORTANT: Pagination must be applied to POSTS, not JOINED ROWS.
+    // If we LIMIT the join directly, multi-location posts get truncated to a
+    // single map card (because each map card is a joined row).
+    //
+    // Fix: select the page of post IDs first (DISTINCT p.id), then fetch all
+    // joined map cards for those posts without a row-limit.
+    // ---------------------------------------------------------------------
+
+    // 1) Fetch page of post IDs (pagination via DISTINCT p.id + LIMIT)
+    $pagePostIds = [];
+    if ($postId > 0 || $postKey !== '') {
+        // Single post fetch: always return the post regardless of user filters.
+        // User filters only affect passes_filter (Step 1b), not whether the post is returned.
+        $singleWhere = [];
+        $singleParams = [];
+        $singleTypes = '';
+        if ($postId > 0) {
+            $singleWhere[] = 'p.id = ?';
+            $singleParams[] = $postId;
+            $singleTypes .= 'i';
+        }
+        if ($postKey !== '') {
+            $singleWhere[] = 'p.post_key = ?';
+            $singleParams[] = $postKey;
+            $singleTypes .= 's';
+        }
+        $singleWhereClause = implode(' AND ', $singleWhere);
+        $idsSql = "
+            SELECT DISTINCT p.id
+            FROM `posts` p
+            WHERE {$singleWhereClause}
+            ORDER BY p.created_at DESC
+        ";
+        $idsStmt = $mysqli->prepare($idsSql);
+        if (!$idsStmt) fail(500, 'Failed to prepare post id query.');
+        if (!empty($singleParams)) {
+            bind_params_array($idsStmt, $singleTypes, $singleParams);
+        }
+    } else {
+        $idsSql = "
+            SELECT DISTINCT p.id
+            FROM `posts` p
+            LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+            LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
+            WHERE {$whereClause}
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        ";
+        $idsStmt = $mysqli->prepare($idsSql);
+        if (!$idsStmt) fail(500, 'Failed to prepare post id query.');
+        $idsParams = $params;
+        $idsParams[] = $limit;
+        $idsParams[] = $offset;
+        $idsTypes = $types . 'ii';
+        bind_params_array($idsStmt, $idsTypes, $idsParams);
+    }
+
+    $idsStmt->execute();
+    $idsRes = $idsStmt->get_result();
+    while ($idsRes && ($r = $idsRes->fetch_assoc())) {
+        $pagePostIds[] = (int)$r['id'];
+    }
+    $idsStmt->close();
+
+    if (empty($pagePostIds)) {
+        $response = [
+            'success' => true,
+            'posts' => [],
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+        $json = json_encode($response, JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            fail(500, 'JSON encoding failed: ' . json_last_error_msg());
+        }
+        ob_end_clean();
+        echo $json;
+        exit;
+    }
+
+    // 1b) Collect which mc.id values passed user-facing filters (excluding bounds) for these posts.
+    $matchedMapCardIds = [];
+    $mcIdPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
+    $mcIdSql = "
+        SELECT mc.id
+        FROM `posts` p
+        LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+        LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
+        WHERE p.id IN ($mcIdPlaceholders) AND {$filterWhereClause}
+    ";
+    $mcIdStmt = $mysqli->prepare($mcIdSql);
+    if ($mcIdStmt) {
+        $mcIdParams = array_merge($pagePostIds, $filterParams);
+        $mcIdTypes = str_repeat('i', count($pagePostIds)) . $filterTypes;
+        bind_params_array($mcIdStmt, $mcIdTypes, $mcIdParams);
+        $mcIdStmt->execute();
+        $mcIdRes = $mcIdStmt->get_result();
+        while ($mcIdRes && ($mr = $mcIdRes->fetch_assoc())) {
+            if ($mr['id'] !== null) {
+                $matchedMapCardIds[(int)$mr['id']] = true;
+            }
+        }
+        $mcIdStmt->close();
+    }
+
+    // 2) Fetch posts + ALL their map cards (no LIMIT; constrained by p.id IN (...))
+    $idPlaceholders = implode(',', array_fill(0, count($pagePostIds), '?'));
     $sql = "
         SELECT 
             p.id,
@@ -335,6 +460,7 @@ try {
             m.avatar_file AS member_avatar_file,
             p.subcategory_key,
             p.loc_qty,
+            p.loc_paid,
             p.visibility,
             p.checkout_key,
             co.checkout_title,
@@ -345,7 +471,7 @@ try {
             sc.icon_path AS subcategory_icon_path,
             sc.subcategory_name AS subcategory_name,
             sc.color_hex AS subcategory_color,
-            mc.id AS map_card_id,
+            mc.id AS post_map_card_id,
             mc.subcategory_key AS map_card_subcategory_key,
             mc.title,
             mc.description,
@@ -358,28 +484,35 @@ try {
             mc.public_email,
             mc.phone_prefix,
             mc.public_phone,
+            mc.location_type,
             mc.venue_name,
             mc.address_line,
+            mc.suburb,
             mc.city,
+            mc.state,
+            mc.postcode,
+            mc.country_name,
+            mc.country_code,
             mc.latitude,
             mc.longitude,
-            mc.country_code,
             mc.amenity_summary,
             mc.age_rating,
-            mc.website_url,
-            mc.tickets_url,
+            mc.ticket_url,
             mc.coupon_code,
             mc.session_summary,
-            mc.price_summary
+            mc.price_summary,
+            (
+                EXISTS (SELECT 1 FROM post_ticket_pricing ptp WHERE ptp.post_map_card_id = mc.id AND ptp.promo_option IS NOT NULL AND ptp.promo_option != 'none')
+                OR EXISTS (SELECT 1 FROM post_item_pricing pip WHERE pip.post_map_card_id = mc.id AND pip.promo_option IS NOT NULL AND pip.promo_option != 'none')
+            ) AS has_promo
         FROM `posts` p
         LEFT JOIN `admins` a ON a.id = p.member_id AND a.username = p.member_name
         LEFT JOIN `members` m ON m.id = p.member_id AND m.username = p.member_name
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         LEFT JOIN `subcategories` sc ON sc.subcategory_key = COALESCE(p.subcategory_key, mc.subcategory_key)
         LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
-        WHERE {$whereClause}
-        ORDER BY p.created_at DESC
-        LIMIT ? OFFSET ?
+        WHERE p.id IN ($idPlaceholders)
+        ORDER BY p.created_at DESC, mc.id ASC
     ";
 
     $stmt = $mysqli->prepare($sql);
@@ -387,13 +520,9 @@ try {
         fail(500, 'Failed to prepare posts query.');
     }
 
-    // Add limit and offset to params
-    $params[] = $limit;
-    $params[] = $offset;
-    $types .= 'ii';
-
-    $paramsBind2 = $params;
-    bind_params_array($stmt, $types, $paramsBind2);
+    $paramsBind2 = $pagePostIds;
+    $types2 = str_repeat('i', count($pagePostIds));
+    bind_params_array($stmt, $types2, $paramsBind2);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -429,6 +558,7 @@ try {
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'subcategory_color' => (string)($row['subcategory_color'] ?? ''),
                 'loc_qty' => (int)$row['loc_qty'],
+                'loc_paid' => (int)$row['loc_paid'],
                 'visibility' => $row['visibility'],
                 'checkout_key' => $row['checkout_key'],
                 'checkout_title' => (string)($row['checkout_title'] ?? ''),
@@ -441,7 +571,7 @@ try {
         }
 
         // Add map card if present
-        if ($row['map_card_id'] !== null) {
+        if ($row['post_map_card_id'] !== null) {
             $mediaIds = $row['media_ids'];
             
             // Collect media IDs for batch lookup
@@ -451,7 +581,7 @@ try {
             }
             
             $postsById[$postId]['map_cards'][] = [
-                'id' => (int)$row['map_card_id'],
+                'id' => (int)$row['post_map_card_id'],
                 'subcategory_key' => (string)($row['map_card_subcategory_key'] ?? ''),
                 'title' => $row['title'],
                 'description' => $row['description'],
@@ -464,24 +594,31 @@ try {
                 'public_email' => $showContactDetails ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
                 'phone_prefix' => $showContactDetails ? $row['phone_prefix'] : null,
                 'public_phone' => $showContactDetails ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
+                'location_type' => $row['location_type'],
                 'venue_name' => $row['venue_name'],
                 'address_line' => $row['address_line'],
+                'suburb' => $row['suburb'],
                 'city' => $row['city'],
+                'state' => $row['state'],
+                'postcode' => $row['postcode'],
+                'country_name' => $row['country_name'],
+                'country_code' => $row['country_code'],
                 'latitude' => $row['latitude'] !== null ? (float)$row['latitude'] : null,
                 'longitude' => $row['longitude'] !== null ? (float)$row['longitude'] : null,
-                'country_code' => $row['country_code'],
                 'amenities' => $row['amenity_summary'],
                 'age_rating' => $row['age_rating'],
-                'website_url' => $row['website_url'],
-                'tickets_url' => $row['tickets_url'],
+                'ticket_url' => $row['ticket_url'],
                 'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
+                'has_promo' => !empty($row['has_promo']),
+                'passes_filter' => !$hasUserFilters || isset($matchedMapCardIds[(int)$row['post_map_card_id']]) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
                 'media_urls' => [], // Will be populated below
                 'sessions' => [], // Will be populated below
                 'pricing_groups' => [], // Will be populated below
-                'age_ratings' => [] // Will be populated below
+                'age_ratings' => [], // Will be populated below
+                'links' => [] // Will be populated below
             ];
         }
     }
@@ -574,6 +711,7 @@ try {
     $ageRatingsByCard = [];
     $itemsByCard = [];
     $amenitiesByCard = [];
+    $linksByCard = [];
     
     if ($full) {
         foreach ($postsById as $p) {
@@ -587,10 +725,10 @@ try {
         $cardIdsCsv = implode(',', $allMapCardIds);
         
         // Sessions
-        $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
+        $sessRes = $mysqli->query("SELECT post_map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE post_map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
         if ($sessRes) {
             while ($sRow = $sessRes->fetch_assoc()) {
-                $cid = (int)$sRow['map_card_id'];
+                $cid = (int)$sRow['post_map_card_id'];
                 if (!isset($sessionsByCard[$cid])) $sessionsByCard[$cid] = [];
                 
                 $date = $sRow['session_date'];
@@ -605,10 +743,10 @@ try {
         }
 
         // Ticket Pricing
-        $priceRes = $mysqli->query("SELECT map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($priceRes) {
             while ($pRow = $priceRes->fetch_assoc()) {
-                $cid = (int)$pRow['map_card_id'];
+                $cid = (int)$pRow['post_map_card_id'];
                 $gk = $pRow['ticket_group_key'];
                 if (!isset($pricingByCard[$cid])) $pricingByCard[$cid] = [];
                 if (!isset($pricingByCard[$cid][$gk])) $pricingByCard[$cid][$gk] = [];
@@ -620,7 +758,12 @@ try {
                 $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
                     'pricing_tier' => $pRow['pricing_tier'],
                     'price' => $pRow['price'],
-                    'currency' => $pRow['currency']
+                    'currency' => $pRow['currency'],
+                    'promo_option' => $pRow['promo_option'],
+                    'promo_code' => $pRow['promo_code'],
+                    'promo_type' => $pRow['promo_type'],
+                    'promo_value' => $pRow['promo_value'],
+                    'promo_price' => $pRow['promo_price']
                 ];
                 
                 if (!isset($ageRatingsByCard[$cid])) $ageRatingsByCard[$cid] = [];
@@ -629,44 +772,103 @@ try {
         }
 
         // Item Pricing
-        $itemRes = $mysqli->query("SELECT map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $itemRes = $mysqli->query("SELECT post_map_card_id, item_name, age_rating, item_variants, item_price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_item_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($itemRes) {
             while ($iRow = $itemRes->fetch_assoc()) {
-                $cid = (int)$iRow['map_card_id'];
+                $cid = (int)$iRow['post_map_card_id'];
                 $itemsByCard[$cid] = [
                     'item_name' => $iRow['item_name'],
+                    'age_rating' => $iRow['age_rating'],
                     'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
                     'item_price' => $iRow['item_price'],
-                    'currency' => $iRow['currency']
+                    'currency' => $iRow['currency'],
+                    'promo_option' => $iRow['promo_option'],
+                    'promo_code' => $iRow['promo_code'],
+                    'promo_type' => $iRow['promo_type'],
+                    'promo_value' => $iRow['promo_value'],
+                    'promo_price' => $iRow['promo_price']
                 ];
             }
         }
 
-        // Amenities: build key-to-name mapping from list_amenities, then fetch from post_amenities
-        $amenityKeyToName = [];
-        $listRes = $mysqli->query("SELECT option_value FROM list_amenities WHERE is_active = 1");
-        if ($listRes) {
-            while ($lRow = $listRes->fetch_assoc()) {
-                $name = $lRow['option_value'];
-                $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
-                $key = trim($key, '_');
-                $amenityKeyToName[$key] = $name;
-            }
+        // Amenities: build key -> meta mapping from list_amenities, then attach only the post's amenities.
+        $amenityKeyToMeta = [];
+        $listRes = $mysqli->query("SELECT option_value, option_filename, sort_order FROM list_amenities WHERE is_active = 1 ORDER BY sort_order ASC, option_value ASC");
+        if (!$listRes) {
+            fail(500, 'Failed to load amenities list.');
         }
-        
-        $amenityRes = $mysqli->query("SELECT map_card_id, amenity_key, value FROM post_amenities WHERE map_card_id IN ($cardIdsCsv)");
-        if ($amenityRes) {
-            while ($aRow = $amenityRes->fetch_assoc()) {
-                $cid = (int)$aRow['map_card_id'];
-                $key = $aRow['amenity_key'];
-                $name = isset($amenityKeyToName[$key]) ? $amenityKeyToName[$key] : $key;
-                if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
-                $amenitiesByCard[$cid][] = [
-                    'amenity' => $name,
-                    'value' => $aRow['value']
-                ];
-            }
+        while ($lRow = $listRes->fetch_assoc()) {
+            $name = (string)($lRow['option_value'] ?? '');
+            if ($name === '') continue;
+            $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
+            $key = trim($key, '_');
+            $amenityKeyToMeta[$key] = [
+                'key' => $key,
+                'label' => $name,
+                'filename' => (string)($lRow['option_filename'] ?? ''),
+                'menu_sort_order' => (int)($lRow['sort_order'] ?? 0),
+            ];
         }
+        $listRes->free();
+
+        $amenitiesListByCard = [];
+        $amenityRes = $mysqli->query("SELECT post_map_card_id, amenity_key, value FROM post_amenities WHERE post_map_card_id IN ($cardIdsCsv)");
+        if (!$amenityRes) {
+            fail(500, 'Failed to load post amenities.');
+        }
+        while ($aRow = $amenityRes->fetch_assoc()) {
+            $cid = (int)($aRow['post_map_card_id'] ?? 0);
+            if (!$cid) continue;
+            $key = (string)($aRow['amenity_key'] ?? '');
+            if ($key === '') continue;
+            $valRaw = $aRow['value'] ?? 0;
+            $val = ($valRaw === '1' || $valRaw === 1 || $valRaw === true) ? 1 : 0;
+
+            // Backward compatible summary array (only amenities present in post_amenities)
+            $name = isset($amenityKeyToMeta[$key]) ? $amenityKeyToMeta[$key]['label'] : $key;
+            if (!isset($amenitiesByCard[$cid])) $amenitiesByCard[$cid] = [];
+            $amenitiesByCard[$cid][] = [
+                'amenity' => $name,
+                'value' => $val
+            ];
+
+            // New: icon metadata for post UI (only this post's amenities)
+            if (!isset($amenitiesListByCard[$cid])) $amenitiesListByCard[$cid] = [];
+            $meta = $amenityKeyToMeta[$key] ?? null;
+            $amenitiesListByCard[$cid][] = [
+                'key' => $key,
+                'label' => $meta ? (string)($meta['label'] ?? $key) : $key,
+                'filename' => $meta ? (string)($meta['filename'] ?? '') : '',
+                'menu_sort_order' => $meta ? (int)($meta['menu_sort_order'] ?? 0) : null,
+                'value' => $val,
+            ];
+        }
+        $amenityRes->free();
+
+        // Links (required: post_links + list_links)
+        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.external_url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
+                     FROM post_links pl
+                     LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
+                     WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
+                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.external_url ASC";
+
+        $linksRes = $mysqli->query($linksSql);
+        if (!$linksRes) {
+            fail(500, 'Failed to load post links.');
+        }
+        while ($lRow = $linksRes->fetch_assoc()) {
+            $cid = (int)($lRow['post_map_card_id'] ?? 0);
+            if (!$cid) continue;
+            if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
+            $linksByCard[$cid][] = [
+                'link_type' => (string)($lRow['link_type'] ?? ''),
+                'external_url' => (string)($lRow['external_url'] ?? ''),
+                'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
+                'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
+                'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,
+            ];
+        }
+        $linksRes->free();
 
     }
 
@@ -720,11 +922,32 @@ try {
                     $mapCard['item_price'] = $item['item_price'];
                     $mapCard['currency'] = $item['currency'];
                     $mapCard['item_variants'] = $item['item_variants'];
+                    $mapCard['age_rating'] = $item['age_rating'];
+                    $mapCard['promo_option'] = $item['promo_option'];
+                    $mapCard['promo_code'] = $item['promo_code'];
+                    $mapCard['promo_type'] = $item['promo_type'];
+                    $mapCard['promo_value'] = $item['promo_value'];
+                    $mapCard['promo_price'] = $item['promo_price'];
                 }
 
                 // Attach Amenities (from subtable, overrides amenity_summary)
                 if (isset($amenitiesByCard[$cid])) {
                     $mapCard['amenities'] = json_encode($amenitiesByCard[$cid]);
+                }
+                if (isset($amenitiesListByCard[$cid])) {
+                    // Keep stable order: menu sort first, then key (so duplicates/unknowns are stable)
+                    usort($amenitiesListByCard[$cid], function($a, $b) {
+                        $am = isset($a['menu_sort_order']) && $a['menu_sort_order'] !== null ? (int)$a['menu_sort_order'] : 9999;
+                        $bm = isset($b['menu_sort_order']) && $b['menu_sort_order'] !== null ? (int)$b['menu_sort_order'] : 9999;
+                        if ($am !== $bm) return $am <=> $bm;
+                        return strcmp((string)($a['key'] ?? ''), (string)($b['key'] ?? ''));
+                    });
+                    $mapCard['amenities_list'] = $amenitiesListByCard[$cid];
+                }
+
+                // Attach Links
+                if (isset($linksByCard[$cid])) {
+                    $mapCard['links'] = $linksByCard[$cid];
                 }
             }
         }

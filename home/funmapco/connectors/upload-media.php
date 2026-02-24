@@ -9,9 +9,9 @@
  * of the doubt. The month only changes when it's the new month EVERYWHERE on Earth.
  * 
  * NAMING CONVENTION:
- *   Pattern: {postId}-{original_filename}.{extension}
- *   Example: 123-British_Museum_2018.jpg
- *   Duplicates: 123-British_Museum_2018-2.jpg, 123-British_Museum_2018-3.jpg, etc.
+ *   Pattern: {8-digit-padded-post-id}-{original_filename}.{extension}
+ *   Example: 00000123-British_Museum_2018.jpg
+ *   Duplicates: 00000123-British_Museum_2018-2.jpg, 00000123-British_Museum_2018-3.jpg, etc.
  * 
  * This keeps original filenames readable while ensuring uniqueness via postId prefix.
  * Duplicate detection checks existing files in the database for the same post.
@@ -22,7 +22,7 @@
  *   3. Complete form and submit → post becomes active
  * 
  * Monthly folders are created automatically by Bunny CDN when uploading.
- * Full path: folder_post_images/YYYY-MM/{postId}-{original_filename}.{extension}
+ * Full path: folder_post_images/YYYY-MM/{8-digit-padded-post-id}-{original_filename}.{extension}
  * 
  * POST params:
  *   - file: The uploaded file
@@ -148,21 +148,22 @@ if ($post_id <= 0) {
 }
 
 // Generate filename following naming convention:
-// Pattern: {postId}-{original_filename}.{extension}
-// Duplicates: {postId}-{original_filename}-2.{extension}, etc.
+// Pattern: {8-digit-padded-post-id}-{original_filename}.{extension}
+// Duplicates: {8-digit-padded-post-id}-{original_filename}-2.{extension}, etc.
 $originalFilename = basename($_FILES['file']['name']);
 $extension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
 $baseName = pathinfo($originalFilename, PATHINFO_FILENAME);
 
-// Sanitize filename: keep alphanumeric, underscores, hyphens, spaces (convert spaces to underscores)
-$baseName = preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $baseName);
+// Sanitize filename: keep original characters, only remove filesystem-unsafe chars
 $baseName = preg_replace('/\s+/', '_', trim($baseName));
+$baseName = preg_replace('/[\/\\\\:*?"<>|]/', '', $baseName);
 if (empty($baseName)) {
     $baseName = 'image';
 }
 
-// Build candidate filename
-$candidateBase = $post_id . '-' . $baseName;
+// Build candidate filename with 8-digit zero-padded post ID
+$paddedId = str_pad((string)$post_id, 8, '0', STR_PAD_LEFT);
+$candidateBase = $paddedId . '-' . $baseName;
 $finalFilename = $candidateBase . '.' . $extension;
 
 // Check for duplicates in database for this post

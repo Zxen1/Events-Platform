@@ -125,6 +125,11 @@ try {
         $fieldsetTooltips = $data['fieldset_tooltips'];
         unset($settings['fieldset_tooltips']);
     }
+    $fieldsetIcons = null;
+    if (isset($data['fieldset_icons']) && is_array($data['fieldset_icons'])) {
+        $fieldsetIcons = $data['fieldset_icons'];
+        unset($settings['fieldset_icons']);
+    }
     if (isset($data['field_tooltips']) && is_array($data['field_tooltips'])) {
         $fieldTooltips = $data['field_tooltips'];
         unset($settings['field_tooltips']);
@@ -270,6 +275,30 @@ try {
         }
     }
 
+    // Save fieldset icons if provided
+    $fieldsetIconsUpdated = 0;
+    if ($fieldsetIcons !== null && is_array($fieldsetIcons) && !empty($fieldsetIcons)) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fieldsets'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `fieldsets`
+                SET `fieldset_icon` = :fieldset_icon,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+            foreach ($fieldsetIcons as $icon) {
+                if (!isset($icon['id'])) continue;
+                $stmt->execute([
+                    ':id'            => (int)$icon['id'],
+                    ':fieldset_icon' => (isset($icon['fieldset_icon']) && $icon['fieldset_icon'] !== '') ? (string)$icon['fieldset_icon'] : null,
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $fieldsetIconsUpdated++;
+                }
+            }
+        }
+    }
+
     // Save field tooltips if provided
     $fieldTooltipsUpdated = 0;
     if ($fieldTooltips !== null && is_array($fieldTooltips) && !empty($fieldTooltips)) {
@@ -387,7 +416,7 @@ try {
                 }
                 $description = isset($option['checkout_description']) ? trim((string)$option['checkout_description']) : '';
                 // Get checkout_key from input, or generate from title if not provided
-                // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
+                // Generate key: "Free" -> "free", "Standard" -> "standard" (hyphens, no numbers/timestamps)
                 $key = isset($option['checkout_key']) && trim((string)$option['checkout_key']) !== '' 
                     ? trim((string)$option['checkout_key']) 
                     : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
@@ -423,7 +452,7 @@ try {
                     $checkoutUpdated++;
                 } else {
                     // Insert new - generate key if not already set above
-                    // Generate key: "Free Listing" -> "free-listing" (hyphens, no numbers/timestamps)
+                    // Generate key: "Free" -> "free", "Standard" -> "standard" (hyphens, no numbers/timestamps)
                     if (!isset($option['checkout_key']) || trim((string)$option['checkout_key']) === '') {
                         $key = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', preg_replace('/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/', '', $title)));
                     }
@@ -499,6 +528,9 @@ try {
     
     if ($fieldsetTooltipsUpdated > 0) {
         $response['fieldset_tooltips_updated'] = $fieldsetTooltipsUpdated;
+    }
+    if ($fieldsetIconsUpdated > 0) {
+        $response['fieldset_icons_updated'] = $fieldsetIconsUpdated;
     }
     if ($fieldTooltipsUpdated > 0) {
         $response['field_tooltips_updated'] = $fieldTooltipsUpdated;

@@ -181,9 +181,12 @@ if (empty($ogTitle)) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
   
   <!-- PWA: iOS standalone mode -->
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- PWA: Standard (non-iOS) standalone mode -->
+  <meta name="mobile-web-app-capable" content="yes">
   <!-- PWA: Status bar style - "default" keeps status bar separate (no content behind it) -->
   <!-- "black-translucent" would extend content behind status bar but requires CSS adjustments -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -245,18 +248,18 @@ if (empty($ogTitle)) {
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places&loading=async"></script>
   
   <!-- CSS Files (10 total) -->
-  <link rel="stylesheet" href="base-new.css?v=20251228i">
-  <link rel="stylesheet" href="header-new.css?v=20251228i">
-  <!-- filter-new.css loaded lazily on first use -->
-  <link rel="stylesheet" href="map-new.css?v=20251228i">
-  <link rel="stylesheet" href="post-new.css?v=20251228i">
-  <link rel="stylesheet" href="components-new.css?v=20251228i">
-  <link rel="stylesheet" href="fieldsets-new.css?v=20251228i">
-  <link rel="stylesheet" href="admin-new.css?v=20251228i">
-  <link rel="stylesheet" href="formbuilder-new.css?v=20251228i">
-  <link rel="stylesheet" href="member-new.css?v=20251228i">
-  <link rel="stylesheet" href="posteditor-new.css?v=20251228i">
-  <link rel="stylesheet" href="marquee-new.css?v=20251228i">
+  <link rel="stylesheet" href="base.css?v=20251228i">
+  <link rel="stylesheet" href="header.css?v=20251228i">
+<link rel="stylesheet" href="filter.css?v=20251228i">
+<link rel="stylesheet" href="map.css?v=20251228i">
+  <link rel="stylesheet" href="post.css?v=20251228i">
+  <link rel="stylesheet" href="components.css?v=20251228i">
+  <link rel="stylesheet" href="fieldsets.css?v=20251228i">
+  <link rel="stylesheet" href="admin.css?v=20251228i">
+  <link rel="stylesheet" href="formbuilder.css?v=20251228i">
+  <link rel="stylesheet" href="member.css?v=20251228i">
+  <link rel="stylesheet" href="posteditor.css?v=20251228i">
+  <link rel="stylesheet" href="marquee.css?v=20251228i">
 </head>
 <body>
 
@@ -341,13 +344,14 @@ if (empty($ogTitle)) {
         </button>
         <div class="filter-sort-menu menu-class-1">
           <div class="filter-sort-menu-button menu-button">
-            <span class="filter-sort-menu-button-text menu-text">Recommended</span>
+            <span class="filter-sort-menu-button-text menu-text">Sort by Recommended</span>
+            <span class="filter-sort-geolocate-icon filter-sort-geolocate-icon--button" aria-hidden="true"></span>
             <span class="filter-sort-menu-button-arrow menu-arrow"></span>
           </div>
           <div class="filter-sort-menu-options menu-options">
-            <div class="filter-sort-menu-option menu-option" data-sort="recommended">Recommended</div>
+            <div class="filter-sort-menu-option menu-option" data-sort="recommended">Sort by Recommended</div>
             <div class="filter-sort-menu-option menu-option" data-sort="az">Sort by Title A-Z</div>
-            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Closest</div>
+            <div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Distance<span class="filter-sort-geolocate-icon" aria-hidden="true"></span></div>
             <div class="filter-sort-menu-option menu-option" data-sort="soon">Sort by Soonest</div>
           </div>
         </div>
@@ -374,13 +378,7 @@ if (empty($ogTitle)) {
               <button class="clear-button filter-daterange-clear" type="button" aria-label="Clear date"></button>
             </div>
           </div>
-          <div class="filter-expired-row row-class-1">
-            <span class="filter-expired-label">Show Expired Events</span>
-            <label class="component-bigorange-switch">
-              <input class="component-bigorange-switch-input filter-expired-input" type="checkbox">
-              <span class="component-bigorange-switch-slider"></span>
-            </label>
-          </div>
+          <input class="filter-expired-input" type="checkbox" style="display:none">
           <div class="filter-calendar-container" aria-hidden="true">
             <div class="filter-calendar"></div>
           </div>
@@ -492,9 +490,9 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div id="adminWelcomeLoadType" class="admin-settings-welcome-type-toggles row-class-1">
@@ -531,18 +529,27 @@ if (empty($ogTitle)) {
               <label class="admin-settings-field-label">Website Currency</label>
               <div id="adminCurrencyPicker" data-setting-key="website_currency"></div>
             </div>
+            <div class="admin-settings-field">
+              <span class="admin-settings-field-label admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Resize Anti-Jitter</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-settings-antijitter-tooltip"></div></span>
+              <div id="adminAntijitter" class="admin-settings-antijitter-buttons toggle-class-1">
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="off" aria-pressed="true">Off</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="blur" aria-pressed="false">Blur</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="teleport" aria-pressed="false">Teleport</button>
+                <button type="button" class="admin-settings-antijitter-button toggle-button" data-value="smoothing" aria-pressed="false">Smoothing</button>
+              </div>
+            </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Devtools Console Filter</span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
           </div>
@@ -551,16 +558,16 @@ if (empty($ogTitle)) {
           <div class="admin-settings-countdown-container">
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Countdown in Posts</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-countdown-tooltip"></div></span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminCountdownPosts" data-setting-key="countdown_posts" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminCountdownPosts" data-setting-key="countdown_posts" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Countdown on Postcards</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-countdown-tooltip"></div></span>
-              <label class="component-big-switch">
-                <input type="checkbox" class="component-big-switch-input" id="adminCountdownPostcards" data-setting-key="countdown_postcards" />
-                <span class="component-big-switch-slider"></span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminCountdownPostcards" data-setting-key="countdown_postcards" />
+                <span class="component-switch-slider"></span>
               </label>
             </div>
             <div id="adminCountdownPostcardsMode" class="admin-settings-countdown-mode-toggles row-class-1">
@@ -778,16 +785,24 @@ if (empty($ogTitle)) {
                   <input type="text" class="admin-settings-field-input" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
                 </div>
                 <div class="admin-settings-field">
-                  <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
-                </div>
-                <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderCountries">Countries Folder</label>
                   <input type="text" class="admin-settings-field-input" id="adminFolderCountries" data-setting-key="folder_countries" autocomplete="off" placeholder="flags/" />
                 </div>
                 <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
+                </div>
+                <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderDummyImages">Dummy Images Folder</label>
                   <input type="text" class="admin-settings-field-input" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderFieldsetIcons">Fieldset Icons Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderFieldsetIcons" data-setting-key="folder_fieldset_icons" autocomplete="off" placeholder="system-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderLinks">Links Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderLinks" data-setting-key="folder_links" autocomplete="off" placeholder="Links/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderMapImages">Map Images Folder</label>
@@ -835,6 +850,16 @@ if (empty($ogTitle)) {
             </div>
           </div>
           
+          <div class="admin-settings-imagemanager-accordion accordion-class-1">
+            <div class="admin-settings-imagemanager-accordion-header accordion-header">
+              <span class="admin-settings-imagemanager-accordion-header-text">Site Customisation</span>
+              <span class="admin-settings-imagemanager-accordion-header-arrow"></span>
+            </div>
+            <div class="admin-settings-imagemanager-accordion-body accordion-body">
+              <div id="adminSiteCustomisationContainer"></div>
+            </div>
+          </div>
+
           <!-- Tailwind Color Swatches -->
           <div class="admin-settings-color-swatches">
             <div class="admin-settings-color-swatches-title">Tailwind Blue Scale</div>
@@ -864,6 +889,48 @@ if (empty($ogTitle)) {
               <div class="admin-settings-color-swatch" style="background: var(--green-800);"><span>800</span></div>
               <div class="admin-settings-color-swatch" style="background: var(--green-900);"><span>900</span></div>
               <div class="admin-settings-color-swatch" style="background: var(--green-950);"><span>950</span></div>
+            </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Yellow Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--yellow-950);"><span>950</span></div>
+            </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Red Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--red-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--red-950);"><span>950</span></div>
+            </div>
+            <div class="admin-settings-color-swatches-title">Tailwind Gray Scale</div>
+            <div class="admin-settings-color-swatches-grid">
+              <div class="admin-settings-color-swatch" style="background: var(--gray-50);"><span>50</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-100);"><span>100</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-200);"><span>200</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-300);"><span>300</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-400);"><span>400</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-500);"><span>500</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-600);"><span>600</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-700);"><span>700</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-800);"><span>800</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-900);"><span>900</span></div>
+              <div class="admin-settings-color-swatch" style="background: var(--gray-950);"><span>950</span></div>
             </div>
           </div>
           
@@ -925,6 +992,27 @@ if (empty($ogTitle)) {
                 <input type="range" id="adminStartingPitchMobile" min="0" max="85" step="1" value="0" class="admin-spin-slider" />
               </div>
             </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminFlytoZoomDesktop">Fly-To Zoom Desktop</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminFlytoZoomDesktopDisplay" class="admin-slider-value">12</span>
+                <input type="range" id="adminFlytoZoomDesktop" min="1" max="18" step="1" value="12" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminFlytoZoomMobile">Fly-To Zoom Mobile</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminFlytoZoomMobileDisplay" class="admin-slider-value">12</span>
+                <input type="range" id="adminFlytoZoomMobile" min="1" max="18" step="1" value="12" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label admin-settings-field-label--has-tooltip" for="adminMapCardPriorityReshuffleZoom"><span class="admin-settings-field-label-text">Map Card Reshuffle Zoom Increment</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-map-card-priority-tooltip"></div></label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminMapCardPriorityReshuffleZoomDisplay" class="admin-slider-value">0.5</span>
+                <input type="range" id="adminMapCardPriorityReshuffleZoom" min="0.1" max="3.0" step="0.1" value="0.5" class="admin-spin-slider" />
+              </div>
+            </div>
           </div>
           
           <!-- Spin Settings -->
@@ -932,18 +1020,18 @@ if (empty($ogTitle)) {
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Spin on Logo</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminSpinLogoClick" class="component-big-switch-input" checked />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminSpinLogoClick" class="component-switch-input" checked />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
             </div>
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Spin on Load</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminSpinLoadStart" class="component-big-switch-input" />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminSpinLoadStart" class="component-switch-input" />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
               <div id="adminSpinType" class="admin-spin-type-toggles admin-spin-type-toggles--no-margin row-class-1">
@@ -977,32 +1065,33 @@ if (empty($ogTitle)) {
           <div class="admin-map-lighting-container" id="admin-map-lighting-container">
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Map Lighting</label>
-              <div class="admin-lighting-buttons">
-                <button type="button" class="admin-lighting-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="admin-lighting-button-text">Sunrise</span>
+              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
+              <div class="admin-lighting-buttons toggle-class-1">
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Sunrise</span> -->
                 </button>
-                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="admin-lighting-button-text">Day</span>
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Day</span> -->
                 </button>
-                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="admin-lighting-button-text">Sunset</span>
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Sunset</span> -->
                 </button>
-                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="admin-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="admin-lighting-button-text">Night</span>
+                <button type="button" class="admin-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  <!-- <span class="admin-lighting-button-text">Night</span> -->
                 </button>
               </div>
             </div>
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Map Style</label>
-              <div class="admin-style-buttons">
-                <button type="button" class="admin-style-button" data-style="standard" aria-pressed="true">
+              <div class="admin-style-buttons toggle-class-1">
+                <button type="button" class="admin-style-button toggle-button" data-style="standard" aria-pressed="true">
                   <span class="admin-style-button-text">Standard</span>
                 </button>
-                <button type="button" class="admin-style-button admin-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                <button type="button" class="admin-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
                   <span class="admin-style-button-text">Satellite</span>
                 </button>
               </div>
@@ -1014,9 +1103,9 @@ if (empty($ogTitle)) {
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Wait for Map Tiles</span>
-                <label class="component-big-switch">
-                  <input type="checkbox" id="adminWaitForMapTiles" class="component-big-switch-input" checked />
-                  <span class="component-big-switch-slider"></span>
+                <label class="component-switch">
+                  <input type="checkbox" id="adminWaitForMapTiles" class="component-switch-input" checked />
+                  <span class="component-switch-slider"></span>
                 </label>
               </div>
             </div>
@@ -1038,17 +1127,17 @@ if (empty($ogTitle)) {
             <!-- Default wallpaper mode for new users (members override with their own preference) -->
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Default Location Wallpaper</label>
-              <div class="admin-wallpaper-buttons">
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="off" aria-pressed="false">
+              <div class="admin-wallpaper-buttons toggle-class-1">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Off</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="still" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Still</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="basic" aria-pressed="true">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
                   <span class="admin-wallpaper-button-text">Basic</span>
                 </button>
-                <button type="button" class="admin-wallpaper-button" data-wallpaper="orbit" aria-pressed="false">
+                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                   <span class="admin-wallpaper-button-text">Orbit</span>
                 </button>
               </div>
@@ -1096,22 +1185,12 @@ if (empty($ogTitle)) {
         
         <!-- Checkout Tab -->
         <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
-          <div class="admin-checkout-paypal-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
-              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client ID" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
-              <input type="text" class="admin-settings-field-input admin-settings-field-input--secret" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client Secret" />
-            </div>
-          </div>
+          <div class="admin-checkout-settings-message" data-message-key="msg_checkout_settings"></div>
           <div class="admin-checkout-options-container">
             <span class="admin-checkout-options-header-label">Checkout Options</span>
             <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
               <!-- Checkout options will be populated by JavaScript -->
             </div>
-            <button type="button" class="admin-checkout-options-add">Add Tier</button>
           </div>
         </section>
         
@@ -1201,7 +1280,7 @@ if (empty($ogTitle)) {
         <div class="member-tab-bar" role="tablist" aria-label="Member sections">
           <button type="button" id="member-tab-profile-btn" class="member-tab-profile button-class-2" data-tab="profile" role="tab" aria-selected="true" aria-controls="member-tab-profile">Profile</button>
           <button type="button" id="member-tab-create-btn" class="member-tab-create button-class-2" data-tab="create" role="tab" aria-selected="false" aria-controls="member-tab-create">Create Post</button>
-          <button type="button" id="member-tab-myposts-btn" class="member-tab-myposts button-class-2" data-tab="myposts" role="tab" aria-selected="false" aria-controls="member-tab-myposts" hidden>My Posts</button>
+          <button type="button" id="member-tab-posteditor-btn" class="member-tab-posteditor button-class-2" data-tab="posteditor" role="tab" aria-selected="false" aria-controls="member-tab-posteditor" hidden>Post Editor</button>
           <button type="button" id="member-tab-register-btn" class="member-tab-register button-class-2" data-tab="register" role="tab" aria-selected="false" aria-controls="member-tab-register">Support FunMap</button>
         </div>
       </div>
@@ -1218,49 +1297,50 @@ if (empty($ogTitle)) {
           <div class="member-mapstyle-container">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Lighting</label>
-              <div class="member-lighting-buttons">
-                <button type="button" class="member-lighting-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="member-lighting-button-text">Sunrise</span>
+              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
+              <div class="member-lighting-buttons toggle-class-1">
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Sunrise</span> -->
                 </button>
-                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="member-lighting-button-text">Day</span>
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Day</span> -->
                 </button>
-                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="member-lighting-button-text">Sunset</span>
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Sunset</span> -->
                 </button>
-                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="member-lighting-button-icon" aria-hidden="true"></span>
-                  <span class="member-lighting-button-text">Night</span>
+                <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  <!-- <span class="member-lighting-button-text">Night</span> -->
                 </button>
               </div>
             </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Style</label>
-              <div class="member-style-buttons">
-                <button type="button" class="member-style-button" data-style="standard" aria-pressed="true">
+              <div class="member-style-buttons toggle-class-1">
+                <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
                   <span class="member-style-button-text">Standard</span>
                 </button>
-                <button type="button" class="member-style-button member-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
                   <span class="member-style-button-text">Satellite</span>
                 </button>
               </div>
             </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Wallpaper Animation</label>
-              <div class="member-wallpaper-buttons">
-                <button type="button" class="member-wallpaper-button" data-wallpaper="off" aria-pressed="false">
+              <div class="member-wallpaper-buttons toggle-class-1">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Off</span>
                 </button>
-                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="still" aria-pressed="false">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Still</span>
                 </button>
-                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="basic" aria-pressed="true">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
                   <span class="member-wallpaper-button-text">Basic</span>
                 </button>
-                <button type="button" class="member-wallpaper-button member-wallpaper-button--bordered" data-wallpaper="orbit" aria-pressed="false">
+                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                   <span class="member-wallpaper-button-text">Orbit</span>
                 </button>
               </div>
@@ -1296,7 +1376,7 @@ if (empty($ogTitle)) {
                     <div id="member-profile-more-menu" class="member-profile-more-menu" hidden>
                       <div class="member-profile-more-item">
                         <span class="member-profile-more-item-text">Hide Account</span>
-                        <div id="member-profile-hide-switch" class="member-profile-more-switch" role="switch" aria-checked="false" tabindex="0"></div>
+                        <label id="member-profile-hide-switch" class="component-switch"><input class="component-switch-input" type="checkbox"><span class="component-switch-slider"></span></label>
                       </div>
                       <button type="button" id="member-profile-delete-btn" class="member-profile-more-item member-profile-more-delete">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
@@ -1307,8 +1387,13 @@ if (empty($ogTitle)) {
                 </form>
               </div>
               
-              <!-- Logout Button (outside drawer) -->
+              <!-- Profile Actions: Refresh Preferences + Logout -->
               <div class="member-profile-actions">
+                <div class="member-refresh-preferences">
+                  <button type="button" class="member-refresh-preferences-btn button-class-2" id="member-refresh-preferences-btn">Refresh Preferences</button>
+                  <span class="member-refresh-tooltip"><svg class="member-refresh-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span>
+                  <div class="member-refresh-tooltip-text" id="member-refresh-tooltip-text"></div>
+                </div>
                 <button type="button" class="member-logout button-class-3" id="member-logout-btn">Log Out</button>
               </div>
             </section>
@@ -1332,9 +1417,9 @@ if (empty($ogTitle)) {
         </section>
         
         <!-- ================================================================
-             MY POSTS TAB
+             POST EDITOR TAB
              ================================================================ -->
-        <section id="member-tab-myposts" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-myposts-btn" data-bottomslack="false" data-topslack="false" hidden>
+        <section id="member-tab-posteditor" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-posteditor-btn" hidden>
           <!-- Content loaded when logged in -->
         </section>
         
@@ -1357,7 +1442,7 @@ if (empty($ogTitle)) {
               <div id="member-avatar-grid-register" aria-label="Avatar choices"></div>
               <div id="member-supporter-country-menu"></div>
               <input type="hidden" id="member-supporter-country" name="country" value="">
-              <button type="submit" class="member-button-submit button-class-2c" data-action="register">Supporter payment gateway</button>
+              <div id="member-register-payment-container"></div>
             </div>
           </form>
         </section>
@@ -1380,7 +1465,7 @@ if (empty($ogTitle)) {
     </div>
   </div>
 
-  <!-- Avatar cropper + picker UI are created dynamically by components (components-new.js) -->
+  <!-- Avatar cropper + picker UI are created dynamically by components (components.js) -->
 
   <!-- ========================================================================
        SECTION 7: MARQUEE
@@ -1417,18 +1502,19 @@ if (empty($ogTitle)) {
        JAVASCRIPT FILES (10 total)
        Load order matters: backbone first, then sections
        ======================================================================== -->
-  <script src="fieldsets-new.js?v=20251228w"></script>
-  <script src="components-new.js?v=20251228w"></script>
-  <script src="index-new.js?v=20251228w"></script>
-  <script src="header-new.js?v=20251228w"></script>
-  <!-- filter-new.js loaded lazily on first use -->
-  <script src="map-new.js?v=20251228w"></script>
-  <script src="post-new.js?v=20251228w"></script>
-  <script src="admin-new.js?v=20251228w"></script>
-  <script src="formbuilder-new.js?v=20251228w"></script>
-  <script src="posteditor-new.js?v=20251228w"></script>
-  <script src="member-new.js?v=20251228w"></script>
-  <script src="marquee-new.js?v=20251228w"></script>
+  <script src="fieldsets.js?v=20251228w"></script>
+  <script src="components.js?v=20251228w"></script>
+  <script src="index.js?v=20251228w"></script>
+  <script src="header.js?v=20251228w"></script>
+<script src="filter.js?v=20251228w"></script>
+<script src="map.js?v=20251228w"></script>
+  <script src="post.js?v=20251228w"></script>
+  <script src="admin.js?v=20251228w"></script>
+  <script src="formbuilder.js?v=20251228w"></script>
+  <script src="posteditor.js?v=20251228w"></script>
+  <script src="member.js?v=20251228w"></script>
+  <script src="marquee.js?v=20251228w"></script>
+
 
 </body>
 </html>
