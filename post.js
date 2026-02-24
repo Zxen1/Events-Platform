@@ -1039,10 +1039,10 @@ const PostModule = (function() {
       return Promise.resolve([]);
     }
 
-    // Trigger fieldset icon load in parallel with posts fetch (first call only, then cached)
-    if (window.App && typeof App.loadFieldsetIcons === 'function') {
-      App.loadFieldsetIcons();
-    }
+    // Start fieldset icons load in parallel with posts fetch; render waits for both
+    var fieldsetIconsReady = (window.App && typeof App.loadFieldsetIcons === 'function')
+      ? App.loadFieldsetIcons()
+      : Promise.resolve();
 
     postsError = null;
 
@@ -1123,22 +1123,24 @@ const PostModule = (function() {
       .then(function(data) {
         // Ignore stale responses
         if (myToken !== postsRequestToken) return [];
-        postsLoading = false;
-        if (data.success && Array.isArray(data.posts)) {
-          renderPostList(data.posts);
-          // Emit counts for the current viewport (server-filtered)
-          emitFilterCounts(data.posts);
-          // Refresh map clusters with new post data
-          if (window.MapModule && MapModule.refreshClusters) {
-            MapModule.refreshClusters();
+        return fieldsetIconsReady.then(function() {
+          postsLoading = false;
+          if (data.success && Array.isArray(data.posts)) {
+            renderPostList(data.posts);
+            // Emit counts for the current viewport (server-filtered)
+            emitFilterCounts(data.posts);
+            // Refresh map clusters with new post data
+            if (window.MapModule && MapModule.refreshClusters) {
+              MapModule.refreshClusters();
+            }
+            return data.posts;
+          } else {
+            postsError = data.message || 'Unknown error';
+            renderPostsEmptyState();
+            App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
+            return [];
           }
-          return data.posts;
-        } else {
-          postsError = data.message || 'Unknown error';
-          renderPostsEmptyState();
-          App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
-          return [];
-        }
+        });
       })
       .catch(function(err) {
         // Abort is expected when filters/map change quickly.
