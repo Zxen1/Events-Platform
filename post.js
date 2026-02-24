@@ -4713,6 +4713,14 @@ const PostModule = (function() {
    */
   function renderRecentPanel() {
     if (!recentPanelContentEl) return;
+    var fieldsetIconsReady = (window.App && typeof App.loadFieldsetIcons === 'function')
+      ? App.loadFieldsetIcons()
+      : Promise.resolve();
+    fieldsetIconsReady.then(function() { _doRenderRecentPanel(); });
+  }
+
+  function _doRenderRecentPanel() {
+    if (!recentPanelContentEl) return;
 
     var history = getRecentHistory();
 
