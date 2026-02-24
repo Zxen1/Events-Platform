@@ -4454,11 +4454,11 @@ const SystemImagePickerComponent = (function(){
     
     // Get database images instantly (from the provided basket, or the default system_images basket)
     function getDatabaseImages(folderPath, basket) {
-        var basket = basket || systemImagesBasket;
-        if (!basket || !folderPath || !Array.isArray(basket)) return [];
+        var activeBasket = basket || systemImagesBasket;
+        if (!activeBasket || !folderPath || !Array.isArray(activeBasket)) return [];
         var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
         var dbImages = [];
-        basket.forEach(function(filename) {
+        activeBasket.forEach(function(filename) {
             dbImages.push(folder + filename);
         });
         return dbImages;
