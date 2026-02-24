@@ -955,12 +955,6 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save fieldset icons');
                     }
-                    // Update originals so subsequent saves don't re-send
-                    modifiedFieldsetIcons.forEach(function(item) {
-                        if (fieldsetIconState[item.id]) {
-                            fieldsetIconState[item.id].original = fieldsetIconState[item.id].current;
-                        }
-                    });
                 })
             );
         }
@@ -3488,9 +3482,6 @@ const AdminModule = (function() {
             });
     }
     
-    // Tracks fieldset icon values: { fieldsetId: { original, current } }
-    var fieldsetIconState = {};
-
     function renderSiteCustomisation() {
         var container = document.getElementById('adminSiteCustomisationContainer');
         if (!container || !window.SystemImagePickerComponent) return;
@@ -3501,11 +3492,9 @@ const AdminModule = (function() {
         var folderPath = settingsData.folder_fieldset_icons || null;
         var basket = settingsData.fieldset_icons_basket || null;
 
-        fieldsetIconState = {};
-
         fieldsets.forEach(function(fs) {
+            var fieldKey = 'fieldset_icon.' + fs.id;
             var initialValue = fs.fieldset_icon || '';
-            fieldsetIconState[fs.id] = { original: initialValue, current: initialValue };
 
             var row = document.createElement('div');
             row.className = 'admin-settings-field admin-settings-field--imagepicker';
@@ -3525,21 +3514,26 @@ const AdminModule = (function() {
                 basket: basket,
                 onSelect: function(imagePath) {
                     var filename = imagePath.indexOf('/') !== -1 ? imagePath.split('/').pop() : imagePath;
-                    fieldsetIconState[fs.id].current = filename;
+                    updateField(fieldKey, filename);
                 }
             });
 
+            picker.element.dataset.fieldsetId = fs.id;
             pickerContainer.appendChild(picker.element);
             container.appendChild(row);
+
+            registerField(fieldKey, initialValue);
         });
     }
 
     function getModifiedFieldsetIcons() {
         var modified = [];
-        for (var id in fieldsetIconState) {
-            var state = fieldsetIconState[id];
-            if (state.current !== state.original) {
-                modified.push({ id: parseInt(id, 10), fieldset_icon: state.current });
+        for (var fieldId in fieldRegistry) {
+            if (fieldId.indexOf('fieldset_icon.') !== 0) continue;
+            var entry = fieldRegistry[fieldId];
+            if (entry.type === 'simple' && entry.current !== entry.original) {
+                var fsId = parseInt(fieldId.replace('fieldset_icon.', ''), 10);
+                modified.push({ id: fsId, fieldset_icon: entry.current });
             }
         }
         return modified;
