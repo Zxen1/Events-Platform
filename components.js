@@ -13527,6 +13527,7 @@ window.CountryComponent = CountryComponent;
 window.MemberAuthFieldsetsComponent = MemberAuthFieldsetsComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
+window.FieldsetIconPickerComponent = FieldsetIconPickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;
 window.AgeRatingComponent = AgeRatingComponent;
 window.LinksComponent = LinksComponent;
