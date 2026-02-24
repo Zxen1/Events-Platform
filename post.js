@@ -205,6 +205,8 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function init() {
+    if (window.App && typeof App.loadFieldsetIcons === 'function') App.loadFieldsetIcons();
+
     panelsContainerEl = document.querySelector('.post-mode-panels');
     if (!panelsContainerEl) {
       throw new Error('[Post] .post-mode-panels container not found.');
