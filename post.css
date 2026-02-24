@@ -541,9 +541,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 28px; /* Fixed width column for icon alignment */
-  width: 28px;
-  padding-right: 10px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
+  padding-right: 5px;
   box-sizing: border-box;
 }
 
@@ -625,10 +625,10 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  flex: 0 0 28px; /* Fixed width column for icon alignment */
-  width: 28px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
   height: 18px;
-  padding-right: 10px;
+  padding-right: 5px;
   border: 0;
   border-radius: 0;
   line-height: 1;
@@ -639,10 +639,9 @@
 .post-card-image-badge,
 .recent-card-image-badge,
 .post-image-badge {
-  max-width: 18px;
-  max-height: 18px;
-  width: auto;
-  height: auto;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
   display: block;
 }
 
@@ -1075,7 +1074,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  padding-right: 10px;
+  padding-right: 5px;
 }
 
 .post-header-row-cat .post-header-icon-sub:empty {
@@ -1107,7 +1106,7 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  padding-right: 10px;
+  padding-right: 5px;
   border: 0;
   border-radius: 0;
   width: auto;
@@ -1117,10 +1116,9 @@
 
 /* Badge image */
 .post-header-image-badge {
-  max-width: 18px;
-  max-height: 18px;
-  width: auto;
-  height: auto;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
   display: block;
 }
 
@@ -1683,13 +1681,10 @@
 
 /* Price badge image (currency flag) */
 .post-info-image-badge {
-  max-width: 18px;
-  max-height: 18px;
-  width: auto;
-  height: auto;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
 }
 
 /* Badge (emoji icons) */

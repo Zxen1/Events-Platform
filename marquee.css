@@ -223,10 +223,10 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  flex: 0 0 28px; /* Fixed width column for icon alignment */
-  width: 28px;
+  flex: 0 0 24px; /* Fixed width column for icon alignment */
+  width: 24px;
   height: 18px;
-  padding-right: 10px;
+  padding-right: 5px;
   border: 0;
   border-radius: 0;
   line-height: 1;
@@ -234,10 +234,9 @@
 }
 
 .marquee-image-badge {
-  max-width: 18px;
-  max-height: 18px;
-  width: auto;
-  height: auto;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
   display: block;
 }
 
