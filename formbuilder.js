@@ -3222,7 +3222,25 @@
                 if (dragging && dragging !== fieldWrapper) {
                     var rect = fieldWrapper.getBoundingClientRect();
                     var midY = rect.top + rect.height / 2;
-                    if (ev.clientY < midY) {
+                    var insertBefore = ev.clientY < midY;
+
+                    // Enforce container lock — block if drop would cross the divider
+                    var draggingFsId = dragging.getAttribute('data-fieldset-id');
+                    var draggingRule = draggingFsId ? LOCKED_FIELDSETS[String(draggingFsId).toLowerCase()] : null;
+                    if (draggingRule && (draggingRule.container === 'primary' || draggingRule.container === 'location')) {
+                        var dividerEl = fieldsContainer.querySelector('.formbuilder-location-divider');
+                        if (dividerEl) {
+                            var allChildren = Array.from(fieldsContainer.children);
+                            var dividerIdx = allChildren.indexOf(dividerEl);
+                            var targetIdx = allChildren.indexOf(fieldWrapper);
+                            var intendedIdx = insertBefore ? targetIdx : targetIdx + 1;
+                            var wouldBePrimary = intendedIdx <= dividerIdx;
+                            if (draggingRule.container === 'primary' && !wouldBePrimary) return;
+                            if (draggingRule.container === 'location' && wouldBePrimary) return;
+                        }
+                    }
+
+                    if (insertBefore) {
                         fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper);
                     } else {
                         fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper.nextSibling);
@@ -3376,7 +3394,17 @@
                 if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled-requires')) return;
 
                 var result = createFieldElement(fs, true, fs);
-                fieldsContainer.appendChild(result.wrapper);
+                var indRule = LOCKED_FIELDSETS[fieldsetKeyLower];
+                if (indRule && indRule.container === 'primary') {
+                    var dividerEl = fieldsContainer.querySelector('.formbuilder-location-divider');
+                    if (dividerEl) {
+                        fieldsContainer.insertBefore(result.wrapper, dividerEl);
+                    } else {
+                        fieldsContainer.appendChild(result.wrapper);
+                    }
+                } else {
+                    fieldsContainer.appendChild(result.wrapper);
+                }
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled');
                 updateRequiresFieldsets();
