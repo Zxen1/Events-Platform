@@ -1407,6 +1407,20 @@
     }
     
     function buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, parentBody) {
+
+        // ── Locked Fieldset Rules ─────────────────────────────────────────────
+        var LOCKED_FIELDSETS = {
+            'venue':          { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
+            'city':           { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
+            'address':        { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
+            'amenities':      { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
+            'ticket-url':     { container: 'location', required: null,         subcategory_type: null,     requires: 'ticket-pricing' },
+            'item-url':       { container: 'location', required: null,         subcategory_type: null,     requires: 'item-pricing'   },
+            'ticket-pricing': { container: 'primary',  required: 'forced-on',  subcategory_type: 'Events', requires: null             },
+            'sessions':       { container: 'location', required: 'forced-on',  subcategory_type: 'Events', requires: null             },
+        };
+        // ─────────────────────────────────────────────────────────────────────
+
         var option = document.createElement('div');
         option.className = 'formbuilder-accordion-option';
         
@@ -1749,6 +1763,30 @@
             });
         }
         
+        // Grey out fieldsets whose required partner is not present in the form
+        function updateRequiresFieldsets() {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                if (!fsId) return;
+                var fsIdLower = String(fsId).toLowerCase();
+                var rule = LOCKED_FIELDSETS[fsIdLower];
+                if (!rule || !rule.requires) return;
+                var requiredKey = rule.requires;
+                var requiredFieldset = fieldsets.find(function(f) {
+                    return f.fieldset_key && String(f.fieldset_key).toLowerCase() === requiredKey;
+                });
+                var requiredId = requiredFieldset ? String(requiredFieldset.id) : null;
+                var partnerPresent = requiredId && !!addedFieldsets[requiredId];
+                if (partnerPresent) {
+                    opt.classList.remove('formbuilder-fieldset-menu-option--disabled-requires');
+                } else {
+                    opt.classList.add('formbuilder-fieldset-menu-option--disabled-requires');
+                }
+            });
+        }
+
         // Function to auto-add mandatory event fieldsets (ticket_pricing, sessions) when Events type is selected
         function autoAddEventFieldsets() {
             if (!fieldsContainer || !fieldsetOpts) return;
@@ -2461,19 +2499,6 @@
                 fieldName = fieldData.key;
             }
             
-            // ── Locked Fieldset Rules ─────────────────────────────────────────────
-            var LOCKED_FIELDSETS = {
-                'venue':          { container: 'location', required: 'forced-on',  subcategory_type: null      },
-                'city':           { container: 'location', required: 'forced-on',  subcategory_type: null      },
-                'address':        { container: 'location', required: 'forced-on',  subcategory_type: null      },
-                'amenities':      { container: 'location', required: 'forced-on',  subcategory_type: null      },
-                'ticket-url':     { container: 'location', required: null,         subcategory_type: null      },
-                'item-url':       { container: 'location', required: null,         subcategory_type: null      },
-                'ticket-pricing': { container: 'primary',  required: 'forced-on',  subcategory_type: 'Events'  },
-                'sessions':       { container: 'location', required: 'forced-on',  subcategory_type: 'Events'  },
-            };
-            // ─────────────────────────────────────────────────────────────────────
-
             var lockedRule = null;
             var isLockedLocationFieldset = false;
             var isLockedLocationOptionalFieldset = false;
@@ -2619,11 +2644,32 @@
                     var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                     if (menuOpt) {
                         menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
-                        // Re-apply location type filtering after removing "already added" disabled state
                         var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
                         var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
                         updateLocationTypeFieldsets(currentLocationType);
                     }
+
+                    // Cascade removal — remove any fieldset that requires this one
+                    var deletedKey = fieldsetDef && fieldsetDef.fieldset_key ? String(fieldsetDef.fieldset_key).toLowerCase() : '';
+                    if (deletedKey) {
+                        Object.keys(LOCKED_FIELDSETS).forEach(function(key) {
+                            if (LOCKED_FIELDSETS[key].requires === deletedKey) {
+                                var dependentFieldset = fieldsets.find(function(f) {
+                                    return f.fieldset_key && String(f.fieldset_key).toLowerCase() === key;
+                                });
+                                var dependentId = dependentFieldset ? String(dependentFieldset.id) : null;
+                                if (dependentId && addedFieldsets[dependentId]) {
+                                    var dependentWrapper = fieldsContainer.querySelector('.formbuilder-field-wrapper[data-fieldset-id="' + dependentId + '"]');
+                                    if (dependentWrapper) dependentWrapper.remove();
+                                    addedFieldsets[dependentId] = false;
+                                    var dependentMenuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + dependentId + '"]');
+                                    if (dependentMenuOpt) dependentMenuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                                }
+                            }
+                        });
+                    }
+
+                    updateRequiresFieldsets();
                     notifyChange();
                 });
             }
@@ -3180,11 +3226,13 @@
                 // Check for "already added" disabled or "general type" disabled (for session_pricing)
                 if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled')) return;
                 if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled-general')) return;
-                
+                if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled-requires')) return;
+
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled');
+                updateRequiresFieldsets();
                 setFieldsetMenuOpen(false);
                 // Update divider and location repeat switches after adding fieldset
                 setTimeout(function() {
@@ -3239,6 +3287,9 @@
                 updateLocationDividerAndRepeatSwitches();
             }, 0);
         }
+
+        // Grey out fieldsets whose required partner is not yet in the form
+        updateRequiresFieldsets();
         
         function setFieldsetMenuOpen(isOpen) {
             if (!fieldsetMenu) return;

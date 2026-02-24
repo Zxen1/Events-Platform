@@ -762,14 +762,16 @@
 
 .formbuilder-fieldset-menu-option--disabled,
 .formbuilder-fieldset-menu-option--disabled-location-type,
-.formbuilder-fieldset-menu-option--disabled-general {
+.formbuilder-fieldset-menu-option--disabled-general,
+.formbuilder-fieldset-menu-option--disabled-requires {
   color: #555;
   cursor: not-allowed;
 }
 
 .formbuilder-fieldset-menu-option--disabled:hover,
 .formbuilder-fieldset-menu-option--disabled-location-type:hover,
-.formbuilder-fieldset-menu-option--disabled-general:hover {
+.formbuilder-fieldset-menu-option--disabled-general:hover,
+.formbuilder-fieldset-menu-option--disabled-requires:hover {
   background: transparent;
 }
 
