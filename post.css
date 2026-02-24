@@ -1684,7 +1684,9 @@
   width: 16px;
   height: 16px;
   object-fit: contain;
-  display: block;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
 /* Badge (emoji icons) */
