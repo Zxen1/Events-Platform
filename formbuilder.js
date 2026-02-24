@@ -1763,22 +1763,20 @@
             });
         }
         
-        // Grey out fieldsets whose required partner is not present in the form
+        // Grey out fieldsets whose required partner is not present in the form.
+        // addedFieldsets is keyed by fs.key (the fieldset_key string), not fs.id (a number).
         function updateRequiresFieldsets() {
             if (!fieldsetOpts) return;
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 if (!fsId) return;
-                var fsIdLower = String(fsId).toLowerCase();
-                var rule = LOCKED_FIELDSETS[fsIdLower];
+                // fsId on the menu option is fs.key (fieldset_key string) — look it up directly.
+                var rule = LOCKED_FIELDSETS[String(fsId).toLowerCase()];
                 if (!rule || !rule.requires) return;
                 var requiredKey = rule.requires;
-                var requiredFieldset = fieldsets.find(function(f) {
-                    return f.fieldset_key && String(f.fieldset_key).toLowerCase() === requiredKey;
-                });
-                var requiredId = requiredFieldset ? String(requiredFieldset.id) : null;
-                var partnerPresent = requiredId && !!addedFieldsets[requiredId];
+                // addedFieldsets is keyed by fs.key, which equals fieldset_key.
+                var partnerPresent = !!addedFieldsets[requiredKey];
                 if (partnerPresent) {
                     opt.classList.remove('formbuilder-fieldset-menu-option--disabled-requires');
                 } else {
@@ -2649,20 +2647,18 @@
                         updateLocationTypeFieldsets(currentLocationType);
                     }
 
-                    // Cascade removal — remove any fieldset that requires this one
+                    // Cascade removal — remove any fieldset that requires this one.
+                    // addedFieldsets and data-fieldset-id are both keyed by fs.key (fieldset_key string).
                     var deletedKey = fieldsetDef && fieldsetDef.fieldset_key ? String(fieldsetDef.fieldset_key).toLowerCase() : '';
                     if (deletedKey) {
                         Object.keys(LOCKED_FIELDSETS).forEach(function(key) {
                             if (LOCKED_FIELDSETS[key].requires === deletedKey) {
-                                var dependentFieldset = fieldsets.find(function(f) {
-                                    return f.fieldset_key && String(f.fieldset_key).toLowerCase() === key;
-                                });
-                                var dependentId = dependentFieldset ? String(dependentFieldset.id) : null;
-                                if (dependentId && addedFieldsets[dependentId]) {
-                                    var dependentWrapper = fieldsContainer.querySelector('.formbuilder-field-wrapper[data-fieldset-id="' + dependentId + '"]');
+                                // key is the fieldset_key of the dependent (e.g. "ticket-url")
+                                if (addedFieldsets[key]) {
+                                    var dependentWrapper = fieldsContainer.querySelector('.formbuilder-field-wrapper[data-fieldset-id="' + key + '"]');
                                     if (dependentWrapper) dependentWrapper.remove();
-                                    addedFieldsets[dependentId] = false;
-                                    var dependentMenuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + dependentId + '"]');
+                                    addedFieldsets[key] = false;
+                                    var dependentMenuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + key + '"]');
                                     if (dependentMenuOpt) dependentMenuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
                                 }
                             }
