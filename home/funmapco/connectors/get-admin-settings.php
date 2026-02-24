@@ -180,6 +180,26 @@ try {
     }
     $response['system_images'] = $systemImages;
 
+    // Fieldsets-only mode: return fieldset icon mappings for post/marquee badge rendering
+    $fieldsetsOnly = isset($_GET['fieldsets_only']) && $_GET['fieldsets_only'] === '1';
+    if ($fieldsetsOnly) {
+        $fieldsetsResponse = ['success' => true, 'fieldsets' => []];
+        try {
+            $stmt = $pdo->query("SHOW TABLES LIKE 'fieldsets'");
+            if ($stmt->rowCount() > 0) {
+                $colCheck = $pdo->query("SHOW COLUMNS FROM `fieldsets` LIKE 'fieldset_icon'");
+                if ($colCheck->rowCount() > 0) {
+                    $stmt = $pdo->query('SELECT `fieldset_key`, `fieldset_icon` FROM `fieldsets` WHERE `fieldset_icon` IS NOT NULL AND `fieldset_icon` != ""');
+                    $fieldsetsResponse['fieldsets'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+            }
+        } catch (Throwable $e) {
+            // Return empty fieldsets rather than breaking
+        }
+        echo json_encode($fieldsetsResponse);
+        return;
+    }
+
     // Lite mode: return only settings + system_images (skip baskets + dropdown_options for faster startup)
     $lite = isset($_GET['lite']) && ($_GET['lite'] === '1' || $_GET['lite'] === 'true' || $_GET['lite'] === 'yes');
     if ($lite) {

@@ -230,6 +230,7 @@ const App = (function() {
     countries: 'folder_countries',
     dummyImages: 'folder_dummy_images',
     currencies: 'folder_currencies',
+    fieldsetIcons: 'folder_fieldset_icons',
     links: 'folder_links',
     phonePrefixes: 'folder_phone_prefixes',
     postImages: 'folder_post_images',
@@ -298,6 +299,41 @@ const App = (function() {
       folderPath += '/';
     }
     return folderPath;
+  }
+
+  /**
+   * Get full CDN URL for a fieldset's icon, looked up by fieldset_key.
+   * Returns null if the fieldset has no icon assigned or the folder is not configured.
+   * @param {string} fieldsetKey - e.g. 'venue', 'sessions', 'public-email'
+   * @returns {string|null}
+   */
+  function getFieldsetIconUrl(fieldsetKey) {
+    var fieldsets = state.fieldsets;
+    if (!fieldsets || !Array.isArray(fieldsets)) return null;
+    for (var i = 0; i < fieldsets.length; i++) {
+      var fs = fieldsets[i];
+      if (fs.fieldset_key === fieldsetKey && fs.fieldset_icon) {
+        return getImageUrl('fieldsetIcons', fs.fieldset_icon);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Load fieldset icon mappings on demand (called at map card breakpoint, not at startup).
+   * Fetches once and caches. Subsequent calls return the cached promise.
+   * @returns {Promise}
+   */
+  var _fieldsetIconsPromise = null;
+  function loadFieldsetIcons() {
+    if (state.fieldsets) return Promise.resolve();
+    if (_fieldsetIconsPromise) return _fieldsetIconsPromise;
+    _fieldsetIconsPromise = fetch('/gateway.php?action=get-admin-settings&fieldsets_only=1')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        setState('fieldsets', Array.isArray(data.fieldsets) ? data.fieldsets : []);
+      });
+    return _fieldsetIconsPromise;
   }
 
   /**
@@ -1081,6 +1117,8 @@ const App = (function() {
     // Image URL helpers
     getImageUrl,
     getImageFolder,
+    getFieldsetIconUrl,
+    loadFieldsetIcons,
     formatDateShort
   };
 

@@ -1039,6 +1039,11 @@ const PostModule = (function() {
       return Promise.resolve([]);
     }
 
+    // Trigger fieldset icon load in parallel with posts fetch (first call only, then cached)
+    if (window.App && typeof App.loadFieldsetIcons === 'function') {
+      App.loadFieldsetIcons();
+    }
+
     postsError = null;
 
     var params = new URLSearchParams();
@@ -1328,6 +1333,21 @@ const PostModule = (function() {
    * @param {string} classPrefix - CSS class prefix ('post-card' or 'recent-card')
    * @returns {string} HTML string for the info rows
    */
+  // Resolve a fieldset icon URL via App.getFieldsetIconUrl.
+  function getFieldsetBadgeUrl(fieldsetKey) {
+    if (!fieldsetKey || !window.App || typeof App.getFieldsetIconUrl !== 'function') return null;
+    return App.getFieldsetIconUrl(fieldsetKey) || null;
+  }
+
+  // Map location_type string to its fieldset key.
+  function locationTypeToFieldsetKey(locationType) {
+    var lt = (locationType || '').toLowerCase();
+    if (lt === 'venue') return 'venue';
+    if (lt === 'city') return 'city';
+    if (lt === 'address') return 'address';
+    return null;
+  }
+
   function buildCardInfoRowsHtml(data, classPrefix) {
     var html = [];
     
@@ -1339,15 +1359,19 @@ const PostModule = (function() {
     
     // Location row
     if (data.locationText) {
-      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">📍</span><span>' + escapeHtml(data.locationText) + '</span></div>');
+      var locIconUrl = getFieldsetBadgeUrl(locationTypeToFieldsetKey(data.locationType));
+      var locBadgeHtml = locIconUrl ? '<img class="' + classPrefix + '-image-badge" src="' + locIconUrl + '" alt="">' : '';
+      html.push('<div class="' + classPrefix + '-row-loc">' + (locBadgeHtml ? '<span class="' + classPrefix + '-badge" title="Location">' + locBadgeHtml + '</span>' : '') + '<span>' + escapeHtml(data.locationText) + '</span></div>');
     }
     
     // Dates row
     if (data.datesText) {
-      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">📅</span><span>' + escapeHtml(data.datesText) + '</span></div>');
+      var dateIconUrl = getFieldsetBadgeUrl('sessions');
+      var dateBadgeHtml = dateIconUrl ? '<img class="' + classPrefix + '-image-badge" src="' + dateIconUrl + '" alt="">' : '';
+      html.push('<div class="' + classPrefix + '-row-date">' + (dateBadgeHtml ? '<span class="' + classPrefix + '-badge" title="Dates">' + dateBadgeHtml + '</span>' : '') + '<span>' + escapeHtml(data.datesText) + '</span></div>');
     }
     
-    // Price row
+    // Price row — currency flag is logic-driven, not a fieldset icon
     if (data.priceParts && data.priceParts.text) {
       var badgeHtml = data.priceParts.flagUrl 
         ? '<img class="' + classPrefix + '-image-badge" src="' + data.priceParts.flagUrl + '" alt="' + data.priceParts.countryCode + '" title="Currency: ' + data.priceParts.countryCode.toUpperCase() + '">'
@@ -1455,6 +1479,7 @@ const PostModule = (function() {
       subcategoryName: displayName,
       subcategoryIconUrl: iconUrl,
       locationText: locationDisplay,
+      locationType: locationType,
       datesText: datesText,
       priceParts: priceParts,
       hasPromo: mapCardHasPromo(mapCard)
@@ -3297,13 +3322,17 @@ const PostModule = (function() {
         // Links (icon strip)
         linksStripRowHtml || '',
         // Public email
-        publicEmail ? '<div class="post-info-row post-info-row-email">' +
-          '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
-        '</div>' : '',
+        publicEmail ? (function() {
+          var iconUrl = getFieldsetBadgeUrl('public-email');
+          var badge = iconUrl ? '<img class="post-info-image-badge" src="' + iconUrl + '" alt=""> ' : '';
+          return '<div class="post-info-row post-info-row-email"><a href="mailto:' + escapeHtml(publicEmail) + '">' + badge + escapeHtml(publicEmail) + '</a></div>';
+        })() : '',
         // Phone
-        (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
-          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
-        '</div>' : '',
+        (phonePrefix || publicPhone) ? (function() {
+          var iconUrl = getFieldsetBadgeUrl('public-phone');
+          var badge = iconUrl ? '<img class="post-info-image-badge" src="' + iconUrl + '" alt=""> ' : '';
+          return '<div class="post-info-row post-info-row-phone"><a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + badge + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a></div>';
+        })() : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +

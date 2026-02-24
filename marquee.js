@@ -450,7 +450,19 @@ const MarqueeModule = (function() {
     if (locationDisplay) {
       const locLine = document.createElement('div');
       locLine.className = 'marquee-slide-info-loc';
-      locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
+      var locFsKey = locationType === 'venue' ? 'venue' : locationType === 'city' ? 'city' : locationType === 'address' ? 'address' : null;
+      var locIconUrl = (locFsKey && window.App && typeof App.getFieldsetIconUrl === 'function') ? App.getFieldsetIconUrl(locFsKey) : null;
+      if (locIconUrl) {
+        const locBadge = document.createElement('span');
+        locBadge.className = 'marquee-badge';
+        locBadge.title = 'Location';
+        const locImg = document.createElement('img');
+        locImg.className = 'marquee-image-badge';
+        locImg.src = locIconUrl;
+        locImg.alt = '';
+        locBadge.appendChild(locImg);
+        locLine.appendChild(locBadge);
+      }
       const locText = document.createElement('span');
       locText.textContent = String(locationDisplay).trim();
       locLine.appendChild(locText);
@@ -461,7 +473,18 @@ const MarqueeModule = (function() {
     if (datesText) {
       const dateLine = document.createElement('div');
       dateLine.className = 'marquee-slide-info-date';
-      dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
+      var dateIconUrl = (window.App && typeof App.getFieldsetIconUrl === 'function') ? App.getFieldsetIconUrl('sessions') : null;
+      if (dateIconUrl) {
+        const dateBadge = document.createElement('span');
+        dateBadge.className = 'marquee-badge';
+        dateBadge.title = 'Dates';
+        const dateImg = document.createElement('img');
+        dateImg.className = 'marquee-image-badge';
+        dateImg.src = dateIconUrl;
+        dateImg.alt = '';
+        dateBadge.appendChild(dateImg);
+        dateLine.appendChild(dateBadge);
+      }
       const dateText = document.createElement('span');
       dateText.textContent = datesText;
       dateLine.appendChild(dateText);
