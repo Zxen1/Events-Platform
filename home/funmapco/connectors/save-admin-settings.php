@@ -125,6 +125,11 @@ try {
         $fieldsetTooltips = $data['fieldset_tooltips'];
         unset($settings['fieldset_tooltips']);
     }
+    $fieldsetIcons = null;
+    if (isset($data['fieldset_icons']) && is_array($data['fieldset_icons'])) {
+        $fieldsetIcons = $data['fieldset_icons'];
+        unset($settings['fieldset_icons']);
+    }
     if (isset($data['field_tooltips']) && is_array($data['field_tooltips'])) {
         $fieldTooltips = $data['field_tooltips'];
         unset($settings['field_tooltips']);
@@ -265,6 +270,30 @@ try {
                 ]);
                 if ($stmt->rowCount() > 0) {
                     $fieldsetTooltipsUpdated++;
+                }
+            }
+        }
+    }
+
+    // Save fieldset icons if provided
+    $fieldsetIconsUpdated = 0;
+    if ($fieldsetIcons !== null && is_array($fieldsetIcons) && !empty($fieldsetIcons)) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fieldsets'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `fieldsets`
+                SET `fieldset_icon` = :fieldset_icon,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+            foreach ($fieldsetIcons as $icon) {
+                if (!isset($icon['id'])) continue;
+                $stmt->execute([
+                    ':id'            => (int)$icon['id'],
+                    ':fieldset_icon' => (isset($icon['fieldset_icon']) && $icon['fieldset_icon'] !== '') ? (string)$icon['fieldset_icon'] : null,
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $fieldsetIconsUpdated++;
                 }
             }
         }
@@ -499,6 +528,9 @@ try {
     
     if ($fieldsetTooltipsUpdated > 0) {
         $response['fieldset_tooltips_updated'] = $fieldsetTooltipsUpdated;
+    }
+    if ($fieldsetIconsUpdated > 0) {
+        $response['fieldset_icons_updated'] = $fieldsetIconsUpdated;
     }
     if ($fieldTooltipsUpdated > 0) {
         $response['field_tooltips_updated'] = $fieldTooltipsUpdated;

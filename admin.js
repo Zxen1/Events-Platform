@@ -603,7 +603,8 @@ const AdminModule = (function() {
                     { folder: res.settings.folder_phone_prefixes, option_group: 'phone-prefix' },
                     { folder: res.settings.folder_countries, option_group: 'country' },
                     { folder: res.settings.folder_age_ratings, option_group: 'age-rating' },
-                    { folder: res.settings.folder_links, option_group: 'link' }
+                    { folder: res.settings.folder_links, option_group: 'link' },
+                    { folder: res.settings.folder_fieldset_icons, option_group: 'fieldset-icon' }
                 ];
                 
                 // Sync each folder in parallel (non-blocking, background)
@@ -940,6 +941,30 @@ const AdminModule = (function() {
             );
         }
         
+        // Save modified fieldset icons (uses save-admin-settings endpoint)
+        var modifiedFieldsetIcons = getModifiedFieldsetIcons();
+        if (modifiedFieldsetIcons.length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fieldset_icons: modifiedFieldsetIcons })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save fieldset icons');
+                    }
+                    // Update originals so subsequent saves don't re-send
+                    modifiedFieldsetIcons.forEach(function(item) {
+                        if (fieldsetIconState[item.id]) {
+                            fieldsetIconState[item.id].original = fieldsetIconState[item.id].current;
+                        }
+                    });
+                })
+            );
+        }
+
         // Save modified field tooltips (uses save-admin-settings endpoint)
         var modifiedFieldTooltips = getModifiedFieldTooltips();
         if (modifiedFieldTooltips.length > 0) {
@@ -3409,6 +3434,14 @@ const AdminModule = (function() {
                     if (data.system_images) {
                         settingsData.system_images = data.system_images;
                     }
+
+                    // Store fieldsets and fieldset icons basket for Site Customisation accordion
+                    if (data.fieldsets) {
+                        settingsData.fieldsets = data.fieldsets;
+                    }
+                    if (data.fieldset_icons_basket) {
+                        settingsData.fieldset_icons_basket = data.fieldset_icons_basket;
+                    }
                     
                     // Store console_filter setting from database (source of truth)
                     if (data.settings.console_filter !== undefined) {
@@ -3455,6 +3488,63 @@ const AdminModule = (function() {
             });
     }
     
+    // Tracks fieldset icon values: { fieldsetId: { original, current } }
+    var fieldsetIconState = {};
+
+    function renderSiteCustomisation() {
+        var container = document.getElementById('adminSiteCustomisationContainer');
+        if (!container || !window.SystemImagePickerComponent) return;
+
+        var fieldsets = settingsData.fieldsets;
+        if (!fieldsets || !fieldsets.length) return;
+
+        var folderPath = settingsData.folder_fieldset_icons || null;
+        var basket = settingsData.fieldset_icons_basket || null;
+
+        fieldsetIconState = {};
+
+        fieldsets.forEach(function(fs) {
+            var initialValue = fs.fieldset_icon || '';
+            fieldsetIconState[fs.id] = { original: initialValue, current: initialValue };
+
+            var row = document.createElement('div');
+            row.className = 'admin-settings-field admin-settings-field--imagepicker';
+
+            var label = document.createElement('label');
+            label.className = 'admin-settings-field-label';
+            label.textContent = 'Fieldset Icon: ' + fs.fieldset_name;
+            row.appendChild(label);
+
+            var pickerContainer = document.createElement('div');
+            row.appendChild(pickerContainer);
+
+            var picker = SystemImagePickerComponent.buildPicker({
+                container: settingsContainer,
+                databaseValue: initialValue,
+                folderPath: folderPath,
+                basket: basket,
+                onSelect: function(imagePath) {
+                    var filename = imagePath.indexOf('/') !== -1 ? imagePath.split('/').pop() : imagePath;
+                    fieldsetIconState[fs.id].current = filename;
+                }
+            });
+
+            pickerContainer.appendChild(picker.element);
+            container.appendChild(row);
+        });
+    }
+
+    function getModifiedFieldsetIcons() {
+        var modified = [];
+        for (var id in fieldsetIconState) {
+            var state = fieldsetIconState[id];
+            if (state.current !== state.original) {
+                modified.push({ id: parseInt(id, 10), fieldset_icon: state.current });
+            }
+        }
+        return modified;
+    }
+
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
         
@@ -3674,6 +3764,9 @@ const AdminModule = (function() {
         
         // Add explanation to API container
         addImageSyncExplanation();
+
+        // Render Site Customisation accordion (fieldset icons)
+        renderSiteCustomisation();
     }
 
     function applyResizeAntiJitter(mode) {

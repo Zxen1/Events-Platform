@@ -850,6 +850,16 @@ if (empty($ogTitle)) {
             </div>
           </div>
           
+          <div class="admin-settings-imagemanager-accordion accordion-class-1">
+            <div class="admin-settings-imagemanager-accordion-header accordion-header">
+              <span class="admin-settings-imagemanager-accordion-header-text">Site Customisation</span>
+              <span class="admin-settings-imagemanager-accordion-header-arrow"></span>
+            </div>
+            <div class="admin-settings-imagemanager-accordion-body accordion-body">
+              <div id="adminSiteCustomisationContainer"></div>
+            </div>
+          </div>
+
           <!-- Tailwind Color Swatches -->
           <div class="admin-settings-color-swatches">
             <div class="admin-settings-color-swatches-title">Tailwind Blue Scale</div>

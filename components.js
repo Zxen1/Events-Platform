@@ -4452,12 +4452,13 @@ const SystemImagePickerComponent = (function(){
             });
     }
     
-    // Get database images instantly (from system_images basket table)
-    function getDatabaseImages(folderPath) {
-        if (!systemImagesBasket || !folderPath || !Array.isArray(systemImagesBasket)) return [];
+    // Get database images instantly (from system_images basket table, or a per-picker basket override)
+    function getDatabaseImages(folderPath, basketOverride) {
+        var basket = basketOverride || systemImagesBasket;
+        if (!basket || !folderPath || !Array.isArray(basket)) return [];
         var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
         var dbImages = [];
-        systemImagesBasket.forEach(function(filename) {
+        basket.forEach(function(filename) {
             dbImages.push(folder + filename);
         });
         return dbImages;
@@ -4547,6 +4548,7 @@ const SystemImagePickerComponent = (function(){
         var onSelect = options.onSelect || function() {};
         var databaseValue = options.databaseValue || null;
         var folderPathOverride = options.folderPath || null;
+        var localBasket = options.basket || null; // Per-picker basket override (e.g. fieldset-icons)
         var currentImage = null; // Only set if databaseValue exists in loaded images
         
         var menu = document.createElement('div');
@@ -4680,14 +4682,15 @@ const SystemImagePickerComponent = (function(){
             
             // Show database images instantly (menu is now open and interactive)
             var effectiveFolder2 = folderPathOverride || imageFolder;
-            if (!systemImagesBasket) {
+            var activeBasket = localBasket || systemImagesBasket;
+            if (!activeBasket) {
                 loadFolderFromSettings().then(function() {
                     // Update with database images now that they're loaded
-                    var updatedDbImages = getDatabaseImages(effectiveFolder2);
+                    var updatedDbImages = getDatabaseImages(effectiveFolder2, localBasket);
                     renderImageOptions(updatedDbImages, true);
                 });
             } else {
-                var dbImages = getDatabaseImages(effectiveFolder2);
+                var dbImages = getDatabaseImages(effectiveFolder2, localBasket);
                 renderImageOptions(dbImages, true);
             }
             
