@@ -806,10 +806,11 @@
 }
 
 .formbuilder-field-required {
-  color: #f87171;
-  font-weight: bold;
-  margin-left: 3px;
   display: none;
+  color: #f87171;
+  font-size: 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .formbuilder-field-required--required {
@@ -1287,13 +1288,10 @@
 }
 
 .formbuilder-field-group-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: #3b82f6;
-  border-radius: 50%;
-  margin-left: 6px;
-  vertical-align: middle;
+  display: inline;
+  color: #3b82f6;
+  font-size: 8px;
+  margin-left: 4px;
   flex-shrink: 0;
 }
 

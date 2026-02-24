@@ -2562,12 +2562,13 @@
             if (lockedRule && lockedRule.group) {
                 var groupDot = document.createElement('span');
                 groupDot.className = 'formbuilder-field-group-dot';
+                groupDot.textContent = '●';
                 fieldNameSpan.appendChild(groupDot);
             }
             
             var fieldRequired = document.createElement('span');
             fieldRequired.className = 'formbuilder-field-required';
-            fieldRequired.textContent = '*';
+            fieldRequired.textContent = '●';
             
             // Indicators removed - divider line now serves as the visual indicator for location-specific fieldsets
             var fieldIndicators = document.createElement('span');
@@ -2645,7 +2646,7 @@
             // Hard-locked fieldsets (forced-on, non-group) have no delete. Group members get a delete that removes the whole group.
             var isHardLocked = !!(lockedRule && lockedRule.required === 'forced-on' && !isGroupMember);
 
-            var deleteLabel = isGroupMember ? 'Remove Group' : 'Delete Field';
+            var deleteLabel = isGroupMember ? 'Remove Group' : 'Remove Field';
             var fieldMoreBtn = document.createElement('div');
             fieldMoreBtn.className = 'formbuilder-field-more';
             fieldMoreBtn.innerHTML = '<div class="formbuilder-field-more-icon"></div><div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">' + deleteLabel + '</div></div>';
