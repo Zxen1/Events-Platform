@@ -3496,11 +3496,14 @@ const AdminModule = (function() {
             var label = document.createElement('label');
             label.className = 'admin-settings-field-label';
             label.textContent = badge.label;
+            var staticWrapper = document.createElement('div');
+            staticWrapper.className = 'component-systemimagepicker-menu menu-class-1';
             var staticBox = document.createElement('div');
-            staticBox.className = 'menu-button';
+            staticBox.className = 'component-systemimagepicker-menu-button menu-button';
             staticBox.textContent = badge.description;
+            staticWrapper.appendChild(staticBox);
             row.appendChild(label);
-            row.appendChild(staticBox);
+            row.appendChild(staticWrapper);
             container.appendChild(row);
         });
 
