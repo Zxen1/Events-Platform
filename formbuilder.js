@@ -1759,8 +1759,10 @@
                     if (isEventsGroup) {
                         if (subcategoryType === 'Events') {
                             opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
+                            opt.removeAttribute('title');
                         } else {
                             opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+                            opt.setAttribute('title', 'Only available for Events subcategories');
                         }
                     }
                     return;
@@ -1773,8 +1775,10 @@
                 if (fsIdLower === 'session-pricing') {
                     if (subcategoryType === 'Events') {
                         opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
+                        opt.removeAttribute('title');
                     } else {
                         opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+                        opt.setAttribute('title', 'Only available for Events subcategories');
                     }
                 }
             });
@@ -1796,8 +1800,14 @@
                 var partnerPresent = !!addedFieldsets[requiredKey];
                 if (partnerPresent) {
                     opt.classList.remove('formbuilder-fieldset-menu-option--disabled-requires');
+                    opt.removeAttribute('title');
                 } else {
+                    var partnerFs = fieldsets.find(function(f) {
+                        return (f.key || f.fieldset_key || '').toLowerCase() === requiredKey;
+                    });
+                    var partnerName = partnerFs ? (partnerFs.name || partnerFs.label || requiredKey) : requiredKey;
                     opt.classList.add('formbuilder-fieldset-menu-option--disabled-requires');
+                    opt.setAttribute('title', 'Requires \u201c' + partnerName + '\u201d to be added first');
                 }
             });
         }
@@ -2617,7 +2627,7 @@
                                 addedFieldsets[k] = false;
                             });
                             var groupOpt = fieldsetOpts.querySelector('[data-fieldset-group="' + groupName + '"]');
-                            if (groupOpt) groupOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                            if (groupOpt) { groupOpt.classList.remove('formbuilder-fieldset-menu-option--disabled'); groupOpt.removeAttribute('title'); }
                             updateRequiresFieldsets();
                             notifyChange();
                         }
@@ -2644,6 +2654,7 @@
                     var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                     if (menuOpt) {
                         menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                        menuOpt.removeAttribute('title');
                         var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
                         var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
                         updateLocationTypeFieldsets(currentLocationType);
@@ -2658,7 +2669,7 @@
                                 if (dependentWrapper) dependentWrapper.remove();
                                 addedFieldsets[key] = false;
                                 var dependentMenuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + key + '"]');
-                                if (dependentMenuOpt) dependentMenuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                                if (dependentMenuOpt) { dependentMenuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled'); dependentMenuOpt.removeAttribute('title'); }
                             }
                         });
                     }
@@ -3109,6 +3120,7 @@
             // Field drag and drop - only via drag handle
             fieldWrapper.draggable = false;
             var fieldDragStartIndex = -1;
+            var fieldDragStartSibling = null;
             fieldDrag.addEventListener('mousedown', function(ev) {
                 ev.stopPropagation();
                 fieldWrapper.draggable = true;
@@ -3121,9 +3133,10 @@
                     ev.preventDefault();
                     return;
                 }
-                // Remember starting position
                 var siblings = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
                 fieldDragStartIndex = siblings.indexOf(fieldWrapper);
+                fieldDragStartSibling = fieldWrapper.nextSibling;
+                fieldWrapper.removeAttribute('data-drag-cross-blocked');
                 ev.stopPropagation();
                 ev.dataTransfer.effectAllowed = 'move';
                 fieldWrapper.classList.add('dragging');
@@ -3131,15 +3144,43 @@
             fieldWrapper.addEventListener('dragend', function() {
                 fieldWrapper.classList.remove('dragging');
                 fieldWrapper.draggable = false;
-                // Only notify if position actually changed
+
+                var crossBlocked = fieldWrapper.hasAttribute('data-drag-cross-blocked');
+                fieldWrapper.removeAttribute('data-drag-cross-blocked');
+
+                var thisFsId = fieldWrapper.getAttribute('data-fieldset-id');
+                var thisRule = thisFsId ? LOCKED_FIELDSETS[String(thisFsId).toLowerCase()] : null;
+                var containerViolation = false;
+                if (thisRule && thisRule.container) {
+                    var divEl = fieldsContainer.querySelector('.formbuilder-location-divider');
+                    if (divEl) {
+                        var allCh = Array.from(fieldsContainer.children);
+                        var divIdx = allCh.indexOf(divEl);
+                        var curIdx = allCh.indexOf(fieldWrapper);
+                        containerViolation = (thisRule.container === 'primary' && curIdx > divIdx) ||
+                                             (thisRule.container === 'location' && curIdx < divIdx);
+                    }
+                }
+
+                if (crossBlocked || containerViolation) {
+                    if (fieldDragStartSibling && fieldDragStartSibling.parentNode === fieldsContainer) {
+                        fieldsContainer.insertBefore(fieldWrapper, fieldDragStartSibling);
+                    } else {
+                        fieldsContainer.appendChild(fieldWrapper);
+                    }
+                    fieldDragStartIndex = -1;
+                    fieldDragStartSibling = null;
+                    return;
+                }
+
                 var siblings = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
                 var currentIndex = siblings.indexOf(fieldWrapper);
                 if (currentIndex !== fieldDragStartIndex) {
-                    // Update divider and location repeat switches after drag-sort
                     updateLocationDividerAndRepeatSwitches();
                     notifyChange();
                 }
                 fieldDragStartIndex = -1;
+                fieldDragStartSibling = null;
             });
             fieldWrapper.addEventListener('dragover', function(ev) {
                 ev.preventDefault();
@@ -3161,10 +3202,17 @@
                             var targetIdx = allChildren.indexOf(fieldWrapper);
                             var intendedIdx = insertBefore ? targetIdx : targetIdx + 1;
                             var wouldBePrimary = intendedIdx <= dividerIdx;
-                            if (draggingRule.container === 'primary' && !wouldBePrimary) return;
-                            if (draggingRule.container === 'location' && wouldBePrimary) return;
+                            if (draggingRule.container === 'primary' && !wouldBePrimary) {
+                                dragging.setAttribute('data-drag-cross-blocked', '1');
+                                return;
+                            }
+                            if (draggingRule.container === 'location' && wouldBePrimary) {
+                                dragging.setAttribute('data-drag-cross-blocked', '1');
+                                return;
+                            }
                         }
                     }
+                    dragging.removeAttribute('data-drag-cross-blocked');
 
                     if (insertBefore) {
                         fieldWrapper.parentNode.insertBefore(dragging, fieldWrapper);
@@ -3275,6 +3323,7 @@
                 // Grey out if not Events subcategory type
                 if (currentSubcategoryType !== 'Events') {
                     groupOpt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+                    groupOpt.setAttribute('title', 'Only available for Events subcategories');
                 }
 
                 groupOpt.onclick = function(e) {
@@ -3301,6 +3350,7 @@
             
             if (isEventOnlyFieldset && currentSubcategoryType !== 'Events') {
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+                opt.setAttribute('title', 'Only available for Events subcategories');
             }
             var displayName = '';
             if (fs.name && typeof fs.name === 'string' && fs.name.trim()) {
@@ -3333,6 +3383,7 @@
                 }
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled');
+                opt.setAttribute('title', 'Already added to this form');
                 updateRequiresFieldsets();
                 setFieldsetMenuOpen(false);
                 setTimeout(function() { updateLocationDividerAndRepeatSwitches(); }, 0);
