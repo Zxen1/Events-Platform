@@ -4358,6 +4358,7 @@ const PostModule = (function() {
         subcategory_name: subName,
         subcategory_icon_url: iconUrl,
         location_text: locText || '',
+        location_type: locType || '',
         dates_text: datesText || '',
         price_summary: priceSummary || '',
         has_promo: hasPromo,
@@ -4856,6 +4857,7 @@ const PostModule = (function() {
       subcategoryName: displayName,
       subcategoryIconUrl: iconUrl,
       locationText: city,
+      locationType: entry.location_type || '',
       datesText: entry.dates_text || '',
       priceParts: parsePriceSummary(entry.price_summary || ''),
       hasPromo: entry.has_promo || false
