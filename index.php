@@ -777,6 +777,10 @@ if (empty($ogTitle)) {
                   <input type="text" class="admin-settings-field-input" id="adminFolderLinks" data-setting-key="folder_links" autocomplete="off" placeholder="Links/" />
                 </div>
                 <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderFieldsetIcons">Fieldset Icons Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderFieldsetIcons" data-setting-key="folder_fieldset_icons" autocomplete="off" placeholder="system-images/" />
+                </div>
+                <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderAmenities">Amenities Folder</label>
                   <input type="text" class="admin-settings-field-input" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
                 </div>
