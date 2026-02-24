@@ -1415,6 +1415,7 @@
             'address':        { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
             'amenities':      { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
             'ticket-url':     { container: 'location', required: 'forced-on',  subcategory_type: 'Events', requires: null, group: 'ticketing' },
+            'item-pricing':   { container: 'primary',  required: null,         subcategory_type: null,     requires: null             },
             'item-url':       { container: 'location', required: null,         subcategory_type: null,     requires: 'item-pricing'   },
             'ticket-pricing': { container: 'primary',  required: 'forced-on',  subcategory_type: 'Events', requires: null, group: 'ticketing' },
             'sessions':       { container: 'location', required: 'forced-on',  subcategory_type: 'Events', requires: null, group: 'ticketing' },
