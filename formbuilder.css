@@ -719,7 +719,7 @@
   border: 1px solid var(--blue-500);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 600px;
+  max-height: 400px;
   overflow-y: auto;
   z-index: var(--layer-menu, 85);
   scrollbar-width: thin;
