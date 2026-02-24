@@ -1848,7 +1848,7 @@
                 // Mark as added in the menu
                 addedFieldsets[result.fsId] = true;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + keyToAdd + '"]');
-                if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+                if (menuOpt) { menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled'); menuOpt.setAttribute('title', 'Already added to this form'); }
             });
 
             // Mark the group menu item as disabled now that all members are present
@@ -3425,7 +3425,7 @@
             fieldsContainer.appendChild(result.wrapper);
             addedFieldsets[result.fsId] = true;
             var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-            if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+            if (menuOpt) { menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled'); menuOpt.setAttribute('title', 'Already added to this form'); }
         });
         
         // AFTER loading existing fields, manage location type fieldset (will only add if missing)
@@ -3449,7 +3449,7 @@
             });
             var allPresent = groupKeys.every(function(k) { return !!addedFieldsets[k]; });
             var groupOpt = fieldsetOpts.querySelector('[data-fieldset-group="' + groupName + '"]');
-            if (groupOpt && allPresent) groupOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+            if (groupOpt && allPresent) { groupOpt.classList.add('formbuilder-fieldset-menu-option--disabled'); groupOpt.setAttribute('title', 'Already added to this form'); }
         });
 
         // Grey out fieldsets whose required partner is not yet in the form
