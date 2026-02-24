@@ -3486,6 +3486,25 @@ const AdminModule = (function() {
         var container = document.getElementById('adminSiteCustomisationContainer');
         if (!container || !window.SystemImagePickerComponent) return;
 
+        // --- Badges ---
+        var badgeRows = [
+            { label: 'Badge: Subcategory', description: 'Subcategory icons' }
+        ];
+        badgeRows.forEach(function(badge) {
+            var row = document.createElement('div');
+            row.className = 'admin-settings-field admin-settings-field--imagepicker';
+            var label = document.createElement('label');
+            label.className = 'admin-settings-field-label';
+            label.textContent = badge.label;
+            var staticBox = document.createElement('div');
+            staticBox.className = 'menu-button';
+            staticBox.textContent = badge.description;
+            row.appendChild(label);
+            row.appendChild(staticBox);
+            container.appendChild(row);
+        });
+
+        // --- Fieldset Icons ---
         var fieldsets = settingsData.fieldsets;
         if (!fieldsets || !fieldsets.length) return;
 
