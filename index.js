@@ -319,9 +319,10 @@ const App = (function() {
     return null;
   }
 
+
   /**
-   * Load fieldset icon mappings on demand (called at map card breakpoint, not at startup).
-   * Fetches once and caches. Subsequent calls return the cached promise.
+   * Load fieldset icon mappings on demand (called when posts/recent/editor first open).
+   * Fetches once and caches via promise. Subsequent calls return the same promise.
    * @returns {Promise}
    */
   var _fieldsetIconsPromise = null;
