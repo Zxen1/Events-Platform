@@ -2559,11 +2559,11 @@
             fieldNameSpan.textContent = fieldName;
 
             // Blue dot for group members
+            var groupDotEl = null;
             if (lockedRule && lockedRule.group) {
-                var groupDot = document.createElement('span');
-                groupDot.className = 'formbuilder-field-group-dot';
-                groupDot.textContent = '●';
-                fieldNameSpan.appendChild(groupDot);
+                groupDotEl = document.createElement('span');
+                groupDotEl.className = 'formbuilder-field-group-dot';
+                groupDotEl.textContent = '●';
             }
             
             var fieldRequired = document.createElement('span');
@@ -2592,6 +2592,7 @@
             modifiedLabel.textContent = 'Modified';
             
             fieldText.appendChild(fieldNameSpan);
+            if (groupDotEl) fieldText.appendChild(groupDotEl);
             fieldText.appendChild(fieldRequired);
             fieldText.appendChild(fieldIndicators);
             fieldText.appendChild(modifiedLabel);
