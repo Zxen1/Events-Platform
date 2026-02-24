@@ -1286,6 +1286,17 @@
   flex-shrink: 0;
 }
 
+.formbuilder-field-group-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .formbuilder-field-required {
   flex-shrink: 0;
   margin-left: 0;
