@@ -4452,9 +4452,9 @@ const SystemImagePickerComponent = (function(){
             });
     }
     
-    // Get database images instantly (from system_images basket table, or a per-picker basket override)
-    function getDatabaseImages(folderPath, basketOverride) {
-        var basket = basketOverride || systemImagesBasket;
+    // Get database images instantly (from the provided basket, or the default system_images basket)
+    function getDatabaseImages(folderPath, basket) {
+        var basket = basket || systemImagesBasket;
         if (!basket || !folderPath || !Array.isArray(basket)) return [];
         var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
         var dbImages = [];
@@ -4465,7 +4465,7 @@ const SystemImagePickerComponent = (function(){
     }
     
     // Load images list - returns database images instantly, loads API in background
-    function loadImagesFromFolder(folderPath, callback) {
+    function loadImagesFromFolder(folderPath, callback, basket) {
         folderPath = folderPath || imageFolder;
         if (!folderPath) {
             if (callback) callback([]);
@@ -4483,7 +4483,7 @@ const SystemImagePickerComponent = (function(){
         }
         
         // Get database images instantly
-        var dbImages = getDatabaseImages(folderPath);
+        var dbImages = getDatabaseImages(folderPath, basket);
         images = dbImages;
         
         // Return database images immediately
@@ -4697,7 +4697,7 @@ const SystemImagePickerComponent = (function(){
             // Load API in background and append new images (always runs)
             loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
                 renderImageOptions(updatedImageList, false);
-            });
+            }, localBasket);
         }
         
         function closeMenu() {
