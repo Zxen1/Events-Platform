@@ -1,0 +1,1950 @@
+/* ============================================================================
+   FORMBUILDER - Category/Subcategory/Field Editor
+   Used in Admin Panel > Forms Tab
+   
+   Z-INDEX NOTE: All z-index values must respect base.css layer system.
+   Menus use var(--layer-menu) = 85, never exceed 100.
+   ============================================================================ */
+
+/* Container */
+.admin-formbuilder-container {
+  width: 100%;
+}
+
+/* Scroll gap spacer (used to keep clicked headers stationary when content above collapses) */
+.formbuilder-scroll-gap {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Dynamic bottom slack spacer (only grows when needed to prevent bottom clamp/yank) */
+.formbuilder-scroll-gap-bottom {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Category Accordion */
+.formbuilder-accordion {
+  width: 100%;
+  margin-bottom: 3px;
+  background: #080808;
+  border-radius: 5px;
+  overflow: visible;
+}
+
+.formbuilder-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  background: var(--blue-950);
+  border-radius: 5px;
+  border: 1px solid transparent;
+  font-weight: normal;
+}
+
+.formbuilder-accordion-header:hover {
+  border-color: var(--blue-500);
+}
+
+.formbuilder-accordion-header--open,
+.formbuilder-accordion-header--editing {
+  border-radius: 5px 5px 0 0;
+}
+
+.formbuilder-accordion-header--editing {
+  border-color: var(--blue-500);
+  border-bottom: none;
+}
+
+.formbuilder-accordion-header-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.formbuilder-icon--empty {
+  visibility: hidden;
+}
+
+.formbuilder-accordion-header-text {
+  flex: 1;
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+.formbuilder-accordion-header-arrow {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-accordion-header-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.formbuilder-accordion-header-arrow--open::before {
+  transform: rotate(180deg);
+}
+
+.formbuilder-accordion-header-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.formbuilder-accordion-header-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-header-drag:hover .formbuilder-accordion-header-drag-icon {
+  background-color: #fff;
+}
+
+
+.formbuilder-accordion.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-accordion-header-editarea {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+}
+
+.formbuilder-accordion-header-edit {
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-header-editarea:hover,
+.formbuilder-accordion-header-editarea--editing {
+  color: var(--blue-500);
+}
+
+/* Edit Panel */
+.formbuilder-accordion-editpanel {
+  display: none;
+  padding: 10px;
+  background: var(--blue-950);
+  border: 1px solid var(--blue-500);
+  border-top: none;
+}
+
+.formbuilder-accordion-editpanel--editing {
+  display: block;
+}
+
+.formbuilder-accordion--editing:not(.formbuilder-accordion--open) .formbuilder-accordion-editpanel {
+  border-radius: 0 0 5px 5px;
+}
+
+.formbuilder-accordion-editpanel-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-accordion-editpanel-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-accordion-editpanel-input:hover,
+.formbuilder-accordion-editpanel-input:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+/* More button (3-dot menu) */
+.formbuilder-accordion-editpanel-more {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+}
+
+.formbuilder-accordion-editpanel-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-editpanel-more:hover {
+  border-color: var(--blue-500);
+  color: var(--blue-500);
+}
+
+
+.formbuilder-accordion-editpanel-more-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+  display: none;
+}
+
+.formbuilder-accordion-editpanel-more-menu--open {
+  display: block;
+}
+
+.formbuilder-accordion-editpanel-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-accordion-editpanel-more-item:hover {
+  background: #222;
+}
+
+.formbuilder-accordion-editpanel-more-item-text {
+  flex: 1;
+}
+
+/* Hide Category toggle: uses component-switch with --on-default state */
+
+.formbuilder-accordion-editpanel-more-delete {
+  color: #f87171;
+}
+
+.formbuilder-accordion-editpanel-more-delete:hover {
+  background: #7f1d1d;
+}
+
+/* Accordion Body */
+.formbuilder-accordion-body {
+  display: none;
+  padding: 3px 0 0 0;
+}
+
+.formbuilder-accordion-body--open {
+  display: block;
+}
+
+/* Subcategory Option */
+.formbuilder-accordion-option {
+  margin-bottom: 3px;
+  border-radius: 5px;
+  overflow: visible;
+}
+
+.formbuilder-accordion-option-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: #000;
+}
+
+.formbuilder-accordion-option-header:hover {
+  border-color: var(--blue-500);
+}
+
+.formbuilder-accordion-option-header--editing {
+  border-color: var(--blue-500);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.formbuilder-accordion-option-text {
+  flex: 1;
+  padding-left: 10px;
+}
+
+.formbuilder-accordion-option-arrow {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-accordion-option-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.formbuilder-accordion-option-arrow--open::before {
+  transform: rotate(180deg);
+}
+
+.formbuilder-accordion-option-header--open {
+  border-color: var(--blue-500);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.formbuilder-accordion-option-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-option-drag:hover .formbuilder-accordion-option-drag-icon {
+  background-color: #fff;
+}
+
+
+.formbuilder-accordion-option.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-accordion-option-editarea {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+}
+
+.formbuilder-accordion-option-edit {
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-option-editarea:hover,
+.formbuilder-accordion-option-editarea--editing {
+  color: var(--blue-500);
+}
+
+.formbuilder-accordion-option-editpanel {
+  display: none;
+  padding: 10px;
+  border: 1px solid var(--blue-500);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: #000;
+}
+
+.formbuilder-accordion-option-editpanel--editing {
+  display: block;
+}
+
+.formbuilder-accordion-option-body {
+  display: none;
+  padding: 0 10px 10px 10px;
+  border: 1px solid var(--blue-500);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: #000;
+}
+
+.formbuilder-accordion-option-body--open {
+  display: block;
+}
+
+/* When both editing and open */
+.formbuilder-accordion-option-editpanel--editing-open {
+  border-radius: 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option-body--editing-open {
+  border-top: none;
+}
+
+/* Subcategory edit panel overrides */
+.formbuilder-accordion-editpanel-input--subcategory {
+  background: #111111;
+}
+
+.formbuilder-accordion-editpanel-more--subcategory {
+  background: #111111;
+}
+
+.formbuilder-menu-button--subcategory {
+  background: #111111;
+}
+
+.formbuilder-menu-options--subcategory {
+  background: #111111;
+}
+
+/* Icon Picker Menu */
+.formbuilder-menu {
+  width: 100%;
+  height: 36px;
+  position: relative;
+}
+
+.formbuilder-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.formbuilder-menu-button:hover {
+  border-color: var(--blue-500);
+}
+
+.formbuilder-menu-button--open {
+  border-color: var(--blue-500);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-menu-button-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.formbuilder-menu-button-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formbuilder-menu-button-arrow {
+  width: 36px;
+  height: 36px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-menu-button-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.formbuilder-menu-button-arrow--open::before {
+  transform: rotate(180deg);
+}
+
+.formbuilder-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #062038;
+  border: 1px solid var(--blue-500);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: var(--layer-menu, 85);
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.formbuilder-menu-options--open {
+  display: block;
+}
+
+.formbuilder-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-menu-option:hover {
+  background: var(--blue-500);
+}
+
+.formbuilder-menu-option-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.formbuilder-menu-option-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Add Buttons */
+.formbuilder-add-category,
+.formbuilder-add-subcategory,
+.formbuilder-form-preview {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 0;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+.formbuilder-add-category:hover,
+.formbuilder-add-subcategory:hover,
+.formbuilder-form-preview:hover {
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+.formbuilder-add-category {
+  width: 100%;
+  margin-top: 3px;
+}
+
+.formbuilder-form-preview {
+  margin-top: 3px;
+  background: var(--blue-500);
+  color: #fff;
+}
+
+.formbuilder-form-preview:hover {
+  background: var(--blue-500);
+}
+
+/* Fieldset Menu */
+.formbuilder-fieldset-menu {
+  width: 100%;
+  position: relative;
+}
+
+.formbuilder-fieldset-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.formbuilder-fieldset-menu-button:hover {
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+.formbuilder-fieldset-menu-button--open {
+  border-color: var(--blue-500);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+  color: #fff;
+}
+
+.formbuilder-fieldset-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: var(--layer-menu, 85);
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.formbuilder-fieldset-menu-options--open {
+  display: block;
+}
+
+.formbuilder-fieldset-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-fieldset-menu-option:hover,
+.formbuilder-fieldset-menu-option.menu-option--highlighted {
+  background: var(--blue-500);
+}
+
+.formbuilder-fieldset-menu-option--disabled,
+.formbuilder-fieldset-menu-option--disabled-location-type,
+.formbuilder-fieldset-menu-option--disabled-general,
+.formbuilder-fieldset-menu-option--disabled-requires {
+  color: #555;
+  cursor: not-allowed;
+}
+
+.formbuilder-fieldset-menu-option--disabled:hover,
+.formbuilder-fieldset-menu-option--disabled-location-type:hover,
+.formbuilder-fieldset-menu-option--disabled-general:hover,
+.formbuilder-fieldset-menu-option--disabled-requires:hover {
+  background: transparent;
+}
+
+/* Fields Container */
+.formbuilder-fields-container {
+  width: 100%;
+}
+
+/* Field Rows */
+.formbuilder-field {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 10px;
+  margin-bottom: 3px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-field:hover {
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.formbuilder-field-required {
+  display: none;
+  color: #f87171;
+  font-size: 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.formbuilder-field-required--required {
+  display: inline;
+}
+
+.formbuilder-field-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.formbuilder-field-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-drag:hover .formbuilder-field-drag-icon {
+  background-color: #fff;
+}
+
+
+.formbuilder-field-edit {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.formbuilder-field-edit-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-edit:hover .formbuilder-field-edit-icon {
+  color: var(--blue-500);
+}
+
+
+.formbuilder-field.dragging,
+.formbuilder-field-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-field-wrapper {
+  margin-bottom: 3px;
+}
+
+/* Location divider line - appears above location fieldset when location type is selected */
+.member-postform-location-divider {
+  width: 100%;
+  height: 3px;
+  min-height: 3px;
+  background: #333;
+  background-clip: content-box;
+  margin: 0;
+  padding: 2px 0 5px 0;
+  box-sizing: content-box;
+}
+
+.formbuilder-field--editing {
+  border-color: var(--blue-500);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.formbuilder-field-edit--editing {
+  color: var(--blue-500);
+}
+
+/* Field Edit Panel */
+.formbuilder-field-editpanel {
+  display: none;
+  padding: 10px;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+.formbuilder-field-editpanel--editing {
+  display: block;
+}
+
+.formbuilder-field-editpanel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-field-editpanel-row:last-child {
+  margin-bottom: 0;
+}
+
+.formbuilder-field-adminnote {
+  margin-bottom: 10px;
+  color: #bbb;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+.formbuilder-field-required-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.formbuilder-field-required-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue-500);
+  cursor: pointer;
+}
+
+/* Field More Menu */
+.formbuilder-field-more {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  margin-left: auto;
+}
+
+.formbuilder-field-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-more:hover {
+  border-color: var(--blue-500);
+  color: var(--blue-500);
+}
+
+
+.formbuilder-field-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+  display: none;
+}
+
+.formbuilder-field-more-menu--open {
+  display: block;
+}
+
+.formbuilder-field-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-field-more-item:hover {
+  background: #222;
+}
+
+.formbuilder-field-more-delete {
+  color: #f87171;
+}
+
+.formbuilder-field-more-delete:hover {
+  background: #7f1d1d;
+}
+
+/* Field Inputs */
+.formbuilder-field-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  margin-bottom: 0;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-field-input:hover,
+.formbuilder-field-input:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  resize: none;
+  line-height: 1.4;
+  margin-bottom: 0;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-field-textarea:hover,
+.formbuilder-field-textarea:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-textarea + .component-textarearesize-handle {
+  border-color: #222222;
+}
+
+.formbuilder-field-textarea:hover + .component-textarearesize-handle,
+.formbuilder-field-textarea:focus + .component-textarearesize-handle {
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-textarea::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-label {
+  display: block;
+  color: #888;
+  font-size: 11px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.formbuilder-field-label:first-child {
+  margin-top: 0;
+}
+
+/* Field Options */
+.formbuilder-field-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+  background: #0f0f0f;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  margin-bottom: 0;
+}
+
+.formbuilder-field-option-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.formbuilder-field-option-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-field-option-input:hover,
+.formbuilder-field-option-input:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-field-option-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-option-remove,
+.formbuilder-field-option-add {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.formbuilder-field-option-add-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-plus);
+  mask-image: var(--ui-icon-plus);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-option-remove-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-minus);
+  mask-image: var(--ui-icon-minus);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-option-remove:hover .formbuilder-field-option-remove-icon,
+.formbuilder-field-option-add:hover .formbuilder-field-option-add-icon {
+  background-color: #fff;
+}
+
+.formbuilder-field-option-remove:hover,
+.formbuilder-field-option-add:hover {
+  border-color: var(--blue-500);
+}
+
+/* Field Switches */
+.formbuilder-field-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-field-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.formbuilder-field-switch-label.disabled {
+  color: #555;
+  cursor: not-allowed;
+}
+
+/* Field toggle: uses component-switch with --on-default state */
+
+/* Modify Section */
+.formbuilder-field-modify-container {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.formbuilder-field-modify-button {
+  width: 100%;
+  height: 36px;
+  margin-top: 10px;
+  margin-bottom: 0;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.formbuilder-field-modify-button:hover {
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+.formbuilder-field-modify-button--open {
+  border-color: var(--blue-500);
+  color: #fff;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.formbuilder-field-modify-button--modified {
+  border-color: #FF8C00;
+  color: #FF8C00;
+  background: rgba(255, 140, 0, 0.1);
+}
+
+.formbuilder-field-modify-button--modified:hover {
+  border-color: #FF8C00;
+  color: #FF8C00;
+  background: rgba(255, 140, 0, 0.2);
+}
+
+/* Modified label on fieldset - appears after indicators */
+.formbuilder-field-modified-label {
+  display: none;
+  color: #FF8C00;
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 6px;
+}
+
+.formbuilder-field-modified-label--modified {
+  display: inline;
+}
+
+/* Ensure proper spacing and order */
+.formbuilder-field-text {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.formbuilder-field-name {
+  flex-shrink: 0;
+}
+
+.formbuilder-field-group-dot {
+  display: inline;
+  color: #3b82f6;
+  font-size: 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.formbuilder-field-required {
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+.formbuilder-field-indicators {
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.formbuilder-field-modified-label {
+  margin-left: 10px;
+}
+
+/* Default text color for inputs */
+.formbuilder-field-input {
+  color: #fff;
+}
+
+/* Field Indicators */
+.formbuilder-field-indicators {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+}
+
+.formbuilder-field-indicator {
+  font-size: 16px;
+  color: var(--blue-500);
+  display: none;
+  line-height: 1;
+}
+
+/* Indicator classes removed - divider line now serves as visual indicator */
+
+/* Fee Row */
+.formbuilder-fee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.formbuilder-fee-row-label {
+  min-width: 120px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-fee-percent {
+  font-weight: 600;
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-fee-input {
+  width: 100px;
+  height: 36px;
+  padding: 0 10px;
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-fee-input::-webkit-inner-spin-button,
+.formbuilder-fee-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.formbuilder-fee-input:hover,
+.formbuilder-fee-input:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-fee-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-calculator-btn {
+  height: 36px;
+  padding: 0 12px;
+  background: #ff6b35;
+  border: 1px solid #ff6b35;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  margin-left: 8px;
+}
+
+.formbuilder-calculator-btn:hover {
+  background: #ff8555;
+  border-color: #ff8555;
+}
+
+.formbuilder-calculator-btn:active {
+  background: #e55a2a;
+  border-color: #e55a2a;
+}
+
+.formbuilder-calculator-surcharge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+/* Type Row */
+.formbuilder-type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  margin-top: 10px;
+}
+
+.formbuilder-type-row-label {
+  min-width: 120px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-type-value {
+  font-size: 13px;
+  color: var(--blue-500);
+}
+
+.formbuilder-add-subcategory-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.formbuilder-type-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.formbuilder-type-option-input {
+  cursor: pointer;
+  accent-color: var(--blue-500);
+}
+
+.formbuilder-type-option-text {
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Checkout Options Editor */
+.formbuilder-checkout-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.formbuilder-checkout-label {
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-checkout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formbuilder-checkout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  background: #111111;
+}
+
+.formbuilder-checkout-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-checkout-prices {
+  display: flex;
+  gap: 16px;
+}
+
+.formbuilder-checkout-price-item {
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-price-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-calculator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-calc-input {
+  width: 80px;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-checkout-calc-input::-webkit-inner-spin-button,
+.formbuilder-checkout-calc-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.formbuilder-checkout-calc-input:hover,
+.formbuilder-checkout-calc-input:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.formbuilder-checkout-calc-total {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-empty {
+  color: #888;
+  padding: 12px;
+  text-align: center;
+}
+
+/* ============================================================================
+   FORM PREVIEW MODAL
+   Shows form as it appears to members
+   ============================================================================ */
+
+.formbuilder-formpreview-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: var(--layer-modal, 90);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-formpreview-modal-container {
+  width: 100%;
+  height: 80%;
+  background: #111;
+  border: 1px solid var(--blue-500);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.formbuilder-formpreview-modal-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--blue-500);
+  border-bottom: 1px solid var(--blue-500);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+}
+
+.formbuilder-formpreview-modal-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-formpreview-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #888;
+  cursor: pointer;
+}
+
+.formbuilder-formpreview-modal-close:hover {
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+.formbuilder-formpreview-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.fieldset--formbuilder-preview {
+  margin-bottom: 10px;
+}
+
+.fieldset--formbuilder-preview:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================================================
+   FORM LOCATION MANAGER
+   Centralized location container infrastructure for form building.
+   This is the single source of truth for location-related UI components,
+   used by both admin form preview and member-facing forms.
+   ============================================================================ */
+
+/* Form Primary Container */
+.form-primary-container {
+  margin-bottom: 10px;
+}
+
+/* Form Location Picker - matches formpicker menu styling */
+.member-locationpicker-container {
+  background: var(--blue-950);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 10px 12px 10px 12px;
+  margin-bottom: 10px;
+}
+
+/* When container is active/focused - blue border */
+.member-locationpicker-container[data-active="true"] {
+  border-color: var(--blue-500);
+}
+
+/* Form Checkout Container - matches formpicker menu styling */
+.member-checkout-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 10px 12px 10px 12px;
+  margin-bottom: 10px;
+}
+
+/* When container is active/focused - blue border */
+.member-checkout-container[data-active="true"] {
+  border-color: var(--blue-500);
+}
+
+/* Location container */
+.member-location-container {
+  margin-bottom: 10px;
+}
+
+/* Location header - 36px, horizontal flex, appearance from container-class-2 */
+.member-postform-location-header {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  padding-right: 46px; /* Space for absolutely positioned delete button */
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* When container is active/focused - blue border */
+.member-location-container[data-active="true"] > .member-postform-location-header {
+  border-color: var(--blue-500);
+}
+
+.member-location-container[data-active="true"] > .member-postform-location-content {
+  border-color: var(--blue-500);
+}
+
+/* Header text */
+.member-postform-location-header-text {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 36px;
+}
+
+/* Delete button in header - positioned 10px from right, vertically centered */
+.member-postform-location-header-button-delete {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0;
+}
+
+/* Icon via CSS mask (loaded from Bunny CDN) */
+.member-postform-location-header-button-delete::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-clear);
+  mask-image: var(--ui-icon-clear);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.member-postform-location-header-button-delete:hover {
+  color: #e74c3c;
+}
+
+/* Arrow (collapse/expand indicator — same pattern as ticket groups) */
+.member-postform-location-header-arrow {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-postform-location-header-arrow-icon {
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.member-location-container.accordion-class-1--open .member-postform-location-header-arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* Location content - appearance from container-class-2 */
+/* Hidden by default, shown when open */
+.member-postform-location-content {
+  display: none;
+  padding: 10px 12px 10px 12px;
+}
+
+.member-location-container.accordion-class-1--open .member-postform-location-content {
+  display: block;
+}
+
+/* ============================================================================
+   LOCATION QUANTITY PICKER
+   ============================================================================ */
+
+.member-postform-location-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px 0;
+  padding: 0;
+}
+
+.member-postform-location-quantity-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.member-postform-location-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.member-postform-location-quantity-btn {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: #777;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Icon spans (matches header button pattern) */
+.member-postform-location-quantity-btn-icon {
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  opacity: 1;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.member-postform-location-quantity-btn-icon--plus {
+  -webkit-mask-image: var(--ui-icon-plus);
+  mask-image: var(--ui-icon-plus);
+}
+
+.member-postform-location-quantity-btn-icon--minus {
+  -webkit-mask-image: var(--ui-icon-minus);
+  mask-image: var(--ui-icon-minus);
+}
+
+.member-postform-location-quantity-btn--plus:hover {
+  border-color: var(--blue-500);
+  color: var(--blue-500);
+}
+
+.member-postform-location-quantity-btn--minus:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.member-postform-location-quantity-btn:active {
+  background: var(--blue-600);
+  border-color: var(--blue-500);
+  color: #fff;
+}
+
+.member-postform-location-quantity-btn--minus:disabled,
+.member-postform-location-quantity-btn--plus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.member-postform-location-quantity-btn--minus:disabled .member-postform-location-quantity-btn-icon,
+.member-postform-location-quantity-btn--plus:disabled .member-postform-location-quantity-btn-icon {
+  background-color: #888;
+}
+
+.member-postform-location-quantity-display {
+  min-width: 24px;
+  margin-right: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.member-postform-location-explainer {
+  margin: 0 0 10px 0;
+  padding: 0;
+  background: transparent;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* Placeholder mode: override fields show grey placeholder from location 1 */
+.member-postform-location-override--placeholder .fieldset-input,
+.member-postform-location-override--placeholder .fieldset-textarea {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.member-postform-location-override--placeholder .fieldset-input:focus,
+.member-postform-location-override--placeholder .fieldset-textarea:focus,
+.member-postform-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.member-postform-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+  color: #fff;
+}
+
+.member-postform-location-override--placeholder .fieldset-input::placeholder,
+.member-postform-location-override--placeholder .fieldset-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.formbuilder-formpreview-empty {
+  color: #888;
+  text-align: center;
+  padding: 10px;
+}
+
+
