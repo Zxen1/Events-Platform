@@ -3060,6 +3060,8 @@
        -------------------------------------------------------------------------- */
     
     function init(containerEl) {
+        if (window.App && typeof App.loadFieldsetIcons === 'function') App.loadFieldsetIcons();
+
         if (!containerEl) {
             containerEl = document.getElementById('member-tab-posteditor');
         }
