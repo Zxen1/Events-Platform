@@ -603,11 +603,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         throw new RuntimeException('Fieldsets table must include `fieldset_tooltip` (new site requires canonical column names).');
     }
     $hasFieldsetInstruction = in_array('fieldset_instruction', $columns, true);
-    $hasAdminNote = in_array('admin_note', $columns, true);
-    if (!$hasAdminNote) {
-        http_response_code(500);
-        throw new RuntimeException('Fieldsets table must include `admin_note` (required for Form Builder admin notes).');
-    }
     // Check for new column name, fallback to old column name
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true);
 
@@ -635,7 +630,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     if ($hasFieldsetInstruction) {
         $selectColumns[] = '`fieldset_instruction`';
     }
-    $selectColumns[] = '`admin_note`';
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
             $selectColumns[] = '`fieldset_fields`';
@@ -755,9 +749,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         // Include fieldset_instruction if column exists
         if (array_key_exists('fieldset_instruction', $row) && $row['fieldset_instruction'] !== null) {
             $entry['fieldset_instruction'] = is_string($row['fieldset_instruction']) ? trim($row['fieldset_instruction']) : (string)$row['fieldset_instruction'];
-        }
-        if (array_key_exists('admin_note', $row) && $row['admin_note'] !== null) {
-            $entry['admin_note'] = is_string($row['admin_note']) ? trim($row['admin_note']) : (string)$row['admin_note'];
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])

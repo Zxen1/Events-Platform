@@ -61,21 +61,7 @@ try {
   if (!isset($mysqli) || !($mysqli instanceof mysqli)) fail(500, 'Database connection unavailable.');
 
   $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 0.0;
-
-  // Read map_card_breakpoint from database settings (no hardcoded fallback)
-  $thresholdSql = "SELECT setting_value FROM admin_settings WHERE setting_key = 'map_card_breakpoint' LIMIT 1";
-  $thresholdResult = $mysqli->query($thresholdSql);
-  if (!$thresholdResult) {
-    fail(500, 'Failed to read map_card_breakpoint setting from database.');
-  }
-  $thresholdRow = $thresholdResult->fetch_assoc();
-  if (!$thresholdRow || !isset($thresholdRow['setting_value'])) {
-    fail(500, 'map_card_breakpoint setting not found in database.');
-  }
-  $mapCardBreakpoint = floatval($thresholdRow['setting_value']);
-  $thresholdResult->free();
-
-  $areaActive = ($zoom >= $mapCardBreakpoint);
+  $areaActive = ($zoom >= 8.0);
 
   // bounds: sw_lng,sw_lat,ne_lng,ne_lat (only used when areaActive)
   $bounds = null;
@@ -131,7 +117,6 @@ try {
     $whereBaseline[] = 'p.visibility = ?';
     $paramsBaseline[] = 'active';
     $typesBaseline .= 's';
-    $whereBaseline[] = '(p.expires_at IS NULL OR p.expires_at > NOW())';
   }
 
   $whereBaseline[] = 'p.moderation_status IN (?, ?)';
@@ -169,7 +154,7 @@ try {
     $start = $dateStart !== '' ? $dateStart : $dateEnd;
     $end = $dateEnd !== '' ? $dateEnd : $dateStart;
     if ($start === '' || $end === '') { $end = $start; }
-    $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.post_map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
+    $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
     $paramsFiltered[] = $start;
     $paramsFiltered[] = $end;
     $typesFiltered .= 'ss';
@@ -179,15 +164,15 @@ try {
     $min = $minPrice !== null ? $minPrice : null;
     $max = $maxPrice !== null ? $maxPrice : null;
     if ($min !== null && $max !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
       $paramsFiltered[] = $min; $paramsFiltered[] = $max; $paramsFiltered[] = $min; $paramsFiltered[] = $max;
       $typesFiltered .= 'dddd';
     } elseif ($min !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price >= ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price >= ?))';
       $paramsFiltered[] = $min; $paramsFiltered[] = $min;
       $typesFiltered .= 'dd';
     } elseif ($max !== null) {
-      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price <= ?))';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price <= ?))';
       $paramsFiltered[] = $max; $paramsFiltered[] = $max;
       $typesFiltered .= 'dd';
     }

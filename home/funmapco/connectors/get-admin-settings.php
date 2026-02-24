@@ -327,25 +327,6 @@ try {
         } catch (Throwable $e) {
             // Table might not exist yet, continue
         }
-
-        // Fetch links (for Links fieldset / link logos)
-        try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_links` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
-            $linkRows = $stmt->fetchAll();
-            $dropdownOptions['link'] = [];
-            foreach ($linkRows as $row) {
-                if (empty($row['option_value']) || empty($row['option_label'])) {
-                    continue;
-                }
-                $dropdownOptions['link'][] = [
-                    'value' => $row['option_value'],
-                    'label' => $row['option_label'],
-                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
-                ];
-            }
-        } catch (Throwable $e) {
-            // Table might not exist yet, continue
-        }
         
         if (!empty($dropdownOptions)) {
             $response['dropdown_options'] = $dropdownOptions;

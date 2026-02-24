@@ -1,1520 +1,1310 @@
 /* ============================================================================
-   MEMBER PANEL - Cleaned for new architecture
+   MEMBER PANEL
    ============================================================================ */
 
 /* ============================================================================
-   STATUS MESSAGE
+   GLOBAL STYLES COPIED FOR INDEPENDENCE
    ============================================================================ */
 
-.member-status-message {
-  position: fixed;
-  top: calc(var(--safe-top, 0px) + 20px);
-  left: 50%;
-  transform: translate(-50%, -10px);
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  padding: 8px 18px;
-  border-radius: 999px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: var(--layer-dialog);
-  font-size: 14px;
-}
-
-.member-status-message--error {
-  background: #c62828;
-  color: #fff;
-}
-
-.member-status-message--success {
-  background: #2ea060;
-  color: #fff;
-}
-
-.member-status-message--show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-/* ============================================================================
-   SUPPORT FUNMAP (REGISTER TAB)
-   ============================================================================ */
-
-/* Register tab panel (Support FunMap) */
-#member-tab-register {
-  /* No gap - elements use margin-bottom: 10px */
-}
-
-.member-supporter-message {
-  margin: 0 0 10px 0;
-  color: #ddd;
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-/* member-supporter-payment container removed - elements now inside registrationform-container */
-
-.member-supporter-payment-presets {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 10px;
-  margin-bottom: 0;
-}
-
-.member-supporter-payment-presets > * {
-  margin-bottom: 10px;
-}
-
-/* Payment preset buttons use button-class-2c for appearance */
-.member-supporterpayment-button {
-  width: 100%;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.member-supporterpayment-button[aria-pressed="true"] {
-  border-color: var(--green-500);
-  background: var(--green-600);
-}
-
-.member-supporterpayment-input {
-  margin: 0 0 10px 0;
-  width: 100%;
-  height: 44px;
-  padding: 0 10px;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1c1c1c;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
+#memberPanel,
+#memberPanel *{
   box-sizing: border-box;
-  caret-color: #fff;
+  border-color: var(--border);
+}
+#memberPanel *:hover{
+  border-color: var(--border-hover);
+}
+#memberPanel *:active{
+  border-color: var(--border-active);
+}
+#memberPanel *[aria-pressed="true"],
+#memberPanel *[aria-selected="true"],
+#memberPanel .selected,
+#memberPanel .on{
+  border-color: var(--border-active);
+}
+#memberPanel *::-webkit-scrollbar{
+  width:var(--scrollbar-h);
+  height:var(--scrollbar-h);
+}
+#memberPanel *::-webkit-scrollbar-track{
+  background:var(--scrollbar-track);
+}
+#memberPanel *::-webkit-scrollbar-thumb{
+  background:var(--scrollbar-thumb);
+  border-radius:0;
+}
+#memberPanel *::-webkit-scrollbar-thumb:hover{
+  background:var(--scrollbar-thumb-hover);
 }
 
-.member-supporterpayment-input:focus {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
+/* Typography */
+#memberPanel h1,
+#memberPanel h2,
+#memberPanel h3,
+#memberPanel h4,
+#memberPanel h5,
+#memberPanel h6{
+  font-size: 16px;
+  font-weight: bold;
+}
+#memberPanel a{
+  color: var(--primary);
+}
+#memberPanel a:hover{
+  color: var(--accent);
+}
+#memberPanel a:active{
+  color: var(--active);
 }
 
-
-.member-supporter-join-toggle {
-  margin: 0 0 10px 0;
-  height: 44px;
-  border-color: rgba(59, 130, 245, 0.6);
-}
-
-.member-registrationform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
-.member-registrationform-container > * {
-  margin-bottom: 10px;
-}
-
-.member-registrationform-container .member-panel-field-label {
-  margin-bottom: 6px;
-}
-
-.member-registrationform-fieldsets {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* ============================================================================
-   PANEL BASE
-   ============================================================================ */
-
-.member-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: calc(var(--vh, 1vh) * 100);
-  background: transparent;
-  display: none;
-  z-index: var(--layer-panel);
-  pointer-events: none;
-}
-
-.member-panel--show {
-  display: block;
-}
-
-/* ============================================================================
-   PANEL CONTENT
-   ============================================================================ */
-
-.member-panel-contents {
-  --panel-transition-duration: 0.3s;
-  position: absolute;
-  left: auto;
-  right: 0;
-  top: calc(var(--header-h) + var(--safe-top));
-  bottom: auto;
-  width: min(440px, 100%);
-  max-width: 100%;
-  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  border-radius: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  pointer-events: auto;
-  transition: transform var(--panel-transition-duration, 0.3s) ease, left 0.4s cubic-bezier(0.25, 0.1, 0.1, 1), right 0.4s cubic-bezier(0.25, 0.1, 0.1, 1);
-  will-change: transform;
-  box-sizing: border-box;
-  background: #222222;
-  color: #fff;
+/* Overscroll containment */
+#memberPanel .panel-content,
+#memberPanel .options-menu{
   overscroll-behavior: contain;
 }
 
-/* DEBUG (per Paul): disable ALL panel motion immediately on mobile */
-@media (max-width: 530px) {
-  .member-panel-contents {
-    --panel-transition-duration: 0s;
-    transition: none;
-  }
-}
-
-.member-panel-contents--side-left {
-  transform: translateX(-100%);
-}
-
-.member-panel-contents--side-right {
-  transform: translateX(100%);
-}
-
-.member-panel-contents--hidden {
-  pointer-events: none;
-}
-
-.member-panel-contents--visible {
-  pointer-events: auto;
-  transform: translateX(0);
-}
-
-@media (max-width: 530px) {
-  .member-panel {
-    position: relative;
-    height: auto;
-    /* Fill the screen even with short content (prevents map showing underneath) */
-    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
-  }
-
-  .member-panel-contents {
-    position: relative;
-    top: auto;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: none;
-    /* Fill the screen even with short content */
-    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
-  }
-
-  .member-panel-body {
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-}
-
-/* ============================================================================
-   PANEL HEADER
-   ============================================================================ */
-
-.member-panel-header {
-  position: sticky;
-  top: 0;
-  padding: 10px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  cursor: ew-resize;
-  background: #222222;
-}
-
-.member-panel-header > * {
-  margin-bottom: 10px;
-}
-
-.member-panel-header > *:last-child {
-  margin-bottom: 0;
-}
-
-.member-panel-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.member-panel-header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ============================================================================
-   PANEL ACTIONS
-   ============================================================================ */
-
-.member-panel-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.member-panel-actions-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  padding: 0;
-  border-radius: 5px;
-  background: transparent;
-  border: none;
-  color: #fff;
+/* Cursor defaults */
+#memberPanel a,
+#memberPanel button,
+#memberPanel [role="button"],
+#memberPanel .clickable{
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
 
-.member-panel-actions-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+/* Options menu z-index */
+#memberPanel .options-menu{
+  z-index: var(--layer-menu);
 }
 
-.member-panel-actions-icon-btn-icon {
-  width: 30px;
-  height: 30px;
-  background-color: #fff;
-  opacity: 1;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.member-panel-actions-icon-btn-icon--save {
-  -webkit-mask-image: var(--ui-icon-save);
-  mask-image: var(--ui-icon-save);
-}
-
-.member-panel-actions-icon-btn-icon--discard {
-  -webkit-mask-image: var(--ui-icon-discard);
-  mask-image: var(--ui-icon-discard);
-}
-
-.member-panel-actions-icon-btn-icon--close {
-  -webkit-mask-image: var(--ui-icon-close);
-  mask-image: var(--ui-icon-close);
-}
-
-.member-panel-actions-icon-btn--disabled {
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.member-panel-actions-icon-btn-icon--disabled {
-  background-color: #888;
-}
-
-.member-panel-actions-icon-btn-icon--save-enabled {
-  background-color: #22c55e;
-}
-
-.member-panel-actions-icon-btn--save-enabled:hover {
-  background: rgba(34, 197, 94, 0.15);
-}
-
-.member-panel-actions-icon-btn-icon--save-enabled-hover {
-  background-color: #4ade80;
-}
-
-.member-panel-actions-icon-btn-icon--discard-enabled {
-  background-color: #ef4444;
-}
-
-.member-panel-actions-icon-btn--discard-enabled:hover {
-  background: rgba(239, 68, 68, 0.15);
-}
-
-.member-panel-actions-icon-btn-icon--discard-enabled-hover {
-  background-color: #f87171;
-}
-
-.member-panel-actions-icon-btn--close:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.member-panel-actions-primary {
-  background: var(--button-selected-bg, var(--btn-selected));
-  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
-  color: var(--button-selected-text, var(--button-active-text));
-}
-
-.member-panel-actions-primary:hover {
-  background: var(--button-selected-hover, var(--btn-selected-hover));
-  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
-  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
-}
-
-.member-panel-actions-discard--disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ============================================================================
-   PANEL BODY
-   ============================================================================ */
-
-.member-panel-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px));
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--panel-scrollbar-thumb) transparent;
-}
-
-/* Bottom slack is provided by `.bottomSlack` elements. */
-
-/* IMPORTANT: panel bodies are flex columns; prevent children shrinking so bottom slack
-   always creates real overflow/scroll (especially for short tabs like logged-in Profile). */
-.member-panel-body > * {
-  flex-shrink: 0;
-}
-
-
-.member-panel-body::-webkit-scrollbar {
-  width: 12px;
-}
-
-.member-panel-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.member-panel-body::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 5px;
-}
-
-.member-panel-body::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-/* Smooth scrollbar resize: fade thumb during spacer/lock transitions */
-.member-panel-body.panel-scrollbar-fade {
-  scrollbar-color: transparent transparent;
-}
-
-.member-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb,
-.member-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb:hover {
-  background-color: transparent;
-}
-
-.member-panel-body::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-.member-panel-body-item {
-  width: 100%;
-  max-width: 420px;
-  box-sizing: border-box;
-  margin: 0 auto;
-  min-width: 0;
-}
-
-.member-panel-body-item--last {
-  margin-bottom: 0;
-}
-
-.member-panel-form {
-  padding: 10px 10px 0;
-}
-
-/* ============================================================================
-   PANEL FIELD
-   ============================================================================ */
-
-.member-panel-field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-
-/* Last child keeps margin-bottom to provide container bottom spacing */
-
-.member-panel-field[hidden] {
-  display: none;
-}
-
-.member-panel-field-label {
-  display: block;
-  text-align: left;
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.member-panel-field-label--alt {
-  color: var(--panel-label-color);
-}
-
-.member-settings-field-label {
-  display: block;
-  text-align: left;
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.member-mapstyle-container {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
-}
-
-.member-mapstyle-container > .member-panel-field {
-  margin-bottom: 10px;
-}
-
-.member-mapstyle-container > .member-panel-field > .member-settings-field-label {
-  margin-bottom: 6px;
-}
-
-/* member-preferences-container removed (no language/currency filters) */
-
-/* Lighting/Style/Wallpaper buttons use toggle-class-1 from base.css */
-.member-lighting-buttons,
-.member-wallpaper-buttons {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.member-lighting-button-icon {
-  width: 22px;
-  height: 22px;
-  background-color: currentColor;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  display: block;
-  opacity: 0;
-}
-
-.member-style-buttons {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.member-panel-field-title {
-  color: var(--panel-title-color);
-  font-size: var(--panel-title-size);
-}
-
-.member-panel-field-input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 8px 12px;
-  color: var(--input-text, #fff);
-  font-size: 14px;
-}
-
-.member-panel-field-input:focus {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
-}
-
-.member-panel-field-textarea {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 8px 12px;
-  color: var(--input-text, #fff);
-  font-size: 14px;
-}
-
-/* ============================================================================
-   TINY BUTTON (Logout button)
-   ============================================================================ */
-
-.member-tiny-btn {
+/* Tiny button styles (logout button) */
+#memberPanel .tiny{
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 5px;
+  width: 38px;
+  height: 40px;
+  border-radius: 8px;
   background: var(--btn);
   cursor: pointer;
   border: 1px solid var(--btn);
 }
-
-.member-tiny-btn--disabled {
+#memberPanel .tiny:disabled,
+#memberPanel .tiny[aria-disabled="true"]{
   background: var(--btn-disabled);
   border-color: var(--btn-disabled);
   color: var(--button-disabled-text);
   cursor: not-allowed;
   opacity: 0.6;
 }
-
-.member-tiny-btn-icon {
+#memberPanel .tiny svg{
   width: 18px;
   height: 18px;
 }
 
+/* Panel Base */
+#memberPanel.panel{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  height:calc(var(--vh, 1vh) * 100);
+  background:transparent;
+  display:none;
+  z-index:var(--layer-panel);
+  pointer-events:none;
+}
+#memberPanel.panel.show{
+  display:block;
+}
+
+/* Panel Content Base */
+#memberPanel .panel-content{
+  position:absolute;
+  left:50%;
+  top:calc(var(--header-h) + var(--safe-top));
+  bottom:auto;
+  width:440px;
+  max-width:440px;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  pointer-events:auto;
+  transition:transform var(--panel-transition-duration, 0.3s) ease;
+  will-change:transform;
+  box-sizing:border-box;
+}
+#memberPanel .panel-content[data-side='left']{
+  transform:translateX(-100%);
+}
+#memberPanel .panel-content[data-side='right']{
+  transform:translateX(100%);
+}
+#memberPanel .panel-content[data-side]:not(.panel-visible){
+  pointer-events:none;
+}
+#memberPanel .panel-content[data-side].panel-visible{
+  pointer-events:auto;
+  transform:translateX(0);
+}
+
+/* Panel Body Base */
+#memberPanel .panel-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:0 10px;
+  overscroll-behavior:contain;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:20px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--panel-scrollbar-thumb) transparent;
+}
+
+#memberPanel .panel-body::-webkit-scrollbar{
+  width:12px;
+}
+#memberPanel .panel-body::-webkit-scrollbar-track{
+  background:transparent;
+}
+#memberPanel .panel-body::-webkit-scrollbar-thumb{
+  background-color:rgba(255,255,255,0.5);
+  border-radius:6px;
+}
+#memberPanel .panel-body::-webkit-scrollbar-thumb:hover{
+  background-color:rgba(255,255,255,0.7);
+}
+#memberPanel .panel-body::-webkit-scrollbar-corner{
+  background:transparent;
+}
+#memberPanel .panel-body > *{
+  width:100%;
+  max-width:420px;
+  box-sizing:border-box;
+  margin:0 auto;
+  min-width:0;
+}
+#memberPanel .panel-body > *:last-child{
+  margin-bottom:0;
+}
+#memberForm.panel-body{
+  padding:10px;
+  padding-bottom:100px;
+}
+
+/* Panel Field Base */
+#memberPanel .panel-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#memberPanel .panel-field label{
+  display:block;
+  text-align:left;
+  margin-bottom:4px;
+  font-size:13px;
+  color:rgba(255,255,255,0.85);
+  font-weight:500;
+}
+#memberPanel .field label{
+  color: var(--panel-label-color);
+  font-size: var(--panel-label-size);
+}
+#memberPanel .panel-content .title,
+#memberPanel .panel-content .t{
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
+#memberPanel .panel-field input,
+#memberPanel .panel-field textarea{
+  width:100%;
+  background:rgba(0,0,0,0.35);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 12px;
+  color:var(--input-text, #fff);
+  font-family:inherit;
+  font-size:14px;
+}
+
+/* Panel Header Base */
+#memberPanel .panel-header{
+  position:sticky;
+  top:0;
+  padding:10px;
+  border-top-left-radius:0;
+  border-top-right-radius:0;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex-shrink:0;
+  background:#222222;
+}
+#memberPanel .panel-header .header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  width:100%;
+}
+#memberPanel .panel-header h2{
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+  margin:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Panel Actions Base */
+#memberPanel .panel-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+#memberPanel .panel-actions .icon-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:35px;
+  height:35px;
+  min-width:35px;
+  padding:0;
+  border-radius:6px;
+  background:transparent;
+  border:none;
+  color:#fff;
+  cursor:pointer;
+  transition:background 0.2s, color 0.2s;
+}
+#memberPanel .panel-actions .icon-btn:hover{
+  background:rgba(255,255,255,0.1);
+}
+#memberPanel .panel-actions .icon-btn .btn-icon{
+  width:30px;
+  height:30px;
+  background-color:#fff;
+  opacity:1;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  mask-position:center;
+}
+#memberPanel .panel-actions .icon-btn .icon-save{
+  -webkit-mask-image:url('assets/system-images/icon-save.svg');
+  mask-image:url('assets/system-images/icon-save.svg');
+}
+#memberPanel .panel-actions .icon-btn .icon-discard{
+  -webkit-mask-image:url('assets/system-images/icon-discard.svg');
+  mask-image:url('assets/system-images/icon-discard.svg');
+}
+#memberPanel .panel-actions .icon-btn .icon-close{
+  -webkit-mask-image:url('assets/system-images/icon-close.svg');
+  mask-image:url('assets/system-images/icon-close.svg');
+}
+#memberPanel .panel-actions .icon-btn[disabled]{
+  cursor:not-allowed;
+  pointer-events:none;
+}
+#memberPanel .panel-actions .icon-btn[disabled] .btn-icon{
+  background-color:#888;
+}
+#memberPanel .panel-actions .icon-btn.save-changes:not([disabled]) .btn-icon{
+  background-color:#22c55e;
+}
+#memberPanel .panel-actions .icon-btn.save-changes:not([disabled]):hover{
+  background:rgba(34,197,94,0.15);
+}
+#memberPanel .panel-actions .icon-btn.save-changes:not([disabled]):hover .btn-icon{
+  background-color:#4ade80;
+}
+#memberPanel .panel-actions .icon-btn.discard-changes:not([disabled]) .btn-icon{
+  background-color:#ef4444;
+}
+#memberPanel .panel-actions .icon-btn.discard-changes:not([disabled]):hover{
+  background:rgba(239,68,68,0.15);
+}
+#memberPanel .panel-actions .icon-btn.discard-changes:not([disabled]):hover .btn-icon{
+  background-color:#f87171;
+}
+#memberPanel .panel-actions .icon-btn.close-panel:hover{
+  color:#fff;
+  background:rgba(255,255,255,0.1);
+}
+
+/* Button Base Styles */
+#memberPanel .button--tab{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#memberPanel .button--tab:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#memberPanel .button--tab:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#memberPanel .button--tab[aria-selected="true"],
+#memberPanel .button--tab.active{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+
+/* Auth Button - for login/register/create account buttons */
+#memberPanel .button--auth{
+  background:var(--btn);
+  border:1px solid var(--btn);
+  color:var(--button-text);
+  font-family:inherit;
+  font-size:13px;
+  padding:0 10px;
+  height:var(--control-h);
+  min-height:var(--control-h);
+  min-width:35px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, color .2s, transform .05s;
+}
+#memberPanel .button--auth:hover{
+  background:var(--btn-hover);
+  border-color:var(--btn-hover);
+  color:var(--button-hover-text);
+}
+#memberPanel .button--auth:active{
+  background:var(--btn-active);
+  border-color:var(--btn-active);
+  color:var(--button-active-text);
+  transform:scale(0.97);
+}
+#memberPanel .button--auth:focus-visible{
+  outline:2px solid #ffffff;
+  outline-offset:2px;
+}
+#memberPanel .button--auth:disabled,
+#memberPanel .button--auth.disabled{
+  background:var(--btn-disabled);
+  border-color:var(--btn-disabled);
+  color:var(--button-disabled-text);
+  cursor:not-allowed;
+  opacity:0.6;
+}
+
+/* Input Base Styles */
+#memberPanel .input-text{
+  font:inherit;
+  caret-color:auto;
+  -webkit-user-select:text;
+  user-select:text;
+  height:var(--control-h);
+  border-radius:8px;
+}
+#memberPanel .input-text::placeholder{
+  color:var(--placeholder-text);
+  font-family:inherit;
+  font-size:inherit;
+}
+#memberPanel .input-dropdown{
+  font:inherit;
+  background:var(--dropdown-bg);
+  color:var(--dropdown-text);
+  border-radius:var(--dropdown-radius);
+  height:var(--control-h);
+}
+
 /* ============================================================================
-   BUTTON STYLES
+   PANEL CONTENT OVERRIDES
    ============================================================================ */
 
-.member-button-auth {
-  background: var(--blue-500);
-  border: 1px solid var(--blue-500);
-  color: #ffffff;
-  font-size: 14px;
-  padding: 0 10px;
-  height: var(--control-h);
-  min-height: var(--control-h);
-  min-width: 35px;
-  border-radius: 5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-  transition: background .2s, border-color .2s, color .2s, transform .05s;
+#memberPanel .panel-content{
+  width:min(440px, 100%);
+  max-width:100%;
+  height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height:var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  overflow-y:overlay;
+  left:auto;
+  right:0;
+  background:#222222;
+  color:#fff;
+  font-family:system-ui, sans-serif;
 }
-
-.member-button-auth:hover {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
-  color: #ffffff;
-}
-
-.member-button-auth:active {
-  background: var(--blue-600);
-  border-color: var(--blue-500);
-  color: #ffffff;
-  transform: scale(0.97);
-}
-
-.member-button-auth--disabled {
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 
 /* ============================================================================
-   SUPPORT FUNMAP: PAYMENT BUTTONS
+   PANEL CONTENT RESPONSIVE
    ============================================================================ */
 
-/* ============================================================================
-   INPUT STYLES
-   ============================================================================ */
-
-.member-input-text {
-  font: inherit;
-  caret-color: auto;
-  -webkit-user-select: text;
-  user-select: text;
-  height: var(--control-h);
-  border-radius: 5px;
+@media (max-width: 768px) {
+  #memberPanel .panel-content{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
 }
 
-.member-input-text::placeholder {
-  color: var(--placeholder-text);
-  font-size: inherit;
-}
-
-.member-input-dropdown {
-  font: inherit;
-  background: var(--dropdown-bg);
-  color: var(--dropdown-text);
-  border-radius: var(--dropdown-radius);
-  height: var(--control-h);
+@media (max-width: 440px) {
+  #memberPanel .panel-content{
+    width:100%;
+    max-width:100%;
+    max-height:none;
+    border-radius:0;
+  }
 }
 
 /* ============================================================================
    TAB BAR
    ============================================================================ */
 
-.member-tab-bar {
-  display: flex;
-  gap: 6px;
-}
-.member-tab-bar > * {
-  flex: 1;  /* Children fill space equally */
+#memberPanel .tab-bar{
+  display:flex;
+  gap:6px;
 }
 
-/* Member tab buttons: .member-tab-[name]-button-class-2 (e.g., member-tab-profile-button-class-2) */
+#memberPanel .tab-bar .tab-btn{
+  flex:1;
+  padding:6px 10px;
+  border-radius:10px;
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  color:var(--button-text);
+  cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+#memberPanel .tab-bar .tab-btn:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+
+#memberPanel .tab-bar .tab-btn:active{
+  transform:none;
+}
+
+#memberPanel .tab-bar .tab-btn[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
+  color:var(--button-active-text);
+}
+
+#memberPanel .tab-bar .tab-btn:focus-visible{
+  outline:2px solid rgba(255,255,255,0.85);
+  outline-offset:2px;
+}
 
 /* ============================================================================
-   TAB CONTENTS
+   MEMBER AUTH TABS
    ============================================================================ */
 
-.member-tab-contents {
-  display: none;
+.member-auth-tab{
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:none;
+  transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.member-tab-contents--active {
-  display: block;
-  min-height: 0;
+.member-auth-tab:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.28);
+}
+
+.member-auth-tab:active{
+  transform:none;
+}
+
+.member-auth-tab[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  box-shadow:none;
+  color:var(--button-active-text);
+}
+
+.member-auth-tab:focus-visible{
+  outline:2px solid rgba(255,255,255,0.85);
+  outline-offset:2px;
+}
+
+/* ============================================================================
+   TAB PANELS
+   ============================================================================ */
+
+#memberPanel .member-tab-panel{
+  display:none;
+}
+
+#memberPanel .member-tab-panel.active{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
 /* ============================================================================
    MEMBER FORM CONTAINER
    ============================================================================ */
 
-.member-postform-container {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
+#memberPanel .member-form-container{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  width:100%;
+  max-width:420px;
+  margin:0 auto;
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+  padding:0 10px 10px;
 }
 
-.member-postform-container[hidden] {
-  display: none;
-}
-
-.member-form {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 100px;
-}
-
-.member-form > * {
-  margin-bottom: 10px;
-}
-
-.member-form > *:last-child {
-  margin-bottom: 0;
+#memberPanel .member-form{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  margin-bottom:100px;
 }
 
 /* ============================================================================
    MEMBER CREATE STYLES
    ============================================================================ */
 
-.member-create-intro {
-  margin: 0 0 10px 0;
-  font-size: 15px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.6);
+#memberPanel .member-create-intro{
+  margin:0;
+  font-size:15px;
+  line-height:1.4;
 }
 
-.member-create-intro--error {
-  color: #ff6b6b;
+#memberPanel .member-create-selects{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
 }
 
-.member-create-selects {
-  display: flex;
-  flex-wrap: wrap;
+#memberPanel .member-create-field{
+  margin:0;
 }
 
-.member-create-selects > * {
-  margin-right: 12px;
-  margin-bottom: 10px;
+#memberPanel .member-create-select{
+  max-width:240px;
 }
 
-.member-create-selects > *:last-child {
-  margin-right: 0;
+#memberPanel .member-create-placeholder{
+  margin:4px 0 0;
+  font-style:italic;
+  opacity:0.8;
 }
 
-.member-create-field {
-  margin: 0 0 10px 0;
+#memberPanel .member-create-fields{
+  display:flex;
+  flex-direction:column;
+  gap:0;
 }
 
-.member-create-select {
-  max-width: 240px;
+#memberPanel .member-create-checkout{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:8px;
 }
 
-.member-create-placeholder {
-  margin: 4px 0 0;
-  font-style: italic;
-  opacity: 0.8;
+#memberPanel .member-create-price-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
 }
 
-.member-postform-fieldsets {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+#memberPanel .member-create-price-row select,
+#memberPanel .member-create-price-row input{
+  flex:1 1 120px;
+  min-width:120px;
 }
 
-.member-create-price-row {
-  display: flex;
-  flex-wrap: wrap;
+#memberPanel .member-create-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
 }
 
-.member-create-price-row > * {
-  margin-right: 8px;
-  margin-bottom: 8px;
-}
-
-.member-create-price-row > *:last-child {
-  margin-right: 0;
-}
-
-.member-create-price-row-select {
-  flex: 1 1 120px;
-  min-width: 120px;
-}
-
-.member-create-price-row-input {
-  flex: 1 1 120px;
-  min-width: 120px;
-}
-
-.member-checkout-actions-container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-bottom: 10px;
-}
-
-.member-checkout-actions-container > * {
-  margin-bottom: 10px;
-}
-
-.member-checkout-actions-container > *:last-child {
-  margin-bottom: 0;
-}
-
-/* Payment submit button styles moved to components.css (PaymentSubmitComponent) */
-
-/* Incomplete-list popover (shown on hover over disabled submit area) */
-.member-missing-popover {
-  position: absolute;
-  right: 0;
-  bottom: 42px;
-  min-width: 220px;
-  max-width: 320px;
-  background: rgba(20, 20, 20, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 6px;
-  padding: 10px 10px 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: var(--layer-popover);
-}
-
-.member-missing-popover-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 8px;
-}
-
-.member-missing-popover-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-missing-popover-list > * {
-  margin-bottom: 10px;
-}
-
-.member-missing-popover-list > *:last-child {
-  margin-bottom: 0;
-}
-
-.member-missing-popover-item {
-  font-size: 13px;
-  line-height: 1.25;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Admin submit button styles moved to components.css (PaymentSubmitComponent) */
-
-
-/* ============================================================================
-   TERMS (checkbox row on form)
-   ============================================================================ */
-
-.member-terms {
-  margin-bottom: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #333;
-}
-
-.member-terms-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #ffffff;
-}
-
-.member-terms-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--blue-500);
-  flex-shrink: 0;
-}
-
-.member-terms-text {
-  color: #ffffff;
-}
-
-.member-terms-link {
-  color: var(--blue-500);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.member-terms-link:hover {
-  color: #60a5fa;
+#memberPanel .member-create-actions .primary-action[disabled]{
+  opacity:0.6;
+  cursor:not-allowed;
 }
 
 /* ============================================================================
    ADMIN SKIP PAYMENT BUTTON
    ============================================================================ */
 
-.member-admin-skip-payment-btn {
-  background: rgba(100, 150, 200, 0.2);
-  border: 1px solid rgba(100, 150, 200, 0.4);
-  color: #8ab4ff;
-  padding: 10px 16px;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+#memberPanel .admin-skip-payment-btn{
+  background:rgba(100,150,200,0.2);
+  border:1px solid rgba(100,150,200,0.4);
+  color:#8ab4ff;
+  padding:10px 16px;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+  transition:background 0.15s, border-color 0.15s;
 }
 
-.member-admin-skip-payment-btn:hover {
-  background: rgba(100, 150, 200, 0.3);
-  border-color: rgba(100, 150, 200, 0.6);
+#memberPanel .admin-skip-payment-btn:hover:not(:disabled){
+  background:rgba(100,150,200,0.3);
+  border-color:rgba(100,150,200,0.6);
 }
 
-.member-admin-skip-payment-btn--disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+#memberPanel .admin-skip-payment-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+/* ============================================================================
+   PANEL ACTIONS
+   ============================================================================ */
+
+#memberPanel .panel-actions .primary-action{
+  background:var(--button-selected-bg, var(--btn-selected));
+  border-color:var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color:var(--button-selected-text, var(--button-active-text));
+}
+
+#memberPanel .panel-actions .primary-action:hover{
+  background:var(--button-selected-hover, var(--btn-selected-hover));
+  border-color:var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color:var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+#memberPanel .panel-actions .discard-changes[disabled]{
+  opacity:0.5;
+  cursor:not-allowed;
 }
 
 /* ============================================================================
    MEMBER AUTH CONTAINER
    ============================================================================ */
 
-.member-auth {
-  display: flex;
-  flex-direction: column;
+.member-auth{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
 }
 
-/* Profile tab: keep layout helpers, but DO NOT force it visible when inactive.
-   Visibility is controlled by `.member-tab-contents` / `.member-tab-contents--active`. */
-#member-tab-profile {
-  /* IMPORTANT: Don't force full-height here.
-     When this is 100%, it consumes the panel's extra bottom scroll padding,
-     so Profile (logged-in) can't scroll down into the bottom slack area like other panels. */
-  min-height: 0;
+.member-auth-tabs{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
 }
 
-/* When logged in, the auth container should fill available height */
-#member-tab-profile .member-auth {
-  flex: 1;
-  min-height: 0;
+.member-auth-tab{
+  flex:1 1 auto;
+  min-width:0;
+  height:38px;
+  border-radius:20px;
+  border:1px solid var(--btn);
+  background:var(--btn);
+  color:var(--button-text);
+  font-weight:600;
+  cursor:pointer;
+  transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-
-/* Login form in Profile tab - no top margin, spacing comes from container above */
-
-
-
-.member-profile-edit {
-  display: flex;
-  flex-direction: column;
+.member-auth-tab[aria-selected="true"]{
+  background:var(--btn-selected);
+  border-color:var(--btn-selected);
+  color:var(--button-active-text);
 }
 
-.member-profile-edit > *:last-child {
-  margin-bottom: 0;
+.member-auth-panel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
-.member-profile-edit > * {
-  margin-bottom: 10px;
+.member-auth-panel[hidden]{
+  display:none;
 }
 
-
-.member-profile-save-btn {
-  align-self: flex-start;
+.member-auth-panel label{
+  font-size:14px;
+  font-weight:600;
 }
 
-/* Register tab button hidden when logged in (controlled by JS) */
-#member-tab-register-btn[hidden] {
-  display: none;
+.member-auth-panel input{
+  height:40px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:#1c1c1c;
+  color:#fff;
+  padding:0 12px;
+  box-sizing:border-box;
+  caret-color:#fff;
+  cursor:text;
+}
+
+.member-auth-panel input:-webkit-autofill,
+.member-auth-panel input:-webkit-autofill:hover,
+.member-auth-panel input:-webkit-autofill:focus,
+.member-auth-panel input:-webkit-autofill:active{
+  -webkit-box-shadow:0 0 0 30px #1c1c1c inset !important;
+  -webkit-text-fill-color:#fff !important;
+  background:#1c1c1c !important;
+  border:1px solid rgba(255,255,255,0.1) !important;
+}
+
+.member-auth-panel input:focus{
+  outline:2px solid var(--btn-selected);
+  outline-offset:2px;
+  background:#1c1c1c;
+}
+
+.member-auth-panel .member-auth-submit{
+  align-self:flex-start;
+}
+
+.member-auth-profile{
+  gap:18px;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-tabs{
+  display:none;
+}
+
+.member-auth[data-state="logged-in"] .member-auth-panel{
+  gap:16px;
 }
 
 /* ============================================================================
    MEMBER PROFILE
    ============================================================================ */
 
-.member-profile {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+.member-profile{
+  display:flex;
+  align-items:center;
+  gap:14px;
 }
 
-.member-profile-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  box-sizing: border-box;
-  background: #111111;
+.member-profile-avatar{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.25);
+  box-sizing:border-box;
+  background:#111111;
 }
 
-.member-profile-details {
-  display: flex;
-  flex-direction: column;
-  margin-left: 14px;
+.member-profile-details{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
 }
 
-.member-profile-name {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+.member-profile-name{
+  margin:0;
+  font-size:20px;
+  font-weight:700;
 }
 
-.member-profile-email {
-  margin: 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+.member-profile-email{
+  margin:0;
+  font-size:14px;
+  color:rgba(255,255,255,0.7);
+}
+
+.member-profile-actions{
+  display:flex;
+  gap:10px;
+}
+
+.member-profile-actions .tiny{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:0;
+  padding:0 16px;
+  white-space:nowrap;
+}
+
+
+/* ============================================================================
+   MAP CONTROLS
+   ============================================================================ */
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button:not(.mapboxgl-ctrl-geolocate-active):not(.mapboxgl-ctrl-geolocate-loading),
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button{
+  background-color:#ffffff;
+  box-shadow:none;
+}
+
+#memberPanel .map-control-row .mapboxgl-ctrl-geolocate button svg,
+#memberPanel .map-control-row .mapboxgl-ctrl-compass button svg{
+  filter:none;
 }
 
 /* ============================================================================
-   UPDATE PROFILE BUTTON AND FORM CONTAINER
+   MEMBER UNSAVED PROMPT
    ============================================================================ */
 
-.member-profileform-toggle {
-  width: 100%;
-  margin-bottom: 12px;
+#memberUnsavedPrompt{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(4px);
+  z-index:var(--layer-dialog);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease;
 }
-
-.member-profileform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
+#memberUnsavedPrompt.show{
+  opacity:1;
+  pointer-events:auto;
 }
-
-.member-profileform-container > * {
-  margin-bottom: 10px;
+#memberUnsavedPrompt .member-unsaved-dialog{
+  background:var(--dropdown-bg, rgba(17,17,17,0.96));
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  max-width:360px;
+  width:calc(100% - 40px);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 18px 60px rgba(0,0,0,0.55);
+  color:#000;
 }
-
-.member-profileform-container .member-panel-field-label {
-  margin-bottom: 6px;
-}
-
-.member-profileform-container[hidden] {
-  display: none;
-}
-
-.member-profileform-fieldsets {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* Profile edit footer with Save/Discard buttons */
-.member-profile-edit-footer {
-  display: flex;
-  gap: 10px;
-  padding: 0;
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
-}
-
-.member-profile-edit-footer button {
-  flex: 1;
-}
-
-/* ============================================================================
-   LOGIN FORM CONTAINER
-   ============================================================================ */
-
-.member-loginform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
-.member-loginform-container > * {
-  margin-bottom: 10px;
-}
-
-.member-loginform-container .member-panel-field {
-  margin-bottom: 10px;
-}
-
-.member-loginform-container .member-panel-field-label {
-  margin-bottom: 6px;
-}
-
-.member-login {
-  align-self: flex-end;
-}
-
-.member-loginform-container[hidden] {
-  display: none;
-}
-
-/* ============================================================================
-   CREATE POST AUTH GATE (shown when logged-out user tries to create post)
-   ============================================================================ */
-
-/* Invisible container - no background, border, or padding */
-.member-auth-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-auth-header {
-  grid-template-columns: repeat(2, 1fr);
-  margin-bottom: 12px;
-}
-
-.member-auth-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-auth-body .member-panel-field {
-  margin-bottom: 10px;
-}
-
-.member-auth-body .member-panel-field-label {
-  margin-bottom: 6px;
-}
-
-.member-loginform-fieldsets {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* Username row with more button */
-.member-profile-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: relative;
-}
-
-.member-profile-edit-name-input {
-  flex: 1;
-}
-
-/* More button (3-dot menu) - matches FormBuilder pattern */
-.member-profile-more-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
-  cursor: pointer;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.member-profile-more-btn:hover {
-  border-color: var(--blue-500);
-  color: var(--blue-500);
-}
-
-.member-profile-more-btn[aria-expanded="true"] {
-  border-color: var(--blue-500);
-  color: var(--blue-500);
-}
-
-/* More menu dropdown */
-.member-profile-more-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 180px;
-  margin-top: 4px;
-  background: #111;
-  border: 1px solid var(--blue-500);
-  border-radius: 5px;
-  padding: 5px 0;
-  z-index: var(--layer-menu, 85);
-}
-
-.member-profile-more-menu[hidden] {
-  display: none;
-}
-
-.member-profile-more-item {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  cursor: pointer;
-  color: #fff;
-  font-size: 13px;
-  background: transparent;
-  border: none;
-  width: 100%;
-  text-align: left;
-  gap: 8px;
-}
-
-.member-profile-more-item:hover {
-  background: #222;
-}
-
-.member-profile-more-item-text {
-  flex: 1;
-}
-
-/* Hide Account toggle: uses component-switch with --on-default state */
-
-/* Delete Account button */
-.member-profile-more-delete {
-  color: #f87171;
-}
-
-.member-profile-more-delete:hover {
-  background: #7f1d1d;
-}
-
-.member-profile-more-delete svg {
-  flex-shrink: 0;
-}
-
-/* ============================================================================
-   AVATAR PICKER / UPLOAD
-   ============================================================================ */
-
-/* Note: AvatarPickerComponent styles live in components.css (.component-avatarpicker-*) */
-/* Note: AvatarCropperComponent styles live in components.css (.component-avatarcropper-tool-*) */
-
-/* ============================================================================
-   PROFILE ACTIONS (Refresh Preferences + Logout)
-   ============================================================================ */
-
-.member-profile-actions {
-  position: static;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 0;
-  background: transparent;
-}
-
-/* Refresh Preferences: button + tooltip icon inline */
-.member-refresh-preferences {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.member-refresh-preferences-btn {
-  white-space: nowrap;
-}
-
-.member-refresh-tooltip {
-  width: 16px;
-  height: 16px;
-  margin-left: 6px;
-  display: none; /* Hidden for now; tooltip infrastructure preserved if needed later */
-  align-items: center;
-  justify-content: center;
-  cursor: help;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.member-refresh-tooltip-icon {
-  width: 16px;
-  height: 16px;
-  stroke: #888;
-}
-
-.member-refresh-tooltip:hover .member-refresh-tooltip-icon {
-  stroke: #fff;
-}
-
-.member-refresh-tooltip-text {
-  display: none;
-  position: absolute;
-  top: calc(100% + 10px);
-  left: -60px;
-  width: 260px;
-  background: #000;
-  border: 1px solid #777;
-  border-radius: 4px;
-  padding: 10px;
-  font-size: 13px;
-  font-style: normal;
-  color: #fff;
-  white-space: pre-line;
-  z-index: var(--layer-dialog, 86);
-  line-height: 1.4;
-}
-
-.member-refresh-tooltip:hover + .member-refresh-tooltip-text,
-.member-refresh-tooltip-text:hover {
-  display: block;
-}
-
-/* Push logout button to the right */
-.member-profile-actions > .member-logout {
-  margin-left: auto;
-}
-
-.member-profile-actions-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  min-width: 0;
-  padding: 0 10px;
-  white-space: nowrap;
-}
-
-/* Logout button uses same auth button styling */
-.member-profile-actions-btn.member-button-auth {
-  font-size: 14px;
-}
-
-/* Spacing under content is handled by `.bottomSlack` at the end of the panel body. */
-
-/* ============================================================================
-   UNSAVED PROMPT DIALOG
-   ============================================================================ */
-
-.member-unsaved-prompt {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
-  z-index: var(--layer-dialog);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.member-unsaved-prompt--show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.member-unsaved-dialog {
-  background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 20px 20px 0;
-  max-width: 360px;
-  width: calc(100% - 40px);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
-  color: #fff;
-}
-
-.member-unsaved-dialog > * {
-  margin-bottom: 10px;
-}
-
-/* Visible container - last child keeps margin for bottom spacing */
-
-.member-unsaved-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+#memberUnsavedPrompt .member-unsaved-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
 }
 
 /* ============================================================================
    FORMPICKER (Category/Subcategory picker in Create tab)
    ============================================================================ */
 
-.member-formpicker-container {
+#memberPanel .formpicker-container{
+  margin:8px 0;
+  width:100%;
+  max-width:100%;
+  margin-left:0;
+  margin-right:0;
+}
+
+#memberPanel .formpicker-container .cats{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+#memberPanel .formpicker-container .filter-category-menu{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .filter-category-header{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .filter-category-trigger-wrap{
+  flex:1;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .filter-category-trigger{
+  height:36px;
+  border-radius:8px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  cursor: pointer;
   width: 100%;
-  max-width: 100%;
-  margin-bottom: 12px;
-}
-
-.member-formpicker-cats {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-formpicker-cats > *:last-child {
-  margin-bottom: 0;
-}
-
-.member-formpicker-cats > * {
-  margin-bottom: 10px;
-}
-
-
-/* Formpicker dropdowns container */
-.member-formpicker-dropdowns {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-formpicker-dropdowns > *:last-child {
-  margin-bottom: 0;
-}
-
-.member-formpicker-dropdowns > * {
-  margin-bottom: 10px;
-}
-
-
-/* Formpicker menu
-   Appearance governed by menu-class-3 from base.css.
-   This section contains LAYOUT ONLY. */
-.member-formpicker-menu {
-  position: relative;
-}
-
-.member-formpicker-menu-button {
-  width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-}
-
-.member-formpicker-menu-button-image {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.member-formpicker-menu-button-text {
-  flex: 1;
   text-align: left;
-  padding-left: 10px;
+  color: var(--button-text);
+  font: inherit;
+  font-size: 16px;
+  margin: 0;
 }
 
-.member-formpicker-menu-button-arrow {
-  width: 16px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#memberPanel .formpicker-container .filter-category-menu .category-logo{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.member-formpicker-menu-options {
-  display: none;
-  position: absolute;
-  top: 36px;
-  left: 0;
-  width: 100%;
-  max-height: 600px;
-  overflow-y: auto;
-  z-index: var(--layer-menu);
+#memberPanel .formpicker-container .filter-category-menu .category-logo img{
+  width:24px;
+  height:24px;
 }
 
-.member-formpicker-menu-options--open {
-  display: block;
+#memberPanel .formpicker-container .filter-category-menu .filter-category-trigger .label{
+  font-weight:400;
+  letter-spacing:.2px;
+  flex:1;
 }
 
-.member-formpicker-menu-option {
-  width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  box-sizing: border-box;
+#memberPanel .formpicker-container .filter-category-menu .cat-switch{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:38px;
+  height:36px;
+  flex:0 0 38px;
+  cursor:pointer;
+  align-self:flex-start;
 }
 
-.member-formpicker-menu-option-image {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
+#memberPanel .formpicker-container .filter-category-menu .cat-switch input{
+  opacity:0;
+  width:0;
+  height:0;
 }
 
-.member-formpicker-menu-option-text {
-  flex: 1;
-  text-align: left;
-  padding-left: 10px;
+#memberPanel .formpicker-container .filter-category-menu .cat-switch .slider{
+  position:absolute;
+  top:8px;
+  left:0;
+  right:0;
+  margin:0 auto;
+  width:38px;
+  height:20px;
+  border-radius:16px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  transition:.2s;
 }
 
-/* ============================================================================
-   ADDITIONAL LOCATIONS
-   ============================================================================ */
-
-/* Section containers - siblings of main form, elements inside handle spacing */
-
-/* Active state removed - member-postform-container is now transparent wrapper */
-
-/* Checkout section active state */
-.member-section-checkout.member-section-container--active {
-  border-color: var(--blue-500);
+#memberPanel .formpicker-container .filter-category-menu .cat-switch .slider:before{
+  content:'';
+  position:absolute;
+  width:16px;
+  height:16px;
+  left:1px;
+  top:1px;
+  border-radius:50%;
+  background:var(--button-text);
+  transition:.2s;
 }
 
-/* ============================================================================
-   MY POSTS TAB
-   Styles moved to posteditor.css
-   ============================================================================ */
+#memberPanel .formpicker-container .filter-category-menu .cat-switch input:checked + .slider{
+  background:var(--category-switch-active);
+  border-color:var(--category-switch-active);
+}
 
+#memberPanel .formpicker-container .filter-category-menu .cat-switch input:checked + .slider:before{
+  transform:translateX(18px);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-dropdown{
+  width:100%;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-dropdown > button{
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu{
+  width:100%;
+  box-sizing:border-box;
+  position:static;
+  margin-top:6px;
+  background:rgba(0,0,0,0.2);
+  border:none;
+  padding:0;
+  border-radius:0;
+  z-index:auto;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:var(--gap);
+  border-radius:6px;
+  border:1px solid transparent;
+  box-sizing:border-box;
+  padding:0 12px;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-logo{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-logo img{
+  width:20px;
+  height:20px;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-label{
+  flex:1;
+  text-align:left;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-switch{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:34px;
+  height:18px;
+  position:relative;
+  pointer-events:none;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-switch .track{
+  position:absolute;
+  inset:0;
+  border-radius:12px;
+  background:var(--btn);
+  border:1px solid var(--btn);
+  transition:.2s;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button .subcategory-switch .thumb{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--button-text);
+  left:2px;
+  top:2px;
+  transition:.2s;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"]{
+  color:var(--muted);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo{
+  opacity:0.6;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-logo img{
+  filter:grayscale(1);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .track{
+  background:var(--btn);
+  border-color:var(--btn);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="false"] .subcategory-switch .thumb{
+  transform:translateX(0);
+  opacity:0.7;
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="true"]{
+  background: var(--dropdown-selected-bg);
+  color: var(--dropdown-selected-text);
+  border-color: var(--dropdown-selected-bg);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .track{
+  background:var(--category-switch-active);
+  border-color:var(--category-switch-active);
+}
+
+#memberPanel .formpicker-container .filter-category-menu .options-menu button[aria-pressed="true"] .subcategory-switch .thumb{
+  transform:translateX(16px);
+}
+
+#memberPanel .formpicker-container .filter-category-menu[aria-expanded="true"] .filter-category-trigger{
+  border-color: var(--border-active);
+}
+
+#memberPanel .formpicker-container .filter-category-menu.cat-off{
+  opacity:0.6;
+}
+
+#memberPanel .formpicker-container .filter-category-menu.cat-off .filter-category-trigger{
+  cursor:default;
+}
+
+#memberPanel .formpicker-dropdowns{
+  width:100%;
+  max-width:100%;
+}
+
+#memberPanel .formpicker-dropdowns .form-field{
+  width:100%;
+  max-width:100%;
+}
+
+#memberPanel .formpicker-dropdowns .form-field-label{
+  text-align:left;
+}
+
+#memberPanel .formpicker-dropdowns .options-dropdown{
+  width:100%;
+  position:relative;
+}
+
+#memberPanel .formpicker-dropdowns .options-dropdown > button,
+#memberPanel .formpicker-dropdowns .form-select{
+  width:100%;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.1);
+  text-align:left;
+  padding-left:10px;
+  padding-right:30px;
+  z-index:65;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+
+#memberPanel .formpicker-dropdowns .options-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  bottom:auto;
+  left:0;
+  right:0;
+  width:100%;
+  box-sizing:border-box;
+  background:#222222;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;
+  color:#fff;
+  z-index:66;
+}
+
+#memberPanel .formpicker-dropdowns .options-menu .menu-option{
+  width:100%;
+  background:transparent;
+  color:#fff;
+  border:1px solid transparent;
+  border-radius:8px;
+  text-align:left;
+  justify-content:flex-start;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  gap:10px;
+}
+
+#memberPanel .formpicker-dropdowns .options-menu .menu-option .formpicker-category-icon,
+#memberPanel .formpicker-dropdowns .options-menu .menu-option .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
+}
+
+#memberPanel .formpicker-dropdowns .options-dropdown > button .formpicker-category-icon,
+#memberPanel .formpicker-dropdowns .options-dropdown > button .formpicker-subcategory-icon{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  object-fit:contain;
+  padding:10px;
+  box-sizing:content-box;
+}
+
+#memberPanel .formpicker-dropdowns .options-menu .menu-option:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+/* Options dropdown base styles */
+#memberPanel .options-dropdown{
+  position:relative;
+}
+#memberPanel .options-dropdown > button{
+  position:relative;
+  padding-right:30px;
+}
+#memberPanel .options-dropdown .dropdown-arrow,
+#memberPanel .options-dropdown .results-arrow{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translate(0, -50%) rotate(45deg);
+  margin-top:-1px;
+  pointer-events:none;
+}
+#memberPanel button[aria-expanded="true"] .dropdown-arrow,
+#memberPanel button[aria-expanded="true"] .results-arrow{
+  transform:translate(0, -50%) rotate(-135deg);
+  margin-top:1px;
+}
+
+/* Dropdown flag and text alignment */
+#memberPanel .dropdown-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:20px;
+  height:15px;
+  line-height:0;
+}
+#memberPanel .dropdown-flag img{
+  display:block;
+  width:20px;
+  height:15px;
+  object-fit:cover;
+  border-radius:2px;
+}
+#memberPanel .dropdown-text{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  line-height:1;
+}

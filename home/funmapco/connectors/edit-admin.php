@@ -113,32 +113,6 @@ if (isset($input['timezone'])) {
   $vals[] = trim((string)$input['timezone']);
 }
 
-// Favorites persistence (JSON string from localStorage)
-if (array_key_exists('favorites', $input)) {
-  $favVal = $input['favorites'];
-  if ($favVal === null || $favVal === '') {
-    $updates[] = 'favorites=NULL';
-  } else {
-    $favStr = is_string($favVal) ? $favVal : json_encode($favVal, JSON_UNESCAPED_SLASHES);
-    $updates[] = 'favorites=?';
-    $types .= 's';
-    $vals[] = $favStr;
-  }
-}
-
-// Recent history persistence (JSON string from localStorage)
-if (array_key_exists('recent', $input)) {
-  $recentVal = $input['recent'];
-  if ($recentVal === null || $recentVal === '') {
-    $updates[] = 'recent=NULL';
-  } else {
-    $recentStr = is_string($recentVal) ? $recentVal : json_encode($recentVal, JSON_UNESCAPED_SLASHES);
-    $updates[] = 'recent=?';
-    $types .= 's';
-    $vals[] = $recentStr;
-  }
-}
-
 // Filters persistence (DB-first; localStorage is secondary)
 if (array_key_exists('filters_json', $input)) {
   $filtersJson = $input['filters_json'];
@@ -198,25 +172,6 @@ if ($newPass !== '' || $confirm !== '') {
   $updates[] = 'password_hash=?';
   $types .= 's';
   $vals[] = $hash;
-}
-
-// Return preferences only (no updates) when requested
-if (!empty($input['return_preferences'])) {
-  $prefStmt = $mysqli->prepare('SELECT favorites, recent, filters_json, filters_hash, filters_version, filters_updated_at FROM admins WHERE id=? AND account_email=? LIMIT 1');
-  if (!$prefStmt) fail(500,'Prepare failed');
-  $prefStmt->bind_param('is', $id, $accountEmail);
-  if(!$prefStmt->execute()){ $prefStmt->close(); fail(500,'Query failed'); }
-  $prefRes = $prefStmt->get_result();
-  $prefRow = $prefRes ? $prefRes->fetch_assoc() : null;
-  $prefStmt->close();
-  ok([
-    'favorites' => isset($prefRow['favorites']) ? $prefRow['favorites'] : null,
-    'recent' => isset($prefRow['recent']) ? $prefRow['recent'] : null,
-    'filters_json' => isset($prefRow['filters_json']) ? $prefRow['filters_json'] : null,
-    'filters_hash' => isset($prefRow['filters_hash']) ? $prefRow['filters_hash'] : null,
-    'filters_version' => isset($prefRow['filters_version']) ? (int)$prefRow['filters_version'] : null,
-    'filters_updated_at' => isset($prefRow['filters_updated_at']) ? $prefRow['filters_updated_at'] : null
-  ]);
 }
 
 if (count($updates) === 0) {

@@ -254,9 +254,6 @@ $isAdmin = strtolower($memberType) === 'admin' ||
 // Check if admin requested to skip payment
 $skipPayment = $isAdmin && !empty($data['skip_payment']);
 
-// Payment gateway transaction ID (required for non-admin, non-free submissions)
-$transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : null;
-
 // IMPORTANT: posts are keyed by subcategory_key, NOT numeric subcategory_id.
 // subcategory_id may exist in the system DB for admin organization, but must NOT be required here.
 if ($subcategoryKey === '') {
@@ -268,25 +265,6 @@ if ($memberId === null || $memberId <= 0) {
 }
 // member_name is optional (DB allows NULL); do not block post creation on it.
 
-// Verify transaction for non-admin, non-free submissions
-if (!$skipPayment && $transactionId !== null && $transactionId > 0) {
-  $stmtTx = $mysqli->prepare("SELECT status FROM transactions WHERE id = ? AND member_id = ? LIMIT 1");
-  if (!$stmtTx) {
-    fail_key(500, 'msg_post_create_error');
-  }
-  $stmtTx->bind_param('ii', $transactionId, $memberId);
-  $stmtTx->execute();
-  $stmtTx->bind_result($txStatus);
-  $txFound = $stmtTx->fetch();
-  $stmtTx->close();
-  if (!$txFound || $txStatus !== 'paid') {
-    fail_key(402, 'msg_post_create_error', null, ['stage' => 'payment_verification', 'status' => $txStatus ?? 'not_found']);
-  }
-} elseif (!$skipPayment && ($transactionId === null || $transactionId <= 0)) {
-  // No transaction ID supplied for a paid submission — block it
-  fail_key(402, 'msg_post_create_error', null, ['stage' => 'payment_required']);
-}
-
 $transactionActive = false;
 
 if (!$mysqli->begin_transaction()) {
@@ -295,12 +273,16 @@ if (!$mysqli->begin_transaction()) {
 
 $transactionActive = true;
 
-// Determine payment status - admins skip payment, others require payment confirmation
-$paymentStatus = $skipPayment ? 'paid' : 'pending';
+// Determine payment status - admins can skip payment if requested, others get 'pending'
+// TEMPORARY: No payment gateway yet - all posts go live immediately
+// TODO: Revert to ($skipPayment ? 'paid' : 'pending') when payment gateway is ready
+$paymentStatus = 'paid';
 
 // Admin free submit: post goes live immediately
-// Regular member: post stays hidden until payment confirmed by payment gateway
-$visibility = $skipPayment ? 'active' : 'hidden';
+// Regular member: post stays paused until payment received
+// TEMPORARY: No payment gateway yet - all posts go live immediately
+// TODO: Revert to ($skipPayment ? 'active' : 'paused') when payment gateway is ready
+$visibility = 'active';
 
 // Moderation status: 'clean' for all new posts
 // Moderation system only deals with flagged/reported content later, not initial submission
@@ -311,9 +293,8 @@ $postColumns = fetch_table_columns($mysqli, 'posts');
 $hasPaymentStatus = in_array('payment_status', $postColumns, true);
 $hasModerationStatus = in_array('moderation_status', $postColumns, true);
 
-// Extract checkout_key and days from fields (post-level, not location-specific)
+// Extract checkout_key from fields (post-level, not location-specific)
 $checkoutKey = null;
-$checkoutDays = null;
 $fieldsArr = $data['fields'] ?? [];
 if (is_array($fieldsArr)) {
   foreach ($fieldsArr as $fld) {
@@ -350,34 +331,22 @@ if (is_array($fieldsArr)) {
           $coStmt->close();
         }
       }
-
-      // Extract days from checkout value for expires_at calculation
-      if (is_array($val) && !empty($val['days'])) {
-        $checkoutDays = (int)$val['days'];
-      }
-
       break;
     }
   }
 }
 
-// Calculate expires_at from checkout days
-$expiresAt = null;
-if (!empty($checkoutDays) && $checkoutDays > 0) {
-  $expiresAt = (new DateTime('now', new DateTimeZone('UTC')))->modify('+' . $checkoutDays . ' days')->format('Y-m-d H:i:s');
-}
-
 if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, moderation_status, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } elseif ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_key) VALUES (?, ?, ?, ?, ?, ?)"
   );
 }
 
@@ -386,20 +355,20 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus && $hasModerationStatus) {
-  // 10 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiisssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
-  // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiissss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississs', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiisss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $expiresAt)) {
+  // 6 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
@@ -618,7 +587,6 @@ foreach ($byLoc as $locNum => $entries) {
     'public_email' => null,
     'phone_prefix' => null,
     'public_phone' => null,
-    'location_type' => 'venue',
     'venue_name' => null,
     'address_line' => null,
     'city' => null,
@@ -626,7 +594,6 @@ foreach ($byLoc as $locNum => $entries) {
     'longitude' => null,
     'country_code' => null,
     'website_url' => null,
-    'links_data' => null,
     'tickets_url' => null,
     'coupon_code' => null,
     'amenity_summary' => null,
@@ -729,20 +696,6 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
-    if ($baseType === 'links' && is_array($val)) {
-      $card['links_data'] = $val;
-      // Derive website_url cache from the "website" link type if present.
-      foreach ($val as $lnk) {
-        if (!is_array($lnk)) continue;
-        $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
-        $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
-        if ($t === 'website' && $u !== '') {
-          $card['website_url'] = $u;
-          break;
-        }
-      }
-      continue;
-    }
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
@@ -757,14 +710,8 @@ foreach ($byLoc as $locNum => $entries) {
     }
 
     if ($baseType === 'venue' && is_array($val)) {
-      $card['location_type'] = 'venue';
       $card['venue_name'] = isset($val['venue_name']) ? trim((string)$val['venue_name']) : null;
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : null;
-      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : null;
-      $card['suburb'] = isset($val['suburb']) ? trim((string)$val['suburb']) : ($card['city'] ?? null);
-      $card['country_name'] = isset($val['country_name']) ? trim((string)$val['country_name']) : null;
-      $card['state'] = isset($val['state']) ? trim((string)$val['state']) : null;
-      $card['postcode'] = isset($val['postcode']) ? trim((string)$val['postcode']) : null;
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : null;
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : null;
       $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
@@ -772,33 +719,16 @@ foreach ($byLoc as $locNum => $entries) {
       $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : null;
       continue;
     }
-    if ($baseType === 'address' && is_array($val)) {
-      $card['location_type'] = 'address';
+    if (($baseType === 'address' || $baseType === 'city') && is_array($val)) {
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : $card['address_line'];
-      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
-      $card['suburb'] = isset($val['suburb']) ? trim((string)$val['suburb']) : ($card['city'] ?? $card['suburb']);
-      $card['country_name'] = isset($val['country_name']) ? trim((string)$val['country_name']) : ($card['country_name'] ?? null);
-      $card['state'] = isset($val['state']) ? trim((string)$val['state']) : ($card['state'] ?? null);
-      $card['postcode'] = isset($val['postcode']) ? trim((string)$val['postcode']) : ($card['postcode'] ?? null);
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
       $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
       $cc = preg_replace('/[^A-Z]/', '', $cc);
       $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
-      continue;
-    }
-    if ($baseType === 'city' && is_array($val)) {
-      $card['location_type'] = 'city';
-      $card['city'] = isset($val['city']) ? trim((string)$val['city']) : $card['city'];
-      $card['suburb'] = isset($val['suburb']) ? trim((string)$val['suburb']) : ($card['city'] ?? $card['suburb']);
-      $card['country_name'] = isset($val['country_name']) ? trim((string)$val['country_name']) : ($card['country_name'] ?? null);
-      $card['state'] = isset($val['state']) ? trim((string)$val['state']) : ($card['state'] ?? null);
-      $card['postcode'] = isset($val['postcode']) ? trim((string)$val['postcode']) : ($card['postcode'] ?? null);
-      $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
-      $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
-      $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
-      $cc = preg_replace('/[^A-Z]/', '', $cc);
-      $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
+      if ($baseType === 'city') {
+        $card['city'] = $card['address_line'];
+      }
       continue;
     }
   }
@@ -813,8 +743,8 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
   
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -830,17 +760,12 @@ foreach ($byLoc as $locNum => $entries) {
   $emailParam = $card['public_email'];
   $phonePrefixParam = $card['phone_prefix'];
   $phoneParam = $card['public_phone'];
-  $locationTypeParam = $card['location_type'];
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
-  $suburbParam = $card['suburb'];
   $cityParam = $card['city'];
-  $stateParam = $card['state'];
-  $postcodeParam = $card['postcode'];
-  $countryNameParam = $card['country_name'];
-  $countryCodeParam = $card['country_code'];
   $latParam = (float)($card['latitude'] ?? 0);
   $lngParam = (float)($card['longitude'] ?? 0);
+  $countryCodeParam = $card['country_code'];
   $timezoneParam = null;
   $ageRatingParam = $card['age_rating'];
   $websiteParam = $card['website_url'];
@@ -852,7 +777,7 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Bind + insert map card
   $stmtCard->bind_param(
-    'isssssssssssssssssssssddssssssss',
+    'issssssssssssssddssssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -866,17 +791,12 @@ foreach ($byLoc as $locNum => $entries) {
     $emailParam,
     $phonePrefixParam,
     $phoneParam,
-    $locationTypeParam,
     $venueNameParam,
     $addrLineParam,
-    $suburbParam,
     $cityParam,
-    $stateParam,
-    $postcodeParam,
-    $countryNameParam,
-    $countryCodeParam,
     $latParam,
     $lngParam,
+    $countryCodeParam,
     $timezoneParam,
     $ageRatingParam,
     $websiteParam,
@@ -894,33 +814,9 @@ foreach ($byLoc as $locNum => $entries) {
     $primaryTitle = (string) $titleParam;
   }
 
-  // Insert links into post_links subtable (repeatable)
-  if (is_array($card['links_data']) && count($card['links_data']) > 0) {
-    if (table_exists($mysqli, 'post_links')) {
-      $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, url, sort_order, is_active, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
-      if ($stmtLinks) {
-        $sortOrder = 0;
-        foreach ($card['links_data'] as $lnk) {
-          if (!is_array($lnk)) continue;
-          $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
-          $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
-          $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
-          $t = trim($t, '_');
-          if ($t === '' || $u === '') continue;
-          if ($sortOrder >= 10) break;
-          $stmtLinks->bind_param('issi', $mapCardId, $t, $u, $sortOrder);
-          $stmtLinks->execute();
-          $sortOrder++;
-        }
-        $stmtLinks->close();
-      }
-    }
-  }
-
   // Insert amenities into post_amenities subtable
   if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
-    $stmtAmenity = $mysqli->prepare("INSERT INTO post_amenities (post_map_card_id, amenity_key, value, created_at, updated_at)
+    $stmtAmenity = $mysqli->prepare("INSERT INTO post_amenities (map_card_id, amenity_key, value, created_at, updated_at)
       VALUES (?, ?, ?, NOW(), NOW())");
     if ($stmtAmenity) {
       foreach ($card['amenities_data'] as $amenityItem) {
@@ -978,7 +874,7 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write sessions with their per-time-slot ticket_group_key
     if (is_array($sessionsToWrite)) {
-      $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (post_map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
+      $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtSess) {
         abort_with_error($mysqli, 500, 'Prepare post_sessions', $transactionActive);
@@ -1001,8 +897,8 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write pricing rows for each pricing group
     if (is_array($pricingGroupsToWrite)) {
-      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtPrice) {
         abort_with_error($mysqli, 500, 'Prepare post_ticket_pricing', $transactionActive);
       }
@@ -1027,20 +923,7 @@ foreach ($byLoc as $locNum => $entries) {
             if ($detectedCurrency === null && $curr !== '') {
               $detectedCurrency = $curr;
             }
-            // Promo fields from tier - only populate if promo is enabled
-            $tpPromoOption = isset($tier['promo_option']) ? trim((string)$tier['promo_option']) : 'none';
-            $tpPromoCode = null;
-            $tpPromoType = null;
-            $tpPromoValue = null;
-            $tpPromoPrice = null;
-            if ($tpPromoOption !== 'none') {
-              $tpPromoCode = isset($tier['promo_code']) ? trim((string)$tier['promo_code']) : '';
-              $tpPromoType = isset($tier['promo_type']) ? trim((string)$tier['promo_type']) : 'percent';
-              $tpPromoValue = isset($tier['promo_value']) ? trim((string)$tier['promo_value']) : '';
-              $tpPromoPrice = isset($tier['promo_price']) ? trim((string)$tier['promo_price']) : '';
-            }
-            
-            $stmtPrice->bind_param('isissssssssss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr, $tpPromoOption, $tpPromoCode, $tpPromoType, $tpPromoValue, $tpPromoPrice);
+            $stmtPrice->bind_param('ississss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
             if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
           }
         }
@@ -1054,13 +937,12 @@ foreach ($byLoc as $locNum => $entries) {
     if (!table_exists($mysqli, 'post_item_pricing')) {
       abort_with_error($mysqli, 500, 'Missing post_item_pricing', $transactionActive);
     }
-    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (post_map_card_id, item_name, age_rating, item_variants, item_price, currency, promo_option, promo_code, promo_type, promo_value, promo_price, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
     if (!$stmtItem) {
       abort_with_error($mysqli, 500, 'Prepare post_item_pricing', $transactionActive);
     }
     $itemName = trim((string)$itemPricing['item_name']);
-    $ageRating = isset($itemPricing['age_rating']) ? trim((string)$itemPricing['age_rating']) : '';
     $variants = isset($itemPricing['item_variants']) ? $itemPricing['item_variants'] : [];
     $variantsJson = json_encode($variants, JSON_UNESCAPED_UNICODE);
     $price = normalize_price_amount($itemPricing['item_price'] ?? null);
@@ -1070,20 +952,7 @@ foreach ($byLoc as $locNum => $entries) {
       $detectedCurrency = $curr;
     }
     
-    // Promo fields - only populate if promo is enabled
-    $promoOption = isset($itemPricing['promo_option']) ? trim((string)$itemPricing['promo_option']) : 'none';
-    $promoCode = null;
-    $promoType = null;
-    $promoValue = null;
-    $promoPrice = null;
-    if ($promoOption !== 'none') {
-      $promoCode = isset($itemPricing['promo_code']) ? trim((string)$itemPricing['promo_code']) : '';
-      $promoType = isset($itemPricing['promo_type']) ? trim((string)$itemPricing['promo_type']) : 'percent';
-      $promoValue = isset($itemPricing['promo_value']) ? trim((string)$itemPricing['promo_value']) : '';
-      $promoPrice = isset($itemPricing['promo_price']) ? trim((string)$itemPricing['promo_price']) : '';
-    }
-    
-    $stmtItem->bind_param('issssssssss', $mapCardId, $itemName, $ageRating, $variantsJson, $price, $curr, $promoOption, $promoCode, $promoType, $promoValue, $promoPrice);
+    $stmtItem->bind_param('issss', $mapCardId, $itemName, $variantsJson, $price, $curr);
     if (!$stmtItem->execute()) { 
       $stmtItem->close(); 
       abort_with_error($mysqli, 500, 'Insert item pricing', $transactionActive); 
@@ -1165,30 +1034,8 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $origName = (string)($_FILES['images']['name'][$i] ?? 'image');
     $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
     if ($ext === '') $ext = 'jpg';
-
-    // Naming convention: {8-digit-padded-post-id}-{original_filename}.{extension}
-    $baseName = pathinfo($origName, PATHINFO_FILENAME);
-    $baseName = preg_replace('/\s+/', '_', trim($baseName));
-    $baseName = preg_replace('/[\/\\\\:*?"<>|]/', '', $baseName);
-    if ($baseName === '') $baseName = 'image';
-    $paddedId = str_pad((string)$insertId, 8, '0', STR_PAD_LEFT);
-    $candidateBase = $paddedId . '-' . $baseName;
-    $finalFilename = $candidateBase . '.' . $ext;
-
-    // Duplicate check for this post
-    $dupStmt = $mysqli->prepare("SELECT file_name FROM post_media WHERE post_id = ? AND file_name LIKE ? AND deleted_at IS NULL");
-    $dupPattern = $candidateBase . '%.' . $ext;
-    $dupStmt->bind_param('is', $insertId, $dupPattern);
-    $dupStmt->execute();
-    $dupResult = $dupStmt->get_result();
-    $existingNames = [];
-    while ($dupRow = $dupResult->fetch_assoc()) { $existingNames[] = $dupRow['file_name']; }
-    $dupStmt->close();
-    if (in_array($finalFilename, $existingNames)) {
-      $suffix = 2;
-      while (in_array($candidateBase . '-' . $suffix . '.' . $ext, $existingNames)) { $suffix++; }
-      $finalFilename = $candidateBase . '-' . $suffix . '.' . $ext;
-    }
+    $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
+    $finalFilename = $insertId . '-' . $hash . '.' . $ext;
 
     $bytes = file_get_contents($tmp);
     if ($bytes === false) abort_with_error($mysqli, 500, 'Read image bytes', $transactionActive);
@@ -1389,45 +1236,13 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
   }
 }
 
-// Insert creation snapshot with actual database rows (for one-click restoration)
-$creationSnapshot = [
-  'post_map_cards' => [],
-  'post_sessions' => [],
-  'post_ticket_pricing' => [],
-  'post_item_pricing' => [],
-  'post_amenities' => [],
-  'post_links' => []
-];
-$creationMapCardIds = [];
-$crMcResult = $mysqli->query("SELECT * FROM post_map_cards WHERE post_id = $insertId");
-if ($crMcResult) {
-  while ($crRow = $crMcResult->fetch_assoc()) {
-    $creationMapCardIds[] = (int)$crRow['id'];
-    $creationSnapshot['post_map_cards'][] = $crRow;
-  }
-  $crMcResult->free();
-}
-if (!empty($creationMapCardIds)) {
-  $crIdList = implode(',', $creationMapCardIds);
-  $r = $mysqli->query("SELECT * FROM post_sessions WHERE post_map_card_id IN ($crIdList)");
-  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_sessions'][] = $row; $r->free(); }
-  $r = $mysqli->query("SELECT * FROM post_ticket_pricing WHERE post_map_card_id IN ($crIdList)");
-  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_ticket_pricing'][] = $row; $r->free(); }
-  $r = $mysqli->query("SELECT * FROM post_item_pricing WHERE post_map_card_id IN ($crIdList)");
-  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_item_pricing'][] = $row; $r->free(); }
-  $r = $mysqli->query("SELECT * FROM post_amenities WHERE post_map_card_id IN ($crIdList)");
-  if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_amenities'][] = $row; $r->free(); }
-  if (table_exists($mysqli, 'post_links')) {
-    $r = $mysqli->query("SELECT * FROM post_links WHERE post_map_card_id IN ($crIdList)");
-    if ($r) { while ($row = $r->fetch_assoc()) $creationSnapshot['post_links'][] = $row; $r->free(); }
-  }
-}
-$creationJson = json_encode($creationSnapshot, JSON_UNESCAPED_UNICODE);
+// Insert revision snapshot
+$revJson = json_encode($data, JSON_UNESCAPED_UNICODE);
 $stmtRev = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at)
   VALUES (?, ?, ?, ?, 'create', 'Created', ?, NOW(), NOW())");
 if ($stmtRev) {
   $title0 = $primaryTitle;
-  $stmtRev->bind_param('isiss', $insertId, $title0, $memberId, $memberName, $creationJson);
+  $stmtRev->bind_param('isiss', $insertId, $title0, $memberId, $memberName, $revJson);
   $stmtRev->execute();
   $stmtRev->close();
 }
@@ -1452,16 +1267,6 @@ if (!$mysqli->commit()) {
   abort_with_error($mysqli, 500, 'Failed to finalize post.', $transactionActive);
 }
 $transactionActive = false;
-
-// Link transaction to the newly created post
-if ($transactionId !== null && $transactionId > 0) {
-  $stmtTxLink = $mysqli->prepare("UPDATE transactions SET post_id = ?, updated_at = NOW() WHERE id = ? AND post_id IS NULL");
-  if ($stmtTxLink) {
-    $stmtTxLink->bind_param('ii', $insertId, $transactionId);
-    $stmtTxLink->execute();
-    $stmtTxLink->close();
-  }
-}
 
 $msgKey = $mediaIds ? 'msg_post_create_with_images' : 'msg_post_create_success';
 echo json_encode(['success'=>true, 'insert_id'=>$insertId, 'message_key'=>$msgKey]);
