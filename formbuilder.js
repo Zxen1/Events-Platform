@@ -1416,8 +1416,8 @@
             'amenities':      { container: 'location', required: 'forced-on',  subcategory_type: null,     requires: null             },
             'ticket-url':     { container: 'location', required: null,         subcategory_type: null,     requires: 'ticket-pricing' },
             'item-url':       { container: 'location', required: null,         subcategory_type: null,     requires: 'item-pricing'   },
-            'ticket-pricing': { container: 'primary',  required: 'forced-on',  subcategory_type: 'Events', requires: null             },
-            'sessions':       { container: 'location', required: 'forced-on',  subcategory_type: 'Events', requires: null             },
+            'ticket-pricing': { container: 'primary',  required: null,         subcategory_type: 'Events', requires: null             },
+            'sessions':       { container: 'location', required: null,         subcategory_type: 'Events', requires: null             },
         };
         // ─────────────────────────────────────────────────────────────────────
 
@@ -2621,8 +2621,8 @@
             fieldMoreBtn.innerHTML = '<div class="formbuilder-field-more-icon"></div><div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
-            // Lock more menu for location fieldsets and event fieldsets - prevent deletion
-            if (isLockedLocationFieldset || isLockedLocationOptionalFieldset || isLockedEventFieldset) {
+            // Lock more menu only for fieldsets with required: 'forced-on' in the registry
+            if (lockedRule && lockedRule.required === 'forced-on') {
                 fieldMoreBtn.classList.add('disabled');
                 fieldMoreBtn.style.pointerEvents = 'none';
                 fieldMoreBtn.style.opacity = '0.5';
