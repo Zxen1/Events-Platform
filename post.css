@@ -639,8 +639,8 @@
 .post-card-image-badge,
 .recent-card-image-badge,
 .post-image-badge {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   display: block;
 }
@@ -1116,8 +1116,8 @@
 
 /* Badge image */
 .post-header-image-badge {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   display: block;
 }
@@ -1681,8 +1681,8 @@
 
 /* Price badge image (currency flag) */
 .post-info-image-badge {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   display: inline-block;
   vertical-align: middle;
