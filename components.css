@@ -1172,7 +1172,7 @@
     top: 36px;
     left: 0;
     width: 100%;
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
@@ -1213,106 +1213,6 @@
 }
 
 .component-systemimagepicker-menu-loading {
-    padding: 20px;
-    text-align: center;
-}
-
-
-/* ============================================================================
-   FIELDSET ICON PICKER COMPONENT
-   
-   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
-   ============================================================================ */
-
-.component-fieldseticonpicker-menu {
-    width: 100%;
-    height: 36px;
-    position: relative;
-}
-
-.component-fieldseticonpicker-menu-button {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    cursor: pointer;
-    font: inherit;
-}
-
-.component-fieldseticonpicker-menu-button-image {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.component-fieldseticonpicker-menu-button-text {
-    flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.component-fieldseticonpicker-menu-button-arrow {
-    width: 16px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-}
-
-.component-fieldseticonpicker-menu-options {
-    display: none;
-    position: absolute;
-    top: 36px;
-    left: 0;
-    width: 100%;
-    max-height: 400px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: var(--layer-menu, 85);
-}
-
-.component-fieldseticonpicker-menu-option {
-    width: 100%;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    cursor: pointer;
-}
-
-.component-fieldseticonpicker-menu-option-image {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.component-fieldseticonpicker-menu-option-text {
-    flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 14px;
-}
-
-.component-fieldseticonpicker-menu-error {
-    padding: 20px 12px;
-    text-align: center;
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.component-fieldseticonpicker-menu-options--open {
-    display: block;
-}
-
-.component-fieldseticonpicker-menu-loading {
     padding: 20px;
     text-align: center;
 }

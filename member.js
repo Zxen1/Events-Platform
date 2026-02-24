@@ -3922,7 +3922,8 @@ const MemberModule = (function() {
             { key: 'city', value: mapCard.city },
             { key: 'public-email', value: mapCard.public_email },
             { key: 'public-phone', value: mapCard.public_phone },
-            { key: 'ticket_url', value: mapCard.ticket_url },
+            { key: 'website_url', value: mapCard.website_url },
+            { key: 'tickets_url', value: mapCard.tickets_url },
             { key: 'coupon_code', value: mapCard.coupon_code },
             { key: 'custom-text', value: mapCard.custom_text },
             { key: 'custom-textarea', value: mapCard.custom_textarea }
@@ -4255,7 +4256,7 @@ const MemberModule = (function() {
                         if (!typeVal && !urlVal) continue;
                         // Only store complete rows.
                         if (!typeVal || !urlVal) continue;
-                        out.push({ link_type: typeVal, external_url: urlVal });
+                        out.push({ link_type: typeVal, url: urlVal });
                     }
                     return out;
                 } catch (eL) {

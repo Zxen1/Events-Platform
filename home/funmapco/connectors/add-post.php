@@ -625,8 +625,9 @@ foreach ($byLoc as $locNum => $entries) {
     'latitude' => null,
     'longitude' => null,
     'country_code' => null,
+    'website_url' => null,
     'links_data' => null,
-    'ticket_url' => null,
+    'tickets_url' => null,
     'coupon_code' => null,
     'amenity_summary' => null,
     'amenities_data' => null,
@@ -727,11 +728,22 @@ foreach ($byLoc as $locNum => $entries) {
         $card['public_phone'] = $num;
       }
     }
+    if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'links' && is_array($val)) {
       $card['links_data'] = $val;
+      // Derive website_url cache from the "website" link type if present.
+      foreach ($val as $lnk) {
+        if (!is_array($lnk)) continue;
+        $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
+        $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
+        if ($t === 'website' && $u !== '') {
+          $card['website_url'] = $u;
+          break;
+        }
+      }
       continue;
     }
-    if ($baseType === 'ticket-url' && is_string($val)) $card['ticket_url'] = trim($val);
+    if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
       // Store JSON summary for quick reference; raw data for post_amenities subtable
@@ -801,8 +813,8 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
   
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, ticket_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, location_type, venue_name, address_line, suburb, city, state, postcode, country_name, country_code, latitude, longitude, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -831,7 +843,8 @@ foreach ($byLoc as $locNum => $entries) {
   $lngParam = (float)($card['longitude'] ?? 0);
   $timezoneParam = null;
   $ageRatingParam = $card['age_rating'];
-  $ticketsParam = $card['ticket_url'];
+  $websiteParam = $card['website_url'];
+  $ticketsParam = $card['tickets_url'];
   $couponCodeParam = $card['coupon_code'];
   $sessSumParam = $card['session_summary'];
   $priceSumParam = $card['price_summary'];
@@ -839,7 +852,7 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Bind + insert map card
   $stmtCard->bind_param(
-    'isssssssssssssssssssssddsssssss',
+    'isssssssssssssssssssssddssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -866,6 +879,7 @@ foreach ($byLoc as $locNum => $entries) {
     $lngParam,
     $timezoneParam,
     $ageRatingParam,
+    $websiteParam,
     $ticketsParam,
     $couponCodeParam,
     $sessSumParam,
@@ -883,14 +897,14 @@ foreach ($byLoc as $locNum => $entries) {
   // Insert links into post_links subtable (repeatable)
   if (is_array($card['links_data']) && count($card['links_data']) > 0) {
     if (table_exists($mysqli, 'post_links')) {
-      $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, external_url, sort_order, is_active, created_at, updated_at)
+      $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, url, sort_order, is_active, created_at, updated_at)
         VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
       if ($stmtLinks) {
         $sortOrder = 0;
         foreach ($card['links_data'] as $lnk) {
           if (!is_array($lnk)) continue;
           $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
-          $u = isset($lnk['external_url']) ? trim((string)$lnk['external_url']) : '';
+          $u = isset($lnk['url']) ? trim((string)$lnk['url']) : '';
           $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
           $t = trim($t, '_');
           if ($t === '' || $u === '') continue;

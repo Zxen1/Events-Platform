@@ -4452,20 +4452,19 @@ const SystemImagePickerComponent = (function(){
             });
     }
     
-    // Get database images instantly (from the provided basket, or the default system_images basket)
-    function getDatabaseImages(folderPath, basket) {
-        var activeBasket = basket || systemImagesBasket;
-        if (!activeBasket || !folderPath || !Array.isArray(activeBasket)) return [];
+    // Get database images instantly (from system_images basket table)
+    function getDatabaseImages(folderPath) {
+        if (!systemImagesBasket || !folderPath || !Array.isArray(systemImagesBasket)) return [];
         var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
         var dbImages = [];
-        activeBasket.forEach(function(filename) {
+        systemImagesBasket.forEach(function(filename) {
             dbImages.push(folder + filename);
         });
         return dbImages;
     }
     
     // Load images list - returns database images instantly, loads API in background
-    function loadImagesFromFolder(folderPath, callback, basket) {
+    function loadImagesFromFolder(folderPath, callback) {
         folderPath = folderPath || imageFolder;
         if (!folderPath) {
             if (callback) callback([]);
@@ -4483,7 +4482,7 @@ const SystemImagePickerComponent = (function(){
         }
         
         // Get database images instantly
-        var dbImages = getDatabaseImages(folderPath, basket);
+        var dbImages = getDatabaseImages(folderPath);
         images = dbImages;
         
         // Return database images immediately
@@ -4548,7 +4547,6 @@ const SystemImagePickerComponent = (function(){
         var onSelect = options.onSelect || function() {};
         var databaseValue = options.databaseValue || null;
         var folderPathOverride = options.folderPath || null;
-        var localBasket = options.basket || null; // Per-picker basket override (e.g. fieldset-icons)
         var currentImage = null; // Only set if databaseValue exists in loaded images
         
         var menu = document.createElement('div');
@@ -4682,22 +4680,21 @@ const SystemImagePickerComponent = (function(){
             
             // Show database images instantly (menu is now open and interactive)
             var effectiveFolder2 = folderPathOverride || imageFolder;
-            var activeBasket = localBasket || systemImagesBasket;
-            if (!activeBasket) {
+            if (!systemImagesBasket) {
                 loadFolderFromSettings().then(function() {
                     // Update with database images now that they're loaded
-                    var updatedDbImages = getDatabaseImages(effectiveFolder2, localBasket);
+                    var updatedDbImages = getDatabaseImages(effectiveFolder2);
                     renderImageOptions(updatedDbImages, true);
                 });
             } else {
-                var dbImages = getDatabaseImages(effectiveFolder2, localBasket);
+                var dbImages = getDatabaseImages(effectiveFolder2);
                 renderImageOptions(dbImages, true);
             }
             
             // Load API in background and append new images (always runs)
             loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
                 renderImageOptions(updatedImageList, false);
-            }, localBasket);
+            });
         }
         
         function closeMenu() {
@@ -4749,317 +4746,6 @@ const SystemImagePickerComponent = (function(){
     return {
         getImageFolder: getImageFolder,
         setImageFolder: setImageFolder,
-        getImages: getImages,
-        isLoaded: isLoaded,
-        loadFolderFromSettings: loadFolderFromSettings,
-        loadImagesFromFolder: loadImagesFromFolder,
-        buildPicker: buildPicker
-    };
-})();
-
-
-/* ============================================================================
-   FIELDSET ICON PICKER COMPONENT
-   
-   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
-   ============================================================================ */
-
-const FieldsetIconPickerComponent = (function(){
-
-    var imageFolder = null;
-    var images = [];
-    var dataLoaded = false;
-    var apiCache = {};
-    var fieldsetIconsBasket = null;
-
-    function getImageFolder() {
-        return imageFolder;
-    }
-
-    function setImageFolder(folder) {
-        imageFolder = folder;
-    }
-
-    function setData(basket) {
-        if (Array.isArray(basket)) {
-            fieldsetIconsBasket = basket;
-        }
-    }
-
-    function getImages() {
-        return images;
-    }
-
-    function isLoaded() {
-        return dataLoaded;
-    }
-
-    function loadFolderFromSettings() {
-        return fetch('/gateway.php?action=get-admin-settings')
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.settings && res.settings.folder_fieldset_icons) {
-                    imageFolder = res.settings.folder_fieldset_icons;
-                }
-                if (res.fieldset_icons_basket && Array.isArray(res.fieldset_icons_basket)) {
-                    fieldsetIconsBasket = res.fieldset_icons_basket;
-                }
-                return imageFolder;
-            });
-    }
-
-    function getDatabaseImages(folderPath) {
-        if (!fieldsetIconsBasket || !folderPath || !Array.isArray(fieldsetIconsBasket)) return [];
-        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
-        return fieldsetIconsBasket.map(function(filename) {
-            return folder + filename;
-        });
-    }
-
-    function loadImagesFromFolder(folderPath, callback) {
-        folderPath = folderPath || imageFolder;
-        if (!folderPath) {
-            if (callback) callback([]);
-            return Promise.resolve([]);
-        }
-
-        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
-
-        if (apiCache[folderPath]) {
-            images = apiCache[folderPath];
-            dataLoaded = true;
-            if (callback) callback(apiCache[folderPath]);
-            return Promise.resolve(apiCache[folderPath]);
-        }
-
-        var dbImages = getDatabaseImages(folderPath);
-        images = dbImages;
-
-        if (callback) callback(dbImages);
-        var dbPromise = Promise.resolve(dbImages);
-
-        fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folderPath))
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.success && Array.isArray(res.icons)) {
-                    var apiImageList = res.icons.map(function(img) {
-                        return folder + img;
-                    });
-
-                    var allImages = dbImages.slice();
-                    var dbFilenames = dbImages.map(function(path) {
-                        return getFilename(path);
-                    });
-
-                    apiImageList.forEach(function(apiPath) {
-                        var apiFilename = getFilename(apiPath);
-                        if (dbFilenames.indexOf(apiFilename) === -1) {
-                            allImages.push(apiPath);
-                        }
-                    });
-
-                    apiCache[folderPath] = allImages;
-                    images = allImages;
-                    dataLoaded = true;
-
-                    if (callback) callback(allImages);
-                }
-            })
-            .catch(function(err) {
-                console.warn('Failed to load fieldset icons from API:', err);
-            });
-
-        return dbPromise;
-    }
-
-    function getFilename(path) {
-        if (!path) return '';
-        var parts = path.split('/');
-        return parts[parts.length - 1] || path;
-    }
-
-    function buildPicker(options) {
-        options = options || {};
-        var onSelect = options.onSelect || function() {};
-        var databaseValue = options.databaseValue || null;
-        var folderPathOverride = options.folderPath || null;
-        var currentImage = null;
-
-        var menu = document.createElement('div');
-        menu.className = 'component-fieldseticonpicker-menu menu-class-1';
-
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'component-fieldseticonpicker-menu-button menu-button';
-
-        var buttonImage = document.createElement('img');
-        buttonImage.className = 'component-fieldseticonpicker-menu-button-image';
-        buttonImage.src = '';
-        buttonImage.alt = '';
-        buttonImage.style.display = 'none';
-
-        var buttonText = document.createElement('span');
-        buttonText.className = 'component-fieldseticonpicker-menu-button-text menu-text';
-        buttonText.textContent = 'Select...';
-
-        var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-fieldseticonpicker-menu-button-arrow menu-arrow';
-
-        button.appendChild(buttonImage);
-        button.appendChild(buttonText);
-        button.appendChild(buttonArrow);
-        menu.appendChild(button);
-
-        var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-fieldseticonpicker-menu-options menu-options';
-        menu.appendChild(optionsDiv);
-
-        function applyOpenState(isOpen) {
-            menu.classList.toggle('component-fieldseticonpicker-menu--open', !!isOpen);
-            button.classList.toggle('component-fieldseticonpicker-menu-button--open', !!isOpen);
-            button.classList.toggle('menu-button--open', !!isOpen);
-            buttonArrow.classList.toggle('component-fieldseticonpicker-menu-button-arrow--open', !!isOpen);
-            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
-            optionsDiv.classList.toggle('component-fieldseticonpicker-menu-options--open', !!isOpen);
-            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
-        }
-        menu.__menuIsOpen = function() { return menu.classList.contains('component-fieldseticonpicker-menu--open'); };
-        menu.__menuApplyOpenState = applyOpenState;
-
-        MenuManager.register(menu);
-        menu.__menuGetOptionsEl = function() { return optionsDiv; };
-        menu.__menuOptionSelector = '.component-fieldseticonpicker-menu-option';
-
-        var loadPromise = (fieldsetIconsBasket && (folderPathOverride || imageFolder)) ? Promise.resolve() : loadFolderFromSettings();
-        loadPromise.then(function() {
-            if (databaseValue) {
-                var databaseFilename = getFilename(databaseValue);
-                var effectiveFolder = folderPathOverride || imageFolder;
-                if (effectiveFolder) {
-                    var folder = effectiveFolder.endsWith('/') ? effectiveFolder : effectiveFolder + '/';
-                    var fullImageUrl = folder + databaseFilename;
-                    currentImage = fullImageUrl;
-                    buttonImage.src = fullImageUrl;
-                    buttonImage.style.display = '';
-                    buttonText.textContent = databaseFilename;
-                }
-            }
-        });
-
-        function renderImageOptions(imageList, clearFirst) {
-            if (clearFirst) {
-                optionsDiv.innerHTML = '';
-            }
-
-            if (imageList.length === 0) {
-                if (clearFirst) {
-                    var msg = document.createElement('div');
-                    msg.className = 'component-fieldseticonpicker-menu-error';
-                    msg.innerHTML = 'No images found.<br>Please set fieldset icons folder in Admin Settings.';
-                    optionsDiv.appendChild(msg);
-                }
-            } else {
-                imageList.forEach(function(imagePath) {
-                    var existing = optionsDiv.querySelector('[data-image-path="' + imagePath + '"]');
-                    if (existing) return;
-
-                    var option = document.createElement('button');
-                    option.type = 'button';
-                    option.className = 'component-fieldseticonpicker-menu-option menu-option';
-                    option.setAttribute('data-image-path', imagePath);
-
-                    var optImg = document.createElement('img');
-                    optImg.className = 'component-fieldseticonpicker-menu-option-image';
-                    optImg.src = imagePath;
-                    optImg.alt = '';
-
-                    var optText = document.createElement('span');
-                    optText.className = 'component-fieldseticonpicker-menu-option-text menu-text';
-                    optText.textContent = getFilename(imagePath);
-
-                    option.appendChild(optImg);
-                    option.appendChild(optText);
-
-                    option.onclick = function(ev) {
-                        ev.stopPropagation();
-                        currentImage = imagePath;
-                        buttonImage.src = imagePath;
-                        buttonImage.style.display = '';
-                        buttonText.textContent = getFilename(imagePath);
-                        applyOpenState(false);
-                        onSelect(imagePath);
-                    };
-                    optionsDiv.appendChild(option);
-                });
-            }
-        }
-
-        function openMenu() {
-            MenuManager.closeAll(menu);
-            applyOpenState(true);
-
-            var effectiveFolder2 = folderPathOverride || imageFolder;
-            if (!fieldsetIconsBasket) {
-                loadFolderFromSettings().then(function() {
-                    renderImageOptions(getDatabaseImages(effectiveFolder2), true);
-                });
-            } else {
-                renderImageOptions(getDatabaseImages(effectiveFolder2), true);
-            }
-
-            loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
-                renderImageOptions(updatedImageList, false);
-            });
-        }
-
-        function closeMenu() {
-            applyOpenState(false);
-        }
-
-        function onKeyDown(e) {
-            if (!e) return;
-            var key = e.key;
-            var isOpen = menu.classList.contains('component-fieldseticonpicker-menu--open');
-
-            if (key === 'Escape') {
-                if (isOpen) {
-                    closeMenu();
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                return;
-            }
-
-            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
-                if (!isOpen) {
-                    openMenu();
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                menuArrowKeyNav(e, optionsDiv, '.component-fieldseticonpicker-menu-option', function(opt) { opt.click(); });
-            }
-        }
-        menu.addEventListener('keydown', onKeyDown, true);
-
-        button.onclick = function(e) {
-            e.stopPropagation();
-            var isOpen = menu.classList.contains('component-fieldseticonpicker-menu--open');
-            if (isOpen) closeMenu();
-            else openMenu();
-        };
-
-        return {
-            element: menu,
-            getImage: function() {
-                return currentImage;
-            }
-        };
-    }
-
-    return {
-        getImageFolder: getImageFolder,
-        setImageFolder: setImageFolder,
-        setData: setData,
         getImages: getImages,
         isLoaded: isLoaded,
         loadFolderFromSettings: loadFolderFromSettings,
@@ -13527,7 +13213,6 @@ window.CountryComponent = CountryComponent;
 window.MemberAuthFieldsetsComponent = MemberAuthFieldsetsComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
-window.FieldsetIconPickerComponent = FieldsetIconPickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;
 window.AgeRatingComponent = AgeRatingComponent;
 window.LinksComponent = LinksComponent;

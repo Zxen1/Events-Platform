@@ -719,7 +719,7 @@
   border: 1px solid var(--blue-500);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
   z-index: var(--layer-menu, 85);
   scrollbar-width: thin;
@@ -762,16 +762,14 @@
 
 .formbuilder-fieldset-menu-option--disabled,
 .formbuilder-fieldset-menu-option--disabled-location-type,
-.formbuilder-fieldset-menu-option--disabled-general,
-.formbuilder-fieldset-menu-option--disabled-requires {
+.formbuilder-fieldset-menu-option--disabled-general {
   color: #555;
   cursor: not-allowed;
 }
 
 .formbuilder-fieldset-menu-option--disabled:hover,
 .formbuilder-fieldset-menu-option--disabled-location-type:hover,
-.formbuilder-fieldset-menu-option--disabled-general:hover,
-.formbuilder-fieldset-menu-option--disabled-requires:hover {
+.formbuilder-fieldset-menu-option--disabled-general:hover {
   background: transparent;
 }
 
@@ -806,12 +804,10 @@
 }
 
 .formbuilder-field-required {
-  display: none;
   color: #f87171;
-  font-size: 8px;
-  margin-left: 4px;
-  flex-shrink: 0;
-  vertical-align: middle;
+  font-weight: bold;
+  margin-left: 3px;
+  display: none;
 }
 
 .formbuilder-field-required--required {
@@ -884,7 +880,7 @@
 }
 
 /* Location divider line - appears above location fieldset when location type is selected */
-.formbuilder-location-divider {
+.member-postform-location-divider {
   width: 100%;
   height: 3px;
   min-height: 3px;
@@ -1286,15 +1282,6 @@
 
 .formbuilder-field-name {
   flex-shrink: 0;
-}
-
-.formbuilder-field-group-dot {
-  display: inline;
-  color: #3b82f6;
-  font-size: 8px;
-  margin-left: 4px;
-  flex-shrink: 0;
-  vertical-align: middle;
 }
 
 .formbuilder-field-required {

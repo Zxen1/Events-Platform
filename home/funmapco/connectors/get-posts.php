@@ -497,7 +497,8 @@ try {
             mc.longitude,
             mc.amenity_summary,
             mc.age_rating,
-            mc.ticket_url,
+            mc.website_url,
+            mc.tickets_url,
             mc.coupon_code,
             mc.session_summary,
             mc.price_summary,
@@ -607,7 +608,8 @@ try {
                 'longitude' => $row['longitude'] !== null ? (float)$row['longitude'] : null,
                 'amenities' => $row['amenity_summary'],
                 'age_rating' => $row['age_rating'],
-                'ticket_url' => $row['ticket_url'],
+                'website_url' => $row['website_url'],
+                'tickets_url' => $row['tickets_url'],
                 'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
@@ -846,11 +848,11 @@ try {
         $amenityRes->free();
 
         // Links (required: post_links + list_links)
-        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.external_url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
+        $linksSql = "SELECT pl.post_map_card_id, pl.link_type, pl.url, ll.option_label, ll.option_filename, ll.sort_order AS menu_sort_order
                      FROM post_links pl
                      LEFT JOIN list_links ll ON ll.option_value = pl.link_type AND ll.is_active = 1
                      WHERE pl.post_map_card_id IN ($cardIdsCsv) AND pl.is_active = 1
-                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.external_url ASC";
+                     ORDER BY pl.post_map_card_id ASC, IFNULL(ll.sort_order, 9999) ASC, pl.url ASC";
 
         $linksRes = $mysqli->query($linksSql);
         if (!$linksRes) {
@@ -862,7 +864,7 @@ try {
             if (!isset($linksByCard[$cid])) $linksByCard[$cid] = [];
             $linksByCard[$cid][] = [
                 'link_type' => (string)($lRow['link_type'] ?? ''),
-                'external_url' => (string)($lRow['external_url'] ?? ''),
+                'url' => (string)($lRow['url'] ?? ''),
                 'label' => isset($lRow['option_label']) ? (string)($lRow['option_label'] ?? '') : '',
                 'filename' => isset($lRow['option_filename']) ? (string)($lRow['option_filename'] ?? '') : '',
                 'menu_sort_order' => isset($lRow['menu_sort_order']) ? (int)($lRow['menu_sort_order'] ?? 0) : null,
