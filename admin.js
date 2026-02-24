@@ -3454,6 +3454,16 @@ const AdminModule = (function() {
                         SystemImagePickerComponent.setImageFolder(settingsData.folder_system_images);
                     }
 
+                    // Initialize FieldsetIconPickerComponent
+                    if (window.FieldsetIconPickerComponent) {
+                        if (settingsData.folder_fieldset_icons) {
+                            FieldsetIconPickerComponent.setImageFolder(settingsData.folder_fieldset_icons);
+                        }
+                        if (data.fieldset_icons_basket) {
+                            FieldsetIconPickerComponent.setData(data.fieldset_icons_basket);
+                        }
+                    }
+
                     // Initialize CurrencyComponent data if available
                     if (window.CurrencyComponent && data.dropdown_options && data.dropdown_options.currency) {
                         CurrencyComponent.setData(data.dropdown_options.currency);
@@ -3484,35 +3494,11 @@ const AdminModule = (function() {
     
     function renderSiteCustomisation() {
         var container = document.getElementById('adminSiteCustomisationContainer');
-        if (!container || !window.SystemImagePickerComponent) return;
-
-        // --- Badges ---
-        var badgeRows = [
-            { label: 'Badge: Subcategory', description: 'Subcategory icons' }
-        ];
-        badgeRows.forEach(function(badge) {
-            var row = document.createElement('div');
-            row.className = 'admin-settings-field admin-settings-field--imagepicker';
-            var label = document.createElement('label');
-            label.className = 'admin-settings-field-label';
-            label.textContent = badge.label;
-            var staticWrapper = document.createElement('div');
-            staticWrapper.className = 'component-systemimagepicker-menu menu-class-1';
-            var staticBox = document.createElement('div');
-            staticBox.className = 'component-systemimagepicker-menu-button menu-button';
-            staticBox.textContent = badge.description;
-            staticWrapper.appendChild(staticBox);
-            row.appendChild(label);
-            row.appendChild(staticWrapper);
-            container.appendChild(row);
-        });
+        if (!container || !window.FieldsetIconPickerComponent) return;
 
         // --- Fieldset Icons ---
         var fieldsets = settingsData.fieldsets;
         if (!fieldsets || !fieldsets.length) return;
-
-        var folderPath = settingsData.folder_fieldset_icons || null;
-        var basket = settingsData.fieldset_icons_basket || null;
 
         fieldsets.forEach(function(fs) {
             var fieldKey = 'fieldset_icon.' + fs.id;
@@ -3529,11 +3515,8 @@ const AdminModule = (function() {
             var pickerContainer = document.createElement('div');
             row.appendChild(pickerContainer);
 
-            var picker = SystemImagePickerComponent.buildPicker({
-                container: settingsContainer,
+            var picker = FieldsetIconPickerComponent.buildPicker({
                 databaseValue: initialValue,
-                folderPath: folderPath,
-                basket: basket,
                 onSelect: function(imagePath) {
                     var filename = imagePath.indexOf('/') !== -1 ? imagePath.split('/').pop() : imagePath;
                     updateField(fieldKey, filename);
