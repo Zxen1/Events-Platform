@@ -3498,10 +3498,10 @@ const AdminModule = (function() {
 
         // --- Badge Icons ---
         var badgeDefs = [
-            { key: 'badge_icon_location', label: 'Location Badge' },
-            { key: 'badge_icon_sessions', label: 'Sessions Badge' },
-            { key: 'badge_icon_phone',    label: 'Phone Badge'    },
-            { key: 'badge_icon_email',    label: 'Email Badge'    }
+            { key: 'badge_icon_location', label: 'Badge Icon: Location' },
+            { key: 'badge_icon_sessions', label: 'Badge Icon: Sessions' },
+            { key: 'badge_icon_phone',    label: 'Badge Icon: Public Phone' },
+            { key: 'badge_icon_email',    label: 'Badge Icon: Public Email' }
         ];
 
         badgeDefs.forEach(function(def) {
