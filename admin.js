@@ -3074,21 +3074,27 @@ const AdminModule = (function() {
         card.appendChild(codeText);
 
         var discountStr = coupon.discount_type === 'percent'
-            ? coupon.discount_value + '% off'
+            ? parseInt(coupon.discount_value, 10) + '% off'
             : '$' + parseFloat(coupon.discount_value).toFixed(2) + ' off';
         var descText = document.createElement('div');
         descText.className = 'admin-checkout-coupon-card-desc-text';
         descText.textContent = (coupon.description ? coupon.description + ' · ' : '') + discountStr;
         card.appendChild(descText);
 
-        var dateStr = '';
-        if (coupon.valid_from || coupon.valid_until) {
-            dateStr = (coupon.valid_from || '—') + ' – ' + (coupon.valid_until || '—') + ' · ';
+        var dateStr;
+        if (coupon.valid_from && coupon.valid_until) {
+            dateStr = coupon.valid_from + ' to ' + coupon.valid_until;
+        } else if (coupon.valid_from) {
+            dateStr = 'From ' + coupon.valid_from;
+        } else if (coupon.valid_until) {
+            dateStr = 'To ' + coupon.valid_until;
+        } else {
+            dateStr = 'No dates';
         }
         var limitStr = parseInt(coupon.usage_limit, 10) > 0 ? String(coupon.usage_limit) : 'unlimited';
         var usageText = document.createElement('div');
         usageText.className = 'admin-checkout-coupon-card-usage-text';
-        usageText.textContent = dateStr + 'Used ' + coupon.usage_count + ' / ' + limitStr;
+        usageText.textContent = dateStr + ' · Used ' + coupon.usage_count + ' / ' + limitStr;
         card.appendChild(usageText);
 
         var actionsRow = document.createElement('div');
@@ -3146,6 +3152,7 @@ const AdminModule = (function() {
             return row;
         }
 
+        // Code
         var codeInput = document.createElement('input');
         codeInput.type = 'text';
         codeInput.className = 'admin-checkout-coupon-form-input input-class-1';
@@ -3153,6 +3160,7 @@ const AdminModule = (function() {
         codeInput.value = coupon ? coupon.code : '';
         form.appendChild(couponFormRow('Code', codeInput));
 
+        // Description
         var descInput = document.createElement('input');
         descInput.type = 'text';
         descInput.className = 'admin-checkout-coupon-form-input input-class-1';
@@ -3160,6 +3168,7 @@ const AdminModule = (function() {
         descInput.value = coupon ? (coupon.description || '') : '';
         form.appendChild(couponFormRow('Description', descInput));
 
+        // Discount type toggle + value
         var discountRow = document.createElement('div');
         discountRow.className = 'admin-checkout-coupon-form-row';
         var discountSub = document.createElement('div');
@@ -3213,18 +3222,214 @@ const AdminModule = (function() {
         discountRow.appendChild(discountWrap);
         form.appendChild(discountRow);
 
-        var validFromInput = document.createElement('input');
-        validFromInput.type = 'date';
-        validFromInput.className = 'admin-checkout-coupon-form-input input-class-1';
-        validFromInput.value = coupon && coupon.valid_from ? coupon.valid_from : '';
-        form.appendChild(couponFormRow('Valid From', validFromInput));
+        // Date range picker
+        var couponFormDateStart = coupon && coupon.valid_from ? coupon.valid_from : null;
+        var couponFormDateEnd = coupon && coupon.valid_until ? coupon.valid_until : null;
+        var couponFormCalendarInstance = null;
 
-        var validUntilInput = document.createElement('input');
-        validUntilInput.type = 'date';
-        validUntilInput.className = 'admin-checkout-coupon-form-input input-class-1';
-        validUntilInput.value = coupon && coupon.valid_until ? coupon.valid_until : '';
-        form.appendChild(couponFormRow('Valid Until', validUntilInput));
+        var dateRangeRow = document.createElement('div');
+        dateRangeRow.className = 'admin-checkout-coupon-form-row';
+        var dateRangeSub = document.createElement('div');
+        dateRangeSub.className = 'admin-checkout-coupon-form-sublabel';
+        dateRangeSub.textContent = 'Date Range';
+        dateRangeRow.appendChild(dateRangeSub);
 
+        var dateRangeWrap = document.createElement('div');
+        dateRangeWrap.className = 'admin-checkout-coupon-form-daterange-wrap';
+
+        var dateRangeInputWrap = document.createElement('div');
+        dateRangeInputWrap.className = 'admin-checkout-coupon-form-daterange-input-wrap';
+
+        var dateRangeInput = document.createElement('input');
+        dateRangeInput.type = 'text';
+        dateRangeInput.className = 'admin-checkout-coupon-form-daterange-input input-class-1';
+        dateRangeInput.placeholder = 'Date Range';
+        dateRangeInput.readOnly = true;
+        dateRangeInput.setAttribute('aria-haspopup', 'dialog');
+        dateRangeInput.setAttribute('aria-expanded', 'false');
+
+        var dateRangeClearBtn = document.createElement('button');
+        dateRangeClearBtn.type = 'button';
+        dateRangeClearBtn.className = 'admin-checkout-coupon-form-daterange-clear clear-button';
+        dateRangeClearBtn.setAttribute('aria-label', 'Clear date');
+
+        dateRangeInputWrap.appendChild(dateRangeInput);
+        dateRangeInputWrap.appendChild(dateRangeClearBtn);
+
+        var calContainer = document.createElement('div');
+        calContainer.className = 'admin-checkout-coupon-form-calendar-container';
+        calContainer.setAttribute('aria-hidden', 'true');
+
+        var calEl = document.createElement('div');
+        calEl.className = 'admin-checkout-coupon-form-calendar';
+        calContainer.appendChild(calEl);
+
+        dateRangeWrap.appendChild(dateRangeInputWrap);
+        dateRangeWrap.appendChild(calContainer);
+        dateRangeRow.appendChild(dateRangeWrap);
+        form.appendChild(dateRangeRow);
+
+        function couponFormSetDaterangeInput(start, end, showPendingHint) {
+            if (start && end) {
+                dateRangeInput.value = App.formatDateShort(start) + ' - ' + App.formatDateShort(end);
+            } else if (start) {
+                dateRangeInput.value = showPendingHint ? (App.formatDateShort(start) + ' -') : App.formatDateShort(start);
+            } else {
+                dateRangeInput.value = '';
+            }
+            dateRangeClearBtn.classList.toggle('active', !!(start || end));
+        }
+
+        function couponFormOpenCalendar() {
+            calContainer.classList.add('admin-checkout-coupon-form-calendar-container--open');
+            calContainer.setAttribute('aria-hidden', 'false');
+            dateRangeInput.setAttribute('aria-expanded', 'true');
+            if (couponFormCalendarInstance && couponFormCalendarInstance.scrollToToday) {
+                couponFormCalendarInstance.scrollToToday();
+            }
+        }
+
+        function couponFormCloseCalendar() {
+            calContainer.classList.remove('admin-checkout-coupon-form-calendar-container--open');
+            calContainer.setAttribute('aria-hidden', 'true');
+            dateRangeInput.setAttribute('aria-expanded', 'false');
+        }
+
+        function couponFormBuildCalendar() {
+            if (typeof CalendarComponent === 'undefined') return;
+            calEl.innerHTML = '';
+
+            couponFormCalendarInstance = CalendarComponent.create(calEl, {
+                monthsPast: 12,
+                monthsFuture: 24,
+                allowPast: true
+            });
+
+            couponFormCalendarInstance.selectedStart = couponFormDateStart;
+            couponFormCalendarInstance.selectedEnd = couponFormDateEnd;
+
+            couponFormCalendarInstance.updateRangeSelection = function() {
+                var days = couponFormCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+                days.forEach(function(d) {
+                    d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+                });
+                days.forEach(function(d) {
+                    var iso = d.dataset.iso;
+                    if (couponFormCalendarInstance.selectedStart && iso === couponFormCalendarInstance.selectedStart) {
+                        d.classList.add('selected', 'range-start');
+                    }
+                    if (couponFormCalendarInstance.selectedEnd && iso === couponFormCalendarInstance.selectedEnd) {
+                        d.classList.add('selected', 'range-end');
+                    }
+                    if (couponFormCalendarInstance.selectedStart && couponFormCalendarInstance.selectedEnd && iso > couponFormCalendarInstance.selectedStart && iso < couponFormCalendarInstance.selectedEnd) {
+                        d.classList.add('in-range');
+                    }
+                });
+            };
+
+            couponFormCalendarInstance.clearSelection = function() {
+                couponFormCalendarInstance.selectedStart = null;
+                couponFormCalendarInstance.selectedEnd = null;
+                couponFormCalendarInstance.updateRangeSelection();
+            };
+
+            couponFormCalendarInstance.updateRangeSelection();
+
+            var days = couponFormCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+            days.forEach(function(cell) {
+                cell.addEventListener('click', function() {
+                    var clickedDate = String(this.dataset.iso || '');
+                    if (!clickedDate) return;
+                    if (!couponFormCalendarInstance.selectedStart || (couponFormCalendarInstance.selectedStart && couponFormCalendarInstance.selectedEnd)) {
+                        couponFormCalendarInstance.selectedStart = clickedDate;
+                        couponFormCalendarInstance.selectedEnd = null;
+                        couponFormCalendarInstance.updateRangeSelection();
+                        couponFormSetDaterangeInput(couponFormCalendarInstance.selectedStart, null, true);
+                    } else {
+                        if (clickedDate < couponFormCalendarInstance.selectedStart) {
+                            couponFormCalendarInstance.selectedEnd = couponFormCalendarInstance.selectedStart;
+                            couponFormCalendarInstance.selectedStart = clickedDate;
+                        } else {
+                            couponFormCalendarInstance.selectedEnd = clickedDate;
+                        }
+                        couponFormCalendarInstance.updateRangeSelection();
+                        couponFormSetDaterangeInput(couponFormCalendarInstance.selectedStart, couponFormCalendarInstance.selectedEnd, false);
+                    }
+                });
+            });
+
+            var actionsEl = document.createElement('div');
+            actionsEl.className = 'calendar-actions';
+
+            var calCancelBtn = document.createElement('button');
+            calCancelBtn.className = 'calendar-cancel button-class-2';
+            calCancelBtn.type = 'button';
+            calCancelBtn.textContent = 'Cancel';
+            calCancelBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                couponFormCalendarInstance.selectedStart = couponFormDateStart;
+                couponFormCalendarInstance.selectedEnd = couponFormDateEnd;
+                couponFormCalendarInstance.updateRangeSelection();
+                couponFormSetDaterangeInput(couponFormDateStart, couponFormDateEnd, false);
+                couponFormCloseCalendar();
+            });
+
+            var calOkBtn = document.createElement('button');
+            calOkBtn.className = 'calendar-ok button-class-2';
+            calOkBtn.type = 'button';
+            calOkBtn.textContent = 'OK';
+            calOkBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                couponFormDateStart = couponFormCalendarInstance.selectedStart;
+                couponFormDateEnd = couponFormCalendarInstance.selectedEnd;
+                couponFormSetDaterangeInput(couponFormDateStart, couponFormDateEnd, false);
+                couponFormCloseCalendar();
+            });
+
+            actionsEl.appendChild(calCancelBtn);
+            actionsEl.appendChild(calOkBtn);
+            calContainer.appendChild(actionsEl);
+        }
+
+        couponFormBuildCalendar();
+        couponFormSetDaterangeInput(couponFormDateStart, couponFormDateEnd, false);
+
+        dateRangeInput.addEventListener('click', function() {
+            if (calContainer.classList.contains('admin-checkout-coupon-form-calendar-container--open')) {
+                couponFormCalendarInstance.selectedStart = couponFormDateStart;
+                couponFormCalendarInstance.selectedEnd = couponFormDateEnd;
+                couponFormSetDaterangeInput(couponFormDateStart, couponFormDateEnd, false);
+                couponFormCloseCalendar();
+            } else {
+                couponFormOpenCalendar();
+            }
+        });
+
+        dateRangeClearBtn.addEventListener('click', function() {
+            couponFormDateStart = null;
+            couponFormDateEnd = null;
+            if (couponFormCalendarInstance && couponFormCalendarInstance.clearSelection) {
+                couponFormCalendarInstance.clearSelection();
+            }
+            couponFormSetDaterangeInput(null, null, false);
+            couponFormCloseCalendar();
+        });
+
+        document.addEventListener('click', function couponCalOutsideClick(e) {
+            if (!calContainer.contains(e.target) && e.target !== dateRangeInput && e.target !== dateRangeClearBtn) {
+                if (calContainer.classList.contains('admin-checkout-coupon-form-calendar-container--open')) {
+                    couponFormCalendarInstance.selectedStart = couponFormDateStart;
+                    couponFormCalendarInstance.selectedEnd = couponFormDateEnd;
+                    couponFormSetDaterangeInput(couponFormDateStart, couponFormDateEnd, false);
+                    couponFormCloseCalendar();
+                }
+            }
+            if (!form.isConnected) {
+                document.removeEventListener('click', couponCalOutsideClick);
+            }
+        });
+
+        // Usage Limit
         var usageLimitInput = document.createElement('input');
         usageLimitInput.type = 'text';
         usageLimitInput.className = 'admin-checkout-coupon-form-input input-class-1';
@@ -3232,20 +3437,93 @@ const AdminModule = (function() {
         usageLimitInput.value = coupon ? String(coupon.usage_limit) : '0';
         form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
 
-        var statusMenu = null;
+        // Status menu (edit mode only)
+        var currentStatus = coupon ? coupon.status : 'active';
+        var statusLabels = { active: 'Active', expired: 'Expired', disabled: 'Disabled' };
+
         if (coupon) {
-            statusMenu = document.createElement('select');
-            statusMenu.className = 'admin-checkout-coupon-form-menu input-class-1';
+            var statusRow = document.createElement('div');
+            statusRow.className = 'admin-checkout-coupon-form-row';
+            var statusSub = document.createElement('div');
+            statusSub.className = 'admin-checkout-coupon-form-sublabel';
+            statusSub.textContent = 'Status';
+            statusRow.appendChild(statusSub);
+
+            var statusMenuEl = document.createElement('div');
+            statusMenuEl.className = 'admin-checkout-coupon-form-status-menu menu-class-1';
+            statusMenuEl.dataset.value = currentStatus;
+
+            var statusBtn = document.createElement('button');
+            statusBtn.type = 'button';
+            statusBtn.className = 'admin-checkout-coupon-form-status-button menu-button';
+
+            var statusBtnText = document.createElement('span');
+            statusBtnText.className = 'admin-checkout-coupon-form-status-text menu-text';
+            statusBtnText.textContent = statusLabels[currentStatus] || currentStatus;
+
+            var statusArrow = document.createElement('span');
+            statusArrow.className = 'admin-checkout-coupon-form-status-arrow menu-arrow';
+
+            statusBtn.appendChild(statusBtnText);
+            statusBtn.appendChild(statusArrow);
+            statusMenuEl.appendChild(statusBtn);
+
+            var statusOptions = document.createElement('div');
+            statusOptions.className = 'admin-checkout-coupon-form-status-options menu-options';
+
             ['active', 'expired', 'disabled'].forEach(function(s) {
-                var opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
-                if (coupon.status === s) opt.selected = true;
-                statusMenu.appendChild(opt);
+                var optBtn = document.createElement('button');
+                optBtn.type = 'button';
+                optBtn.className = 'admin-checkout-coupon-form-status-option menu-option';
+                optBtn.textContent = statusLabels[s];
+                optBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentStatus = s;
+                    statusBtnText.textContent = statusLabels[s];
+                    statusMenuEl.dataset.value = s;
+                    statusMenuEl.__menuApplyOpenState(false);
+                });
+                statusOptions.appendChild(optBtn);
             });
-            form.appendChild(couponFormRow('Status', statusMenu));
+
+            statusMenuEl.appendChild(statusOptions);
+
+            statusMenuEl.__menuIsOpen = function() {
+                return statusMenuEl.classList.contains('admin-checkout-coupon-form-status-menu--open');
+            };
+            statusMenuEl.__menuApplyOpenState = function(isOpen) {
+                statusMenuEl.classList.toggle('admin-checkout-coupon-form-status-menu--open', !!isOpen);
+                statusBtn.classList.toggle('menu-button--open', !!isOpen);
+                statusArrow.classList.toggle('menu-arrow--open', !!isOpen);
+                statusOptions.classList.toggle('menu-options--open', !!isOpen);
+            };
+
+            statusBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var isOpen = statusMenuEl.__menuIsOpen();
+                try {
+                    if (window.MenuManager && typeof window.MenuManager.closeAll === 'function') {
+                        window.MenuManager.closeAll(statusMenuEl);
+                    }
+                } catch (e2) {}
+                if (!isOpen) {
+                    statusMenuEl.__menuApplyOpenState(true);
+                }
+            });
+
+            try {
+                if (window.MenuManager && typeof window.MenuManager.register === 'function') {
+                    window.MenuManager.register(statusMenuEl);
+                }
+            } catch (e0) {}
+
+            statusRow.appendChild(statusMenuEl);
+            form.appendChild(statusRow);
         }
 
+        // Save + Cancel buttons
         var btnRow = document.createElement('div');
         btnRow.className = 'admin-checkout-coupon-form-btn-row';
 
@@ -3264,10 +3542,10 @@ const AdminModule = (function() {
                 description: descInput.value.trim(),
                 discount_type: currentDiscountType,
                 discount_value: val,
-                valid_from: validFromInput.value || null,
-                valid_until: validUntilInput.value || null,
+                valid_from: couponFormDateStart || null,
+                valid_until: couponFormDateEnd || null,
                 usage_limit: parseInt(usageLimitInput.value, 10) || 0,
-                status: statusMenu ? statusMenu.value : 'active'
+                status: currentStatus
             };
             if (coupon && coupon.id) payload.id = coupon.id;
             saveCheckoutCoupon(payload);
