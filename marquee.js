@@ -450,10 +450,7 @@ const MarqueeModule = (function() {
     if (locationDisplay) {
       const locLine = document.createElement('div');
       locLine.className = 'marquee-slide-info-loc';
-      const venueIcons = App.getState('badge_icons');
-      const venueFile = venueIcons && venueIcons.venue;
-      const venueUrl = venueFile ? App.getImageUrl('fieldsetIcons', venueFile) : '';
-      locLine.innerHTML = '<span class="marquee-badge" title="Location">' + (venueUrl ? '<img class="marquee-image-badge" src="' + venueUrl + '" alt="" title="Venue">' : '') + '</span>';
+      locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
       const locText = document.createElement('span');
       locText.textContent = String(locationDisplay).trim();
       locLine.appendChild(locText);
@@ -464,10 +461,7 @@ const MarqueeModule = (function() {
     if (datesText) {
       const dateLine = document.createElement('div');
       dateLine.className = 'marquee-slide-info-date';
-      const sessIcons = App.getState('badge_icons');
-      const sessFile = sessIcons && sessIcons.sessions;
-      const sessUrl = sessFile ? App.getImageUrl('fieldsetIcons', sessFile) : '';
-      dateLine.innerHTML = '<span class="marquee-badge" title="Dates">' + (sessUrl ? '<img class="marquee-image-badge" src="' + sessUrl + '" alt="" title="Dates">' : '') + '</span>';
+      dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
       const dateText = document.createElement('span');
       dateText.textContent = datesText;
       dateLine.appendChild(dateText);

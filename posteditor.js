@@ -367,9 +367,6 @@
         fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId)
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res && res.badge_icons) {
-                    App.setState('badge_icons', res.badge_icons);
-                }
                 if (res && res.success && Array.isArray(res.posts)) {
                     renderPosts(res.posts);
                 } else {
