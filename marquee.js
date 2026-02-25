@@ -450,7 +450,9 @@ const MarqueeModule = (function() {
     if (locationDisplay) {
       const locLine = document.createElement('div');
       locLine.className = 'marquee-slide-info-loc';
-      locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
+      var locSett = App.getState('settings') || {};
+      var locIconUrl = locSett.badge_icon_location ? App.getImageUrl('fieldsetIcons', locSett.badge_icon_location) : '';
+      locLine.innerHTML = '<span class="marquee-badge">' + (locIconUrl ? '<img class="marquee-image-badge" src="' + locIconUrl + '" alt="" title="Location">' : '') + '</span>';
       const locText = document.createElement('span');
       locText.textContent = String(locationDisplay).trim();
       locLine.appendChild(locText);
@@ -461,7 +463,9 @@ const MarqueeModule = (function() {
     if (datesText) {
       const dateLine = document.createElement('div');
       dateLine.className = 'marquee-slide-info-date';
-      dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
+      var dateSett = App.getState('settings') || {};
+      var dateIconUrl = dateSett.badge_icon_sessions ? App.getImageUrl('fieldsetIcons', dateSett.badge_icon_sessions) : '';
+      dateLine.innerHTML = '<span class="marquee-badge">' + (dateIconUrl ? '<img class="marquee-image-badge" src="' + dateIconUrl + '" alt="" title="Dates">' : '') + '</span>';
       const dateText = document.createElement('span');
       dateText.textContent = datesText;
       dateLine.appendChild(dateText);

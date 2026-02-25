@@ -1339,12 +1339,18 @@ const PostModule = (function() {
     
     // Location row
     if (data.locationText) {
-      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">📍</span><span>' + escapeHtml(data.locationText) + '</span></div>');
+      var sett = App.getState('settings') || {};
+      var locIconUrl = sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', sett.badge_icon_location) : '';
+      var locBadge = locIconUrl ? '<img class="' + classPrefix + '-image-badge" src="' + locIconUrl + '" alt="" title="Venue">' : '';
+      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge">' + locBadge + '</span><span>' + escapeHtml(data.locationText) + '</span></div>');
     }
     
     // Dates row
     if (data.datesText) {
-      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">📅</span><span>' + escapeHtml(data.datesText) + '</span></div>');
+      var sett = App.getState('settings') || {};
+      var dateIconUrl = sett.badge_icon_sessions ? App.getImageUrl('fieldsetIcons', sett.badge_icon_sessions) : '';
+      var dateBadge = dateIconUrl ? '<img class="' + classPrefix + '-image-badge" src="' + dateIconUrl + '" alt="" title="Dates">' : '';
+      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge">' + dateBadge + '</span><span>' + escapeHtml(data.datesText) + '</span></div>');
     }
     
     // Price row
@@ -3297,13 +3303,23 @@ const PostModule = (function() {
         // Links (icon strip)
         linksStripRowHtml || '',
         // Public email
-        publicEmail ? '<div class="post-info-row post-info-row-email">' +
-          '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
-        '</div>' : '',
+        publicEmail ? (function() {
+          var sett = App.getState('settings') || {};
+          var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
+          var emailBadge = emailIconUrl ? '<img class="post-info-image-badge" src="' + emailIconUrl + '" alt="">' : '';
+          return '<div class="post-info-row post-info-row-email">' +
+            '<a href="mailto:' + escapeHtml(publicEmail) + '">' + emailBadge + ' ' + escapeHtml(publicEmail) + '</a>' +
+          '</div>';
+        })() : '',
         // Phone
-        (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
-          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
-        '</div>' : '',
+        (phonePrefix || publicPhone) ? (function() {
+          var sett = App.getState('settings') || {};
+          var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
+          var phoneBadge = phoneIconUrl ? '<img class="post-info-image-badge" src="' + phoneIconUrl + '" alt="">' : '';
+          return '<div class="post-info-row post-info-row-phone">' +
+            '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + phoneBadge + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+          '</div>';
+        })() : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +
