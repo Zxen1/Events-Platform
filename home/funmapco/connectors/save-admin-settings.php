@@ -110,11 +110,12 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, and system_images from settings
+    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, and system_images from settings
     $messages = null;
     $fieldsetTooltips = null;
     $fieldTooltips = null;
     $checkoutOptions = null;
+    $checkoutCoupon = null;
     $systemImages = null;
     $settings = $data;
     if (isset($data['messages']) && is_array($data['messages'])) {
@@ -137,6 +138,10 @@ try {
     if (isset($data['checkout_options']) && is_array($data['checkout_options'])) {
         $checkoutOptions = $data['checkout_options'];
         unset($settings['checkout_options']);
+    }
+    if (isset($data['checkout_coupon']) && is_array($data['checkout_coupon'])) {
+        $checkoutCoupon = $data['checkout_coupon'];
+        unset($settings['checkout_coupon']);
     }
     if (isset($data['system_images']) && is_array($data['system_images'])) {
         $systemImages = $data['system_images'];
@@ -488,6 +493,55 @@ try {
         }
     }
 
+    // Save checkout_coupon if provided (insert or update a single coupon)
+    $couponSaved = false;
+    $couponId = 0;
+    if ($checkoutCoupon !== null && is_array($checkoutCoupon)) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_coupons'");
+        if ($stmt->rowCount() > 0) {
+            $couponId = isset($checkoutCoupon['id']) ? (int)$checkoutCoupon['id'] : 0;
+            $hasCode = isset($checkoutCoupon['code']) && $checkoutCoupon['code'] !== '';
+
+            if ($couponId > 0 && !$hasCode) {
+                // Status-only toggle (card enable/disable buttons)
+                $stmt = $pdo->prepare("UPDATE `checkout_coupons` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id");
+                $stmt->execute([
+                    ':status' => $checkoutCoupon['status'] ?? 'active',
+                    ':id'     => $couponId,
+                ]);
+            } elseif ($couponId > 0) {
+                // Full update of existing coupon
+                $stmt = $pdo->prepare("UPDATE `checkout_coupons` SET `code` = :code, `description` = :description, `discount_type` = :discount_type, `discount_value` = :discount_value, `valid_from` = :valid_from, `valid_until` = :valid_until, `usage_limit` = :usage_limit, `status` = :status, `updated_at` = NOW() WHERE `id` = :id");
+                $stmt->execute([
+                    ':code'           => strtoupper(trim($checkoutCoupon['code'])),
+                    ':description'    => $checkoutCoupon['description'] ?? '',
+                    ':discount_type'  => $checkoutCoupon['discount_type'] ?? 'percent',
+                    ':discount_value' => (int)($checkoutCoupon['discount_value'] ?? 0),
+                    ':valid_from'     => ($checkoutCoupon['valid_from'] ?? '') ?: null,
+                    ':valid_until'    => ($checkoutCoupon['valid_until'] ?? '') ?: null,
+                    ':usage_limit'    => (int)($checkoutCoupon['usage_limit'] ?? 0),
+                    ':status'         => $checkoutCoupon['status'] ?? 'active',
+                    ':id'             => $couponId,
+                ]);
+            } else {
+                // Insert new coupon
+                $stmt = $pdo->prepare("INSERT INTO `checkout_coupons` (`code`, `description`, `discount_type`, `discount_value`, `valid_from`, `valid_until`, `usage_limit`, `usage_count`, `status`, `created_at`, `updated_at`) VALUES (:code, :description, :discount_type, :discount_value, :valid_from, :valid_until, :usage_limit, 0, :status, NOW(), NOW())");
+                $stmt->execute([
+                    ':code'           => strtoupper(trim($checkoutCoupon['code'])),
+                    ':description'    => $checkoutCoupon['description'] ?? '',
+                    ':discount_type'  => $checkoutCoupon['discount_type'] ?? 'percent',
+                    ':discount_value' => (int)($checkoutCoupon['discount_value'] ?? 0),
+                    ':valid_from'     => ($checkoutCoupon['valid_from'] ?? '') ?: null,
+                    ':valid_until'    => ($checkoutCoupon['valid_until'] ?? '') ?: null,
+                    ':usage_limit'    => (int)($checkoutCoupon['usage_limit'] ?? 0),
+                    ':status'         => $checkoutCoupon['status'] ?? 'active',
+                ]);
+                $couponId = (int)$pdo->lastInsertId();
+            }
+            $couponSaved = true;
+        }
+    }
+
     // Save system_images if provided (save to admin_settings, not system_images table)
     $systemImagesUpdated = 0;
     if ($systemImages !== null && is_array($systemImages) && !empty($systemImages)) {
@@ -545,6 +599,11 @@ try {
     
     if ($systemImagesUpdated > 0) {
         $response['system_images_updated'] = $systemImagesUpdated;
+    }
+
+    if ($couponSaved) {
+        $response['coupon_saved'] = true;
+        $response['coupon_id'] = $couponId;
     }
 
     echo json_encode($response);

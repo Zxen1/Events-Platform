@@ -3033,11 +3033,11 @@ const AdminModule = (function() {
     function loadCheckoutCoupons() {
         var list = document.getElementById('adminCheckoutCouponList');
         if (!list) return;
-        fetch('/gateway.php?action=get-checkout-coupons')
+        fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (!data.success) throw new Error(data.message || 'Failed to load coupons');
-                checkoutCoupons = data.coupons || [];
+                checkoutCoupons = data.checkout_coupons || [];
                 renderCheckoutCouponList();
             })
             .catch(function(err) {
@@ -3509,10 +3509,10 @@ const AdminModule = (function() {
     }
 
     function saveCheckoutCoupon(payload) {
-        fetch('/gateway.php?action=save-checkout-coupon', {
+        fetch('/gateway.php?action=save-admin-settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ checkout_coupon: payload })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {

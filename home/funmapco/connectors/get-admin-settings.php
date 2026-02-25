@@ -395,6 +395,34 @@ try {
         // If checkout options fail, don't break the whole response
     }
 
+    // Fetch checkout_coupons
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_coupons'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `id`, `code`, `description`, `discount_type`, `discount_value`, `valid_from`, `valid_until`, `usage_limit`, `usage_count`, `status`, `created_at` FROM `checkout_coupons` ORDER BY `created_at` DESC');
+            $couponRows = $stmt->fetchAll();
+            $coupons = [];
+            foreach ($couponRows as $row) {
+                $coupons[] = [
+                    'id'             => (int)$row['id'],
+                    'code'           => $row['code'],
+                    'description'    => $row['description'],
+                    'discount_type'  => $row['discount_type'],
+                    'discount_value' => (int)$row['discount_value'],
+                    'valid_from'     => $row['valid_from'],
+                    'valid_until'    => $row['valid_until'],
+                    'usage_limit'    => (int)$row['usage_limit'],
+                    'usage_count'    => (int)$row['usage_count'],
+                    'status'         => $row['status'],
+                    'created_at'     => $row['created_at'],
+                ];
+            }
+            $response['checkout_coupons'] = $coupons;
+        }
+    } catch (Throwable $couponError) {
+        // If coupons fail, don't break the whole response
+    }
+
     // Fetch fieldset icons basket (list of available filenames from list_fieldset_icons)
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'list_fieldset_icons'");
