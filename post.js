@@ -3306,18 +3306,20 @@ const PostModule = (function() {
         publicEmail ? (function() {
           var sett = App.getState('settings') || {};
           var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
-          var emailBadge = emailIconUrl ? '<img class="post-info-image-badge" src="' + emailIconUrl + '" alt="">' : '';
+          var emailBadge = emailIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + emailIconUrl + '" alt=""></span>' : '';
           return '<div class="post-info-row post-info-row-email">' +
-            '<a href="mailto:' + escapeHtml(publicEmail) + '">' + emailBadge + ' ' + escapeHtml(publicEmail) + '</a>' +
+            emailBadge +
+            '<a href="mailto:' + escapeHtml(publicEmail) + '">' + escapeHtml(publicEmail) + '</a>' +
           '</div>';
         })() : '',
         // Phone
         (phonePrefix || publicPhone) ? (function() {
           var sett = App.getState('settings') || {};
           var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
-          var phoneBadge = phoneIconUrl ? '<img class="post-info-image-badge" src="' + phoneIconUrl + '" alt="">' : '';
+          var phoneBadge = phoneIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + phoneIconUrl + '" alt=""></span>' : '';
           return '<div class="post-info-row post-info-row-phone">' +
-            '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + phoneBadge + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+            phoneBadge +
+            '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
           '</div>';
         })() : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
