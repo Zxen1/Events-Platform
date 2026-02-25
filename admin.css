@@ -2378,6 +2378,12 @@
   margin-bottom: 6px;
 }
 
+.admin-checkout-coupon-card-dates-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+}
+
 .admin-checkout-coupon-card-usage-text {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
@@ -2461,6 +2467,7 @@
 
 .admin-checkout-coupon-form-daterange-input {
   flex: 1;
+  width: 100%;
   height: 36px;
   padding: 0 10px;
   cursor: pointer;
@@ -2497,6 +2504,7 @@
 
 .admin-checkout-coupon-form-status-menu {
   width: 100%;
+  position: relative;
 }
 
 .admin-checkout-coupon-form-status-button {
@@ -2504,13 +2512,32 @@
   height: 36px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 10px;
   text-align: left;
 }
 
+.admin-checkout-coupon-form-status-arrow {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.admin-checkout-coupon-form-status-text {
+  flex: 1;
+}
+
 .admin-checkout-coupon-form-status-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
   width: 100%;
+  z-index: var(--layer-menu);
+}
+
+.admin-checkout-coupon-form-status-options.menu-options--open {
+  display: block;
 }
 
 .admin-checkout-coupon-form-discount-wrap {

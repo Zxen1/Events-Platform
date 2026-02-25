@@ -3083,18 +3083,23 @@ const AdminModule = (function() {
 
         var dateStr;
         if (coupon.valid_from && coupon.valid_until) {
-            dateStr = coupon.valid_from + ' to ' + coupon.valid_until;
+            dateStr = App.formatDateShort(coupon.valid_from) + ' to ' + App.formatDateShort(coupon.valid_until);
         } else if (coupon.valid_from) {
-            dateStr = 'From ' + coupon.valid_from;
+            dateStr = 'From ' + App.formatDateShort(coupon.valid_from);
         } else if (coupon.valid_until) {
-            dateStr = 'To ' + coupon.valid_until;
+            dateStr = 'To ' + App.formatDateShort(coupon.valid_until);
         } else {
             dateStr = 'No dates';
         }
+        var datesText = document.createElement('div');
+        datesText.className = 'admin-checkout-coupon-card-dates-text';
+        datesText.textContent = dateStr;
+        card.appendChild(datesText);
+
         var limitStr = parseInt(coupon.usage_limit, 10) > 0 ? String(coupon.usage_limit) : 'unlimited';
         var usageText = document.createElement('div');
         usageText.className = 'admin-checkout-coupon-card-usage-text';
-        usageText.textContent = dateStr + ' · Used ' + coupon.usage_count + ' / ' + limitStr;
+        usageText.textContent = 'Used ' + coupon.usage_count + ' / ' + limitStr;
         card.appendChild(usageText);
 
         var actionsRow = document.createElement('div');
