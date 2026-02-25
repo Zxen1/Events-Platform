@@ -1695,13 +1695,6 @@
   justify-content: center;
 }
 
-/* Badge image (flag icons for currency) */
-.post-info-badge img {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  display: block;
-}
 
 /* Info text */
 .post-info-text {
