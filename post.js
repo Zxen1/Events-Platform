@@ -70,6 +70,38 @@ const PostModule = (function() {
   var postsRequestToken = 0;
   var postsAbort = null;
 
+  // Badge icons from fieldsets table (lazy-loaded with get-posts response)
+  var badgeIcons = null;
+  var badgeIconsPromise = null;
+
+  function storeBadgeIcons(data) {
+    if (data && data.badge_icons) {
+      badgeIcons = data.badge_icons;
+      App.setState('badge_icons', badgeIcons);
+    }
+  }
+
+  function ensureBadgeIcons() {
+    if (badgeIcons) return Promise.resolve(badgeIcons);
+    var stored = App.getState('badge_icons');
+    if (stored) { badgeIcons = stored; return Promise.resolve(badgeIcons); }
+    if (badgeIconsPromise) return badgeIconsPromise;
+    badgeIconsPromise = fetch('/gateway.php?action=get-posts&limit=1')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        storeBadgeIcons(data);
+        return badgeIcons;
+      });
+    return badgeIconsPromise;
+  }
+
+  function badgeImgHtml(key, cssClass, title) {
+    if (!badgeIcons || !badgeIcons[key]) return '';
+    var url = App.getImageUrl('fieldsetIcons', badgeIcons[key]);
+    if (!url) return '';
+    return '<img class="' + cssClass + '" src="' + url + '" alt="" title="' + escapeHtml(title) + '">';
+  }
+
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
     post: { token: 0, hideHandler: null, hideTimeoutId: 0 },
@@ -1120,6 +1152,7 @@ const PostModule = (function() {
         if (myToken !== postsRequestToken) return [];
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
+          storeBadgeIcons(data);
           renderPostList(data.posts);
           // Emit counts for the current viewport (server-filtered)
           emitFilterCounts(data.posts);
@@ -1339,12 +1372,12 @@ const PostModule = (function() {
     
     // Location row
     if (data.locationText) {
-      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">📍</span><span>' + escapeHtml(data.locationText) + '</span></div>');
+      html.push('<div class="' + classPrefix + '-row-loc"><span class="' + classPrefix + '-badge" title="Venue">' + badgeImgHtml('venue', classPrefix + '-image-badge', 'Venue') + '</span><span>' + escapeHtml(data.locationText) + '</span></div>');
     }
     
     // Dates row
     if (data.datesText) {
-      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">📅</span><span>' + escapeHtml(data.datesText) + '</span></div>');
+      html.push('<div class="' + classPrefix + '-row-date"><span class="' + classPrefix + '-badge" title="Dates">' + badgeImgHtml('sessions', classPrefix + '-image-badge', 'Dates') + '</span><span>' + escapeHtml(data.datesText) + '</span></div>');
     }
     
     // Price row
@@ -3042,7 +3075,7 @@ const PostModule = (function() {
 
     // Sort postcards/marquee/info text order: Date range comes BEFORE Price range.
     var defaultInfo = datesText
-      ? ('📅 ' + datesText + (priceHtml ? (' | ' + priceHtml) : ''))
+      ? (badgeImgHtml('sessions', 'post-image-badge post-image-badge--inline', 'Dates') + ' ' + datesText + (priceHtml ? (' | ' + priceHtml) : ''))
       : (priceHtml ? priceHtml : '');
 
     // Additional info fields from map card
@@ -3298,11 +3331,11 @@ const PostModule = (function() {
         linksStripRowHtml || '',
         // Public email
         publicEmail ? '<div class="post-info-row post-info-row-email">' +
-          '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
+          '<a href="mailto:' + escapeHtml(publicEmail) + '">' + badgeImgHtml('public-email', 'post-info-image-badge', 'Email') + ' ' + escapeHtml(publicEmail) + '</a>' +
         '</div>' : '',
         // Phone
         (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
-          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + badgeImgHtml('public-phone', 'post-info-image-badge', 'Phone') + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
         '</div>' : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
         // Coupon code
@@ -4681,6 +4714,11 @@ const PostModule = (function() {
   function renderRecentPanel() {
     if (!recentPanelContentEl) return;
 
+    if (!badgeIcons) {
+      ensureBadgeIcons().then(function() { renderRecentPanel(); });
+      return;
+    }
+
     var history = getRecentHistory();
 
     // Show empty state if no history
@@ -5101,6 +5139,7 @@ const PostModule = (function() {
         return response.json();
       })
       .then(function(data) {
+        if (data) storeBadgeIcons(data);
         if (data && data.success && data.posts && data.posts.length) {
           return data.posts[0];
         }
@@ -5124,6 +5163,7 @@ const PostModule = (function() {
         return response.json();
       })
       .then(function(data) {
+        if (data) storeBadgeIcons(data);
         if (data && data.success && data.posts && data.posts.length) {
           return data.posts[0];
         }
