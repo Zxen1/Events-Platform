@@ -511,7 +511,7 @@ try {
                 ]);
             } elseif ($couponId > 0) {
                 // Full update of existing coupon
-                $stmt = $pdo->prepare("UPDATE `checkout_coupons` SET `code` = :code, `description` = :description, `discount_type` = :discount_type, `discount_value` = :discount_value, `valid_from` = :valid_from, `valid_until` = :valid_until, `usage_limit` = :usage_limit, `status` = :status, `updated_at` = NOW() WHERE `id` = :id");
+                $stmt = $pdo->prepare("UPDATE `checkout_coupons` SET `code` = :code, `description` = :description, `discount_type` = :discount_type, `discount_value` = :discount_value, `valid_from` = :valid_from, `valid_until` = :valid_until, `usage_limit` = :usage_limit, `one_per_member` = :one_per_member, `status` = :status, `updated_at` = NOW() WHERE `id` = :id");
                 $stmt->execute([
                     ':code'           => strtoupper(trim($checkoutCoupon['code'])),
                     ':description'    => $checkoutCoupon['description'] ?? '',
@@ -520,12 +520,13 @@ try {
                     ':valid_from'     => ($checkoutCoupon['valid_from'] ?? '') ?: null,
                     ':valid_until'    => ($checkoutCoupon['valid_until'] ?? '') ?: null,
                     ':usage_limit'    => (int)($checkoutCoupon['usage_limit'] ?? 0),
+                    ':one_per_member' => isset($checkoutCoupon['one_per_member']) && $checkoutCoupon['one_per_member'] ? 1 : 0,
                     ':status'         => $checkoutCoupon['status'] ?? 'active',
                     ':id'             => $couponId,
                 ]);
             } else {
                 // Insert new coupon
-                $stmt = $pdo->prepare("INSERT INTO `checkout_coupons` (`code`, `description`, `discount_type`, `discount_value`, `valid_from`, `valid_until`, `usage_limit`, `usage_count`, `status`, `created_at`, `updated_at`) VALUES (:code, :description, :discount_type, :discount_value, :valid_from, :valid_until, :usage_limit, 0, :status, NOW(), NOW())");
+                $stmt = $pdo->prepare("INSERT INTO `checkout_coupons` (`code`, `description`, `discount_type`, `discount_value`, `valid_from`, `valid_until`, `usage_limit`, `one_per_member`, `usage_count`, `status`, `created_at`, `updated_at`) VALUES (:code, :description, :discount_type, :discount_value, :valid_from, :valid_until, :usage_limit, :one_per_member, 0, :status, NOW(), NOW())");
                 $stmt->execute([
                     ':code'           => strtoupper(trim($checkoutCoupon['code'])),
                     ':description'    => $checkoutCoupon['description'] ?? '',
@@ -534,6 +535,7 @@ try {
                     ':valid_from'     => ($checkoutCoupon['valid_from'] ?? '') ?: null,
                     ':valid_until'    => ($checkoutCoupon['valid_until'] ?? '') ?: null,
                     ':usage_limit'    => (int)($checkoutCoupon['usage_limit'] ?? 0),
+                    ':one_per_member' => isset($checkoutCoupon['one_per_member']) && $checkoutCoupon['one_per_member'] ? 1 : 0,
                     ':status'         => $checkoutCoupon['status'] ?? 'active',
                 ]);
                 $couponId = (int)$pdo->lastInsertId();

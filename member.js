@@ -2520,6 +2520,9 @@ const MemberModule = (function() {
     var checkoutOptions = [];
     var siteCurrency = null;
     var checkoutInstance = null;
+    var appliedCoupon = null;
+    var couponInputEl = null;
+    var couponMsgEl = null;
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -2557,6 +2560,9 @@ const MemberModule = (function() {
         submitBtn = null;
         adminSubmitBtn = null;
         termsAgreed = false;
+        appliedCoupon = null;
+        couponInputEl = null;
+        couponMsgEl = null;
         
         var categoryIconPaths = memberCategoryIconPaths;
         var subcategoryIconPaths = memberSubcategoryIconPaths;
@@ -3037,6 +3043,9 @@ const MemberModule = (function() {
         
         // Render checkout options at the bottom of the form (member-specific)
         renderCheckoutOptionsSection();
+
+        // Render coupon code input below checkout options
+        renderCouponSection();
         
         // Render terms agreement and submit buttons after checkout options (member-specific)
         renderTermsAndSubmitSection();
@@ -3172,6 +3181,7 @@ const MemberModule = (function() {
                     locationCount: currentQty
                 });
             }
+            applyCouponToDisplay();
             updatePayButtonLabels();
         }
 
@@ -3221,6 +3231,177 @@ const MemberModule = (function() {
         }
     }
     
+    /* --------------------------------------------------------------------------
+       COUPON CODE SECTION
+       -------------------------------------------------------------------------- */
+
+    function renderCouponSection() {
+        if (!formFields) return;
+        var checkoutContainer = formFields.querySelector('.member-checkout-container');
+        if (!checkoutContainer) return;
+
+        var section = document.createElement('div');
+        section.className = 'fieldset member-coupon';
+
+        var row = document.createElement('div');
+        row.className = 'member-coupon-input-row';
+
+        couponInputEl = document.createElement('input');
+        couponInputEl.type = 'text';
+        couponInputEl.className = 'fieldset-input input-class-1 member-coupon-input';
+        couponInputEl.placeholder = 'Coupon code';
+        couponInputEl.autocomplete = 'off';
+        couponInputEl.setAttribute('maxlength', '32');
+        couponInputEl.addEventListener('input', function() {
+            var pos = this.selectionStart;
+            var cleaned = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (cleaned !== this.value) {
+                this.value = cleaned;
+                this.setSelectionRange(pos, pos);
+            }
+            if (appliedCoupon) {
+                appliedCoupon = null;
+                clearCouponDisplay();
+                setCouponMessage('', '');
+            }
+        });
+        couponInputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
+        });
+
+        var applyBtn = document.createElement('button');
+        applyBtn.type = 'button';
+        applyBtn.className = 'member-coupon-apply button-class-2';
+        applyBtn.textContent = 'Apply';
+        applyBtn.addEventListener('click', applyCoupon);
+
+        couponMsgEl = document.createElement('div');
+        couponMsgEl.className = 'member-coupon-message';
+        couponMsgEl.hidden = true;
+
+        row.appendChild(couponInputEl);
+        row.appendChild(applyBtn);
+        section.appendChild(row);
+        section.appendChild(couponMsgEl);
+        checkoutContainer.appendChild(section);
+    }
+
+    function setCouponMessage(text, type) {
+        if (!couponMsgEl) return;
+        if (!text) {
+            couponMsgEl.hidden = true;
+            couponMsgEl.textContent = '';
+            couponMsgEl.className = 'member-coupon-message';
+            return;
+        }
+        couponMsgEl.textContent = text;
+        couponMsgEl.className = 'member-coupon-message member-coupon-message--' + type;
+        couponMsgEl.hidden = false;
+    }
+
+    function applyCoupon() {
+        if (!couponInputEl) return;
+        var code = couponInputEl.value.trim().toUpperCase();
+        if (!code) { couponInputEl.focus(); return; }
+
+        var memberId = currentUser ? (currentUser.id || 0) : 0;
+        setCouponMessage('Checking\u2026', 'checking');
+
+        fetch('/gateway.php?action=verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'coupon', code: code, member_id: memberId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                appliedCoupon = {
+                    id: data.coupon_id,
+                    code: data.code,
+                    discount_type: data.discount_type,
+                    discount_value: data.discount_value
+                };
+                applyCouponToDisplay();
+                updatePayButtonLabels();
+                var discountStr = data.discount_type === 'percent'
+                    ? data.discount_value + '% off'
+                    : (window.CurrencyComponent
+                        ? CurrencyComponent.formatWithSymbol(data.discount_value.toFixed(2), siteCurrency || null, { trimZeroDecimals: false }) + ' off'
+                        : '$' + data.discount_value + ' off');
+                getMessage('msg_coupon_applied', { code: data.code, discount: discountStr }, false).then(function(msg) {
+                    setCouponMessage(msg || (data.code + ' applied \u2014 ' + discountStr), 'success');
+                });
+            } else {
+                appliedCoupon = null;
+                clearCouponDisplay();
+                updatePayButtonLabels();
+                var rawKey = data.error_key || 'coupon_invalid';
+                var msgKey = rawKey.indexOf('msg_') === 0 ? rawKey : 'msg_' + rawKey;
+                getMessage(msgKey, {}, false).then(function(msg) {
+                    setCouponMessage(msg || 'Invalid coupon code.', 'error');
+                });
+            }
+        })
+        .catch(function() {
+            setCouponMessage('Unable to verify coupon. Please try again.', 'error');
+        });
+    }
+
+    function computeCouponDiscount(basePrice, coupon) {
+        if (!coupon) return basePrice;
+        var discounted;
+        if (coupon.discount_type === 'percent') {
+            discounted = basePrice * (1 - coupon.discount_value / 100);
+        } else {
+            discounted = basePrice - coupon.discount_value;
+        }
+        return Math.max(discounted, 1.00);
+    }
+
+    function applyCouponToDisplay() {
+        if (!checkoutInstance) return;
+        var wrapper = formFields ? formFields.querySelector('.member-checkout-wrapper') : null;
+        if (!wrapper) return;
+        var radios = wrapper.querySelectorAll('input[type="radio"][data-price]');
+        if (!radios.length) return;
+        var curr = siteCurrency || null;
+        radios.forEach(function(radio) {
+            var basePrice = parseFloat(radio.dataset.price) || 0;
+            if (!appliedCoupon) {
+                if (radio.dataset.basePrice) {
+                    radio.dataset.price = radio.dataset.basePrice;
+                    delete radio.dataset.basePrice;
+                }
+                var textEl = radio.parentNode ? radio.parentNode.querySelector('.member-checkout-duration-text') : null;
+                if (textEl && textEl.dataset.originalText) {
+                    textEl.textContent = textEl.dataset.originalText;
+                    delete textEl.dataset.originalText;
+                }
+                return;
+            }
+            radio.dataset.basePrice = radio.dataset.price;
+            var discounted = computeCouponDiscount(basePrice, appliedCoupon);
+            radio.dataset.price = discounted.toFixed(2);
+            var textEl = radio.parentNode ? radio.parentNode.querySelector('.member-checkout-duration-text') : null;
+            if (textEl) {
+                if (!textEl.dataset.originalText) textEl.dataset.originalText = textEl.textContent;
+                var parts = textEl.dataset.originalText.split(' \u2014 ');
+                var summary = parts[0] || '';
+                var origFormatted = window.CurrencyComponent
+                    ? CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false })
+                    : '$' + basePrice.toFixed(2);
+                var newFormatted = window.CurrencyComponent
+                    ? CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false })
+                    : '$' + discounted.toFixed(2);
+                textEl.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
+            }
+        });
+    }
+
+    function clearCouponDisplay() {
+        applyCouponToDisplay();
+    }
+
     // Form terms agreement row element
     var formTermsCheckbox = null;
     
@@ -5003,6 +5184,7 @@ const MemberModule = (function() {
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
                 transaction_id: transactionId || null,
+                coupon_id: appliedCoupon ? appliedCoupon.id : null,
                 loc_qty: payload.loc_qty || window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
@@ -5076,6 +5258,9 @@ const MemberModule = (function() {
         selectedSubcategory = '';
         termsAgreed = false;
         isEditingPostId = null;
+        appliedCoupon = null;
+        couponInputEl = null;
+        couponMsgEl = null;
         
         // Reset tab label and buttons
         if (createTabBtn) createTabBtn.textContent = 'Create Post';

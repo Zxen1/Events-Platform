@@ -874,6 +874,52 @@
 
 
 /* ============================================================================
+   COUPON CODE
+   ============================================================================ */
+
+.member-coupon {
+  margin-bottom: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #333;
+}
+
+.member-coupon-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.member-coupon-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.member-coupon-apply {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.member-coupon-message {
+  margin-top: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.member-coupon-message--success {
+  color: var(--color-success, #4caf50);
+}
+
+.member-coupon-message--error {
+  color: var(--color-error, #e53935);
+}
+
+.member-coupon-message--checking {
+  color: var(--color-text-secondary, #aaa);
+}
+
+/* ============================================================================
    TERMS (checkbox row on form)
    ============================================================================ */
 

@@ -3089,7 +3089,7 @@ const AdminModule = (function() {
         } else if (coupon.valid_until) {
             dateStr = 'To ' + App.formatDateShort(coupon.valid_until);
         } else {
-            dateStr = 'No dates';
+            dateStr = 'No date limits';
         }
         var datesText = document.createElement('div');
         datesText.className = 'admin-checkout-coupon-card-dates-text';
@@ -3271,6 +3271,7 @@ const AdminModule = (function() {
         dateRangeClearBtn.type = 'button';
         dateRangeClearBtn.className = 'admin-checkout-coupon-form-daterange-clear clear-button';
         dateRangeClearBtn.setAttribute('aria-label', 'Clear date');
+        dateRangeClearBtn.innerHTML = '<span class="clear-button-icon" aria-hidden="true"></span>';
 
         dateRangeInputWrap.appendChild(dateRangeInput);
         dateRangeInputWrap.appendChild(dateRangeClearBtn);
@@ -3462,6 +3463,18 @@ const AdminModule = (function() {
         });
         form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
 
+        var onePerMemberLabel = document.createElement('label');
+        onePerMemberLabel.className = 'admin-checkout-coupon-form-checkbox-label';
+        var onePerMemberCheckbox = document.createElement('input');
+        onePerMemberCheckbox.type = 'checkbox';
+        onePerMemberCheckbox.className = 'admin-checkout-coupon-form-checkbox';
+        onePerMemberCheckbox.checked = coupon ? !!coupon.one_per_member : false;
+        var onePerMemberSpan = document.createElement('span');
+        onePerMemberSpan.textContent = 'Limit to one use per member';
+        onePerMemberLabel.appendChild(onePerMemberCheckbox);
+        onePerMemberLabel.appendChild(onePerMemberSpan);
+        form.appendChild(couponFormRow('', onePerMemberLabel));
+
         var currentStatus = coupon ? coupon.status : 'active';
 
         // Save + Cancel buttons
@@ -3486,6 +3499,7 @@ const AdminModule = (function() {
                 valid_from: couponFormDateStart || null,
                 valid_until: couponFormDateEnd || null,
                 usage_limit: parseInt(usageLimitInput.value, 10) || 0,
+                one_per_member: onePerMemberCheckbox.checked ? 1 : 0,
                 status: currentStatus
             };
             if (coupon && coupon.id) payload.id = coupon.id;
@@ -3504,7 +3518,18 @@ const AdminModule = (function() {
         form.appendChild(btnRow);
 
         var addBtn = document.getElementById('adminCheckoutCouponAdd');
-        if (addBtn) {
+        if (coupon && coupon.id) {
+            form.classList.add('admin-checkout-coupon-form--editing');
+            var list = document.getElementById('adminCheckoutCouponList');
+            var matchingCard = list ? list.querySelector('.admin-checkout-coupon-card[data-id="' + coupon.id + '"]') : null;
+            if (matchingCard && matchingCard.parentNode) {
+                matchingCard.parentNode.insertBefore(form, matchingCard.nextSibling);
+            } else if (addBtn) {
+                container.insertBefore(form, addBtn);
+            } else {
+                container.appendChild(form);
+            }
+        } else if (addBtn) {
             container.insertBefore(form, addBtn);
         } else {
             container.appendChild(form);
