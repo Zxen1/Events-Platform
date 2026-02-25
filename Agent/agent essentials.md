@@ -277,6 +277,9 @@ Everything loads when required, not at startup. Never initialize components on p
 ### Never Preload
 Don't fetch data or load assets on startup. Wait until user action requires it.
 
+### Tabs Are Pages
+Treat each tab like a separate page. Nothing inside a tab loads until the user clicks it. Data fetches within a tab must fire immediately when the tab opens — not after waiting for other unrelated fetches to complete.
+
 ---
 
 ## MAP RULES (3-MAP MAXIMUM)

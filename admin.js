@@ -2992,6 +2992,8 @@ const AdminModule = (function() {
         checkoutTabContainer = document.getElementById('admin-tab-checkout');
         if (!checkoutTabContainer) return;
         
+        loadCheckoutCoupons();
+
         // Load settings if not already loaded
         if (!settingsInitialized) {
             loadSettingsFromDatabase().then(function() {
@@ -3020,8 +3022,6 @@ const AdminModule = (function() {
                 openCheckoutCouponForm(null);
             });
         }
-
-        loadCheckoutCoupons();
     }
 
     /* --------------------------------------------------------------------------
@@ -3075,7 +3075,7 @@ const AdminModule = (function() {
 
         var discountStr = coupon.discount_type === 'percent'
             ? parseInt(coupon.discount_value, 10) + '% off'
-            : '$' + parseFloat(coupon.discount_value).toFixed(2) + ' off';
+            : '$' + parseInt(coupon.discount_value, 10) + ' off';
         var descText = document.createElement('div');
         descText.className = 'admin-checkout-coupon-card-desc-text';
         descText.textContent = (coupon.description ? coupon.description + ' · ' : '') + discountStr;
@@ -3221,11 +3221,7 @@ const AdminModule = (function() {
         valueInput.type = 'text';
         valueInput.className = 'admin-checkout-coupon-form-input admin-checkout-coupon-form-input--value input-class-1';
         valueInput.placeholder = '0';
-        valueInput.value = coupon
-            ? (coupon.discount_type === 'fixed'
-                ? parseFloat(coupon.discount_value).toFixed(2)
-                : String(parseInt(coupon.discount_value, 10)))
-            : '';
+        valueInput.value = coupon ? String(parseInt(coupon.discount_value, 10)) : '';
         discountWrap.appendChild(valueInput);
 
         discountRow.appendChild(discountWrap);
