@@ -2373,19 +2373,19 @@
 }
 
 .admin-checkout-coupon-card-desc-text {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 6px;
 }
 
 .admin-checkout-coupon-card-dates-text {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 6px;
 }
 
 .admin-checkout-coupon-card-usage-text {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 10px;
 }
@@ -2399,7 +2399,7 @@
 }
 
 .admin-checkout-coupon-card-status-text {
-  font-size: 12px;
+  font-size: 13px;
   flex: 1;
 }
 
@@ -2411,7 +2411,7 @@
 .admin-checkout-coupon-card-disable-button,
 .admin-checkout-coupon-card-enable-button {
   height: 36px;
-  font-size: 12px;
+  font-size: 13px;
   padding: 0 10px;
 }
 
