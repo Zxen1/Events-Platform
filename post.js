@@ -96,8 +96,9 @@ const PostModule = (function() {
   }
 
   function badgeImgHtml(key, cssClass, title) {
-    if (!badgeIcons || !badgeIcons[key]) return '';
-    var url = App.getImageUrl('fieldsetIcons', badgeIcons[key]);
+    var icons = badgeIcons || App.getState('badge_icons');
+    if (!icons || !icons[key]) return '';
+    var url = App.getImageUrl('fieldsetIcons', icons[key]);
     if (!url) return '';
     return '<img class="' + cssClass + '" src="' + url + '" alt="" title="' + escapeHtml(title) + '">';
   }
