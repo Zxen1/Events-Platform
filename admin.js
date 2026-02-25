@@ -3029,6 +3029,45 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
 
     var checkoutCoupons = [];
+    var activeCouponFormData = null; // { form, card, hasChanges: fn }
+
+    function tryCloseCouponForm(callback) {
+        if (!activeCouponFormData) {
+            if (typeof callback === 'function') callback();
+            return;
+        }
+        if (activeCouponFormData.hasChanges()) {
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Discard changes?',
+                    messageText: 'You have unsaved changes to this coupon.',
+                    confirmLabel: 'Discard',
+                    cancelLabel: 'Keep editing',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        closeCouponForm();
+                        if (typeof callback === 'function') callback();
+                    }
+                });
+            }
+        } else {
+            closeCouponForm();
+            if (typeof callback === 'function') callback();
+        }
+    }
+
+    function closeCouponForm() {
+        if (!activeCouponFormData) return;
+        if (activeCouponFormData.form && activeCouponFormData.form.parentNode) {
+            activeCouponFormData.form.remove();
+        }
+        if (activeCouponFormData.card) {
+            activeCouponFormData.card.classList.remove('admin-checkout-coupon-card--editing');
+        }
+        activeCouponFormData = null;
+    }
 
     function loadCheckoutCoupons() {
         var list = document.getElementById('adminCheckoutCouponList');
@@ -3102,6 +3141,13 @@ const AdminModule = (function() {
         usageText.textContent = 'Used ' + coupon.usage_count + ' / ' + limitStr;
         card.appendChild(usageText);
 
+        if (coupon.one_per_member) {
+            var opmText = document.createElement('div');
+            opmText.className = 'admin-checkout-coupon-card-opm-text';
+            opmText.textContent = 'One use per member';
+            card.appendChild(opmText);
+        }
+
         var actionsRow = document.createElement('div');
         actionsRow.className = 'admin-checkout-coupon-card-actions-row';
 
@@ -3116,7 +3162,17 @@ const AdminModule = (function() {
         editBtn.className = 'admin-checkout-coupon-card-edit-button button-class-2';
         editBtn.textContent = 'Edit';
         editBtn.addEventListener('click', function() {
-            openCheckoutCouponForm(coupon);
+            // If THIS card's form is already open, toggle it closed
+            if (activeCouponFormData && activeCouponFormData.card === card) {
+                tryCloseCouponForm(null);
+                return;
+            }
+            // If a DIFFERENT card's form is open, close it first then open this one
+            if (activeCouponFormData) {
+                tryCloseCouponForm(function() { openCheckoutCouponForm(coupon, card); });
+                return;
+            }
+            openCheckoutCouponForm(coupon, card);
         });
         actionsRow.appendChild(editBtn);
 
@@ -3136,12 +3192,12 @@ const AdminModule = (function() {
         return card;
     }
 
-    function openCheckoutCouponForm(coupon) {
+    function openCheckoutCouponForm(coupon, cardEl) {
         var container = document.querySelector('.admin-checkout-coupon-container');
         if (!container) return;
 
-        var existingForm = container.querySelector('.admin-checkout-coupon-form');
-        if (existingForm) existingForm.remove();
+        // Close any existing form cleanly (no confirm — caller already handled it)
+        closeCouponForm();
 
         var form = document.createElement('div');
         form.className = 'admin-checkout-coupon-form';
@@ -3463,19 +3519,44 @@ const AdminModule = (function() {
         });
         form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
 
-        var onePerMemberLabel = document.createElement('label');
-        onePerMemberLabel.className = 'admin-checkout-coupon-form-checkbox-label';
-        var onePerMemberCheckbox = document.createElement('input');
-        onePerMemberCheckbox.type = 'checkbox';
-        onePerMemberCheckbox.className = 'admin-checkout-coupon-form-checkbox';
-        onePerMemberCheckbox.checked = coupon ? !!coupon.one_per_member : false;
-        var onePerMemberSpan = document.createElement('span');
-        onePerMemberSpan.textContent = 'Limit to one use per member';
-        onePerMemberLabel.appendChild(onePerMemberCheckbox);
-        onePerMemberLabel.appendChild(onePerMemberSpan);
-        form.appendChild(couponFormRow('', onePerMemberLabel));
+        var onePerMemberSwitch = SwitchComponent.create({
+            checked: coupon ? !!coupon.one_per_member : false,
+            state: 'on-default',
+            ariaLabel: 'Limit to one use per member'
+        });
+        var switchRow = document.createElement('div');
+        switchRow.className = 'admin-checkout-coupon-form-switch-row';
+        var switchLabelText = document.createElement('span');
+        switchLabelText.className = 'admin-checkout-coupon-form-switch-label';
+        switchLabelText.textContent = 'One use per member';
+        switchRow.appendChild(switchLabelText);
+        switchRow.appendChild(onePerMemberSwitch.element);
+        form.appendChild(switchRow);
 
         var currentStatus = coupon ? coupon.status : 'active';
+
+        // Capture initial values for change detection
+        var initialValues = {
+            code: codeInput.value,
+            description: descInput.value,
+            discountType: currentDiscountType,
+            discountValue: valueInput.value,
+            validFrom: couponFormDateStart,
+            validUntil: couponFormDateEnd,
+            usageLimit: usageLimitInput.value,
+            onePerMember: onePerMemberSwitch.isChecked()
+        };
+
+        function formHasChanges() {
+            return codeInput.value !== initialValues.code ||
+                   descInput.value !== initialValues.description ||
+                   currentDiscountType !== initialValues.discountType ||
+                   valueInput.value !== initialValues.discountValue ||
+                   couponFormDateStart !== initialValues.validFrom ||
+                   couponFormDateEnd !== initialValues.validUntil ||
+                   usageLimitInput.value !== initialValues.usageLimit ||
+                   onePerMemberSwitch.isChecked() !== initialValues.onePerMember;
+        }
 
         // Save + Cancel buttons
         var btnRow = document.createElement('div');
@@ -3499,41 +3580,62 @@ const AdminModule = (function() {
                 valid_from: couponFormDateStart || null,
                 valid_until: couponFormDateEnd || null,
                 usage_limit: parseInt(usageLimitInput.value, 10) || 0,
-                one_per_member: onePerMemberCheckbox.checked ? 1 : 0,
+                one_per_member: onePerMemberSwitch.isChecked() ? 1 : 0,
                 status: currentStatus
             };
             if (coupon && coupon.id) payload.id = coupon.id;
+            // Mark as unchanged so closing doesn't trigger confirm
+            initialValues = null;
             saveCheckoutCoupon(payload);
-            form.remove();
+            closeCouponForm();
         });
 
         var cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.className = 'admin-checkout-coupon-form-cancel-button button-class-2';
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.addEventListener('click', function() { form.remove(); });
+        cancelBtn.addEventListener('click', function() { tryCloseCouponForm(null); });
 
         btnRow.appendChild(saveBtn);
         btnRow.appendChild(cancelBtn);
         form.appendChild(btnRow);
 
+        // Insert form into DOM
         var addBtn = document.getElementById('adminCheckoutCouponAdd');
-        if (coupon && coupon.id) {
-            form.classList.add('admin-checkout-coupon-form--editing');
+        var targetCard = cardEl || null;
+        if (!targetCard && coupon && coupon.id) {
             var list = document.getElementById('adminCheckoutCouponList');
-            var matchingCard = list ? list.querySelector('.admin-checkout-coupon-card[data-id="' + coupon.id + '"]') : null;
-            if (matchingCard && matchingCard.parentNode) {
-                matchingCard.parentNode.insertBefore(form, matchingCard.nextSibling);
-            } else if (addBtn) {
-                container.insertBefore(form, addBtn);
-            } else {
-                container.appendChild(form);
-            }
+            targetCard = list ? list.querySelector('.admin-checkout-coupon-card[data-id="' + coupon.id + '"]') : null;
+        }
+
+        if (targetCard) {
+            form.classList.add('admin-checkout-coupon-form--editing');
+            targetCard.classList.add('admin-checkout-coupon-card--editing');
+            targetCard.parentNode.insertBefore(form, targetCard.nextSibling);
         } else if (addBtn) {
             container.insertBefore(form, addBtn);
         } else {
             container.appendChild(form);
         }
+
+        // Register in module-level state
+        activeCouponFormData = { form: form, card: targetCard, hasChanges: function() { return initialValues !== null && formHasChanges(); } };
+
+        // Outside-click handler — closes form if click is outside card+form
+        document.addEventListener('click', function couponOutsideClick(e) {
+            if (!form.isConnected) {
+                document.removeEventListener('click', couponOutsideClick);
+                return;
+            }
+            var insideForm = form.contains(e.target);
+            var insideCard = targetCard && targetCard.contains(e.target);
+            if (!insideForm && !insideCard) {
+                tryCloseCouponForm(null);
+            }
+            if (!form.isConnected) {
+                document.removeEventListener('click', couponOutsideClick);
+            }
+        });
     }
 
     function saveCheckoutCoupon(payload) {

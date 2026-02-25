@@ -908,15 +908,15 @@
 }
 
 .member-coupon-message--success {
-  color: var(--color-success, #4caf50);
+  color: rgba(120, 255, 150, 1);
 }
 
 .member-coupon-message--error {
-  color: var(--color-error, #e53935);
+  color: #ff6b6b;
 }
 
 .member-coupon-message--checking {
-  color: var(--color-text-secondary, #aaa);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ============================================================================

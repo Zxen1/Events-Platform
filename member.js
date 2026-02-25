@@ -3325,9 +3325,7 @@ const MemberModule = (function() {
                 updatePayButtonLabels();
                 var discountStr = data.discount_type === 'percent'
                     ? data.discount_value + '% off'
-                    : (window.CurrencyComponent
-                        ? CurrencyComponent.formatWithSymbol(data.discount_value.toFixed(2), siteCurrency || null, { trimZeroDecimals: false }) + ' off'
-                        : '$' + data.discount_value + ' off');
+                    : CurrencyComponent.formatWithSymbol(String(data.discount_value), siteCurrency || null, { trimZeroDecimals: false }) + ' off';
                 getMessage('msg_coupon_applied', { code: data.code, discount: discountStr }, false).then(function(msg) {
                     setCouponMessage(msg || (data.code + ' applied \u2014 ' + discountStr), 'success');
                 });
@@ -3387,12 +3385,8 @@ const MemberModule = (function() {
                 if (!textEl.dataset.originalText) textEl.dataset.originalText = textEl.textContent;
                 var parts = textEl.dataset.originalText.split(' \u2014 ');
                 var summary = parts[0] || '';
-                var origFormatted = window.CurrencyComponent
-                    ? CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false })
-                    : '$' + basePrice.toFixed(2);
-                var newFormatted = window.CurrencyComponent
-                    ? CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false })
-                    : '$' + discounted.toFixed(2);
+                var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false });
+                var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false });
                 textEl.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
             }
         });
