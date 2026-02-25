@@ -3366,7 +3366,7 @@ const MemberModule = (function() {
         if (!radios.length) return;
         var curr = siteCurrency || null;
         radios.forEach(function(radio) {
-            var basePrice = parseFloat(radio.dataset.price) || 0;
+            var basePrice = parseFloat(radio.dataset.basePrice || radio.dataset.price) || 0;
             if (!appliedCoupon) {
                 if (radio.dataset.basePrice) {
                     radio.dataset.price = radio.dataset.basePrice;
@@ -3379,7 +3379,7 @@ const MemberModule = (function() {
                 }
                 return;
             }
-            radio.dataset.basePrice = radio.dataset.price;
+            if (!radio.dataset.basePrice) radio.dataset.basePrice = radio.dataset.price;
             var discounted = computeCouponDiscount(basePrice, appliedCoupon);
             radio.dataset.price = discounted.toFixed(2);
             var textEl = radio.parentNode ? radio.parentNode.querySelector('.member-checkout-duration-text') : null;
