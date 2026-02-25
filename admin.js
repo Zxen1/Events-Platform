@@ -3496,6 +3496,42 @@ const AdminModule = (function() {
         var container = document.getElementById('adminSiteCustomisationContainer');
         if (!container || !window.FieldsetIconPickerComponent) return;
 
+        // --- Badge Icons ---
+        var badgeDefs = [
+            { key: 'badge_icon_location', label: 'Location Badge' },
+            { key: 'badge_icon_sessions', label: 'Sessions Badge' },
+            { key: 'badge_icon_phone',    label: 'Phone Badge'    },
+            { key: 'badge_icon_email',    label: 'Email Badge'    }
+        ];
+
+        badgeDefs.forEach(function(def) {
+            var initialValue = settingsData[def.key] || '';
+
+            var row = document.createElement('div');
+            row.className = 'admin-settings-field admin-settings-field--imagepicker';
+
+            var label = document.createElement('label');
+            label.className = 'admin-settings-field-label';
+            label.textContent = def.label;
+            row.appendChild(label);
+
+            var pickerContainer = document.createElement('div');
+            row.appendChild(pickerContainer);
+
+            var picker = FieldsetIconPickerComponent.buildPicker({
+                databaseValue: initialValue,
+                onSelect: function(imagePath) {
+                    var filename = imagePath.indexOf('/') !== -1 ? imagePath.split('/').pop() : imagePath;
+                    updateField('settings.' + def.key, filename);
+                }
+            });
+
+            pickerContainer.appendChild(picker.element);
+            container.appendChild(row);
+
+            registerField('settings.' + def.key, initialValue);
+        });
+
         // --- Fieldset Icons ---
         var fieldsets = settingsData.fieldsets;
         if (!fieldsets || !fieldsets.length) return;
