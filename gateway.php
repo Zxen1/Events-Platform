@@ -30,7 +30,7 @@ if ($connectorDir === null) {
 
 
 $map = [
-  'verify-login' => $connectorDir . '/verify-login.php',
+  'verify' => $connectorDir . '/verify.php',
   'add-member' => $connectorDir . '/add-member.php',
   'save-form' => $connectorDir . '/save-form.php',
   'get-form' => $connectorDir . '/get-form.php',

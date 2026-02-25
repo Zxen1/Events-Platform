@@ -6786,10 +6786,10 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function verifyLogin(username, password) {
-        return fetch('/gateway.php?action=verify-login', {
+        return fetch('/gateway.php?action=verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username, password: password })
+            body: JSON.stringify({ type: 'login', username: username, password: password })
         }).then(function(response) {
             return response.text();
         }).then(function(text) {
