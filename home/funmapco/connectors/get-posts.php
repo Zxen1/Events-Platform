@@ -407,12 +407,24 @@ try {
     $idsStmt->close();
 
     if (empty($pagePostIds)) {
+        // Still include badge icons even when no posts match
+        $earlyBadgeIcons = [];
+        $earlyBiStmt = $mysqli->prepare("SELECT fieldset_key, fieldset_icon FROM fieldsets WHERE fieldset_key IN ('venue', 'sessions', 'public-phone', 'public-email') AND fieldset_icon IS NOT NULL AND fieldset_icon != ''");
+        if ($earlyBiStmt) {
+            $earlyBiStmt->execute();
+            $earlyBiResult = $earlyBiStmt->get_result();
+            while ($row = $earlyBiResult->fetch_assoc()) {
+                $earlyBadgeIcons[$row['fieldset_key']] = $row['fieldset_icon'];
+            }
+            $earlyBiStmt->close();
+        }
         $response = [
             'success' => true,
             'posts' => [],
             'total' => $total,
             'limit' => $limit,
             'offset' => $offset,
+            'badge_icons' => !empty($earlyBadgeIcons) ? $earlyBadgeIcons : null,
         ];
         $json = json_encode($response, JSON_UNESCAPED_SLASHES);
         if ($json === false) {

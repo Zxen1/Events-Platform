@@ -1302,8 +1302,8 @@ const PostModule = (function() {
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
           '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">' + (badgeImgHtml('venue', 'post-card-image-badge', 'Venue') || '📍') + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">' + (badgeImgHtml('sessions', 'post-card-image-badge', 'Dates') || '📅') + '</span><span>' + escapeHtml(datesText) + '</span></div>' : 
+          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">' + badgeImgHtml('venue', 'post-card-image-badge', 'Venue') + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
+          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">' + badgeImgHtml('sessions', 'post-card-image-badge', 'Dates') + '</span><span>' + escapeHtml(datesText) + '</span></div>' : 
           (priceParts.text ? (function() {
             var badgeHtml = priceParts.flagUrl 
               ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
@@ -2659,11 +2659,11 @@ const PostModule = (function() {
         '</div>' : '',
         // Public email
         publicEmail ? '<div class="post-info-row post-info-row-email">' +
-          '<a href="mailto:' + escapeHtml(publicEmail) + '">' + (badgeImgHtml('public-email', 'post-info-image-badge', 'Email') || '✉️') + ' ' + escapeHtml(publicEmail) + '</a>' +
+          '<a href="mailto:' + escapeHtml(publicEmail) + '">' + badgeImgHtml('public-email', 'post-info-image-badge', 'Email') + ' ' + escapeHtml(publicEmail) + '</a>' +
         '</div>' : '',
         // Phone
         (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
-          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + (badgeImgHtml('public-phone', 'post-info-image-badge', 'Phone') || '📞') + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + badgeImgHtml('public-phone', 'post-info-image-badge', 'Phone') + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
         '</div>' : '',
         // Amenities
         amenitySummary ? '<div class="post-info-row post-info-row-amenities">' +
@@ -4060,7 +4060,7 @@ const PostModule = (function() {
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
           '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">' + (badgeImgHtml('venue', 'recent-card-image-badge', 'Venue') || '📍') + '</span><span>' + escapeHtml(city) + '</span></div>' : '',
+          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">' + badgeImgHtml('venue', 'recent-card-image-badge', 'Venue') + '</span><span>' + escapeHtml(city) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',
@@ -4266,6 +4266,7 @@ const PostModule = (function() {
         return response.json();
       })
       .then(function(data) {
+        if (data) storeBadgeIcons(data);
         if (data && data.success && data.posts && data.posts.length) {
           return data.posts[0];
         }
@@ -4285,6 +4286,7 @@ const PostModule = (function() {
         return response.json();
       })
       .then(function(data) {
+        if (data) storeBadgeIcons(data);
         if (data && data.success && data.posts && data.posts.length) {
           return data.posts[0];
         }
