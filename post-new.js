@@ -65,6 +65,38 @@ const PostModule = (function() {
   var postsRequestToken = 0;
   var postsAbort = null;
 
+  // Badge icons from fieldsets table (lazy-loaded with get-posts response)
+  var badgeIcons = null;
+  var badgeIconsPromise = null;
+
+  function storeBadgeIcons(data) {
+    if (data && data.badge_icons) {
+      badgeIcons = data.badge_icons;
+      App.setState('badge_icons', badgeIcons);
+    }
+  }
+
+  function ensureBadgeIcons() {
+    if (badgeIcons) return Promise.resolve(badgeIcons);
+    var stored = App.getState('badge_icons');
+    if (stored) { badgeIcons = stored; return Promise.resolve(badgeIcons); }
+    if (badgeIconsPromise) return badgeIconsPromise;
+    badgeIconsPromise = fetch('/gateway.php?action=get-posts&limit=1')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        storeBadgeIcons(data);
+        return badgeIcons;
+      });
+    return badgeIconsPromise;
+  }
+
+  function badgeImgHtml(key, cssClass, title) {
+    if (!badgeIcons || !badgeIcons[key]) return '';
+    var url = App.getImageUrl('fieldsetIcons', badgeIcons[key]);
+    if (!url) return '';
+    return '<img class="' + cssClass + '" src="' + url + '" alt="" title="' + escapeHtml(title) + '">';
+  }
+
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
     post: { token: 0, hideHandler: null, hideTimeoutId: 0 },
@@ -1015,6 +1047,7 @@ const PostModule = (function() {
         if (myToken !== postsRequestToken) return [];
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
+          storeBadgeIcons(data);
           renderPostList(data.posts);
           // Emit counts for the current viewport (server-filtered)
           emitFilterCounts(data.posts);
@@ -1269,8 +1302,8 @@ const PostModule = (function() {
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
           '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
+          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">' + (badgeImgHtml('venue', 'post-card-image-badge', 'Venue') || '📍') + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
+          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">' + (badgeImgHtml('sessions', 'post-card-image-badge', 'Dates') || '📅') + '</span><span>' + escapeHtml(datesText) + '</span></div>' : 
           (priceParts.text ? (function() {
             var badgeHtml = priceParts.flagUrl 
               ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
@@ -2626,11 +2659,11 @@ const PostModule = (function() {
         '</div>' : '',
         // Public email
         publicEmail ? '<div class="post-info-row post-info-row-email">' +
-          '<a href="mailto:' + escapeHtml(publicEmail) + '">✉️ ' + escapeHtml(publicEmail) + '</a>' +
+          '<a href="mailto:' + escapeHtml(publicEmail) + '">' + (badgeImgHtml('public-email', 'post-info-image-badge', 'Email') || '✉️') + ' ' + escapeHtml(publicEmail) + '</a>' +
         '</div>' : '',
         // Phone
         (phonePrefix || publicPhone) ? '<div class="post-info-row post-info-row-phone">' +
-          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">📞 ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
+          '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + (badgeImgHtml('public-phone', 'post-info-image-badge', 'Phone') || '📞') + ' ' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
         '</div>' : '',
         // Amenities
         amenitySummary ? '<div class="post-info-row post-info-row-amenities">' +
@@ -3897,6 +3930,11 @@ const PostModule = (function() {
   function renderRecentPanel() {
     if (!recentPanelContentEl) return;
 
+    if (!badgeIcons) {
+      ensureBadgeIcons().then(function() { renderRecentPanel(); });
+      return;
+    }
+
     var history = getRecentHistory();
 
     // Show empty state if no history
@@ -4022,7 +4060,7 @@ const PostModule = (function() {
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
           '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
-          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
+          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">' + (badgeImgHtml('venue', 'recent-card-image-badge', 'Venue') || '📍') + '</span><span>' + escapeHtml(city) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',

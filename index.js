@@ -237,7 +237,8 @@ const App = (function() {
     recentSystemImages: 'folder_recent_system_images',
     siteAvatars: 'folder_site_avatars',
     siteImages: 'folder_site_images',
-    systemImages: 'folder_system_images'
+    systemImages: 'folder_system_images',
+    fieldsetIcons: 'folder_fieldset_icons'
   };
 
   /**

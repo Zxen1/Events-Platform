@@ -957,12 +957,25 @@ try {
     // Convert to array
     $posts = array_values($postsById);
 
+    // Fetch badge icons (venue, sessions, public-phone, public-email) from fieldsets table
+    $badgeIcons = [];
+    $biStmt = $mysqli->prepare("SELECT fieldset_key, fieldset_icon FROM fieldsets WHERE fieldset_key IN ('venue', 'sessions', 'public-phone', 'public-email') AND fieldset_icon IS NOT NULL AND fieldset_icon != ''");
+    if ($biStmt) {
+        $biStmt->execute();
+        $biResult = $biStmt->get_result();
+        while ($row = $biResult->fetch_assoc()) {
+            $badgeIcons[$row['fieldset_key']] = $row['fieldset_icon'];
+        }
+        $biStmt->close();
+    }
+
     $response = [
         'success' => true,
         'posts' => $posts,
         'total' => $total,
         'limit' => $limit,
         'offset' => $offset,
+        'badge_icons' => !empty($badgeIcons) ? $badgeIcons : null,
     ];
     
     $json = json_encode($response, JSON_UNESCAPED_SLASHES);
