@@ -2456,6 +2456,7 @@
 
 .admin-checkout-coupon-form-daterange-wrap {
   position: relative;
+  width: 100%;
 }
 
 .admin-checkout-coupon-form-daterange-input-wrap {
@@ -2463,6 +2464,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
 }
 
 .admin-checkout-coupon-form-daterange-input {

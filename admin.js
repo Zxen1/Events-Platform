@@ -3221,7 +3221,11 @@ const AdminModule = (function() {
         valueInput.type = 'text';
         valueInput.className = 'admin-checkout-coupon-form-input admin-checkout-coupon-form-input--value input-class-1';
         valueInput.placeholder = '0';
-        valueInput.value = coupon ? (coupon.discount_value || '') : '';
+        valueInput.value = coupon
+            ? (coupon.discount_type === 'fixed'
+                ? parseFloat(coupon.discount_value).toFixed(2)
+                : String(parseInt(coupon.discount_value, 10)))
+            : '';
         discountWrap.appendChild(valueInput);
 
         discountRow.appendChild(discountWrap);
@@ -3439,7 +3443,7 @@ const AdminModule = (function() {
         usageLimitInput.type = 'text';
         usageLimitInput.className = 'admin-checkout-coupon-form-input input-class-1';
         usageLimitInput.placeholder = '0 = unlimited';
-        usageLimitInput.value = coupon ? String(coupon.usage_limit) : '0';
+        usageLimitInput.value = coupon && parseInt(coupon.usage_limit, 10) > 0 ? String(coupon.usage_limit) : '';
         form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
 
         var currentStatus = coupon ? coupon.status : 'active';
