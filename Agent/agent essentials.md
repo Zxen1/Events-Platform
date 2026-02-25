@@ -227,8 +227,8 @@ Some tables use a hundreds-based system to organize rows by audience. For exampl
 | Range | Audience | container_key |
 |-------|----------|---------------|
 | 100–199 | Users | `msg_user` |
-| 200–299 | Members | `msg_member` |
-| 300–399 | Admins | `msg_admin` |
+| 200–499 | Members | `msg_member` |
+| 500–599 | Admins | `msg_admin` |
 
 When inserting new rows, first determine the audience, then find the next available ID within that range.
 
