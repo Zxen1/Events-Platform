@@ -1186,18 +1186,18 @@ if (empty($ogTitle)) {
         <!-- Checkout Tab -->
         <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
           <div class="admin-checkout-settings-message" data-message-key="msg_checkout_settings"></div>
+          <div class="admin-checkout-options-container">
+            <span class="admin-checkout-options-header-label">Checkout Options</span>
+            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
+              <!-- Checkout options will be populated by JavaScript -->
+            </div>
+          </div>
           <div class="admin-checkout-coupon-container">
             <span class="admin-checkout-coupon-header-label">Coupon Codes</span>
             <div class="admin-checkout-coupon-list" id="adminCheckoutCouponList">
               <!-- populated by JS -->
             </div>
             <button type="button" class="admin-checkout-coupon-add button-class-2" id="adminCheckoutCouponAdd">+ Add Coupon</button>
-          </div>
-          <div class="admin-checkout-options-container">
-            <span class="admin-checkout-options-header-label">Checkout Options</span>
-            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
-              <!-- Checkout options will be populated by JavaScript -->
-            </div>
           </div>
         </section>
         

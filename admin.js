@@ -3278,6 +3278,7 @@ const AdminModule = (function() {
         var calContainer = document.createElement('div');
         calContainer.className = 'admin-checkout-coupon-form-calendar-container';
         calContainer.setAttribute('aria-hidden', 'true');
+        calContainer.setAttribute('inert', '');
 
         var calEl = document.createElement('div');
         calEl.className = 'admin-checkout-coupon-form-calendar';
@@ -3302,6 +3303,7 @@ const AdminModule = (function() {
         function couponFormOpenCalendar() {
             calContainer.classList.add('admin-checkout-coupon-form-calendar-container--open');
             calContainer.setAttribute('aria-hidden', 'false');
+            calContainer.removeAttribute('inert');
             dateRangeInput.setAttribute('aria-expanded', 'true');
             if (couponFormCalendarInstance && couponFormCalendarInstance.scrollToToday) {
                 couponFormCalendarInstance.scrollToToday();
@@ -3311,6 +3313,7 @@ const AdminModule = (function() {
         function couponFormCloseCalendar() {
             calContainer.classList.remove('admin-checkout-coupon-form-calendar-container--open');
             calContainer.setAttribute('aria-hidden', 'true');
+            calContainer.setAttribute('inert', '');
             dateRangeInput.setAttribute('aria-expanded', 'false');
         }
 
