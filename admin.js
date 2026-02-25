@@ -3163,6 +3163,14 @@ const AdminModule = (function() {
         codeInput.className = 'admin-checkout-coupon-form-input input-class-1';
         codeInput.placeholder = 'eg. LAUNCH50';
         codeInput.value = coupon ? coupon.code : '';
+        codeInput.addEventListener('input', function() {
+            var pos = this.selectionStart;
+            var cleaned = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (cleaned !== this.value) {
+                this.value = cleaned;
+                this.setSelectionRange(pos - 1, pos - 1);
+            }
+        });
         form.appendChild(couponFormRow('Code', codeInput));
 
         // Description
@@ -3222,6 +3230,9 @@ const AdminModule = (function() {
         valueInput.className = 'admin-checkout-coupon-form-input admin-checkout-coupon-form-input--value input-class-1';
         valueInput.placeholder = '0';
         valueInput.value = coupon ? String(parseInt(coupon.discount_value, 10)) : '';
+        valueInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
         discountWrap.appendChild(valueInput);
 
         discountRow.appendChild(discountWrap);
@@ -3440,6 +3451,9 @@ const AdminModule = (function() {
         usageLimitInput.className = 'admin-checkout-coupon-form-input input-class-1';
         usageLimitInput.placeholder = '0 = unlimited';
         usageLimitInput.value = coupon && parseInt(coupon.usage_limit, 10) > 0 ? String(coupon.usage_limit) : '';
+        usageLimitInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
         form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
 
         var currentStatus = coupon ? coupon.status : 'active';
