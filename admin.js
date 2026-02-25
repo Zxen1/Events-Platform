@@ -3013,6 +3013,299 @@ const AdminModule = (function() {
                 if (message) checkoutMsgEl.textContent = message;
             }).catch(function() {});
         }
+
+        var addCouponBtn = document.getElementById('adminCheckoutCouponAdd');
+        if (addCouponBtn) {
+            addCouponBtn.addEventListener('click', function() {
+                openCheckoutCouponForm(null);
+            });
+        }
+
+        loadCheckoutCoupons();
+    }
+
+    /* --------------------------------------------------------------------------
+       CHECKOUT COUPON MANAGEMENT
+       -------------------------------------------------------------------------- */
+
+    var checkoutCoupons = [];
+
+    function loadCheckoutCoupons() {
+        var list = document.getElementById('adminCheckoutCouponList');
+        if (!list) return;
+        fetch('/gateway.php?action=get-checkout-coupons')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) throw new Error(data.message || 'Failed to load coupons');
+                checkoutCoupons = data.coupons || [];
+                renderCheckoutCouponList();
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load checkout coupons:', err);
+            });
+    }
+
+    function renderCheckoutCouponList() {
+        var list = document.getElementById('adminCheckoutCouponList');
+        if (!list) return;
+        list.innerHTML = '';
+
+        if (!checkoutCoupons.length) {
+            var empty = document.createElement('div');
+            empty.className = 'admin-checkout-coupon-empty-text';
+            empty.textContent = 'No coupon codes yet.';
+            list.appendChild(empty);
+            return;
+        }
+
+        checkoutCoupons.forEach(function(coupon) {
+            list.appendChild(buildCheckoutCouponCard(coupon));
+        });
+    }
+
+    function buildCheckoutCouponCard(coupon) {
+        var card = document.createElement('div');
+        card.className = 'admin-checkout-coupon-card';
+        card.dataset.id = coupon.id;
+
+        var codeText = document.createElement('div');
+        codeText.className = 'admin-checkout-coupon-card-code-text';
+        codeText.textContent = coupon.code;
+        card.appendChild(codeText);
+
+        var discountStr = coupon.discount_type === 'percent'
+            ? coupon.discount_value + '% off'
+            : '$' + parseFloat(coupon.discount_value).toFixed(2) + ' off';
+        var descText = document.createElement('div');
+        descText.className = 'admin-checkout-coupon-card-desc-text';
+        descText.textContent = (coupon.description ? coupon.description + ' · ' : '') + discountStr;
+        card.appendChild(descText);
+
+        var dateStr = '';
+        if (coupon.valid_from || coupon.valid_until) {
+            dateStr = (coupon.valid_from || '—') + ' – ' + (coupon.valid_until || '—') + ' · ';
+        }
+        var limitStr = parseInt(coupon.usage_limit, 10) > 0 ? String(coupon.usage_limit) : 'unlimited';
+        var usageText = document.createElement('div');
+        usageText.className = 'admin-checkout-coupon-card-usage-text';
+        usageText.textContent = dateStr + 'Used ' + coupon.usage_count + ' / ' + limitStr;
+        card.appendChild(usageText);
+
+        var actionsRow = document.createElement('div');
+        actionsRow.className = 'admin-checkout-coupon-card-actions-row';
+
+        var statusText = document.createElement('span');
+        var statusLabels = { active: 'Active', expired: 'Expired', disabled: 'Disabled' };
+        statusText.className = 'admin-checkout-coupon-card-status-text admin-checkout-coupon-card-status-text--' + coupon.status;
+        statusText.textContent = statusLabels[coupon.status] || coupon.status;
+        actionsRow.appendChild(statusText);
+
+        var editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'admin-checkout-coupon-card-edit-button button-class-2';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function() {
+            openCheckoutCouponForm(coupon);
+        });
+        actionsRow.appendChild(editBtn);
+
+        if (coupon.status !== 'expired') {
+            var isDisabled = coupon.status === 'disabled';
+            var toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'admin-checkout-coupon-card-' + (isDisabled ? 'enable' : 'disable') + '-button button-class-2';
+            toggleBtn.textContent = isDisabled ? 'Enable' : 'Disable';
+            toggleBtn.addEventListener('click', function() {
+                saveCheckoutCoupon({ id: coupon.id, status: isDisabled ? 'active' : 'disabled' });
+            });
+            actionsRow.appendChild(toggleBtn);
+        }
+
+        card.appendChild(actionsRow);
+        return card;
+    }
+
+    function openCheckoutCouponForm(coupon) {
+        var container = document.querySelector('.admin-checkout-coupon-container');
+        if (!container) return;
+
+        var existingForm = container.querySelector('.admin-checkout-coupon-form');
+        if (existingForm) existingForm.remove();
+
+        var form = document.createElement('div');
+        form.className = 'admin-checkout-coupon-form';
+
+        function couponFormRow(labelText, inputEl) {
+            var row = document.createElement('div');
+            row.className = 'admin-checkout-coupon-form-row';
+            var sub = document.createElement('div');
+            sub.className = 'admin-checkout-coupon-form-sublabel';
+            sub.textContent = labelText;
+            row.appendChild(sub);
+            row.appendChild(inputEl);
+            return row;
+        }
+
+        var codeInput = document.createElement('input');
+        codeInput.type = 'text';
+        codeInput.className = 'admin-checkout-coupon-form-input input-class-1';
+        codeInput.placeholder = 'eg. LAUNCH50';
+        codeInput.value = coupon ? coupon.code : '';
+        form.appendChild(couponFormRow('Code', codeInput));
+
+        var descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.className = 'admin-checkout-coupon-form-input input-class-1';
+        descInput.placeholder = 'Internal note (optional)';
+        descInput.value = coupon ? (coupon.description || '') : '';
+        form.appendChild(couponFormRow('Description', descInput));
+
+        var discountRow = document.createElement('div');
+        discountRow.className = 'admin-checkout-coupon-form-row';
+        var discountSub = document.createElement('div');
+        discountSub.className = 'admin-checkout-coupon-form-sublabel';
+        discountSub.textContent = 'Discount';
+        discountRow.appendChild(discountSub);
+
+        var discountWrap = document.createElement('div');
+        discountWrap.className = 'admin-checkout-coupon-form-discount-wrap';
+
+        var typeToggle = document.createElement('div');
+        typeToggle.className = 'admin-checkout-coupon-form-type-toggle';
+
+        var pctBtn = document.createElement('button');
+        pctBtn.type = 'button';
+        pctBtn.className = 'admin-checkout-coupon-form-type-btn';
+        pctBtn.textContent = '%';
+
+        var fixedBtn = document.createElement('button');
+        fixedBtn.type = 'button';
+        fixedBtn.className = 'admin-checkout-coupon-form-type-btn';
+        fixedBtn.textContent = '$';
+
+        var currentDiscountType = coupon ? coupon.discount_type : 'percent';
+
+        function updateDiscountTypeToggle() {
+            if (currentDiscountType === 'percent') {
+                pctBtn.classList.add('admin-checkout-coupon-form-type-btn--active');
+                fixedBtn.classList.remove('admin-checkout-coupon-form-type-btn--active');
+            } else {
+                fixedBtn.classList.add('admin-checkout-coupon-form-type-btn--active');
+                pctBtn.classList.remove('admin-checkout-coupon-form-type-btn--active');
+            }
+        }
+        updateDiscountTypeToggle();
+
+        pctBtn.addEventListener('click', function() { currentDiscountType = 'percent'; updateDiscountTypeToggle(); });
+        fixedBtn.addEventListener('click', function() { currentDiscountType = 'fixed'; updateDiscountTypeToggle(); });
+
+        typeToggle.appendChild(pctBtn);
+        typeToggle.appendChild(fixedBtn);
+        discountWrap.appendChild(typeToggle);
+
+        var valueInput = document.createElement('input');
+        valueInput.type = 'text';
+        valueInput.className = 'admin-checkout-coupon-form-input admin-checkout-coupon-form-input--value input-class-1';
+        valueInput.placeholder = '0';
+        valueInput.value = coupon ? (coupon.discount_value || '') : '';
+        discountWrap.appendChild(valueInput);
+
+        discountRow.appendChild(discountWrap);
+        form.appendChild(discountRow);
+
+        var validFromInput = document.createElement('input');
+        validFromInput.type = 'date';
+        validFromInput.className = 'admin-checkout-coupon-form-input input-class-1';
+        validFromInput.value = coupon && coupon.valid_from ? coupon.valid_from : '';
+        form.appendChild(couponFormRow('Valid From', validFromInput));
+
+        var validUntilInput = document.createElement('input');
+        validUntilInput.type = 'date';
+        validUntilInput.className = 'admin-checkout-coupon-form-input input-class-1';
+        validUntilInput.value = coupon && coupon.valid_until ? coupon.valid_until : '';
+        form.appendChild(couponFormRow('Valid Until', validUntilInput));
+
+        var usageLimitInput = document.createElement('input');
+        usageLimitInput.type = 'text';
+        usageLimitInput.className = 'admin-checkout-coupon-form-input input-class-1';
+        usageLimitInput.placeholder = '0 = unlimited';
+        usageLimitInput.value = coupon ? String(coupon.usage_limit) : '0';
+        form.appendChild(couponFormRow('Usage Limit', usageLimitInput));
+
+        var statusMenu = null;
+        if (coupon) {
+            statusMenu = document.createElement('select');
+            statusMenu.className = 'admin-checkout-coupon-form-menu input-class-1';
+            ['active', 'expired', 'disabled'].forEach(function(s) {
+                var opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+                if (coupon.status === s) opt.selected = true;
+                statusMenu.appendChild(opt);
+            });
+            form.appendChild(couponFormRow('Status', statusMenu));
+        }
+
+        var btnRow = document.createElement('div');
+        btnRow.className = 'admin-checkout-coupon-form-btn-row';
+
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'admin-checkout-coupon-form-save-button button-class-3';
+        saveBtn.textContent = 'Save';
+        saveBtn.addEventListener('click', function() {
+            var code = codeInput.value.trim().toUpperCase();
+            if (!code) { codeInput.focus(); return; }
+            var val = parseFloat(valueInput.value);
+            if (isNaN(val) || val <= 0) { valueInput.focus(); return; }
+
+            var payload = {
+                code: code,
+                description: descInput.value.trim(),
+                discount_type: currentDiscountType,
+                discount_value: val,
+                valid_from: validFromInput.value || null,
+                valid_until: validUntilInput.value || null,
+                usage_limit: parseInt(usageLimitInput.value, 10) || 0,
+                status: statusMenu ? statusMenu.value : 'active'
+            };
+            if (coupon && coupon.id) payload.id = coupon.id;
+            saveCheckoutCoupon(payload);
+            form.remove();
+        });
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'admin-checkout-coupon-form-cancel-button button-class-2';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', function() { form.remove(); });
+
+        btnRow.appendChild(saveBtn);
+        btnRow.appendChild(cancelBtn);
+        form.appendChild(btnRow);
+
+        var addBtn = document.getElementById('adminCheckoutCouponAdd');
+        if (addBtn) {
+            container.insertBefore(form, addBtn);
+        } else {
+            container.appendChild(form);
+        }
+    }
+
+    function saveCheckoutCoupon(payload) {
+        fetch('/gateway.php?action=save-checkout-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) throw new Error(data.message || 'Failed to save coupon');
+            loadCheckoutCoupons();
+        })
+        .catch(function(err) {
+            console.error('[Admin] Failed to save checkout coupon:', err);
+        });
     }
 
     /* --------------------------------------------------------------------------

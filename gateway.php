@@ -56,6 +56,8 @@ $map = [
   'get-post-media' => $connectorDir . '/get-post-media.php',
   'restore-post' => $connectorDir . '/restore-post.php',
   'payment-order' => $connectorDir . '/payment-order.php',
+  'get-checkout-coupons' => $connectorDir . '/get-checkout-coupons.php',
+  'save-checkout-coupon' => $connectorDir . '/save-checkout-coupon.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
