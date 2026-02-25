@@ -3167,8 +3167,11 @@ const AdminModule = (function() {
             var pos = this.selectionStart;
             var cleaned = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
             if (cleaned !== this.value) {
+                var diff = this.value.length - cleaned.length;
                 this.value = cleaned;
-                this.setSelectionRange(pos - 1, pos - 1);
+                this.setSelectionRange(pos - diff, pos - diff);
+            } else {
+                this.value = cleaned;
             }
         });
         form.appendChild(couponFormRow('Code', codeInput));
