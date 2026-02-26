@@ -6838,16 +6838,7 @@ const MemberModule = (function() {
             }
             
             // Build user object
-            currentUser = {
-                id: payload.id || null,
-                name: name,
-                email: email,
-                emailNormalized: email.toLowerCase(),
-                username: email,
-                avatar: payload.avatar_file || '',
-                type: 'member',
-                isAdmin: false
-            };
+            currentUser = buildUserObject(payload, email);
             
             storeCurrent(currentUser);
             render();
