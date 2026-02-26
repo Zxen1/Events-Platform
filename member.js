@@ -2510,7 +2510,6 @@ const MemberModule = (function() {
 
     /* --------------------------------------------------------------------------
        FORMPICKER (Category/Subcategory selection)
-       Copied from forms.js, using member-formpicker-menu classes from member.css
        -------------------------------------------------------------------------- */
     
     var formpickerLoaded = false;
