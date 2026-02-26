@@ -81,7 +81,7 @@ if (!$template) fail(404, 'Email template not found: ' . $message_key);
 
 $settingsStmt = $mysqli->prepare(
   "SELECT setting_key, setting_value FROM admin_settings
-   WHERE setting_key IN ('support_email', 'website_name')"
+   WHERE setting_key IN ('support_email', 'website_name', 'email_logo', 'folder_system_images')"
 );
 $settingsStmt->execute();
 $settingsResult = $settingsStmt->get_result();
@@ -90,8 +90,14 @@ while ($row = $settingsResult->fetch_assoc()) {
   $siteSettings[$row['setting_key']] = $row['setting_value'];
 }
 $settingsStmt->close();
-$fromEmail = !empty($siteSettings['support_email']) ? $siteSettings['support_email'] : 'support@funmap.com';
-$fromName  = !empty($siteSettings['website_name'])  ? $siteSettings['website_name']  : 'FunMap';
+$fromEmail   = !empty($siteSettings['support_email'])      ? $siteSettings['support_email']      : 'support@funmap.com';
+$fromName    = !empty($siteSettings['website_name'])       ? $siteSettings['website_name']       : 'FunMap';
+$logoFolder  = rtrim($siteSettings['folder_system_images'] ?? '', '/');
+$logoFile    = $siteSettings['email_logo'] ?? '';
+$logoUrl     = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+$logoHeader  = $logoUrl
+  ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>'
+  : '';
 
 $subject = $template['message_name'];
 $body    = $template['message_text'];
@@ -130,7 +136,7 @@ try {
 
   if ($template['supports_html']) {
     $mail->isHTML(true);
-    $mail->Body    = $body;
+    $mail->Body    = $logoHeader ? preg_replace('/(<div[^>]*font-family[^>]*>)/i', '$1' . $logoHeader, $body, 1) : $body;
     $mail->AltBody = strip_tags($body);
   } else {
     $mail->isHTML(false);
