@@ -31,8 +31,8 @@ if ($configPath === null) {
 
 require_once $configPath;
 
-function verify_json_fail($msg) {
-    echo json_encode(['success' => false, 'message' => $msg], JSON_UNESCAPED_SLASHES);
+function verify_json_fail($key) {
+    echo json_encode(['success' => false, 'error_key' => $key, 'message' => $key], JSON_UNESCAPED_SLASHES);
     exit;
 }
 
@@ -128,10 +128,14 @@ try {
             verify_json_fail('missing_code');
         }
 
-        // Use PDO (config may provide $pdo or constants for PDO DSN)
         $pdo = null;
         if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
             $pdo = $GLOBALS['pdo'];
+        } elseif (defined('DB_DSN')) {
+            $pdo = new PDO(DB_DSN, defined('DB_USER') ? DB_USER : null, defined('DB_PASS') ? DB_PASS : null, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
         } elseif (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
             $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', DB_HOST, DB_NAME);
             $pdo = new PDO($dsn, DB_USER, defined('DB_PASS') ? DB_PASS : null, [
