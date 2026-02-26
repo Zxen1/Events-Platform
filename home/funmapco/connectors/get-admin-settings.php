@@ -399,6 +399,7 @@ try {
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_coupons'");
         if ($stmt->rowCount() > 0) {
+            $pdo->exec("UPDATE `checkout_coupons` SET `status` = 'expired' WHERE `status` = 'active' AND `valid_until` IS NOT NULL AND `valid_until` < CURDATE()");
             $stmt = $pdo->query('SELECT `id`, `code`, `description`, `discount_type`, `discount_value`, `valid_from`, `valid_until`, `usage_limit`, `one_per_member`, `usage_count`, `status`, `created_at` FROM `checkout_coupons` ORDER BY `created_at` DESC');
             $couponRows = $stmt->fetchAll();
             $coupons = [];

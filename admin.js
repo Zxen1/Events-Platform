@@ -3153,9 +3153,6 @@ const AdminModule = (function() {
 
         var today = new Date().toISOString().slice(0, 10);
         var effectiveStatus = coupon.status;
-        if (effectiveStatus === 'active' && coupon.valid_until && today > coupon.valid_until) {
-            effectiveStatus = 'expired';
-        }
         if (effectiveStatus === 'active' && coupon.valid_from && today < coupon.valid_from) {
             effectiveStatus = 'pending';
         }
