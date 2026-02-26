@@ -76,11 +76,8 @@ $samples = [
 <?php foreach ($templates as $t):
   $body = $t['message_text'];
   if ($logoUrl) {
-    $body = preg_replace(
-      '/<div style="background:#222;padding:24px;text-align:center;">.*?<\/div>/s',
-      '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-height:60px;max-width:100%;"></div>',
-      $body
-    );
+    $logoHeader = '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-height:60px;max-width:100%;"></div>';
+    $body = preg_replace('/(<div[^>]*font-family[^>]*>)/i', '$1' . $logoHeader, $body, 1);
   }
   $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
   if (is_array($allowed)) {
