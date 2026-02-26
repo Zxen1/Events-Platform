@@ -65,27 +65,38 @@ function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exi
 
 function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username) {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
-  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) return;
+  $msgKey = 'msg_email_welcome';
+  $logFailed = function() use ($mysqli, $member_id, $username, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('issss', $member_id, $username, $msgKey, $to_email, $s); $l->execute(); $l->close(); }
+  };
   $stmt = $mysqli->prepare(
     "SELECT message_name, message_text, supports_html FROM admin_messages
      WHERE message_key = 'msg_email_welcome' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1"
   );
-  if (!$stmt) return;
+  if (!$stmt) { $logFailed(); return; }
   $stmt->execute();
   $result = $stmt->get_result();
   $template = $result->fetch_assoc();
   $stmt->close();
-  if (!$template) return;
-  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name')");
+  if (!$template) { $logFailed(); return; }
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
   $siteSettings = [];
   if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
-  $fromEmail = !empty($siteSettings['support_email']) ? $siteSettings['support_email'] : 'support@funmap.com';
-  $fromName  = !empty($siteSettings['website_name'])  ? $siteSettings['website_name']  : 'FunMap';
+  $fromEmail  = !empty($siteSettings['support_email']) ? $siteSettings['support_email'] : 'support@funmap.com';
+  $fromName   = !empty($siteSettings['website_name'])  ? $siteSettings['website_name']  : 'FunMap';
+  $logoFolder = rtrim($siteSettings['folder_system_images'] ?? '', '/');
+  $logoFile   = $siteSettings['email_logo'] ?? '';
+  $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+  $logoHeader = $logoUrl
+    ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>'
+    : '';
   $safeName = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
   $subject  = str_replace('{name}', $safeName, $template['message_name']);
   $body     = str_replace('{name}', $safeName, $template['message_text']);
-  $docRoot  = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
-  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) return;
+  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed(); return; }
+  $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed(); return; }
   require_once $docRoot . '/libs/phpmailer/Exception.php';
   require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
   require_once $docRoot . '/libs/phpmailer/SMTP.php';
@@ -105,7 +116,7 @@ function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username)
     $mail->Subject = $subject;
     if ($template['supports_html']) {
       $mail->isHTML(true);
-      $mail->Body    = $body;
+      $mail->Body    = $logoHeader ? preg_replace('/(<div[^>]*font-family[^>]*>)/i', '$1' . $logoHeader, $body, 1) : $body;
       $mail->AltBody = strip_tags($body);
     } else {
       $mail->isHTML(false);
@@ -116,7 +127,6 @@ function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username)
   } catch (\PHPMailer\PHPMailer\Exception $e) {
     $status = 'failed';
   }
-  $msgKey = 'msg_email_welcome';
   $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
   if ($log) {
     $log->bind_param('issss', $member_id, $username, $msgKey, $to_email, $status);
