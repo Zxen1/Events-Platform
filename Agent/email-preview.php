@@ -13,6 +13,22 @@ if ($configPath === null) { die('Cannot find config-db.php'); }
 require_once $configPath;
 
 $stmt = $mysqli->prepare(
+  "SELECT setting_key, setting_value FROM admin_settings
+   WHERE setting_key IN ('big_logo', 'folder_system_images')"
+);
+$stmt->execute();
+$res = $stmt->get_result();
+$settings = [];
+while ($row = $res->fetch_assoc()) {
+  $settings[$row['setting_key']] = $row['setting_value'];
+}
+$stmt->close();
+
+$logoFolder = rtrim($settings['folder_system_images'] ?? '', '/');
+$logoFile   = $settings['big_logo'] ?? '';
+$logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+
+$stmt = $mysqli->prepare(
   "SELECT message_name, message_key, message_text, placeholders
    FROM admin_messages
    WHERE container_key = 'msg_email' AND is_active = 1
@@ -59,6 +75,13 @@ $samples = [
   <br>
 <?php foreach ($templates as $t):
   $body = $t['message_text'];
+  if ($logoUrl) {
+    $body = preg_replace(
+      '/<div style="background:#222;padding:24px;text-align:center;">.*?<\/div>/s',
+      '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-height:60px;max-width:260px;"></div>',
+      $body
+    );
+  }
   $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
   if (is_array($allowed)) {
     foreach ($allowed as $key) {
