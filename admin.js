@@ -3374,6 +3374,9 @@ const AdminModule = (function() {
         }
 
         function couponFormCloseCalendar() {
+            if (calContainer.contains(document.activeElement)) {
+                dateRangeInput.focus();
+            }
             calContainer.classList.remove('admin-checkout-coupon-form-calendar-container--open');
             calContainer.setAttribute('aria-hidden', 'true');
             calContainer.setAttribute('inert', '');
