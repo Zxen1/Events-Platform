@@ -124,8 +124,26 @@ try {
   }
 
   $mail->send();
+
+  $status = 'sent';
+  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, message_key, to_email, status) VALUES (?, ?, ?, ?)');
+  if ($stmt) {
+    $member_id = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
+    $stmt->bind_param('isss', $member_id, $message_key, $to_email, $status);
+    $stmt->execute();
+    $stmt->close();
+  }
+
   ok(['to' => $to_email]);
 } catch (Exception $e) {
+  $status = 'failed';
+  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, message_key, to_email, status) VALUES (?, ?, ?, ?)');
+  if ($stmt) {
+    $member_id = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
+    $stmt->bind_param('isss', $member_id, $message_key, $to_email, $status);
+    $stmt->execute();
+    $stmt->close();
+  }
   fail(500, 'Email failed: ' . $mail->ErrorInfo);
 }
 ?>
