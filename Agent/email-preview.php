@@ -14,7 +14,7 @@ require_once $configPath;
 
 $stmt = $mysqli->prepare(
   "SELECT setting_key, setting_value FROM admin_settings
-   WHERE setting_key IN ('big_logo', 'folder_system_images')"
+   WHERE setting_key IN ('email_logo', 'folder_system_images')"
 );
 $stmt->execute();
 $res = $stmt->get_result();
@@ -25,7 +25,7 @@ while ($row = $res->fetch_assoc()) {
 $stmt->close();
 
 $logoFolder = rtrim($settings['folder_system_images'] ?? '', '/');
-$logoFile   = $settings['big_logo'] ?? '';
+$logoFile   = $settings['email_logo'] ?? '';
 $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
 
 $stmt = $mysqli->prepare(
