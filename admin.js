@@ -3151,10 +3151,19 @@ const AdminModule = (function() {
         var actionsRow = document.createElement('div');
         actionsRow.className = 'admin-checkout-coupon-card-actions-row';
 
+        var today = new Date().toISOString().slice(0, 10);
+        var effectiveStatus = coupon.status;
+        if (effectiveStatus === 'active' && coupon.valid_until && today > coupon.valid_until) {
+            effectiveStatus = 'expired';
+        }
+        if (effectiveStatus === 'active' && coupon.valid_from && today < coupon.valid_from) {
+            effectiveStatus = 'pending';
+        }
+
         var statusText = document.createElement('span');
-        var statusLabels = { active: 'Active', expired: 'Expired', disabled: 'Disabled' };
-        statusText.className = 'admin-checkout-coupon-card-status-text admin-checkout-coupon-card-status-text--' + coupon.status;
-        statusText.textContent = statusLabels[coupon.status] || coupon.status;
+        var statusLabels = { active: 'Active', expired: 'Expired', disabled: 'Disabled', pending: 'Not yet active' };
+        statusText.className = 'admin-checkout-coupon-card-status-text admin-checkout-coupon-card-status-text--' + effectiveStatus;
+        statusText.textContent = statusLabels[effectiveStatus] || effectiveStatus;
         actionsRow.appendChild(statusText);
 
         var editBtn = document.createElement('button');
@@ -3176,7 +3185,7 @@ const AdminModule = (function() {
         });
         actionsRow.appendChild(editBtn);
 
-        if (coupon.status !== 'expired') {
+        if (effectiveStatus !== 'expired') {
             var isDisabled = coupon.status === 'disabled';
             var toggleBtn = document.createElement('button');
             toggleBtn.type = 'button';
