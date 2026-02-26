@@ -78,7 +78,7 @@ $samples = [
   if ($logoUrl) {
     $body = preg_replace(
       '/<div style="background:#222;padding:24px;text-align:center;">.*?<\/div>/s',
-      '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-height:60px;max-width:260px;"></div>',
+      '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-width:100%;"></div>',
       $body
     );
   }
