@@ -32,6 +32,19 @@ if ($configPath === null) {
 
 require_once $configPath;
 
+$authCandidates = [
+  __DIR__ . '/../config/config-auth.php',
+  dirname(__DIR__) . '/config/config-auth.php',
+  dirname(__DIR__, 2) . '/config/config-auth.php',
+  dirname(__DIR__, 3) . '/../config/config-auth.php',
+  dirname(__DIR__) . '/../config/config-auth.php',
+  __DIR__ . '/config-auth.php',
+];
+$authPath = null;
+foreach ($authCandidates as $candidate) {
+  if (is_file($candidate)) { $authPath = $candidate; break; }
+}
+if ($authPath) require_once $authPath;
 
 function fail($code, $msg){
   http_response_code($code);
@@ -49,6 +62,68 @@ function fail_key_ph($code, $messageKey, $placeholders){
   exit;
 }
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}
+
+function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username) {
+  global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
+  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) return;
+  $stmt = $mysqli->prepare(
+    "SELECT message_name, message_text, supports_html FROM admin_messages
+     WHERE message_key = 'msg_email_welcome' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1"
+  );
+  if (!$stmt) return;
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $template = $result->fetch_assoc();
+  $stmt->close();
+  if (!$template) return;
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name')");
+  $siteSettings = [];
+  if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
+  $fromEmail = !empty($siteSettings['support_email']) ? $siteSettings['support_email'] : 'support@funmap.com';
+  $fromName  = !empty($siteSettings['website_name'])  ? $siteSettings['website_name']  : 'FunMap';
+  $safeName = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
+  $subject  = str_replace('{name}', $safeName, $template['message_name']);
+  $body     = str_replace('{name}', $safeName, $template['message_text']);
+  $docRoot  = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) return;
+  require_once $docRoot . '/libs/phpmailer/Exception.php';
+  require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
+  require_once $docRoot . '/libs/phpmailer/SMTP.php';
+  $mail   = new \PHPMailer\PHPMailer\PHPMailer(true);
+  $status = 'failed';
+  try {
+    $mail->isSMTP();
+    $mail->Host       = $SMTP_HOST;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $SMTP_USERNAME;
+    $mail->Password   = $SMTP_PASSWORD;
+    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+    $mail->Port       = 465;
+    $mail->CharSet    = 'UTF-8';
+    $mail->setFrom($fromEmail, $fromName);
+    $mail->addAddress($to_email, $to_name);
+    $mail->Subject = $subject;
+    if ($template['supports_html']) {
+      $mail->isHTML(true);
+      $mail->Body    = $body;
+      $mail->AltBody = strip_tags($body);
+    } else {
+      $mail->isHTML(false);
+      $mail->Body = strip_tags($body);
+    }
+    $mail->send();
+    $status = 'sent';
+  } catch (\PHPMailer\PHPMailer\Exception $e) {
+    $status = 'failed';
+  }
+  $msgKey = 'msg_email_welcome';
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
+  if ($log) {
+    $log->bind_param('issss', $member_id, $username, $msgKey, $to_email, $status);
+    $log->execute();
+    $log->close();
+  }
+}
 
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
@@ -164,6 +239,8 @@ $insert->bind_param('ssssss',$email,$hash,$username,$avatar,$candidateKey,$count
 if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
 $id = $insert->insert_id;
 $insert->close();
+
+send_welcome_email($mysqli, $email, $username, $id, $username);
 
 // If avatar_file is present, upload now (final filename), then update member row
 if ($hasAvatarFile) {

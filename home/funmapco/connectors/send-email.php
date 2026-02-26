@@ -145,22 +145,24 @@ try {
 
   $mail->send();
 
-  $status = 'sent';
-  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, message_key, to_email, status) VALUES (?, ?, ?, ?)');
+  $status      = 'sent';
+  $member_id   = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
+  $username_log = trim($_POST['username'] ?? '');
+  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
   if ($stmt) {
-    $member_id = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
-    $stmt->bind_param('isss', $member_id, $message_key, $to_email, $status);
+    $stmt->bind_param('issss', $member_id, $username_log, $message_key, $to_email, $status);
     $stmt->execute();
     $stmt->close();
   }
 
   ok(['to' => $to_email]);
 } catch (Exception $e) {
-  $status = 'failed';
-  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, message_key, to_email, status) VALUES (?, ?, ?, ?)');
+  $status      = 'failed';
+  $member_id   = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
+  $username_log = trim($_POST['username'] ?? '');
+  $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
   if ($stmt) {
-    $member_id = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
-    $stmt->bind_param('isss', $member_id, $message_key, $to_email, $status);
+    $stmt->bind_param('issss', $member_id, $username_log, $message_key, $to_email, $status);
     $stmt->execute();
     $stmt->close();
   }
