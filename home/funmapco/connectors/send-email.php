@@ -79,6 +79,20 @@ $stmt->close();
 
 if (!$template) fail(404, 'Email template not found: ' . $message_key);
 
+$settingsStmt = $mysqli->prepare(
+  "SELECT setting_key, setting_value FROM admin_settings
+   WHERE setting_key IN ('support_email', 'website_name')"
+);
+$settingsStmt->execute();
+$settingsResult = $settingsStmt->get_result();
+$siteSettings = [];
+while ($row = $settingsResult->fetch_assoc()) {
+  $siteSettings[$row['setting_key']] = $row['setting_value'];
+}
+$settingsStmt->close();
+$fromEmail = !empty($siteSettings['support_email']) ? $siteSettings['support_email'] : 'support@funmap.com';
+$fromName  = !empty($siteSettings['website_name'])  ? $siteSettings['website_name']  : 'FunMap';
+
 $subject = $template['message_name'];
 $body    = $template['message_text'];
 
@@ -110,7 +124,7 @@ try {
   $mail->Port       = 465;
   $mail->CharSet    = 'UTF-8';
 
-  $mail->setFrom('support@funmap.com', 'FunMap');
+  $mail->setFrom($fromEmail, $fromName);
   $mail->addAddress($to_email, $to_name);
   $mail->Subject = $subject;
 
