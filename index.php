@@ -211,12 +211,12 @@ if (empty($ogTitle)) {
   <meta name="twitter:image" content="<?php echo $ogImage; ?>">
   
   <!-- Favicons -->
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" href="/logos/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/logos/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logos/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="FunMap" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="manifest" href="/logos/site.webmanifest" />
   
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-K1FG6B44LF"></script>
