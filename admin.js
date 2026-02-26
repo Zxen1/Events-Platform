@@ -4398,6 +4398,7 @@ const AdminModule = (function() {
         // Initialize image pickers (using SystemImagePickerComponent from components file)
         initImagePicker('adminBigLogoPicker', 'big_logo');
         initImagePicker('adminSmallLogoPicker', 'small_logo');
+        initImagePicker('adminEmailLogoPicker', 'email_logo');
         initImagePicker('adminFaviconPicker', 'favicon');
         initImagePicker('adminIconFilterPicker', 'icon_filter');
         initImagePicker('adminIconRecentPicker', 'icon_recent');

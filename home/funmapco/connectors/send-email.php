@@ -116,9 +116,9 @@ use PHPMailer\PHPMailer\Exception;
 $mail = new PHPMailer(true);
 try {
   $mail->isSMTP();
-  $mail->Host       = 'mail.funmap.com';
+  $mail->Host       = $SMTP_HOST;
   $mail->SMTPAuth   = true;
-  $mail->Username   = 'support@funmap.com';
+  $mail->Username   = $SMTP_USERNAME;
   $mail->Password   = $SMTP_PASSWORD;
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
   $mail->Port       = 465;

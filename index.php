@@ -522,6 +522,10 @@ if (empty($ogTitle)) {
               <div id="adminSmallLogoPicker" data-setting-key="small_logo"></div>
             </div>
             <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Email Logo</label>
+              <div id="adminEmailLogoPicker" data-setting-key="email_logo"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
               <label class="admin-settings-field-label">Favicon</label>
               <div id="adminFaviconPicker" data-setting-key="favicon"></div>
             </div>
