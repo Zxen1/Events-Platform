@@ -3324,8 +3324,8 @@ const MemberModule = (function() {
                 applyCouponToDisplay();
                 updatePayButtonLabels();
                 var discountStr = data.discount_type === 'percent'
-                    ? data.discount_value + '% off'
-                    : CurrencyComponent.formatWithSymbol(String(data.discount_value), siteCurrency || null, { trimZeroDecimals: false }) + ' off';
+                    ? data.discount_value + '%'
+                    : CurrencyComponent.formatWithSymbol(String(data.discount_value), siteCurrency || null, { trimZeroDecimals: false });
                 getMessage('msg_coupon_applied', { code: data.code, discount: discountStr }, false).then(function(msg) {
                     setCouponMessage(msg || (data.code + ' applied \u2014 ' + discountStr), 'success');
                 });

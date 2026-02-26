@@ -563,8 +563,11 @@ const HeaderModule = (function() {
                 return;
             }
 
-            // If open and at default: no action (admin button never closes)
-            if (adminIsOpen) return;
+            // If open and at default: close
+            if (adminIsOpen) {
+                App.emit('panel:toggle', { panel: 'admin', show: false });
+                return;
+            }
 
             // Closed: open
             App.emit('panel:toggle', { panel: 'admin', show: true });
