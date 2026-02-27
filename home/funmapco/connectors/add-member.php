@@ -74,12 +74,12 @@ function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username)
     "SELECT message_name, message_text, supports_html FROM admin_messages
      WHERE message_key = 'msg_email_welcome' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1"
   );
-  if (!$stmt) { $logFailed(); return; }
+  if (!$stmt) { $logFailed('DB prepare failed for template query'); return; }
   $stmt->execute();
   $result = $stmt->get_result();
   $template = $result->fetch_assoc();
   $stmt->close();
-  if (!$template) { $logFailed(); return; }
+  if (!$template) { $logFailed('Email template not found or inactive'); return; }
   $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
   $siteSettings = [];
   if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
@@ -94,9 +94,9 @@ function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username)
   $safeName = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
   $subject  = str_replace('{name}', $safeName, $template['message_name']);
   $body     = str_replace('{name}', $safeName, $template['message_text']);
-  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed(); return; }
+  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
   $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
-  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed(); return; }
+  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed('PHPMailer not found at: ' . $docRoot . '/libs/phpmailer/PHPMailer.php'); return; }
   require_once $docRoot . '/libs/phpmailer/Exception.php';
   require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
   require_once $docRoot . '/libs/phpmailer/SMTP.php';
