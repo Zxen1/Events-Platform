@@ -889,6 +889,11 @@ const PostModule = (function() {
     var isShown = panelEl.classList.contains(panelShowClass);
     var isVisible = contentEl.classList.contains(visibleClass);
 
+    // Move focus out before hiding to avoid aria-hidden violation
+    if (document.activeElement && panelEl.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+
     panelEl.setAttribute('aria-hidden', 'true');
 
     // If not shown/visible, there's nothing to animate (already off-screen).
