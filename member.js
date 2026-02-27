@@ -6613,7 +6613,7 @@ const MemberModule = (function() {
         });
     }
 
-    function handleRegister(_transactionId) {
+    function handleRegister(_transactionId, _dismissPaymentOverlay) {
         // Hard block register submit until all required registration fieldsets are complete
         // (also prevents Enter-key submit from bypassing the disabled button).
         if (!isRegisterFormComplete()) {
@@ -6750,8 +6750,8 @@ const MemberModule = (function() {
                     onReady: function() {
                         if (registerSubmitBtn) PaymentSubmitComponent.setLoading(registerSubmitBtn, false);
                     },
-                    onSuccess: function(result) {
-                        handleRegister(result.transactionId);
+                    onSuccess: function(result, dismiss) {
+                        handleRegister(result.transactionId, dismiss);
                     },
                     onCancel: function() {
                         if (registerSubmitBtn) { PaymentSubmitComponent.setLoading(registerSubmitBtn, false); registerSubmitBtn.disabled = false; }
@@ -6844,6 +6844,7 @@ const MemberModule = (function() {
             currentUser = buildUserObject(payload, email);
             
             storeCurrent(currentUser);
+            if (typeof _dismissPaymentOverlay === 'function') _dismissPaymentOverlay();
             render();
             
             getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
@@ -6853,6 +6854,7 @@ const MemberModule = (function() {
             });
             
         }).catch(function(err) {
+            if (typeof _dismissPaymentOverlay === 'function') _dismissPaymentOverlay();
             console.error('Registration failed', err);
             getMessage('msg_auth_register_failed', {}, false).then(function(message) {
                 if (message) {

@@ -13331,6 +13331,23 @@ const PaymentModule = (function () {
         _activeOverlay = null;
     }
 
+    function _showProcessing() {
+        if (!_activeOverlay) return;
+        var box = _activeOverlay.querySelector('.component-payment-box');
+        if (!box) return;
+        box.innerHTML = '';
+        var proc = document.createElement('div');
+        proc.className = 'component-payment-processing';
+        var spinner = document.createElement('div');
+        spinner.className = 'component-payment-processing-spinner';
+        var label = document.createElement('div');
+        label.className = 'component-payment-processing-label';
+        label.textContent = 'Processing\u2026';
+        proc.appendChild(spinner);
+        proc.appendChild(label);
+        box.appendChild(proc);
+    }
+
     /**
      * Charge the user. Shows a modal with Stripe on top and PayPal below.
      *
@@ -13459,10 +13476,11 @@ const PaymentModule = (function () {
                                 order_id:   result.paymentIntent.id,
                             }))
                             .then(function (capRes) {
-                                _removeOverlay();
                                 if (capRes && capRes.success) {
-                                    onSuccess({ transactionId: capRes.transaction_id });
+                                    _showProcessing();
+                                    onSuccess({ transactionId: capRes.transaction_id }, _removeOverlay);
                                 } else {
+                                    _removeOverlay();
                                     onError(new Error(capRes && capRes.message ? capRes.message : 'Stripe capture failed'));
                                 }
                             })
@@ -13497,8 +13515,10 @@ const PaymentModule = (function () {
                                 }))
                                 .then(function (res) {
                                     if (res && res.success) {
-                                        onSuccess({ transactionId: res.transaction_id });
+                                        _showProcessing();
+                                        onSuccess({ transactionId: res.transaction_id }, _removeOverlay);
                                     } else {
+                                        _removeOverlay();
                                         onError(new Error(res && res.message ? res.message : 'PayPal capture failed'));
                                     }
                                 })
