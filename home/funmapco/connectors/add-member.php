@@ -66,9 +66,9 @@ function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exi
 function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username) {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_welcome';
-  $logFailed = function() use ($mysqli, $member_id, $username, $msgKey, $to_email) {
-    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
-    if ($l) { $s = 'failed'; $l->bind_param('issss', $member_id, $username, $msgKey, $to_email, $s); $l->execute(); $l->close(); }
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $username, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
   };
   $stmt = $mysqli->prepare(
     "SELECT message_name, message_text, supports_html FROM admin_messages
@@ -126,10 +126,12 @@ function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username)
     $status = 'sent';
   } catch (\PHPMailer\PHPMailer\Exception $e) {
     $status = 'failed';
+    $errorNote = $e->getMessage();
   }
-  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?)');
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
   if ($log) {
-    $log->bind_param('issss', $member_id, $username, $msgKey, $to_email, $status);
+    $logNotes = $status === 'failed' ? ($errorNote ?? null) : null;
+    $log->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $status, $logNotes);
     $log->execute();
     $log->close();
   }

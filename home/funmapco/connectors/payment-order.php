@@ -245,7 +245,7 @@ function stripe_create_payment_intent(array $paymentConfig, float $amount, strin
 
 function stripe_retrieve_payment_intent(array $paymentConfig, string $intentId, string &$error): ?array {
     $secretKey = trim($paymentConfig['stripe_secret_key'] ?? '');
-    $ch = curl_init('https://api.stripe.com/v1/payment_intents/' . urlencode($intentId));
+    $ch = curl_init('https://api.stripe.com/v1/payment_intents/' . urlencode($intentId) . '?expand[]=latest_charge');
     curl_setopt_array($ch, [
         CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $secretKey],
         CURLOPT_RETURNTRANSFER => true,
@@ -262,9 +262,10 @@ function stripe_retrieve_payment_intent(array $paymentConfig, string $intentId, 
 }
 
 function extract_stripe_payment_method(array $pi): string {
-    $wallet = $pi['charges']['data'][0]['payment_method_details']['card']['wallet']['type'] ?? '';
-    $brand  = $pi['charges']['data'][0]['payment_method_details']['card']['brand'] ?? '';
-    $type   = $pi['charges']['data'][0]['payment_method_details']['type'] ?? ($pi['payment_method_types'][0] ?? '');
+    $charge = $pi['latest_charge'] ?? ($pi['charges']['data'][0] ?? []);
+    $wallet = $charge['payment_method_details']['card']['wallet']['type'] ?? '';
+    $brand  = $charge['payment_method_details']['card']['brand'] ?? '';
+    $type   = $charge['payment_method_details']['type'] ?? ($pi['payment_method_types'][0] ?? '');
 
     $walletMap = [
         'apple_pay'  => 'APPLE_PAY',
