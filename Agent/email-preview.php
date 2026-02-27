@@ -39,18 +39,25 @@ $result = $stmt->get_result();
 $templates = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+$logoHtml = '';
+if ($logoUrl) {
+  $logoHtml = '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="" style="max-height:60px;max-width:100%;"></div>';
+}
+
 $samples = [
-  'name'       => 'Jane Smith',
-  'title'      => 'Sydney Harbour Fireworks',
-  'tier'       => 'Premium',
-  'view_link'  => 'https://funmap.com',
-  'edit_link'  => 'https://funmap.com',
-  'reset_link' => 'https://funmap.com',
-  'item'       => 'Sydney Harbour Fireworks',
-  'amount'     => 'USD $29.00',
-  'description'=> 'Featured listing — Sydney Harbour Fireworks',
-  'receipt_id' => 'FMP-20260227-00001',
-  'listings'   => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
+  'logo'          => $logoHtml,
+  'name'          => 'Jane Smith',
+  'title'         => 'Sydney Harbour Fireworks',
+  'tier'          => 'Premium',
+  'view_link'     => 'https://funmap.com',
+  'reset_link'    => 'https://funmap.com',
+  'amount'        => '<img src="https://cdn.funmap.com/currencies/usd.png" alt="" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">$29.00',
+  'description'   => 'Featured listing — Sydney Harbour Fireworks',
+  'receipt_id'    => '8271',
+  'listings'      => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
+  'listing_label' => 'listings',
+  'has_have'      => 'have',
+  'is_are'        => 'are',
 ];
 ?>
 <!DOCTYPE html>
@@ -75,10 +82,6 @@ $samples = [
   <br>
 <?php foreach ($templates as $t):
   $body = $t['message_text'];
-  if ($logoUrl) {
-    $logoHeader = '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="FunMap" style="max-height:60px;max-width:100%;"></div>';
-    $body = preg_replace('/(<div[^>]*font-family[^>]*>)/i', '$1' . $logoHeader, $body, 1);
-  }
   $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
   if (is_array($allowed)) {
     foreach ($allowed as $key) {
