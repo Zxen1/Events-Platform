@@ -262,15 +262,36 @@ function stripe_retrieve_payment_intent(array $paymentConfig, string $intentId, 
 }
 
 function extract_stripe_payment_method(array $pi): string {
-    $map = [
-        'card'               => 'CARD',
-        'apple_pay'          => 'APPLE_PAY',
-        'google_pay'         => 'GOOGLE_PAY',
-        'afterpay_clearpay'  => 'AFTERPAY',
-        'link'               => 'LINK',
+    $wallet = $pi['charges']['data'][0]['payment_method_details']['card']['wallet']['type'] ?? '';
+    $brand  = $pi['charges']['data'][0]['payment_method_details']['card']['brand'] ?? '';
+    $type   = $pi['charges']['data'][0]['payment_method_details']['type'] ?? ($pi['payment_method_types'][0] ?? '');
+
+    $walletMap = [
+        'apple_pay'  => 'APPLE_PAY',
+        'google_pay' => 'GOOGLE_PAY',
+        'link'       => 'LINK',
     ];
-    $type = $pi['payment_method_types'][0] ?? '';
-    return $map[$type] ?? (strtoupper($type) ?: 'UNKNOWN');
+    if ($wallet !== '' && isset($walletMap[$wallet])) return $walletMap[$wallet];
+
+    $brandMap = [
+        'visa'       => 'VISA',
+        'mastercard' => 'MASTERCARD',
+        'amex'       => 'AMEX',
+        'discover'   => 'DISCOVER',
+        'diners'     => 'DINERS',
+        'jcb'        => 'JCB',
+        'unionpay'   => 'UNIONPAY',
+    ];
+    if ($brand !== '' && isset($brandMap[$brand])) return $brandMap[$brand];
+    if ($brand !== '') return strtoupper($brand);
+
+    $typeMap = [
+        'card'              => 'CARD',
+        'afterpay_clearpay' => 'AFTERPAY',
+        'klarna'            => 'KLARNA',
+        'affirm'            => 'AFFIRM',
+    ];
+    return $typeMap[$type] ?? (strtoupper($type) ?: 'UNKNOWN');
 }
 
 // ============================================================
