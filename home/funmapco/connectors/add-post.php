@@ -220,6 +220,114 @@ function bind_statement_params(mysqli_stmt $stmt, string $types, ...$params): bo
   return call_user_func_array([$stmt, 'bind_param'], $arguments);
 }
 
+function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode): string {
+  $stmt = $mysqli->prepare(
+    "SELECT option_symbol, option_symbol_position, option_decimal_separator,
+            option_decimal_places, option_thousands_separator, option_filename
+     FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1"
+  );
+  if (!$stmt) return '';
+  $stmt->bind_param('s', $currencyCode);
+  $stmt->execute();
+  $row = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  if (!$row) return '';
+  $decPlaces = (int)$row['option_decimal_places'];
+  $decSep    = $row['option_decimal_separator'] ?: '.';
+  $thousSep  = $row['option_thousands_separator'] ?: ',';
+  $symbol    = $row['option_symbol'] ?: $currencyCode;
+  $position  = $row['option_symbol_position'] ?: 'left';
+  $filename  = $row['option_filename'] ?: '';
+  $formatted = number_format($amount, $decPlaces, $decSep, $thousSep);
+  $number    = $position === 'right' ? $formatted . ' ' . $symbol : $symbol . $formatted;
+  $flagHtml  = '';
+  if ($filename) {
+    $sRes = $mysqli->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'folder_currencies' LIMIT 1");
+    if ($sRes) { $sRow = $sRes->fetch_assoc(); $sRes->free(); $cdnBase = rtrim($sRow['setting_value'] ?? '', '/'); if ($cdnBase) $flagHtml = '<img src="' . htmlspecialchars($cdnBase . '/' . $filename) . '" alt="" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">'; }
+  }
+  return $flagHtml . $number;
+}
+
+function send_post_live_email(mysqli $mysqli, int $member_id, string $member_type, string $to_name, string $post_title, string $post_key, ?int $transaction_id): void {
+  global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
+  $msgKey = 'msg_email_post_live';
+
+  // Look up member email
+  $table = $member_type === 'admin' ? 'admins' : 'members';
+  $eStmt = $mysqli->prepare("SELECT account_email FROM `{$table}` WHERE id = ? LIMIT 1");
+  if (!$eStmt) return;
+  $eStmt->bind_param('i', $member_id);
+  $eStmt->execute();
+  $eRow = $eStmt->get_result()->fetch_assoc();
+  $eStmt->close();
+  if (!$eRow) return;
+  $to_email = $eRow['account_email'];
+
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $to_name, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+  };
+
+  $stmt = $mysqli->prepare("SELECT message_name, message_text, supports_html FROM admin_messages WHERE message_key = 'msg_email_post_live' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1");
+  if (!$stmt) { $logFailed('DB prepare failed for template query'); return; }
+  $stmt->execute();
+  $template = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  if (!$template) { $logFailed('Email template not found or inactive'); return; }
+
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images','website_url')");
+  $siteSettings = [];
+  if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
+  $fromEmail = $siteSettings['support_email'] ?? '';
+  if (!$fromEmail) { $logFailed('support_email not configured in admin_settings'); return; }
+  $fromName  = $siteSettings['website_name'] ?? '';
+  $siteUrl   = rtrim($siteSettings['website_url'] ?? '', '/');
+  if (!$siteUrl) { $logFailed('website_url not configured in admin_settings'); return; }
+  $logoFolder = rtrim($siteSettings['folder_system_images'] ?? '', '/');
+  $logoFile   = $siteSettings['email_logo'] ?? '';
+  $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+  $logoHtml   = $logoUrl ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>' : '';
+
+  $viewLink = $siteUrl . '/post/' . rawurlencode($post_key);
+
+  // Fetch transaction details for receipt
+  $txDesc = ''; $txAmount = 0.0; $txCurrency = 'USD'; $txId = 0;
+  if ($transaction_id !== null && $transaction_id > 0) {
+    $txStmt = $mysqli->prepare('SELECT description, amount, currency, id FROM transactions WHERE id = ? LIMIT 1');
+    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['amount']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; } }
+  }
+  $amountHtml = $txId > 0 ? format_email_amount($mysqli, $txAmount, $txCurrency) : '';
+
+  $safeName  = htmlspecialchars($to_name, ENT_QUOTES, 'UTF-8');
+  $safeTitle = htmlspecialchars($post_title, ENT_QUOTES, 'UTF-8');
+  $safeDesc  = htmlspecialchars($txDesc, ENT_QUOTES, 'UTF-8');
+  $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
+  $body      = str_replace(
+    ['{name}', '{title}', '{view_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
+    $template['message_text']
+  );
+
+  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
+  $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed('PHPMailer not found'); return; }
+  require_once $docRoot . '/libs/phpmailer/Exception.php';
+  require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
+  require_once $docRoot . '/libs/phpmailer/SMTP.php';
+  $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+  $status = 'failed'; $errorNote = null;
+  try {
+    $mail->isSMTP(); $mail->Host = $SMTP_HOST; $mail->SMTPAuth = true; $mail->Username = $SMTP_USERNAME; $mail->Password = $SMTP_PASSWORD;
+    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS; $mail->Port = 465; $mail->CharSet = 'UTF-8';
+    $mail->setFrom($fromEmail, $fromName); $mail->addAddress($to_email, $to_name); $mail->Subject = $subject;
+    if ($template['supports_html']) { $mail->isHTML(true); $mail->Body = $body; $mail->AltBody = strip_tags($body); }
+    else { $mail->isHTML(false); $mail->Body = strip_tags($body); }
+    $mail->send(); $status = 'sent';
+  } catch (\PHPMailer\PHPMailer\Exception $e) { $status = 'failed'; $errorNote = $e->getMessage(); }
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+  if ($log) { $logNotes = $status === 'failed' ? $errorNote : null; $log->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $status, $logNotes); $log->execute(); $log->close(); }
+}
+
 // Accept JSON or multipart form-data.
 $data = null;
 $rawInput = file_get_contents('php://input');
@@ -1447,6 +1555,11 @@ if ($transactionId !== null && $transactionId > 0) {
     $stmtTxLink->execute();
     $stmtTxLink->close();
   }
+}
+
+// Send "Post live" email with receipt (template 701)
+if ($memberId !== null && $memberId > 0 && !$skipPayment) {
+  send_post_live_email($mysqli, $memberId, $memberType, $memberName, $primaryTitle, $postKey, $transactionId);
 }
 
 $msgKey = $mediaIds ? 'msg_post_create_with_images' : 'msg_post_create_success';

@@ -62,6 +62,20 @@ if ($paymentConfigPath === null) {
 }
 $paymentConfig = require $paymentConfigPath;
 
+$authCandidates = [
+    __DIR__ . '/../config/config-auth.php',
+    dirname(__DIR__) . '/config/config-auth.php',
+    dirname(__DIR__, 2) . '/config/config-auth.php',
+    dirname(__DIR__, 3) . '/../config/config-auth.php',
+    dirname(__DIR__) . '/../config/config-auth.php',
+    __DIR__ . '/config-auth.php',
+];
+$authPath = null;
+foreach ($authCandidates as $c) {
+    if (is_file($c)) { $authPath = $c; break; }
+}
+if ($authPath) require_once $authPath;
+
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
@@ -79,6 +93,130 @@ if (!is_array($data)) {
 }
 
 $subAction = isset($data['sub_action']) ? trim((string)$data['sub_action']) : '';
+
+// ============================================================
+// HELPER FUNCTIONS — EMAIL
+// ============================================================
+
+function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode): string {
+    $stmt = $mysqli->prepare(
+        "SELECT option_symbol, option_symbol_position, option_decimal_separator,
+                option_decimal_places, option_thousands_separator, option_filename
+         FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1"
+    );
+    if (!$stmt) return '';
+    $stmt->bind_param('s', $currencyCode);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$row) return '';
+
+    $decPlaces  = (int)$row['option_decimal_places'];
+    $decSep     = $row['option_decimal_separator'] ?: '.';
+    $thousSep   = $row['option_thousands_separator'] ?: ',';
+    $symbol     = $row['option_symbol'] ?: $currencyCode;
+    $position   = $row['option_symbol_position'] ?: 'left';
+    $filename   = $row['option_filename'] ?: '';
+
+    $formatted = number_format($amount, $decPlaces, $decSep, $thousSep);
+    $number    = $position === 'right' ? $formatted . ' ' . $symbol : $symbol . $formatted;
+
+    $flagHtml = '';
+    if ($filename) {
+        $sRes = $mysqli->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'folder_currencies' LIMIT 1");
+        if ($sRes) {
+            $sRow = $sRes->fetch_assoc();
+            $sRes->free();
+            $cdnBase = rtrim($sRow['setting_value'] ?? '', '/');
+            if ($cdnBase) {
+                $flagHtml = '<img src="' . htmlspecialchars($cdnBase . '/' . $filename) . '" alt="" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">';
+            }
+        }
+    }
+    return $flagHtml . $number;
+}
+
+function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to_name, int $member_id, string $username, string $description, float $amount, string $currency, int $transaction_id): void {
+    global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
+    $msgKey = 'msg_email_payment_receipt';
+    $logFailed = function($notes = null) use ($mysqli, $member_id, $username, $msgKey, $to_email) {
+        $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+        if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+    };
+    $stmt = $mysqli->prepare(
+        "SELECT message_name, message_text, supports_html FROM admin_messages
+         WHERE message_key = 'msg_email_payment_receipt' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1"
+    );
+    if (!$stmt) { $logFailed('DB prepare failed for template query'); return; }
+    $stmt->execute();
+    $template = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$template) { $logFailed('Email template not found or inactive'); return; }
+
+    $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
+    $siteSettings = [];
+    if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
+    $fromEmail = $siteSettings['support_email'] ?? '';
+    if (!$fromEmail) { $logFailed('support_email not configured in admin_settings'); return; }
+    $fromName   = $siteSettings['website_name'] ?? '';
+    $logoFolder = rtrim($siteSettings['folder_system_images'] ?? '', '/');
+    $logoFile   = $siteSettings['email_logo'] ?? '';
+    $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+    $logoHtml   = $logoUrl
+        ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>'
+        : '';
+
+    $safeName    = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
+    $amountHtml  = format_email_amount($mysqli, $amount, $currency);
+    $safeDesc    = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+    $subject     = str_replace('{name}', $safeName, $template['message_name']);
+    $body        = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
+                               [$safeName, $logoHtml, $safeDesc, $amountHtml, (string)$transaction_id],
+                               $template['message_text']);
+
+    if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+    if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed('PHPMailer not found'); return; }
+    require_once $docRoot . '/libs/phpmailer/Exception.php';
+    require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
+    require_once $docRoot . '/libs/phpmailer/SMTP.php';
+    $mail   = new \PHPMailer\PHPMailer\PHPMailer(true);
+    $status = 'failed';
+    $errorNote = null;
+    try {
+        $mail->isSMTP();
+        $mail->Host       = $SMTP_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $SMTP_USERNAME;
+        $mail->Password   = $SMTP_PASSWORD;
+        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port       = 465;
+        $mail->CharSet    = 'UTF-8';
+        $mail->setFrom($fromEmail, $fromName);
+        $mail->addAddress($to_email, $to_name);
+        $mail->Subject = $subject;
+        if ($template['supports_html']) {
+            $mail->isHTML(true);
+            $mail->Body    = $body;
+            $mail->AltBody = strip_tags($body);
+        } else {
+            $mail->isHTML(false);
+            $mail->Body = strip_tags($body);
+        }
+        $mail->send();
+        $status = 'sent';
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+        $status    = 'failed';
+        $errorNote = $e->getMessage();
+    }
+    $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    if ($log) {
+        $logNotes = $status === 'failed' ? $errorNote : null;
+        $log->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $status, $logNotes);
+        $log->execute();
+        $log->close();
+    }
+}
 
 // ============================================================
 // HELPER FUNCTIONS — PAYPAL
@@ -412,6 +550,19 @@ if ($subAction === 'capture') {
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
 
+        if ($transactionType === 'donation' && $memberId !== null) {
+            $mStmt = $mysqli->prepare('SELECT account_email, username FROM members WHERE id = ? LIMIT 1');
+            if ($mStmt) {
+                $mStmt->bind_param('i', $memberId);
+                $mStmt->execute();
+                $mRow = $mStmt->get_result()->fetch_assoc();
+                $mStmt->close();
+                if ($mRow) {
+                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $mRow['username'], $description, $amount, $currency, $newTransactionId);
+                }
+            }
+        }
+
         echo json_encode(['success' => true, 'transaction_id' => $newTransactionId]);
         exit;
     }
@@ -449,6 +600,19 @@ if ($subAction === 'capture') {
         if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
+
+        if ($transactionType === 'donation' && $memberId !== null) {
+            $mStmt = $mysqli->prepare('SELECT account_email, username FROM members WHERE id = ? LIMIT 1');
+            if ($mStmt) {
+                $mStmt->bind_param('i', $memberId);
+                $mStmt->execute();
+                $mRow = $mStmt->get_result()->fetch_assoc();
+                $mStmt->close();
+                if ($mRow) {
+                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $mRow['username'], $description, $amount, $currency, $newTransactionId);
+                }
+            }
+        }
 
         echo json_encode(['success' => true, 'transaction_id' => $newTransactionId]);
         exit;
