@@ -6315,6 +6315,7 @@ const ImageModalComponent = (function() {
                             trackEl.style.transform = 'translateX(-' + (len * 100) + '%)';
                             
                             setTimeout(function() {
+                                if (!state) return;
                                 trackEl.style.transition = 'none';
                                 trackEl.style.transform = 'translateX(0)';
                                 if (clone.parentNode) clone.parentNode.removeChild(clone);
