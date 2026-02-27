@@ -6792,6 +6792,9 @@ const MemberModule = (function() {
             if (avatarBlob) {
                 formData.append('avatar_file', avatarBlob, 'avatar.png');
             }
+            if (_transactionId) {
+                formData.set('transaction_id', _transactionId);
+            }
 
             return fetch('/gateway.php?action=add-member', {
                 method: 'POST',

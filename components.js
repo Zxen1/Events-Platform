@@ -13404,8 +13404,8 @@ const PaymentModule = (function () {
                 post(Object.assign({}, chargePayload, { sub_action: 'create', gateway: 'stripe' }))
                 .then(function (res) {
                     if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Failed to initialise payment');
-                    var clientSecret        = res.client_secret;
-                    var stripeTransactionId = res.transaction_id;
+                    var clientSecret     = res.client_secret;
+                    var paymentIntentId  = res.payment_intent_id;
 
                     // Step 4: show overlay
                     var els = _buildOverlay({ amount: amount, currency: currency, onCancel: onCancel });
@@ -13453,16 +13453,15 @@ const PaymentModule = (function () {
                                 return;
                             }
                             // Verify server-side then finish
-                            post({
-                                sub_action:     'capture',
-                                gateway:        'stripe',
-                                order_id:       result.paymentIntent.id,
-                                transaction_id: stripeTransactionId,
-                            })
+                            post(Object.assign({}, chargePayload, {
+                                sub_action: 'capture',
+                                gateway:    'stripe',
+                                order_id:   result.paymentIntent.id,
+                            }))
                             .then(function (capRes) {
                                 _removeOverlay();
                                 if (capRes && capRes.success) {
-                                    onSuccess({ transactionId: stripeTransactionId });
+                                    onSuccess({ transactionId: capRes.transaction_id });
                                 } else {
                                     onError(new Error(capRes && capRes.message ? capRes.message : 'Stripe capture failed'));
                                 }
@@ -13480,28 +13479,25 @@ const PaymentModule = (function () {
                     // Step 7: PayPal button (wallet only, lazy order creation)
                     if (paypalClient) {
                         /* global paypal */
-                        var paypalTransactionId = null;
                         paypal.Buttons({
                             fundingSource: paypal.FUNDING.PAYPAL,
                             createOrder: function () {
                                 return post(Object.assign({}, chargePayload, { sub_action: 'create', gateway: 'paypal' }))
                                 .then(function (res) {
                                     if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Failed to create PayPal order');
-                                    paypalTransactionId = res.transaction_id;
                                     return res.order_id;
                                 });
                             },
                             onApprove: function (data) {
                                 _removeOverlay();
-                                post({
-                                    sub_action:     'capture',
-                                    gateway:        'paypal',
-                                    order_id:       data.orderID,
-                                    transaction_id: paypalTransactionId,
-                                })
+                                post(Object.assign({}, chargePayload, {
+                                    sub_action: 'capture',
+                                    gateway:    'paypal',
+                                    order_id:   data.orderID,
+                                }))
                                 .then(function (res) {
                                     if (res && res.success) {
-                                        onSuccess({ transactionId: paypalTransactionId });
+                                        onSuccess({ transactionId: res.transaction_id });
                                     } else {
                                         onError(new Error(res && res.message ? res.message : 'PayPal capture failed'));
                                     }

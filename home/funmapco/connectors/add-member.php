@@ -250,6 +250,12 @@ if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
 $id = $insert->insert_id;
 $insert->close();
 
+$txId = isset($_POST['transaction_id']) ? (int)$_POST['transaction_id'] : 0;
+if ($txId > 0) {
+  $txUp = $mysqli->prepare('UPDATE transactions SET member_id = ? WHERE id = ? AND member_id IS NULL AND transaction_type = \'donation\' LIMIT 1');
+  if ($txUp) { $txUp->bind_param('ii', $id, $txId); $txUp->execute(); $txUp->close(); }
+}
+
 send_welcome_email($mysqli, $email, $username, $id, $username);
 
 // If avatar_file is present, upload now (final filename), then update member row

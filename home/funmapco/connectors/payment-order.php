@@ -315,20 +315,9 @@ if ($subAction === 'create') {
             echo json_encode(['success' => false, 'message' => $err]);
             exit;
         }
-        $paymentId    = $piResult['id'];
-        $clientSecret = $piResult['client_secret'];
 
-        $stmt = $mysqli->prepare(
-            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, amount, currency, line_items, description, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
-        );
-        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
-        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $gateway, $amount, $currency, $lineItemsJson, $description);
-        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $transactionId = (int)$stmt->insert_id;
-        $stmt->close();
-
-        echo json_encode(['success' => true, 'gateway' => 'stripe', 'client_secret' => $clientSecret, 'transaction_id' => $transactionId]);
+        // No DB row written here — inserted only on successful capture
+        echo json_encode(['success' => true, 'gateway' => 'stripe', 'client_secret' => $piResult['client_secret'], 'payment_intent_id' => $piResult['id']]);
         exit;
     }
 
@@ -341,22 +330,12 @@ if ($subAction === 'create') {
         $orderId = paypal_create_order($paymentConfig, $accessToken, $amount, $currency, $description, $err);
         if ($orderId === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
 
-        $stmt = $mysqli->prepare(
-            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, amount, currency, line_items, description, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())"
-        );
-        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
-        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $orderId, $gateway, $amount, $currency, $lineItemsJson, $description);
-        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $transactionId = (int)$stmt->insert_id;
-        $stmt->close();
-
+        // No DB row written here — inserted only on successful capture
         echo json_encode([
-            'success'        => true,
-            'gateway'        => 'paypal',
-            'client_id'      => $paymentConfig['paypal_client_id'],
-            'order_id'       => $orderId,
-            'transaction_id' => $transactionId,
+            'success'   => true,
+            'gateway'   => 'paypal',
+            'client_id' => $paymentConfig['paypal_client_id'],
+            'order_id'  => $orderId,
         ]);
         exit;
     }
@@ -370,29 +349,27 @@ if ($subAction === 'create') {
 // CAPTURE — verify payment and mark transaction paid
 // ============================================================
 if ($subAction === 'capture') {
-    $paymentId     = trim((string)($data['order_id'] ?? ''));
-    $transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : 0;
-    $gateway       = trim((string)($data['gateway'] ?? ''));
+    $paymentId = trim((string)($data['order_id'] ?? ''));
+    $gateway   = trim((string)($data['gateway'] ?? ''));
 
-    if ($paymentId === '' || $transactionId <= 0 || $gateway === '') {
+    if ($paymentId === '' || $gateway === '') {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Missing capture parameters']);
         exit;
     }
 
-    $stmtCheck = $mysqli->prepare("SELECT id, status FROM transactions WHERE id = ? AND payment_id = ? LIMIT 1");
-    if (!$stmtCheck) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB prepare failed']); exit; }
-    $stmtCheck->bind_param('is', $transactionId, $paymentId);
-    $stmtCheck->execute();
-    $stmtCheck->bind_result($txId, $txStatus);
-    $found = $stmtCheck->fetch();
-    $stmtCheck->close();
-
-    if (!$found) { http_response_code(400); echo json_encode(['success' => false, 'message' => 'Transaction not found']); exit; }
-    if ($txStatus === 'paid') { echo json_encode(['success' => true, 'transaction_id' => $transactionId]); exit; }
-
-    // ---- Stripe capture ----
+    // ---- Stripe capture — inserts row only on success ----
     if ($gateway === 'stripe') {
+        $amount          = round((float)($data['amount'] ?? 0), 2);
+        $currency        = strtoupper(trim((string)($data['currency'] ?? 'USD')));
+        $description     = trim((string)($data['description'] ?? 'Payment'));
+        $memberId        = isset($data['member_id'])  && $data['member_id']  !== null ? (int)$data['member_id']  : null;
+        $postId          = isset($data['post_id'])    && $data['post_id']    !== null ? (int)$data['post_id']    : null;
+        $transactionType = trim((string)($data['transaction_type'] ?? 'new_post'));
+        $checkoutKey     = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : null;
+        $lineItems       = $data['line_items'] ?? null;
+        $lineItemsJson   = $lineItems !== null ? json_encode($lineItems, JSON_UNESCAPED_UNICODE) : null;
+
         $err = '';
         $pi  = stripe_retrieve_payment_intent($paymentConfig, $paymentId, $err);
         if ($pi === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
@@ -403,39 +380,55 @@ if ($subAction === 'capture') {
         }
         $paymentMethod = extract_stripe_payment_method($pi);
 
-        $stmtUpdate = $mysqli->prepare("UPDATE transactions SET status = 'paid', payment_method = ?, updated_at = NOW() WHERE id = ?");
-        if (!$stmtUpdate) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB update failed']); exit; }
-        $stmtUpdate->bind_param('si', $paymentMethod, $transactionId);
-        $stmtUpdate->execute();
-        $stmtUpdate->close();
+        $stmt = $mysqli->prepare(
+            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+        );
+        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $newTransactionId = (int)$stmt->insert_id;
+        $stmt->close();
 
-        echo json_encode(['success' => true, 'transaction_id' => $transactionId]);
+        echo json_encode(['success' => true, 'transaction_id' => $newTransactionId]);
         exit;
     }
 
-    // ---- PayPal capture ----
+    // ---- PayPal capture — inserts row only on success ----
     if ($gateway === 'paypal') {
+        $amount          = round((float)($data['amount'] ?? 0), 2);
+        $currency        = strtoupper(trim((string)($data['currency'] ?? 'USD')));
+        $description     = trim((string)($data['description'] ?? 'Payment'));
+        $memberId        = isset($data['member_id'])  && $data['member_id']  !== null ? (int)$data['member_id']  : null;
+        $postId          = isset($data['post_id'])    && $data['post_id']    !== null ? (int)$data['post_id']    : null;
+        $transactionType = trim((string)($data['transaction_type'] ?? 'new_post'));
+        $checkoutKey     = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : null;
+        $lineItems       = $data['line_items'] ?? null;
+        $lineItemsJson   = $lineItems !== null ? json_encode($lineItems, JSON_UNESCAPED_UNICODE) : null;
+
         $err         = '';
         $accessToken = paypal_get_access_token($paymentConfig, $err);
         if ($accessToken === null) { http_response_code(502); echo json_encode(['success' => false, 'message' => $err]); exit; }
 
         $captureResponse = paypal_capture_order($paymentConfig, $accessToken, $paymentId, $err);
         if ($captureResponse === null) {
-            $stmtFail = $mysqli->prepare("UPDATE transactions SET status = 'failed', updated_at = NOW() WHERE id = ?");
-            if ($stmtFail) { $stmtFail->bind_param('i', $transactionId); $stmtFail->execute(); $stmtFail->close(); }
             http_response_code(502);
             echo json_encode(['success' => false, 'message' => $err]);
             exit;
         }
         $paymentMethod = extract_paypal_payment_method($captureResponse);
 
-        $stmtUpdate = $mysqli->prepare("UPDATE transactions SET status = 'paid', payment_method = ?, updated_at = NOW() WHERE id = ?");
-        if (!$stmtUpdate) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB update failed']); exit; }
-        $stmtUpdate->bind_param('si', $paymentMethod, $transactionId);
-        $stmtUpdate->execute();
-        $stmtUpdate->close();
+        $stmt = $mysqli->prepare(
+            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, 'paypal', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+        );
+        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        $newTransactionId = (int)$stmt->insert_id;
+        $stmt->close();
 
-        echo json_encode(['success' => true, 'transaction_id' => $transactionId]);
+        echo json_encode(['success' => true, 'transaction_id' => $newTransactionId]);
         exit;
     }
 
