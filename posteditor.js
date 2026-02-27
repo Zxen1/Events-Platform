@@ -2056,7 +2056,7 @@
                 PaymentModule.charge({
                     amount:          pricing.total,
                     currency:        pricing.currency,
-                    description:     'Post #' + postId + ' upgrade',
+                    description:     'Post #' + postId + ' extras',
                     memberId:        user ? user.id : null,
                     postId:          postId,
                     transactionType: 'edit',
