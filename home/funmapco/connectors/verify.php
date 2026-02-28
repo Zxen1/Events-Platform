@@ -68,9 +68,10 @@ try {
             if (!$row) return null;
             if (!isset($row['password_hash']) || !password_verify($pass, $row['password_hash'])) return null;
 
+            $storageTable = ($table === 'admins') ? 'funmapco_system.admins' : 'funmapco_content.members';
+
             $reactivated = false;
             if (!empty($row['deleted_at'])) {
-                $storageTable = ($table === 'admins') ? 'funmapco_system.admins' : 'funmapco_content.members';
                 $reactivateStmt = $db->prepare("UPDATE {$storageTable} SET deleted_at = NULL WHERE id = ?");
                 if ($reactivateStmt) {
                     $reactivateStmt->bind_param('i', $row['id']);
@@ -78,6 +79,13 @@ try {
                     $reactivateStmt->close();
                     $reactivated = true;
                 }
+            }
+
+            $loginStmt = $db->prepare("UPDATE {$storageTable} SET last_login_at = NOW() WHERE id = ?");
+            if ($loginStmt) {
+                $loginStmt->bind_param('i', $row['id']);
+                $loginStmt->execute();
+                $loginStmt->close();
             }
 
             return [
