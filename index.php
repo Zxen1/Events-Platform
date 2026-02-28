@@ -477,6 +477,10 @@ if (empty($ogTitle)) {
               <input type="text" class="admin-settings-field-input" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
             </div>
             <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteUrl">Website URL</label>
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteUrl" data-setting-key="website_url" autocomplete="off" placeholder="https://example.com" />
+            </div>
+            <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteDescription">Website Description</label>
               <textarea class="admin-settings-field-textarea" id="adminWebsiteDescription" data-setting-key="website_description" rows="4" placeholder="Enter website description for social sharing"></textarea>
             </div>
