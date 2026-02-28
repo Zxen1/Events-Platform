@@ -376,7 +376,7 @@
                         for (var i = 0; i < res.posts.length; i++) {
                             var p = res.posts[i];
                             if (String(p.id || '') === String(keyToOpen) || String(p.post_key || '') === String(keyToOpen)) {
-                                try { openManageModal(p); } catch (_eOPK) {}
+                                try { openManageModal(p); } catch (_eOPK) { console.error('[PostEditor] openManageModal failed:', _eOPK); }
                                 break;
                             }
                         }
