@@ -44,6 +44,38 @@ if ($logoUrl) {
   $logoHtml = '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="" style="max-height:60px;max-width:100%;"></div>';
 }
 
+// Build a real sample amount using live currency data from the database
+$sampleAmount = '$29.00';
+$curStmt = $mysqli->prepare(
+  "SELECT lc.option_symbol, lc.option_symbol_position, lc.option_decimal_separator,
+          lc.option_decimal_places, lc.option_thousands_separator, lc.option_filename,
+          s.setting_value AS folder_currencies
+   FROM list_currencies lc
+   LEFT JOIN admin_settings s ON s.setting_key = 'folder_currencies'
+   WHERE lc.option_value = 'USD' AND lc.is_active = 1 LIMIT 1"
+);
+if ($curStmt) {
+  $curStmt->execute();
+  $cur = $curStmt->get_result()->fetch_assoc();
+  $curStmt->close();
+  if ($cur) {
+    $decPlaces = (int)$cur['option_decimal_places'];
+    $decSep    = $cur['option_decimal_separator'] ?: '.';
+    $thousSep  = $cur['option_thousands_separator'] ?: ',';
+    $symbol    = $cur['option_symbol'] ?: 'USD';
+    $position  = $cur['option_symbol_position'] ?: 'left';
+    $filename  = $cur['option_filename'] ?: '';
+    $formatted = number_format(29.00, $decPlaces, $decSep, $thousSep);
+    $number    = $position === 'right' ? $formatted . ' ' . $symbol : $symbol . $formatted;
+    $flagHtml  = '';
+    if ($filename && $cur['folder_currencies']) {
+      $cdnBase  = rtrim($cur['folder_currencies'], '/');
+      $flagHtml = '<img src="' . htmlspecialchars($cdnBase . '/' . $filename) . '" alt="USD" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">';
+    }
+    $sampleAmount = $flagHtml . $number;
+  }
+}
+
 $samples = [
   'logo'          => $logoHtml,
   'name'          => 'Jane Smith',
@@ -51,7 +83,7 @@ $samples = [
   'tier'          => 'Premium',
   'view_link'     => 'https://funmap.com',
   'reset_link'    => 'https://funmap.com',
-  'amount'        => '<img src="https://cdn.funmap.com/currencies/usd.png" alt="" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">$29.00',
+  'amount'        => $sampleAmount,
   'description'   => 'Featured listing — Sydney Harbour Fireworks',
   'receipt_id'    => '8271',
   'listings'      => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
