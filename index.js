@@ -1089,3 +1089,17 @@ const App = (function() {
 
 // Expose App globally so modules can check window.App
 window.App = App;
+
+/* --------------------------------------------------------------------------
+   DEEP LINK DISPATCHER
+   Central handler for all deep-link URL params. Runs after all modules have
+   loaded and initialized. Each module exposes a handleDeepLink() function;
+   add a line here for each new deep-link type.
+   Supported:
+     /?post=<post_key>  or  /post/<post_key>  — opens post in Recent panel
+   -------------------------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    try { if (window.PostModule) PostModule.handleDeepLink(); } catch (_e) {}
+  }, 0);
+});

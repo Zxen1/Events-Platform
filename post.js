@@ -230,9 +230,7 @@ const PostModule = (function() {
     primeZoomFromMapIfAvailable();
     updatePostsButtonState();
 
-    // Deep link: allow shared URLs like `/?post=<post_key>` or `/post/<post_key>` to open in Recent panel.
-    // NOTE: `/post/*` requires server routing to reach index page; `?post=` works without rewrites.
-    try { setTimeout(maybeOpenDeepLinkedPost, 0); } catch (_eDL) {}
+    // Deep link handling is dispatched centrally from index.js after all modules load.
   }
 
   function loadSavedFiltersFromLocalStorage() {
@@ -5383,7 +5381,8 @@ const PostModule = (function() {
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary,
     mapCardHasPromo: mapCardHasPromo,
-    loadPostById: loadPostById
+    loadPostById: loadPostById,
+    handleDeepLink: maybeOpenDeepLinkedPost
   };
 
 })();
