@@ -7406,6 +7406,37 @@ const MemberModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       DEEP LINK
+       -------------------------------------------------------------------------- */
+
+    function handleDeepLink() {
+        var isRegister = false;
+        try {
+            var path = String(window.location.pathname || '');
+            if (path === '/register' || path === '/register/') isRegister = true;
+            if (!isRegister) {
+                var qs = new URLSearchParams(window.location.search || '');
+                if (qs.get('register') !== null) isRegister = true;
+            }
+        } catch (_eDL) {}
+        if (!isRegister) return;
+
+        // Clean URL before anything renders with the param
+        try { window.history.replaceState({}, document.title, '/'); } catch (_eUrl) {}
+
+        // Emit panel:toggle — this initialises the module on first call
+        if (window.App && typeof App.emit === 'function') {
+            App.emit('panel:toggle', { panel: 'member', show: true });
+        }
+
+        // After emit, init() has run so registerTabBtn is assigned.
+        // Only switch to register tab when available (not shown to logged-in members).
+        if (registerTabBtn && !registerTabBtn.hidden) {
+            requestTabSwitch('register');
+        }
+    }
+
+    /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
     
@@ -7455,7 +7486,8 @@ const MemberModule = (function() {
         extractFieldValue: extractFieldValue,
         updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
         openTermsModal: openTermsModal,
-        getCheckoutOptions: function() { return checkoutOptions; }
+        getCheckoutOptions: function() { return checkoutOptions; },
+        handleDeepLink: handleDeepLink
     };
 
 })();

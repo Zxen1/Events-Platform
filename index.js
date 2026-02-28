@@ -1097,9 +1097,11 @@ window.App = App;
    add a line here for each new deep-link type.
    Supported:
      /?post=<post_key>  or  /post/<post_key>  — opens post in Recent panel
+     /?register=1       or  /register         — opens Member panel → Support tab
    -------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     try { if (window.PostModule) PostModule.handleDeepLink(); } catch (_e) {}
+    try { if (window.MemberModule) MemberModule.handleDeepLink(); } catch (_e) {}
   }, 0);
 });
