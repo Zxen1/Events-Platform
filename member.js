@@ -6918,6 +6918,16 @@ const MemberModule = (function() {
     function handleLogout() {
         currentUser = null;
         storeCurrent(null);
+
+        // Clear private user data from localStorage
+        try {
+            localStorage.removeItem('recentPosts');
+            localStorage.removeItem('postFavorites');
+            localStorage.removeItem('member_country_code');
+            localStorage.removeItem('member_timezone');
+            localStorage.removeItem('funmap_filters');
+        } catch (_eLsClr) {}
+
         render();
         
         // Revert to localStorage (guest) or admin settings (site default)
