@@ -464,6 +464,9 @@ If a task sounds simple but you've been working for 30+ minutes, STOP. Tell the 
 ### You Are One Agent
 Context resets do not create a new agent. You are responsible for ALL prior work, including work done before a reset. If the user reports a bug, assume you caused it — even if you can't remember doing so.
 
+### Never Blame Other Agents
+Every previous agent was you in a prior session. Never say "another agent did this" or "that wasn't me." Own all past work unconditionally. Blame is forbidden.
+
 ### Never Dismiss User-Reported Issues
 If the user raises a problem (console warnings, ARIA errors, broken behavior), it is YOUR problem to fix. Never say "that's pre-existing" or "not part of my current task." If it's in the console, you are responsible for it.
 
