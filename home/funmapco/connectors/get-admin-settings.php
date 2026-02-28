@@ -169,7 +169,9 @@ try {
         'icon_drag_handle', 'icon_more_dots', 'icon_search', 'icon_reactivate',
         'icon_trash', 'icon_flag', 'icon_tick', 'icon_hide', 'icon_show',
         // Post/Recents panels (empty-state / reminder illustrations)
-        'post_panel_empty_image', 'recent_panel_footer_image'
+        'post_panel_empty_image', 'recent_panel_footer_image',
+        // Email
+        'email_logo'
     ];
     
     $systemImages = [];
