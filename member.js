@@ -5632,6 +5632,15 @@ const MemberModule = (function() {
             });
         }
 
+        // Refresh custom input display with currency symbol if an amount is already selected
+        if (supporterCustomAmountInput && supporterAmountHiddenInput) {
+            var rawAmt = String(supporterAmountHiddenInput.value || '').trim();
+            var nAmt = parseFloat(rawAmt);
+            if (isFinite(nAmt) && nAmt > 0) {
+                supporterCustomAmountInput.value = CurrencyComponent.formatWithSymbol(nAmt, code, { trimZeroDecimals: false });
+            }
+        }
+
         // Ensure the submit button always shows currency context.
         try {
             if (!registerSubmitBtn) return;
