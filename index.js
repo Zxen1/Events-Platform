@@ -1103,7 +1103,22 @@ window.App = App;
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     try { if (window.PostModule) PostModule.handleDeepLink(); } catch (_e) {}
-    try { if (window.MemberModule) MemberModule.handleDeepLink(); } catch (_e) {}
+
+    // Member deep-links depend on settings being loaded (avatars, CDN paths, currency).
+    // Wait for state:settings before firing — if already loaded, dispatch immediately.
+    function dispatchMemberDeepLink() {
+      try { if (window.MemberModule) MemberModule.handleDeepLink(); } catch (_e) {}
+    }
+    if (App.getState('settings')) {
+      dispatchMemberDeepLink();
+    } else {
+      var _memberDLFired = false;
+      App.on('state:settings', function() {
+        if (_memberDLFired) return;
+        _memberDLFired = true;
+        dispatchMemberDeepLink();
+      });
+    }
   }, 0);
 });
 
