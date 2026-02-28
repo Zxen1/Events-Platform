@@ -339,10 +339,12 @@ const AdminModule = (function() {
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
             var startLeft = rect.left;
+            var moved = false;
             
             panelContent.style.transitionProperty = 'transform';
             
             function onMove(ev) {
+                moved = true;
                 panelDragged = true;
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
@@ -356,6 +358,7 @@ const AdminModule = (function() {
                 panelContent.style.transitionProperty = '';
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
+                if (!moved) return;
 
                 var currentLeft = parseFloat(panelContent.style.left) || 0;
                 var atRightEdge = currentLeft >= window.innerWidth - panelContent.offsetWidth - 20;
