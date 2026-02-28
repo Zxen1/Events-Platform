@@ -303,8 +303,8 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_typ
   $safeDesc  = htmlspecialchars($txDesc, ENT_QUOTES, 'UTF-8');
   $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
   $body      = str_replace(
-    ['{name}', '{title}', '{view_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
-    [$safeName, $safeTitle, htmlspecialchars($viewLink), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
+    ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $post_key), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
     $template['message_text']
   );
 

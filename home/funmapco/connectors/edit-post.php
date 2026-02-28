@@ -379,8 +379,8 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   $safeDesc  = htmlspecialchars($txDesc, ENT_QUOTES, 'UTF-8');
   $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
   $body      = str_replace(
-    ['{name}', '{title}', '{view_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
-    [$safeName, $safeTitle, htmlspecialchars($viewLink), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
+    ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $postKey), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
     $template['message_text']
   );
 

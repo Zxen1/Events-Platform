@@ -82,6 +82,7 @@ $samples = [
   'title'         => 'Sydney Harbour Fireworks',
   'tier'          => 'Premium',
   'view_link'     => 'https://funmap.com/post/933-little-havana',
+  'edit_link'     => 'https://funmap.com/post-editor=933-little-havana',
   'reset_link'    => 'https://funmap.com',
   'amount'        => $sampleAmount,
   'description'   => 'Featured listing — Sydney Harbour Fireworks',
