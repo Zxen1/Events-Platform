@@ -81,12 +81,14 @@ try {
                 }
             }
 
-            $loginStmt = $db->prepare("UPDATE {$storageTable} SET last_login_at = NOW() WHERE id = ?");
-            if ($loginStmt) {
-                $loginStmt->bind_param('i', $row['id']);
-                $loginStmt->execute();
-                $loginStmt->close();
-            }
+            try {
+                $loginStmt = $db->prepare("UPDATE {$storageTable} SET last_login_at = NOW() WHERE id = ?");
+                if ($loginStmt) {
+                    $loginStmt->bind_param('i', $row['id']);
+                    $loginStmt->execute();
+                    $loginStmt->close();
+                }
+            } catch (\Throwable $_eLLAt) {}
 
             return [
                 'success'     => true,
