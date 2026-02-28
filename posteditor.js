@@ -373,12 +373,18 @@
                     if (pendingOpenKey) {
                         var keyToOpen = pendingOpenKey;
                         pendingOpenKey = null;
+                        var postToOpen = null;
                         for (var i = 0; i < res.posts.length; i++) {
                             var p = res.posts[i];
                             if (String(p.id || '') === String(keyToOpen) || String(p.post_key || '') === String(keyToOpen)) {
-                                try { openManageModal(p); } catch (_eOPK) {}
+                                postToOpen = p;
                                 break;
                             }
+                        }
+                        if (postToOpen) {
+                            ensureCategoriesLoaded().then(function() {
+                                try { openManageModal(postToOpen); } catch (_eOPK) {}
+                            });
                         }
                     }
                 } else {
