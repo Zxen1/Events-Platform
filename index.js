@@ -1098,6 +1098,7 @@ window.App = App;
    Supported:
      /?post=<post_key>  or  /post/<post_key>  — opens post in Recent panel
      /?register=1       or  /register         — opens Member panel → Support tab
+     /?post-editor=1    or  /post-editor      — opens Member panel → Post Editor tab
    -------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {

@@ -7411,15 +7411,16 @@ const MemberModule = (function() {
 
     function handleDeepLink() {
         var isRegister = false;
+        var isPostEditor = false;
         try {
             var path = String(window.location.pathname || '');
+            var qs = new URLSearchParams(window.location.search || '');
             if (path === '/register' || path === '/register/') isRegister = true;
-            if (!isRegister) {
-                var qs = new URLSearchParams(window.location.search || '');
-                if (qs.get('register') !== null) isRegister = true;
-            }
+            if (!isRegister && qs.get('register') !== null) isRegister = true;
+            if (path === '/post-editor' || path === '/post-editor/') isPostEditor = true;
+            if (!isPostEditor && qs.get('post-editor') !== null) isPostEditor = true;
         } catch (_eDL) {}
-        if (!isRegister) return;
+        if (!isRegister && !isPostEditor) return;
 
         // Clean URL before anything renders with the param
         try { window.history.replaceState({}, document.title, '/'); } catch (_eUrl) {}
@@ -7429,10 +7430,14 @@ const MemberModule = (function() {
             App.emit('panel:toggle', { panel: 'member', show: true });
         }
 
-        // After emit, init() has run so registerTabBtn is assigned.
-        // Only switch to register tab when available (not shown to logged-in members).
-        if (registerTabBtn && !registerTabBtn.hidden) {
+        // After emit, init() has run so tab button refs are assigned.
+        // Register tab: only available to logged-out users.
+        // Post Editor tab: only available to logged-in users.
+        // If the target tab is unavailable, panel opens to the default (profile) tab.
+        if (isRegister && registerTabBtn && !registerTabBtn.hidden) {
             requestTabSwitch('register');
+        } else if (isPostEditor && posteditorTabBtn && !posteditorTabBtn.hidden) {
+            requestTabSwitch('posteditor');
         }
     }
 
