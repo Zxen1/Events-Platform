@@ -31,6 +31,7 @@
     var isLoaded = false;
     var editingPostsData = {};      // { [postId]: { original: postObj, current: {}, original_extracted_fields: [] } }
     var activeModal = null;         // { backdrop: HTMLElement, close: Function }
+    var pendingOpenKey = null;      // set by openPostByKey() before init; consumed by loadPosts()
 
     /* --------------------------------------------------------------------------
        HELPERS
@@ -369,6 +370,17 @@
             .then(function(res) {
                 if (res && res.success && Array.isArray(res.posts)) {
                     renderPosts(res.posts);
+                    if (pendingOpenKey) {
+                        var keyToOpen = pendingOpenKey;
+                        pendingOpenKey = null;
+                        for (var i = 0; i < res.posts.length; i++) {
+                            var p = res.posts[i];
+                            if (String(p.post_key || p.id || '') === String(keyToOpen)) {
+                                try { openManageModal(p); } catch (_eOPK) {}
+                                break;
+                            }
+                        }
+                    }
                 } else {
                     container.innerHTML = '<p class="posteditor-status">You haven\'t created any posts yet.</p>';
                 }
@@ -3182,7 +3194,8 @@
         savePost: savePost,
         saveAllDirtyPosts: saveAllDirtyPosts,
         showLoadingPlaceholder: showLoadingPlaceholder,
-        updateLoadingPlaceholder: updateLoadingPlaceholder
+        updateLoadingPlaceholder: updateLoadingPlaceholder,
+        openPostByKey: function(key) { pendingOpenKey = key; }
     };
 
     // Register with App

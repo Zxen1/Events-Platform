@@ -7431,18 +7431,37 @@ const MemberModule = (function() {
     function handleDeepLink() {
         var isRegister = false;
         var isPostEditor = false;
+        var postEditorKey = null;
         try {
             var path = String(window.location.pathname || '');
             var qs = new URLSearchParams(window.location.search || '');
             if (path === '/register' || path === '/register/') isRegister = true;
             if (!isRegister && qs.get('register') !== null) isRegister = true;
-            if (path === '/post-editor' || path === '/post-editor/') isPostEditor = true;
-            if (!isPostEditor && qs.get('post-editor') !== null) isPostEditor = true;
+            // /post-editor={key} — specific post
+            var keyMatch = path.match(/^\/post-editor=([^/?#]+)\/?$/);
+            if (keyMatch) {
+                isPostEditor = true;
+                postEditorKey = decodeURIComponent(keyMatch[1]);
+            }
+            if (!isPostEditor && qs.get('post-editor-key') !== null) {
+                isPostEditor = true;
+                postEditorKey = qs.get('post-editor-key');
+            }
+            // /post-editor — plain tab (no specific post)
+            if (!isPostEditor) {
+                if (path === '/post-editor' || path === '/post-editor/') isPostEditor = true;
+                if (!isPostEditor && qs.get('post-editor') !== null) isPostEditor = true;
+            }
         } catch (_eDL) {}
         if (!isRegister && !isPostEditor) return;
 
         // Clean URL before anything renders with the param
         try { window.history.replaceState({}, document.title, '/'); } catch (_eUrl) {}
+
+        // Prime PostEditorModule with the key BEFORE init runs so loadPosts() picks it up
+        if (isPostEditor && postEditorKey && window.PostEditorModule && typeof PostEditorModule.openPostByKey === 'function') {
+            try { PostEditorModule.openPostByKey(postEditorKey); } catch (_ePEK) {}
+        }
 
         // Emit panel:toggle — this initialises the module on first call
         if (window.App && typeof App.emit === 'function') {
