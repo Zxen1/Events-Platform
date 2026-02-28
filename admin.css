@@ -2798,6 +2798,7 @@
 }
 
 .admin-settings-field-textarea + .component-textarearesize-handle {
+  margin-top: -6px;
   border-color: rgba(255, 255, 255, 0.15);
 }
 

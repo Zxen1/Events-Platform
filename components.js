@@ -525,7 +525,6 @@ const TextareaResizeComponent = (function(){
     }
     
     function prepareTextarea(textarea) {
-        textarea.style.display = 'block';
         textarea.style.resize = 'none';
         textarea.style.borderBottomLeftRadius = '0';
         textarea.style.borderBottomRightRadius = '0';
