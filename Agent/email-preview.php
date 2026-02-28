@@ -75,7 +75,7 @@ function preview_format_amount(mysqli $db, float $amount, string $currencyCode):
   return $flagHtml . $number;
 }
 
-// Fetch most recent transaction per type, with member name from correct table
+// Fetch most recent transaction per type, with member name and linked post data
 $txData = [];
 foreach (['new_post', 'edit', 'donation'] as $type) {
   $stmt = $mysqli->prepare(
@@ -84,10 +84,13 @@ foreach (['new_post', 'edit', 'donation'] as $type) {
               CASE WHEN t.member_role = 'admin' THEN a.username ELSE NULL END,
               m.username,
               'Member'
-            ) AS member_name
+            ) AS member_name,
+            p.post_key,
+            (SELECT pmc.title FROM post_map_cards pmc WHERE pmc.post_id = t.post_id ORDER BY pmc.id ASC LIMIT 1) AS post_title
      FROM transactions t
      LEFT JOIN members m ON m.id = t.member_id AND (t.member_role IS NULL OR t.member_role != 'admin')
      LEFT JOIN admins a ON a.id = t.member_id AND t.member_role = 'admin'
+     LEFT JOIN posts p ON p.id = t.post_id
      WHERE t.transaction_type = ?
      ORDER BY t.id DESC LIMIT 1"
   );
@@ -156,6 +159,13 @@ $samples = [
     $renderSamples['description'] = htmlspecialchars($tx['description']);
     $renderSamples['amount']      = preview_format_amount($mysqli, (float)$tx['amount'], $tx['currency']);
     $renderSamples['receipt_id']  = (string)$tx['id'];
+    if (!empty($tx['post_title'])) {
+      $renderSamples['title']     = htmlspecialchars($tx['post_title']);
+    }
+    if (!empty($tx['post_key'])) {
+      $renderSamples['view_link'] = 'https://funmap.com/post/' . rawurlencode($tx['post_key']);
+      $renderSamples['edit_link'] = 'https://funmap.com/post-editor=' . rawurlencode($tx['post_key']);
+    }
   }
 
   if (is_array($allowed)) {
