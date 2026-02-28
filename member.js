@@ -7490,6 +7490,7 @@ const MemberModule = (function() {
         handleDeepLink: handleDeepLink
     };
 
+
 })();
 
 // Register module with App

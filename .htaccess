@@ -10,6 +10,7 @@ RewriteRule ^ - [L]
 # Use 302 while testing; switch to 301 later if desired.
 RewriteRule ^post/([^/?#]+)/?$ /?post=$1 [L,R=302,QSA]
 RewriteRule ^register/?$ /?register=1 [L,R=302,QSA]
+
 </IfModule>
 
 
