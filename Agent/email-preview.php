@@ -44,37 +44,62 @@ if ($logoUrl) {
   $logoHtml = '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="" style="max-height:60px;max-width:100%;"></div>';
 }
 
-// Build a real sample amount using live currency data from the database
-$sampleAmount = '$29.00';
-$curStmt = $mysqli->prepare(
-  "SELECT lc.option_symbol, lc.option_symbol_position, lc.option_decimal_separator,
-          lc.option_decimal_places, lc.option_thousands_separator, lc.option_filename,
-          s.setting_value AS folder_currencies
-   FROM list_currencies lc
-   LEFT JOIN admin_settings s ON s.setting_key = 'folder_currencies'
-   WHERE lc.option_value = 'USD' AND lc.is_active = 1 LIMIT 1"
-);
-if ($curStmt) {
-  $curStmt->execute();
-  $cur = $curStmt->get_result()->fetch_assoc();
-  $curStmt->close();
-  if ($cur) {
-    $decPlaces = (int)$cur['option_decimal_places'];
-    $decSep    = $cur['option_decimal_separator'] ?: '.';
-    $thousSep  = $cur['option_thousands_separator'] ?: ',';
-    $symbol    = $cur['option_symbol'] ?: 'USD';
-    $position  = $cur['option_symbol_position'] ?: 'left';
-    $filename  = $cur['option_filename'] ?: '';
-    $formatted = number_format(29.00, $decPlaces, $decSep, $thousSep);
-    $number    = $position === 'right' ? $formatted . ' ' . $symbol : $symbol . $formatted;
-    $flagHtml  = '';
-    if ($filename && $cur['folder_currencies']) {
-      $cdnBase  = rtrim($cur['folder_currencies'], '/');
-      $flagHtml = '<img src="' . htmlspecialchars($cdnBase . '/' . $filename) . '" alt="USD" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">';
-    }
-    $sampleAmount = $flagHtml . $number;
+function preview_format_amount(mysqli $db, float $amount, string $currencyCode): string {
+  $stmt = $db->prepare(
+    "SELECT lc.option_symbol, lc.option_symbol_position, lc.option_decimal_separator,
+            lc.option_decimal_places, lc.option_thousands_separator, lc.option_filename,
+            s.setting_value AS folder_currencies
+     FROM list_currencies lc
+     LEFT JOIN admin_settings s ON s.setting_key = 'folder_currencies'
+     WHERE lc.option_value = ? AND lc.is_active = 1 LIMIT 1"
+  );
+  if (!$stmt) return number_format($amount, 2);
+  $stmt->bind_param('s', $currencyCode);
+  $stmt->execute();
+  $cur = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  if (!$cur) return number_format($amount, 2);
+  $decPlaces = (int)$cur['option_decimal_places'];
+  $decSep    = $cur['option_decimal_separator'] ?: '.';
+  $thousSep  = $cur['option_thousands_separator'] ?: ',';
+  $symbol    = $cur['option_symbol'] ?: $currencyCode;
+  $position  = $cur['option_symbol_position'] ?: 'left';
+  $filename  = $cur['option_filename'] ?: '';
+  $formatted = number_format($amount, $decPlaces, $decSep, $thousSep);
+  $number    = $position === 'right' ? $formatted . ' ' . $symbol : $symbol . $formatted;
+  $flagHtml  = '';
+  if ($filename && $cur['folder_currencies']) {
+    $cdnBase  = rtrim($cur['folder_currencies'], '/');
+    $flagHtml = '<img src="' . htmlspecialchars($cdnBase . '/' . $filename) . '" alt="' . htmlspecialchars($currencyCode) . '" style="width:18px;height:12px;vertical-align:middle;margin-right:5px;">';
+  }
+  return $flagHtml . $number;
+}
+
+// Fetch most recent transaction per type, with member name
+$txData = [];
+foreach (['new_post', 'edit', 'donation'] as $type) {
+  $stmt = $mysqli->prepare(
+    "SELECT t.id, t.description, t.amount, t.currency,
+            COALESCE(m.username, 'Member') AS member_name
+     FROM transactions t
+     LEFT JOIN members m ON m.id = t.member_id
+     WHERE t.transaction_type = ?
+     ORDER BY t.id DESC LIMIT 1"
+  );
+  if ($stmt) {
+    $stmt->bind_param('s', $type);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($row) $txData[$type] = $row;
   }
 }
+
+$keyToType = [
+  'msg_email_post_live'       => 'new_post',
+  'msg_email_post_updated'    => 'edit',
+  'msg_email_donation_thanks' => 'donation',
+];
 
 $samples = [
   'logo'          => $logoHtml,
@@ -84,9 +109,9 @@ $samples = [
   'view_link'     => 'https://funmap.com/post/1828-login-and-pay-test',
   'edit_link'     => 'https://funmap.com/post-editor=1828-login-and-pay-test',
   'reset_link'    => 'https://funmap.com',
-  'amount'        => $sampleAmount,
-  'description'   => 'Featured listing — Sydney Harbour Fireworks',
-  'receipt_id'    => '8271',
+  'amount'        => '',
+  'description'   => '',
+  'receipt_id'    => '',
   'listings'      => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
   'listing_label' => 'listings',
   'has_have'      => 'have',
@@ -114,11 +139,23 @@ $samples = [
   <h1>FunMap — Email Template Preview</h1>
   <br>
 <?php foreach ($templates as $t):
-  $body = $t['message_text'];
+  $body    = $t['message_text'];
   $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
+
+  $type = $keyToType[$t['message_key']] ?? null;
+  $tx   = $type && isset($txData[$type]) ? $txData[$type] : null;
+
+  $renderSamples = $samples;
+  if ($tx) {
+    $renderSamples['name']        = htmlspecialchars($tx['member_name']);
+    $renderSamples['description'] = htmlspecialchars($tx['description']);
+    $renderSamples['amount']      = preview_format_amount($mysqli, (float)$tx['amount'], $tx['currency']);
+    $renderSamples['receipt_id']  = (string)$tx['id'];
+  }
+
   if (is_array($allowed)) {
     foreach ($allowed as $key) {
-      $val = $samples[$key] ?? '{' . $key . '}';
+      $val  = $renderSamples[$key] ?? '{' . $key . '}';
       $body = str_replace('{' . $key . '}', $val, $body);
     }
   }
