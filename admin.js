@@ -4254,7 +4254,7 @@ const AdminModule = (function() {
                 updateField('settings.' + key, input.value);
             });
 
-            if (input.type === 'url') {
+            if (key === 'website_url') {
                 input.addEventListener('blur', function() {
                     var val = input.value.trim();
                     if (val && !/^https?:\/\//i.test(val)) {
