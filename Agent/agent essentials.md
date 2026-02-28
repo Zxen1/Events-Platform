@@ -337,6 +337,14 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 
 ---
 
+## DEBUGGING
+
+### Console Test First
+Before sifting through large amounts of code to find a bug, add a temporary `console.error` to surface the real error.
+Remove it after the fix.
+
+---
+
 ## IF UNSURE
 
 1. **Re-read this file first** — the answer may already be documented here
