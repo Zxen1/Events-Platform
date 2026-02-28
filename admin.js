@@ -4253,6 +4253,17 @@ const AdminModule = (function() {
             input.addEventListener('input', function() {
                 updateField('settings.' + key, input.value);
             });
+
+            if (input.type === 'url') {
+                input.addEventListener('blur', function() {
+                    var val = input.value.trim();
+                    if (val && !/^https?:\/\//i.test(val)) {
+                        val = 'https://' + val;
+                        input.value = val;
+                        updateField('settings.' + key, val);
+                    }
+                });
+            }
         });
         
         // Attach to textareas
