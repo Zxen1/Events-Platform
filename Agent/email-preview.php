@@ -75,14 +75,19 @@ function preview_format_amount(mysqli $db, float $amount, string $currencyCode):
   return $flagHtml . $number;
 }
 
-// Fetch most recent transaction per type, with member name
+// Fetch most recent transaction per type, with member name from correct table
 $txData = [];
 foreach (['new_post', 'edit', 'donation'] as $type) {
   $stmt = $mysqli->prepare(
-    "SELECT t.id, t.description, t.amount, t.currency,
-            COALESCE(m.username, 'Member') AS member_name
+    "SELECT t.id, t.description, t.amount, t.currency, t.member_role,
+            COALESCE(
+              CASE WHEN t.member_role = 'admin' THEN a.username ELSE NULL END,
+              m.username,
+              'Member'
+            ) AS member_name
      FROM transactions t
-     LEFT JOIN members m ON m.id = t.member_id
+     LEFT JOIN members m ON m.id = t.member_id AND (t.member_role IS NULL OR t.member_role != 'admin')
+     LEFT JOIN admins a ON a.id = t.member_id AND t.member_role = 'admin'
      WHERE t.transaction_type = ?
      ORDER BY t.id DESC LIMIT 1"
   );

@@ -248,12 +248,12 @@ function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode
   return $flagHtml . $number;
 }
 
-function send_post_live_email(mysqli $mysqli, int $member_id, string $member_type, string $to_name, string $post_title, string $post_key, ?int $transaction_id): void {
+function send_post_live_email(mysqli $mysqli, int $member_id, string $member_role, string $to_name, string $post_title, string $post_key, ?int $transaction_id): void {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_post_live';
 
   // Look up member email
-  $table = $member_type === 'admin' ? 'admins' : 'members';
+  $table = $member_role === 'admin' ? 'admins' : 'members';
   $eStmt = $mysqli->prepare("SELECT account_email FROM `{$table}` WHERE id = ? LIMIT 1");
   if (!$eStmt) return;
   $eStmt->bind_param('i', $member_id);
@@ -349,12 +349,12 @@ if (!$data || !is_array($data)) {
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
-$memberType = isset($data['member_type']) ? trim((string)$data['member_type']) : 'member';
+$memberRole = isset($data['member_role']) ? trim((string)$data['member_role']) : 'member';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
 
 // Check if user is admin
-$isAdmin = strtolower($memberType) === 'admin' || 
+$isAdmin = strtolower($memberRole) === 'admin' || 
            (isset($data['member']) && is_array($data['member']) && 
             (strtolower($data['member']['type'] ?? '') === 'admin' || 
              !empty($data['member']['isAdmin'])));
@@ -1528,9 +1528,9 @@ if ($stmtRev) {
 
 // Update user's preferred_currency if a currency was used in this post
 if ($detectedCurrency !== null && $memberId > 0) {
-  if ($memberType === 'member') {
+  if ($memberRole === 'member') {
     $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
-  } elseif ($memberType === 'admin') {
+  } elseif ($memberRole === 'admin') {
     $stmtCurr = $mysqli->prepare("UPDATE admins SET preferred_currency = ? WHERE id = ?");
   } else {
     $stmtCurr = null;
@@ -1559,7 +1559,7 @@ if ($transactionId !== null && $transactionId > 0) {
 
 // Send "Post live" email with receipt (template 701)
 if ($memberId !== null && $memberId > 0 && !$skipPayment) {
-  send_post_live_email($mysqli, $memberId, $memberType, $memberName, $primaryTitle, $postKey, $transactionId);
+  send_post_live_email($mysqli, $memberId, $memberRole, $memberName, $primaryTitle, $postKey, $transactionId);
 }
 
 $msgKey = $mediaIds ? 'msg_post_create_with_images' : 'msg_post_create_success';

@@ -933,7 +933,7 @@
                 body: JSON.stringify({
                     post_id: postId,
                     member_id: mId,
-                    member_type: mType,
+                    member_role: mType,
                     manage_action: 'toggle_visibility',
                     visibility: newVisibility
                 })
@@ -1665,7 +1665,7 @@
             var user = getCurrentUser();
             var mId = user ? parseInt(user.id, 10) : 0;
             var mType = user ? (user.type || 'member') : 'member';
-            fetch('/gateway.php?action=restore-post&post_id=' + postId + '&member_id=' + mId + '&member_type=' + encodeURIComponent(mType))
+            fetch('/gateway.php?action=restore-post&post_id=' + postId + '&member_id=' + mId + '&member_role=' + encodeURIComponent(mType))
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     restoreContainer.innerHTML = '';
@@ -1733,7 +1733,7 @@
             fetch('/gateway.php?action=restore-post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ revision_id: revisionId, member_id: mId, member_type: mType })
+                body: JSON.stringify({ revision_id: revisionId, member_id: mId, member_role: mType })
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
@@ -1953,7 +1953,7 @@
                     post_id: postId,
                     member_id: user ? user.id : null,
                     member_name: user ? (user.username || user.name || '') : '',
-                    member_type: user && user.isAdmin ? 'admin' : 'member',
+                    member_role: user && user.isAdmin ? 'admin' : 'member',
                     manage_action: 'skip_payment',
                     checkout_key: selOpt.checkout_key || '',
                     add_days: parseInt(durationAddInput.value, 10) || 0,
@@ -2021,7 +2021,7 @@
                     post_id: postId,
                     member_id: user ? user.id : null,
                     member_name: user ? (user.username || user.name || '') : '',
-                    member_type: user && user.isAdmin ? 'admin' : 'member',
+                    member_role: user && user.isAdmin ? 'admin' : 'member',
                     manage_action: 'upgrade_checkout',
                     checkout_key: pricing.checkout_key,
                     currency: pricing.currency,

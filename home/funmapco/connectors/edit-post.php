@@ -309,7 +309,7 @@ function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode
   return $flagHtml . $number;
 }
 
-function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_type, string $to_name, int $post_id, ?int $transaction_id): void {
+function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_role, string $to_name, int $post_id, ?int $transaction_id): void {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_post_updated';
 
@@ -329,7 +329,7 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   if ($tStmt) { $tStmt->bind_param('i', $post_id); $tStmt->execute(); $tRow = $tStmt->get_result()->fetch_assoc(); $tStmt->close(); if ($tRow) $postTitle = $tRow['title']; }
 
   // Look up member email
-  $table = $member_type === 'admin' ? 'admins' : 'members';
+  $table = $member_role === 'admin' ? 'admins' : 'members';
   $eStmt = $mysqli->prepare("SELECT account_email FROM `{$table}` WHERE id = ? LIMIT 1");
   if (!$eStmt) return;
   $eStmt->bind_param('i', $member_id);
@@ -422,13 +422,13 @@ if (!$data || !is_array($data) || empty($data['post_id'])) {
 $postId = (int)$data['post_id'];
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
-$memberType = isset($data['member_type']) ? trim((string)$data['member_type']) : 'member';
+$memberRole = isset($data['member_role']) ? trim((string)$data['member_role']) : 'member';
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
 
 // Security: Verify post exists and member has permission to edit
-$isAdmin = strtolower($memberType) === 'admin';
+$isAdmin = strtolower($memberRole) === 'admin';
 $stmtCheck = $mysqli->prepare("SELECT member_id, subcategory_key FROM posts WHERE id = ? AND deleted_at IS NULL LIMIT 1");
 if (!$stmtCheck) {
   fail_key(500, 'msg_post_edit_error');
@@ -554,7 +554,7 @@ if ($manageAction !== '') {
 
       // Send "Post updated" email with receipt (template 702)
       if ($memberId !== null && $memberId > 0) {
-        send_post_updated_email($mysqli, $memberId, $memberType, $memberName, $postId, $transactionId);
+        send_post_updated_email($mysqli, $memberId, $memberRole, $memberName, $postId, $transactionId);
       }
 
       echo json_encode([
@@ -1286,9 +1286,9 @@ if ($pruneResult && $pruneResult->num_rows > 0) {
 
 // Update user's preferred_currency if a currency was used in this post
 if ($detectedCurrency !== null && $memberId > 0) {
-  if ($memberType === 'member') {
+  if ($memberRole === 'member') {
     $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
-  } elseif ($memberType === 'admin') {
+  } elseif ($memberRole === 'admin') {
     $stmtCurr = $mysqli->prepare("UPDATE admins SET preferred_currency = ? WHERE id = ?");
   } else {
     $stmtCurr = null;

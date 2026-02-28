@@ -526,6 +526,7 @@ if ($subAction === 'capture') {
         $memberId        = isset($data['member_id'])  && $data['member_id']  !== null ? (int)$data['member_id']  : null;
         $postId          = isset($data['post_id'])    && $data['post_id']    !== null ? (int)$data['post_id']    : null;
         $transactionType = trim((string)($data['transaction_type'] ?? 'new_post'));
+        $memberRole      = trim((string)($data['member_role'] ?? 'member'));
         $checkoutKey     = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : null;
         $lineItems       = $data['line_items'] ?? null;
         $lineItemsJson   = $lineItems !== null ? json_encode($lineItems, JSON_UNESCAPED_UNICODE) : null;
@@ -541,17 +542,18 @@ if ($subAction === 'capture') {
         $paymentMethod = extract_stripe_payment_method($pi);
 
         $stmt = $mysqli->prepare(
-            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+            "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
         if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        $stmt->bind_param('iiisssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
         if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
 
         if ($transactionType === 'donation' && $memberId !== null) {
-            $mStmt = $mysqli->prepare('SELECT account_email, username FROM members WHERE id = ? LIMIT 1');
+            $mTable = $memberRole === 'admin' ? 'admins' : 'members';
+            $mStmt = $mysqli->prepare("SELECT account_email, username FROM `{$mTable}` WHERE id = ? LIMIT 1");
             if ($mStmt) {
                 $mStmt->bind_param('i', $memberId);
                 $mStmt->execute();
@@ -575,6 +577,7 @@ if ($subAction === 'capture') {
         $memberId        = isset($data['member_id'])  && $data['member_id']  !== null ? (int)$data['member_id']  : null;
         $postId          = isset($data['post_id'])    && $data['post_id']    !== null ? (int)$data['post_id']    : null;
         $transactionType = trim((string)($data['transaction_type'] ?? 'new_post'));
+        $memberRole      = trim((string)($data['member_role'] ?? 'member'));
         $checkoutKey     = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : null;
         $lineItems       = $data['line_items'] ?? null;
         $lineItemsJson   = $lineItems !== null ? json_encode($lineItems, JSON_UNESCAPED_UNICODE) : null;
@@ -592,17 +595,18 @@ if ($subAction === 'capture') {
         $paymentMethod = extract_paypal_payment_method($captureResponse);
 
         $stmt = $mysqli->prepare(
-            "INSERT INTO transactions (member_id, post_id, transaction_type, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, 'paypal', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+            "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, amount, currency, line_items, description, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'paypal', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
         if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $stmt->bind_param('iissssdsss', $memberId, $postId, $transactionType, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        $stmt->bind_param('iiisssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
         if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
 
         if ($transactionType === 'donation' && $memberId !== null) {
-            $mStmt = $mysqli->prepare('SELECT account_email, username FROM members WHERE id = ? LIMIT 1');
+            $mTable = $memberRole === 'admin' ? 'admins' : 'members';
+            $mStmt = $mysqli->prepare("SELECT account_email, username FROM `{$mTable}` WHERE id = ? LIMIT 1");
             if ($mStmt) {
                 $mStmt->bind_param('i', $memberId);
                 $mStmt->execute();
