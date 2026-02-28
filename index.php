@@ -478,7 +478,7 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteUrl">Website URL</label>
-              <input type="text" class="admin-settings-field-input" id="adminWebsiteUrl" data-setting-key="website_url" autocomplete="off" placeholder="https://example.com" />
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteUrl" data-setting-key="website_url" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="https://example.com" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteDescription">Website Description</label>
