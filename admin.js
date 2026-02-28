@@ -1823,6 +1823,7 @@ const AdminModule = (function() {
         textDisplay.addEventListener('click', function() {
             textDisplay.classList.add('admin-message-text-display--hidden');
             textInput.classList.remove('admin-message-text-input--hidden');
+            textInput.style.display = 'block';
             textInput.focus();
         });
         
@@ -1837,12 +1838,14 @@ const AdminModule = (function() {
             textDisplay.innerHTML = textInput.value;
             textDisplay.classList.remove('admin-message-text-display--hidden');
             textInput.classList.add('admin-message-text-input--hidden');
+            textInput.style.display = 'none';
         });
         
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
         TextareaResizeComponent.attach(textInput);
+        textInput.style.display = 'none';
         
         return item;
     }
@@ -1945,6 +1948,7 @@ const AdminModule = (function() {
         textDisplay.addEventListener('click', function() {
             textDisplay.classList.add('admin-message-text-display--hidden');
             textInput.classList.remove('admin-message-text-input--hidden');
+            textInput.style.display = 'block';
             textInput.focus();
         });
         
@@ -1966,12 +1970,14 @@ const AdminModule = (function() {
             textDisplay.style.fontStyle = textInput.value ? '' : 'italic';
             textDisplay.classList.remove('admin-message-text-display--hidden');
             textInput.classList.add('admin-message-text-input--hidden');
+            textInput.style.display = 'none';
         });
         
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
         TextareaResizeComponent.attach(textInput);
+        textInput.style.display = 'none';
         
         return item;
     }
@@ -2049,6 +2055,7 @@ const AdminModule = (function() {
         textDisplay.addEventListener('click', function() {
             textDisplay.classList.add('admin-message-text-display--hidden');
             textInput.classList.remove('admin-message-text-input--hidden');
+            textInput.style.display = 'block';
             textInput.focus();
         });
         
@@ -2070,12 +2077,14 @@ const AdminModule = (function() {
             textDisplay.style.fontStyle = textInput.value ? '' : 'italic';
             textDisplay.classList.remove('admin-message-text-display--hidden');
             textInput.classList.add('admin-message-text-input--hidden');
+            textInput.style.display = 'none';
         });
         
         item.appendChild(label);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
         TextareaResizeComponent.attach(textInput);
+        textInput.style.display = 'none';
         
         return item;
     }
