@@ -6756,7 +6756,7 @@ const MemberModule = (function() {
                 PaymentModule.charge({
                     amount:          supporterAmount,
                     currency:        supporterCurrency,
-                    description:     'FunMap membership donation',
+                    description:     'New member',
                     memberId:        null,
                     transactionType: 'donation',
                     onReady: function() {
