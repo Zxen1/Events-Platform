@@ -215,6 +215,9 @@ Draft SQL must live only in chat, never as files in the workspace.
 ### Verify Before Writing SQL
 ALWAYS search the database dump for exact table structure before writing any SQL. Never guess column names.
 
+### New Admin Settings Keys Must Be Whitelisted
+When adding a new key to `admin_settings`, check `get-admin-settings.php` — if it's an image/icon, add it to `$systemImageKeys`; otherwise verify it is returned in `data.settings`.
+
 ### Column Ordering
 `created_at` and `updated_at` must always be the last columns in a table.
 
