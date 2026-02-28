@@ -82,7 +82,7 @@ try {
             }
 
             try {
-                $loginStmt = $db->prepare("UPDATE {$storageTable} SET last_login_at = NOW() WHERE id = ?");
+                $loginStmt = $db->prepare("UPDATE {$table} SET last_login_at = NOW() WHERE id = ?");
                 if ($loginStmt) {
                     $loginStmt->bind_param('i', $row['id']);
                     $loginStmt->execute();
