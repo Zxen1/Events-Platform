@@ -398,7 +398,7 @@ if ($hasAvatarFile) {
     fail(400, 'Invalid avatar file type. Allowed: JPG, PNG, GIF, WebP');
   }
 
-  $finalFilename = $id . '-avatar.' . $ext;
+  $finalFilename = str_pad($id, 8, '0', STR_PAD_LEFT) . '-avatar.' . $ext;
   $fileContent = file_get_contents($_FILES['avatar_file']['tmp_name']);
   if ($fileContent === false) {
     $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
