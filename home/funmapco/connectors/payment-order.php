@@ -166,12 +166,21 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
         ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>'
         : '';
 
+    $txGateway = ''; $txMethod = ''; $txCreatedAt = '';
+    $txStmt = $mysqli->prepare('SELECT payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
+    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
+    if (!$txGateway) { $logFailed('Transaction ' . $transaction_id . ' has no payment_gateway'); return; }
+    $gwLabels = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+    $gw = $gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway);
+    $paymentVia = $txMethod ? $gw . ' · ' . $txMethod : $gw;
+    $dateStr = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
+
     $safeName    = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
     $amountHtml  = format_email_amount($mysqli, $amount, $currency);
     $safeDesc    = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
     $subject     = str_replace('{name}', $safeName, $template['message_name']);
-    $body        = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
-                               [$safeName, $logoHtml, $safeDesc, $amountHtml, (string)$transaction_id],
+    $body        = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
+                               [$safeName, $logoHtml, $safeDesc, $amountHtml, (string)$transaction_id, $paymentVia, $dateStr],
                                $template['message_text']);
 
     if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }

@@ -80,6 +80,7 @@ $txData = [];
 foreach (['new_post', 'edit', 'donation'] as $type) {
   $stmt = $mysqli->prepare(
     "SELECT t.id, t.description, t.amount, t.currency, t.member_role,
+            t.payment_gateway, t.payment_method, t.created_at,
             COALESCE(
               CASE WHEN t.member_role = 'admin' THEN a.username ELSE NULL END,
               m.username,
@@ -120,6 +121,8 @@ $samples = [
   'amount'        => '',
   'description'   => '',
   'receipt_id'    => '',
+  'payment'       => '',
+  'date'          => '',
   'listings'      => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
   'listing_label' => 'listings',
   'has_have'      => 'have',
@@ -159,6 +162,13 @@ $samples = [
     $renderSamples['description'] = htmlspecialchars($tx['description']);
     $renderSamples['amount']      = preview_format_amount($mysqli, (float)$tx['amount'], $tx['currency']);
     $renderSamples['receipt_id']  = (string)$tx['id'];
+    $txGateway   = $tx['payment_gateway'] ?? '';
+    $txMethod    = $tx['payment_method']  ?? '';
+    $txCreatedAt = $tx['created_at']      ?? '';
+    $gwLabels = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+    $gw = $txGateway ? ($gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway)) : '';
+    $renderSamples['payment'] = ($txMethod && $gw) ? $gw . ' · ' . $txMethod : $gw;
+    $renderSamples['date']    = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
     if (!empty($tx['post_title'])) {
       $renderSamples['title']     = htmlspecialchars($tx['post_title']);
     }

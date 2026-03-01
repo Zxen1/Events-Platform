@@ -367,20 +367,29 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   $viewLink = $siteUrl . '/post/' . rawurlencode($postKey);
 
   // Fetch transaction details for receipt
-  $txDesc = ''; $txAmount = 0.0; $txCurrency = 'USD'; $txId = 0;
+  $txDesc = ''; $txAmount = 0.0; $txCurrency = 'USD'; $txId = 0; $txGateway = ''; $txMethod = ''; $txCreatedAt = '';
   if ($transaction_id !== null && $transaction_id > 0) {
-    $txStmt = $mysqli->prepare('SELECT description, amount, currency, id FROM transactions WHERE id = ? LIMIT 1');
-    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['amount']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; } }
+    $txStmt = $mysqli->prepare('SELECT description, amount, currency, id, payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
+    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['amount']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
   }
   $amountHtml = $txId > 0 ? format_email_amount($mysqli, $txAmount, $txCurrency) : '';
+  $paymentVia = '';
+  $dateStr    = '';
+  if ($txId > 0) {
+    if (!$txGateway) { $logFailed('Transaction ' . $txId . ' has no payment_gateway'); return; }
+    $gwLabels = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+    $gw = $gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway);
+    $paymentVia = $txMethod ? $gw . ' · ' . $txMethod : $gw;
+    $dateStr = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
+  }
 
   $safeName  = htmlspecialchars($to_name, ENT_QUOTES, 'UTF-8');
   $safeTitle = htmlspecialchars($postTitle, ENT_QUOTES, 'UTF-8');
   $safeDesc  = htmlspecialchars($txDesc, ENT_QUOTES, 'UTF-8');
   $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
   $body      = str_replace(
-    ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}'],
-    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $postKey), $logoHtml, $safeDesc, $amountHtml, (string)$txId],
+    ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $postKey), $logoHtml, $safeDesc, $amountHtml, (string)$txId, $paymentVia, $dateStr],
     $template['message_text']
   );
 
