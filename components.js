@@ -13736,7 +13736,8 @@ const PaymentModule = (function () {
                                 els.stripeErrorEl.hidden = false;
                                 return;
                             }
-                            // Verify server-side then finish
+                            // Stripe confirmed — show processing immediately, capture server-side in background
+                            _showProcessing();
                             post(Object.assign({}, chargePayload, {
                                 sub_action: 'capture',
                                 gateway:    'stripe',
@@ -13744,7 +13745,6 @@ const PaymentModule = (function () {
                             }))
                             .then(function (capRes) {
                                 if (capRes && capRes.success) {
-                                    _showProcessing();
                                     onSuccess({ transactionId: capRes.transaction_id }, _removeOverlay);
                                 } else {
                                     _removeOverlay();
