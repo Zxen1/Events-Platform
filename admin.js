@@ -958,6 +958,15 @@ const AdminModule = (function() {
         var body = document.createElement('div');
         body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
 
+        var addItemBtn = document.createElement('div');
+        addItemBtn.className = 'admin-sitemap-manual-add-item';
+        addItemBtn.textContent = '+ Add Item';
+        addItemBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addItem(body, addItemBtn);
+        });
+        body.appendChild(addItemBtn);
+
         accordion.appendChild(header);
         accordion.appendChild(editPanel);
         accordion.appendChild(body);
@@ -1056,6 +1065,87 @@ const AdminModule = (function() {
 
         registerComposite('instructions', captureInstructionsState);
         instructionsLoaded = true;
+    }
+
+    function addItem(body, addItemBtn) {
+        var itemEl = createInstructionItem('', '');
+        itemEl.dataset.isNew = '1';
+        body.insertBefore(itemEl, addItemBtn);
+        // Open title for editing immediately
+        var titleDisplay = itemEl.querySelector('.admin-sitemap-manual-item-title-display');
+        if (titleDisplay) titleDisplay.click();
+        if (instructionsLoaded) notifyFieldChange();
+    }
+
+    function createInstructionItem(title, description) {
+        var item = document.createElement('div');
+        item.className = 'admin-sitemap-manual-item';
+
+        // Title display (click to edit)
+        var titleDisplay = document.createElement('div');
+        titleDisplay.className = 'admin-sitemap-manual-item-title-display';
+        titleDisplay.textContent = title || 'Click to add title';
+
+        // Title input (hidden by default)
+        var titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'admin-sitemap-manual-item-title-input input-class-1';
+        titleInput.value = title || '';
+        titleInput.placeholder = 'Title';
+        titleInput.style.display = 'none';
+
+        titleDisplay.addEventListener('click', function() {
+            titleDisplay.style.display = 'none';
+            titleInput.style.display = '';
+            titleInput.focus();
+            titleInput.select();
+        });
+        titleInput.addEventListener('input', function() {
+            titleDisplay.textContent = titleInput.value || 'Click to add title';
+            if (instructionsLoaded) notifyFieldChange();
+        });
+        titleInput.addEventListener('blur', function() {
+            titleDisplay.style.display = '';
+            titleInput.style.display = 'none';
+        });
+
+        // Description display (click to edit)
+        var textDisplay = document.createElement('div');
+        textDisplay.className = 'admin-message-text-display';
+        textDisplay.textContent = description || 'Click to add description';
+        textDisplay.title = 'Click to edit';
+
+        // Description textarea (hidden by default)
+        var textInput = document.createElement('textarea');
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.value = description || '';
+        textInput.rows = 3;
+
+        textDisplay.addEventListener('click', function() {
+            textDisplay.classList.add('admin-message-text-display--hidden');
+            textInput.classList.remove('admin-message-text-input--hidden');
+            textInput.style.display = 'block';
+            textInput.focus();
+        });
+        textInput.addEventListener('input', function() {
+            textDisplay.textContent = textInput.value || 'Click to add description';
+            if (instructionsLoaded) notifyFieldChange();
+        });
+        textInput.addEventListener('blur', function() {
+            textDisplay.textContent = textInput.value || 'Click to add description';
+            textDisplay.classList.remove('admin-message-text-display--hidden');
+            textInput.classList.add('admin-message-text-input--hidden');
+            textInput.style.display = 'none';
+        });
+
+        item.appendChild(titleDisplay);
+        item.appendChild(titleInput);
+        item.appendChild(textDisplay);
+        item.appendChild(textInput);
+        TextareaResizeComponent.attach(textInput);
+        textInput.style.display = 'none';
+
+        return item;
     }
 
     function addChapter(container, addChapterBtn) {
