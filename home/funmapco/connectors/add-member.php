@@ -179,7 +179,7 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
   $template = $stmt->get_result()->fetch_assoc();
   $stmt->close();
   if (!$template) { $logFailed('Email template not found or inactive'); return; }
-  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images','website_prefix')");
   $siteSettings = [];
   if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
   $fromEmail = $siteSettings['support_email'] ?? '';
@@ -189,11 +189,24 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
   $logoFile   = $siteSettings['email_logo'] ?? '';
   $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
   $logoHtml   = $logoUrl ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>' : '';
+
+  $txGateway = ''; $txMethod = ''; $txCreatedAt = '';
+  $txStmt = $mysqli->prepare('SELECT payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
+  if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow2 = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow2) { $txGateway = $txRow2['payment_gateway'] ?? ''; $txMethod = $txRow2['payment_method'] ?? ''; $txCreatedAt = $txRow2['created_at'] ?? ''; } }
+  $gwLabels     = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+  $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card', 'link' => 'Stripe Link'];
+  $gw         = $txGateway ? ($gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway)) : '';
+  $normMethod = $txMethod  ? ($methodLabels[strtolower($txMethod)]  ?? ucfirst(strtolower($txMethod)))  : '';
+  $paymentVia = ($normMethod && $gw) ? $gw . ' · ' . $normMethod : $gw;
+  $dateStr    = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
+  $prefix     = ($siteSettings['website_prefix'] ?? '') ? $siteSettings['website_prefix'] . '-' : '';
+  $receiptId  = $prefix . str_pad($transaction_id, 6, '0', STR_PAD_LEFT);
+
   $safeName   = htmlspecialchars((string)$to_name, ENT_QUOTES, 'UTF-8');
   $amountHtml = format_email_amount($mysqli, $amount, $currency);
   $safeDesc   = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
   $subject    = str_replace('{name}', $safeName, $template['message_name']);
-  $body       = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}'], [$safeName, $logoHtml, $safeDesc, $amountHtml, (string)$transaction_id], $template['message_text']);
+  $body       = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'], [$safeName, $logoHtml, $safeDesc, $amountHtml, $receiptId, $paymentVia, $dateStr], $template['message_text']);
   if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
   $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
   if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed('PHPMailer not found'); return; }
