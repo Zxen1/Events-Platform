@@ -860,6 +860,155 @@ const AdminModule = (function() {
         if (body) body.classList.toggle('admin-sitemap-manual-accordion-body--hidden', !isOpen);
     }
 
+    function buildInstructionsAccordion(chapterData, container) {
+        var accordion = document.createElement('div');
+        accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
+        accordion.dataset.chapter = chapterData.chapter;
+
+        var header = document.createElement('div');
+        header.className = 'admin-sitemap-manual-accordion-header accordion-header';
+
+        var headerText = document.createElement('span');
+        headerText.className = 'admin-sitemap-manual-accordion-header-text';
+        headerText.textContent = chapterData.chapter;
+
+        var headerArrow = document.createElement('span');
+        headerArrow.className = 'admin-sitemap-manual-accordion-header-arrow';
+
+        var headerDrag = document.createElement('div');
+        headerDrag.className = 'admin-sitemap-manual-accordion-header-drag';
+        var headerDragIcon = document.createElement('div');
+        headerDragIcon.className = 'admin-sitemap-manual-accordion-header-drag-icon';
+        headerDrag.appendChild(headerDragIcon);
+
+        var headerEditArea = document.createElement('div');
+        headerEditArea.className = 'admin-sitemap-manual-accordion-header-editarea';
+        var headerEdit = document.createElement('div');
+        headerEdit.className = 'admin-sitemap-manual-accordion-header-edit';
+        headerEditArea.appendChild(headerEdit);
+
+        header.appendChild(headerText);
+        header.appendChild(headerArrow);
+        header.appendChild(headerDrag);
+        header.appendChild(headerEditArea);
+
+        var editPanel = document.createElement('div');
+        editPanel.className = 'admin-sitemap-manual-accordion-editpanel';
+
+        var nameRow = document.createElement('div');
+        nameRow.className = 'admin-sitemap-manual-accordion-editpanel-row';
+
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'admin-sitemap-manual-accordion-editpanel-input input-class-1';
+        nameInput.value = chapterData.chapter;
+        nameInput.dataset.chapterKey = chapterData.chapter;
+        nameInput.addEventListener('input', function() {
+            headerText.textContent = nameInput.value || chapterData.chapter;
+            if (instructionsLoaded) notifyFieldChange();
+        });
+
+        nameRow.appendChild(nameInput);
+
+        var moreBtn = document.createElement('div');
+        moreBtn.className = 'admin-sitemap-manual-accordion-editpanel-more';
+        moreBtn.innerHTML = '<div class="admin-sitemap-manual-accordion-editpanel-more-icon"></div><div class="admin-sitemap-manual-accordion-editpanel-more-menu"><div class="admin-sitemap-manual-accordion-editpanel-more-item admin-sitemap-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
+        var moreMenuEl = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-menu');
+
+        moreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            moreMenuEl.classList.toggle('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+        });
+
+        var deleteBtn = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-delete');
+        deleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            moreMenuEl.classList.remove('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+            var chapterName = headerText.textContent.trim() || 'this chapter';
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Delete Chapter',
+                    messageText: 'Delete "' + chapterName + '" and all its items?',
+                    confirmLabel: 'Delete',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        accordion.parentNode.removeChild(accordion);
+                        if (instructionsLoaded) notifyFieldChange();
+                    }
+                });
+                return;
+            }
+            if (confirm('Delete "' + chapterName + '" and all its items?')) {
+                accordion.parentNode.removeChild(accordion);
+                if (instructionsLoaded) notifyFieldChange();
+            }
+        });
+
+        nameRow.appendChild(moreBtn);
+        editPanel.appendChild(nameRow);
+
+        var body = document.createElement('div');
+        body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
+
+        accordion.appendChild(header);
+        accordion.appendChild(editPanel);
+        accordion.appendChild(body);
+
+        // Drag and drop
+        accordion.draggable = false;
+        headerDrag.addEventListener('mousedown', function() { accordion.draggable = true; });
+        document.addEventListener('mouseup', function() { accordion.draggable = false; });
+        accordion.addEventListener('dragstart', function(e) {
+            if (!accordion.draggable) { e.preventDefault(); return; }
+            var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+            accordion._dragStartIndex = siblings.indexOf(accordion);
+            e.dataTransfer.effectAllowed = 'move';
+            accordion.classList.add('dragging');
+        });
+        accordion.addEventListener('dragend', function() {
+            accordion.classList.remove('dragging');
+            accordion.draggable = false;
+            var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+            if (siblings.indexOf(accordion) !== accordion._dragStartIndex) {
+                if (instructionsLoaded) notifyFieldChange();
+            }
+        });
+        accordion.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            var dragging = container.querySelector('.admin-sitemap-manual-accordion.dragging');
+            if (dragging && dragging !== accordion) {
+                var rect = accordion.getBoundingClientRect();
+                if (e.clientY < rect.top + rect.height / 2) {
+                    accordion.parentNode.insertBefore(dragging, accordion);
+                } else {
+                    accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
+                }
+            }
+        });
+
+        headerEditArea.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
+            closeAllInstructionsEditPanels();
+            if (!isEditing) accordion.classList.add('admin-sitemap-manual-accordion--editing');
+            syncInstructionsAccordionUi(accordion);
+        });
+
+        header.addEventListener('click', function(e) {
+            if (e.target.closest('.admin-sitemap-manual-accordion-header-editarea')) return;
+            if (e.target.closest('.admin-sitemap-manual-accordion-header-drag')) return;
+            if (!accordion.classList.contains('admin-sitemap-manual-accordion--editing')) {
+                closeAllInstructionsEditPanels();
+            }
+            accordion.classList.toggle('admin-sitemap-manual-accordion--open');
+            syncInstructionsAccordionUi(accordion);
+        });
+
+        return accordion;
+    }
+
     function renderInstructionsAccordions(container, instructions) {
         container.innerHTML = '';
 
@@ -874,155 +1023,21 @@ const AdminModule = (function() {
             chapterMap[item.chapter].items.push(item);
         });
 
-        var dragStartIndex = -1;
-
         chapters.forEach(function(chapterData) {
-            var accordion = document.createElement('div');
-            accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
-            accordion.dataset.chapter = chapterData.chapter;
-
-            // Header
-            var header = document.createElement('div');
-            header.className = 'admin-sitemap-manual-accordion-header accordion-header';
-
-            var headerText = document.createElement('span');
-            headerText.className = 'admin-sitemap-manual-accordion-header-text';
-            headerText.textContent = chapterData.chapter;
-
-            var headerArrow = document.createElement('span');
-            headerArrow.className = 'admin-sitemap-manual-accordion-header-arrow';
-
-            // Drag handle
-            var headerDrag = document.createElement('div');
-            headerDrag.className = 'admin-sitemap-manual-accordion-header-drag';
-            var headerDragIcon = document.createElement('div');
-            headerDragIcon.className = 'admin-sitemap-manual-accordion-header-drag-icon';
-            headerDrag.appendChild(headerDragIcon);
-
-            // Edit area (pencil)
-            var headerEditArea = document.createElement('div');
-            headerEditArea.className = 'admin-sitemap-manual-accordion-header-editarea';
-            var headerEdit = document.createElement('div');
-            headerEdit.className = 'admin-sitemap-manual-accordion-header-edit';
-            headerEditArea.appendChild(headerEdit);
-
-            header.appendChild(headerText);
-            header.appendChild(headerArrow);
-            header.appendChild(headerDrag);
-            header.appendChild(headerEditArea);
-
-            // Edit panel (chapter title input)
-            var editPanel = document.createElement('div');
-            editPanel.className = 'admin-sitemap-manual-accordion-editpanel';
-
-            var nameRow = document.createElement('div');
-            nameRow.className = 'admin-sitemap-manual-accordion-editpanel-row';
-
-            var nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.className = 'admin-sitemap-manual-accordion-editpanel-input input-class-1';
-            nameInput.value = chapterData.chapter;
-            nameInput.dataset.chapterKey = chapterData.chapter;
-            nameInput.addEventListener('input', function() {
-                headerText.textContent = nameInput.value || chapterData.chapter;
-                if (instructionsLoaded) notifyFieldChange();
-            });
-
-            nameRow.appendChild(nameInput);
-
-            // More button (three dots) with Delete Chapter
-            var moreBtn = document.createElement('div');
-            moreBtn.className = 'admin-sitemap-manual-accordion-editpanel-more';
-            moreBtn.innerHTML = '<div class="admin-sitemap-manual-accordion-editpanel-more-icon"></div><div class="admin-sitemap-manual-accordion-editpanel-more-menu"><div class="admin-sitemap-manual-accordion-editpanel-more-item admin-sitemap-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
-            var moreMenuEl = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-menu');
-
-            moreBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                moreMenuEl.classList.toggle('admin-sitemap-manual-accordion-editpanel-more-menu--open');
-            });
-
-            var deleteBtn = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-delete');
-            deleteBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                moreMenuEl.classList.remove('admin-sitemap-manual-accordion-editpanel-more-menu--open');
-                accordion.parentNode.removeChild(accordion);
-                if (instructionsLoaded) notifyFieldChange();
-            });
-
-            nameRow.appendChild(moreBtn);
-            editPanel.appendChild(nameRow);
-
-            // Body
-            var body = document.createElement('div');
-            body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
-
-            accordion.appendChild(header);
-            accordion.appendChild(editPanel);
-            accordion.appendChild(body);
+            var accordion = buildInstructionsAccordion(chapterData, container);
             container.appendChild(accordion);
-
-            // Drag and drop (same as messages)
-            accordion.draggable = false;
-            headerDrag.addEventListener('mousedown', function() {
-                accordion.draggable = true;
-            });
-            document.addEventListener('mouseup', function() {
-                accordion.draggable = false;
-            });
-            accordion.addEventListener('dragstart', function(e) {
-                if (!accordion.draggable) { e.preventDefault(); return; }
-                var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
-                dragStartIndex = siblings.indexOf(accordion);
-                e.dataTransfer.effectAllowed = 'move';
-                accordion.classList.add('dragging');
-            });
-            accordion.addEventListener('dragend', function() {
-                accordion.classList.remove('dragging');
-                accordion.draggable = false;
-                var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
-                if (siblings.indexOf(accordion) !== dragStartIndex) {
-                    if (instructionsLoaded) notifyFieldChange();
-                }
-                dragStartIndex = -1;
-            });
-            accordion.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                var dragging = container.querySelector('.admin-sitemap-manual-accordion.dragging');
-                if (dragging && dragging !== accordion) {
-                    var rect = accordion.getBoundingClientRect();
-                    var midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
-                        accordion.parentNode.insertBefore(dragging, accordion);
-                    } else {
-                        accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
-                    }
-                }
-            });
-
-            // Edit area click — toggle edit panel
-            headerEditArea.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
-                closeAllInstructionsEditPanels();
-                if (!isEditing) {
-                    accordion.classList.add('admin-sitemap-manual-accordion--editing');
-                }
-                syncInstructionsAccordionUi(accordion);
-            });
-
-            // Header click — toggle open/close
-            header.addEventListener('click', function(e) {
-                if (e.target.closest('.admin-sitemap-manual-accordion-header-editarea')) return;
-                if (e.target.closest('.admin-sitemap-manual-accordion-header-drag')) return;
-                if (!accordion.classList.contains('admin-sitemap-manual-accordion--editing')) {
-                    closeAllInstructionsEditPanels();
-                }
-                accordion.classList.toggle('admin-sitemap-manual-accordion--open');
-                syncInstructionsAccordionUi(accordion);
-            });
-
             syncInstructionsAccordionUi(accordion);
         });
+
+        // Add Chapter button
+        var addChapterBtn = document.createElement('div');
+        addChapterBtn.className = 'admin-sitemap-manual-add-chapter';
+        addChapterBtn.textContent = '+ Add Chapter';
+        addChapterBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            addChapter(container, addChapterBtn);
+        });
+        container.appendChild(addChapterBtn);
 
         // Close edit panels on outside click
         document.addEventListener('click', function(e) {
@@ -1035,6 +1050,17 @@ const AdminModule = (function() {
 
         registerComposite('instructions', captureInstructionsState);
         instructionsLoaded = true;
+    }
+
+    function addChapter(container, addChapterBtn) {
+        var newChapter = { chapter: 'New Chapter', items: [] };
+        var accordion = buildInstructionsAccordion(newChapter, container);
+        container.insertBefore(accordion, addChapterBtn);
+        accordion.classList.add('admin-sitemap-manual-accordion--editing');
+        syncInstructionsAccordionUi(accordion);
+        var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+        if (nameInput) { nameInput.select(); nameInput.focus(); }
+        if (instructionsLoaded) notifyFieldChange();
     }
 
     /* --------------------------------------------------------------------------
