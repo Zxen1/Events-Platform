@@ -7480,13 +7480,17 @@ const MemberModule = (function() {
                 if (path === '/post-editor' || path === '/post-editor/') isPostEditor = true;
                 if (!isPostEditor && qs.get('post-editor') !== null) isPostEditor = true;
             }
-            // /reset-password=TOKEN
+            // /reset-password=TOKEN (path) or ?reset-password=TOKEN (after htaccess redirect)
             var resetMatch = path.match(/^\/reset-password=([^/?#]+)\/?$/);
             if (resetMatch) {
                 resetToken = decodeURIComponent(resetMatch[1]);
                 isProfileForm = true;
             }
-            // /profile-form
+            if (!resetToken && qs.get('reset-password') !== null) {
+                resetToken = qs.get('reset-password');
+                isProfileForm = true;
+            }
+            // /profile-form or ?profile-form
             if (!isProfileForm && (path === '/profile-form' || path === '/profile-form/')) isProfileForm = true;
             if (!isProfileForm && qs.get('profile-form') !== null) isProfileForm = true;
         } catch (_eDL) {}
