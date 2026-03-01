@@ -146,7 +146,7 @@ $samples = [
   'description'   => '',
   'receipt_id'    => '',
   'payment'       => '',
-  'date'          => '',
+  'date'          => '31 March 2026',
   'code'          => 'A4B2C9',
   'listings'      => '<ul style="padding:0 0 0 20px;margin:0 0 16px;"><li style="margin-bottom:8px;font-size:15px;color:#333;">Sydney Harbour Fireworks — expires 6 Mar 2026</li><li style="margin-bottom:8px;font-size:15px;color:#333;">Little Havana Domino Park — expires 9 Mar 2026</li></ul>',
   'listing_label' => 'listings',
