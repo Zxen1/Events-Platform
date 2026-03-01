@@ -56,6 +56,8 @@ $map = [
   'get-post-media' => $connectorDir . '/get-post-media.php',
   'restore-post' => $connectorDir . '/restore-post.php',
   'payment-order' => $connectorDir . '/payment-order.php',
+  'send-verification-code' => $connectorDir . '/send-verification-code.php',
+  'verify-email-code' => $connectorDir . '/verify-email-code.php',
 ];
 
 if (!$action || !isset($map[$action])) {

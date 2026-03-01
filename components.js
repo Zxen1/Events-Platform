@@ -2526,6 +2526,236 @@ const MemberAuthFieldsetsComponent = (function(){
         return wrap;
     }
 
+    function buildEmailVerifyFieldset(emailInput) {
+        var fieldset = document.createElement('div');
+        fieldset.className = 'fieldset';
+        fieldset.dataset.fieldsetKey  = 'email-verification';
+        fieldset.dataset.fieldsetName = 'Email verification';
+        fieldset.dataset.required     = 'true';
+        fieldset.dataset.complete     = 'false';
+
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.buildLabel === 'function') {
+            fieldset.appendChild(FieldsetBuilder.buildLabel('Verify email', '', null, null));
+        }
+
+        var row = document.createElement('div');
+        row.className = 'member-register-emailverify-row';
+
+        // — Send wrap (idle / sending state) —
+        var sendWrap = document.createElement('div');
+        sendWrap.className = 'member-register-emailverify-sendwrap';
+
+        var sendBtn = document.createElement('button');
+        sendBtn.type      = 'button';
+        sendBtn.className = 'member-register-emailverify-sendbtn button-class-3';
+        sendBtn.disabled  = true;
+
+        var btnText = document.createElement('span');
+        btnText.className   = 'member-register-emailverify-sendbtn-text';
+        btnText.textContent = 'Send Code';
+        sendBtn.appendChild(btnText);
+
+        var btnSpinner = document.createElement('span');
+        btnSpinner.className    = 'member-register-emailverify-sendbtn-spinner';
+        btnSpinner.style.display = 'none';
+        sendBtn.appendChild(btnSpinner);
+
+        var sendMsg = document.createElement('span');
+        sendMsg.className = 'member-register-emailverify-sendmsg';
+
+        sendWrap.appendChild(sendBtn);
+        sendWrap.appendChild(sendMsg);
+
+        // — Code wrap (code-entry state) —
+        var codeWrap = document.createElement('div');
+        codeWrap.className    = 'member-register-emailverify-codewrap';
+        codeWrap.style.display = 'none';
+
+        var codeInputRow = document.createElement('div');
+        codeInputRow.className = 'member-register-emailverify-codeinputrow';
+
+        var codeInput = document.createElement('input');
+        codeInput.type          = 'text';
+        codeInput.className     = 'member-register-emailverify-codeinput';
+        codeInput.maxLength     = 6;
+        codeInput.placeholder   = 'A1B2C3';
+        codeInput.autocomplete  = 'off';
+        codeInput.setAttribute('spellcheck', 'false');
+        codeInput.setAttribute('inputmode', 'text');
+
+        var resendBtn = document.createElement('button');
+        resendBtn.type      = 'button';
+        resendBtn.className = 'member-register-emailverify-resendbtn';
+        resendBtn.textContent = 'Resend';
+
+        codeInputRow.appendChild(codeInput);
+        codeInputRow.appendChild(resendBtn);
+
+        var codeMsg = document.createElement('span');
+        codeMsg.className = 'member-register-emailverify-codemsg';
+
+        codeWrap.appendChild(codeInputRow);
+        codeWrap.appendChild(codeMsg);
+
+        // — Done wrap (verified state) —
+        var doneWrap = document.createElement('div');
+        doneWrap.className    = 'member-register-emailverify-donewrap';
+        doneWrap.style.display = 'none';
+
+        var doneIcon = document.createElement('span');
+        doneIcon.className   = 'member-register-emailverify-doneicon';
+        doneIcon.textContent = '✓';
+
+        var doneText = document.createElement('span');
+        doneText.className   = 'member-register-emailverify-donetext';
+        doneText.textContent = 'Email verified';
+
+        doneWrap.appendChild(doneIcon);
+        doneWrap.appendChild(doneText);
+
+        row.appendChild(sendWrap);
+        row.appendChild(codeWrap);
+        row.appendChild(doneWrap);
+        fieldset.appendChild(row);
+
+        // — State machine —
+        var state = 'idle';
+
+        function getEmail() {
+            return emailInput ? String(emailInput.value || '').trim() : '';
+        }
+
+        function isValidEmail(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        }
+
+        function setComplete(val) {
+            fieldset.dataset.complete = val ? 'true' : 'false';
+            var star = fieldset.querySelector('.fieldset-label-required');
+            if (star) star.classList.toggle('fieldset-label-required--complete', !!val);
+            try { fieldset.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true })); } catch (e) {}
+        }
+
+        function showState(newState) {
+            state = newState;
+            sendWrap.style.display = (state === 'idle' || state === 'sending') ? '' : 'none';
+            codeWrap.style.display = (state === 'code-entry') ? '' : 'none';
+            doneWrap.style.display = (state === 'verified')   ? '' : 'none';
+        }
+
+        function updateSendBtnState() {
+            if (state !== 'idle') return;
+            sendBtn.disabled = !isValidEmail(getEmail());
+        }
+
+        function setSending(val) {
+            sendBtn.disabled         = val;
+            btnText.style.display    = val ? 'none' : '';
+            btnSpinner.style.display = val ? ''     : 'none';
+        }
+
+        function showSendMsg(msg, isError) {
+            sendMsg.textContent = msg;
+            sendMsg.className = 'member-register-emailverify-sendmsg' + (isError ? ' member-register-emailverify-sendmsg--error' : '');
+        }
+
+        function showCodeMsg(msg, isError) {
+            codeMsg.textContent = msg;
+            codeMsg.className = 'member-register-emailverify-codemsg' + (isError ? ' member-register-emailverify-codemsg--error' : '');
+        }
+
+        function sendCode() {
+            var email = getEmail();
+            if (!isValidEmail(email)) return;
+            showState('sending');
+            setSending(true);
+            sendMsg.textContent = '';
+            var fd = new FormData();
+            fd.append('email', email);
+            fetch('/gateway.php?action=send-verification-code', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showState('code-entry');
+                        showCodeMsg('');
+                        codeInput.value = '';
+                        requestAnimationFrame(function() { try { codeInput.focus(); } catch (e) {} });
+                    } else {
+                        showState('idle');
+                        setSending(false);
+                        showSendMsg(data.message || 'Failed to send code.', true);
+                    }
+                })
+                .catch(function() {
+                    showState('idle');
+                    setSending(false);
+                    showSendMsg('Failed to send code.', true);
+                });
+        }
+
+        function verifyCode(code) {
+            var email = getEmail();
+            if (!isValidEmail(email)) { showState('idle'); return; }
+            showCodeMsg('Checking…');
+            codeInput.disabled = true;
+            var fd = new FormData();
+            fd.append('email', email);
+            fd.append('code', code);
+            fetch('/gateway.php?action=verify-email-code', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    codeInput.disabled = false;
+                    if (data.success) {
+                        showState('verified');
+                        setComplete(true);
+                    } else {
+                        codeInput.value = '';
+                        try { codeInput.focus(); } catch (e) {}
+                        showCodeMsg(data.message || 'Incorrect code. Please try again.', true);
+                    }
+                })
+                .catch(function() {
+                    codeInput.disabled = false;
+                    codeInput.value = '';
+                    showCodeMsg('Verification failed. Please try again.', true);
+                });
+        }
+
+        // — Events —
+        sendBtn.addEventListener('click', function() {
+            if (state === 'idle') sendCode();
+        });
+
+        resendBtn.addEventListener('click', function() {
+            showState('idle');
+            setSending(false);
+            sendMsg.textContent = '';
+            sendCode();
+        });
+
+        codeInput.addEventListener('input', function() {
+            var val = codeInput.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
+            if (codeInput.value !== val) codeInput.value = val;
+            if (val.length === 6) verifyCode(val);
+        });
+
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                if (state !== 'idle') {
+                    showState('idle');
+                    setSending(false);
+                    setComplete(false);
+                    sendMsg.textContent = '';
+                }
+                updateSendBtnState();
+            });
+            emailInput.addEventListener('blur', updateSendBtnState);
+        }
+
+        updateSendBtnState();
+        return fieldset;
+    }
+
     function renderRegister(containerEl, options) {
         options = options || {};
         if (!containerEl) throw new Error('MemberAuthFieldsetsComponent.renderRegister: containerEl is required');
@@ -2576,6 +2806,8 @@ const MemberAuthFieldsetsComponent = (function(){
                 el.name = 'registerEmail';
                 el.autocomplete = 'email';
             });
+
+            containerEl.appendChild(buildEmailVerifyFieldset(email ? email.input : null));
 
             var password = addFieldset('password', function(el) {
                 if (!el) return;
