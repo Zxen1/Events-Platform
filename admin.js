@@ -965,6 +965,17 @@ const AdminModule = (function() {
             e.stopPropagation();
             addItem(body, addItemBtn);
         });
+
+        // Render existing items
+        if (chapterData.items && chapterData.items.length) {
+            chapterData.items.forEach(function(item) {
+                if (!item.title && !item.description) return;
+                var itemEl = createInstructionItem(item.title, item.description);
+                itemEl.dataset.itemId = item.id;
+                body.appendChild(itemEl);
+            });
+        }
+
         body.appendChild(addItemBtn);
 
         accordion.appendChild(header);
