@@ -182,6 +182,30 @@ try {
     }
     $response['system_images'] = $systemImages;
 
+    // Optionally include admin instructions if requested
+    $includeInstructions = isset($_GET['include_instructions']) && $_GET['include_instructions'] === 'true';
+    if ($includeInstructions) {
+        try {
+            $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
+            if ($stmt->rowCount() > 0) {
+                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description` FROM `admin_instructions` ORDER BY `id` ASC');
+                $rows = $stmt->fetchAll();
+                $instructions = [];
+                foreach ($rows as $row) {
+                    $instructions[] = [
+                        'id'          => (int)$row['id'],
+                        'chapter'     => $row['chapter'],
+                        'title'       => $row['title'],
+                        'description' => $row['description'],
+                    ];
+                }
+                $response['instructions'] = $instructions;
+            }
+        } catch (Throwable $instructionsError) {
+            // If instructions fail, don't break the whole response
+        }
+    }
+
     // Lite mode: return only settings + system_images (skip baskets + dropdown_options for faster startup)
     $lite = isset($_GET['lite']) && ($_GET['lite'] === '1' || $_GET['lite'] === 'true' || $_GET['lite'] === 'yes');
     if ($lite) {
@@ -581,30 +605,6 @@ try {
         } catch (Throwable $messageError) {
             // If messages fail, don't break the whole response
             $response['messages_error'] = $messageError->getMessage();
-        }
-    }
-
-    // Optionally include admin instructions if requested
-    $includeInstructions = isset($_GET['include_instructions']) && $_GET['include_instructions'] === 'true';
-    if ($includeInstructions) {
-        try {
-            $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
-            if ($stmt->rowCount() > 0) {
-                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description` FROM `admin_instructions` ORDER BY `id` ASC');
-                $rows = $stmt->fetchAll();
-                $instructions = [];
-                foreach ($rows as $row) {
-                    $instructions[] = [
-                        'id'          => (int)$row['id'],
-                        'chapter'     => $row['chapter'],
-                        'title'       => $row['title'],
-                        'description' => $row['description'],
-                    ];
-                }
-                $response['instructions'] = $instructions;
-            }
-        } catch (Throwable $instructionsError) {
-            // If instructions fail, don't break the whole response
         }
     }
 

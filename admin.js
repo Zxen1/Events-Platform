@@ -784,25 +784,30 @@ const AdminModule = (function() {
         if (sitemapTabInitialized) return;
         sitemapTabInitialized = true;
 
-        // Load iframe
-        var iframe = document.getElementById('admin-sitemap-iframe');
-        if (iframe) {
-            var src = iframe.getAttribute('data-src');
-            if (src) iframe.setAttribute('src', src);
-        }
-
-        // Load and render instructions accordions
+        // Load and render instructions accordions first, then load iframe
         var manualContainer = document.getElementById('admin-sitemap-manual-container');
-        if (!manualContainer) return;
 
-        fetch('/gateway.php?action=get-admin-settings&include_instructions=true')
+        fetch('/gateway.php?action=get-admin-settings&lite=1&include_instructions=true')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (!data.success || !data.instructions || !data.instructions.length) return;
-                renderInstructionsAccordions(manualContainer, data.instructions);
+                if (manualContainer && data.success && data.instructions && data.instructions.length) {
+                    renderInstructionsAccordions(manualContainer, data.instructions);
+                }
+                // Load iframe after chapters are rendered
+                var iframe = document.getElementById('admin-sitemap-iframe');
+                if (iframe) {
+                    var src = iframe.getAttribute('data-src');
+                    if (src) iframe.setAttribute('src', src);
+                }
             })
             .catch(function(err) {
                 console.error('[Admin] Failed to load instructions:', err);
+                // Load iframe even if instructions fail
+                var iframe = document.getElementById('admin-sitemap-iframe');
+                if (iframe) {
+                    var src = iframe.getAttribute('data-src');
+                    if (src) iframe.setAttribute('src', src);
+                }
             });
     }
 
