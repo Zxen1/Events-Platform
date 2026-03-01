@@ -391,7 +391,7 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
   $body      = str_replace(
     ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
-    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $postKey), $logoHtml, $safeDesc, $amountHtml, (string)$txId, $paymentVia, $dateStr],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $postKey), $logoHtml, $safeDesc, $amountHtml, 'FM-' . str_pad($txId, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
     $template['message_text']
   );
 

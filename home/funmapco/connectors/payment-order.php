@@ -182,7 +182,7 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
     $safeDesc    = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
     $subject     = str_replace('{name}', $safeName, $template['message_name']);
     $body        = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
-                               [$safeName, $logoHtml, $safeDesc, $amountHtml, (string)$transaction_id, $paymentVia, $dateStr],
+                               [$safeName, $logoHtml, $safeDesc, $amountHtml, 'FM-' . str_pad($transaction_id, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
                                $template['message_text']);
 
     if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
