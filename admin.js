@@ -931,6 +931,27 @@ const AdminModule = (function() {
             nameRow.appendChild(nameInput);
             editPanel.appendChild(nameRow);
 
+            // More button (three dots) with Delete Chapter
+            var moreBtn = document.createElement('div');
+            moreBtn.className = 'admin-sitemap-manual-accordion-editpanel-more';
+            moreBtn.innerHTML = '<div class="admin-sitemap-manual-accordion-editpanel-more-icon"></div><div class="admin-sitemap-manual-accordion-editpanel-more-menu"><div class="admin-sitemap-manual-accordion-editpanel-more-item admin-sitemap-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
+            var moreMenuEl = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-menu');
+
+            moreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                moreMenuEl.classList.toggle('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+            });
+
+            var deleteBtn = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-delete');
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                moreMenuEl.classList.remove('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+                accordion.parentNode.removeChild(accordion);
+                if (instructionsLoaded) notifyFieldChange();
+            });
+
+            editPanel.appendChild(moreBtn);
+
             // Body
             var body = document.createElement('div');
             body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
