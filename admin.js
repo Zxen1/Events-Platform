@@ -929,7 +929,6 @@ const AdminModule = (function() {
             });
 
             nameRow.appendChild(nameInput);
-            editPanel.appendChild(nameRow);
 
             // More button (three dots) with Delete Chapter
             var moreBtn = document.createElement('div');
@@ -950,7 +949,8 @@ const AdminModule = (function() {
                 if (instructionsLoaded) notifyFieldChange();
             });
 
-            editPanel.appendChild(moreBtn);
+            nameRow.appendChild(moreBtn);
+            editPanel.appendChild(nameRow);
 
             // Body
             var body = document.createElement('div');
