@@ -585,21 +585,35 @@ try {
 
     // Save instructions if provided
     $instructionsUpdated = 0;
+    $newChapterIds = [];
     if ($instructions !== null && is_array($instructions) && !empty($instructions)) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->prepare('
+            $updateStmt = $pdo->prepare('
                 UPDATE `admin_instructions`
                 SET `description` = :description
                 WHERE `id` = :id
             ');
+            $insertStmt = $pdo->prepare('
+                INSERT INTO `admin_instructions` (`chapter`, `title`, `description`)
+                VALUES (:chapter, :title, :description)
+            ');
             foreach ($instructions as $item) {
-                if (!isset($item['id']) || !isset($item['description'])) continue;
-                $stmt->execute([
-                    ':id'          => (int)$item['id'],
-                    ':description' => (string)$item['description'],
-                ]);
-                if ($stmt->rowCount() > 0) $instructionsUpdated++;
+                if (!empty($item['is_new'])) {
+                    $insertStmt->execute([
+                        ':chapter'     => (string)($item['chapter'] ?? 'New Chapter'),
+                        ':title'       => '',
+                        ':description' => '',
+                    ]);
+                    $newChapterIds[] = (int)$pdo->lastInsertId();
+                    $instructionsUpdated++;
+                } elseif (isset($item['id']) && isset($item['description'])) {
+                    $updateStmt->execute([
+                        ':id'          => (int)$item['id'],
+                        ':description' => (string)$item['description'],
+                    ]);
+                    if ($updateStmt->rowCount() > 0) $instructionsUpdated++;
+                }
             }
         }
     }
@@ -642,6 +656,9 @@ try {
 
     if ($instructionsUpdated > 0) {
         $response['instructions_updated'] = $instructionsUpdated;
+    }
+    if (!empty($newChapterIds)) {
+        $response['new_chapter_ids'] = $newChapterIds;
     }
 
     echo json_encode($response);

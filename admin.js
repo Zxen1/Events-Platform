@@ -829,15 +829,16 @@ const AdminModule = (function() {
 
     function getModifiedInstructions() {
         var modified = [];
-        var entry = fieldRegistry['instructions'];
-        if (!entry || entry.type !== 'composite') return modified;
-        var originalState = JSON.parse(entry.original);
-        var currentState = captureInstructionsState();
-        for (var id in currentState) {
-            if (currentState[id] !== (originalState[id] || '')) {
-                modified.push({ id: parseInt(id, 10), description: currentState[id] });
+        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        if (!manualContainer) return modified;
+        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+            if (!nameInput) return;
+            var chapterName = nameInput.value.trim() || 'New Chapter';
+            if (accordion.dataset.isNew === '1') {
+                modified.push({ chapter: chapterName, is_new: true });
             }
-        }
+        });
         return modified;
     }
 
@@ -1060,6 +1061,7 @@ const AdminModule = (function() {
     function addChapter(container, addChapterBtn) {
         var newChapter = { chapter: 'New Chapter', items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container);
+        accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-sitemap-manual-accordion--editing');
         syncInstructionsAccordionUi(accordion);
@@ -1194,6 +1196,19 @@ const AdminModule = (function() {
                 .then(function(data) {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save instructions');
+                    }
+                    // Clear is_new flag on newly saved chapters
+                    if (data.new_chapter_ids && Array.isArray(data.new_chapter_ids)) {
+                        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+                        if (manualContainer) {
+                            var newAccordions = manualContainer.querySelectorAll('.admin-sitemap-manual-accordion[data-is-new="1"]');
+                            data.new_chapter_ids.forEach(function(newId, i) {
+                                if (newAccordions[i]) {
+                                    newAccordions[i].dataset.isNew = '';
+                                    newAccordions[i].dataset.chapterId = newId;
+                                }
+                            });
+                        }
                     }
                     updateCompositeBaseline('instructions');
                 })
