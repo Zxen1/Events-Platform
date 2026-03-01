@@ -1300,6 +1300,21 @@
 /* Note: AvatarCropperComponent styles live in components.css (.component-avatarcropper-tool-*) */
 
 /* ============================================================================
+   LOGIN FORM ACTIONS (Forgot Password + Log In)
+   ============================================================================ */
+
+.member-loginform-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.member-loginform-actions > .member-loginform-login {
+  margin-left: auto;
+}
+
+/* ============================================================================
    PROFILE ACTIONS (Refresh Preferences + Logout)
    ============================================================================ */
 

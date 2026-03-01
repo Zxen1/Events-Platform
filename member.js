@@ -6066,24 +6066,28 @@ const MemberModule = (function() {
         fieldsets.appendChild(emailField);
         fieldsets.appendChild(passField);
 
-        // Submit button
+        // Actions row (mirrors member-profile-actions layout)
+        var actionsRow = document.createElement('div');
+        actionsRow.className = 'member-loginform-actions';
+
+        var forgotBtn = document.createElement('button');
+        forgotBtn.type = 'button';
+        forgotBtn.className = 'member-loginform-forgotpassword button-class-2';
+        forgotBtn.textContent = 'Forgot Password?';
+        forgotBtn.addEventListener('click', function() { handleForgotPassword(); });
+
         var submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
-        submitBtn.className = 'member-login button-class-2b';
+        submitBtn.className = 'member-loginform-login button-class-3';
         submitBtn.dataset.action = 'login';
         submitBtn.textContent = 'Log In';
 
-        form.appendChild(fieldsets);
-        form.appendChild(submitBtn);
-        container.appendChild(form);
+        actionsRow.appendChild(forgotBtn);
+        actionsRow.appendChild(submitBtn);
 
-        // Forgot password link
-        var forgotBtn = document.createElement('button');
-        forgotBtn.type = 'button';
-        forgotBtn.className = 'member-login-forgot button-class-2b';
-        forgotBtn.textContent = 'Forgot Password?';
-        forgotBtn.addEventListener('click', function() { handleForgotPassword(); });
-        container.appendChild(forgotBtn);
+        form.appendChild(fieldsets);
+        form.appendChild(actionsRow);
+        container.appendChild(form);
 
         // Insert into auth wrapper
         authWrapper.appendChild(container);
