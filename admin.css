@@ -3131,6 +3131,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 10px;
   background: #062038;
   border: 1px solid #222222;
   border-radius: 5px;
