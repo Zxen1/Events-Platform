@@ -2988,7 +2988,9 @@
    ============================================================================ */
 
 .admin-sitemap-manual-container {
-  padding: 10px 10px 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 12px auto;
 }
 
 .admin-sitemap-manual-accordion {
@@ -3007,7 +3009,6 @@
 
 .admin-sitemap-manual-accordion-header-text {
   flex: 1;
-  padding-left: 10px;
   font-weight: bold;
 }
 

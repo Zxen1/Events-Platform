@@ -110,8 +110,9 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, and system_images from settings
+    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, system_images, and instructions from settings
     $messages = null;
+    $instructions = null;
     $fieldsetTooltips = null;
     $fieldTooltips = null;
     $checkoutOptions = null;
@@ -121,6 +122,10 @@ try {
     if (isset($data['messages']) && is_array($data['messages'])) {
         $messages = $data['messages'];
         unset($settings['messages']);
+    }
+    if (isset($data['instructions']) && is_array($data['instructions'])) {
+        $instructions = $data['instructions'];
+        unset($settings['instructions']);
     }
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
@@ -578,6 +583,27 @@ try {
         }
     }
 
+    // Save instructions if provided
+    $instructionsUpdated = 0;
+    if ($instructions !== null && is_array($instructions) && !empty($instructions)) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `admin_instructions`
+                SET `description` = :description
+                WHERE `id` = :id
+            ');
+            foreach ($instructions as $item) {
+                if (!isset($item['id']) || !isset($item['description'])) continue;
+                $stmt->execute([
+                    ':id'          => (int)$item['id'],
+                    ':description' => (string)$item['description'],
+                ]);
+                if ($stmt->rowCount() > 0) $instructionsUpdated++;
+            }
+        }
+    }
+
     $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
@@ -612,6 +638,10 @@ try {
     if ($couponSaved) {
         $response['coupon_saved'] = true;
         $response['coupon_id'] = $couponId;
+    }
+
+    if ($instructionsUpdated > 0) {
+        $response['instructions_updated'] = $instructionsUpdated;
     }
 
     echo json_encode($response);

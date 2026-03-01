@@ -806,6 +806,32 @@ const AdminModule = (function() {
             });
     }
 
+    var instructionsLoaded = false;
+
+    function captureInstructionsState() {
+        var state = {};
+        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        if (!manualContainer) return state;
+        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion-body-input[data-instruction-id]').forEach(function(textarea) {
+            state[textarea.dataset.instructionId] = textarea.value;
+        });
+        return state;
+    }
+
+    function getModifiedInstructions() {
+        var modified = [];
+        var entry = fieldRegistry['instructions'];
+        if (!entry || entry.type !== 'composite') return modified;
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureInstructionsState();
+        for (var id in currentState) {
+            if (currentState[id] !== (originalState[id] || '')) {
+                modified.push({ id: parseInt(id, 10), description: currentState[id] });
+            }
+        }
+        return modified;
+    }
+
     function renderInstructionsAccordions(container, instructions) {
         container.innerHTML = '';
 
@@ -829,7 +855,43 @@ const AdminModule = (function() {
 
             var body = document.createElement('div');
             body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
-            body.textContent = item.description;
+
+            // Text display (click to edit)
+            var textDisplay = document.createElement('div');
+            textDisplay.className = 'admin-message-text-display';
+            textDisplay.innerHTML = item.description || '';
+            textDisplay.title = 'Click to edit';
+
+            // Textarea (hidden by default)
+            var textInput = document.createElement('textarea');
+            textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+            textInput.value = item.description || '';
+            textInput.rows = 3;
+            textInput.dataset.instructionId = String(item.id);
+
+            textDisplay.addEventListener('click', function() {
+                textDisplay.classList.add('admin-message-text-display--hidden');
+                textInput.classList.remove('admin-message-text-input--hidden');
+                textInput.style.display = 'block';
+                textInput.focus();
+            });
+
+            textInput.addEventListener('input', function() {
+                textDisplay.innerHTML = textInput.value;
+                if (instructionsLoaded) notifyFieldChange();
+            });
+
+            textInput.addEventListener('blur', function() {
+                textDisplay.innerHTML = textInput.value;
+                textDisplay.classList.remove('admin-message-text-display--hidden');
+                textInput.classList.add('admin-message-text-input--hidden');
+                textInput.style.display = 'none';
+            });
+
+            body.appendChild(textDisplay);
+            body.appendChild(textInput);
+            TextareaResizeComponent.attach(textInput);
+            textInput.style.display = 'none';
 
             accordion.appendChild(header);
             accordion.appendChild(body);
@@ -841,6 +903,9 @@ const AdminModule = (function() {
                 headerArrow.classList.toggle('admin-sitemap-manual-accordion-header-arrow--open', isOpen);
             });
         });
+
+        registerComposite('instructions', captureInstructionsState);
+        instructionsLoaded = true;
     }
 
     /* --------------------------------------------------------------------------
@@ -956,6 +1021,25 @@ const AdminModule = (function() {
             );
         }
         
+        // Save modified instructions (uses save-admin-settings endpoint)
+        var modifiedInstructions = getModifiedInstructions();
+        if (modifiedInstructions.length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instructions: modifiedInstructions })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save instructions');
+                    }
+                    updateCompositeBaseline('instructions');
+                })
+            );
+        }
+
         // Save modified messages (uses save-admin-settings endpoint)
         var modifiedMessages = getModifiedMessages();
         if (modifiedMessages.length > 0) {
