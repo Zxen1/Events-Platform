@@ -301,9 +301,11 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
   $dateStr    = '';
   if ($txId > 0) {
     if (!$txGateway) { $logFailed('Transaction ' . $txId . ' has no payment_gateway'); return; }
-    $gwLabels = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
-    $gw = $gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway);
-    $paymentVia = $txMethod ? $gw . ' · ' . $txMethod : $gw;
+    $gwLabels     = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+    $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card'];
+    $gw         = $gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway);
+    $normMethod = $txMethod ? ($methodLabels[strtolower($txMethod)] ?? ucfirst(strtolower($txMethod))) : '';
+    $paymentVia = $normMethod ? $gw . ' · ' . $normMethod : $gw;
     $dateStr = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
   }
 

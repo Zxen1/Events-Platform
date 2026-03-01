@@ -165,9 +165,11 @@ $samples = [
     $txGateway   = $tx['payment_gateway'] ?? '';
     $txMethod    = $tx['payment_method']  ?? '';
     $txCreatedAt = $tx['created_at']      ?? '';
-    $gwLabels = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
-    $gw = $txGateway ? ($gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway)) : '';
-    $renderSamples['payment'] = ($txMethod && $gw) ? $gw . ' · ' . $txMethod : $gw;
+    $gwLabels     = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
+    $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card'];
+    $gw         = $txGateway ? ($gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway)) : '';
+    $normMethod = $txMethod ? ($methodLabels[strtolower($txMethod)] ?? ucfirst(strtolower($txMethod))) : '';
+    $renderSamples['payment'] = ($normMethod && $gw) ? $gw . ' · ' . $normMethod : $gw;
     $renderSamples['date']    = $txCreatedAt ? date('j M Y, H:i', strtotime($txCreatedAt)) . ' UTC' : '';
     if (!empty($tx['post_title'])) {
       $renderSamples['title']     = htmlspecialchars($tx['post_title']);
