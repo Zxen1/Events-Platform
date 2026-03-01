@@ -1571,12 +1571,13 @@
 
 .member-register-emailverify-sendwrap {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .member-register-emailverify-sendbtn {
-  min-width: 100px;
+  width: 100%;
+  height: 36px;
 }
 
 .member-register-emailverify-sendbtn-spinner {

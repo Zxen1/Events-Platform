@@ -2535,7 +2535,7 @@ const MemberAuthFieldsetsComponent = (function(){
         fieldset.dataset.complete     = 'false';
 
         if (window.FieldsetBuilder && typeof FieldsetBuilder.buildLabel === 'function') {
-            fieldset.appendChild(FieldsetBuilder.buildLabel('Verify email', '', null, null));
+            fieldset.appendChild(FieldsetBuilder.buildLabel('Verify Email', '', null, null));
         }
 
         var row = document.createElement('div');
