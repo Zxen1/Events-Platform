@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unsubscribed</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .page {
+      text-align: center;
+      max-width: 480px;
+      width: 100%;
+    }
+    .page-logo {
+      max-height: 60px;
+      max-width: 240px;
+      display: block;
+      margin: 0 auto 32px;
+    }
+    .page-logo--hidden { display: none; }
+    .page-heading {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .page-body {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <img id="pageLogo" class="page-logo page-logo--hidden" alt="Fun Map">
+    <h1 class="page-heading">You've been unsubscribed.</h1>
+    <p class="page-body">You will no longer receive reminder emails from FunMap. To switch them back on, log in and visit your profile.</p>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var memberId = parseInt(params.get('id'), 10) || 0;
+      var email    = params.get('email') || '';
+
+      // Fire unsubscribe — no need to wait for result before showing the page
+      if (memberId > 0 && email) {
+        fetch('/gateway.php?action=edit-member', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: memberId, 'account-email': email, email_notifications: 0 })
+        }).catch(function () {});
+      }
+
+      // Fetch logo from admin settings
+      fetch('/gateway.php?action=get-admin-settings')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var s      = (data && data.settings) ? data.settings : {};
+          var folder = (s.folder_system_images || '').replace(/\/$/, '');
+          var file   = s.email_logo || '';
+          var name   = s.website_name || 'Fun Map';
+          if (folder && file) {
+            var img  = document.getElementById('pageLogo');
+            img.src  = folder + '/' + encodeURIComponent(file);
+            img.alt  = name;
+            img.classList.remove('page-logo--hidden');
+          }
+          if (s.website_name) {
+            document.title = 'Unsubscribed \u2014 ' + s.website_name;
+          }
+        })
+        .catch(function () {});
+    }());
+  </script>
+</body>
+</html>
