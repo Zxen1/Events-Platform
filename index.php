@@ -1261,6 +1261,11 @@ if (empty($ogTitle)) {
 
         <!-- Sitemap Tab -->
         <section id="admin-tab-sitemap" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-sitemap-btn">
+
+          <!-- Manual -->
+          <div id="admin-sitemap-manual-container" class="admin-sitemap-manual-container"></div>
+
+          <!-- Sitemap iframe -->
           <div class="admin-panel-body-item">
             <iframe id="admin-sitemap-iframe" title="Sitemap" data-src="sitemap.html" loading="lazy" style="width: 100%; height: 980px; border: 0; display: block; background: transparent;"></iframe>
           </div>

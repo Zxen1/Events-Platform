@@ -584,6 +584,29 @@ try {
         }
     }
 
+    // Optionally include admin instructions if requested
+    $includeInstructions = isset($_GET['include_instructions']) && $_GET['include_instructions'] === 'true';
+    if ($includeInstructions) {
+        try {
+            $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
+            if ($stmt->rowCount() > 0) {
+                $stmt = $pdo->query('SELECT `id`, `title`, `description` FROM `admin_instructions` ORDER BY `id` ASC');
+                $rows = $stmt->fetchAll();
+                $instructions = [];
+                foreach ($rows as $row) {
+                    $instructions[] = [
+                        'id'          => (int)$row['id'],
+                        'title'       => $row['title'],
+                        'description' => $row['description'],
+                    ];
+                }
+                $response['instructions'] = $instructions;
+            }
+        } catch (Throwable $instructionsError) {
+            // If instructions fail, don't break the whole response
+        }
+    }
+
     // Flush output immediately
     echo json_encode($response);
     // Note: fastcgi_finish_request() removed - was causing partial image loading issues

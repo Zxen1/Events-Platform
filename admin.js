@@ -779,14 +779,68 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     var sitemapTabInitialized = false;
-    
+
     function initSitemapTab() {
         if (sitemapTabInitialized) return;
-        var iframe = document.getElementById('admin-sitemap-iframe');
-        if (!iframe) return;
-        var src = iframe.getAttribute('data-src');
-        if (src) iframe.setAttribute('src', src);
         sitemapTabInitialized = true;
+
+        // Load iframe
+        var iframe = document.getElementById('admin-sitemap-iframe');
+        if (iframe) {
+            var src = iframe.getAttribute('data-src');
+            if (src) iframe.setAttribute('src', src);
+        }
+
+        // Load and render instructions accordions
+        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        if (!manualContainer) return;
+
+        fetch('/gateway.php?action=get-admin-settings&include_instructions=true')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (!data.success || !data.instructions || !data.instructions.length) return;
+                renderInstructionsAccordions(manualContainer, data.instructions);
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load instructions:', err);
+            });
+    }
+
+    function renderInstructionsAccordions(container, instructions) {
+        container.innerHTML = '';
+
+        instructions.forEach(function(item) {
+            var accordion = document.createElement('div');
+            accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
+            accordion.dataset.instructionId = item.id;
+
+            var header = document.createElement('div');
+            header.className = 'admin-sitemap-manual-accordion-header accordion-header';
+
+            var headerText = document.createElement('span');
+            headerText.className = 'admin-sitemap-manual-accordion-header-text';
+            headerText.textContent = item.title;
+
+            var headerArrow = document.createElement('span');
+            headerArrow.className = 'admin-sitemap-manual-accordion-header-arrow';
+
+            header.appendChild(headerText);
+            header.appendChild(headerArrow);
+
+            var body = document.createElement('div');
+            body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
+            body.textContent = item.description;
+
+            accordion.appendChild(header);
+            accordion.appendChild(body);
+            container.appendChild(accordion);
+
+            header.addEventListener('click', function() {
+                var isOpen = accordion.classList.toggle('accordion-class-1--open');
+                body.classList.toggle('admin-sitemap-manual-accordion-body--hidden', !isOpen);
+                headerArrow.classList.toggle('admin-sitemap-manual-accordion-header-arrow--open', isOpen);
+            });
+        });
     }
 
     /* --------------------------------------------------------------------------

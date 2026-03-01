@@ -2984,6 +2984,75 @@
 }
 
 /* ============================================================================
+   SITEMAP TAB — MANUAL (INSTRUCTIONS)
+   ============================================================================ */
+
+.admin-sitemap-manual-container {
+  padding: 10px 10px 0;
+}
+
+.admin-sitemap-manual-accordion {
+  width: 100%;
+  margin: 0 0 12px 0;
+  overflow: visible;
+}
+
+.admin-sitemap-manual-accordion:last-child {
+  margin-bottom: 0;
+}
+
+.admin-sitemap-manual-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.admin-sitemap-manual-accordion-header-text {
+  flex: 1;
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+.admin-sitemap-manual-accordion-header-arrow {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sitemap-manual-accordion-header-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.admin-sitemap-manual-accordion-header-arrow--open::before {
+  transform: rotate(180deg);
+}
+
+.admin-sitemap-manual-accordion-body {
+  padding: 10px 10px 0 10px;
+}
+
+.admin-sitemap-manual-accordion-body--hidden {
+  display: none;
+}
+
+/* ============================================================================
    SYSTEM IMAGE PICKER
    ============================================================================ */
 
