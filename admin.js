@@ -809,11 +809,15 @@ const AdminModule = (function() {
     var instructionsLoaded = false;
 
     function captureInstructionsState() {
-        var state = {};
+        var state = { chapters: [], descriptions: {} };
         var manualContainer = document.getElementById('admin-sitemap-manual-container');
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion-body-input[data-instruction-id]').forEach(function(textarea) {
-            state[textarea.dataset.instructionId] = textarea.value;
+        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+            var input = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+            if (input) state.chapters.push(input.value);
+        });
+        manualContainer.querySelectorAll('.admin-message-text-input[data-instruction-id]').forEach(function(textarea) {
+            state.descriptions[textarea.dataset.instructionId] = textarea.value;
         });
         return state;
     }
@@ -832,76 +836,180 @@ const AdminModule = (function() {
         return modified;
     }
 
+    function closeAllInstructionsEditPanels() {
+        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        if (!manualContainer) return;
+        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion--editing').forEach(function(el) {
+            el.classList.remove('admin-sitemap-manual-accordion--editing');
+            syncInstructionsAccordionUi(el);
+        });
+    }
+
+    function syncInstructionsAccordionUi(accordion) {
+        if (!accordion) return;
+        var isOpen = accordion.classList.contains('admin-sitemap-manual-accordion--open');
+        var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
+        var arrow = accordion.querySelector('.admin-sitemap-manual-accordion-header-arrow');
+        var editArea = accordion.querySelector('.admin-sitemap-manual-accordion-header-editarea');
+        var editPanel = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel');
+        var body = accordion.querySelector('.admin-sitemap-manual-accordion-body');
+        accordion.classList.toggle('accordion-class-1--open', isOpen || isEditing);
+        if (arrow) arrow.classList.toggle('admin-sitemap-manual-accordion-header-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('admin-sitemap-manual-accordion-header-editarea--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('admin-sitemap-manual-accordion-editpanel--editing', !!isEditing);
+        if (body) body.classList.toggle('admin-sitemap-manual-accordion-body--hidden', !isOpen);
+    }
+
     function renderInstructionsAccordions(container, instructions) {
         container.innerHTML = '';
 
+        // Group rows by chapter
+        var chapters = [];
+        var chapterMap = {};
         instructions.forEach(function(item) {
+            if (!chapterMap[item.chapter]) {
+                chapterMap[item.chapter] = { chapter: item.chapter, items: [] };
+                chapters.push(chapterMap[item.chapter]);
+            }
+            chapterMap[item.chapter].items.push(item);
+        });
+
+        var dragStartIndex = -1;
+
+        chapters.forEach(function(chapterData) {
             var accordion = document.createElement('div');
             accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
-            accordion.dataset.instructionId = item.id;
+            accordion.dataset.chapter = chapterData.chapter;
 
+            // Header
             var header = document.createElement('div');
             header.className = 'admin-sitemap-manual-accordion-header accordion-header';
 
             var headerText = document.createElement('span');
             headerText.className = 'admin-sitemap-manual-accordion-header-text';
-            headerText.textContent = item.title;
+            headerText.textContent = chapterData.chapter;
 
             var headerArrow = document.createElement('span');
             headerArrow.className = 'admin-sitemap-manual-accordion-header-arrow';
 
+            // Drag handle
+            var headerDrag = document.createElement('div');
+            headerDrag.className = 'admin-sitemap-manual-accordion-header-drag';
+            var headerDragIcon = document.createElement('div');
+            headerDragIcon.className = 'admin-sitemap-manual-accordion-header-drag-icon';
+            headerDrag.appendChild(headerDragIcon);
+
+            // Edit area (pencil)
+            var headerEditArea = document.createElement('div');
+            headerEditArea.className = 'admin-sitemap-manual-accordion-header-editarea';
+            var headerEdit = document.createElement('div');
+            headerEdit.className = 'admin-sitemap-manual-accordion-header-edit';
+            headerEditArea.appendChild(headerEdit);
+
             header.appendChild(headerText);
             header.appendChild(headerArrow);
+            header.appendChild(headerDrag);
+            header.appendChild(headerEditArea);
 
-            var body = document.createElement('div');
-            body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
+            // Edit panel (chapter title input)
+            var editPanel = document.createElement('div');
+            editPanel.className = 'admin-sitemap-manual-accordion-editpanel';
 
-            // Text display (click to edit)
-            var textDisplay = document.createElement('div');
-            textDisplay.className = 'admin-message-text-display';
-            textDisplay.innerHTML = item.description || '';
-            textDisplay.title = 'Click to edit';
+            var nameRow = document.createElement('div');
+            nameRow.className = 'admin-sitemap-manual-accordion-editpanel-row';
 
-            // Textarea (hidden by default)
-            var textInput = document.createElement('textarea');
-            textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
-            textInput.value = item.description || '';
-            textInput.rows = 3;
-            textInput.dataset.instructionId = String(item.id);
-
-            textDisplay.addEventListener('click', function() {
-                textDisplay.classList.add('admin-message-text-display--hidden');
-                textInput.classList.remove('admin-message-text-input--hidden');
-                textInput.style.display = 'block';
-                textInput.focus();
-            });
-
-            textInput.addEventListener('input', function() {
-                textDisplay.innerHTML = textInput.value;
+            var nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'admin-sitemap-manual-accordion-editpanel-input input-class-1';
+            nameInput.value = chapterData.chapter;
+            nameInput.dataset.chapterKey = chapterData.chapter;
+            nameInput.addEventListener('input', function() {
+                headerText.textContent = nameInput.value || chapterData.chapter;
                 if (instructionsLoaded) notifyFieldChange();
             });
 
-            textInput.addEventListener('blur', function() {
-                textDisplay.innerHTML = textInput.value;
-                textDisplay.classList.remove('admin-message-text-display--hidden');
-                textInput.classList.add('admin-message-text-input--hidden');
-                textInput.style.display = 'none';
-            });
+            nameRow.appendChild(nameInput);
+            editPanel.appendChild(nameRow);
 
-            body.appendChild(textDisplay);
-            body.appendChild(textInput);
-            TextareaResizeComponent.attach(textInput);
-            textInput.style.display = 'none';
+            // Body
+            var body = document.createElement('div');
+            body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
 
             accordion.appendChild(header);
+            accordion.appendChild(editPanel);
             accordion.appendChild(body);
             container.appendChild(accordion);
 
-            header.addEventListener('click', function() {
-                var isOpen = accordion.classList.toggle('accordion-class-1--open');
-                body.classList.toggle('admin-sitemap-manual-accordion-body--hidden', !isOpen);
-                headerArrow.classList.toggle('admin-sitemap-manual-accordion-header-arrow--open', isOpen);
+            // Drag and drop (same as messages)
+            accordion.draggable = false;
+            headerDrag.addEventListener('mousedown', function() {
+                accordion.draggable = true;
             });
+            document.addEventListener('mouseup', function() {
+                accordion.draggable = false;
+            });
+            accordion.addEventListener('dragstart', function(e) {
+                if (!accordion.draggable) { e.preventDefault(); return; }
+                var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+                dragStartIndex = siblings.indexOf(accordion);
+                e.dataTransfer.effectAllowed = 'move';
+                accordion.classList.add('dragging');
+            });
+            accordion.addEventListener('dragend', function() {
+                accordion.classList.remove('dragging');
+                accordion.draggable = false;
+                var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+                if (siblings.indexOf(accordion) !== dragStartIndex) {
+                    if (instructionsLoaded) notifyFieldChange();
+                }
+                dragStartIndex = -1;
+            });
+            accordion.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                var dragging = container.querySelector('.admin-sitemap-manual-accordion.dragging');
+                if (dragging && dragging !== accordion) {
+                    var rect = accordion.getBoundingClientRect();
+                    var midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        accordion.parentNode.insertBefore(dragging, accordion);
+                    } else {
+                        accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
+                    }
+                }
+            });
+
+            // Edit area click — toggle edit panel
+            headerEditArea.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
+                closeAllInstructionsEditPanels();
+                if (!isEditing) {
+                    accordion.classList.add('admin-sitemap-manual-accordion--editing');
+                }
+                syncInstructionsAccordionUi(accordion);
+            });
+
+            // Header click — toggle open/close
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('.admin-sitemap-manual-accordion-header-editarea')) return;
+                if (e.target.closest('.admin-sitemap-manual-accordion-header-drag')) return;
+                if (!accordion.classList.contains('admin-sitemap-manual-accordion--editing')) {
+                    closeAllInstructionsEditPanels();
+                }
+                accordion.classList.toggle('admin-sitemap-manual-accordion--open');
+                syncInstructionsAccordionUi(accordion);
+            });
+
+            syncInstructionsAccordionUi(accordion);
+        });
+
+        // Close edit panels on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.admin-sitemap-manual-accordion-editpanel') &&
+                !e.target.closest('.admin-sitemap-manual-accordion-header-editarea') &&
+                !e.target.closest('.admin-sitemap-manual-accordion-header')) {
+                closeAllInstructionsEditPanels();
+            }
         });
 
         registerComposite('instructions', captureInstructionsState);

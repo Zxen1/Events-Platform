@@ -590,12 +590,13 @@ try {
         try {
             $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
             if ($stmt->rowCount() > 0) {
-                $stmt = $pdo->query('SELECT `id`, `title`, `description` FROM `admin_instructions` ORDER BY `id` ASC');
+                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description` FROM `admin_instructions` ORDER BY `id` ASC');
                 $rows = $stmt->fetchAll();
                 $instructions = [];
                 foreach ($rows as $row) {
                     $instructions[] = [
                         'id'          => (int)$row['id'],
+                        'chapter'     => $row['chapter'],
                         'title'       => $row['title'],
                         'description' => $row['description'],
                     ];
