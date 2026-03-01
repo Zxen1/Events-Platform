@@ -44,6 +44,7 @@ $map = [
   'edit-post' => $connectorDir . '/edit-post.php',
   'edit-member' => $connectorDir . '/edit-member.php',
   'edit-admin' => $connectorDir . '/edit-admin.php',
+  'delete-post'   => $connectorDir . '/delete-post.php',
   'delete-member' => $connectorDir . '/delete-member.php',
   'check-member-posts' => $connectorDir . '/check-member-posts.php',
   'get-moderation-data' => $connectorDir . '/get-moderation-data.php',

@@ -42,7 +42,7 @@ if ($id <= 0 || $accountEmail === '') {
 }
 
 // Verify email matches id before proceeding
-$check = $mysqli->prepare('SELECT account_email FROM `members` WHERE id = ?');
+$check = $mysqli->prepare('SELECT account_email, username FROM `members` WHERE id = ?');
 if (!$check) fail(500, 'Prepare failed');
 $check->bind_param('i', $id);
 if (!$check->execute()) { $check->close(); fail(500, 'Query failed'); }
@@ -83,12 +83,89 @@ $affected = $update->affected_rows;
 $update->close();
 
 if ($affected > 0) {
-  // TODO: Send recovery email here (future enhancement)
+  $deletionDate = date('j F Y', strtotime('+30 days'));
+  send_account_deletion_requested_email($mysqli, $accountEmail, $row['username'], $id, $row['username'], $deletionDate);
   echo json_encode([
-    'success' => true,
-    'message' => 'Account scheduled for deletion',
-    'grace_period_days' => 30
+    'success'       => true,
+    'message'       => 'Account scheduled for deletion',
+    'grace_period_days' => 30,
+    'deletion_date' => $deletionDate,
   ]);
 } else {
   fail(500, 'Delete failed');
+}
+
+function send_account_deletion_requested_email($mysqli, $to_email, $to_name, $member_id, $username, $deletion_date) {
+  global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
+  $msgKey = 'msg_email_account_deletion_requested';
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $username, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+  };
+  $stmt = $mysqli->prepare(
+    "SELECT message_name, message_text, supports_html FROM admin_messages
+     WHERE message_key = 'msg_email_account_deletion_requested' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1"
+  );
+  if (!$stmt) { $logFailed('DB prepare failed for template query'); return; }
+  $stmt->execute();
+  $template = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+  if (!$template) { $logFailed('Email template not found or inactive'); return; }
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
+  $siteSettings = [];
+  if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
+  $fromEmail = $siteSettings['support_email'] ?? '';
+  if (!$fromEmail) { $logFailed('support_email not configured in admin_settings'); return; }
+  $fromName   = $siteSettings['website_name'] ?? '';
+  $logoFolder = rtrim($siteSettings['folder_system_images'] ?? '', '/');
+  $logoFile   = $siteSettings['email_logo'] ?? '';
+  $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($logoFile) : '';
+  $logoHtml   = $logoUrl
+    ? '<div style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;"><img src="' . htmlspecialchars($logoUrl) . '" alt="' . htmlspecialchars($fromName) . '" style="max-height:60px;max-width:100%;"></div>'
+    : '';
+  $safeName = htmlspecialchars((string)$to_name,       ENT_QUOTES, 'UTF-8');
+  $safeDate = htmlspecialchars((string)$deletion_date, ENT_QUOTES, 'UTF-8');
+  $subject  = str_replace(['{name}', '{date}'], [$safeName, $safeDate], $template['message_name']);
+  $body     = str_replace(['{name}', '{date}', '{logo}'], [$safeName, $safeDate, $logoHtml], $template['message_text']);
+  if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
+  $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+  if (!file_exists($docRoot . '/libs/phpmailer/PHPMailer.php')) { $logFailed('PHPMailer not found'); return; }
+  require_once $docRoot . '/libs/phpmailer/Exception.php';
+  require_once $docRoot . '/libs/phpmailer/PHPMailer.php';
+  require_once $docRoot . '/libs/phpmailer/SMTP.php';
+  $mail   = new \PHPMailer\PHPMailer\PHPMailer(true);
+  $status = 'failed';
+  $errorNote = null;
+  try {
+    $mail->isSMTP();
+    $mail->Host       = $SMTP_HOST;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $SMTP_USERNAME;
+    $mail->Password   = $SMTP_PASSWORD;
+    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+    $mail->Port       = 465;
+    $mail->CharSet    = 'UTF-8';
+    $mail->setFrom($fromEmail, $fromName);
+    $mail->addAddress($to_email, $to_name);
+    $mail->Subject = $subject;
+    if ($template['supports_html']) {
+      $mail->isHTML(true);
+      $mail->Body    = $body;
+      $mail->AltBody = strip_tags($body);
+    } else {
+      $mail->isHTML(false);
+      $mail->Body = strip_tags($body);
+    }
+    $mail->send();
+    $status = 'sent';
+  } catch (\PHPMailer\PHPMailer\Exception $e) {
+    $errorNote = $e->getMessage();
+  }
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+  if ($log) {
+    $logNotes = $status === 'failed' ? $errorNote : null;
+    $log->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $status, $logNotes);
+    $log->execute();
+    $log->close();
+  }
 }

@@ -994,7 +994,39 @@
                             focusCancel: true
                         }).then(function(confirmed) {
                             if (confirmed) {
-                                // TODO: call backend to soft-delete post
+                                var user = getCurrentUser();
+                                var mId   = user ? parseInt(user.id, 10) : 0;
+                                var mType = user ? (user.type || 'member') : 'member';
+                                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+                                statusMenuOpen = false;
+                                fetch('/gateway.php?action=delete-post', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ post_id: postId, member_id: mId, member_type: mType })
+                                }).then(function(r) { return r.json(); }).then(function(res) {
+                                    if (res && res.success) {
+                                        post.visibility  = 'deleted';
+                                        post.deleted_at  = res.deleted_at || null;
+                                        if (editingPostsData[postId] && editingPostsData[postId].original) {
+                                            editingPostsData[postId].original.visibility = 'deleted';
+                                            editingPostsData[postId].original.deleted_at = post.deleted_at;
+                                        }
+                                        var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                        if (oldModalBar) {
+                                            var newModalBar = buildStatusBar(post);
+                                            oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                                        }
+                                        var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                        if (postItem) {
+                                            var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                            if (oldBar) {
+                                                var newBar = buildStatusBar(post);
+                                                oldBar.parentNode.replaceChild(newBar, oldBar);
+                                            }
+                                        }
+                                        App.emit('post:updated', { post_id: postId });
+                                    }
+                                });
                             }
                         });
                     });
