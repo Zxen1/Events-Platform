@@ -3237,6 +3237,7 @@
   font-size: 13px;
   cursor: pointer;
   margin-top: 3px;
+  margin-bottom: 10px;
 }
 
 .admin-sitemap-manual-add-item:hover {
