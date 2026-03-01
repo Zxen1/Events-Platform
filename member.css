@@ -1580,6 +1580,11 @@
   height: 36px;
 }
 
+.member-register-emailverify-sendbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .member-register-emailverify-sendbtn-spinner {
   display: inline-block;
   width: 14px;
