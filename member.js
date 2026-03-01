@@ -7461,6 +7461,7 @@ const MemberModule = (function() {
         var isPostEditor = false;
         var postEditorKey = null;
         var isProfileForm = false;
+        var isProfile = false;
         var resetToken = null;
         try {
             var path = String(window.location.pathname || '');
@@ -7495,8 +7496,11 @@ const MemberModule = (function() {
             // /profile-form or ?profile-form
             if (!isProfileForm && (path === '/profile-form' || path === '/profile-form/')) isProfileForm = true;
             if (!isProfileForm && qs.get('profile-form') !== null) isProfileForm = true;
+            // /profile or ?profile
+            if (path === '/profile' || path === '/profile/') isProfile = true;
+            if (!isProfile && qs.get('profile') !== null) isProfile = true;
         } catch (_eDL) {}
-        if (!isRegister && !isPostEditor && !isProfileForm) return;
+        if (!isRegister && !isPostEditor && !isProfileForm && !isProfile) return;
 
         // Clean URL before anything renders with the param
         try { window.history.replaceState({}, document.title, '/'); } catch (_eUrl) {}
@@ -7519,6 +7523,8 @@ const MemberModule = (function() {
             requestTabSwitch('register');
         } else if (isPostEditor && posteditorTabBtn && !posteditorTabBtn.hidden) {
             requestTabSwitch('posteditor');
+        } else if (isProfile && profileTabBtn && !profileTabBtn.hidden) {
+            requestTabSwitch('profile');
         }
 
         // Profile form deep link

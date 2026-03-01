@@ -1096,10 +1096,11 @@ window.App = App;
    loaded and initialized. Each module exposes a handleDeepLink() function;
    add a line here for each new deep-link type.
    Supported:
-     /?post=<post_key>  or  /post/<post_key>  — opens post in Recent panel
-     /?register=1       or  /register         — opens Member panel → Support tab
+     /?post=<post_key>  or  /post/<post_key>      — opens post in Recent panel
+     /?register=1       or  /register             — opens Member panel → Register tab
      /?post-editor=1    or  /post-editor          — opens Member panel → Post Editor tab
      /?post-editor-key= or  /post-editor={key}    — opens Member panel → Post Editor tab → specific post
+     /?profile=1        or  /profile              — opens Member panel → Profile tab
    -------------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
