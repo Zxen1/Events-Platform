@@ -2997,9 +2997,6 @@
   overflow: visible;
 }
 
-.admin-sitemap-manual-accordion:last-child {
-  margin-bottom: 0;
-}
 
 .admin-sitemap-manual-accordion-header {
   height: 36px;

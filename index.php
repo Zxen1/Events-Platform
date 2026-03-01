@@ -1263,7 +1263,9 @@ if (empty($ogTitle)) {
         <section id="admin-tab-sitemap" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-sitemap-btn">
 
           <!-- Manual -->
-          <div id="admin-sitemap-manual-container" class="admin-sitemap-manual-container"></div>
+          <div class="admin-panel-body-item">
+            <div id="admin-sitemap-manual-container" class="admin-sitemap-manual-container"></div>
+          </div>
 
           <!-- Sitemap iframe -->
           <div class="admin-panel-body-item">
