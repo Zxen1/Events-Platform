@@ -14,7 +14,7 @@ require_once $configPath;
 
 $stmt = $mysqli->prepare(
   "SELECT setting_key, setting_value FROM admin_settings
-   WHERE setting_key IN ('email_logo', 'folder_system_images')"
+   WHERE setting_key IN ('email_logo', 'folder_system_images', 'website_prefix')"
 );
 $stmt->execute();
 $res = $stmt->get_result();
@@ -160,7 +160,7 @@ $samples = [
     $renderSamples['name']        = htmlspecialchars($tx['member_name']);
     $renderSamples['description'] = htmlspecialchars($tx['description']);
     $renderSamples['amount']      = preview_format_amount($mysqli, (float)$tx['amount'], $tx['currency']);
-    $renderSamples['receipt_id']  = 'FM-' . str_pad((int)$tx['id'], 6, '0', STR_PAD_LEFT);
+    $renderSamples['receipt_id']  = (($settings['website_prefix'] ?? '') ? $settings['website_prefix'] . '-' : '') . str_pad((int)$tx['id'], 6, '0', STR_PAD_LEFT);
     $txGateway   = $tx['payment_gateway'] ?? '';
     $txMethod    = $tx['payment_method']  ?? '';
     $txCreatedAt = $tx['created_at']      ?? '';

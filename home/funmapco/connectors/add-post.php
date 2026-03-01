@@ -275,7 +275,7 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
   $stmt->close();
   if (!$template) { $logFailed('Email template not found or inactive'); return; }
 
-  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images','website_url')");
+  $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images','website_url','website_prefix')");
   $siteSettings = [];
   if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
   $fromEmail = $siteSettings['support_email'] ?? '';
@@ -315,7 +315,7 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
   $subject   = str_replace(['{name}', '{title}'], [$safeName, $safeTitle], $template['message_name']);
   $body      = str_replace(
     ['{name}', '{title}', '{view_link}', '{edit_link}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
-    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $post_key), $logoHtml, $safeDesc, $amountHtml, 'FM-' . str_pad($txId, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
+    [$safeName, $safeTitle, htmlspecialchars($viewLink), htmlspecialchars($siteUrl . '/post-editor=' . $post_key), $logoHtml, $safeDesc, $amountHtml, (($siteSettings['website_prefix'] ?? '') ? $siteSettings['website_prefix'] . '-' : '') . str_pad($txId, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
     $template['message_text']
   );
 

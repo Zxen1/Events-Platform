@@ -153,7 +153,7 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
     $stmt->close();
     if (!$template) { $logFailed('Email template not found or inactive'); return; }
 
-    $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images')");
+    $sRes = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('support_email','website_name','email_logo','folder_system_images','website_prefix')");
     $siteSettings = [];
     if ($sRes) { while ($r = $sRes->fetch_assoc()) $siteSettings[$r['setting_key']] = $r['setting_value']; $sRes->free(); }
     $fromEmail = $siteSettings['support_email'] ?? '';
@@ -182,7 +182,7 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
     $safeDesc    = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
     $subject     = str_replace('{name}', $safeName, $template['message_name']);
     $body        = str_replace(['{name}', '{logo}', '{description}', '{amount}', '{receipt_id}', '{payment}', '{date}'],
-                               [$safeName, $logoHtml, $safeDesc, $amountHtml, 'FM-' . str_pad($transaction_id, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
+                               [$safeName, $logoHtml, $safeDesc, $amountHtml, (($siteSettings['website_prefix'] ?? '') ? $siteSettings['website_prefix'] . '-' : '') . str_pad($transaction_id, 6, '0', STR_PAD_LEFT), $paymentVia, $dateStr],
                                $template['message_text']);
 
     if (empty($SMTP_HOST) || empty($SMTP_USERNAME) || empty($SMTP_PASSWORD)) { $logFailed('SMTP credentials missing'); return; }
