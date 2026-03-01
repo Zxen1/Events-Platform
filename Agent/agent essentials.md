@@ -81,6 +81,7 @@ The agent must minimize context (time/tokens) usage:
 - IMPORTANT: The backup system is on the user's PC (outside this repo). It is NOT the `backups/` folder in the workspace, and the agent has no access to the user's PC backups.
 - **THE AUDITOR TOOL**: The user has a permanent tool at `Agent/auditor.html`. The user can use this tool to search the entire codebase and database dump for any keywords in seconds. The agent must NEVER perform broad searches or waste context/tokens searching for keywords throughout the site. Instead, the agent must ASK the user to run the Auditor and provide the report summary.
 - **DATABASE DUMP**: The database dump is the SQL file always provided by the user in the root of the website. The agent can read this file directly to inspect table contents.
+- **GREP TRUNCATION WARNING**: The Grep tool truncates long lines in its output. A match on a very long line (e.g. a full HTML email body stored in a single SQL INSERT) will show the line but cut it off before the matched term is visible. This causes false negatives — the agent may report a value is missing when it is actually present. **Solution:** When verifying content inside a known long line, use the Read tool with a specific `offset` and `limit` to read the exact line number returned by Grep, then search within that content visually. Never conclude a value is absent based on truncated Grep output alone.
 
 ### Essentials Compliance Check (End of Every Task)
 At the end of every task, the agent must explicitly confirm that `Agent/agent essentials.md` was obeyed.
