@@ -65,7 +65,7 @@ try {
             verify_json_fail('Missing credentials');
         }
 
-        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
+        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, email_notifications';
 
         $attempt = function(mysqli $db, string $table, string $user, string $pass, string $colList) {
             $sql = "SELECT {$colList} FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
@@ -117,10 +117,11 @@ try {
                     'timezone'           => null,
                     'favorites'          => isset($row['favorites']) ? (string)$row['favorites'] : null,
                     'recent'             => isset($row['recent']) ? (string)$row['recent'] : null,
-                    'filters_json'       => isset($row['filters_json']) ? (string)$row['filters_json'] : null,
-                    'filters_hash'       => isset($row['filters_hash']) ? (string)$row['filters_hash'] : null,
-                    'filters_version'    => isset($row['filters_version']) ? (int)$row['filters_version'] : null,
-                    'filters_updated_at' => isset($row['filters_updated_at']) ? (string)$row['filters_updated_at'] : null,
+                    'filters_json'          => isset($row['filters_json']) ? (string)$row['filters_json'] : null,
+                    'filters_hash'          => isset($row['filters_hash']) ? (string)$row['filters_hash'] : null,
+                    'filters_version'       => isset($row['filters_version']) ? (int)$row['filters_version'] : null,
+                    'filters_updated_at'    => isset($row['filters_updated_at']) ? (string)$row['filters_updated_at'] : null,
+                    'email_notifications'   => isset($row['email_notifications']) ? (int)$row['email_notifications'] : 1,
                 ],
             ];
         };
@@ -242,7 +243,7 @@ try {
         if ($upd) { $upd->bind_param('s', $token); $upd->execute(); $upd->close(); }
 
         $table = $row['member_role'] === 'admin' ? 'admins' : 'members';
-        $cols  = 'id, account_email, username, username_key, avatar_file, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
+        $cols  = 'id, account_email, username, username_key, avatar_file, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, email_notifications';
         $mStmt = $mysqli->prepare("SELECT {$cols} FROM `{$table}` WHERE id = ? LIMIT 1");
         if (!$mStmt) verify_json_fail('server_error');
         $mStmt->bind_param('i', $row['member_id']);
@@ -272,10 +273,11 @@ try {
                 'timezone'           => null,
                 'favorites'          => $mRow['favorites'] ?? null,
                 'recent'             => $mRow['recent'] ?? null,
-                'filters_json'       => $mRow['filters_json'] ?? null,
-                'filters_hash'       => $mRow['filters_hash'] ?? null,
-                'filters_version'    => isset($mRow['filters_version']) ? (int)$mRow['filters_version'] : null,
-                'filters_updated_at' => $mRow['filters_updated_at'] ?? null,
+                'filters_json'          => $mRow['filters_json'] ?? null,
+                'filters_hash'          => $mRow['filters_hash'] ?? null,
+                'filters_version'       => isset($mRow['filters_version']) ? (int)$mRow['filters_version'] : null,
+                'filters_updated_at'    => $mRow['filters_updated_at'] ?? null,
+                'email_notifications'   => isset($mRow['email_notifications']) ? (int)$mRow['email_notifications'] : 1,
             ],
         ], JSON_UNESCAPED_SLASHES);
         exit;

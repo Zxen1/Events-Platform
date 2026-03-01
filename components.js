@@ -2980,10 +2980,37 @@ const MemberAuthFieldsetsComponent = (function(){
                 el.value = '';
             });
 
+            // Reminder emails toggle — mirrors admin-settings-field--toggle row pattern
+            var initialOn = (options.emailNotifications !== undefined && options.emailNotifications !== null)
+                ? (options.emailNotifications !== 0 && options.emailNotifications !== false)
+                : true;
+            var reminderRow = document.createElement('div');
+            reminderRow.className = 'member-profileform-reminder-row row-class-1';
+            var reminderLabelText = document.createElement('label');
+            reminderLabelText.htmlFor = 'member-profile-email-notifications';
+            reminderLabelText.className = 'fieldset-label-text';
+            reminderLabelText.textContent = 'Receive reminder emails';
+            var reminderSwitchLabel = document.createElement('label');
+            reminderSwitchLabel.className = 'component-switch';
+            var reminderInput = document.createElement('input');
+            reminderInput.type = 'checkbox';
+            reminderInput.className = 'component-switch-input';
+            reminderInput.id = 'member-profile-email-notifications';
+            reminderInput.checked = initialOn;
+            var reminderSlider = document.createElement('span');
+            reminderSlider.className = 'component-switch-slider' + (initialOn ? ' component-switch-slider--on-default' : '');
+            reminderSwitchLabel.appendChild(reminderInput);
+            reminderSwitchLabel.appendChild(reminderSlider);
+            reminderRow.appendChild(reminderLabelText);
+            reminderRow.appendChild(reminderSwitchLabel);
+            containerEl.appendChild(reminderRow);
+
             return {
                 usernameInput: username ? username.input : null,
                 newPasswordInput: newPw ? newPw.input : null,
-                confirmInput: confirm ? confirm.input : null
+                confirmInput: confirm ? confirm.input : null,
+                emailNotificationsInput: reminderInput,
+                emailNotificationsSlider: reminderSlider
             };
         });
     }

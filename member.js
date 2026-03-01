@@ -128,6 +128,9 @@ const MemberModule = (function() {
     var profileEditNameInput = null;
     var profileEditPasswordInput = null;
     var profileEditConfirmInput = null;
+    var profileEditEmailNotificationsInput = null;
+    var profileEditEmailNotificationsSlider = null;
+    var profileOriginalEmailNotifications = 1;
     // Legacy inline save button (removed from HTML). Keep var to avoid strict-mode ReferenceError.
     var profileSaveBtn = null;
     var profileEditForm = null;
@@ -508,6 +511,9 @@ const MemberModule = (function() {
         profileEditNameInput = null;
         profileEditPasswordInput = null;
         profileEditConfirmInput = null;
+        profileEditEmailNotificationsInput = null;
+        profileEditEmailNotificationsSlider = null;
+        profileOriginalEmailNotifications = 1;
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
         
@@ -1759,7 +1765,10 @@ const MemberModule = (function() {
         
         var nameChanged = name !== '' && name !== (profileOriginalName || '');
         var pwChanged = pw !== '' || confirm !== '';
-        var canSave = nameChanged || pwChanged;
+        var enChanged = profileEditEmailNotificationsInput
+            ? (profileEditEmailNotificationsInput.checked ? 1 : 0) !== profileOriginalEmailNotifications
+            : false;
+        var canSave = nameChanged || pwChanged || enChanged;
         
         if (profileSaveBtn) {
             profileSaveBtn.disabled = !canSave;
@@ -1913,12 +1922,14 @@ const MemberModule = (function() {
         var payload = { id: currentUser.id, 'account-email': currentUser.account_email };
         if (name && name !== profileOriginalName) payload.username = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
+        var currentEn = profileEditEmailNotificationsInput ? (profileEditEmailNotificationsInput.checked ? 1 : 0) : profileOriginalEmailNotifications;
+        if (currentEn !== profileOriginalEmailNotifications) payload.email_notifications = currentEn;
         // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
 
         var wantsAvatarChange = !!pendingProfileAvatarBlob || ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || ''));
         
         // Nothing to do
-        if (!payload.username && !payload.password && !wantsAvatarChange) {
+        if (!payload.username && !payload.password && payload.email_notifications === undefined && !wantsAvatarChange) {
             if (typeof onSuccessNext === 'function') onSuccessNext();
             return;
         }
@@ -1951,6 +1962,11 @@ const MemberModule = (function() {
                   
                   if (profileEditPasswordInput) profileEditPasswordInput.value = '';
                   if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+
+                  if (payload.email_notifications !== undefined) {
+                      currentUser.email_notifications = payload.email_notifications;
+                      profileOriginalEmailNotifications = payload.email_notifications;
+                  }
 
                   if (payload.avatar_file !== undefined) {
                       currentUser.avatar = payload.avatar_file;
@@ -2131,14 +2147,24 @@ const MemberModule = (function() {
         var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
         var nameChanged = name !== '' && name !== (profileOriginalName || '');
         var pwChanged = pw !== '' || confirm !== '';
+        var enChanged = profileEditEmailNotificationsInput
+            ? (profileEditEmailNotificationsInput.checked ? 1 : 0) !== profileOriginalEmailNotifications
+            : false;
         var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '') || !!pendingProfileAvatarBlob || !!pendingProfileSiteUrl;
-        return nameChanged || pwChanged || avatarChanged;
+        return nameChanged || pwChanged || enChanged || avatarChanged;
     }
 
     function discardProfileEdits() {
         if (profileEditNameInput) profileEditNameInput.value = profileOriginalName || '';
         if (profileEditPasswordInput) profileEditPasswordInput.value = '';
         if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+        if (profileEditEmailNotificationsInput) {
+            var shouldBeOn = profileOriginalEmailNotifications !== 0;
+            profileEditEmailNotificationsInput.checked = shouldBeOn;
+            if (profileEditEmailNotificationsSlider) {
+                profileEditEmailNotificationsSlider.classList.toggle('component-switch-slider--on-default', shouldBeOn);
+            }
+        }
         pendingAvatarUrl = profileOriginalAvatarUrl || '';
         pendingProfileAvatarBlob = null;
         pendingProfileSiteUrl = '';
@@ -5787,19 +5813,37 @@ const MemberModule = (function() {
         if (!currentUser) return;
         if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderProfile !== 'function') return;
 
+        profileOriginalEmailNotifications = (currentUser && currentUser.email_notifications !== undefined)
+            ? (currentUser.email_notifications === 0 ? 0 : 1)
+            : 1;
+
         MemberAuthFieldsetsComponent.renderProfile(profileFieldsetsContainer, {
             avatarHost: avatarGridProfile,
-            usernameValue: profileOriginalName || ''
+            usernameValue: profileOriginalName || '',
+            emailNotifications: profileOriginalEmailNotifications
         }).then(function(refs) {
             profileEditNameInput = refs ? refs.usernameInput : null;
             profileEditPasswordInput = refs ? refs.newPasswordInput : null;
             profileEditConfirmInput = refs ? refs.confirmInput : null;
+            profileEditEmailNotificationsInput = refs ? refs.emailNotificationsInput : null;
+            profileEditEmailNotificationsSlider = refs ? refs.emailNotificationsSlider : null;
 
             // Input listeners (now that inputs exist)
             try {
                 if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
                 if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
                 if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+                if (profileEditEmailNotificationsInput) {
+                    profileEditEmailNotificationsInput.addEventListener('change', function() {
+                        if (profileEditEmailNotificationsSlider) {
+                            profileEditEmailNotificationsSlider.classList.toggle(
+                                'component-switch-slider--on-default',
+                                profileEditEmailNotificationsInput.checked
+                            );
+                        }
+                        updateProfileSaveState();
+                    });
+                }
             } catch (e) {}
 
             try {
@@ -7074,7 +7118,11 @@ const MemberModule = (function() {
             filters_updated_at: (payload.filters_updated_at !== undefined) ? payload.filters_updated_at : null,
             // Favorites & recent history (DB → localStorage on login)
             favorites: (payload.favorites !== undefined) ? payload.favorites : null,
-            recent: (payload.recent !== undefined) ? payload.recent : null
+            recent: (payload.recent !== undefined) ? payload.recent : null,
+            // Email notification preference (1 = on, 0 = off; default on)
+            email_notifications: (payload.email_notifications !== undefined && payload.email_notifications !== null)
+                ? (parseInt(payload.email_notifications, 10) === 0 ? 0 : 1)
+                : 1
         };
     }
 

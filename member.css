@@ -1113,6 +1113,11 @@
   gap: 0;
 }
 
+/* Reminder emails toggle row — space-between pushes label left, switch right */
+.member-profileform-reminder-row {
+  justify-content: space-between;
+}
+
 /* Profile edit footer with Save/Discard buttons */
 .member-profile-edit-footer {
   display: flex;

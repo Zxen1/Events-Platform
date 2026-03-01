@@ -112,6 +112,13 @@ if (isset($input['timezone'])) {
   $types .= 's';
   $vals[] = trim((string)$input['timezone']);
 }
+if (isset($input['email_notifications'])) {
+  $en = (int)$input['email_notifications'];
+  $en = ($en === 0) ? 0 : 1;
+  $updates[] = 'email_notifications=?';
+  $types .= 'i';
+  $vals[] = $en;
+}
 
 // Favorites persistence (JSON string from localStorage)
 if (array_key_exists('favorites', $input)) {
