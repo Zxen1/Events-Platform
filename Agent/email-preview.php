@@ -117,7 +117,7 @@ $samples = [
   'tier'          => 'Premium',
   'view_link'     => 'https://funmap.com/post/1828-login-and-pay-test',
   'edit_link'     => 'https://funmap.com/post-editor=1828-login-and-pay-test',
-  'reset_link'    => 'https://funmap.com',
+  'reset_link'    => 'https://funmap.com/profile-form',
   'amount'        => '',
   'description'   => '',
   'receipt_id'    => '',

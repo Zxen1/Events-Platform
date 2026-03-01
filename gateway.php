@@ -56,7 +56,6 @@ $map = [
   'get-post-media' => $connectorDir . '/get-post-media.php',
   'restore-post' => $connectorDir . '/restore-post.php',
   'payment-order' => $connectorDir . '/payment-order.php',
-  // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 
 if (!$action || !isset($map[$action])) {

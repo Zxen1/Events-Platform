@@ -6030,6 +6030,14 @@ const MemberModule = (function() {
         form.appendChild(submitBtn);
         container.appendChild(form);
 
+        // Forgot password link
+        var forgotBtn = document.createElement('button');
+        forgotBtn.type = 'button';
+        forgotBtn.className = 'member-login-forgot button-class-2b';
+        forgotBtn.textContent = 'Forgot Password?';
+        forgotBtn.addEventListener('click', function() { handleForgotPassword(); });
+        container.appendChild(forgotBtn);
+
         // Insert into auth wrapper
         authWrapper.appendChild(container);
 
@@ -6622,6 +6630,24 @@ const MemberModule = (function() {
                     ToastComponent.showError(message);
                 }
             });
+        });
+    }
+
+    function handleForgotPassword() {
+        var emailInput = document.getElementById('memberLoginEmail');
+        var email = emailInput ? String(emailInput.value || '').trim() : '';
+        if (!email) {
+            if (emailInput) emailInput.focus();
+            return;
+        }
+        fetch('/gateway.php?action=verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'request-password-reset', email: email })
+        }).then(function() {
+            try { if (window.ToastComponent) ToastComponent.showSuccess('If that email is registered, a reset link has been sent.'); } catch (_e) {}
+        }).catch(function() {
+            try { if (window.ToastComponent) ToastComponent.showError('Something went wrong. Please try again.'); } catch (_e) {}
         });
     }
 
@@ -7432,6 +7458,8 @@ const MemberModule = (function() {
         var isRegister = false;
         var isPostEditor = false;
         var postEditorKey = null;
+        var isProfileForm = false;
+        var resetToken = null;
         try {
             var path = String(window.location.pathname || '');
             var qs = new URLSearchParams(window.location.search || '');
@@ -7452,8 +7480,17 @@ const MemberModule = (function() {
                 if (path === '/post-editor' || path === '/post-editor/') isPostEditor = true;
                 if (!isPostEditor && qs.get('post-editor') !== null) isPostEditor = true;
             }
+            // /reset-password=TOKEN
+            var resetMatch = path.match(/^\/reset-password=([^/?#]+)\/?$/);
+            if (resetMatch) {
+                resetToken = decodeURIComponent(resetMatch[1]);
+                isProfileForm = true;
+            }
+            // /profile-form
+            if (!isProfileForm && (path === '/profile-form' || path === '/profile-form/')) isProfileForm = true;
+            if (!isProfileForm && qs.get('profile-form') !== null) isProfileForm = true;
         } catch (_eDL) {}
-        if (!isRegister && !isPostEditor) return;
+        if (!isRegister && !isPostEditor && !isProfileForm) return;
 
         // Clean URL before anything renders with the param
         try { window.history.replaceState({}, document.title, '/'); } catch (_eUrl) {}
@@ -7476,6 +7513,44 @@ const MemberModule = (function() {
             requestTabSwitch('register');
         } else if (isPostEditor && posteditorTabBtn && !posteditorTabBtn.hidden) {
             requestTabSwitch('posteditor');
+        }
+
+        // Profile form deep link
+        if (isProfileForm) {
+            if (resetToken) {
+                fetch('/gateway.php?action=verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'reset-token', token: resetToken })
+                }).then(function(r) { return r.json(); }).then(function(result) {
+                    if (!result || result.success !== true) {
+                        try { if (window.ToastComponent) ToastComponent.showError('This password reset link is invalid or has expired.'); } catch (_e) {}
+                        return;
+                    }
+                    var payload = result.user || {};
+                    payload.role = result.role;
+                    currentUser = buildUserObject(payload, payload.account_email || '');
+                    syncLocalProfilePrefsFromUser(currentUser);
+                    storeCurrent(currentUser);
+                    fetch('/gateway.php?action=issue-token').catch(function() {});
+                    render();
+                    if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
+                        window.MapModule.setMapLighting(currentUser.map_lighting);
+                    }
+                    if (currentUser.map_style && window.MapModule && window.MapModule.setMapStyle) {
+                        window.MapModule.setMapStyle(currentUser.map_style);
+                    }
+                    if (profileFormContainer && profileFormContainer.hidden) {
+                        toggleProfileForm();
+                    }
+                }).catch(function() {
+                    try { if (window.ToastComponent) ToastComponent.showError('Something went wrong. Please try again.'); } catch (_e) {}
+                });
+            } else if (currentUser) {
+                if (profileFormContainer && profileFormContainer.hidden) {
+                    toggleProfileForm();
+                }
+            }
         }
     }
 
