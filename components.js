@@ -2562,6 +2562,7 @@ const MemberAuthFieldsetsComponent = (function(){
 
         var sendMsg = document.createElement('span');
         sendMsg.className = 'member-register-emailverify-sendmsg';
+        var _countdownInterval = null;
 
         sendWrap.appendChild(sendBtn);
         sendWrap.appendChild(sendMsg);
@@ -2654,9 +2655,33 @@ const MemberAuthFieldsetsComponent = (function(){
             btnSpinner.style.display = val ? ''     : 'none';
         }
 
+        function clearCountdown() {
+            if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
+        }
+
         function showSendMsg(msg, isError) {
+            clearCountdown();
             sendMsg.textContent = msg;
             sendMsg.className = 'member-register-emailverify-sendmsg' + (isError ? ' member-register-emailverify-sendmsg--error' : '');
+        }
+
+        function startCooldownCountdown(seconds) {
+            clearCountdown();
+            var remaining = Math.max(1, seconds);
+            sendMsg.className = 'member-register-emailverify-sendmsg member-register-emailverify-sendmsg--error';
+            function tick() {
+                if (remaining <= 0) {
+                    clearCountdown();
+                    sendMsg.textContent = '';
+                    sendMsg.className = 'member-register-emailverify-sendmsg';
+                    updateSendBtnState();
+                    return;
+                }
+                sendMsg.textContent = 'Please wait ' + remaining + 's before resending.';
+                remaining--;
+            }
+            tick();
+            _countdownInterval = setInterval(tick, 1000);
         }
 
         function showCodeMsg(msg, isError) {
@@ -2683,7 +2708,11 @@ const MemberAuthFieldsetsComponent = (function(){
                     } else {
                         showState('idle');
                         setSending(false);
-                        showSendMsg(data.message || 'Failed to send code.', true);
+                        if (data.seconds_remaining > 0) {
+                            startCooldownCountdown(data.seconds_remaining);
+                        } else {
+                            showSendMsg(data.message || 'Failed to send code.', true);
+                        }
                     }
                 })
                 .catch(function() {
@@ -2745,8 +2774,10 @@ const MemberAuthFieldsetsComponent = (function(){
                     showState('idle');
                     setSending(false);
                     setComplete(false);
-                    sendMsg.textContent = '';
                 }
+                clearCountdown();
+                sendMsg.textContent = '';
+                sendMsg.className = 'member-register-emailverify-sendmsg';
                 updateSendBtnState();
             });
             emailInput.addEventListener('blur', updateSendBtnState);

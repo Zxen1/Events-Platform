@@ -64,7 +64,8 @@ $mysqli->query(
 
 // Cooldown: reject if a valid token was issued within the last 60 seconds
 $stmt = $mysqli->prepare(
-  "SELECT id FROM member_tokens
+  "SELECT GREATEST(0, 60 - TIMESTAMPDIFF(SECOND, created_at, NOW())) AS seconds_remaining
+   FROM member_tokens
    WHERE email = ? AND token_type = 'email_verification' AND used = 0 AND expires_at > NOW()
      AND created_at > DATE_SUB(NOW(), INTERVAL 60 SECOND)
    LIMIT 1"
@@ -74,8 +75,12 @@ $stmt->bind_param('s', $email);
 $stmt->execute();
 $stmt->store_result();
 if ($stmt->num_rows > 0) {
+  $stmt->bind_result($secondsRemaining);
+  $stmt->fetch();
   $stmt->close();
-  svc_fail(429, 'Please wait a moment before requesting another code.');
+  http_response_code(429);
+  echo json_encode(['success' => false, 'message' => 'Please wait before requesting another code.', 'seconds_remaining' => (int)$secondsRemaining]);
+  exit;
 }
 $stmt->close();
 
