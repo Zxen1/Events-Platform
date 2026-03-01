@@ -378,7 +378,7 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   if ($txId > 0) {
     if (!$txGateway) { $logFailed('Transaction ' . $txId . ' has no payment_gateway'); return; }
     $gwLabels     = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
-    $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card'];
+    $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card', 'link' => 'Link'];
     $gw         = $gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway);
     $normMethod = $txMethod ? ($methodLabels[strtolower($txMethod)] ?? ucfirst(strtolower($txMethod))) : '';
     $paymentVia = $normMethod ? $gw . ' · ' . $normMethod : $gw;

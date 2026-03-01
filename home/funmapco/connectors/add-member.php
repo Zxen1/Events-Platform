@@ -194,7 +194,7 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
   $txStmt = $mysqli->prepare('SELECT payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
   if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow2 = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow2) { $txGateway = $txRow2['payment_gateway'] ?? ''; $txMethod = $txRow2['payment_method'] ?? ''; $txCreatedAt = $txRow2['created_at'] ?? ''; } }
   $gwLabels     = ['paypal' => 'PayPal', 'stripe' => 'Stripe'];
-  $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card', 'link' => 'Stripe Link'];
+  $methodLabels = ['visa' => 'Visa', 'mastercard' => 'Mastercard', 'amex' => 'Amex', 'discover' => 'Discover', 'jcb' => 'JCB', 'diners' => 'Diners Club', 'unionpay' => 'UnionPay', 'card' => 'Card', 'link' => 'Link'];
   $gw         = $txGateway ? ($gwLabels[strtolower($txGateway)] ?? ucfirst($txGateway)) : '';
   $normMethod = $txMethod  ? ($methodLabels[strtolower($txMethod)]  ?? ucfirst(strtolower($txMethod)))  : '';
   $paymentVia = ($normMethod && $gw) ? $gw . ' · ' . $normMethod : $gw;
