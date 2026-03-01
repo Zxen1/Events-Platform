@@ -2569,8 +2569,7 @@ const MemberAuthFieldsetsComponent = (function(){
 
         // — Code wrap (code-entry state) —
         var codeWrap = document.createElement('div');
-        codeWrap.className    = 'member-register-emailverify-codewrap';
-        codeWrap.style.display = 'none';
+        codeWrap.className = 'member-register-emailverify-codewrap';
 
         var codeInputRow = document.createElement('div');
         codeInputRow.className = 'member-register-emailverify-codeinputrow';
@@ -2600,8 +2599,7 @@ const MemberAuthFieldsetsComponent = (function(){
 
         // — Done wrap (verified state) —
         var doneWrap = document.createElement('div');
-        doneWrap.className    = 'member-register-emailverify-donewrap';
-        doneWrap.style.display = 'none';
+        doneWrap.className = 'member-register-emailverify-donewrap';
 
         var doneIcon = document.createElement('span');
         doneIcon.className   = 'member-register-emailverify-doneicon';
@@ -2637,11 +2635,16 @@ const MemberAuthFieldsetsComponent = (function(){
             try { fieldset.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true })); } catch (e) {}
         }
 
+        function setVisible(el, visible) {
+            el.style.visibility  = visible ? '' : 'hidden';
+            el.style.pointerEvents = visible ? '' : 'none';
+        }
+
         function showState(newState) {
             state = newState;
-            sendWrap.style.display = (state === 'idle' || state === 'sending') ? '' : 'none';
-            codeWrap.style.display = (state === 'code-entry') ? '' : 'none';
-            doneWrap.style.display = (state === 'verified')   ? '' : 'none';
+            setVisible(sendWrap, state === 'idle' || state === 'sending');
+            setVisible(codeWrap, state === 'code-entry');
+            setVisible(doneWrap, state === 'verified');
         }
 
         function updateSendBtnState() {
