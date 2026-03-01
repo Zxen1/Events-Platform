@@ -31,13 +31,33 @@ $logoUrl    = ($logoFolder && $logoFile) ? $logoFolder . '/' . rawurlencode($log
 $stmt = $mysqli->prepare(
   "SELECT message_name, message_key, message_text, placeholders
    FROM admin_messages
-   WHERE container_key = 'msg_email' AND is_active = 1
-   ORDER BY id ASC"
+   WHERE container_key = 'msg_email' AND is_active = 1"
 );
 $stmt->execute();
 $result = $stmt->get_result();
 $templates = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$keyOrder = [
+  'msg_email_welcome',
+  'msg_email_post_live',
+  'msg_email_post_updated',
+  'msg_email_donation_thanks',
+  'msg_email_password_reset',
+  'msg_email_verification_code',
+  'msg_email_deletion_confirmed',
+  'msg_email_expiry_warning',
+  'msg_email_post_expired',
+  'msg_email_inactivity_warning',
+  'msg_email_inactivity_closure',
+];
+usort($templates, function($a, $b) use ($keyOrder) {
+  $posA = array_search($a['message_key'], $keyOrder);
+  $posB = array_search($b['message_key'], $keyOrder);
+  if ($posA === false) $posA = PHP_INT_MAX;
+  if ($posB === false) $posB = PHP_INT_MAX;
+  return $posA <=> $posB;
+});
 
 $logoHtml = '';
 if ($logoUrl) {
