@@ -130,6 +130,7 @@ const MemberModule = (function() {
     var profileEditConfirmInput = null;
     var profileEditEmailNotificationsInput = null;
     var profileEditEmailNotificationsSlider = null;
+    var profileEditEmailNotificationsLabel = null;
     var profileOriginalEmailNotifications = 1;
     // Legacy inline save button (removed from HTML). Keep var to avoid strict-mode ReferenceError.
     var profileSaveBtn = null;
@@ -5827,6 +5828,7 @@ const MemberModule = (function() {
             profileEditConfirmInput = refs ? refs.confirmInput : null;
             profileEditEmailNotificationsInput = refs ? refs.emailNotificationsInput : null;
             profileEditEmailNotificationsSlider = refs ? refs.emailNotificationsSlider : null;
+            profileEditEmailNotificationsLabel = refs ? refs.emailNotificationsLabel : null;
 
             // Input listeners (now that inputs exist)
             try {
@@ -5835,11 +5837,12 @@ const MemberModule = (function() {
                 if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
                 if (profileEditEmailNotificationsInput) {
                     profileEditEmailNotificationsInput.addEventListener('change', function() {
+                        var isOn = profileEditEmailNotificationsInput.checked;
                         if (profileEditEmailNotificationsSlider) {
-                            profileEditEmailNotificationsSlider.classList.toggle(
-                                'component-switch-slider--on-default',
-                                profileEditEmailNotificationsInput.checked
-                            );
+                            profileEditEmailNotificationsSlider.classList.toggle('component-switch-slider--on-default', isOn);
+                        }
+                        if (profileEditEmailNotificationsLabel) {
+                            profileEditEmailNotificationsLabel.textContent = isOn ? 'Receive reminder emails' : 'Receive reminder emails (unsubscribed)';
                         }
                         updateProfileSaveState();
                     });

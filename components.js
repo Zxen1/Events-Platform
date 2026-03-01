@@ -2989,7 +2989,7 @@ const MemberAuthFieldsetsComponent = (function(){
             var reminderLabelText = document.createElement('label');
             reminderLabelText.htmlFor = 'member-profile-email-notifications';
             reminderLabelText.className = 'fieldset-label-text';
-            reminderLabelText.textContent = 'Receive reminder emails';
+            reminderLabelText.textContent = initialOn ? 'Receive reminder emails' : 'Receive reminder emails (unsubscribed)';
             var reminderSwitchLabel = document.createElement('label');
             reminderSwitchLabel.className = 'component-switch';
             var reminderInput = document.createElement('input');
@@ -3010,7 +3010,8 @@ const MemberAuthFieldsetsComponent = (function(){
                 newPasswordInput: newPw ? newPw.input : null,
                 confirmInput: confirm ? confirm.input : null,
                 emailNotificationsInput: reminderInput,
-                emailNotificationsSlider: reminderSlider
+                emailNotificationsSlider: reminderSlider,
+                emailNotificationsLabel: reminderLabelText
             };
         });
     }
