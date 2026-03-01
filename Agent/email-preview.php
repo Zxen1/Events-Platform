@@ -39,17 +39,22 @@ $templates = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 $keyOrder = [
+  'msg_email_verification_code',
   'msg_email_welcome',
+  'msg_email_donation_thanks',
   'msg_email_post_live',
   'msg_email_post_updated',
-  'msg_email_donation_thanks',
   'msg_email_password_reset',
-  'msg_email_verification_code',
-  'msg_email_deletion_confirmed',
+  'msg_email_post_deletion_requested',
+  'msg_email_post_deletion_warning',
+  'msg_email_post_deleted',
+  'msg_email_account_deletion_requested',
+  'msg_email_account_deletion_warning',
+  'msg_email_account_deleted',
   'msg_email_expiry_warning',
   'msg_email_post_expired',
   'msg_email_inactivity_warning',
-  'msg_email_inactivity_closure',
+  'msg_email_inactivity_closed',
 ];
 usort($templates, function($a, $b) use ($keyOrder) {
   $posA = array_search($a['message_key'], $keyOrder);
