@@ -557,7 +557,7 @@ if ($subAction === 'capture') {
              VALUES (?, ?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
         if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $stmt->bind_param('iiisssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        $stmt->bind_param('iisssssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
         if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
@@ -610,7 +610,7 @@ if ($subAction === 'capture') {
              VALUES (?, ?, ?, ?, ?, ?, 'paypal', ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
         if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
-        $stmt->bind_param('iiisssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
+        $stmt->bind_param('iisssssdsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $amount, $currency, $lineItemsJson, $description);
         if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
