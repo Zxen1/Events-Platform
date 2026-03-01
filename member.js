@@ -6647,7 +6647,9 @@ const MemberModule = (function() {
         }).then(function() {
             try { if (window.ToastComponent) ToastComponent.showSuccess('If that email is registered, a reset link has been sent.'); } catch (_e) {}
         }).catch(function() {
-            try { if (window.ToastComponent) ToastComponent.showError('Something went wrong. Please try again.'); } catch (_e) {}
+            getMessage('msg_auth_reset_failed', {}, false).then(function(message) {
+                try { if (message && window.ToastComponent) ToastComponent.showError(message); } catch (_e) {}
+            });
         });
     }
 
@@ -7528,7 +7530,9 @@ const MemberModule = (function() {
                     body: JSON.stringify({ type: 'reset-token', token: resetToken })
                 }).then(function(r) { return r.json(); }).then(function(result) {
                     if (!result || result.success !== true) {
-                        try { if (window.ToastComponent) ToastComponent.showError('This password reset link is invalid or has expired.'); } catch (_e) {}
+                        getMessage('msg_auth_reset_invalid', {}, false).then(function(message) {
+                            try { if (message && window.ToastComponent) ToastComponent.showError(message); } catch (_e) {}
+                        });
                         return;
                     }
                     var payload = result.user || {};
@@ -7548,7 +7552,9 @@ const MemberModule = (function() {
                         toggleProfileForm();
                     }
                 }).catch(function() {
-                    try { if (window.ToastComponent) ToastComponent.showError('Something went wrong. Please try again.'); } catch (_e) {}
+                    getMessage('msg_auth_reset_failed', {}, false).then(function(message) {
+                        try { if (message && window.ToastComponent) ToastComponent.showError(message); } catch (_e) {}
+                    });
                 });
             } else if (currentUser) {
                 if (profileFormContainer && profileFormContainer.hidden) {
