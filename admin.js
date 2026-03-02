@@ -3837,8 +3837,7 @@ const AdminModule = (function() {
 
     function openCheckoutCouponForm(coupon, cardEl) {
         var container = document.querySelector('.admin-checkout-coupon-container');
-        console.error('[Coupon] openCheckoutCouponForm called. container:', container, 'coupon:', coupon);
-        if (!container) { console.error('[Coupon] STOPPED: container not found'); return; }
+        if (!container) return;
 
         // Close any existing form cleanly (no confirm — caller already handled it)
         closeCouponForm();
@@ -4277,7 +4276,6 @@ const AdminModule = (function() {
         btnRow.appendChild(cancelBtn);
         form.appendChild(btnRow);
 
-        console.error('[Coupon] Reached DOM insertion point');
         // Insert form into DOM
         var addBtn = document.getElementById('adminCheckoutCouponAdd');
         var targetCard = cardEl || null;
@@ -4299,7 +4297,8 @@ const AdminModule = (function() {
         // Register in module-level state
         activeCouponFormData = { form: form, card: targetCard, hasChanges: function() { return initialValues !== null && formHasChanges(); } };
 
-        // Outside-click handler — closes form if click is outside card+form
+        // Outside-click handler — deferred so the triggering click doesn't immediately close the form
+        setTimeout(function() {
         document.addEventListener('click', function couponOutsideClick(e) {
             if (!form.isConnected) {
                 document.removeEventListener('click', couponOutsideClick);
@@ -4314,6 +4313,7 @@ const AdminModule = (function() {
                 document.removeEventListener('click', couponOutsideClick);
             }
         });
+        }, 0);
     }
 
     function saveCheckoutCoupon(payload) {
