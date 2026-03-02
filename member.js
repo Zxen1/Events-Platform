@@ -3961,6 +3961,9 @@ const MemberModule = (function() {
         var imageFiles = validation.imageFiles || [];
         var imagesMeta = validation.imagesMeta || '[]';
         
+        // Capture coupon ID before form reset clears appliedCoupon
+        var submittingCouponId = appliedCoupon ? appliedCoupon.id : null;
+
         // Immediately switch to Post Editor with loading placeholder (no delay)
         resetCreatePostForm();
         try { requestTabSwitch('posteditor'); } catch (e0) {}
@@ -3974,7 +3977,7 @@ const MemberModule = (function() {
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
             console.log('[TRACK] Map images collected:', mapImageData.files.length);
             
-            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId)
+            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId, submittingCouponId)
             .then(function(result) {
                 isSubmittingPost = false;
                 updateSubmitButtonState();
@@ -5182,7 +5185,7 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData, transactionId) {
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData, transactionId, couponId) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
@@ -5211,7 +5214,7 @@ const MemberModule = (function() {
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
                 transaction_id: transactionId || null,
-                coupon_id: appliedCoupon ? appliedCoupon.id : null,
+                coupon_id: couponId || null,
                 loc_qty: payload.loc_qty || window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
