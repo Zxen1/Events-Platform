@@ -922,13 +922,11 @@ const AdminModule = (function() {
         var moreMenuEl = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-menu');
 
         moreBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
             moreMenuEl.classList.toggle('admin-sitemap-manual-accordion-editpanel-more-menu--open');
         });
 
         var deleteBtn = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-delete');
         deleteBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
             moreMenuEl.classList.remove('admin-sitemap-manual-accordion-editpanel-more-menu--open');
             var chapterName = headerText.textContent.trim() || 'this chapter';
             if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
@@ -962,7 +960,6 @@ const AdminModule = (function() {
         addItemBtn.className = 'admin-sitemap-manual-add-item';
         addItemBtn.textContent = '+ Add Item';
         addItemBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
             addItem(body, addItemBtn);
         });
 
@@ -1015,7 +1012,6 @@ const AdminModule = (function() {
         });
 
         headerEditArea.addEventListener('click', function(e) {
-            e.stopPropagation();
             var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
             closeAllInstructionsEditPanels();
             if (!isEditing) accordion.classList.add('admin-sitemap-manual-accordion--editing');
@@ -1060,7 +1056,6 @@ const AdminModule = (function() {
         addChapterBtn.className = 'admin-sitemap-manual-add-chapter';
         addChapterBtn.textContent = '+ Add Chapter';
         addChapterBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
             addChapter(container, addChapterBtn);
         });
         container.appendChild(addChapterBtn);
@@ -1091,6 +1086,7 @@ const AdminModule = (function() {
     function createInstructionItem(title, description) {
         var item = document.createElement('div');
         item.className = 'admin-sitemap-manual-item';
+        item.setAttribute('data-slack-anchor', '');
 
         // Title display (click to edit)
         var titleDisplay = document.createElement('div');
