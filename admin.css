@@ -2991,6 +2991,7 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
+  box-sizing: border-box;
 }
 
 .admin-sitemap-manual-accordion {
