@@ -842,6 +842,11 @@ const AdminModule = (function() {
                 modified.push({ chapter: chapterName, is_new: true });
                 return;
             }
+            // Include placeholder row (empty title/description chapter-header row) with its sort_order slot
+            if (accordion.dataset.chapterRowId) {
+                globalOrder++;
+                modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
+            }
             // Collect existing items with sort_order
             accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
                 var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
@@ -897,6 +902,9 @@ const AdminModule = (function() {
         accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
         accordion.setAttribute('data-slack-anchor', '');
+        if (chapterData.placeholderRowId) {
+            accordion.dataset.chapterRowId = chapterData.placeholderRowId;
+        }
 
         var header = document.createElement('div');
         header.className = 'admin-sitemap-manual-accordion-header accordion-header';
@@ -1009,7 +1017,7 @@ const AdminModule = (function() {
 
         // Drag and drop
         accordion.draggable = false;
-        headerDrag.addEventListener('mousedown', function() { accordion.draggable = true; });
+        headerDrag.addEventListener('mousedown', function(e) { e.preventDefault(); accordion.draggable = true; });
         document.addEventListener('mouseup', function() { accordion.draggable = false; });
         accordion.addEventListener('dragstart', function(e) {
             if (!accordion.draggable) { e.preventDefault(); return; }
@@ -1067,10 +1075,14 @@ const AdminModule = (function() {
         var chapterMap = {};
         instructions.forEach(function(item) {
             if (!chapterMap[item.chapter]) {
-                chapterMap[item.chapter] = { chapter: item.chapter, items: [] };
+                chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
                 chapters.push(chapterMap[item.chapter]);
             }
-            chapterMap[item.chapter].items.push(item);
+            if (!item.title && !item.description) {
+                chapterMap[item.chapter].placeholderRowId = item.id;
+            } else {
+                chapterMap[item.chapter].items.push(item);
+            }
         });
 
         chapters.forEach(function(chapterData) {
@@ -1236,7 +1248,7 @@ const AdminModule = (function() {
         // Drag and drop (reorder items within chapter body)
         if (body) {
             item.draggable = false;
-            dragHandle.addEventListener('mousedown', function() { item.draggable = true; });
+            dragHandle.addEventListener('mousedown', function(e) { e.preventDefault(); item.draggable = true; });
             document.addEventListener('mouseup', function() { item.draggable = false; });
             item.addEventListener('dragstart', function(e) {
                 if (!item.draggable) { e.preventDefault(); return; }
