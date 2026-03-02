@@ -201,6 +201,9 @@ const MemberModule = (function() {
     // Terms modal elements
     var termsModalContainer = null;
 
+    // Departing member modal
+    var departingModalContainer = null;
+
     /* --------------------------------------------------------------------------
        INITIALIZATION
        -------------------------------------------------------------------------- */
@@ -5396,7 +5399,79 @@ const MemberModule = (function() {
         
         document.body.appendChild(termsModalContainer);
     }
-    
+
+    // ---- Departing Member Modal ----
+    // Shown on login when account has a pending deletion (deleted_at is set).
+    // No close button, no background dismiss — Acknowledge button only.
+
+    function openDepartingModal() {
+        if (!departingModalContainer) {
+            createDepartingModal();
+        }
+        departingModalContainer.classList.remove('departing-modal-container--hidden');
+    }
+
+    function closeDepartingModal() {
+        if (departingModalContainer) {
+            departingModalContainer.classList.add('departing-modal-container--hidden');
+        }
+    }
+
+    function createDepartingModal() {
+        var daysRemainingLabel = '30 days';
+        if (currentUser && currentUser.deleted_at) {
+            var deletedDate = new Date(currentUser.deleted_at.replace(' ', 'T') + 'Z');
+            var now = new Date();
+            var daysElapsed = Math.floor((now - deletedDate) / (1000 * 60 * 60 * 24));
+            var daysCount = Math.max(0, 30 - daysElapsed);
+            daysRemainingLabel = window.App && typeof App.pluralize === 'function'
+                ? App.pluralize(daysCount, 'day')
+                : daysCount + ' days';
+        }
+
+        departingModalContainer = document.createElement('div');
+        departingModalContainer.className = 'departing-modal-container departing-modal-container--hidden';
+
+        var modal = document.createElement('div');
+        modal.className = 'departing-modal';
+
+        var content = document.createElement('div');
+        content.className = 'departing-modal-content';
+
+        var text = document.createElement('div');
+        text.className = 'departing-modal-text';
+
+        if (typeof window.getMessage === 'function') {
+            getMessage('msg_member_departing_modal', { days_remaining: daysRemainingLabel }, false).then(function(msg) {
+                if (msg) text.innerHTML = msg;
+            });
+        }
+
+        content.appendChild(text);
+
+        var footer = document.createElement('div');
+        footer.className = 'departing-modal-footer';
+
+        var ackBtn = document.createElement('button');
+        ackBtn.type = 'button';
+        ackBtn.className = 'member-departing-ack button-class-1';
+        ackBtn.textContent = 'Acknowledge';
+        ackBtn.addEventListener('click', closeDepartingModal);
+
+        footer.appendChild(ackBtn);
+        modal.appendChild(content);
+        modal.appendChild(footer);
+        departingModalContainer.appendChild(modal);
+        document.body.appendChild(departingModalContainer);
+    }
+
+    function updateDepartingState() {
+        if (!createTabBtn) return;
+        var departing = !!(currentUser && currentUser.deleted_at);
+        createTabBtn.disabled = departing;
+        createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
+    }
+
     // Ensure field has safe defaults
     function ensureFieldDefaults(field) {
         if (!field || typeof field !== 'object') {
@@ -6651,13 +6726,9 @@ const MemberModule = (function() {
             
             var displayName = currentUser.name || currentUser.account_email || currentUser.username;
             
-            // Check if account was reactivated (soft-deleted member logging back in)
-            if (result.reactivated === true) {
-                getMessage('msg_account_reactivated', {}, false).then(function(message) {
-                    if (message && window.ToastComponent) {
-                        ToastComponent.showSuccess(message);
-                    }
-                });
+            // Show departing modal if account is in grace period, otherwise normal login toast
+            if (result.departing === true) {
+                openDepartingModal();
             } else {
                 getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
                     if (message) {
@@ -7391,6 +7462,7 @@ const MemberModule = (function() {
         // - Ensure we don't leave stale inline auth UI or stale submit buttons around when auth changes.
         try { unmountCreateAuth(); } catch (e0) {}
         try { updateSubmitButtonState(); } catch (e1) {}
+        try { updateDepartingState(); } catch (e2) {}
 
         // Post Editor: Clear content on logout (PostEditorModule will reload on tab switch)
         var postEditorEl = document.getElementById('member-tab-posteditor');

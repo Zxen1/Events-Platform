@@ -79,16 +79,9 @@ try {
             if (!$row) return null;
             if (!isset($row['password_hash']) || !password_verify($pass, $row['password_hash'])) return null;
 
-            $reactivated = false;
-            if (!empty($row['deleted_at'])) {
-                $reactivateStmt = $db->prepare("UPDATE {$table} SET deleted_at = NULL WHERE id = ?");
-                if ($reactivateStmt) {
-                    $reactivateStmt->bind_param('i', $row['id']);
-                    $reactivateStmt->execute();
-                    $reactivateStmt->close();
-                    $reactivated = true;
-                }
-            }
+            // Departing members (deleted_at set) are allowed to log in — deletion is NOT cancelled on login.
+            // The JS will detect the departing flag and show the grace period modal.
+            $departing = !empty($row['deleted_at']);
 
             try {
                 $loginStmt = $db->prepare("UPDATE {$table} SET last_login_at = NOW() WHERE id = ?");
@@ -100,10 +93,10 @@ try {
             } catch (\Throwable $_eLLAt) {}
 
             return [
-                'success'     => true,
-                'role'        => $table === 'admins' ? 'admin' : 'member',
-                'reactivated' => $reactivated,
-                'user'        => [
+                'success'   => true,
+                'role'      => $table === 'admins' ? 'admin' : 'member',
+                'departing' => $departing,
+                'user'      => [
                     'id'                 => (int)$row['id'],
                     'account_email'      => isset($row['account_email']) ? (string)$row['account_email'] : '',
                     'username'           => (string)$row['username'],
@@ -122,6 +115,7 @@ try {
                     'filters_version'       => isset($row['filters_version']) ? (int)$row['filters_version'] : null,
                     'filters_updated_at'    => isset($row['filters_updated_at']) ? (string)$row['filters_updated_at'] : null,
                     'reminder_emails'       => isset($row['reminder_emails']) ? (int)$row['reminder_emails'] : 1,
+                    'deleted_at'            => isset($row['deleted_at']) ? (string)$row['deleted_at'] : null,
                 ],
             ];
         };

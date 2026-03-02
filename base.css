@@ -3,8 +3,9 @@
    ============================================================================
    
    Z-INDEX REFERENCE (max 100):
-   --layer-devtools: 100        (developer tools)
-   --layer-resize-overlay: 101  (resize blur overlay — above everything)
+   --layer-devtools: 100           (developer tools)
+   --layer-resize-overlay: 101     (resize blur overlay — above everything)
+   --layer-departing-modal: 101    (departing member modal — above all panels and modals)
    --layer-modal: 90            (full-screen modals)
    --layer-image-modal: 88 (lightbox)
    --layer-dialog: 86     (confirmations, toasts)
@@ -29,6 +30,7 @@
   /* Z-index layers */
   --layer-devtools: 100;
   --layer-resize-overlay: 101;
+  --layer-departing-modal: 101;
   --layer-modal: 90;
   --layer-image-modal: 88;
   --layer-dialog: 86;

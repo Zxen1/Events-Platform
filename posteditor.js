@@ -558,19 +558,28 @@
         buttonRow.className = 'posteditor-buttons';
 
         // Manage Button (opens combined Edit + Manage modal)
+        // Hidden for departing members (account pending deletion)
+        var currentUser = window.MemberModule && typeof MemberModule.getCurrentUser === 'function'
+            ? MemberModule.getCurrentUser() : null;
+        var isDeparting = !!(currentUser && currentUser.deleted_at);
+
         var manageBtn = document.createElement('button');
         manageBtn.className = 'posteditor-button-manage button-class-2';
         manageBtn.title = 'Manage Post';
         manageBtn.textContent = 'Manage';
         manageBtn.setAttribute('aria-selected', 'false');
-        manageBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (window.PostModule && typeof PostModule.closePost === 'function') {
-                PostModule.closePost(post.id);
-            }
-            openManageModal(post);
-        });
+        if (isDeparting) {
+            manageBtn.hidden = true;
+        } else {
+            manageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.PostModule && typeof PostModule.closePost === 'function') {
+                    PostModule.closePost(post.id);
+                }
+                openManageModal(post);
+            });
+        }
 
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
