@@ -373,6 +373,33 @@ $isAdmin = strtolower($memberRole) === 'admin' ||
 // Check if admin requested to skip payment
 $skipPayment = $isAdmin && !empty($data['skip_payment']);
 
+// Check if a 100% coupon makes this a free checkout
+$couponId = isset($data['coupon_id']) ? (int)$data['coupon_id'] : null;
+$freeCoupon = false;
+if (!$skipPayment && $couponId > 0) {
+    $cpStmt = $mysqli->prepare(
+        "SELECT id, discount_type, discount_value, status, valid_from, valid_until, usage_limit, usage_count
+         FROM checkout_coupons WHERE id = ? LIMIT 1"
+    );
+    if ($cpStmt) {
+        $cpStmt->bind_param('i', $couponId);
+        $cpStmt->execute();
+        $cpRow = $cpStmt->get_result()->fetch_assoc();
+        $cpStmt->close();
+        if ($cpRow &&
+            $cpRow['status'] === 'active' &&
+            (empty($cpRow['valid_from'])  || date('Y-m-d') >= $cpRow['valid_from']) &&
+            (empty($cpRow['valid_until']) || date('Y-m-d') <= $cpRow['valid_until']) &&
+            ($cpRow['usage_limit'] <= 0 || $cpRow['usage_count'] < $cpRow['usage_limit']) &&
+            $cpRow['discount_type'] === 'percent' &&
+            (float)$cpRow['discount_value'] >= 100
+        ) {
+            $skipPayment = true;
+            $freeCoupon  = true;
+        }
+    }
+}
+
 // Payment gateway transaction ID (required for non-admin, non-free submissions)
 $transactionId = isset($data['transaction_id']) ? (int)$data['transaction_id'] : null;
 
@@ -1558,6 +1585,16 @@ if (!$mysqli->commit()) {
 }
 $transactionActive = false;
 
+// Increment coupon usage count for free coupon checkouts
+if ($freeCoupon && $couponId > 0) {
+    $cpUseStmt = $mysqli->prepare("UPDATE checkout_coupons SET usage_count = usage_count + 1, updated_at = NOW() WHERE id = ?");
+    if ($cpUseStmt) {
+        $cpUseStmt->bind_param('i', $couponId);
+        $cpUseStmt->execute();
+        $cpUseStmt->close();
+    }
+}
+
 // Link transaction to the newly created post
 if ($transactionId !== null && $transactionId > 0) {
   $stmtTxLink = $mysqli->prepare("UPDATE transactions SET post_id = ?, updated_at = NOW() WHERE id = ? AND post_id IS NULL");
@@ -1568,8 +1605,8 @@ if ($transactionId !== null && $transactionId > 0) {
   }
 }
 
-// Send "Post live" email with receipt (template 701)
-if ($memberId !== null && $memberId > 0 && !$skipPayment) {
+// Send "Post live" email — sent for paid posts and free coupon checkouts, not admin-free skips
+if ($memberId !== null && $memberId > 0 && (!$skipPayment || $freeCoupon)) {
   send_post_live_email($mysqli, $memberId, $memberRole, $memberName, $primaryTitle, $postKey, $transactionId);
 }
 
