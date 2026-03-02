@@ -3837,7 +3837,8 @@ const AdminModule = (function() {
 
     function openCheckoutCouponForm(coupon, cardEl) {
         var container = document.querySelector('.admin-checkout-coupon-container');
-        if (!container) return;
+        console.error('[Coupon] openCheckoutCouponForm called. container:', container, 'coupon:', coupon);
+        if (!container) { console.error('[Coupon] STOPPED: container not found'); return; }
 
         // Close any existing form cleanly (no confirm — caller already handled it)
         closeCouponForm();
