@@ -4297,8 +4297,7 @@ const AdminModule = (function() {
         // Register in module-level state
         activeCouponFormData = { form: form, card: targetCard, hasChanges: function() { return initialValues !== null && formHasChanges(); } };
 
-        // Outside-click handler — deferred so the triggering click doesn't immediately close the form
-        setTimeout(function() {
+        // Outside-click handler — closes form if click is outside card+form
         document.addEventListener('click', function couponOutsideClick(e) {
             if (!form.isConnected) {
                 document.removeEventListener('click', couponOutsideClick);
@@ -4313,7 +4312,6 @@ const AdminModule = (function() {
                 document.removeEventListener('click', couponOutsideClick);
             }
         });
-        }, 0);
     }
 
     function saveCheckoutCoupon(payload) {
