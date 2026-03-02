@@ -4277,6 +4277,7 @@ const AdminModule = (function() {
         btnRow.appendChild(cancelBtn);
         form.appendChild(btnRow);
 
+        console.error('[Coupon] Reached DOM insertion point');
         // Insert form into DOM
         var addBtn = document.getElementById('adminCheckoutCouponAdd');
         var targetCard = cardEl || null;
