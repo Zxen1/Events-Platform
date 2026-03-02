@@ -3894,8 +3894,10 @@ const MemberModule = (function() {
                 ? checkoutInstance.getSelected() : null;
             var chargeAmount = sel && sel.price !== null && isFinite(sel.price) ? parseFloat(sel.price) : 0;
             
-            // Guard: never submit a paid create-post without a transaction id.
-            // If checkout isn't selected / priced yet, block and prompt the user instead of triggering backend 402.
+            // CHECKOUT PAYMENT RULES
+            // Rule 1: A valid option must be selected before submitting.
+            // Rule 2: Free checkout (chargeAmount === 0) is only allowed when a 100% coupon is applied.
+            // Rule 3: Any real payment must be at least $1.00 — Stripe rejects sub-dollar charges.
             if (!sel || sel.price === null || !isFinite(sel.price)) {
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                     getMessage('msg_post_validation_choose', {}, false).then(function(msg) {
@@ -3908,6 +3910,14 @@ const MemberModule = (function() {
                         checkoutFs.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 } catch (e0) {}
+                return;
+            }
+            if (chargeAmount > 0 && chargeAmount < 1) {
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    getMessage('msg_post_validation_choose', {}, false).then(function(msg) {
+                        if (msg) ToastComponent.showError(msg);
+                    });
+                }
                 return;
             }
             if (chargeAmount > 0) {
