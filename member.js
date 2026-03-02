@@ -3896,7 +3896,7 @@ const MemberModule = (function() {
             
             // Guard: never submit a paid create-post without a transaction id.
             // If checkout isn't selected / priced yet, block and prompt the user instead of triggering backend 402.
-            if (!sel || sel.price === null || !isFinite(sel.price) || !(chargeAmount > 0)) {
+            if (!sel || sel.price === null || !isFinite(sel.price)) {
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                     getMessage('msg_post_validation_choose', {}, false).then(function(msg) {
                         if (msg) ToastComponent.showError(msg);
