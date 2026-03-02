@@ -378,21 +378,25 @@ $couponId = isset($data['coupon_id']) ? (int)$data['coupon_id'] : null;
 $freeCoupon = false;
 if (!$skipPayment && $couponId > 0) {
     $cpStmt = $mysqli->prepare(
-        "SELECT id, discount_type, discount_value, status, valid_from, valid_until, usage_limit, usage_count
+        "SELECT discount_type, discount_value, status, valid_from, valid_until, usage_limit, usage_count
          FROM checkout_coupons WHERE id = ? LIMIT 1"
     );
     if ($cpStmt) {
         $cpStmt->bind_param('i', $couponId);
         $cpStmt->execute();
-        $cpRow = $cpStmt->get_result()->fetch_assoc();
+        $cpDiscountType = $cpStatus = $cpValidFrom = $cpValidUntil = null;
+        $cpDiscountValue = $cpUsageLimit = $cpUsageCount = null;
+        $cpStmt->bind_result($cpDiscountType, $cpDiscountValue, $cpStatus, $cpValidFrom, $cpValidUntil, $cpUsageLimit, $cpUsageCount);
+        $cpFound = $cpStmt->fetch();
         $cpStmt->close();
-        if ($cpRow &&
-            $cpRow['status'] === 'active' &&
-            (empty($cpRow['valid_from'])  || date('Y-m-d') >= $cpRow['valid_from']) &&
-            (empty($cpRow['valid_until']) || date('Y-m-d') <= $cpRow['valid_until']) &&
-            ($cpRow['usage_limit'] <= 0 || $cpRow['usage_count'] < $cpRow['usage_limit']) &&
-            $cpRow['discount_type'] === 'percent' &&
-            (float)$cpRow['discount_value'] >= 100
+        $today = date('Y-m-d');
+        if ($cpFound &&
+            $cpStatus === 'active' &&
+            (empty($cpValidFrom)  || $today >= $cpValidFrom) &&
+            (empty($cpValidUntil) || $today <= $cpValidUntil) &&
+            ($cpUsageLimit <= 0 || $cpUsageCount < $cpUsageLimit) &&
+            $cpDiscountType === 'percent' &&
+            (float)$cpDiscountValue >= 100
         ) {
             $skipPayment = true;
             $freeCoupon  = true;
