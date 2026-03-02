@@ -870,6 +870,7 @@ const AdminModule = (function() {
         var accordion = document.createElement('div');
         accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
+        accordion.setAttribute('data-slack-anchor', '');
 
         var header = document.createElement('div');
         header.className = 'admin-sitemap-manual-accordion-header accordion-header';
@@ -959,6 +960,7 @@ const AdminModule = (function() {
         var addItemBtn = document.createElement('div');
         addItemBtn.className = 'admin-sitemap-manual-add-item';
         addItemBtn.textContent = '+ Add Item';
+        addItemBtn.setAttribute('data-slack-anchor', '');
         addItemBtn.addEventListener('click', function(e) {
             addItem(body, addItemBtn);
         });
