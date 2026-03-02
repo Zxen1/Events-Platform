@@ -3050,6 +3050,8 @@
   align-items: center;
   justify-content: center;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .admin-sitemap-manual-accordion-header-drag-icon {
@@ -3304,6 +3306,8 @@
   justify-content: center;
   cursor: grab;
   flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .admin-sitemap-manual-item-drag-icon {

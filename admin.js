@@ -1017,7 +1017,7 @@ const AdminModule = (function() {
 
         // Drag and drop
         accordion.draggable = false;
-        headerDrag.addEventListener('mousedown', function(e) { e.preventDefault(); accordion.draggable = true; });
+        headerDrag.addEventListener('mousedown', function() { accordion.draggable = true; });
         document.addEventListener('mouseup', function() { accordion.draggable = false; });
         accordion.addEventListener('dragstart', function(e) {
             if (!accordion.draggable) { e.preventDefault(); return; }
@@ -1248,7 +1248,7 @@ const AdminModule = (function() {
         // Drag and drop (reorder items within chapter body)
         if (body) {
             item.draggable = false;
-            dragHandle.addEventListener('mousedown', function(e) { e.preventDefault(); item.draggable = true; });
+            dragHandle.addEventListener('mousedown', function() { item.draggable = true; });
             document.addEventListener('mouseup', function() { item.draggable = false; });
             item.addEventListener('dragstart', function(e) {
                 if (!item.draggable) { e.preventDefault(); return; }
