@@ -512,7 +512,12 @@ try {
             $couponId = isset($checkoutCoupon['id']) ? (int)$checkoutCoupon['id'] : 0;
             $hasCode = isset($checkoutCoupon['code']) && $checkoutCoupon['code'] !== '';
 
-            if ($couponId > 0 && !$hasCode) {
+            if ($couponId > 0 && !empty($checkoutCoupon['delete'])) {
+                // Hard delete
+                $stmt = $pdo->prepare("DELETE FROM `checkout_coupons` WHERE `id` = :id");
+                $stmt->execute([':id' => $couponId]);
+                $couponSaved = true;
+            } elseif ($couponId > 0 && !$hasCode) {
                 // Status-only toggle (card enable/disable buttons)
                 $stmt = $pdo->prepare("UPDATE `checkout_coupons` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id");
                 $stmt->execute([

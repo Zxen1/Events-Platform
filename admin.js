@@ -4243,6 +4243,36 @@ const AdminModule = (function() {
         cancelBtn.addEventListener('click', function() { tryCloseCouponForm(null); });
 
         btnRow.appendChild(saveBtn);
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'admin-checkout-coupon-form-delete-button button-class-danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', function() {
+            if (!coupon || !coupon.id) {
+                initialValues = null;
+                closeCouponForm();
+                return;
+            }
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Delete coupon?',
+                    messageText: 'Delete the coupon "' + coupon.code + '"? This cannot be undone.',
+                    confirmLabel: 'Delete',
+                    cancelLabel: 'Cancel',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        initialValues = null;
+                        closeCouponForm();
+                        deleteCheckoutCoupon(coupon.id);
+                    }
+                });
+            }
+        });
+        btnRow.appendChild(deleteBtn);
+
         btnRow.appendChild(cancelBtn);
         form.appendChild(btnRow);
 
@@ -4297,6 +4327,22 @@ const AdminModule = (function() {
         })
         .catch(function(err) {
             console.error('[Admin] Failed to save checkout coupon:', err);
+        });
+    }
+
+    function deleteCheckoutCoupon(id) {
+        fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ checkout_coupon: { id: id, delete: true } })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) throw new Error(data.message || 'Failed to delete coupon');
+            loadCheckoutCoupons();
+        })
+        .catch(function(err) {
+            console.error('[Admin] Failed to delete checkout coupon:', err);
         });
     }
 
