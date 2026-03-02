@@ -3659,6 +3659,14 @@ const AdminModule = (function() {
                 openCheckoutCouponForm(null);
             });
         }
+
+        // Close coupon form on outside click — attached once at tab load (not inside open function)
+        document.addEventListener('click', function(e) {
+            if (!activeCouponFormData) return;
+            if (e.target.closest('.admin-checkout-coupon-container')) return;
+            if (e.target.closest('.component-confirm-dialog-overlay')) return;
+            tryCloseCouponForm(null);
+        });
     }
 
     /* --------------------------------------------------------------------------
@@ -4297,21 +4305,6 @@ const AdminModule = (function() {
         // Register in module-level state
         activeCouponFormData = { form: form, card: targetCard, hasChanges: function() { return initialValues !== null && formHasChanges(); } };
 
-        // Outside-click handler — closes form if click is outside card+form
-        document.addEventListener('click', function couponOutsideClick(e) {
-            if (!form.isConnected) {
-                document.removeEventListener('click', couponOutsideClick);
-                return;
-            }
-            var insideForm = form.contains(e.target);
-            var insideCard = targetCard && targetCard.contains(e.target);
-            if (!insideForm && !insideCard) {
-                tryCloseCouponForm(null);
-            }
-            if (!form.isConnected) {
-                document.removeEventListener('click', couponOutsideClick);
-            }
-        });
     }
 
     function saveCheckoutCoupon(payload) {
