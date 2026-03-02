@@ -351,6 +351,11 @@ foreach (['members', 'admins'] as $table) {
 
     // Step 8: TOMBSTONE — wipe personal columns, keep id + account_email + deleted_at + hidden
     // Do NOT hard DELETE this row. See file header for explanation.
+    //
+    // !! WARNING: password_hash is set to the literal string 'DELETED' intentionally.
+    // !! The registration duplicate-email check in add-member.php uses
+    // !! password_hash != 'DELETED' to distinguish a true tombstone from a live or
+    // !! grace-period account. Do NOT change this string without updating that check.
     $wipeStmt = $mysqli->prepare(
       "UPDATE `{$table}` SET
          username             = NULL,

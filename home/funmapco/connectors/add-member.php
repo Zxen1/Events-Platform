@@ -283,7 +283,7 @@ if(!$hash) fail(500,'Hash failed');
 $emailLower = strtolower($email);
 
 // Email duplicate?
-$stmt = $mysqli->prepare('SELECT id FROM members WHERE LOWER(account_email)=? LIMIT 1');
+$stmt = $mysqli->prepare("SELECT id FROM members WHERE LOWER(account_email)=? AND password_hash != 'DELETED' LIMIT 1");
 if(!$stmt) fail(500,'Prepare failed (check query)');
 $stmt->bind_param('s',$emailLower);
 $stmt->execute();
@@ -291,7 +291,7 @@ $stmt->store_result();
 if($stmt->num_rows>0){$stmt->close();fail_key(409,'msg_auth_register_email_taken');}
 $stmt->close();
 
-$stmt = $mysqli->prepare('SELECT id FROM admins WHERE LOWER(account_email)=? LIMIT 1');
+$stmt = $mysqli->prepare("SELECT id FROM admins WHERE LOWER(account_email)=? AND password_hash != 'DELETED' LIMIT 1");
 if(!$stmt) fail(500,'Prepare failed (check query)');
 $stmt->bind_param('s',$emailLower);
 $stmt->execute();
