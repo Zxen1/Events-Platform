@@ -3385,7 +3385,8 @@ const MemberModule = (function() {
         } else {
             discounted = basePrice - coupon.discount_value;
         }
-        return Math.max(discounted, 1.00);
+        // Floor is 0 — a 100% coupon results in a free checkout, bypassing payment
+        return Math.max(discounted, 0);
     }
 
     function applyCouponToDisplay() {
