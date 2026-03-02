@@ -55,6 +55,7 @@ $keyOrder = [
   'msg_email_post_expired',
   'msg_email_inactivity_warning',
   'msg_email_inactivity_closed',
+  'msg_email_reminder_report',
 ];
 usort($templates, function($a, $b) use ($keyOrder) {
   $posA = array_search($a['message_key'], $keyOrder);
@@ -63,6 +64,10 @@ usort($templates, function($a, $b) use ($keyOrder) {
   if ($posB === false) $posB = PHP_INT_MAX;
   return $posA <=> $posB;
 });
+
+$archivedKeys      = ['msg_email_post_deletion_warning', 'msg_email_post_deleted', 'msg_email_expiry_warning', 'msg_email_post_expired'];
+$activeTemplates   = array_values(array_filter($templates, fn($t) => !in_array($t['message_key'], $archivedKeys)));
+$archivedTemplates = array_values(array_filter($templates, fn($t) =>  in_array($t['message_key'], $archivedKeys)));
 
 $logoHtml = '';
 if ($logoUrl) {
@@ -152,7 +157,10 @@ $samples = [
   'listing_label'    => 'listings',
   'has_have'         => 'have',
   'is_are'           => 'are',
-  'unsubscribe_link' => 'https://funmap.com/unsubscribed.html?id=1&email=jane%40example.com',
+  'unsubscribe_link'  => 'https://funmap.com/unsubscribed.html?id=1&email=jane%40example.com',
+  'trigger_subject'   => 'Your FunMap listing expires in 7 days',
+  'summary'           => 'Your account: 7 live · 3 expired · 1 scheduled for deletion',
+  'report'            => '<p style="font-size:13px;font-weight:bold;color:#333;margin:0 0 8px;">Needs attention:</p><ul style="padding:0 0 0 18px;margin:0 0 20px;"><li style="margin-bottom:6px;font-size:14px;color:#333;">Post D — expires 9 Mar 2026 (7 days)</li><li style="margin-bottom:6px;font-size:14px;color:#333;">Post E — expires 12 Mar 2026 (10 days)</li><li style="margin-bottom:6px;font-size:14px;color:#333;">Post F — expires 15 Mar 2026 (13 days)</li><li style="margin-bottom:6px;font-size:14px;color:#333;">Post K — scheduled for deletion 8 Mar 2026 (6 days)</li></ul><p style="font-size:13px;font-weight:bold;color:#333;margin:0 0 8px;">Recently expired:</p><ul style="padding:0 0 0 18px;margin:0 0 24px;"><li style="margin-bottom:6px;font-size:14px;color:#aaa;">Post A — expired 12 Feb 2026</li><li style="margin-bottom:6px;font-size:14px;color:#aaa;">Post B — expired 18 Feb 2026</li><li style="margin-bottom:6px;font-size:14px;color:#aaa;">Post C — expired 20 Feb 2026</li></ul>',
 ];
 ?>
 <!DOCTYPE html>
@@ -175,7 +183,7 @@ $samples = [
 <body>
   <h1>FunMap — Email Template Preview</h1>
   <br>
-<?php foreach ($templates as $t):
+<?php foreach ($activeTemplates as $t):
   $body    = $t['message_text'];
   $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
 
@@ -206,16 +214,42 @@ $samples = [
     }
   }
 
+  $subject = $t['message_name'];
   if (is_array($allowed)) {
     foreach ($allowed as $key) {
-      $val  = $renderSamples[$key] ?? '{' . $key . '}';
-      $body = str_replace('{' . $key . '}', $val, $body);
+      $val     = $renderSamples[$key] ?? '{' . $key . '}';
+      $body    = str_replace('{' . $key . '}', $val, $body);
+      $subject = str_replace('{' . $key . '}', $val, $subject);
     }
   }
 ?>
   <div class="email-block">
     <div class="email-label"><?= htmlspecialchars($t['message_key']) ?></div>
-    <div class="email-subject">Subject: <span><?= htmlspecialchars($t['message_name']) ?></span></div>
+    <div class="email-subject">Subject: <span><?= htmlspecialchars($subject) ?></span></div>
+    <div class="email-frame"><?= $body ?></div>
+  </div>
+  <hr class="divider">
+<?php endforeach; ?>
+
+  <div style="margin:60px 0 30px;padding:20px 0;border-top:3px solid #999;text-align:center;">
+    <span style="font-size:13px;font-weight:bold;color:#999;text-transform:uppercase;letter-spacing:1px;">Removed — replaced by reminder report</span>
+  </div>
+
+<?php foreach ($archivedTemplates as $t):
+  $body    = $t['message_text'];
+  $allowed = $t['placeholders'] ? json_decode($t['placeholders'], true) : [];
+  $subject = $t['message_name'];
+  if (is_array($allowed)) {
+    foreach ($allowed as $key) {
+      $val     = $samples[$key] ?? '{' . $key . '}';
+      $body    = str_replace('{' . $key . '}', $val, $body);
+      $subject = str_replace('{' . $key . '}', $val, $subject);
+    }
+  }
+?>
+  <div class="email-block" style="opacity:0.5;">
+    <div class="email-label"><?= htmlspecialchars($t['message_key']) ?></div>
+    <div class="email-subject">Subject: <span><?= htmlspecialchars($subject) ?></span></div>
     <div class="email-frame"><?= $body ?></div>
   </div>
   <hr class="divider">
