@@ -127,6 +127,11 @@ try {
         $instructions = $data['instructions'];
         unset($settings['instructions']);
     }
+    $deletedInstructionIds = null;
+    if (isset($data['deleted_instruction_ids']) && is_array($data['deleted_instruction_ids'])) {
+        $deletedInstructionIds = $data['deleted_instruction_ids'];
+        unset($settings['deleted_instruction_ids']);
+    }
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
         unset($settings['fieldset_tooltips']);
@@ -585,35 +590,47 @@ try {
 
     // Save instructions if provided
     $instructionsUpdated = 0;
-    $newChapterIds = [];
-    if ($instructions !== null && is_array($instructions) && !empty($instructions)) {
+    $newItemIds = [];
+    $tableExists = null;
+    if (($instructions !== null && !empty($instructions)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds))) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
-        if ($stmt->rowCount() > 0) {
-            $updateStmt = $pdo->prepare('
-                UPDATE `admin_instructions`
-                SET `description` = :description
-                WHERE `id` = :id
-            ');
-            $insertStmt = $pdo->prepare('
-                INSERT INTO `admin_instructions` (`chapter`, `title`, `description`)
-                VALUES (:chapter, :title, :description)
-            ');
-            foreach ($instructions as $item) {
-                if (!empty($item['is_new'])) {
-                    $insertStmt->execute([
-                        ':chapter'     => (string)($item['chapter'] ?? 'New Chapter'),
-                        ':title'       => '',
-                        ':description' => '',
-                    ]);
-                    $newChapterIds[] = (int)$pdo->lastInsertId();
-                    $instructionsUpdated++;
-                } elseif (isset($item['id']) && isset($item['description'])) {
-                    $updateStmt->execute([
-                        ':id'          => (int)$item['id'],
-                        ':description' => (string)$item['description'],
-                    ]);
-                    if ($updateStmt->rowCount() > 0) $instructionsUpdated++;
-                }
+        $tableExists = $stmt->rowCount() > 0;
+    }
+    if ($tableExists && $deletedInstructionIds !== null && !empty($deletedInstructionIds)) {
+        $deleteStmt = $pdo->prepare('DELETE FROM `admin_instructions` WHERE `id` = :id');
+        foreach ($deletedInstructionIds as $delId) {
+            $deleteStmt->execute([':id' => (int)$delId]);
+        }
+    }
+    if ($tableExists && $instructions !== null && !empty($instructions)) {
+        $updateStmt = $pdo->prepare('
+            UPDATE `admin_instructions`
+            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            WHERE `id` = :id
+        ');
+        $insertStmt = $pdo->prepare('
+            INSERT INTO `admin_instructions` (`chapter`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :title, :description, :sort_order)
+        ');
+        foreach ($instructions as $item) {
+            if (!empty($item['is_new'])) {
+                $insertStmt->execute([
+                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                $newItemIds[] = (int)$pdo->lastInsertId();
+                $instructionsUpdated++;
+            } elseif (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => (string)($item['chapter'] ?? ''),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $instructionsUpdated++;
             }
         }
     }
@@ -657,8 +674,8 @@ try {
     if ($instructionsUpdated > 0) {
         $response['instructions_updated'] = $instructionsUpdated;
     }
-    if (!empty($newChapterIds)) {
-        $response['new_chapter_ids'] = $newChapterIds;
+    if (!empty($newItemIds)) {
+        $response['new_item_ids'] = $newItemIds;
     }
 
     echo json_encode($response);

@@ -829,17 +829,43 @@ const AdminModule = (function() {
 
     function getModifiedInstructions() {
         var modified = [];
+        var deletedIds = [];
         var manualContainer = document.getElementById('admin-sitemap-manual-container');
-        if (!manualContainer) return modified;
+        if (!manualContainer) return { items: modified, deleted_ids: deletedIds };
+
+        var globalOrder = 0;
         manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
             var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
             if (!nameInput) return;
             var chapterName = nameInput.value.trim() || 'New Chapter';
             if (accordion.dataset.isNew === '1') {
                 modified.push({ chapter: chapterName, is_new: true });
+                return;
             }
+            // Collect existing items with sort_order
+            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
+                var textInput = itemEl.querySelector('.admin-message-text-input');
+                var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
+                var title = titleInput ? titleInput.value : '';
+                var description = textInput ? textInput.value : '';
+                globalOrder++;
+                if (itemEl.dataset.isNew === '1') {
+                    modified.push({ chapter: chapterName, title: title, description: description, sort_order: globalOrder, is_new: true });
+                } else if (id) {
+                    modified.push({ id: id, chapter: chapterName, title: title, description: description, sort_order: globalOrder });
+                }
+            });
         });
-        return modified;
+
+        if (manualContainer.dataset.deletedIds) {
+            manualContainer.dataset.deletedIds.split(',').forEach(function(v) {
+                var n = parseInt(v, 10);
+                if (n) deletedIds.push(n);
+            });
+        }
+
+        return { items: modified, deleted_ids: deletedIds };
     }
 
     function closeAllInstructionsEditPanels() {
@@ -969,7 +995,7 @@ const AdminModule = (function() {
         if (chapterData.items && chapterData.items.length) {
             chapterData.items.forEach(function(item) {
                 if (!item.title && !item.description) return;
-                var itemEl = createInstructionItem(item.title, item.description);
+                var itemEl = createInstructionItem(item.title, item.description, body);
                 itemEl.dataset.itemId = item.id;
                 body.appendChild(itemEl);
             });
@@ -1076,7 +1102,7 @@ const AdminModule = (function() {
     }
 
     function addItem(body, addItemBtn) {
-        var itemEl = createInstructionItem('', '');
+        var itemEl = createInstructionItem('', '', body);
         itemEl.dataset.isNew = '1';
         body.insertBefore(itemEl, addItemBtn);
         // Open title for editing immediately
@@ -1085,10 +1111,30 @@ const AdminModule = (function() {
         if (instructionsLoaded) notifyFieldChange();
     }
 
-    function createInstructionItem(title, description) {
+    function trackDeletedItem(item) {
+        var id = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
+        if (!id) return;
+        var container = document.getElementById('admin-sitemap-manual-container');
+        if (!container) return;
+        var prev = container.dataset.deletedIds ? container.dataset.deletedIds + ',' : '';
+        container.dataset.deletedIds = prev + id;
+    }
+
+    function createInstructionItem(title, description, body) {
         var item = document.createElement('div');
         item.className = 'admin-sitemap-manual-item';
         item.setAttribute('data-slack-anchor', '');
+
+        // Item header row: drag handle + title display/input + delete button
+        var itemHeader = document.createElement('div');
+        itemHeader.className = 'admin-sitemap-manual-item-header';
+
+        // Drag handle
+        var dragHandle = document.createElement('div');
+        dragHandle.className = 'admin-sitemap-manual-item-drag';
+        var dragIcon = document.createElement('div');
+        dragIcon.className = 'admin-sitemap-manual-item-drag-icon';
+        dragHandle.appendChild(dragIcon);
 
         // Title display (click to edit)
         var titleDisplay = document.createElement('div');
@@ -1117,6 +1163,40 @@ const AdminModule = (function() {
             titleDisplay.style.display = '';
             titleInput.style.display = 'none';
         });
+
+        // Delete button
+        var deleteBtn = document.createElement('div');
+        deleteBtn.className = 'admin-sitemap-manual-item-delete';
+        deleteBtn.setAttribute('title', 'Delete item');
+        deleteBtn.addEventListener('click', function() {
+            var itemTitle = titleInput.value.trim() || 'this item';
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Delete Item',
+                    messageText: 'Delete "' + itemTitle + '"?',
+                    confirmLabel: 'Delete',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        trackDeletedItem(item);
+                        item.parentNode.removeChild(item);
+                        if (instructionsLoaded) notifyFieldChange();
+                    }
+                });
+                return;
+            }
+            if (confirm('Delete "' + itemTitle + '"?')) {
+                trackDeletedItem(item);
+                item.parentNode.removeChild(item);
+                if (instructionsLoaded) notifyFieldChange();
+            }
+        });
+
+        itemHeader.appendChild(dragHandle);
+        itemHeader.appendChild(titleDisplay);
+        itemHeader.appendChild(titleInput);
+        itemHeader.appendChild(deleteBtn);
 
         // Description display (click to edit)
         var textDisplay = document.createElement('div');
@@ -1147,12 +1227,42 @@ const AdminModule = (function() {
             textInput.style.display = 'none';
         });
 
-        item.appendChild(titleDisplay);
-        item.appendChild(titleInput);
+        item.appendChild(itemHeader);
         item.appendChild(textDisplay);
         item.appendChild(textInput);
         TextareaResizeComponent.attach(textInput);
         textInput.style.display = 'none';
+
+        // Drag and drop (reorder items within chapter body)
+        if (body) {
+            item.draggable = false;
+            dragHandle.addEventListener('mousedown', function() { item.draggable = true; });
+            document.addEventListener('mouseup', function() { item.draggable = false; });
+            item.addEventListener('dragstart', function(e) {
+                if (!item.draggable) { e.preventDefault(); return; }
+                item._dragStartIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
+                e.dataTransfer.effectAllowed = 'move';
+                item.classList.add('admin-sitemap-manual-item--dragging');
+            });
+            item.addEventListener('dragend', function() {
+                item.classList.remove('admin-sitemap-manual-item--dragging');
+                item.draggable = false;
+                var newIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
+                if (newIndex !== item._dragStartIndex && instructionsLoaded) notifyFieldChange();
+            });
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                var dragging = body.querySelector('.admin-sitemap-manual-item--dragging');
+                if (dragging && dragging !== item) {
+                    var rect = item.getBoundingClientRect();
+                    if (e.clientY < rect.top + rect.height / 2) {
+                        body.insertBefore(dragging, item);
+                    } else {
+                        body.insertBefore(dragging, item.nextSibling);
+                    }
+                }
+            });
+        }
 
         return item;
     }
@@ -1283,31 +1393,33 @@ const AdminModule = (function() {
         }
         
         // Save modified instructions (uses save-admin-settings endpoint)
-        var modifiedInstructions = getModifiedInstructions();
-        if (modifiedInstructions.length > 0) {
+        var instructionsPayload = getModifiedInstructions();
+        if (instructionsPayload.items.length > 0 || instructionsPayload.deleted_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ instructions: modifiedInstructions })
+                    body: JSON.stringify({ instructions: instructionsPayload.items, deleted_instruction_ids: instructionsPayload.deleted_ids })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save instructions');
                     }
-                    // Clear is_new flag on newly saved chapters
-                    if (data.new_chapter_ids && Array.isArray(data.new_chapter_ids)) {
-                        var manualContainer = document.getElementById('admin-sitemap-manual-container');
-                        if (manualContainer) {
-                            var newAccordions = manualContainer.querySelectorAll('.admin-sitemap-manual-accordion[data-is-new="1"]');
-                            data.new_chapter_ids.forEach(function(newId, i) {
-                                if (newAccordions[i]) {
-                                    newAccordions[i].dataset.isNew = '';
-                                    newAccordions[i].dataset.chapterId = newId;
+                    var manualContainer = document.getElementById('admin-sitemap-manual-container');
+                    if (manualContainer) {
+                        // Clear is_new on newly saved items and assign their real IDs
+                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                            var newItems = manualContainer.querySelectorAll('.admin-sitemap-manual-item[data-is-new="1"]');
+                            data.new_item_ids.forEach(function(newId, i) {
+                                if (newItems[i]) {
+                                    newItems[i].dataset.isNew = '';
+                                    newItems[i].dataset.itemId = newId;
                                 }
                             });
                         }
+                        // Clear deleted IDs tracker
+                        delete manualContainer.dataset.deletedIds;
                     }
                     updateCompositeBaseline('instructions');
                 })
