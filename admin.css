@@ -3349,7 +3349,7 @@
   background-color: var(--red-500);
 }
 
-.admin-sitemap-manual-item--dragging {
+.admin-sitemap-manual-item.dragging {
   opacity: 0.5;
 }
 

@@ -1021,28 +1021,38 @@ const AdminModule = (function() {
         accordion.appendChild(editPanel);
         accordion.appendChild(body);
 
-        // Drag and drop
-        accordion.draggable = true;
+        // Drag and drop - copied exactly from messages accordion pattern
+        accordion.draggable = false;
+        var chapterDragStartIndex = -1;
+        headerDrag.addEventListener('mousedown', function() {
+            accordion.draggable = true;
+        });
+        document.addEventListener('mouseup', function() {
+            accordion.draggable = false;
+        });
         accordion.addEventListener('dragstart', function(e) {
-            if (!e.target.closest('.admin-sitemap-manual-accordion-header-drag')) { e.preventDefault(); return; }
+            if (!accordion.draggable) { e.preventDefault(); return; }
             var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
-            accordion._dragStartIndex = siblings.indexOf(accordion);
+            chapterDragStartIndex = siblings.indexOf(accordion);
             e.dataTransfer.effectAllowed = 'move';
             accordion.classList.add('dragging');
         });
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
+            accordion.draggable = false;
             var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
-            if (siblings.indexOf(accordion) !== accordion._dragStartIndex) {
+            if (siblings.indexOf(accordion) !== chapterDragStartIndex) {
                 if (instructionsLoaded) notifyFieldChange();
             }
+            chapterDragStartIndex = -1;
         });
         accordion.addEventListener('dragover', function(e) {
             e.preventDefault();
             var dragging = container.querySelector('.admin-sitemap-manual-accordion.dragging');
             if (dragging && dragging !== accordion) {
                 var rect = accordion.getBoundingClientRect();
-                if (e.clientY < rect.top + rect.height / 2) {
+                var midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
                     accordion.parentNode.insertBefore(dragging, accordion);
                 } else {
                     accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
@@ -1248,26 +1258,39 @@ const AdminModule = (function() {
         TextareaResizeComponent.attach(textInput);
         textInput.style.display = 'none';
 
-        // Drag and drop (reorder items within chapter body)
+        // Drag and drop - copied exactly from messages accordion pattern, scoped to body
         if (body) {
-            item.draggable = true;
+            item.draggable = false;
+            var itemDragStartIndex = -1;
+            dragHandle.addEventListener('mousedown', function() {
+                item.draggable = true;
+            });
+            document.addEventListener('mouseup', function() {
+                item.draggable = false;
+            });
             item.addEventListener('dragstart', function(e) {
-                if (!e.target.closest('.admin-sitemap-manual-item-drag')) { e.preventDefault(); return; }
-                item._dragStartIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
+                if (!item.draggable) { e.preventDefault(); return; }
+                var siblings = Array.from(body.querySelectorAll('.admin-sitemap-manual-item'));
+                itemDragStartIndex = siblings.indexOf(item);
                 e.dataTransfer.effectAllowed = 'move';
-                item.classList.add('admin-sitemap-manual-item--dragging');
+                item.classList.add('dragging');
             });
             item.addEventListener('dragend', function() {
-                item.classList.remove('admin-sitemap-manual-item--dragging');
-                var newIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
-                if (newIndex !== item._dragStartIndex && instructionsLoaded) notifyFieldChange();
+                item.classList.remove('dragging');
+                item.draggable = false;
+                var siblings = Array.from(body.querySelectorAll('.admin-sitemap-manual-item'));
+                if (siblings.indexOf(item) !== itemDragStartIndex) {
+                    if (instructionsLoaded) notifyFieldChange();
+                }
+                itemDragStartIndex = -1;
             });
             item.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                var dragging = body.querySelector('.admin-sitemap-manual-item--dragging');
+                var dragging = body.querySelector('.admin-sitemap-manual-item.dragging');
                 if (dragging && dragging !== item) {
                     var rect = item.getBoundingClientRect();
-                    if (e.clientY < rect.top + rect.height / 2) {
+                    var midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
                         body.insertBefore(dragging, item);
                     } else {
                         body.insertBefore(dragging, item.nextSibling);
