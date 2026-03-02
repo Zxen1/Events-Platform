@@ -1291,7 +1291,7 @@ const AdminModule = (function() {
         // Description display (click to edit)
         var textDisplay = document.createElement('div');
         textDisplay.className = 'admin-message-text-display';
-        textDisplay.textContent = description || 'Click to add description';
+        textDisplay.innerHTML = description || 'Click to add description';
         textDisplay.title = 'Click to edit';
 
         // Description textarea (hidden by default)
