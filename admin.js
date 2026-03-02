@@ -814,15 +814,21 @@ const AdminModule = (function() {
     var instructionsLoaded = false;
 
     function captureInstructionsState() {
-        var state = { chapters: [], descriptions: {} };
+        var state = { chapters: [], items: [] };
         var manualContainer = document.getElementById('admin-sitemap-manual-container');
         if (!manualContainer) return state;
         manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
-            var input = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
-            if (input) state.chapters.push(input.value);
-        });
-        manualContainer.querySelectorAll('.admin-message-text-input[data-instruction-id]').forEach(function(textarea) {
-            state.descriptions[textarea.dataset.instructionId] = textarea.value;
+            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+            if (nameInput) state.chapters.push(nameInput.value);
+            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
+                var textInput = itemEl.querySelector('.admin-message-text-input');
+                state.items.push({
+                    id: itemEl.dataset.itemId || '',
+                    title: titleInput ? titleInput.value : '',
+                    description: textInput ? textInput.value : ''
+                });
+            });
         });
         return state;
     }
@@ -1016,11 +1022,9 @@ const AdminModule = (function() {
         accordion.appendChild(body);
 
         // Drag and drop
-        accordion.draggable = false;
-        headerDrag.addEventListener('mousedown', function() { accordion.draggable = true; });
-        document.addEventListener('mouseup', function() { accordion.draggable = false; });
+        accordion.draggable = true;
         accordion.addEventListener('dragstart', function(e) {
-            if (!accordion.draggable) { e.preventDefault(); return; }
+            if (!e.target.closest('.admin-sitemap-manual-accordion-header-drag')) { e.preventDefault(); return; }
             var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
             accordion._dragStartIndex = siblings.indexOf(accordion);
             e.dataTransfer.effectAllowed = 'move';
@@ -1028,7 +1032,6 @@ const AdminModule = (function() {
         });
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
-            accordion.draggable = false;
             var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
             if (siblings.indexOf(accordion) !== accordion._dragStartIndex) {
                 if (instructionsLoaded) notifyFieldChange();
@@ -1247,18 +1250,15 @@ const AdminModule = (function() {
 
         // Drag and drop (reorder items within chapter body)
         if (body) {
-            item.draggable = false;
-            dragHandle.addEventListener('mousedown', function() { item.draggable = true; });
-            document.addEventListener('mouseup', function() { item.draggable = false; });
+            item.draggable = true;
             item.addEventListener('dragstart', function(e) {
-                if (!item.draggable) { e.preventDefault(); return; }
+                if (!e.target.closest('.admin-sitemap-manual-item-drag')) { e.preventDefault(); return; }
                 item._dragStartIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
                 e.dataTransfer.effectAllowed = 'move';
                 item.classList.add('admin-sitemap-manual-item--dragging');
             });
             item.addEventListener('dragend', function() {
                 item.classList.remove('admin-sitemap-manual-item--dragging');
-                item.draggable = false;
                 var newIndex = Array.from(body.querySelectorAll('.admin-sitemap-manual-item')).indexOf(item);
                 if (newIndex !== item._dragStartIndex && instructionsLoaded) notifyFieldChange();
             });
