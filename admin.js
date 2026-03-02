@@ -4246,7 +4246,7 @@ const AdminModule = (function() {
 
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'admin-checkout-coupon-form-delete-button button-class-danger';
+        deleteBtn.className = 'admin-checkout-coupon-form-delete-button button-class-2';
         deleteBtn.textContent = 'Delete';
         deleteBtn.addEventListener('click', function() {
             if (!coupon || !coupon.id) {
