@@ -469,6 +469,15 @@ If a task sounds simple but you've been working for 30+ minutes, STOP. Tell the 
 
 ---
 
+## COMMIT STATE ASSUMPTION
+
+### Changes Are Never Committed Until Confirmed
+Always assume the user has NOT committed the most recent changes until explicitly confirmed.
+The user writes messages while the agent is working — they arrive late due to Cursor's limitations.
+Never treat work as done until the user confirms it is working and commits.
+
+---
+
 ## CONTINUITY ACROSS CONTEXT RESETS
 
 ### You Are One Agent
