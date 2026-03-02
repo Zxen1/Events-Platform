@@ -814,23 +814,85 @@ const AdminModule = (function() {
     var instructionsLoaded = false;
 
     function captureInstructionsState() {
-        var state = { chapters: [], items: [] };
+        var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
         var manualContainer = document.getElementById('admin-sitemap-manual-container');
         if (!manualContainer) return state;
         manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapter || '';
             var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
-            if (nameInput) state.chapters.push(nameInput.value);
+            state.chapterOrder.push(chapterKey);
+            state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
+            state.itemOrder[chapterKey] = [];
             accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+                var id = itemEl.dataset.itemId || '';
                 var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
                 var textInput = itemEl.querySelector('.admin-message-text-input');
-                state.items.push({
-                    id: itemEl.dataset.itemId || '',
+                state.itemOrder[chapterKey].push(id);
+                state.items[id] = {
                     title: titleInput ? titleInput.value : '',
                     description: textInput ? textInput.value : ''
-                });
+                };
             });
         });
         return state;
+    }
+
+    function resetInstructionsToOriginal() {
+        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        if (!manualContainer) return;
+        var entry = fieldRegistry['instructions'];
+        if (!entry || entry.type !== 'composite') return;
+        var originalState = JSON.parse(entry.original);
+
+        // Restore chapter accordion order
+        var addChapterBtn = manualContainer.querySelector('.admin-sitemap-manual-add-chapter');
+        if (originalState.chapterOrder) {
+            originalState.chapterOrder.forEach(function(chapterKey) {
+                var accordion = manualContainer.querySelector('.admin-sitemap-manual-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
+                if (accordion) manualContainer.insertBefore(accordion, addChapterBtn);
+            });
+        }
+
+        // Restore chapter names and item order within each chapter
+        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapter || '';
+            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+            var headerText = accordion.querySelector('.admin-sitemap-manual-accordion-header-text');
+
+            // Restore chapter name
+            if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
+                nameInput.value = originalState.chapterNames[chapterKey];
+                if (headerText) headerText.textContent = originalState.chapterNames[chapterKey];
+            }
+
+            // Restore item order
+            var addItemBtn = accordion.querySelector('.admin-sitemap-manual-add-item');
+            var originalItemOrder = originalState.itemOrder ? originalState.itemOrder[chapterKey] : null;
+            if (originalItemOrder) {
+                originalItemOrder.forEach(function(itemId) {
+                    var itemEl = accordion.querySelector('.admin-sitemap-manual-item[data-item-id="' + itemId + '"]');
+                    if (itemEl) accordion.querySelector('.admin-sitemap-manual-accordion-body').insertBefore(itemEl, addItemBtn);
+                });
+            }
+
+            // Restore item values
+            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+                var id = itemEl.dataset.itemId || '';
+                if (!originalState.items || !originalState.items[id]) return;
+                var orig = originalState.items[id];
+                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
+                var titleDisplay = itemEl.querySelector('.admin-sitemap-manual-item-title-display');
+                var textInput = itemEl.querySelector('.admin-message-text-input');
+                var textDisplay = itemEl.querySelector('.admin-message-text-display');
+                if (titleInput) { titleInput.value = orig.title; }
+                if (titleDisplay) { titleDisplay.textContent = orig.title || 'Click to add title'; }
+                if (textInput) { textInput.value = orig.description; }
+                if (textDisplay) { textDisplay.textContent = orig.description || 'Click to add description'; }
+            });
+        });
+
+        // Clear any pending deleted IDs
+        delete manualContainer.dataset.deletedIds;
     }
 
     function getModifiedInstructions() {
@@ -1666,6 +1728,7 @@ const AdminModule = (function() {
         resetMessagesToOriginal();
         resetCheckoutOptionsToOriginal();
         resetMapTabToOriginal();
+        resetInstructionsToOriginal();
         
         // Reset field registry values (current = original) instead of clearing
         // This preserves registrations so fields don't need to re-register
