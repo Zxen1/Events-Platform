@@ -112,10 +112,10 @@ if (isset($input['timezone'])) {
   $types .= 's';
   $vals[] = trim((string)$input['timezone']);
 }
-if (isset($input['email_notifications'])) {
-  $en = (int)$input['email_notifications'];
+if (isset($input['reminder_emails'])) {
+  $en = (int)$input['reminder_emails'];
   $en = ($en === 0) ? 0 : 1;
-  $updates[] = 'email_notifications=?';
+  $updates[] = 'reminder_emails=?';
   $types .= 'i';
   $vals[] = $en;
 }

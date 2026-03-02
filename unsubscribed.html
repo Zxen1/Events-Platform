@@ -54,7 +54,7 @@
         fetch('/gateway.php?action=edit-member', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: memberId, 'account-email': email, email_notifications: 0 })
+          body: JSON.stringify({ id: memberId, 'account-email': email, reminder_emails: 0 })
         }).catch(function () {});
       }
 

@@ -1924,13 +1924,13 @@ const MemberModule = (function() {
         if (name && name !== profileOriginalName) payload.username = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
         var currentEn = profileEditEmailNotificationsInput ? (profileEditEmailNotificationsInput.checked ? 1 : 0) : profileOriginalEmailNotifications;
-        if (currentEn !== profileOriginalEmailNotifications) payload.email_notifications = currentEn;
+        if (currentEn !== profileOriginalEmailNotifications) payload.reminder_emails = currentEn;
         // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
 
         var wantsAvatarChange = !!pendingProfileAvatarBlob || ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || ''));
         
         // Nothing to do
-        if (!payload.username && !payload.password && payload.email_notifications === undefined && !wantsAvatarChange) {
+        if (!payload.username && !payload.password && payload.reminder_emails === undefined && !wantsAvatarChange) {
             if (typeof onSuccessNext === 'function') onSuccessNext();
             return;
         }
@@ -1964,9 +1964,9 @@ const MemberModule = (function() {
                   if (profileEditPasswordInput) profileEditPasswordInput.value = '';
                   if (profileEditConfirmInput) profileEditConfirmInput.value = '';
 
-                  if (payload.email_notifications !== undefined) {
-                      currentUser.email_notifications = payload.email_notifications;
-                      profileOriginalEmailNotifications = payload.email_notifications;
+                  if (payload.reminder_emails !== undefined) {
+                      currentUser.reminder_emails = payload.reminder_emails;
+                      profileOriginalEmailNotifications = payload.reminder_emails;
                   }
 
                   if (payload.avatar_file !== undefined) {
@@ -5814,8 +5814,8 @@ const MemberModule = (function() {
         if (!currentUser) return;
         if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderProfile !== 'function') return;
 
-        profileOriginalEmailNotifications = (currentUser && currentUser.email_notifications !== undefined)
-            ? (currentUser.email_notifications === 0 ? 0 : 1)
+        profileOriginalEmailNotifications = (currentUser && currentUser.reminder_emails !== undefined)
+            ? (currentUser.reminder_emails === 0 ? 0 : 1)
             : 1;
 
         MemberAuthFieldsetsComponent.renderProfile(profileFieldsetsContainer, {
@@ -7126,9 +7126,9 @@ const MemberModule = (function() {
             // Favorites & recent history (DB → localStorage on login)
             favorites: (payload.favorites !== undefined) ? payload.favorites : null,
             recent: (payload.recent !== undefined) ? payload.recent : null,
-            // Email notification preference (1 = on, 0 = off; default on)
-            email_notifications: (payload.email_notifications !== undefined && payload.email_notifications !== null)
-                ? (parseInt(payload.email_notifications, 10) === 0 ? 0 : 1)
+            // Reminder email preference (1 = on, 0 = off; default on)
+            reminder_emails: (payload.reminder_emails !== undefined && payload.reminder_emails !== null)
+                ? (parseInt(payload.reminder_emails, 10) === 0 ? 0 : 1)
                 : 1
         };
     }

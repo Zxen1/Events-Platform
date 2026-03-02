@@ -65,7 +65,7 @@ try {
             verify_json_fail('Missing credentials');
         }
 
-        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, email_notifications';
+        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, reminder_emails';
 
         $attempt = function(mysqli $db, string $table, string $user, string $pass, string $colList) {
             $sql = "SELECT {$colList} FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
@@ -121,7 +121,7 @@ try {
                     'filters_hash'          => isset($row['filters_hash']) ? (string)$row['filters_hash'] : null,
                     'filters_version'       => isset($row['filters_version']) ? (int)$row['filters_version'] : null,
                     'filters_updated_at'    => isset($row['filters_updated_at']) ? (string)$row['filters_updated_at'] : null,
-                    'email_notifications'   => isset($row['email_notifications']) ? (int)$row['email_notifications'] : 1,
+                    'reminder_emails'       => isset($row['reminder_emails']) ? (int)$row['reminder_emails'] : 1,
                 ],
             ];
         };
