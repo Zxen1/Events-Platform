@@ -1017,6 +1017,8 @@ const AdminModule = (function() {
 
         body.appendChild(addItemBtn);
 
+        body.addEventListener('dragover', function(e) { e.preventDefault(); });
+
         accordion.appendChild(header);
         accordion.appendChild(editPanel);
         accordion.appendChild(body);
@@ -1031,6 +1033,7 @@ const AdminModule = (function() {
             accordion.draggable = false;
         });
         accordion.addEventListener('dragstart', function(e) {
+            if (e.target.closest('.admin-sitemap-manual-item')) return;
             if (!accordion.draggable) { e.preventDefault(); return; }
             var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
             chapterDragStartIndex = siblings.indexOf(accordion);
