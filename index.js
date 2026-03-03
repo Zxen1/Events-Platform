@@ -307,7 +307,6 @@ const App = (function() {
    * @param {string} dateStr - YYYY-MM-DD format
    * @returns {string} Formatted date
    */
-  /**
   function formatDateShort(dateStr) {
     if (!dateStr) return '';
     try {
