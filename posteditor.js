@@ -122,7 +122,9 @@
 
         bar.classList.add(colorClass);
         statusSpan.textContent = status;
-        tierSpan.textContent = post.checkout_title || '';
+        if (!isDeleted && !isExpiredByDb && !isExpiredByTime) {
+            tierSpan.textContent = post.checkout_title || '';
+        }
 
         leftSpan.appendChild(statusSpan);
         leftSpan.appendChild(tierSpan);

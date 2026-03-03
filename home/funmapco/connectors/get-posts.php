@@ -158,7 +158,7 @@ try {
 
     // Auto-expire: only when post editor is fetching (lazy — not on public reads)
     if ($memberId > 0) {
-        $mysqli->query("UPDATE posts SET visibility = 'expired' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
+        $mysqli->query("UPDATE posts SET visibility = 'expired', checkout_key = 'standard' WHERE visibility = 'active' AND expires_at IS NOT NULL AND expires_at <= NOW()");
     }
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
