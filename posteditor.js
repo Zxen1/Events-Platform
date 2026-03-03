@@ -988,8 +988,8 @@
         deleteItem.appendChild(deleteItemText);
         if (summaryIsDeleted || summaryVisibility === 'deleted') {
             deleteItem.style.display = 'none';
-        } else {
-            deleteItem.addEventListener('click', function(e) {
+        }
+        deleteItem.addEventListener('click', function(e) {
                 e.stopPropagation();
                 statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
                 statusMenuOpen = false;
@@ -1062,7 +1062,6 @@
                     });
                 }
             });
-        }
 
         // Restore item (shown only when deleted)
         var restoreItem = document.createElement('div');
@@ -1071,8 +1070,10 @@
         restoreItemText.className = 'posteditor-manage-more-item-text';
         restoreItemText.textContent = 'Restore';
         restoreItem.appendChild(restoreItemText);
-        if (summaryIsDeleted || summaryVisibility === 'deleted') {
-            restoreItem.addEventListener('click', function(e) {
+        if (!(summaryIsDeleted || summaryVisibility === 'deleted')) {
+            restoreItem.style.display = 'none';
+        }
+        restoreItem.addEventListener('click', function(e) {
                 e.stopPropagation();
                 statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
                 statusMenuOpen = false;
@@ -1143,9 +1144,6 @@
                     });
                 }
             });
-        } else {
-            restoreItem.style.display = 'none';
-        }
 
         statusMoreMenu.appendChild(hideItem);
         statusMoreMenu.appendChild(restoreItem);
