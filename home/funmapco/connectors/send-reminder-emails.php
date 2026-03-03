@@ -321,6 +321,13 @@ function reminderSendReport(
   $body = str_replace('{summary}',          htmlspecialchars($summaryLine,  ENT_QUOTES, 'UTF-8'),         $body);
   $body = str_replace('{unsubscribe_link}', htmlspecialchars($unsubUrl,     ENT_QUOTES, 'UTF-8'),         $body);
 
+  // Pluralization: {variable|singular|plural}
+  $reminderPlaceholders = ['name' => $displayName, 'trigger_subject' => $subject, 'summary' => $summaryLine];
+  $body = preg_replace_callback('/\{(\w+)\|([^|}]+)\|([^|}]+)\}/', function($m) use ($reminderPlaceholders) {
+    if (!isset($reminderPlaceholders[$m[1]])) return $m[0];
+    return (int)$reminderPlaceholders[$m[1]] === 1 ? $m[2] : $m[3];
+  }, $body);
+
   $emailSubject = str_replace('{trigger_subject}', htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'), $template['message_name']);
 
   $mail   = new PHPMailer(true);
