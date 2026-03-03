@@ -447,7 +447,9 @@
         if (!container) return;
         
         if (!posts || posts.length === 0) {
+            var placeholder = document.getElementById('posteditor-uploading');
             container.innerHTML = '<p class="posteditor-status">You haven\'t created any posts yet.</p>';
+            if (placeholder) container.appendChild(placeholder);
             currentPosts = [];
             return;
         }
