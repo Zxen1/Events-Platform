@@ -308,17 +308,6 @@ const App = (function() {
    * @returns {string} Formatted date
    */
   /**
-   * Returns a count with a correctly pluralised word.
-   * pluralize(1, 'day')        → "1 day"
-   * pluralize(5, 'day')        → "5 days"
-   * pluralize(1, 'ox', 'oxen') → "1 ox"
-   * pluralize(3, 'ox', 'oxen') → "3 oxen"
-   */
-  function pluralize(count, singular, plural) {
-    var word = count === 1 ? singular : (plural !== undefined ? plural : singular + 's');
-    return count + ' ' + word;
-  }
-
   function formatDateShort(dateStr) {
     if (!dateStr) return '';
     try {
@@ -427,6 +416,12 @@ const App = (function() {
     if (!text || typeof text !== 'string') {
       return text || '';
     }
+    // Pluralization tokens: {variable|singular|plural} — resolved before normal substitution
+    text = text.replace(/\{(\w+)\|([^|}]+)\|([^|}]+)\}/g, (match, key, singular, plural) => {
+      var val = placeholders[key];
+      if (val === undefined) return match;
+      return Number(val) === 1 ? singular : plural;
+    });
     return text.replace(/\{(\w+)\}/g, (match, key) => {
       return placeholders[key] !== undefined ? String(placeholders[key]) : match;
     });
@@ -1094,8 +1089,7 @@ const App = (function() {
     // Image URL helpers
     getImageUrl,
     getImageFolder,
-    formatDateShort,
-    pluralize
+    formatDateShort
   };
 
 })();
