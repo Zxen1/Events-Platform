@@ -1085,6 +1085,8 @@
         var selectedTierIndex = -1;
         var pricingLocUsed = locUsed;
         var pricingLocPaid = locPaid;
+        var manageCoupon = null;
+        var manageDiscountedTotal = 0;
 
         for (var ti = 0; ti < allCheckoutOptions.length; ti++) {
             if (String(allCheckoutOptions[ti].checkout_key || allCheckoutOptions[ti].id) === currentTierKey ||
@@ -1633,14 +1635,38 @@
 
             // Total
             var total = upgradeCost + addDaysCost + locCost;
+
+            // Apply coupon discount to total
+            var discountedTotal = total;
+            if (manageCoupon && total > 0) {
+                if (manageCoupon.discount_type === 'percent') {
+                    discountedTotal = Math.max(0, total * (1 - manageCoupon.discount_value / 100));
+                } else {
+                    discountedTotal = Math.max(0, total - manageCoupon.discount_value);
+                }
+                discountedTotal = parseFloat(discountedTotal.toFixed(2));
+            }
+
             totalLine.style.display = total > 0 ? '' : 'none';
-            totalVal.textContent = formatPriceWithSymbol(total, currencyCode);
+            if (manageCoupon && total > 0 && discountedTotal !== total) {
+                totalVal.innerHTML = '<s>' + formatPriceWithSymbol(total, currencyCode) + '</s> ' + formatPriceWithSymbol(discountedTotal, currencyCode);
+            } else {
+                totalVal.textContent = formatPriceWithSymbol(total, currencyCode);
+            }
+
+            manageDiscountedTotal = discountedTotal;
 
             // Update submit button text
-            submitText.textContent = 'Pay ' + formatPriceWithSymbol(total, currencyCode);
+            if (discountedTotal <= 0 && manageCoupon) {
+                submitText.textContent = 'Submit Free';
+            } else {
+                submitText.textContent = 'Pay ' + formatPriceWithSymbol(discountedTotal, currencyCode);
+            }
 
-            // Single readiness check for all submit buttons
-            var ready = total > 0 && termsCheckbox && termsCheckbox.checked;
+            // Single readiness check: enabled when there's a charge (normal) or free via coupon
+            var hasCharge = total > 0;
+            var isFreeViaCoupon = hasCharge && manageCoupon && discountedTotal <= 0;
+            var ready = hasCharge && termsCheckbox && termsCheckbox.checked;
             manageSubmitBtn.disabled = !ready;
             if (manageAdminSubmitBtn) {
                 manageAdminSubmitBtn.disabled = !ready;
@@ -1652,6 +1678,104 @@
         });
 
         body.appendChild(pricingContainer);
+
+        // --- Coupon code section ---
+        var manageCouponSection = document.createElement('div');
+        manageCouponSection.className = 'fieldset member-coupon posteditor-manage-coupon';
+
+        var manageCouponRow = document.createElement('div');
+        manageCouponRow.className = 'member-coupon-input-row';
+
+        var manageCouponInput = document.createElement('input');
+        manageCouponInput.type = 'text';
+        manageCouponInput.className = 'fieldset-input input-class-1 member-coupon-input';
+        manageCouponInput.placeholder = 'Coupon code';
+        manageCouponInput.autocomplete = 'off';
+        manageCouponInput.setAttribute('maxlength', '32');
+        manageCouponInput.addEventListener('input', function() {
+            var pos = this.selectionStart;
+            var cleaned = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (cleaned !== this.value) {
+                this.value = cleaned;
+                this.setSelectionRange(pos, pos);
+            }
+            if (manageCoupon) {
+                manageCoupon = null;
+                manageDiscountedTotal = 0;
+                setManageCouponMessage('', '');
+                recalcPricing();
+            }
+        });
+        manageCouponInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyManageCoupon(); }
+        });
+
+        var manageCouponApplyBtn = document.createElement('button');
+        manageCouponApplyBtn.type = 'button';
+        manageCouponApplyBtn.className = 'member-coupon-apply button-class-2';
+        manageCouponApplyBtn.textContent = 'Apply';
+        manageCouponApplyBtn.addEventListener('click', applyManageCoupon);
+
+        var manageCouponMsg = document.createElement('div');
+        manageCouponMsg.className = 'member-coupon-message';
+        manageCouponMsg.hidden = true;
+
+        manageCouponRow.appendChild(manageCouponInput);
+        manageCouponRow.appendChild(manageCouponApplyBtn);
+        manageCouponSection.appendChild(manageCouponRow);
+        manageCouponSection.appendChild(manageCouponMsg);
+        body.appendChild(manageCouponSection);
+
+        function setManageCouponMessage(text, type) {
+            if (!text) {
+                manageCouponMsg.hidden = true;
+                manageCouponMsg.textContent = '';
+                manageCouponMsg.className = 'member-coupon-message';
+                return;
+            }
+            manageCouponMsg.textContent = text;
+            manageCouponMsg.className = 'member-coupon-message member-coupon-message--' + type;
+            manageCouponMsg.hidden = false;
+        }
+
+        function applyManageCoupon() {
+            var code = manageCouponInput.value.trim().toUpperCase();
+            if (!code) { manageCouponInput.focus(); return; }
+            var user = getCurrentUser();
+            var memberId = user ? (user.id || 0) : 0;
+            setManageCouponMessage('Checking\u2026', 'checking');
+            fetch('/gateway.php?action=verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'coupon', code: code, member_id: memberId })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) {
+                    manageCoupon = {
+                        id: data.coupon_id,
+                        code: data.code,
+                        discount_type: data.discount_type,
+                        discount_value: data.discount_value
+                    };
+                    recalcPricing();
+                    var discountStr = data.discount_type === 'percent'
+                        ? data.discount_value + '%'
+                        : formatPriceWithSymbol(data.discount_value, pricingCurrencyCode);
+                    getMessage('msg_coupon_applied', { code: data.code, discount: discountStr }, false).then(function(msg) {
+                        setManageCouponMessage(msg || (data.code + ' applied \u2014 ' + discountStr), 'success');
+                    });
+                } else {
+                    manageCoupon = null;
+                    recalcPricing();
+                    var rawKey = data.error_key || 'coupon_invalid';
+                    var msgKey = rawKey.indexOf('msg_') === 0 ? rawKey : 'msg_' + rawKey;
+                    getMessage(msgKey, {}, false).then(function(msg) {
+                        setManageCouponMessage(msg || 'Invalid coupon code.', 'error');
+                    });
+                }
+            }).catch(function() {
+                setManageCouponMessage('Unable to verify coupon. Please try again.', 'error');
+            });
+        }
 
         // --- Restore button (beside Edit) ---
         var moreBtn = document.createElement('button');
@@ -2000,7 +2124,8 @@
                     manage_action: 'skip_payment',
                     checkout_key: selOpt.checkout_key || '',
                     add_days: parseInt(durationAddInput.value, 10) || 0,
-                    loc_qty: pricingLocUsed
+                    loc_qty: pricingLocUsed,
+                    coupon_id: manageCoupon ? manageCoupon.id : null
                 };
 
                 fetch('/gateway.php?action=edit-post', {
@@ -2060,19 +2185,21 @@
 
             function doUpgradeSubmit(transactionId) {
                 manageSubmitBtn.disabled = true;
+                var isCouponFree = manageCoupon && manageDiscountedTotal <= 0;
                 var payload = {
                     post_id: postId,
                     member_id: user ? user.id : null,
                     member_name: user ? (user.username || user.name || '') : '',
                     member_role: user && user.isAdmin ? 'admin' : 'member',
-                    manage_action: 'upgrade_checkout',
+                    manage_action: isCouponFree ? 'coupon_free_checkout' : 'upgrade_checkout',
                     checkout_key: pricing.checkout_key,
                     currency: pricing.currency,
-                    amount: pricing.total,
+                    amount: manageDiscountedTotal,
                     line_items: pricing.line_items,
                     transaction_id: transactionId || null,
                     add_days: parseInt(durationAddInput.value, 10) || 0,
-                    loc_qty: pricingLocUsed
+                    loc_qty: pricingLocUsed,
+                    coupon_id: manageCoupon ? manageCoupon.id : null
                 };
 
                 fetch('/gateway.php?action=edit-post', {
@@ -2112,10 +2239,16 @@
             });
             } // end doUpgradeSubmit
 
+            // Free via coupon — skip payment gateway, submit directly
+            if (manageCoupon && manageDiscountedTotal <= 0) {
+                doUpgradeSubmit(null);
+                return;
+            }
+
             if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
                 PaymentSubmitComponent.setLoading(manageSubmitBtn, true);
                 PaymentModule.charge({
-                    amount:          pricing.total,
+                    amount:          manageDiscountedTotal,
                     currency:        pricing.currency,
                     description:     'Post #' + postId + ' extras',
                     memberId:        user ? user.id : null,

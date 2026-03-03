@@ -641,6 +641,113 @@ if ($manageAction !== '') {
       ]);
       exit;
 
+    case 'coupon_free_checkout':
+      $checkoutKey = isset($data['checkout_key']) ? trim((string)$data['checkout_key']) : '';
+      $addDays     = isset($data['add_days']) ? (int)$data['add_days'] : 0;
+      $newLocQty   = isset($data['loc_qty']) ? (int)$data['loc_qty'] : 0;
+      $couponId    = isset($data['coupon_id']) ? (int)$data['coupon_id'] : 0;
+
+      if ($couponId <= 0) {
+        fail_key(400, 'msg_post_edit_error');
+      }
+
+      // Verify coupon is valid and grants 100% off
+      $cpStmt = $mysqli->prepare(
+        "SELECT discount_type, discount_value, status, valid_from, valid_until, usage_limit, usage_count, one_per_member
+         FROM checkout_coupons WHERE id = ? LIMIT 1"
+      );
+      if (!$cpStmt) fail_key(500, 'msg_post_edit_error');
+      $cpStmt->bind_param('i', $couponId);
+      $cpStmt->execute();
+      $cpDiscountType = $cpStatus = $cpValidFrom = $cpValidUntil = null;
+      $cpDiscountValue = $cpUsageLimit = $cpUsageCount = $cpOnePerMember = null;
+      $cpStmt->bind_result($cpDiscountType, $cpDiscountValue, $cpStatus, $cpValidFrom, $cpValidUntil, $cpUsageLimit, $cpUsageCount, $cpOnePerMember);
+      $cpFound = $cpStmt->fetch();
+      $cpStmt->close();
+
+      $today = date('Y-m-d');
+      if (!$cpFound ||
+          $cpStatus !== 'active' ||
+          (!empty($cpValidFrom)  && $today < $cpValidFrom) ||
+          (!empty($cpValidUntil) && $today > $cpValidUntil) ||
+          ($cpUsageLimit > 0 && $cpUsageCount >= $cpUsageLimit) ||
+          $cpDiscountType !== 'percent' ||
+          (float)$cpDiscountValue < 100
+      ) {
+        fail_key(400, 'msg_post_edit_error');
+      }
+
+      // Check one_per_member restriction
+      if ($cpOnePerMember && $memberId > 0) {
+        $useStmt = $mysqli->prepare("SELECT COUNT(*) FROM transactions WHERE member_id = ? AND coupon_id = ? LIMIT 1");
+        if (!$useStmt) fail_key(500, 'msg_post_edit_error');
+        $useStmt->bind_param('ii', $memberId, $couponId);
+        $useStmt->execute();
+        $useStmt->bind_result($useCount);
+        $useStmt->fetch();
+        $useStmt->close();
+        if ($useCount > 0) fail_key(400, 'msg_post_edit_error');
+      }
+
+      if ($addDays < 0) $addDays = 0;
+      if ($newLocQty < 1) $newLocQty = 1;
+
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
+      $stmtPost->bind_param('i', $postId);
+      $stmtPost->execute();
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
+      $stmtPost->close();
+
+      $maxFutureDays = 730;
+      $now = new DateTime('now', new DateTimeZone('UTC'));
+      $curExpiry = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+      if ($curExpiry < $now) $curExpiry = $now;
+      $daysRemainingServer = max(0, (int)$curExpiry->diff($now)->days);
+      $maxAddDays = max(0, min(365, $maxFutureDays - $daysRemainingServer));
+      if ($addDays > $maxAddDays) $addDays = $maxAddDays;
+
+      $finalCheckoutKey = ($checkoutKey !== '') ? $checkoutKey : $curCheckoutKey;
+      $newDaysPurchased = (int)$curDaysPurchased + $addDays;
+
+      $newExpiresAt = $curExpiresAt;
+      if ($addDays > 0) {
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $expiryBase = ($curExpiresAt !== null) ? new DateTime($curExpiresAt, new DateTimeZone('UTC')) : $now;
+        if ($expiryBase < $now) $expiryBase = $now;
+        $expiryBase->modify('+' . $addDays . ' days');
+        $newExpiresAt = $expiryBase->format('Y-m-d H:i:s');
+      }
+
+      $newLocPaid = max((int)$curLocPaid, $newLocQty);
+
+      $stmtUpdate = $mysqli->prepare(
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+      );
+      if (!$stmtUpdate) fail_key(500, 'msg_post_edit_error');
+      $stmtUpdate->bind_param('siisi', $finalCheckoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
+      if (!$stmtUpdate->execute()) { $stmtUpdate->close(); fail_key(500, 'msg_post_edit_error'); }
+      $stmtUpdate->close();
+
+      // Increment coupon usage count
+      $cpUseStmt = $mysqli->prepare("UPDATE checkout_coupons SET usage_count = usage_count + 1, updated_at = NOW() WHERE id = ?");
+      if ($cpUseStmt) {
+        $cpUseStmt->bind_param('i', $couponId);
+        $cpUseStmt->execute();
+        $cpUseStmt->close();
+      }
+
+      echo json_encode([
+        'success'        => true,
+        'manage_action'  => 'coupon_free_checkout',
+        'checkout_key'   => $finalCheckoutKey,
+        'days_purchased' => $newDaysPurchased,
+        'loc_paid'       => $newLocPaid,
+        'expires_at'     => $newExpiresAt
+      ]);
+      exit;
+
     default:
       fail_key(400, 'msg_post_edit_error');
   }
