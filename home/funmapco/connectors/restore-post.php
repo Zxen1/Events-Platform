@@ -61,8 +61,8 @@ if (!empty($_GET['post_id']) && (empty($data) || empty($data['revision_id']))) {
   $memberType = isset($_GET['member_type']) ? trim((string)$_GET['member_type']) : 'member';
   $isAdmin   = strtolower($memberType) === 'admin';
 
-  // Verify ownership
-  $stmtOwner = $mysqli->prepare("SELECT member_id FROM posts WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+  // Verify ownership (allow deleted posts so their revision history can be listed)
+  $stmtOwner = $mysqli->prepare("SELECT member_id FROM posts WHERE id = ? LIMIT 1");
   if (!$stmtOwner) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Query failed']);
@@ -147,7 +147,7 @@ if (!$stmtRev->fetch()) {
 $stmtRev->close();
 
 // 2. Verify ownership
-$stmtOwner = $mysqli->prepare("SELECT member_id FROM posts WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+$stmtOwner = $mysqli->prepare("SELECT member_id FROM posts WHERE id = ? LIMIT 1");
 if (!$stmtOwner) {
   http_response_code(500);
   echo json_encode(['success' => false, 'message' => 'Failed to verify post ownership']);

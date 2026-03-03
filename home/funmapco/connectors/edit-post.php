@@ -433,7 +433,10 @@ if (!$data || !is_array($data) || empty($data['post_id'])) {
 $postId = (int)$data['post_id'];
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
-$memberRole = isset($data['member_role']) ? trim((string)$data['member_role']) : 'member';
+if (!isset($data['member_role']) || trim((string)$data['member_role']) === '') {
+    fail_key(400, 'msg_post_edit_error');
+}
+$memberRole = trim((string)$data['member_role']);
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
