@@ -1106,7 +1106,6 @@
                                         }
                                         restoreItem.style.display = 'none';
                                         deleteItem.style.display = '';
-                                        console.error('[PostEditor] restore: checkout_title=', post.checkout_title, 'checkout_key=', post.checkout_key, 'visibility=', post.visibility);
                                         var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
                                         if (oldModalBar) {
                                             var newModalBar = buildStatusBar(post);
