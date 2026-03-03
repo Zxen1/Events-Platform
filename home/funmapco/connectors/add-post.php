@@ -541,7 +541,7 @@ if (!$stmt) {
 
 if ($hasPaymentStatus && $hasModerationStatus) {
   // 12 params: memberId(i), memberRole(s), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), daysPurchased(i), expiresAt(s)
-  if (!bind_statement_params($stmt, 'isssiissssiss', $memberId, $memberRole, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $daysPurchased, $expiresAt)) {
+  if (!bind_statement_params($stmt, 'isssiissssis', $memberId, $memberRole, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $daysPurchased, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
