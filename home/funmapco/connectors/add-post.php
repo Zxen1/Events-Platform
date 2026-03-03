@@ -474,13 +474,13 @@ if (is_array($fieldsArr)) {
       if (!empty($fld['value'])) {
         $val = $fld['value'];
         if (is_array($val)) {
-          // Check for checkout_key directly, then radio value (which IS the checkout_key), then option_id
+          // Resolve checkout_key from explicit key or option_id lookup
           if (!empty($val['checkout_key'])) {
             $checkoutKey = (string)$val['checkout_key'];
-          } elseif (!empty($val['value'])) {
-            $checkoutKey = (string)$val['value'];
           } elseif (!empty($val['option_id'])) {
             $optionId = (int)$val['option_id'];
+          } else {
+            abort_with_error($mysqli, 400, 'Checkout field missing checkout_key and option_id.', false);
           }
         } else {
           // Could be checkout_key string directly
