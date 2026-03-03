@@ -3394,9 +3394,10 @@ const MemberModule = (function() {
         if (!checkoutInstance) return;
         var wrapper = formFields ? formFields.querySelector('.member-checkout-wrapper') : null;
         if (!wrapper) return;
-        var radios = wrapper.querySelectorAll('input[type="radio"][data-price]');
-        if (!radios.length) return;
         var curr = siteCurrency || null;
+
+        // General posts: sub-option duration radios
+        var radios = wrapper.querySelectorAll('input[type="radio"].member-checkout-duration-radio[data-price]');
         radios.forEach(function(radio) {
             var basePrice = parseFloat(radio.dataset.basePrice || radio.dataset.price) || 0;
             if (!appliedCoupon) {
@@ -3423,6 +3424,35 @@ const MemberModule = (function() {
                 var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false });
                 textEl.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
             }
+        });
+
+        // Event posts: single tier radio with price-display span
+        var eventRadios = wrapper.querySelectorAll('input[type="radio"].member-checkout-option-radio[data-price]');
+        eventRadios.forEach(function(radio) {
+            var card = radio.closest ? radio.closest('.member-checkout-option') : (radio.parentNode || null);
+            var priceDisplay = card ? card.querySelector('.member-checkout-price-display') : null;
+            if (!priceDisplay) return;
+            var basePrice = parseFloat(radio.dataset.basePrice || radio.dataset.price) || 0;
+            if (!appliedCoupon) {
+                if (radio.dataset.basePrice) {
+                    radio.dataset.price = radio.dataset.basePrice;
+                    delete radio.dataset.basePrice;
+                }
+                if (priceDisplay.dataset.originalText) {
+                    priceDisplay.textContent = priceDisplay.dataset.originalText;
+                    delete priceDisplay.dataset.originalText;
+                }
+                return;
+            }
+            if (!radio.dataset.basePrice) radio.dataset.basePrice = radio.dataset.price;
+            var discounted = computeCouponDiscount(basePrice, appliedCoupon);
+            radio.dataset.price = discounted.toFixed(2);
+            if (!priceDisplay.dataset.originalText) priceDisplay.dataset.originalText = priceDisplay.textContent;
+            var parts = priceDisplay.dataset.originalText.split(' \u2014 ');
+            var summary = parts[0] || '';
+            var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false });
+            var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false });
+            priceDisplay.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
         });
     }
 

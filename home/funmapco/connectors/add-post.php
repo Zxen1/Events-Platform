@@ -360,7 +360,10 @@ if (!$data || !is_array($data)) {
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
-$memberRole = isset($data['member_role']) ? trim((string)$data['member_role']) : 'member';
+if (!isset($data['member_role']) || trim((string)$data['member_role']) === '') {
+    abort_with_error($mysqli, 400, 'member_role is required.', false);
+}
+$memberRole = trim((string)$data['member_role']);
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
 

@@ -4337,6 +4337,13 @@ const CheckoutOptionsComponent = (function(){
                 radio.dataset.optionId = String(option.id);
                 radio.required = true;
                 radio.disabled = !hasDates;
+                if (hasDates) {
+                    var initRes = computeEventTotal(flagfallPrice, basicDayRate, discountDayRate, eventVenueDays, locationCount, surchargePercent);
+                    if (initRes && initRes.hasDates) {
+                        radio.dataset.price = initRes.total.toFixed(2);
+                        radio.dataset.days = String(initRes.primaryDays || '');
+                    }
+                }
                 card.appendChild(radio);
             }
             
@@ -4510,6 +4517,8 @@ const CheckoutOptionsComponent = (function(){
                                 var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
                                 var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
                                 radio.dataset.days = (res && res.hasDates) ? String(res.primaryDays || '') : '';
+                                radio.dataset.price = (res && res.hasDates) ? res.total.toFixed(2) : '';
+                                delete radio.dataset.basePrice;
                             } catch (e0) {}
                         }
                         if (priceDisplay) {
