@@ -3984,9 +3984,7 @@ const MemberModule = (function() {
         
         // Collect map images for final locations (runs while loading shows)
         var finalLocations = extractLocationsFromPayload(validation.payload);
-        console.log('[TRACK] Final locations for map images:', finalLocations.length, finalLocations);
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
-            console.log('[TRACK] Map images collected:', mapImageData.files.length);
             
             submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId, submittingCouponId)
             .then(function(result) {
@@ -4258,7 +4256,6 @@ const MemberModule = (function() {
                     .then(function(r) { return r.json(); })
                     .then(function(resp) {
                         if (resp && resp.success && resp.wallpapers && Object.keys(resp.wallpapers).length === 4) {
-                            console.log('[TRACK] Map images already on server for', loc.lat, loc.lng);
                             pending--;
                             if (pending === 0) resolve(result);
                             return;
@@ -5252,13 +5249,10 @@ const MemberModule = (function() {
             
             // Attach map images (captured at submission time for final locations)
             if (mapImageData && mapImageData.files && mapImageData.files.length > 0) {
-                console.log('[TRACK] Attaching', mapImageData.files.length, 'map images');
-                mapImageData.files.forEach(function(file, idx) {
-                    console.log('[TRACK] Map image', idx, ':', file ? file.name : 'null', file ? file.size : 0);
+                mapImageData.files.forEach(function(file) {
                     if (file) fd.append('map_images[]', file, file.name || 'map_image');
                 });
                 fd.set('map_images_meta', JSON.stringify(mapImageData.meta || []));
-                console.log('[TRACK] map_images_meta:', JSON.stringify(mapImageData.meta));
             }
 
             var action = effectivePostId ? 'edit-post' : 'add-post';
