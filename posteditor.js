@@ -446,8 +446,10 @@
     function renderPosts(posts) {
         if (!container) return;
         
+        // Keep the uploading placeholder if it exists
+        var placeholder = document.getElementById('posteditor-uploading');
+
         if (!posts || posts.length === 0) {
-            var placeholder = document.getElementById('posteditor-uploading');
             container.innerHTML = '<p class="posteditor-status">You haven\'t created any posts yet.</p>';
             if (placeholder) container.appendChild(placeholder);
             currentPosts = [];
@@ -458,8 +460,6 @@
         currentPosts = posts;
         var sortedPosts = sortPostsWithFavorites(posts);
 
-        // Keep the uploading placeholder if it exists
-        var placeholder = document.getElementById('posteditor-uploading');
         container.innerHTML = '';
         if (placeholder) {
             container.appendChild(placeholder);
