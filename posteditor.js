@@ -1788,7 +1788,7 @@
         // Placeholder for revision items (populated async)
         var revisionsContainer = document.createElement('div');
         revisionsContainer.className = 'posteditor-manage-more-revisions-list';
-        restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
+        revisionsContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
         moreMenu.appendChild(revisionsContainer);
 
         editAccordionRow.appendChild(moreBtn);
@@ -1917,7 +1917,7 @@
                     editAccordionContent.innerHTML = '';
                     setAccordionExpanded(false);
                 } else {
-                    var errMsg = (res && res.message) ? res.message : 'Restore failed.';
+                    var errMsg = (res && res.message) ? res.message : 'Revert failed.';
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         ToastComponent.showError(errMsg);
                     } else {
@@ -1927,9 +1927,9 @@
             })
             .catch(function() {
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError('Network error during restore.');
+                    ToastComponent.showError('Network error during revert.');
                 } else {
-                    alert('Network error during restore.');
+                    alert('Network error during revert.');
                 }
             });
         }
