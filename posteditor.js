@@ -1022,6 +1022,8 @@
                                             editingPostsData[postId].original.visibility = 'deleted';
                                             editingPostsData[postId].original.deleted_at = post.deleted_at;
                                         }
+                                        deleteItem.style.display = 'none';
+                                        restoreItem.style.display = '';
                                         var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
                                         if (oldModalBar) {
                                             var newModalBar = buildStatusBar(post);
@@ -1101,6 +1103,8 @@
                                             editingPostsData[postId].original.visibility = res.visibility;
                                             editingPostsData[postId].original.deleted_at = null;
                                         }
+                                        restoreItem.style.display = 'none';
+                                        deleteItem.style.display = '';
                                         var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
                                         if (oldModalBar) {
                                             var newModalBar = buildStatusBar(post);
