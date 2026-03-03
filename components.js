@@ -5721,7 +5721,7 @@ const ConfirmDialogComponent = (function() {
         
         // Set content
         title.textContent = titleText;
-        message.textContent = messageText;
+        message.innerHTML = messageText;
         cancelBtn.textContent = cancelLabel;
         confirmBtn.textContent = confirmLabel;
         
