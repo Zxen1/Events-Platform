@@ -1777,32 +1777,32 @@
             });
         }
 
-        // --- Restore button (beside Edit) ---
+        // --- Revisions button (beside Edit) ---
         var moreBtn = document.createElement('button');
-        moreBtn.className = 'posteditor-manage-restore-toggle button-class-2b';
-        moreBtn.textContent = 'Restore';
+        moreBtn.className = 'posteditor-manage-revisions-toggle button-class-2b';
+        moreBtn.textContent = 'Revisions';
 
         var moreMenu = document.createElement('div');
-        moreMenu.className = 'posteditor-manage-restore-menu';
+        moreMenu.className = 'posteditor-manage-revisions-menu';
 
-        // Placeholder for restore items (populated async)
-        var restoreContainer = document.createElement('div');
-        restoreContainer.className = 'posteditor-manage-more-restore-list';
+        // Placeholder for revision items (populated async)
+        var revisionsContainer = document.createElement('div');
+        revisionsContainer.className = 'posteditor-manage-more-revisions-list';
         restoreContainer.innerHTML = '<div class="posteditor-manage-more-item posteditor-manage-more-item--loading"><span class="posteditor-manage-more-item-text">Loading...</span></div>';
-        moreMenu.appendChild(restoreContainer);
+        moreMenu.appendChild(revisionsContainer);
 
         editAccordionRow.appendChild(moreBtn);
         editAccordionRow.appendChild(statusMoreBtn);
         editAccordionRow.appendChild(moreMenu);
 
-        // Restore menu toggle
+        // Revisions menu toggle
         var moreMenuOpen = false;
         function setMoreMenuOpen(open) {
             moreMenuOpen = open;
             if (open) {
-                moreMenu.classList.add('posteditor-manage-restore-menu--open');
+                moreMenu.classList.add('posteditor-manage-revisions-menu--open');
             } else {
-                moreMenu.classList.remove('posteditor-manage-restore-menu--open');
+                moreMenu.classList.remove('posteditor-manage-revisions-menu--open');
             }
         }
 
@@ -1815,7 +1815,7 @@
             setMoreMenuOpen(!moreMenuOpen);
         });
 
-        // Close restore menu when clicking outside
+        // Close revisions menu when clicking outside
         var outsideClickHandler = function(e) {
             if (!backdrop.parentNode) {
                 document.removeEventListener('click', outsideClickHandler);
@@ -1827,20 +1827,20 @@
         };
         document.addEventListener('click', outsideClickHandler);
 
-        // Fetch and populate restore items
+        // Fetch and populate revision items
         function loadRevisions() {
             var user = getCurrentUser();
             var mId = user ? parseInt(user.id, 10) : 0;
             var mType = user ? (user.type || 'member') : 'member';
-            fetch('/gateway.php?action=restore-post&post_id=' + postId + '&member_id=' + mId + '&member_role=' + encodeURIComponent(mType))
+            fetch('/gateway.php?action=post-revisions&post_id=' + postId + '&member_id=' + mId + '&member_role=' + encodeURIComponent(mType))
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
-                    restoreContainer.innerHTML = '';
+                    revisionsContainer.innerHTML = '';
                     if (!res || !res.success || !res.revisions || res.revisions.length === 0) {
                         var emptyRow = document.createElement('div');
                         emptyRow.className = 'posteditor-manage-more-item posteditor-manage-more-item--disabled';
-                        emptyRow.innerHTML = '<span class="posteditor-manage-more-item-text">No restore points</span>';
-                        restoreContainer.appendChild(emptyRow);
+                        emptyRow.innerHTML = '<span class="posteditor-manage-more-item-text">No revisions</span>';
+                        revisionsContainer.appendChild(emptyRow);
                         return;
                     }
                     res.revisions.forEach(function(rev) {
@@ -1852,52 +1852,52 @@
                         } catch (e) { /* keep raw */ }
 
                         var revRow = document.createElement('div');
-                        revRow.className = 'posteditor-manage-more-item posteditor-manage-more-restore';
-                        revRow.innerHTML = '<span class="posteditor-manage-restore-label">' + typeLabel + '</span><span class="posteditor-manage-restore-date">' + dateStr + '</span>';
+                        revRow.className = 'posteditor-manage-more-item posteditor-manage-more-revision';
+                        revRow.innerHTML = '<span class="posteditor-manage-revision-label">' + typeLabel + '</span><span class="posteditor-manage-revision-date">' + dateStr + '</span>';
                         revRow.addEventListener('click', (function(revData, revDateStr) {
                             return function(e) {
                                 e.stopPropagation();
-                                var msgKey = revData.change_type === 'create' ? 'msg_posteditor_confirm_restore_original' : 'msg_posteditor_confirm_restore_snapshot';
+                                var msgKey = revData.change_type === 'create' ? 'msg_posteditor_confirm_revert_original' : 'msg_posteditor_confirm_revert_snapshot';
                                 var msgParams = revData.change_type === 'create' ? {} : { date: revDateStr };
                                 setMoreMenuOpen(false);
                                 if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
                                     window.getMessage(msgKey, msgParams, false).then(function(msg) {
                                         if (!msg) return;
                                         ConfirmDialogComponent.show({
-                                            titleText: 'Restore Post',
+                                            titleText: 'Revert Post',
                                             messageText: msg,
-                                            confirmLabel: 'Restore',
+                                            confirmLabel: 'Revert',
                                             cancelLabel: 'Cancel',
                                             confirmClass: 'danger',
                                             focusCancel: true
                                         }).then(function(confirmed) {
                                             if (confirmed) {
-                                                performRestore(revData.id);
+                                                performRevert(revData.id);
                                             }
                                         });
                                     });
                                 }
                             };
                         })(rev, dateStr));
-                        restoreContainer.appendChild(revRow);
+                        revisionsContainer.appendChild(revRow);
                     });
                 })
                 .catch(function() {
-                    restoreContainer.innerHTML = '';
+                    revisionsContainer.innerHTML = '';
                     var errRow = document.createElement('div');
                     errRow.className = 'posteditor-manage-more-item posteditor-manage-more-item--disabled';
                     errRow.innerHTML = '<span class="posteditor-manage-more-item-text">Failed to load</span>';
-                    restoreContainer.appendChild(errRow);
+                    revisionsContainer.appendChild(errRow);
                 });
         }
         loadRevisions();
 
-        function performRestore(revisionId) {
+        function performRevert(revisionId) {
             var user = getCurrentUser();
             var mId = user ? parseInt(user.id, 10) : 0;
             var mType = user ? (user.type || 'member') : 'member';
             setMoreMenuOpen(false);
-            fetch('/gateway.php?action=restore-post', {
+            fetch('/gateway.php?action=post-revisions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ revision_id: revisionId, member_id: mId, member_role: mType })
@@ -1906,7 +1906,7 @@
             .then(function(res) {
                 if (res && res.success) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        var msg = res.message || 'Post restored successfully.';
+                        var msg = res.message || 'Post reverted successfully.';
                         if (res.skipped_columns && res.skipped_columns.length > 0) {
                             msg += ' (' + res.skipped_columns.length + ' column(s) skipped)';
                         }

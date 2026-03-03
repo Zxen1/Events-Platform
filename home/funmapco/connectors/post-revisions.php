@@ -1,14 +1,14 @@
 <?php
 /**
- * restore-post.php — Lists revisions and restores posts from snapshots.
+ * post-revisions.php — Lists revisions and reverts posts from snapshots.
  *
  * Two modes:
- *   LIST:    GET ?post_id=123&member_id=1&member_type=member
- *            Returns available restore points (no data_json — just metadata).
+ *   LIST:   GET ?post_id=123&member_id=1&member_type=member
+ *           Returns available revision points (no data_json — just metadata).
  *
- *   RESTORE: POST { "revision_id": 123, "member_id": 1, "member_type": "member" }
- *            Reads data_json, deletes current child-table data, re-inserts from snapshot.
- *            Resilient: skips columns that no longer exist, reports what was skipped.
+ *   REVERT: POST { "revision_id": 123, "member_id": 1, "member_type": "member" }
+ *           Reads data_json, deletes current child-table data, re-inserts from snapshot.
+ *           Resilient: skips columns that no longer exist, reports what was skipped.
  */
 
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
@@ -85,7 +85,7 @@ if (!empty($_GET['post_id']) && (empty($data) || empty($data['revision_id']))) {
     exit;
   }
 
-  // Fetch revisions — only restorable types (database row snapshots), newest first
+  // Fetch revisions — only revertable types (database row snapshots), newest first
   $stmt = $mysqli->prepare("SELECT id, post_title, editor_name, change_type, change_summary, created_at FROM post_revisions WHERE post_id = ? AND change_type IN ('create', 'edit') ORDER BY id DESC");
   if (!$stmt) {
     http_response_code(500);
@@ -115,7 +115,7 @@ if (!empty($_GET['post_id']) && (empty($data) || empty($data['revision_id']))) {
 }
 
 // ============================================================================
-// MODE: RESTORE (POST request with revision_id)
+// MODE: REVERT (POST request with revision_id)
 // ============================================================================
 if (!is_array($data) || empty($data['revision_id'])) {
   http_response_code(400);
@@ -166,15 +166,15 @@ $stmtOwner->close();
 
 if (!$isAdmin && (int)$postOwnerId !== $memberId) {
   http_response_code(403);
-  echo json_encode(['success' => false, 'message' => 'You do not have permission to restore this post']);
+  echo json_encode(['success' => false, 'message' => 'You do not have permission to revert this post']);
   exit;
 }
 
-// 3. Decode the snapshot and verify it contains restorable data
+// 3. Decode the snapshot and verify it contains revertable data
 $snapshot = json_decode($dataJson, true);
 if (!is_array($snapshot) || !isset($snapshot['post_map_cards']) || !is_array($snapshot['post_map_cards'])) {
   http_response_code(400);
-  echo json_encode(['success' => false, 'message' => 'This revision is not in a restorable format.']);
+  echo json_encode(['success' => false, 'message' => 'This revision is not in a revertable format.']);
   exit;
 }
 
@@ -357,7 +357,7 @@ try {
     }
   }
 
-  // 4d. Update loc_qty on the posts table to match restored location count
+  // 4d. Update loc_qty on the posts table to match reverted location count
   $restoredLocCount = count($mapCardRows);
   if ($restoredLocCount > 0) {
     $stmtLoc = $mysqli->prepare("UPDATE posts SET loc_qty = ?, loc_paid = GREATEST(loc_paid, ?), updated_at = NOW() WHERE id = ?");
@@ -373,26 +373,26 @@ try {
 } catch (Exception $e) {
   $mysqli->rollback();
   http_response_code(500);
-  echo json_encode(['success' => false, 'message' => 'Restore failed: ' . $e->getMessage()]);
+  echo json_encode(['success' => false, 'message' => 'Revert failed: ' . $e->getMessage()]);
   exit;
 }
 
 // 5. Build response
 $response = [
   'success' => true,
-  'message' => 'Post restored successfully',
+  'message' => 'Post reverted successfully',
   'post_id' => $postId,
   'revision_id' => $revisionId,
-  'restored_map_cards' => count($mapCardRows),
-  'restored_sessions' => count($snapshot['post_sessions'] ?? []),
-  'restored_ticket_pricing' => count($snapshot['post_ticket_pricing'] ?? []),
-  'restored_item_pricing' => count($snapshot['post_item_pricing'] ?? []),
-  'restored_amenities' => count($snapshot['post_amenities'] ?? []),
+  'reverted_map_cards' => count($mapCardRows),
+  'reverted_sessions' => count($snapshot['post_sessions'] ?? []),
+  'reverted_ticket_pricing' => count($snapshot['post_ticket_pricing'] ?? []),
+  'reverted_item_pricing' => count($snapshot['post_item_pricing'] ?? []),
+  'reverted_amenities' => count($snapshot['post_amenities'] ?? []),
 ];
 
 if (!empty($allSkipped)) {
   $response['skipped_columns'] = $allSkipped;
-  $response['message'] = 'Post restored with ' . count($allSkipped) . ' skipped column(s) that no longer exist in the database.';
+  $response['message'] = 'Post reverted with ' . count($allSkipped) . ' skipped column(s) that no longer exist in the database.';
 }
 
 echo json_encode($response, JSON_UNESCAPED_SLASHES);

@@ -384,14 +384,14 @@
 }
 
 .posteditor-manage-edit-toggle,
-.posteditor-manage-restore-toggle,
+.posteditor-manage-revisions-toggle,
 .posteditor-manage-edit-save,
 .posteditor-manage-edit-close {
   flex: 1;
 }
 
-/* Restore menu (absolute, floats over content like the 3-dot menu) */
-.posteditor-manage-restore-menu {
+/* Revisions menu (absolute, floats over content like the 3-dot menu) */
+.posteditor-manage-revisions-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -404,7 +404,7 @@
   z-index: var(--layer-menu, 85);
 }
 
-.posteditor-manage-restore-menu--open {
+.posteditor-manage-revisions-menu--open {
   display: block;
 }
 
@@ -419,7 +419,7 @@
   display: none;
 }
 
-/* Pending payment message (below Edit/Restore buttons) */
+/* Pending payment message (below Edit/Revisions buttons) */
 .posteditor-manage-pending-message {
   margin-top: 10px;
   font-size: 13px;
@@ -812,17 +812,17 @@
 
 /* Hide toggle: uses component-switch with --on-danger state */
 
-/* Restore items */
-.posteditor-manage-more-restore {
+/* Revision items */
+.posteditor-manage-more-revision {
   color: #fff;
 }
 
-.posteditor-manage-restore-label {
+.posteditor-manage-revision-label {
   width: 100px;
   min-width: 100px;
 }
 
-.posteditor-manage-restore-date {
+.posteditor-manage-revision-date {
   flex: 1;
 }
 
