@@ -1007,13 +1007,13 @@
                             if (confirmed) {
                                 var user = getCurrentUser();
                                 var mId   = user ? parseInt(user.id, 10) : 0;
-                                var mType = user ? (user.type || 'member') : 'member';
+                                var mRole = user ? (user.role || user.type || 'member') : 'member';
                                 statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
                                 statusMenuOpen = false;
                                 fetch('/gateway.php?action=delete-post', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ post_id: postId, member_id: mId, member_type: mType })
+                                    body: JSON.stringify({ post_id: postId, member_id: mId, member_role: mRole })
                                 }).then(function(r) { return r.json(); }).then(function(res) {
                                     if (res && res.success) {
                                         post.visibility  = 'deleted';

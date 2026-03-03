@@ -339,9 +339,9 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   if (!$eRow) return;
   $to_email = $eRow['account_email'];
 
-  $logFailed = function($notes = null) use ($mysqli, $member_id, $to_name, $msgKey, $to_email) {
-    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $to_name, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $to_name, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
   };
 
   $stmt = $mysqli->prepare("SELECT message_name, message_text, supports_html FROM admin_messages WHERE message_key = 'msg_email_post_updated' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1");
@@ -411,8 +411,8 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
     else { $mail->isHTML(false); $mail->Body = strip_tags($body); }
     $mail->send(); $status = 'sent';
   } catch (\PHPMailer\PHPMailer\Exception $e) { $status = 'failed'; $errorNote = $e->getMessage(); }
-  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-  if ($log) { $logNotes = $status === 'failed' ? $errorNote : null; $log->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $status, $logNotes); $log->execute(); $log->close(); }
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  if ($log) { $logNotes = $status === 'failed' ? $errorNote : null; $log->bind_param('issssss', $member_id, $member_role, $to_name, $msgKey, $to_email, $status, $logNotes); $log->execute(); $log->close(); }
 }
 
 // Accept JSON payload (or multipart if images added later)

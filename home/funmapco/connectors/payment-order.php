@@ -136,12 +136,12 @@ function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode
     return $flagHtml . $number;
 }
 
-function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to_name, int $member_id, string $username, string $description, float $amount, string $currency, int $transaction_id): void {
+function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to_name, int $member_id, string $member_role, string $username, string $description, float $amount, string $currency, int $transaction_id): void {
     global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
     $msgKey = 'msg_email_donation_thanks';
-    $logFailed = function($notes = null) use ($mysqli, $member_id, $username, $msgKey, $to_email) {
-        $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-        if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+    $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $username, $msgKey, $to_email) {
+        $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
     };
     $stmt = $mysqli->prepare(
         "SELECT message_name, message_text, supports_html FROM admin_messages
@@ -220,10 +220,10 @@ function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to
         $status    = 'failed';
         $errorNote = $e->getMessage();
     }
-    $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
     if ($log) {
         $logNotes = $status === 'failed' ? $errorNote : null;
-        $log->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $status, $logNotes);
+        $log->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $status, $logNotes);
         $log->execute();
         $log->close();
     }
@@ -571,7 +571,7 @@ if ($subAction === 'capture') {
                 $mRow = $mStmt->get_result()->fetch_assoc();
                 $mStmt->close();
                 if ($mRow) {
-                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $mRow['username'], $description, $amount, $currency, $newTransactionId);
+                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $memberRole, $mRow['username'], $description, $amount, $currency, $newTransactionId);
                 }
             }
         }
@@ -624,7 +624,7 @@ if ($subAction === 'capture') {
                 $mRow = $mStmt->get_result()->fetch_assoc();
                 $mStmt->close();
                 if ($mRow) {
-                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $mRow['username'], $description, $amount, $currency, $newTransactionId);
+                    send_payment_receipt_email($mysqli, $mRow['account_email'], $mRow['username'], $memberId, $memberRole, $mRow['username'], $description, $amount, $currency, $newTransactionId);
                 }
             }
         }

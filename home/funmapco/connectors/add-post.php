@@ -263,9 +263,9 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
   if (!$eRow) return;
   $to_email = $eRow['account_email'];
 
-  $logFailed = function($notes = null) use ($mysqli, $member_id, $to_name, $msgKey, $to_email) {
-    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $to_name, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $to_name, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
   };
 
   $stmt = $mysqli->prepare("SELECT message_name, message_text, supports_html FROM admin_messages WHERE message_key = 'msg_email_post_live' AND container_key = 'msg_email' AND is_active = 1 LIMIT 1");
@@ -335,8 +335,8 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
     else { $mail->isHTML(false); $mail->Body = strip_tags($body); }
     $mail->send(); $status = 'sent';
   } catch (\PHPMailer\PHPMailer\Exception $e) { $status = 'failed'; $errorNote = $e->getMessage(); }
-  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-  if ($log) { $logNotes = $status === 'failed' ? $errorNote : null; $log->bind_param('isssss', $member_id, $to_name, $msgKey, $to_email, $status, $logNotes); $log->execute(); $log->close(); }
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  if ($log) { $logNotes = $status === 'failed' ? $errorNote : null; $log->bind_param('issssss', $member_id, $member_role, $to_name, $msgKey, $to_email, $status, $logNotes); $log->execute(); $log->close(); }
 }
 
 // Accept JSON or multipart form-data.
@@ -474,9 +474,11 @@ if (is_array($fieldsArr)) {
       if (!empty($fld['value'])) {
         $val = $fld['value'];
         if (is_array($val)) {
-          // Check for checkout_key first, then option_id
+          // Check for checkout_key directly, then radio value (which IS the checkout_key), then option_id
           if (!empty($val['checkout_key'])) {
             $checkoutKey = (string)$val['checkout_key'];
+          } elseif (!empty($val['value'])) {
+            $checkoutKey = (string)$val['value'];
           } elseif (!empty($val['option_id'])) {
             $optionId = (int)$val['option_id'];
           }
@@ -517,17 +519,19 @@ if (!empty($checkoutDays) && $checkoutDays > 0) {
   $expiresAt = (new DateTime('now', new DateTimeZone('UTC')))->modify('+' . $checkoutDays . ' days')->format('Y-m-d H:i:s');
 }
 
+$daysPurchased = (int)($checkoutDays ?? 0);
+
 if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, moderation_status, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_role, member_name, subcategory_key, loc_qty, loc_paid, visibility, moderation_status, payment_status, checkout_key, days_purchased, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } elseif ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, payment_status, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_role, member_name, subcategory_key, loc_qty, loc_paid, visibility, payment_status, checkout_key, days_purchased, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, loc_paid, visibility, checkout_key, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_role, member_name, subcategory_key, loc_qty, loc_paid, visibility, checkout_key, days_purchased, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
 }
 
@@ -536,20 +540,20 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus && $hasModerationStatus) {
-  // 10 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiisssss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 12 params: memberId(i), memberRole(s), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s), daysPurchased(i), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isssiissssiss', $memberId, $memberRole, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey, $daysPurchased, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
-  // 9 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), paymentStatus(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiissss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $expiresAt)) {
+  // 11 params: memberId(i), memberRole(s), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), paymentStatus(s), checkoutKey(s), daysPurchased(i), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isssiisssis', $memberId, $memberRole, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $paymentStatus, $checkoutKey, $daysPurchased, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), checkoutKey(s), expiresAt(s)
-  if (!bind_statement_params($stmt, 'issiisss', $memberId, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $expiresAt)) {
+  // 10 params: memberId(i), memberRole(s), memberName(s), subcategoryKey(s), locQty(i), locPaid(i), visibility(s), checkoutKey(s), daysPurchased(i), expiresAt(s)
+  if (!bind_statement_params($stmt, 'isssiissis', $memberId, $memberRole, $memberName, $subcategoryKey, $locQty, $locQty, $visibility, $checkoutKey, $daysPurchased, $expiresAt)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
@@ -1269,8 +1273,8 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
   }
 
   $count = count($_FILES['images']['name']);
-  $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, member_role, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtMedia) abort_with_error($mysqli, 500, 'Prepare media', $transactionActive);
 
   // Get validation limits
@@ -1363,7 +1367,7 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     if (isset($meta[$i]) && is_array($meta[$i])) {
       $settingsJson = json_encode($meta[$i], JSON_UNESCAPED_UNICODE);
     }
-    $stmtMedia->bind_param('iissis', $memberId, $insertId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
+    $stmtMedia->bind_param('isissis', $memberId, $memberRole, $insertId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
     if (!$stmtMedia->execute()) {
       if ($isExternal) {
         foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }

@@ -35,11 +35,11 @@ function fail($code, $msg) {
 $input      = json_decode(file_get_contents('php://input'), true);
 $postId     = isset($input['post_id'])    ? intval($input['post_id'])        : 0;
 $memberId   = isset($input['member_id'])  ? intval($input['member_id'])       : 0;
-$memberType = isset($input['member_type']) ? trim($input['member_type'])      : 'member';
+$memberRole = isset($input['member_role']) ? trim($input['member_role']) : (isset($input['member_type']) ? trim($input['member_type']) : 'member');
 
 if ($postId <= 0 || $memberId <= 0) fail(400, 'Missing post_id/member_id');
 
-$memberTable = ($memberType === 'admin') ? 'admins' : 'members';
+$memberTable = ($memberRole === 'admin') ? 'admins' : 'members';
 
 // Verify ownership
 $check = $mysqli->prepare("SELECT p.id FROM posts p WHERE p.id = ? AND p.member_id = ? AND p.deleted_at IS NULL LIMIT 1");
@@ -87,7 +87,7 @@ $deletionDate = date('j F Y', strtotime('+30 days'));
 
 // Send email
 if ($memberEmail) {
-  send_post_deletion_requested_email($mysqli, $memberEmail, $memberUsername, $memberId, $memberUsername, $postTitle, $deletionDate);
+  send_post_deletion_requested_email($mysqli, $memberEmail, $memberUsername, $memberId, $memberRole, $memberUsername, $postTitle, $deletionDate);
 }
 
 echo json_encode([
@@ -97,12 +97,12 @@ echo json_encode([
   'deletion_date' => $deletionDate,
 ]);
 
-function send_post_deletion_requested_email($mysqli, $to_email, $to_name, $member_id, $username, $post_title, $deletion_date) {
+function send_post_deletion_requested_email($mysqli, $to_email, $to_name, $member_id, $member_role, $username, $post_title, $deletion_date) {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_post_deletion_requested';
-  $logFailed = function($notes = null) use ($mysqli, $member_id, $username, $msgKey, $to_email) {
-    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
-    if ($l) { $s = 'failed'; $l->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
+  $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $username, $msgKey, $to_email) {
+    $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
   };
   $stmt = $mysqli->prepare(
     "SELECT message_name, message_text, supports_html FROM admin_messages
@@ -164,10 +164,10 @@ function send_post_deletion_requested_email($mysqli, $to_email, $to_name, $membe
   } catch (\PHPMailer\PHPMailer\Exception $e) {
     $errorNote = $e->getMessage();
   }
-  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?)');
+  $log = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
   if ($log) {
     $logNotes = $status === 'failed' ? $errorNote : null;
-    $log->bind_param('isssss', $member_id, $username, $msgKey, $to_email, $status, $logNotes);
+    $log->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $status, $logNotes);
     $log->execute();
     $log->close();
   }

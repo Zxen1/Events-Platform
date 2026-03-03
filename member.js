@@ -5221,7 +5221,7 @@ const MemberModule = (function() {
                 subcategory_key: actualSubcategoryKey,
                 member_id: currentUser ? currentUser.id : null,
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
-                member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
+                member_role: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
                 transaction_id: transactionId || null,
                 coupon_id: couponId || null,
