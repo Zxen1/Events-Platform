@@ -87,7 +87,7 @@
             colorClass = 'posteditor-status-bar--black';
             var deletedAt = new Date(post.deleted_at);
             var removalDate = new Date(deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
-            countdownSpan.textContent = 'Removed in ' + formatCountdown(removalDate, now);
+            countdownSpan.textContent = 'Removal in ' + formatCountdown(removalDate, now);
             dateSpan.textContent = formatStatusDate(deletedAt);
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
