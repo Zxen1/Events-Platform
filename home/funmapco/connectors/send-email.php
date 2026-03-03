@@ -103,13 +103,22 @@ $subject = $template['message_name'];
 $body    = $template['message_text'];
 
 $allowed = $template['placeholders'] ? json_decode($template['placeholders'], true) : [];
+$placeholderValues = [];
 if (is_array($allowed)) {
   foreach ($allowed as $key) {
     $value = $_POST[$key] ?? '';
+    $placeholderValues[$key] = $value;
     $body    = str_replace('{' . $key . '}', htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'), $body);
     $subject = str_replace('{' . $key . '}', htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'), $subject);
   }
 }
+// Pluralization: {variable|singular|plural}
+$pluralizeCallback = function($m) use ($placeholderValues) {
+  if (!isset($placeholderValues[$m[1]])) return $m[0];
+  return (int)$placeholderValues[$m[1]] === 1 ? $m[2] : $m[3];
+};
+$body    = preg_replace_callback('/\{(\w+)\|([^|}]+)\|([^|}]+)\}/', $pluralizeCallback, $body);
+$subject = preg_replace_callback('/\{(\w+)\|([^|}]+)\|([^|}]+)\}/', $pluralizeCallback, $subject);
 
 $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
 require_once $docRoot . '/libs/phpmailer/Exception.php';
