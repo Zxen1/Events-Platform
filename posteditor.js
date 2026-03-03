@@ -987,7 +987,7 @@
         deleteItemText.textContent = 'Delete';
         deleteItem.appendChild(deleteItemText);
         if (summaryIsDeleted || summaryVisibility === 'deleted') {
-            deleteItem.classList.add('posteditor-manage-status-more-item--disabled');
+            deleteItem.style.display = 'none';
         } else {
             deleteItem.addEventListener('click', function(e) {
                 e.stopPropagation();
