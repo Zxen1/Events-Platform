@@ -63,10 +63,9 @@ function fail_key_ph($code, $messageKey, $placeholders){
 }
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}
 
-function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $username) {
+function send_welcome_email($mysqli, $to_email, $to_name, $member_id, $member_role, $username) {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_welcome';
-  $member_role = 'member';
   $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $username, $msgKey, $to_email) {
     $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
     if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
@@ -167,10 +166,9 @@ function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode
   return $flagHtml . $number;
 }
 
-function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to_name, int $member_id, string $username, string $description, float $amount, string $currency, int $transaction_id): void {
+function send_payment_receipt_email(mysqli $mysqli, string $to_email, string $to_name, int $member_id, string $member_role, string $username, string $description, float $amount, string $currency, int $transaction_id): void {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_donation_thanks';
-  $member_role = 'member';
   $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $username, $msgKey, $to_email) {
     $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
     if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }
@@ -350,14 +348,14 @@ if ($txId > 0) {
   if ($txUp) { $txUp->bind_param('ii', $id, $txId); $txUp->execute(); $txUp->close(); }
 }
 
-send_welcome_email($mysqli, $email, $username, $id, $username);
+send_welcome_email($mysqli, $email, $username, $id, 'member', $username);
 
 if ($txId > 0) {
   $txRow = null;
   $txSel = $mysqli->prepare('SELECT transaction_type, description, amount, currency FROM transactions WHERE id = ? LIMIT 1');
   if ($txSel) { $txSel->bind_param('i', $txId); $txSel->execute(); $txRow = $txSel->get_result()->fetch_assoc(); $txSel->close(); }
   if ($txRow && $txRow['transaction_type'] === 'donation') {
-    send_payment_receipt_email($mysqli, $email, $username, $id, $username, $txRow['description'], (float)$txRow['amount'], $txRow['currency'], $txId);
+    send_payment_receipt_email($mysqli, $email, $username, $id, 'member', $username, $txRow['description'], (float)$txRow['amount'], $txRow['currency'], $txId);
   }
 }
 

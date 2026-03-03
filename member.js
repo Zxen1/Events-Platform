@@ -2318,7 +2318,8 @@ const MemberModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                'account-email': currentUser.account_email
+                'account-email': currentUser.account_email,
+                member_role: (currentUser.id > 0 && currentUser.id < 100) ? 'admin' : 'member'
             })
         })
         .then(function(res) { return res.json(); })
@@ -5221,7 +5222,7 @@ const MemberModule = (function() {
                 subcategory_key: actualSubcategoryKey,
                 member_id: currentUser ? currentUser.id : null,
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
-                member_role: currentUser && currentUser.isAdmin ? 'admin' : 'member',
+                member_role: (currentUser && currentUser.id > 0 && currentUser.id < 100) ? 'admin' : 'member',
                 skip_payment: isAdminFree,
                 transaction_id: transactionId || null,
                 coupon_id: couponId || null,

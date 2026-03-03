@@ -1007,7 +1007,7 @@
                             if (confirmed) {
                                 var user = getCurrentUser();
                                 var mId   = user ? parseInt(user.id, 10) : 0;
-                                var mRole = user ? (user.role || user.type || 'member') : 'member';
+                                var mRole = (mId > 0 && mId < 100) ? 'admin' : 'member';
                                 statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
                                 statusMenuOpen = false;
                                 fetch('/gateway.php?action=delete-post', {

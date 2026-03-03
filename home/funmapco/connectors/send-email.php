@@ -156,7 +156,7 @@ try {
 
   $status       = 'sent';
   $member_id    = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
-  $member_role_log = trim($_POST['member_role'] ?? 'member');
+  $member_role_log = ($member_id > 0 && $member_id < 100) ? 'admin' : 'member';
   $username_log = trim($_POST['username'] ?? '');
   $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?, ?)');
   if ($stmt) {
@@ -169,7 +169,7 @@ try {
 } catch (Exception $e) {
   $status       = 'failed';
   $member_id    = isset($_POST['member_id']) ? (int)$_POST['member_id'] : 0;
-  $member_role_log = trim($_POST['member_role'] ?? 'member');
+  $member_role_log = ($member_id > 0 && $member_id < 100) ? 'admin' : 'member';
   $username_log = trim($_POST['username'] ?? '');
   $stmt = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status) VALUES (?, ?, ?, ?, ?, ?)');
   if ($stmt) {

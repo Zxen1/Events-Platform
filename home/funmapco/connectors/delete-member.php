@@ -36,6 +36,8 @@ function fail($code, $msg) {
 $input = json_decode(file_get_contents('php://input'), true);
 $id = isset($input['id']) ? intval($input['id']) : 0;
 $accountEmail = isset($input['account-email']) ? trim($input['account-email']) : '';
+$memberRole = isset($input['member_role']) ? trim($input['member_role']) : '';
+if ($memberRole === '') fail(400, 'Missing member_role');
 
 if ($id <= 0 || $accountEmail === '') {
   fail(400, 'Missing id/account-email');
@@ -84,7 +86,7 @@ $update->close();
 
 if ($affected > 0) {
   $deletionDate = date('j F Y', strtotime('+30 days'));
-  send_account_deletion_requested_email($mysqli, $accountEmail, $row['username'], $id, $row['username'], $deletionDate);
+  send_account_deletion_requested_email($mysqli, $accountEmail, $row['username'], $id, $memberRole, $row['username'], $deletionDate);
   echo json_encode([
     'success'       => true,
     'message'       => 'Account scheduled for deletion',
@@ -95,10 +97,9 @@ if ($affected > 0) {
   fail(500, 'Delete failed');
 }
 
-function send_account_deletion_requested_email($mysqli, $to_email, $to_name, $member_id, $username, $deletion_date) {
+function send_account_deletion_requested_email($mysqli, $to_email, $to_name, $member_id, $member_role, $username, $deletion_date) {
   global $SMTP_HOST, $SMTP_USERNAME, $SMTP_PASSWORD;
   $msgKey = 'msg_email_account_deletion_requested';
-  $member_role = 'member';
   $logFailed = function($notes = null) use ($mysqli, $member_id, $member_role, $username, $msgKey, $to_email) {
     $l = $mysqli->prepare('INSERT INTO `emails_sent` (member_id, member_role, username, message_key, to_email, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
     if ($l) { $s = 'failed'; $l->bind_param('issssss', $member_id, $member_role, $username, $msgKey, $to_email, $s, $notes); $l->execute(); $l->close(); }

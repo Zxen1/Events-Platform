@@ -35,9 +35,10 @@ function fail($code, $msg) {
 $input      = json_decode(file_get_contents('php://input'), true);
 $postId     = isset($input['post_id'])    ? intval($input['post_id'])        : 0;
 $memberId   = isset($input['member_id'])  ? intval($input['member_id'])       : 0;
-$memberRole = isset($input['member_role']) ? trim($input['member_role']) : (isset($input['member_type']) ? trim($input['member_type']) : 'member');
+$memberRole = isset($input['member_role']) ? trim($input['member_role']) : '';
 
 if ($postId <= 0 || $memberId <= 0) fail(400, 'Missing post_id/member_id');
+if ($memberRole === '') fail(400, 'Missing member_role');
 
 $memberTable = ($memberRole === 'admin') ? 'admins' : 'members';
 
