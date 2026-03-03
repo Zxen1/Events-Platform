@@ -1062,7 +1062,89 @@
             });
         }
 
+        // Restore item (shown only when deleted)
+        var restoreItem = document.createElement('div');
+        restoreItem.className = 'posteditor-manage-more-item posteditor-manage-more-restore';
+        var restoreItemText = document.createElement('span');
+        restoreItemText.className = 'posteditor-manage-more-item-text';
+        restoreItemText.textContent = 'Restore';
+        restoreItem.appendChild(restoreItemText);
+        if (summaryIsDeleted || summaryVisibility === 'deleted') {
+            restoreItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                statusMoreMenu.classList.remove('posteditor-manage-status-more-menu--open');
+                statusMenuOpen = false;
+                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function' && typeof window.getMessage === 'function') {
+                    window.getMessage('msg_posteditor_confirm_restore', {}, false).then(function(msg) {
+                        if (!msg) return;
+                        ConfirmDialogComponent.show({
+                            titleText: 'Restore Post',
+                            messageText: msg,
+                            confirmLabel: 'Restore',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'success',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                var user = getCurrentUser();
+                                var mId   = user ? parseInt(user.id, 10) : 0;
+                                var mRole = (mId > 0 && mId < 100) ? 'admin' : 'member';
+                                fetch('/gateway.php?action=delete-post', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ post_id: postId, member_id: mId, member_role: mRole, action: 'restore' })
+                                }).then(function(r) { return r.json(); }).then(function(res) {
+                                    if (res && res.success) {
+                                        post.visibility = res.visibility;
+                                        post.deleted_at = null;
+                                        if (editingPostsData[postId] && editingPostsData[postId].original) {
+                                            editingPostsData[postId].original.visibility = res.visibility;
+                                            editingPostsData[postId].original.deleted_at = null;
+                                        }
+                                        var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                        if (oldModalBar) {
+                                            var newModalBar = buildStatusBar(post);
+                                            oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
+                                        }
+                                        var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                        if (postItem) {
+                                            var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                            if (oldBar) {
+                                                var newBar = buildStatusBar(post);
+                                                oldBar.parentNode.replaceChild(newBar, oldBar);
+                                            }
+                                        }
+                                        App.emit('post:updated', { post_id: postId });
+                                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                                            getMessage('msg_posteditor_post_restored', {}, false).then(function(msg) {
+                                                if (msg) ToastComponent.showSuccess(msg);
+                                            });
+                                        }
+                                    } else {
+                                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                            getMessage('msg_posteditor_post_restore_failed', {}, false).then(function(msg) {
+                                                if (msg) ToastComponent.showError(msg);
+                                            });
+                                        }
+                                    }
+                                }).catch(function() {
+                                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                        getMessage('msg_posteditor_post_restore_failed', {}, false).then(function(msg) {
+                                            if (msg) ToastComponent.showError(msg);
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        } else {
+            restoreItem.style.display = 'none';
+        }
+
         statusMoreMenu.appendChild(hideItem);
+        statusMoreMenu.appendChild(restoreItem);
         statusMoreMenu.appendChild(deleteItem);
         statusMoreBtn.appendChild(statusMoreMenu);
 

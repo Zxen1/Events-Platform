@@ -36,11 +36,55 @@ $input      = json_decode(file_get_contents('php://input'), true);
 $postId     = isset($input['post_id'])    ? intval($input['post_id'])        : 0;
 $memberId   = isset($input['member_id'])  ? intval($input['member_id'])       : 0;
 $memberRole = isset($input['member_role']) ? trim($input['member_role']) : '';
+$action     = isset($input['action'])     ? trim($input['action'])            : 'delete';
 
 if ($postId <= 0 || $memberId <= 0) fail(400, 'Missing post_id/member_id');
 if ($memberRole === '') fail(400, 'Missing member_role');
 
 $memberTable = ($memberRole === 'admin') ? 'admins' : 'members';
+
+// ============================================================================
+// MODE: RESTORE (un-delete a soft-deleted post)
+// ============================================================================
+if ($action === 'restore') {
+  // Verify ownership and that post IS deleted
+  $check = $mysqli->prepare("SELECT p.expires_at FROM posts p WHERE p.id = ? AND p.member_id = ? AND p.deleted_at IS NOT NULL LIMIT 1");
+  if (!$check) fail(500, 'Prepare failed');
+  $check->bind_param('ii', $postId, $memberId);
+  $check->execute();
+  $check->bind_result($expiresAt);
+  if (!$check->fetch()) { $check->close(); fail(404, 'Post not found or not deleted'); }
+  $check->close();
+
+  // Determine restored visibility from expires_at
+  $now = new DateTime('now', new DateTimeZone('UTC'));
+  $newVisibility = 'expired';
+  if ($expiresAt !== null) {
+    $expiry = new DateTime($expiresAt, new DateTimeZone('UTC'));
+    if ($expiry > $now) $newVisibility = 'active';
+  }
+
+  $update = $mysqli->prepare("UPDATE posts SET deleted_at = NULL, visibility = ? WHERE id = ?");
+  if (!$update) fail(500, 'Prepare failed');
+  $update->bind_param('si', $newVisibility, $postId);
+  $update->execute();
+  $affected = $update->affected_rows;
+  $update->close();
+
+  if ($affected <= 0) fail(500, 'Restore failed');
+
+  echo json_encode([
+    'success'    => true,
+    'message'    => 'Post restored',
+    'visibility' => $newVisibility,
+    'deleted_at' => null,
+  ]);
+  exit;
+}
+
+// ============================================================================
+// MODE: DELETE (soft delete — schedule for deletion)
+// ============================================================================
 
 // Verify ownership
 $check = $mysqli->prepare("SELECT p.id FROM posts p WHERE p.id = ? AND p.member_id = ? AND p.deleted_at IS NULL LIMIT 1");
