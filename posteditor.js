@@ -1036,6 +1036,23 @@
                                             }
                                         }
                                         App.emit('post:updated', { post_id: postId });
+                                        if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                                            getMessage('msg_posteditor_post_deleted', {}, false).then(function(msg) {
+                                                if (msg) ToastComponent.showSuccess(msg);
+                                            });
+                                        }
+                                    } else {
+                                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                            getMessage('msg_posteditor_post_delete_failed', {}, false).then(function(msg) {
+                                                if (msg) ToastComponent.showError(msg);
+                                            });
+                                        }
+                                    }
+                                }).catch(function() {
+                                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                        getMessage('msg_posteditor_post_delete_failed', {}, false).then(function(msg) {
+                                            if (msg) ToastComponent.showError(msg);
+                                        });
                                     }
                                 });
                             }
