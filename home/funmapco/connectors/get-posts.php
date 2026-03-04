@@ -499,7 +499,6 @@ try {
             mc.amenity_summary,
             mc.age_rating,
             mc.ticket_url,
-            mc.coupon_code,
             mc.session_summary,
             mc.price_summary,
             (
@@ -610,7 +609,6 @@ try {
                 'amenities' => $row['amenity_summary'],
                 'age_rating' => $row['age_rating'],
                 'ticket_url' => $row['ticket_url'],
-                'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'has_promo' => !empty($row['has_promo']),
