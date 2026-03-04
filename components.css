@@ -2770,11 +2770,20 @@
    Toast notifications matching old site design
    ============================================================================ */
 
-.component-toast {
+.component-toast-container {
     position: fixed;
     top: calc(var(--safe-top, 0px) + 20px);
     left: 50%;
-    transform: translate(-50%, -10px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-toast {
     background: rgba(0, 0, 0, 0.85);
     color: #fff;
     padding: 8px 18px;
@@ -2782,29 +2791,27 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     font-size: 14px;
     opacity: 0;
+    transform: translateY(-10px);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: var(--layer-dialog, 95);
+    white-space: nowrap;
 }
 
 .component-toast--show {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
 }
 
 .component-toast--success {
     background: #2ea060;
-    color: #fff;
 }
 
 .component-toast--error {
     background: #c62828;
-    color: #fff;
 }
 
 .component-toast--warning {
     background: var(--filter-active-color);
-    color: #fff;
 }
 
 

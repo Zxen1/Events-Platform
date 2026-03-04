@@ -6026,73 +6026,59 @@ const ThreeButtonDialogComponent = (function() {
    ============================================================================ */
 
 const ToastComponent = (function() {
-    var toastEl = null;
-    var toastTimer = null;
-    
-    function ensureToastElement() {
-        if (toastEl) return toastEl;
-        
-        var toast = document.createElement('div');
-        toast.className = 'component-toast';
-        toast.setAttribute('role', 'status');
-        toast.setAttribute('aria-live', 'polite');
-        toast.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(toast);
-        
-        toastEl = toast;
-        return toast;
+    var containerEl = null;
+
+    function ensureContainer() {
+        if (containerEl) return containerEl;
+        var c = document.createElement('div');
+        c.className = 'component-toast-container';
+        c.setAttribute('aria-live', 'polite');
+        document.body.appendChild(c);
+        containerEl = c;
+        return c;
     }
-    
+
     function show(message, variant, duration) {
         variant = variant || 'default';
         duration = duration || 2000;
-        
-        if (!ensureToastElement()) return;
-        
-        toastEl.textContent = message || '';
-        toastEl.setAttribute('aria-hidden', 'false');
-        
-        // Remove all variant classes
-        toastEl.classList.remove(
-            'component-toast--success',
-            'component-toast--error',
-            'component-toast--warning',
-            'component-toast--show'
-        );
-        
-        // Add variant class
+
+        var container = ensureContainer();
+
+        var toast = document.createElement('div');
+        toast.className = 'component-toast';
         if (variant !== 'default') {
-            toastEl.classList.add('component-toast--' + variant);
+            toast.classList.add('component-toast--' + variant);
         }
-        
-        // Clear existing timer
-        if (toastTimer) {
-            clearTimeout(toastTimer);
-            toastTimer = null;
-        }
-        
-        // Show toast
-        toastEl.classList.add('component-toast--show');
-        
-        // Auto-hide
-        toastTimer = setTimeout(function() {
-            toastEl.classList.remove('component-toast--show');
-            toastEl.setAttribute('aria-hidden', 'true');
+        toast.setAttribute('role', 'status');
+        toast.textContent = message || '';
+        container.appendChild(toast);
+
+        // Trigger enter animation on next frame
+        requestAnimationFrame(function() {
+            toast.classList.add('component-toast--show');
+        });
+
+        // Auto-remove
+        setTimeout(function() {
+            toast.classList.remove('component-toast--show');
+            setTimeout(function() {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 250);
         }, duration);
     }
-    
+
     function showSuccess(message, duration) {
         show(message, 'success', duration);
     }
-    
+
     function showError(message, duration) {
         show(message, 'error', duration);
     }
-    
+
     function showWarning(message, duration) {
         show(message, 'warning', duration);
     }
-    
+
     return {
         show: show,
         showSuccess: showSuccess,
