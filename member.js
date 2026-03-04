@@ -7886,9 +7886,11 @@ window.MemberModule = MemberModule;
                 memberBtn.classList.add('has-avatar');
             };
             pre.onerror = function() {
+                console.error('[AvatarEarly] Failed to load avatar image:', src);
                 avatarUpdated = false; // Allow retry
             };
             pre.src = src;
+            console.error('[AvatarEarly] Attempting to load avatar src:', src);
         } catch (e) {
             // Silently fail - header will show default icon
         }
