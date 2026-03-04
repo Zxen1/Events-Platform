@@ -3872,7 +3872,9 @@ const MemberModule = (function() {
 
         var suffix = '';
         if (price !== null && !isFreeViaCoupon) {
-            suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2), currencyCode, { trimZeroDecimals: false });
+            var btnCurrData = (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) ? CurrencyComponent.getCurrencyByCode(currencyCode) : null;
+            var btnDecSep = (btnCurrData && btnCurrData.decimalSeparator) ? btnCurrData.decimalSeparator : '.';
+            suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2).replace('.', btnDecSep), currencyCode, { trimZeroDecimals: false });
         }
 
         var textEl = submitBtn.querySelector('.component-paymentsubmit-button-text');
