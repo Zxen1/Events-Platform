@@ -8081,7 +8081,9 @@ const AvatarCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var maxZoom = Math.max(1, Math.min(iw, ih) / 1000);
+            var minPx = 1000;
+            try { if (window.adminSettings && window.adminSettings.avatar_min_width) minPx = parseInt(window.adminSettings.avatar_min_width, 10) || 1000; } catch (e) {}
+            var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
 
             if (zoomInput) {
                 zoomInput.min = '1';
@@ -8901,7 +8903,9 @@ const PostCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var maxZoom = Math.max(1, Math.min(iw, ih) / 1000);
+            var minPx = 1000;
+            try { if (window.adminSettings && window.adminSettings.image_min_width) minPx = parseInt(window.adminSettings.image_min_width, 10) || 1000; } catch (e) {}
+            var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
 
             if (zoomInput) {
                 zoomInput.min = '1';
