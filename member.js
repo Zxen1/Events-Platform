@@ -7919,7 +7919,7 @@ window.MemberModule = MemberModule;
     
     // Run immediately on DOMContentLoaded
     function runOnDOMReady() {
-        updateHeaderEarly();
+        updateAdminButtonEarly();
         
         // Set up listener for settings to load (in case avatar folder wasn't available yet)
         function setupSettingsListener() {
