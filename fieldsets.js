@@ -2003,10 +2003,11 @@ const FieldsetBuilder = (function(){
                 var imageMinHeight = 0;
                 var imageMaxSize = 5242880; // 5MB
                 try {
-                    if (window.adminSettings) {
-                        if (window.adminSettings.image_min_width) imageMinWidth = parseInt(window.adminSettings.image_min_width, 10);
-                        if (window.adminSettings.image_min_height) imageMinHeight = parseInt(window.adminSettings.image_min_height, 10);
-                        if (window.adminSettings.image_max_size) imageMaxSize = parseInt(window.adminSettings.image_max_size, 10) || 5242880;
+                    var _as = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+                    if (_as) {
+                        if (_as.image_min_width) imageMinWidth = parseInt(_as.image_min_width, 10);
+                        if (_as.image_min_height) imageMinHeight = parseInt(_as.image_min_height, 10);
+                        if (_as.image_max_size) imageMaxSize = parseInt(_as.image_max_size, 10) || 5242880;
                     }
                 } catch (e) {}
                 

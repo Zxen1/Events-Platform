@@ -2462,10 +2462,11 @@ const MemberAuthFieldsetsComponent = (function(){
             var avatarMinHeight = 0;
             var avatarMaxSize = 5242880;
             try {
-                if (window.adminSettings) {
-                    if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10);
-                    if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10);
-                    if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
+                var _as = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+                if (_as) {
+                    if (_as.avatar_min_width) avatarMinWidth = parseInt(_as.avatar_min_width, 10);
+                    if (_as.avatar_min_height) avatarMinHeight = parseInt(_as.avatar_min_height, 10);
+                    if (_as.avatar_max_size) avatarMaxSize = parseInt(_as.avatar_max_size, 10) || 5242880;
                 }
             } catch (e) {}
             var avatarMaxMB = (avatarMaxSize / 1024 / 1024).toFixed(0);
@@ -8081,8 +8082,8 @@ const AvatarCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var minPx = 1000;
-            try { if (window.adminSettings && window.adminSettings.avatar_min_width) minPx = parseInt(window.adminSettings.avatar_min_width, 10) || 1000; } catch (e) {}
+            var minPx = 800;
+            try { var _as2 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null; if (_as2 && _as2.avatar_min_width) minPx = parseInt(_as2.avatar_min_width, 10) || 800; } catch (e) {}
             var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
 
             if (zoomInput) {
@@ -8304,10 +8305,11 @@ const AvatarPickerComponent = (function() {
         var avatarMinHeight = 0;
         var avatarMaxSize = 5242880; // 5MB
         try {
-            if (window.adminSettings) {
-                if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10);
-                if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10);
-                if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
+            var _as3 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+            if (_as3) {
+                if (_as3.avatar_min_width) avatarMinWidth = parseInt(_as3.avatar_min_width, 10);
+                if (_as3.avatar_min_height) avatarMinHeight = parseInt(_as3.avatar_min_height, 10);
+                if (_as3.avatar_max_size) avatarMaxSize = parseInt(_as3.avatar_max_size, 10) || 5242880;
             }
         } catch (e) {}
         
@@ -8903,8 +8905,8 @@ const PostCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var minPx = 1000;
-            try { if (window.adminSettings && window.adminSettings.image_min_width) minPx = parseInt(window.adminSettings.image_min_width, 10) || 1000; } catch (e) {}
+            var minPx = 800;
+            try { var _as4 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null; if (_as4 && _as4.image_min_width) minPx = parseInt(_as4.image_min_width, 10) || 800; } catch (e) {}
             var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
 
             if (zoomInput) {
