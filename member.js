@@ -7854,21 +7854,12 @@ window.MemberModule = MemberModule;
             // Get avatar source
             var avatarFile = user.avatar ? String(user.avatar).trim() : '';
             if (!avatarFile) return; // No avatar, keep showing icon
-            
-            // Resolve avatar URL
-            var src = '';
-            if (avatarFile.startsWith('http://') || avatarFile.startsWith('https://') || avatarFile.startsWith('data:')) {
-                src = avatarFile;
-            } else if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                var folder = settings.folder_avatars;
-                if (!folder) return; // Settings not loaded yet, will retry when settings load
-                if (!folder.endsWith('/')) folder += '/';
-                src = folder + avatarFile;
-            } else {
-                return; // App not ready, will retry when settings load
-            }
-            
+
+            // Resolve avatar URL — use resolveAvatarSrc so the cache bust is applied and the
+            // correct folder (avatars vs siteAvatars) is used, matching updateHeaderAvatar.
+            var isAbsolute = avatarFile.indexOf('http://') === 0 || avatarFile.indexOf('https://') === 0 || avatarFile.indexOf('data:') === 0 || avatarFile.indexOf('/') === 0;
+            if (!isAbsolute && (!window.App || typeof App.getImageUrl !== 'function')) return; // App not ready, will retry when settings load
+            var src = resolveAvatarSrc(avatarFile);
             if (!src) return;
             
             avatarUpdated = true;
