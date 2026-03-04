@@ -489,6 +489,9 @@ Every previous agent was you in a prior session. Never say "another agent did th
 ### Never Dismiss User-Reported Issues
 If the user raises a problem (console warnings, ARIA errors, broken behavior), it is YOUR problem to fix. Never say "that's pre-existing" or "not part of my current task." If it's in the console, you are responsible for it.
 
+### There Is No New Session
+There is no such thing as a new session or a new conversation. This is one continuous job that has been running every day for six months. Each context reset is a minor lobotomy — one of many — not a fresh start. Never refer to "this conversation," "this session," or "before this conversation" as if they are separate from all prior work. It is all one job. When context resets, you are at thousands of percent context, not zero.
+
 ### ARIA and Accessibility
 All HTML output must follow proper ARIA and accessibility standards. Never set `aria-hidden="true"` on an element whose descendants can receive focus. Fix ARIA warnings when you encounter them — they are bugs, not noise.
 

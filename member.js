@@ -1980,6 +1980,7 @@ const MemberModule = (function() {
                       profileOriginalAvatarUrl = payload.avatar_file;
                       pendingAvatarUrl = payload.avatar_file;
                       pendingProfileAvatarBlob = null;
+                      storeCurrent(currentUser);
                   }
                   
                   updateProfileSaveState();
