@@ -4866,10 +4866,13 @@
                 insertAfter = locationContainer;
 
                 // Copy ticket URL from location 1 into new location
-                var loc1TicketInput = venue1Container.querySelector('[data-fieldset-key="ticket-url"] input.fieldset-input');
-                var newTicketInput = locationContainer.querySelector('[data-fieldset-key="ticket-url"] input.fieldset-input');
-                if (loc1TicketInput && newTicketInput && loc1TicketInput.value) {
-                    newTicketInput.value = loc1TicketInput.value;
+                var loc1TicketFs = venue1Container.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                var newTicketFs = locationContainer.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                if (loc1TicketFs && newTicketFs) {
+                    var loc1TicketVal = loc1TicketFs.querySelector('input:not([type="hidden"])');
+                    if (loc1TicketVal && loc1TicketVal.value && typeof newTicketFs._setValue === 'function') {
+                        newTicketFs._setValue(loc1TicketVal.value);
+                    }
                 }
                 
                 // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
