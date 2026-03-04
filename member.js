@@ -5144,7 +5144,9 @@ const MemberModule = (function() {
                         // Calculate promo_price
                         if (item_price && promo_value) {
                             var numericItemPrice = parseFloat(item_price);
-                            var numericPromoValue = parseFloat(promo_value);
+                            var numericPromoValue = (promo_type === 'fixed' && currency && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                                ? CurrencyComponent.parseInput(promo_value, currency)
+                                : parseFloat(String(promo_value).replace(',', '.'));
                             if (Number.isFinite(numericItemPrice) && Number.isFinite(numericPromoValue) && numericPromoValue > 0) {
                                 var discounted;
                                 if (promo_type === 'percent') {

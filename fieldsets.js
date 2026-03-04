@@ -3468,9 +3468,15 @@ const FieldsetBuilder = (function(){
                                 discounted = numericPrice - pValue;
                             }
                             discounted = Math.max(0, Math.round(discounted * 100) / 100);
-                            var displayVal = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol)
-                                ? CurrencyComponent.formatWithSymbol(discounted.toString(), curr, { trimZeroDecimals: false })
-                                : discounted.toFixed(2);
+                            var displayVal;
+                            if (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol && CurrencyComponent.getCurrencyByCode) {
+                                var currData = CurrencyComponent.getCurrencyByCode(curr);
+                                var decSep = (currData && currData.decimalSeparator) ? currData.decimalSeparator : '.';
+                                var discountedStr = discounted.toFixed(2).replace('.', decSep);
+                                displayVal = CurrencyComponent.formatWithSymbol(discountedStr, curr, { trimZeroDecimals: false });
+                            } else {
+                                displayVal = discounted.toFixed(2);
+                            }
                             itemPriceInput.value = displayVal;
                         }
                     }
@@ -5219,9 +5225,13 @@ const FieldsetBuilder = (function(){
                                         discounted = numericPrice - pValue;
                                     }
                                     discounted = Math.max(0, Math.round(discounted * 100) / 100);
-                                    inp.value = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol)
-                                        ? CurrencyComponent.formatWithSymbol(discounted.toString(), curr, { trimZeroDecimals: false })
-                                        : discounted.toFixed(2);
+                                    if (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol && CurrencyComponent.getCurrencyByCode) {
+                                        var tpCurrData = CurrencyComponent.getCurrencyByCode(curr);
+                                        var tpDecSep = (tpCurrData && tpCurrData.decimalSeparator) ? tpCurrData.decimalSeparator : '.';
+                                        inp.value = CurrencyComponent.formatWithSymbol(discounted.toFixed(2).replace('.', tpDecSep), curr, { trimZeroDecimals: false });
+                                    } else {
+                                        inp.value = discounted.toFixed(2);
+                                    }
                                 }
                             }
                         });
