@@ -636,6 +636,23 @@ if ($manageAction !== '') {
       if (!$stmtUpdate->execute()) { $stmtUpdate->close(); fail_key(500, 'msg_post_edit_error'); }
       $stmtUpdate->close();
 
+      // Insert transaction record (admin bypass)
+      $spCurrency = isset($data['currency']) ? strtoupper(trim((string)$data['currency'])) : 'USD';
+      $spDesc     = 'Post #' . $postId . ' extras (admin)';
+      $spTxStmt = $mysqli->prepare(
+        "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
+         VALUES (?, ?, 'edit', ?, ?, NULL, NULL, NULL, 0, 0, NULL, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
+      );
+      if ($spTxStmt) {
+        $spTxStmt->bind_param('iissss', $memberId, $postId, $memberRole, $finalCheckoutKey, $spCurrency, $spDesc);
+        $spTxStmt->execute();
+        $spTransactionId = (int)$spTxStmt->insert_id;
+        $spTxStmt->close();
+        if ($memberId !== null && $memberId > 0) {
+          send_post_updated_email($mysqli, $memberId, $memberRole, $memberName, $postId, $spTransactionId);
+        }
+      }
+
       echo json_encode([
         'success'        => true,
         'manage_action'  => 'skip_payment',
@@ -744,6 +761,27 @@ if ($manageAction !== '') {
         $cpUseStmt->bind_param('i', $couponId);
         $cpUseStmt->execute();
         $cpUseStmt->close();
+      }
+
+      // Insert transaction record (zero-dollar coupon checkout)
+      $cpCurrency  = isset($data['currency']) ? strtoupper(trim((string)$data['currency'])) : 'USD';
+      $cpQuote     = round((float)($data['quote']    ?? 0), 2);
+      $cpDiscount  = round((float)($data['discount'] ?? 0), 2);
+      $cpTotal     = 0.00;
+      $cpLineItems = isset($data['line_items']) ? json_encode($data['line_items'], JSON_UNESCAPED_UNICODE) : null;
+      $cpDesc      = 'Post #' . $postId . ' extras';
+      $cpTxStmt = $mysqli->prepare(
+        "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
+         VALUES (?, ?, 'edit', ?, ?, NULL, 'coupon', 'coupon', ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+      );
+      if ($cpTxStmt) {
+        $cpTxStmt->bind_param('iissddidsss', $memberId, $postId, $memberRole, $finalCheckoutKey, $cpQuote, $cpDiscount, $couponId, $cpTotal, $cpCurrency, $cpLineItems, $cpDesc);
+        $cpTxStmt->execute();
+        $cpTransactionId = (int)$cpTxStmt->insert_id;
+        $cpTxStmt->close();
+        if ($memberId !== null && $memberId > 0) {
+          send_post_updated_email($mysqli, $memberId, $memberRole, $memberName, $postId, $cpTransactionId);
+        }
       }
 
       echo json_encode([

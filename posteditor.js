@@ -1197,6 +1197,7 @@
         var pricingLocUsed = locUsed;
         var pricingLocPaid = locPaid;
         var manageCoupon = null;
+        var manageQuote = 0;
         var manageDiscountedTotal = 0;
 
         for (var ti = 0; ti < allCheckoutOptions.length; ti++) {
@@ -1765,6 +1766,7 @@
                 totalVal.textContent = formatPriceWithSymbol(total, currencyCode);
             }
 
+            manageQuote = total;
             manageDiscountedTotal = discountedTotal;
 
             // Update submit button text
@@ -2306,6 +2308,8 @@
                     checkout_key: pricing.checkout_key,
                     currency: pricing.currency,
                     amount: manageDiscountedTotal,
+                    quote: manageQuote,
+                    discount: parseFloat((manageQuote - manageDiscountedTotal).toFixed(2)),
                     line_items: pricing.line_items,
                     transaction_id: transactionId || null,
                     add_days: parseInt(durationAddInput.value, 10) || 0,
@@ -2367,6 +2371,9 @@
                     transactionType: 'edit',
                     checkoutKey:     pricing.checkout_key,
                     lineItems:       pricing.line_items,
+                    quote:           manageQuote,
+                    discount:        parseFloat((manageQuote - manageDiscountedTotal).toFixed(2)),
+                    couponId:        manageCoupon ? manageCoupon.id : null,
                     onReady: function() {
                         PaymentSubmitComponent.setLoading(manageSubmitBtn, false);
                     },

@@ -13680,6 +13680,9 @@ const PaymentModule = (function () {
         var transactionType = String(options.transactionType || 'new_post');
         var checkoutKey     = options.checkoutKey || null;
         var lineItems       = options.lineItems   || null;
+        var quote           = parseFloat(options.quote)    || amount;
+        var discount        = parseFloat(options.discount) || 0;
+        var couponId        = options.couponId || null;
         var onSuccess = typeof options.onSuccess === 'function' ? options.onSuccess : function () {};
         var onCancel  = typeof options.onCancel  === 'function' ? options.onCancel  : function () {};
         var onError   = typeof options.onError   === 'function' ? options.onError   : function (e) { console.error('[PaymentModule]', e); };
@@ -13696,6 +13699,9 @@ const PaymentModule = (function () {
             transaction_type: transactionType,
             checkout_key:     checkoutKey,
             line_items:       lineItems,
+            quote:            quote,
+            discount:         discount,
+            coupon_id:        couponId,
         };
 
         function post(body) {

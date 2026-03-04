@@ -3962,6 +3962,16 @@ const MemberModule = (function() {
                         }
                     });
                 }
+                var chargeQuote    = chargeAmount;
+                var chargeDiscount = 0;
+                if (appliedCoupon) {
+                    if (appliedCoupon.discount_type === 'percent') {
+                        chargeQuote = parseFloat((chargeAmount / (1 - appliedCoupon.discount_value / 100)).toFixed(2));
+                    } else {
+                        chargeQuote = parseFloat((chargeAmount + appliedCoupon.discount_value).toFixed(2));
+                    }
+                    chargeDiscount = parseFloat((chargeQuote - chargeAmount).toFixed(2));
+                }
                 if (window.PaymentModule && typeof PaymentModule.charge === 'function') {
                     if (submitBtn) PaymentSubmitComponent.setLoading(submitBtn, true);
                     PaymentModule.charge({
@@ -3973,6 +3983,9 @@ const MemberModule = (function() {
                         transactionType: 'new_post',
                         checkoutKey:     chargeCheckoutKey,
                         lineItems:       [{ type: 'new_post', checkout_key: chargeCheckoutKey, days: sel ? sel.days : null, amount: chargeAmount }],
+                        quote:           chargeQuote,
+                        discount:        chargeDiscount,
+                        couponId:        appliedCoupon ? appliedCoupon.id : null,
                         onReady: function() {
                             if (submitBtn) PaymentSubmitComponent.setLoading(submitBtn, false);
                         },
