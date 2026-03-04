@@ -8078,9 +8078,14 @@ const AvatarCropperComponent = (function() {
             cropState.offsetX = 0;
             cropState.offsetY = 0;
             cropState.minZoom = 1;
-            
+
+            var iw = cropImg.naturalWidth || cropImg.width;
+            var ih = cropImg.naturalHeight || cropImg.height;
+            var maxZoom = Math.max(1, Math.min(iw, ih) / 1000);
+
             if (zoomInput) {
                 zoomInput.min = '1';
+                zoomInput.max = String(maxZoom);
                 zoomInput.value = '1';
             }
             
@@ -8893,10 +8898,15 @@ const PostCropperComponent = (function() {
                 cropState.offsetY = 0;
             }
             cropState.minZoom = 1;
-            
+
+            var iw = cropImg.naturalWidth || cropImg.width;
+            var ih = cropImg.naturalHeight || cropImg.height;
+            var maxZoom = Math.max(1, Math.min(iw, ih) / 1000);
+
             if (zoomInput) {
                 zoomInput.min = '1';
-                zoomInput.value = String(cropState.zoom);
+                zoomInput.max = String(maxZoom);
+                zoomInput.value = String(Math.min(cropState.zoom, maxZoom));
             }
             
             draw();
