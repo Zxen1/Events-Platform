@@ -7554,7 +7554,6 @@ const MemberModule = (function() {
                 // Preload first so we never show a broken-image placeholder in the header.
                 var pre = new Image();
                 pre.onload = function() {
-                    window._headerAvatarSet = true;
                     if (avatarImg) {
                         avatarImg.src = src;
                         avatarImg.classList.remove('header-access-button-avatar--hidden');
@@ -7864,7 +7863,7 @@ window.MemberModule = MemberModule;
                 var folder = settings.folder_avatars;
                 if (!folder) return; // Settings not loaded yet, will retry when settings load
                 if (!folder.endsWith('/')) folder += '/';
-                src = appendCacheBust(folder + avatarFile, getAvatarCacheBust(user.id));
+                src = folder + avatarFile;
             } else {
                 return; // App not ready, will retry when settings load
             }
@@ -7933,7 +7932,7 @@ window.MemberModule = MemberModule;
         function setupSettingsListener() {
             if (window.App && typeof App.on === 'function') {
                 App.on('state:settings', function() {
-                    if (!avatarUpdated && !window._headerAvatarSet) {
+                    if (!avatarUpdated) {
                         updateHeaderAvatarEarly();
                     }
                 });
@@ -7950,7 +7949,7 @@ window.MemberModule = MemberModule;
                 if (setupSettingsListener() || retries >= 10) {
                     clearInterval(retryInterval);
                     // Final attempt to update avatar in case settings loaded during retries
-                    if (!avatarUpdated && !window._headerAvatarSet) {
+                    if (!avatarUpdated) {
                         updateHeaderAvatarEarly();
                     }
                 }
