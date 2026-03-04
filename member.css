@@ -1292,6 +1292,19 @@
   flex-shrink: 0;
 }
 
+/* Restore Account button */
+.member-profile-more-restore {
+  color: #4ade80;
+}
+
+.member-profile-more-restore:hover {
+  background: #14532d;
+}
+
+.member-profile-more-restore svg {
+  flex-shrink: 0;
+}
+
 /* ============================================================================
    AVATAR PICKER / UPLOAD
    ============================================================================ */

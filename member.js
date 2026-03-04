@@ -146,6 +146,7 @@ const MemberModule = (function() {
     var profileMoreMenu = null;
     var profileHideSwitch = null;
     var profileDeleteBtn = null;
+    var profileRestoreBtn = null;
     var refreshPreferencesBtn = null;
     var refreshTooltipText = null;
     var profileOriginalAvatarUrl = '';
@@ -530,6 +531,7 @@ const MemberModule = (function() {
         profileMoreMenu = document.getElementById('member-profile-more-menu');
         profileHideSwitch = document.getElementById('member-profile-hide-switch');
         profileDeleteBtn = document.getElementById('member-profile-delete-btn');
+        profileRestoreBtn = document.getElementById('member-profile-restore-btn');
 
         // Avatar UI
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
@@ -873,6 +875,15 @@ const MemberModule = (function() {
                 e.stopPropagation();
                 closeAllProfileMenus();
                 confirmDeleteAccount();
+            });
+        }
+
+        // Restore Account button
+        if (profileRestoreBtn) {
+            profileRestoreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeAllProfileMenus();
+                performRestoreAccount();
             });
         }
 
@@ -2330,11 +2341,12 @@ const MemberModule = (function() {
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.success) {
-                // Show scheduled deletion message (soft delete with 30-day grace period)
+                currentUser.deleted_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                updateDepartingState();
                 getMessage('msg_account_scheduled_delete', {}, false).then(function(msg) {
-                    if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
+                    if (msg && window.ToastComponent) ToastComponent.showSuccess(msg, 5000);
                 });
-                handleLogout();
+                openDepartingModal();
             } else {
                 getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
                     if (msg && window.ToastComponent) ToastComponent.showError(msg);
@@ -2347,6 +2359,57 @@ const MemberModule = (function() {
                 if (msg && window.ToastComponent) ToastComponent.showError(msg);
             });
         });
+    }
+
+    function performRestoreAccount() {
+        if (!currentUser || !currentUser.id || !currentUser.account_email) return;
+
+        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+            getMessage('msg_member_confirm_restore_account', {}, false).then(function(msg) {
+                if (!msg) return;
+                ConfirmDialogComponent.show({
+                    titleText: 'Restore Account',
+                    messageText: msg,
+                    confirmLabel: 'Restore',
+                    cancelLabel: 'Cancel',
+                    confirmClass: 'success',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (!confirmed) return;
+                    fetch('/gateway.php?action=delete-member', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: currentUser.id,
+                            'account-email': currentUser.account_email,
+                            member_role: (currentUser.id > 0 && currentUser.id < 100) ? 'admin' : 'member',
+                            action: 'restore'
+                        })
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            currentUser.deleted_at = null;
+                            updateDepartingState();
+                            closeDepartingModal();
+                            getMessage('msg_account_reactivated', {}, false).then(function(msg) {
+                                if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
+                            });
+                        } else {
+                            getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                                if (msg && window.ToastComponent) ToastComponent.showError(msg);
+                            });
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('[Member] Failed to restore account:', err);
+                        getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                            if (msg && window.ToastComponent) ToastComponent.showError(msg);
+                        });
+                    });
+                });
+            });
+        }
     }
 
     function requestTabSwitch(tabName) {
@@ -5537,6 +5600,8 @@ const MemberModule = (function() {
         var departing = !!(currentUser && currentUser.deleted_at);
         createTabBtn.disabled = departing;
         createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
+        if (profileDeleteBtn)  profileDeleteBtn.hidden  = departing;
+        if (profileRestoreBtn) profileRestoreBtn.hidden = !departing;
     }
 
     // Ensure field has safe defaults

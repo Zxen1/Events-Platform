@@ -37,10 +37,38 @@ $input = json_decode(file_get_contents('php://input'), true);
 $id = isset($input['id']) ? intval($input['id']) : 0;
 $accountEmail = isset($input['account-email']) ? trim($input['account-email']) : '';
 $memberRole = isset($input['member_role']) ? trim($input['member_role']) : '';
+$action = isset($input['action']) ? trim($input['action']) : 'delete';
 if ($memberRole === '') fail(400, 'Missing member_role');
 
 if ($id <= 0 || $accountEmail === '') {
   fail(400, 'Missing id/account-email');
+}
+
+$memberTable = ($memberRole === 'admin') ? 'admins' : 'members';
+
+// ============================================================================
+// MODE: RESTORE (cancel a scheduled account deletion)
+// ============================================================================
+if ($action === 'restore') {
+  $check = $mysqli->prepare("SELECT id FROM `{$memberTable}` WHERE id = ? AND deleted_at IS NOT NULL LIMIT 1");
+  if (!$check) fail(500, 'Prepare failed');
+  $check->bind_param('i', $id);
+  $check->execute();
+  $check->store_result();
+  if ($check->num_rows === 0) { $check->close(); fail(404, 'Account not found or not scheduled for deletion'); }
+  $check->close();
+
+  $update = $mysqli->prepare("UPDATE `{$memberTable}` SET deleted_at = NULL WHERE id = ?");
+  if (!$update) fail(500, 'Prepare failed');
+  $update->bind_param('i', $id);
+  $update->execute();
+  $affected = $update->affected_rows;
+  $update->close();
+
+  if ($affected <= 0) fail(500, 'Restore failed');
+
+  echo json_encode(['success' => true, 'message' => 'Account restored']);
+  exit;
 }
 
 // Verify email matches id before proceeding
