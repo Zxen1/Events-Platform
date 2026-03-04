@@ -7860,6 +7860,8 @@ window.MemberModule = MemberModule;
             if (!window.App || typeof App.getImageUrl !== 'function') return; // App not ready, will retry when settings load
             var src = MemberModule.getAvatarSource(user);
             if (!src) return; // Folder not configured yet, will retry when settings load
+            // If the URL has no host/path (bare filename), the folder setting isn't loaded yet — bail and let state:settings retry handle it
+            if (src.indexOf('http://') !== 0 && src.indexOf('https://') !== 0 && src.indexOf('/') !== 0 && src.indexOf('data:') !== 0) return;
             
             avatarUpdated = true;
             
