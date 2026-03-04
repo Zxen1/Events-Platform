@@ -293,8 +293,8 @@ function send_post_live_email(mysqli $mysqli, int $member_id, string $member_rol
   // Fetch transaction details for receipt
   $txDesc = ''; $txAmount = 0.0; $txCurrency = 'USD'; $txId = 0; $txGateway = ''; $txMethod = ''; $txCreatedAt = '';
   if ($transaction_id !== null && $transaction_id > 0) {
-    $txStmt = $mysqli->prepare('SELECT description, amount, currency, id, payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
-    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['amount']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
+    $txStmt = $mysqli->prepare('SELECT description, total, currency, id, payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
+    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['total']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
   }
   $amountHtml = $txId > 0 ? format_email_amount($mysqli, $txAmount, $txCurrency) : '';
   $paymentVia = '';
@@ -1603,6 +1603,22 @@ if ($freeCoupon && $couponId > 0) {
         $cpUseStmt->bind_param('i', $couponId);
         $cpUseStmt->execute();
         $cpUseStmt->close();
+    }
+
+    // Insert transaction record (zero-dollar coupon new post)
+    $newCurrency  = isset($data['currency']) ? strtoupper(trim((string)$data['currency'])) : 'USD';
+    $newQuote     = round((float)($data['quote']    ?? 0), 2);
+    $newDiscount  = round((float)($data['discount'] ?? 0), 2);
+    $newDesc      = 'New post';
+    $newTxStmt = $mysqli->prepare(
+        "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
+         VALUES (?, ?, 'new_post', ?, ?, NULL, 'coupon', 'coupon', ?, ?, ?, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
+    );
+    if ($newTxStmt) {
+        $newTxStmt->bind_param('iissddiss', $memberId, $insertId, $memberRole, $checkoutKey, $newQuote, $newDiscount, $couponId, $newCurrency, $newDesc);
+        $newTxStmt->execute();
+        $transactionId = (int)$newTxStmt->insert_id;
+        $newTxStmt->close();
     }
 }
 

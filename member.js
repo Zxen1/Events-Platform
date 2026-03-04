@@ -3859,14 +3859,16 @@ const MemberModule = (function() {
             }
         }
 
+        var isFreeViaCoupon = price !== null && price <= 0 && appliedCoupon;
+
         var suffix = '';
-        if (price !== null) {
+        if (price !== null && !isFreeViaCoupon) {
             suffix = ' ' + CurrencyComponent.formatWithSymbol(price.toFixed(2), currencyCode, { trimZeroDecimals: false });
         }
 
         var textEl = submitBtn.querySelector('.component-paymentsubmit-button-text');
         if (textEl) {
-            textEl.textContent = baseLabel + suffix;
+            textEl.textContent = isFreeViaCoupon ? 'Submit Free' : (baseLabel + suffix);
         }
     }
     
