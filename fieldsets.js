@@ -3448,13 +3448,18 @@ const FieldsetBuilder = (function(){
                     
                     // Get promo settings
                     var pType = ipPromoTypePercent.classList.contains('fieldset-itempricing-promo-type-btn--active') ? 'percent' : 'fixed';
-                    var pValue = parseFloat(ipPromoValueInput.value) || 0;
+                    var curr = ipSelectedCurrency || null;
+                    var pValue = (pType === 'fixed' && curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                        ? CurrencyComponent.parseInput(ipPromoValueInput.value, curr)
+                        : parseFloat(String(ipPromoValueInput.value).replace(',', '.')) || 0;
                     
                     // Calculate and show discounted price
                     ipOriginalPriceValue = itemPriceInput.value;
                     
                     if (ipOriginalPriceValue && pValue > 0) {
-                        var numericPrice = parseFloat(ipOriginalPriceValue.replace(/[^0-9.-]/g, ''));
+                        var numericPrice = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                            ? CurrencyComponent.parseInput(ipOriginalPriceValue, curr)
+                            : parseFloat(ipOriginalPriceValue.replace(/[^0-9.-]/g, ''));
                         if (Number.isFinite(numericPrice)) {
                             var discounted;
                             if (pType === 'percent') {
@@ -3463,7 +3468,10 @@ const FieldsetBuilder = (function(){
                                 discounted = numericPrice - pValue;
                             }
                             discounted = Math.max(0, Math.round(discounted * 100) / 100);
-                            itemPriceInput.value = discounted.toFixed(2);
+                            var displayVal = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol)
+                                ? CurrencyComponent.formatWithSymbol(discounted.toString(), curr, { trimZeroDecimals: false })
+                                : discounted.toFixed(2);
+                            itemPriceInput.value = displayVal;
                         }
                     }
                 }
@@ -4702,7 +4710,9 @@ const FieldsetBuilder = (function(){
                                     var numericPrice = typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput && curr
                                         ? CurrencyComponent.parseInput(priceRaw, curr)
                                         : parseFloat(priceRaw.replace(/[^0-9.-]/g, ''));
-                                    var numericPromoValue = parseFloat(promoValue);
+                                    var numericPromoValue = (promoType === 'fixed' && curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                                        ? CurrencyComponent.parseInput(promoValue, curr)
+                                        : parseFloat(String(promoValue).replace(',', '.'));
                                     if (Number.isFinite(numericPrice) && Number.isFinite(numericPromoValue)) {
                                         var calculatedPrice;
                                         if (promoType === 'percent') {
@@ -5183,7 +5193,12 @@ const FieldsetBuilder = (function(){
                         
                         // Get promo settings
                         var pType = promoTypePercent.classList.contains('fieldset-ticketpricing-promo-type-btn--active') ? 'percent' : 'fixed';
-                        var pValue = parseFloat(promoValueInput.value) || 0;
+                        var currencyInput = editorEl.querySelector('.component-currencyfull-menu-button-input');
+                        var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                        if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                        var pValue = (pType === 'fixed' && curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                            ? CurrencyComponent.parseInput(promoValueInput.value, curr)
+                            : parseFloat(String(promoValueInput.value).replace(',', '.')) || 0;
                         
                         // Calculate and show discounted prices
                         originalPriceValues = [];
@@ -5193,7 +5208,9 @@ const FieldsetBuilder = (function(){
                             originalPriceValues.push({ el: inp, val: originalVal });
                             
                             if (originalVal && pValue > 0) {
-                                var numericPrice = parseFloat(originalVal.replace(/[^0-9.-]/g, ''));
+                                var numericPrice = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                                    ? CurrencyComponent.parseInput(originalVal, curr)
+                                    : parseFloat(originalVal.replace(/[^0-9.-]/g, ''));
                                 if (Number.isFinite(numericPrice)) {
                                     var discounted;
                                     if (pType === 'percent') {
@@ -5202,7 +5219,9 @@ const FieldsetBuilder = (function(){
                                         discounted = numericPrice - pValue;
                                     }
                                     discounted = Math.max(0, Math.round(discounted * 100) / 100);
-                                    inp.value = discounted.toFixed(2);
+                                    inp.value = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol)
+                                        ? CurrencyComponent.formatWithSymbol(discounted.toString(), curr, { trimZeroDecimals: false })
+                                        : discounted.toFixed(2);
                                 }
                             }
                         });
