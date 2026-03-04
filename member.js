@@ -5603,8 +5603,8 @@ const MemberModule = (function() {
             createTabBtn.disabled = departing;
             createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
         }
-        if (profileDeleteBtn)  profileDeleteBtn.hidden  = departing;
-        if (profileRestoreBtn) profileRestoreBtn.hidden = !departing;
+        if (profileDeleteBtn)  profileDeleteBtn.style.display  = departing ? 'none' : '';
+        if (profileRestoreBtn) profileRestoreBtn.style.display = departing ? '' : 'none';
     }
 
     // Ensure field has safe defaults
