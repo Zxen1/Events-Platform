@@ -581,7 +581,8 @@
         manageBtn.textContent = 'Manage';
         manageBtn.setAttribute('aria-selected', 'false');
         if (isDeparting) {
-            manageBtn.hidden = true;
+            manageBtn.disabled = true;
+            manageBtn.classList.add('member-tab-btn--departing-disabled');
         } else {
             manageBtn.addEventListener('click', function(e) {
                 e.preventDefault();

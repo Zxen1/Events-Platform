@@ -1279,6 +1279,13 @@
 
 /* Hide Account toggle: uses component-switch with --on-default state */
 
+/* Hide Account switch — disabled state for departing members */
+.member-profile-hide-switch--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 /* Delete Account button */
 .member-profile-more-delete {
   color: #f87171;
