@@ -532,6 +532,7 @@ const MemberModule = (function() {
         profileHideSwitch = document.getElementById('member-profile-hide-switch');
         profileDeleteBtn = document.getElementById('member-profile-delete-btn');
         profileRestoreBtn = document.getElementById('member-profile-restore-btn');
+        updateDepartingState();
 
         // Avatar UI
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
