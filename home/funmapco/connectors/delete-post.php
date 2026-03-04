@@ -26,6 +26,17 @@ if ($configPath === null) {
 }
 require_once $configPath;
 
+$authCandidates = [
+  __DIR__ . '/../config/config-auth.php',
+  dirname(__DIR__) . '/config/config-auth.php',
+  dirname(__DIR__, 2) . '/config/config-auth.php',
+  dirname(__DIR__, 3) . '/../config/config-auth.php',
+  dirname(__DIR__) . '/../config/config-auth.php',
+];
+foreach ($authCandidates as $candidate) {
+  if (is_file($candidate)) { require_once $candidate; break; }
+}
+
 function fail($code, $msg) {
   http_response_code($code);
   echo json_encode(['success' => false, 'error' => $msg]);
