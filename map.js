@@ -3025,7 +3025,6 @@ const MapModule = (function() {
    * Update map style (standard or standard-satellite)
    */
   function setMapStyle(style) {
-    console.log('[Map] setMapStyle called with:', style);
     if (!map) {
       console.warn('[Map] setMapStyle: Map not initialized');
       return;
@@ -3033,8 +3032,6 @@ const MapModule = (function() {
     var styleUrl = style === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
-    console.log('[Map] Setting style to:', styleUrl, 'currentStyleUrl:', currentStyleUrl);
-
     // If the requested style is already active, do nothing (prevents flicker).
     if (currentStyleUrl === styleUrl) {
       logDebug('[Map] setMapStyle: style already active, skipping reload');
@@ -3071,29 +3068,21 @@ const MapModule = (function() {
       
       // Register style.load handler BEFORE calling setStyle
       map.once('style.load', function() {
-        console.log('[Map] STYLE.LOAD EVENT FIRED - token:', token, 'styleChangeToken:', styleChangeToken);
         if (token !== styleChangeToken) {
-          console.log('[Map] Token mismatch, aborting');
           return;
         }
-        console.log('[Map] Re-applying lighting:', currentLighting);
         applyLightingDirect(currentLighting);
         
         // Style change removes all images/sources/layers - must reload clusters
         // Also reset cluster cache keys so updateClusterData will fetch fresh data
-        console.log('[Map] Resetting cluster state and reloading icons...');
         clusterIconsLoaded = false;
         lastClusterBucketKey = null;
         lastClusterRequestKey = null;
         loadClusterIcons().then(function() {
-          console.log('[Map] loadClusterIcons resolved, clusterIconsLoaded =', clusterIconsLoaded);
           if (token !== styleChangeToken) {
-            console.log('[Map] Token mismatch after icon load, aborting');
             return;
           }
-          console.log('[Map] Calling setupClusterLayers...');
           setupClusterLayers();
-          console.log('[Map] Cluster layers re-added after style change');
         }).catch(function(err) {
           console.error('[Map] loadClusterIcons failed:', err);
         });
