@@ -3425,8 +3425,10 @@ const MemberModule = (function() {
                 if (!textEl.dataset.originalText) textEl.dataset.originalText = textEl.textContent;
                 var parts = textEl.dataset.originalText.split(' \u2014 ');
                 var summary = parts[0] || '';
-                var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false });
-                var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false });
+                var ccData = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) ? CurrencyComponent.getCurrencyByCode(curr) : null;
+                var ccDec = (ccData && ccData.decimalSeparator) ? ccData.decimalSeparator : '.';
+                var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2).replace('.', ccDec), curr, { trimZeroDecimals: false });
+                var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2).replace('.', ccDec), curr, { trimZeroDecimals: false });
                 textEl.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
             }
         });
@@ -3455,9 +3457,11 @@ const MemberModule = (function() {
             if (!priceDisplay.dataset.originalText) priceDisplay.dataset.originalText = priceDisplay.textContent;
             var parts = priceDisplay.dataset.originalText.split(' \u2014 ');
             var summary = parts[0] || '';
-            var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2), curr, { trimZeroDecimals: false });
-            var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2), curr, { trimZeroDecimals: false });
-            priceDisplay.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
+                var evCcData = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) ? CurrencyComponent.getCurrencyByCode(curr) : null;
+                var evCcDec = (evCcData && evCcData.decimalSeparator) ? evCcData.decimalSeparator : '.';
+                var origFormatted = CurrencyComponent.formatWithSymbol(basePrice.toFixed(2).replace('.', evCcDec), curr, { trimZeroDecimals: false });
+                var newFormatted = CurrencyComponent.formatWithSymbol(discounted.toFixed(2).replace('.', evCcDec), curr, { trimZeroDecimals: false });
+                priceDisplay.innerHTML = summary + ' \u2014 <s>' + origFormatted + '</s> ' + newFormatted;
         });
     }
 
