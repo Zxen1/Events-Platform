@@ -1279,11 +1279,9 @@
 
 /* Hide Account toggle: uses component-switch with --on-default state */
 
-/* Hide Account switch — disabled state for departing members */
-.member-profile-hide-switch--disabled {
-  opacity: 0.4;
+/* Hide Account switch: children also need pointer-events blocked (label is not a button) */
+#member-profile-hide-switch.member-tab-btn--departing-disabled * {
   pointer-events: none;
-  cursor: not-allowed;
 }
 
 /* Delete Account button */

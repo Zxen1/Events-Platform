@@ -861,7 +861,7 @@ const MemberModule = (function() {
             var profileHideSlider = profileHideSwitch.querySelector('.component-switch-slider');
             profileHideSwitch.addEventListener('click', function(e) {
                 e.preventDefault();
-                if (currentUser && currentUser.deleted_at) return;
+                if (profileHideInput.disabled) return;
                 profileHideInput.checked = !profileHideInput.checked;
                 profileHideSlider.classList.toggle('component-switch-slider--on-default');
                 // Save to database
@@ -5608,8 +5608,12 @@ const MemberModule = (function() {
         if (profileHideSwitch) {
             var switchInput = profileHideSwitch.querySelector('input');
             if (switchInput) switchInput.disabled = departing;
-            profileHideSwitch.classList.toggle('member-profile-hide-switch--disabled', departing);
+            profileHideSwitch.classList.toggle('member-tab-btn--departing-disabled', departing);
         }
+        document.querySelectorAll('.posteditor-button-manage').forEach(function(btn) {
+            btn.disabled = departing;
+            btn.classList.toggle('member-tab-btn--departing-disabled', departing);
+        });
         if (profileDeleteBtn)  profileDeleteBtn.style.display  = departing ? 'none' : '';
         if (profileRestoreBtn) profileRestoreBtn.style.display = departing ? '' : 'none';
     }
