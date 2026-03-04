@@ -4864,6 +4864,13 @@
                     parentContainer.insertBefore(locationContainer, insertAfter.nextSibling);
                 }
                 insertAfter = locationContainer;
+
+                // Copy ticket URL from location 1 into new location
+                var loc1TicketInput = venue1Container.querySelector('[data-fieldset-key="ticket-url"] input.fieldset-input');
+                var newTicketInput = locationContainer.querySelector('[data-fieldset-key="ticket-url"] input.fieldset-input');
+                if (loc1TicketInput && newTicketInput && loc1TicketInput.value) {
+                    newTicketInput.value = loc1TicketInput.value;
+                }
                 
                 // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
             })(i);
