@@ -1676,6 +1676,11 @@ const AdminModule = (function() {
                 // Update baselines to saved values
                 markSaved();
                 
+                // Propagate new settings across the entire site immediately
+                if (window.App && typeof App.refreshSettings === 'function') {
+                    App.refreshSettings();
+                }
+                
                 // Show success message
                 getMessage('msg_admin_saved', {}, true).then(function(message) {
                     if (message) {

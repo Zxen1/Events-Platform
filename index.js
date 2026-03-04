@@ -1060,6 +1060,10 @@ const App = (function() {
     whenStartupSettingsReady: function() {
       return loadStartupSettings();
     },
+    refreshSettings: function() {
+      startupSettingsPromise = null;
+      return loadStartupSettings();
+    },
     
     // Event bus
     on,
