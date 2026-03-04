@@ -7554,6 +7554,7 @@ const MemberModule = (function() {
                 // Preload first so we never show a broken-image placeholder in the header.
                 var pre = new Image();
                 pre.onload = function() {
+                    avatarUpdated = true;
                     if (avatarImg) {
                         avatarImg.src = src;
                         avatarImg.classList.remove('header-access-button-avatar--hidden');
