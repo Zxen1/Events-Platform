@@ -7921,10 +7921,9 @@ window.MemberModule = MemberModule;
     function runOnDOMReady() {
         updateAdminButtonEarly();
         
-        // Set up listener for settings to load (in case avatar folder wasn't available yet)
-        function setupSettingsListener() {
-            if (window.App && typeof App.on === 'function') {
-                App.on('state:settings', function() {
+        function trySetupAvatarLoad() {
+            if (window.App && typeof App.whenStartupSettingsReady === 'function') {
+                App.whenStartupSettingsReady().then(function() {
                     if (!avatarUpdated) {
                         updateHeaderAvatarEarly();
                     }
@@ -7934,17 +7933,12 @@ window.MemberModule = MemberModule;
             return false;
         }
         
-        // Try to set up listener immediately, or retry a few times
-        if (!setupSettingsListener()) {
+        if (!trySetupAvatarLoad()) {
             var retries = 0;
             var retryInterval = setInterval(function() {
                 retries++;
-                if (setupSettingsListener() || retries >= 10) {
+                if (trySetupAvatarLoad() || retries >= 10) {
                     clearInterval(retryInterval);
-                    // Final attempt to update avatar in case settings loaded during retries
-                    if (!avatarUpdated) {
-                        updateHeaderAvatarEarly();
-                    }
                 }
             }, 50);
         }
