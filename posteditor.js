@@ -528,9 +528,14 @@
             if (!post) return;
 
             var oldCard = postContainer.querySelector('.post-card');
-            if (!oldCard) return;
+            if (oldCard) {
+                oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
+            }
 
-            oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
+            var oldBar = postContainer.querySelector('.posteditor-status-bar');
+            if (oldBar) {
+                oldBar.parentNode.replaceChild(buildStatusBar(post), oldBar);
+            }
 
             if (editingPostsData[postId]) {
                 editingPostsData[postId].original = post;

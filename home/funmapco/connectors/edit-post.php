@@ -519,11 +519,11 @@ if ($manageAction !== '') {
       }
 
       // Fetch current post state for safe updates
-      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at, visibility FROM posts WHERE id = ? LIMIT 1");
       if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
       $stmtPost->bind_param('i', $postId);
       $stmtPost->execute();
-      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt, $curVisibility);
       if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
       $stmtPost->close();
 
@@ -556,8 +556,10 @@ if ($manageAction !== '') {
       // Only update loc_paid if new locations were added (loc_qty > current loc_paid)
       $newLocPaid = max((int)$curLocPaid, $newLocQty);
 
+      $newVisibility = ($curVisibility === 'expired') ? 'active' : $curVisibility;
+      $visibilityClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
       $stmtUpdate = $mysqli->prepare(
-        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?" . $visibilityClause . ", updated_at = NOW() WHERE id = ?"
       );
       if (!$stmtUpdate) { $mysqli->rollback(); fail_key(500, 'msg_post_edit_error'); }
       $stmtUpdate->bind_param('siisi', $checkoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
@@ -578,6 +580,7 @@ if ($manageAction !== '') {
         'days_purchased' => $newDaysPurchased,
         'loc_paid'       => $newLocPaid,
         'expires_at'     => $newExpiresAt,
+        'visibility'     => $newVisibility,
         'amount'         => $amount
       ]);
       exit;
@@ -593,11 +596,11 @@ if ($manageAction !== '') {
       if ($addDays < 0) $addDays = 0;
       if ($newLocQty < 1) $newLocQty = 1;
 
-      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at, visibility FROM posts WHERE id = ? LIMIT 1");
       if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
       $stmtPost->bind_param('i', $postId);
       $stmtPost->execute();
-      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt, $curVisibility);
       if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
       $stmtPost->close();
 
@@ -623,8 +626,10 @@ if ($manageAction !== '') {
 
       $newLocPaid = max((int)$curLocPaid, $newLocQty);
 
+      $newVisibility = ($curVisibility === 'expired') ? 'active' : $curVisibility;
+      $visibilityClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
       $stmtUpdate = $mysqli->prepare(
-        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?" . $visibilityClause . ", updated_at = NOW() WHERE id = ?"
       );
       if (!$stmtUpdate) fail_key(500, 'msg_post_edit_error');
       $stmtUpdate->bind_param('siisi', $finalCheckoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
@@ -637,7 +642,8 @@ if ($manageAction !== '') {
         'checkout_key'   => $finalCheckoutKey,
         'days_purchased' => $newDaysPurchased,
         'loc_paid'       => $newLocPaid,
-        'expires_at'     => $newExpiresAt
+        'expires_at'     => $newExpiresAt,
+        'visibility'     => $newVisibility
       ]);
       exit;
 
@@ -692,11 +698,11 @@ if ($manageAction !== '') {
       if ($addDays < 0) $addDays = 0;
       if ($newLocQty < 1) $newLocQty = 1;
 
-      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at FROM posts WHERE id = ? LIMIT 1");
+      $stmtPost = $mysqli->prepare("SELECT checkout_key, days_purchased, loc_paid, expires_at, visibility FROM posts WHERE id = ? LIMIT 1");
       if (!$stmtPost) fail_key(500, 'msg_post_edit_error');
       $stmtPost->bind_param('i', $postId);
       $stmtPost->execute();
-      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt);
+      $stmtPost->bind_result($curCheckoutKey, $curDaysPurchased, $curLocPaid, $curExpiresAt, $curVisibility);
       if (!$stmtPost->fetch()) { $stmtPost->close(); fail_key(404, 'msg_post_edit_not_found'); }
       $stmtPost->close();
 
@@ -722,8 +728,10 @@ if ($manageAction !== '') {
 
       $newLocPaid = max((int)$curLocPaid, $newLocQty);
 
+      $newVisibility = ($curVisibility === 'expired') ? 'active' : $curVisibility;
+      $visibilityClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
       $stmtUpdate = $mysqli->prepare(
-        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?, updated_at = NOW() WHERE id = ?"
+        "UPDATE posts SET checkout_key = ?, days_purchased = ?, loc_paid = ?, expires_at = ?" . $visibilityClause . ", updated_at = NOW() WHERE id = ?"
       );
       if (!$stmtUpdate) fail_key(500, 'msg_post_edit_error');
       $stmtUpdate->bind_param('siisi', $finalCheckoutKey, $newDaysPurchased, $newLocPaid, $newExpiresAt, $postId);
@@ -744,7 +752,8 @@ if ($manageAction !== '') {
         'checkout_key'   => $finalCheckoutKey,
         'days_purchased' => $newDaysPurchased,
         'loc_paid'       => $newLocPaid,
-        'expires_at'     => $newExpiresAt
+        'expires_at'     => $newExpiresAt,
+        'visibility'     => $newVisibility
       ]);
       exit;
 
