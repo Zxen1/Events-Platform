@@ -1490,7 +1490,10 @@
         reachInputWrapper.appendChild(reachPrefix);
         reachInputWrapper.appendChild(reachValue);
         reachInputWrapper.appendChild(reachSuffix);
+        var reachFraction = document.createElement('span');
+        reachFraction.className = 'posteditor-manage-reach-fraction';
         reachRow.appendChild(reachInputWrapper);
+        reachRow.appendChild(reachFraction);
         reachGroup.appendChild(reachRow);
         pricingContainer.appendChild(reachGroup);
 
@@ -1608,6 +1611,12 @@
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
             reachValue.textContent = String(newLocs);
+            reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid;
+            if (pricingLocUsed > pricingLocPaid) {
+                reachFraction.classList.add('posteditor-manage-reach-fraction--over');
+            } else {
+                reachFraction.classList.remove('posteditor-manage-reach-fraction--over');
+            }
             var hasSurcharge = surchargePercent !== 0;
             var firstLocRate = thresholdUnlocked ? 'discount' : 'basic';
 

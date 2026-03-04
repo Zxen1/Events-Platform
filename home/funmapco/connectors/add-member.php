@@ -352,10 +352,10 @@ send_welcome_email($mysqli, $email, $username, $id, 'member', $username);
 
 if ($txId > 0) {
   $txRow = null;
-  $txSel = $mysqli->prepare('SELECT transaction_type, description, amount, currency FROM transactions WHERE id = ? LIMIT 1');
+  $txSel = $mysqli->prepare('SELECT transaction_type, description, total, currency FROM transactions WHERE id = ? LIMIT 1');
   if ($txSel) { $txSel->bind_param('i', $txId); $txSel->execute(); $txRow = $txSel->get_result()->fetch_assoc(); $txSel->close(); }
   if ($txRow && $txRow['transaction_type'] === 'donation') {
-    send_payment_receipt_email($mysqli, $email, $username, $id, 'member', $username, $txRow['description'], (float)$txRow['amount'], $txRow['currency'], $txId);
+    send_payment_receipt_email($mysqli, $email, $username, $id, 'member', $username, $txRow['description'], (float)$txRow['total'], $txRow['currency'], $txId);
   }
 }
 

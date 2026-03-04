@@ -369,8 +369,8 @@ function send_post_updated_email(mysqli $mysqli, int $member_id, string $member_
   // Fetch transaction details for receipt
   $txDesc = ''; $txAmount = 0.0; $txCurrency = 'USD'; $txId = 0; $txGateway = ''; $txMethod = ''; $txCreatedAt = '';
   if ($transaction_id !== null && $transaction_id > 0) {
-    $txStmt = $mysqli->prepare('SELECT description, amount, currency, id, payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
-    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['amount']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
+    $txStmt = $mysqli->prepare('SELECT description, total, currency, id, payment_gateway, payment_method, created_at FROM transactions WHERE id = ? LIMIT 1');
+    if ($txStmt) { $txStmt->bind_param('i', $transaction_id); $txStmt->execute(); $txRow = $txStmt->get_result()->fetch_assoc(); $txStmt->close(); if ($txRow) { $txDesc = $txRow['description']; $txAmount = (float)$txRow['total']; $txCurrency = $txRow['currency']; $txId = (int)$txRow['id']; $txGateway = $txRow['payment_gateway'] ?? ''; $txMethod = $txRow['payment_method'] ?? ''; $txCreatedAt = $txRow['created_at'] ?? ''; } }
   }
   $amountHtml = $txId > 0 ? format_email_amount($mysqli, $txAmount, $txCurrency) : '';
   $paymentVia = '';
