@@ -49,6 +49,7 @@ $keyOrder = [
   'msg_email_post_deletion_warning',
   'msg_email_post_deleted',
   'msg_email_account_deletion_requested',
+  'msg_email_account_restored',
   'msg_email_account_deletion_warning',
   'msg_email_account_deleted',
   'msg_email_expiry_warning',
