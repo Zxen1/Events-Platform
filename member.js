@@ -6861,6 +6861,8 @@ const MemberModule = (function() {
             
             var displayName = currentUser.name || currentUser.account_email || currentUser.username;
             
+            updateDepartingState();
+
             // Show departing modal if account is in grace period, otherwise normal login toast
             if (result.departing === true) {
                 openDepartingModal();
