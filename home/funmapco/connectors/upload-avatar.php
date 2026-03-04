@@ -33,6 +33,20 @@ if ($configPath === null) {
 
 require_once $configPath;
 
+$authCandidates = [
+  __DIR__ . '/../config/config-auth.php',
+  dirname(__DIR__) . '/config/config-auth.php',
+  dirname(__DIR__, 2) . '/config/config-auth.php',
+  dirname(__DIR__, 3) . '/../config/config-auth.php',
+  dirname(__DIR__) . '/../config/config-auth.php',
+  __DIR__ . '/config-auth.php',
+];
+$authPath = null;
+foreach ($authCandidates as $c) {
+  if (is_file($c)) { $authPath = $c; break; }
+}
+if ($authPath) require_once $authPath;
+
 function fail($code, $msg){http_response_code($code);echo json_encode(['success'=>false,'error'=>$msg]);exit;}
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}
 
@@ -48,6 +62,7 @@ $result = $stmt->get_result();
 $avatarFolder = 'https://cdn.funmap.com/avatars/';
 $storageApiKey = '';
 $storageZoneName = '';
+$bunnyApiKey = isset($BUNNY_API_KEY) ? $BUNNY_API_KEY : '';
 $avatarMinWidth = 800;
 $avatarMinHeight = 800;
 $avatarMaxSize = 5242880; // 5MB default
@@ -147,6 +162,16 @@ if ($isExternal) {
   }
   
   $avatarUrl = rtrim($avatarFolder, '/') . '/' . $finalFilename;
+
+  // Purge CDN cache for this file so the new bytes are served immediately
+  if ($bunnyApiKey) {
+    $purgeUrl = 'https://api.bunny.net/purge?url=' . urlencode($avatarUrl) . '&async=true';
+    $ch2 = curl_init($purgeUrl);
+    curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch2, CURLOPT_HTTPHEADER, ['AccessKey: ' . $bunnyApiKey]);
+    curl_exec($ch2);
+    curl_close($ch2);
+  }
 } else {
   // Local storage
   $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim(rtrim($avatarFolder, '/'), '/');
