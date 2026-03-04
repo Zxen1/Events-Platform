@@ -7855,12 +7855,21 @@ window.MemberModule = MemberModule;
             var avatarFile = user.avatar ? String(user.avatar).trim() : '';
             if (!avatarFile) return; // No avatar, keep showing icon
 
-            // Resolve avatar URL — use resolveAvatarSrc so the cache bust is applied and the
-            // correct folder (avatars vs siteAvatars) is used, matching updateHeaderAvatar.
-            var isAbsolute = avatarFile.indexOf('http://') === 0 || avatarFile.indexOf('https://') === 0 || avatarFile.indexOf('data:') === 0 || avatarFile.indexOf('/') === 0;
-            if (!isAbsolute && (!window.App || typeof App.getImageUrl !== 'function')) return; // App not ready, will retry when settings load
-            var src = resolveAvatarSrc(avatarFile);
-            if (!src) return;
+            // Resolve avatar URL — same folder logic as before, but with cache bust appended
+            // so the browser does not serve a stale cached image after an avatar upload.
+            var src = '';
+            if (avatarFile.indexOf('http://') === 0 || avatarFile.indexOf('https://') === 0 || avatarFile.indexOf('data:') === 0) {
+                src = avatarFile;
+            } else if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                var folder = settings.folder_avatars;
+                if (!folder) return; // Settings not loaded yet, will retry when settings load
+                if (!folder.endsWith('/')) folder += '/';
+                var bust = currentUser && currentUser.id ? getAvatarCacheBust(currentUser.id) : '';
+                src = appendCacheBust(folder + avatarFile, bust);
+            } else {
+                return; // App not ready, will retry when settings load
+            }
             
             avatarUpdated = true;
             
