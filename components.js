@@ -2458,13 +2458,13 @@ const MemberAuthFieldsetsComponent = (function(){
         
         // For avatar fieldset, append dynamic requirements from admin_settings
         if (fieldsetKey === 'avatar') {
-            var avatarMinWidth = 1000;
-            var avatarMinHeight = 1000;
+            var avatarMinWidth = 0;
+            var avatarMinHeight = 0;
             var avatarMaxSize = 5242880;
             try {
                 if (window.adminSettings) {
-                    if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10) || 1000;
-                    if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10) || 1000;
+                    if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10);
+                    if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10);
                     if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
                 }
             } catch (e) {}
@@ -8300,13 +8300,13 @@ const AvatarPickerComponent = (function() {
         }
 
         // Avatar validation settings (from admin_settings 403-405)
-        var avatarMinWidth = 1000;
-        var avatarMinHeight = 1000;
+        var avatarMinWidth = 0;
+        var avatarMinHeight = 0;
         var avatarMaxSize = 5242880; // 5MB
         try {
             if (window.adminSettings) {
-                if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10) || 1000;
-                if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10) || 1000;
+                if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10);
+                if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10);
                 if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
             }
         } catch (e) {}

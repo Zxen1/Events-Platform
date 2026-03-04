@@ -1999,13 +1999,13 @@ const FieldsetBuilder = (function(){
                 }
                 
                 // Image validation settings (from admin_settings 400-402)
-                var imageMinWidth = 1000;
-                var imageMinHeight = 1000;
+                var imageMinWidth = 0;
+                var imageMinHeight = 0;
                 var imageMaxSize = 5242880; // 5MB
                 try {
                     if (window.adminSettings) {
-                        if (window.adminSettings.image_min_width) imageMinWidth = parseInt(window.adminSettings.image_min_width, 10) || 1000;
-                        if (window.adminSettings.image_min_height) imageMinHeight = parseInt(window.adminSettings.image_min_height, 10) || 1000;
+                        if (window.adminSettings.image_min_width) imageMinWidth = parseInt(window.adminSettings.image_min_width, 10);
+                        if (window.adminSettings.image_min_height) imageMinHeight = parseInt(window.adminSettings.image_min_height, 10);
                         if (window.adminSettings.image_max_size) imageMaxSize = parseInt(window.adminSettings.image_max_size, 10) || 5242880;
                     }
                 } catch (e) {}
