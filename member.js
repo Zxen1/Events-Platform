@@ -7342,7 +7342,10 @@ const MemberModule = (function() {
             // Reminder email preference (1 = on, 0 = off; default on)
             reminder_emails: (payload.reminder_emails !== undefined && payload.reminder_emails !== null)
                 ? (parseInt(payload.reminder_emails, 10) === 0 ? 0 : 1)
-                : 1
+                : 1,
+            deleted_at: (payload.deleted_at !== undefined && payload.deleted_at !== null && payload.deleted_at !== '')
+                ? payload.deleted_at
+                : null
         };
     }
 
