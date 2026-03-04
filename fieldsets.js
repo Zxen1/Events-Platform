@@ -1188,16 +1188,6 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(titleValidation.charCount);
                 break;
             
-            case 'coupon':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
-                var couponInput = document.createElement('input');
-                couponInput.type = 'text';
-                couponInput.className = 'fieldset-input input-class-1';
-                applyPlaceholder(couponInput, placeholder);
-                var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
-                fieldset.appendChild(couponInput);
-                fieldset.appendChild(couponValidation.charCount);
-                break;
                 
             case 'description':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
@@ -7240,7 +7230,6 @@ const FieldsetBuilder = (function(){
 
             switch (key) {
                 case 'title':
-                case 'coupon':
                 case 'custom-text':
                 case 'username':
                 case 'password':
