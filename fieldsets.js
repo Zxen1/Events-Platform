@@ -1412,6 +1412,7 @@ const FieldsetBuilder = (function(){
                     if (val && typeof val === 'string') {
                         radioGroup.dataset.value = val;
                         crSyncUi();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                     }
                 };
                 break;
@@ -1540,6 +1541,7 @@ const FieldsetBuilder = (function(){
                     if (Array.isArray(val)) {
                         ccSetSelected(val);
                         ccSyncUi();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e3) {}
                     }
                 };
                 break;
