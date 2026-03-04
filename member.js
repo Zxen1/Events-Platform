@@ -7918,8 +7918,18 @@ window.MemberModule = MemberModule;
     }
     
     // Run immediately on DOMContentLoaded
+    function hideMemberIconIfLoggedIn() {
+        var user = getStoredUser();
+        if (!user || !user.avatar) return;
+        var memberBtn = document.querySelector('.header-access-member');
+        if (!memberBtn) return;
+        var iconSpan = memberBtn.querySelector('.header-access-button-icon--member');
+        if (iconSpan) iconSpan.classList.add('header-access-button-icon--hidden');
+    }
+
     function runOnDOMReady() {
         updateAdminButtonEarly();
+        hideMemberIconIfLoggedIn();
         
         function trySetupAvatarLoad() {
             if (window.App && typeof App.whenStartupSettingsReady === 'function') {
