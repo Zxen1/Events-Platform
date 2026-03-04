@@ -5535,9 +5535,11 @@ const MemberModule = (function() {
     // No close button, no background dismiss — Acknowledge button only.
 
     function openDepartingModal() {
-        if (!departingModalContainer) {
-            createDepartingModal();
+        if (departingModalContainer) {
+            departingModalContainer.remove();
+            departingModalContainer = null;
         }
+        createDepartingModal();
         departingModalContainer.classList.remove('departing-modal-container--hidden');
     }
 
