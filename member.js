@@ -1672,15 +1672,18 @@ const MemberModule = (function() {
             var img = new Image();
             img.onload = function() {
                 try { URL.revokeObjectURL(url); } catch (e) {}
+                var iw = img.naturalWidth || img.width;
+                var ih = img.naturalHeight || img.height;
+                var _s = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+                var targetSide = (_s && _s.avatar_min_width) ? parseInt(_s.avatar_min_width, 10) : null;
+                var side = targetSide ? Math.min(Math.min(iw, ih), targetSide) : Math.min(iw, ih);
                 var canvas = document.createElement('canvas');
-                canvas.width = 530;
-                canvas.height = 530;
+                canvas.width = side;
+                canvas.height = side;
                 var ctx = canvas.getContext('2d');
                 if (!ctx) return cb(null);
 
                 var cw = canvas.width, ch = canvas.height;
-                var iw = img.naturalWidth || img.width;
-                var ih = img.naturalHeight || img.height;
                 if (!iw || !ih) return cb(null);
                 var cover = Math.max(cw / iw, ch / ih);
                 var drawW = iw * cover;

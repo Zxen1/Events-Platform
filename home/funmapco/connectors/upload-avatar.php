@@ -48,8 +48,8 @@ $result = $stmt->get_result();
 $avatarFolder = 'https://cdn.funmap.com/avatars/';
 $storageApiKey = '';
 $storageZoneName = '';
-$avatarMinWidth = 1000;
-$avatarMinHeight = 1000;
+$avatarMinWidth = 800;
+$avatarMinHeight = 800;
 $avatarMaxSize = 5242880; // 5MB default
 while($row = $result->fetch_assoc()) {
   if($row['setting_key'] === 'folder_avatars') {
@@ -60,9 +60,9 @@ while($row = $result->fetch_assoc()) {
   } elseif($row['setting_key'] === 'storage_zone_name') {
     $storageZoneName = trim($row['setting_value']);
   } elseif($row['setting_key'] === 'avatar_min_width') {
-    $avatarMinWidth = (int)$row['setting_value'] ?: 1000;
+    $avatarMinWidth = (int)$row['setting_value'] ?: 800;
   } elseif($row['setting_key'] === 'avatar_min_height') {
-    $avatarMinHeight = (int)$row['setting_value'] ?: 1000;
+    $avatarMinHeight = (int)$row['setting_value'] ?: 800;
   } elseif($row['setting_key'] === 'avatar_max_size') {
     $avatarMaxSize = (int)$row['setting_value'] ?: 5242880;
   }

@@ -8082,9 +8082,9 @@ const AvatarCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var minPx = 800;
-            try { var _as2 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null; if (_as2 && _as2.avatar_min_width) minPx = parseInt(_as2.avatar_min_width, 10) || 800; } catch (e) {}
-            var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
+            var _as2 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+            var minPx = (_as2 && _as2.avatar_min_width) ? parseInt(_as2.avatar_min_width, 10) : null;
+            var maxZoom = minPx ? Math.max(1, Math.min(iw, ih) / minPx) : null;
 
             if (zoomInput) {
                 zoomInput.min = '1';
@@ -8905,9 +8905,9 @@ const PostCropperComponent = (function() {
 
             var iw = cropImg.naturalWidth || cropImg.width;
             var ih = cropImg.naturalHeight || cropImg.height;
-            var minPx = 800;
-            try { var _as4 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null; if (_as4 && _as4.image_min_width) minPx = parseInt(_as4.image_min_width, 10) || 800; } catch (e) {}
-            var maxZoom = Math.max(1, Math.min(iw, ih) / minPx);
+            var _as4 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+            var minPx = (_as4 && _as4.image_min_width) ? parseInt(_as4.image_min_width, 10) : null;
+            var maxZoom = minPx ? Math.max(1, Math.min(iw, ih) / minPx) : null;
 
             if (zoomInput) {
                 zoomInput.min = '1';
