@@ -72,7 +72,7 @@ if ($action === 'restore') {
 }
 
 // Verify email matches id before proceeding
-$check = $mysqli->prepare('SELECT account_email, username FROM `members` WHERE id = ?');
+$check = $mysqli->prepare("SELECT account_email, username FROM `{$memberTable}` WHERE id = ?");
 if (!$check) fail(500, 'Prepare failed');
 $check->bind_param('i', $id);
 if (!$check->execute()) { $check->close(); fail(500, 'Query failed'); }
@@ -105,7 +105,7 @@ if ($activeCount > 0) {
 }
 
 // Soft delete: set deleted_at timestamp
-$update = $mysqli->prepare('UPDATE `members` SET deleted_at = NOW() WHERE id = ?');
+$update = $mysqli->prepare("UPDATE `{$memberTable}` SET deleted_at = NOW() WHERE id = ?");
 if (!$update) fail(500, 'Prepare failed');
 $update->bind_param('i', $id);
 if (!$update->execute()) { $update->close(); fail(500, 'Update failed'); }

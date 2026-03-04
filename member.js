@@ -2396,14 +2396,14 @@ const MemberModule = (function() {
                                 if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
                             });
                         } else {
-                            getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                            getMessage('msg_account_restore_failed', {}, false).then(function(msg) {
                                 if (msg && window.ToastComponent) ToastComponent.showError(msg);
                             });
                         }
                     })
                     .catch(function(err) {
                         console.error('[Member] Failed to restore account:', err);
-                        getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                        getMessage('msg_account_restore_failed', {}, false).then(function(msg) {
                             if (msg && window.ToastComponent) ToastComponent.showError(msg);
                         });
                     });
