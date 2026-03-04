@@ -1707,6 +1707,7 @@ const MemberModule = (function() {
     }
 
     function uploadAvatarBlob(blob) {
+        console.error('[Avatar] uploadAvatarBlob called — blob size:', blob && blob.size, 'type:', blob && blob.type);
         var fd = new FormData();
         fd.append('file', blob, 'avatar.png');
         // Require final naming on server (rules file): {memberId}-avatar.{ext}
@@ -1734,6 +1735,7 @@ const MemberModule = (function() {
             }
             // Prefer filename-only storage (rules file)
             var avatarValue = (res && res.filename) ? String(res.filename) : String(res.url);
+            console.error('[Avatar] Upload success — filename:', avatarValue, 'profileOriginalAvatarUrl:', profileOriginalAvatarUrl);
             // The filename is stable (overwrite), so bump cache-bust to force the latest bytes after save/refresh.
             if (currentUser && currentUser.id) {
                 bumpAvatarCacheBust(currentUser.id);
