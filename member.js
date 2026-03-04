@@ -7839,11 +7839,11 @@ window.MemberModule = MemberModule;
     }
     
     function updateHeaderAvatarEarly() {
-        if (avatarUpdated) return;
+        if (avatarUpdated) { console.error('[AvatarEarly] blocked by avatarUpdated flag'); return; }
         
         try {
             var user = getStoredUser();
-            if (!user) return;
+            if (!user) { console.error('[AvatarEarly] no stored user'); return; }
             
             var memberBtn = document.querySelector('.header-access-member');
             if (!memberBtn) return;
@@ -7853,7 +7853,7 @@ window.MemberModule = MemberModule;
             
             // Get avatar source
             var avatarFile = user.avatar ? String(user.avatar).trim() : '';
-            if (!avatarFile) return; // No avatar, keep showing icon
+            if (!avatarFile) { console.error('[AvatarEarly] no avatar field, user:', JSON.stringify(user)); return; }
 
             // Resolve avatar URL — same folder logic as before, but with cache bust appended
             // so the browser does not serve a stale cached image after an avatar upload.
@@ -7863,11 +7863,12 @@ window.MemberModule = MemberModule;
             } else if (window.App && typeof App.getState === 'function') {
                 var settings = App.getState('settings') || {};
                 var folder = settings.folder_avatars;
-                if (!folder) return; // Settings not loaded yet, will retry when settings load
+                if (!folder) { console.error('[AvatarEarly] no folder_avatars in settings'); return; }
                 if (!folder.endsWith('/')) folder += '/';
                 var bust = currentUser && currentUser.id ? getAvatarCacheBust(currentUser.id) : '';
                 src = appendCacheBust(folder + avatarFile, bust);
             } else {
+                console.error('[AvatarEarly] App not ready');
                 return; // App not ready, will retry when settings load
             }
             
