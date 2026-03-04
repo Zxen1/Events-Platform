@@ -1612,7 +1612,7 @@ if ($freeCoupon && $couponId > 0) {
     $newDesc      = 'New post';
     $newTxStmt = $mysqli->prepare(
         "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
-         VALUES (?, ?, 'new_post', ?, ?, NULL, 'coupon', 'coupon', ?, ?, ?, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
+         VALUES (?, ?, 'new_post', ?, ?, NULL, NULL, NULL, ?, ?, ?, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
     );
     if ($newTxStmt) {
         $newTxStmt->bind_param('iissddiss', $memberId, $insertId, $memberRole, $checkoutKey, $newQuote, $newDiscount, $couponId, $newCurrency, $newDesc);
