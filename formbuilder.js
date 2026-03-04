@@ -4642,6 +4642,31 @@
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
 
+        // Sync ticket URL from location 1 to other locations (unless manually edited)
+        container.addEventListener('input', function(e) {
+            var input = e.target;
+            if (!input || !input.closest) return;
+            var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
+            if (!ticketFs) return;
+            var locContainer = input.closest('.member-location-container[data-location-number]');
+            if (!locContainer) return;
+            var locNum = parseInt(locContainer.dataset.locationNumber, 10);
+            if (locNum === 1 && e.isTrusted) {
+                // User edited location 1 — sync to all non-manually-edited locations
+                var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
+                allLocs.forEach(function(loc) {
+                    if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
+                    var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                    if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
+                        fs._setValue(input.value);
+                    }
+                });
+            } else if (locNum > 1 && e.isTrusted) {
+                // User manually edited a non-primary location — mark it independent
+                ticketFs.dataset.ticketUrlManual = 'true';
+            }
+        });
+
         // Location wallpaper: install non-invasive listeners (lat/lng change -> refresh active wallpaper)
         try {
             if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.install === 'function') {
