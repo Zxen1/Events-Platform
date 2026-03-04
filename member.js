@@ -5598,10 +5598,11 @@ const MemberModule = (function() {
     }
 
     function updateDepartingState() {
-        if (!createTabBtn) return;
         var departing = !!(currentUser && currentUser.deleted_at);
-        createTabBtn.disabled = departing;
-        createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
+        if (createTabBtn) {
+            createTabBtn.disabled = departing;
+            createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
+        }
         if (profileDeleteBtn)  profileDeleteBtn.hidden  = departing;
         if (profileRestoreBtn) profileRestoreBtn.hidden = !departing;
     }
