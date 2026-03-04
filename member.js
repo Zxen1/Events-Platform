@@ -7807,7 +7807,8 @@ const MemberModule = (function() {
         updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
         openTermsModal: openTermsModal,
         getCheckoutOptions: function() { return checkoutOptions; },
-        handleDeepLink: handleDeepLink
+        handleDeepLink: handleDeepLink,
+        getAvatarSource: getAvatarSource
     };
 
 
@@ -7857,7 +7858,7 @@ window.MemberModule = MemberModule;
 
             // Resolve avatar URL using getAvatarSource (applies correct folder and cache bust)
             if (!window.App || typeof App.getImageUrl !== 'function') return; // App not ready, will retry when settings load
-            var src = getAvatarSource(user);
+            var src = MemberModule.getAvatarSource(user);
             if (!src) return; // Folder not configured yet, will retry when settings load
             
             avatarUpdated = true;
