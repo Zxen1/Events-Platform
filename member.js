@@ -7863,7 +7863,7 @@ window.MemberModule = MemberModule;
                 var folder = settings.folder_avatars;
                 if (!folder) return; // Settings not loaded yet, will retry when settings load
                 if (!folder.endsWith('/')) folder += '/';
-                src = folder + avatarFile;
+                src = appendCacheBust(folder + avatarFile, getAvatarCacheBust(user.id));
             } else {
                 return; // App not ready, will retry when settings load
             }
