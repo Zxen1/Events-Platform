@@ -2924,7 +2924,7 @@ const PostModule = (function() {
     requestAnimationFrame(function() {
       detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
         try {
-          var strip = item.parentElement;
+          var strip = item.closest('.post-links-strip, .post-amenities-strip');
           var visibleRight = strip ? strip.getBoundingClientRect().right : detail.getBoundingClientRect().right;
           var itemRect = item.getBoundingClientRect();
           var pillWidth = item.offsetWidth || 36;
