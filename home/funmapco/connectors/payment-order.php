@@ -113,7 +113,7 @@ function format_email_amount(mysqli $mysqli, float $amount, string $currencyCode
 
     $decPlaces  = (int)$row['option_decimal_places'];
     $decSep     = $row['option_decimal_separator'] ?: '.';
-    $thousSep   = $row['option_thousands_separator'] ?: ',';
+    $thousSep   = ''; // Thousands separators intentionally disabled — they corrupt stored values on re-read.
     $symbol     = $row['option_symbol'] ?: $currencyCode;
     $position   = $row['option_symbol_position'] ?: 'left';
     $filename   = $row['option_filename'] ?: '';

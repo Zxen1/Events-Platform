@@ -1433,10 +1433,8 @@ const CurrencyComponent = (function(){
         var intPart = parts[0];
         var decPart = parts[1] || '';
         
-        // Add thousands separators
-        if (thousSep) {
-            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousSep);
-        }
+        // Thousands separators intentionally not applied — they cause parse corruption
+        // when stored values are re-read (dot-as-thousands stripped from decimal values).
         
         // Build the number string - trim .00 if whole number and requested
         var numStr;
@@ -1493,7 +1491,14 @@ const CurrencyComponent = (function(){
         
         // Remove thousands separator
         if (thousSep) {
-            val = val.split(thousSep).join('');
+            if (thousSep === '.') {
+                // Only remove dots that are true thousands separators: followed by exactly
+                // 3 digits then a separator or end of string. This preserves decimal dots
+                // in stored values like "50.00", which would otherwise be read as 5000.
+                val = val.replace(/\.(?=\d{3}(?:[.,]|$))/g, '');
+            } else {
+                val = val.split(thousSep).join('');
+            }
         }
         
         // Normalize: if user used the "wrong" separator (e.g. dot instead of comma), 
