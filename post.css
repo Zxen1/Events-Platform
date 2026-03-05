@@ -1558,7 +1558,7 @@
 
 .post-links-link:hover .post-links-icon,
 .post-links-link:focus-visible .post-links-icon {
-  background-color: var(--blue-500);
+  background-color: #fff;
 }
 
 .post-amenities-strip {
