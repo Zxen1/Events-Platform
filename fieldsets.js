@@ -775,151 +775,6 @@ const FieldsetBuilder = (function(){
         });
     }
 
-    // Money input behavior (prices): digits + one dot, max 2 decimals; format to 2 decimals on blur.
-    // Uses text input with inputMode=decimal to avoid browser 'number' quirks (e/E, locale issues).
-    // getCurrencyCode: optional function that returns the currently selected currency code
-    function attachMoneyInputBehavior(input, getCurrencyCode) {
-        if (!input) return;
-        input.type = 'text';
-        input.inputMode = 'decimal';
-        input.autocomplete = 'off';
-
-        function sanitize(raw) {
-            var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
-            
-            // If currency is selected, use currency-aware sanitization
-            if (currencyCode) {
-                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                    throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
-                }
-                return CurrencyComponent.sanitizeInput(raw, currencyCode);
-            }
-            
-            // No currency selected yet - use standard decimal format (dot separator, 2 decimals)
-            var val = (raw || '').toString();
-            val = val.trim();
-
-            // Support comma decimal when no dot is present (e.g. "14,5" -> "14.5")
-            if (val.indexOf(',') !== -1 && val.indexOf('.') === -1) {
-                val = val.replace(/,/g, '.');
-            } else {
-                val = val.replace(/,/g, '');
-            }
-
-            // Keep only digits and dot
-            val = val.replace(/[^0-9.]/g, '');
-
-            // Only one dot
-            var firstDot = val.indexOf('.');
-            if (firstDot !== -1) {
-                var before = val.slice(0, firstDot + 1);
-                var after = val.slice(firstDot + 1).replace(/\./g, '');
-                // Max 2 decimals
-                after = after.slice(0, 2);
-                val = before + after;
-            }
-
-            return val;
-        }
-
-        input.addEventListener('keydown', function(e) {
-            if (!e) return;
-            var k = e.key;
-            // Allow navigation/control keys
-            if (
-                k === 'Backspace' || k === 'Delete' || k === 'Tab' || k === 'Enter' ||
-                k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown' ||
-                k === 'Home' || k === 'End' || k === 'Escape'
-            ) {
-                return;
-            }
-            // Allow Ctrl/Cmd shortcuts
-            if (e.ctrlKey || e.metaKey) return;
-            if (typeof k !== 'string' || k.length !== 1) return;
-
-            // Allow digits and both decimal separators (dot and comma) for better UX.
-            // CurrencyComponent.sanitizeInput will normalize them to the correct one.
-            var allowedPattern = /[0-9.,]/;
-            if (!allowedPattern.test(k)) {
-                e.preventDefault();
-                return;
-            }
-
-            // Determine preferred decimal separator based on currency
-            var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
-            var decSep = '.';
-            if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
-                var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
-                if (currency && currency.decimalSeparator) {
-                    decSep = currency.decimalSeparator;
-                }
-            }
-
-            // Block second decimal separator (regardless of whether they typed . or ,)
-            if ((k === '.' || k === ',') && (this.value.indexOf('.') !== -1 || this.value.indexOf(',') !== -1)) {
-                e.preventDefault();
-                return;
-            }
-        });
-
-        input.addEventListener('input', function() {
-            var next = sanitize(this.value);
-            if (this.value !== next) {
-                this.value = next;
-            }
-            if (typeof this.setCustomValidity === 'function') {
-                this.setCustomValidity('');
-            }
-        });
-
-        input.addEventListener('focus', function() {
-            var v = String(this.value || '').trim();
-            if (v === '') return;
-            
-            var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
-            
-            // Strip symbol on focus so user can edit just the number
-            if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
-                this.value = CurrencyComponent.stripSymbol(v, currencyCode);
-            }
-        });
-        
-        input.addEventListener('blur', function() {
-            var cleaned = sanitize(this.value);
-            if (cleaned === '') {
-                this.value = '';
-                if (typeof this.setCustomValidity === 'function') {
-                    this.setCustomValidity('');
-                }
-                return;
-            }
-            
-            var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
-            
-            // If currency is selected, format WITH symbol (always show decimal places)
-            if (currencyCode) {
-                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
-                    throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
-                }
-                var formatted = CurrencyComponent.formatWithSymbol(cleaned, currencyCode, { trimZeroDecimals: false });
-                if (formatted !== '') {
-                    this.value = formatted;
-                    return;
-                }
-            }
-            
-            // No currency selected yet - use standard 2-decimal format
-            var num = parseFloat(cleaned);
-            if (!isFinite(num)) {
-                if (typeof this.setCustomValidity === 'function') {
-                    this.setCustomValidity('Please enter a valid price.');
-                    if (typeof this.reportValidity === 'function') this.reportValidity();
-                }
-                return;
-            }
-            this.value = num.toFixed(2);
-        });
-    }
     
     // Update placeholder text based on currency's format (symbol + decimal format)
     // No currency selected: shows "0.00" (valid initial state)
@@ -3049,14 +2904,12 @@ const FieldsetBuilder = (function(){
                                 var val = String(priceInput.value || '').trim();
                                 if (val) {
                                     // Parse with old currency to get numeric value
-                                    var numericValue;
-                                    if (oldCurrency && CurrencyComponent.parseInput) {
-                                        numericValue = CurrencyComponent.parseInput(val, oldCurrency);
-                                    } else {
-                                        numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                                    if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput || !CurrencyComponent.formatWithSymbol) {
+                                        throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput and formatWithSymbol are required');
                                     }
-                                    // Format with new currency (always show decimal places)
-                                    if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
+                                    if (!oldCurrency) return;
+                                    var numericValue = CurrencyComponent.parseInput(val, oldCurrency);
+                                    if (Number.isFinite(numericValue)) {
                                         priceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), value, { trimZeroDecimals: false });
                                     }
                                 }
@@ -3089,7 +2942,10 @@ const FieldsetBuilder = (function(){
                 itemPriceInput.type = 'text';
                 itemPriceInput.className = 'fieldset-input fieldset-itempricing-input-itemprice input-class-1';
                 itemPriceInput.placeholder = '0.00';
-                attachMoneyInputBehavior(itemPriceInput, ipGetSelectedCurrencyCode);
+                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.createMoneyInput) {
+                    throw new Error('[FieldsetBuilder] CurrencyComponent.createMoneyInput is required');
+                }
+                CurrencyComponent.createMoneyInput(ipGetSelectedCurrencyCode, itemPriceInput);
                 itemPriceCol.appendChild(itemPriceInput);
                 itemPriceRow.appendChild(itemPriceCol);
                 applyFieldsetRowItemClasses(itemPriceRow);
@@ -3406,11 +3262,20 @@ const FieldsetBuilder = (function(){
                 ipPromoValueInput.style.borderRadius = '5px';
                 // Only allow numbers and decimal, track completeness
                 ipPromoValueInput.addEventListener('input', function() {
-                    var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                    var parts = raw.split('.');
-                    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                    this.value = raw;
-                    ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!raw);
+                    var isFixed = ipPromoTypeFixed.classList.contains('fieldset-itempricing-promo-type-btn--active');
+                    if (isFixed) {
+                        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
+                            throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
+                        }
+                        var code = ipGetSelectedCurrencyCode();
+                        if (code) this.value = CurrencyComponent.sanitizeInput(this.value, code);
+                    } else {
+                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                        var parts = raw.split('.');
+                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                        this.value = raw;
+                    }
+                    ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!this.value);
                 });
                 // Set initial completeness state for discount
                 ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!String(ipInitialPromoValue || '').trim());
@@ -3454,9 +3319,11 @@ const FieldsetBuilder = (function(){
                     ipOriginalPriceValue = itemPriceInput.value;
                     
                     if (ipOriginalPriceValue && pValue > 0) {
-                        var numericPrice = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
-                            ? CurrencyComponent.parseInput(ipOriginalPriceValue, curr)
-                            : parseFloat(ipOriginalPriceValue.replace(/[^0-9.-]/g, ''));
+                        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                            throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput is required');
+                        }
+                        if (!curr) return;
+                        var numericPrice = CurrencyComponent.parseInput(ipOriginalPriceValue, curr);
                         if (Number.isFinite(numericPrice)) {
                             var discounted;
                             if (pType === 'percent') {
@@ -3562,8 +3429,11 @@ const FieldsetBuilder = (function(){
                             updatePricePlaceholder(itemPriceInput, val.currency);
                             var priceStr = String(itemPriceInput.value || '').trim();
                             if (priceStr) {
-                                var numericValue = parseFloat(priceStr.replace(/[^0-9.-]/g, ''));
-                                if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
+                                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput || !CurrencyComponent.formatWithSymbol) {
+                                    throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput and formatWithSymbol are required');
+                                }
+                                var numericValue = CurrencyComponent.parseInput(priceStr, val.currency);
+                                if (Number.isFinite(numericValue)) {
                                     itemPriceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), val.currency, { trimZeroDecimals: false });
                                 }
                             }
@@ -3972,18 +3842,13 @@ const FieldsetBuilder = (function(){
                         var val = String(inp.value || '').trim();
                         if (val === '') return;
                         
-                        var numericValue;
-                        if (oldCurrencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput) {
-                            numericValue = CurrencyComponent.parseInput(val, oldCurrencyCode);
-                        } else {
-                            numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput || !CurrencyComponent.formatWithSymbol) {
+                            throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput and formatWithSymbol are required');
                         }
-                        
+                        if (!oldCurrencyCode) return;
+                        var numericValue = CurrencyComponent.parseInput(val, oldCurrencyCode);
                         if (!Number.isFinite(numericValue)) return;
-                        
-                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode, { trimZeroDecimals: false });
-                        }
+                        inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode, { trimZeroDecimals: false });
                     });
                 }
                 
@@ -4015,77 +3880,19 @@ const FieldsetBuilder = (function(){
 
                 function tpAttachMoneyInputBehavior(inputEl) {
                     if (!inputEl) return;
-                    
-                    inputEl.addEventListener('input', function() {
-                        var currencyCode = tpGetTicketCurrencyCode();
-                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
+                    if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.createMoneyInput) {
+                        throw new Error('[FieldsetBuilder] CurrencyComponent.createMoneyInput is required');
+                    }
+                    CurrencyComponent.createMoneyInput(function() {
+                        var groupEl = inputEl.closest('.fieldset-ticketpricing-ticketgroup-item');
                         if (groupEl) {
                             var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
                             var val = currencyInput ? String(currencyInput.value || '').trim() : '';
                             if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
-                            if (val) currencyCode = val;
+                            if (val) return val;
                         }
-                        
-                        if (currencyCode) {
-                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
-                            }
-                            this.value = CurrencyComponent.sanitizeInput(this.value, currencyCode);
-                            return;
-                        }
-                        
-                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                        var parts = raw.split('.');
-                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                        this.value = raw;
-                    });
-                    
-                    inputEl.addEventListener('focus', function() {
-                        var v = String(this.value || '').trim();
-                        if (v === '') return;
-                        
-                        var currencyCode = tpGetTicketCurrencyCode();
-                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
-                        if (groupEl) {
-                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
-                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
-                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
-                            if (val) currencyCode = val;
-                        }
-                        
-                        if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
-                            this.value = CurrencyComponent.stripSymbol(v, currencyCode);
-                        }
-                    });
-                    
-                    inputEl.addEventListener('blur', function() {
-                        var v = String(this.value || '').trim();
-                        if (v === '') return;
-                        
-                        var currencyCode = tpGetTicketCurrencyCode();
-                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
-                        if (groupEl) {
-                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
-                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
-                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
-                            if (val) currencyCode = val;
-                        }
-                        
-                        if (currencyCode) {
-                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
-                            }
-                            var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode, { trimZeroDecimals: false });
-                            if (formatted !== '') {
-                                this.value = formatted;
-                                return;
-                            }
-                        }
-                        
-                        var num = parseFloat(v);
-                        if (isNaN(num)) { this.value = ''; return; }
-                        this.value = num.toFixed(2);
-                    });
+                        return tpGetTicketCurrencyCode();
+                    }, inputEl);
                 }
 
                 // --- Tier name duplication system ---
@@ -4709,13 +4516,14 @@ const FieldsetBuilder = (function(){
                                 // Calculate promo_price if promo is enabled
                                 var promoPrice = '';
                                 if (promoOption !== 'none' && priceRaw && promoValue) {
-                                    // Parse numeric price
-                                    var numericPrice = typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput && curr
-                                        ? CurrencyComponent.parseInput(priceRaw, curr)
-                                        : parseFloat(priceRaw.replace(/[^0-9.-]/g, ''));
-                                    var numericPromoValue = (promoType === 'fixed' && curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
+                                    if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                                        throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput is required');
+                                    }
+                                    if (!curr) return;
+                                    var numericPrice = CurrencyComponent.parseInput(priceRaw, curr);
+                                    var numericPromoValue = (promoType === 'fixed')
                                         ? CurrencyComponent.parseInput(promoValue, curr)
-                                        : parseFloat(String(promoValue).replace(',', '.'));
+                                        : parseFloat(String(promoValue));
                                     if (Number.isFinite(numericPrice) && Number.isFinite(numericPromoValue)) {
                                         var calculatedPrice;
                                         if (promoType === 'percent') {
@@ -4833,6 +4641,13 @@ const FieldsetBuilder = (function(){
                     
                     if (currDot) {
                         currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurrValue || '').trim());
+                    }
+                    
+                    // Sync state: buildFullMenu sets the initial display but doesn't fire onSelect,
+                    // so tpTicketCurrencyState.code must be synced manually before the promo section
+                    // is built (which reads tpTicketCurrencyState.code to populate the fixed button).
+                    if (initialCurrValue && initialCurrValue !== tpTicketCurrencyState.code) {
+                        tpTicketCurrencyState.code = initialCurrValue;
                     }
 
                     // Row 5 & 6: Promo Code Section
@@ -5157,11 +4972,20 @@ const FieldsetBuilder = (function(){
                     promoValueInput.style.borderRadius = '5px';
                     // Only allow numbers and decimal, track completeness
                     promoValueInput.addEventListener('input', function() {
-                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                        var parts = raw.split('.');
-                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                        this.value = raw;
-                        promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!raw);
+                        var isFixed = promoTypeFixed.classList.contains('fieldset-ticketpricing-promo-type-btn--active');
+                        if (isFixed) {
+                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
+                            }
+                            var code = tpGetTicketCurrencyCode();
+                            if (code) this.value = CurrencyComponent.sanitizeInput(this.value, code);
+                        } else {
+                            var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                            var parts = raw.split('.');
+                            if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                            this.value = raw;
+                        }
+                        promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!this.value);
                     });
                     // Set initial completeness state for discount
                     promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!String(initialPromoValue || '').trim());
@@ -5211,9 +5035,11 @@ const FieldsetBuilder = (function(){
                             originalPriceValues.push({ el: inp, val: originalVal });
                             
                             if (originalVal && pValue > 0) {
-                                var numericPrice = (curr && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput)
-                                    ? CurrencyComponent.parseInput(originalVal, curr)
-                                    : parseFloat(originalVal.replace(/[^0-9.-]/g, ''));
+                                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                                    throw new Error('[FieldsetBuilder] CurrencyComponent.parseInput is required');
+                                }
+                                if (!curr) return;
+                                var numericPrice = CurrencyComponent.parseInput(originalVal, curr);
                                 if (Number.isFinite(numericPrice)) {
                                     var discounted;
                                     if (pType === 'percent') {

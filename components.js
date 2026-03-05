@@ -1660,18 +1660,21 @@ const CurrencyComponent = (function(){
         createMoneyInput: createMoneyInput
     };
 
-    // Creates a fully configured money input element.
+    // Creates or configures a money input element.
     // getCurrencyCode: function that returns the active currency code at call time.
+    // existingInput (optional): attach behavior to an existing DOM input instead of creating one.
     // Returns { element, getValue, setValue, reformat }
-    function createMoneyInput(getCurrencyCode) {
+    function createMoneyInput(getCurrencyCode, existingInput) {
         if (typeof getCurrencyCode !== 'function') {
             throw new Error('[CurrencyComponent] createMoneyInput: getCurrencyCode must be a function');
         }
 
-        var input = document.createElement('input');
-        input.type = 'text';
+        var input = existingInput || document.createElement('input');
+        if (!existingInput) {
+            input.type = 'text';
+            input.autocomplete = 'off';
+        }
         input.setAttribute('data-input-type', 'money');
-        input.autocomplete = 'off';
 
         input.addEventListener('input', function() {
             var code = getCurrencyCode();

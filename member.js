@@ -4836,6 +4836,9 @@ const MemberModule = (function() {
                                     // Handle "VALUE - LABEL" format from full menu
                                     if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
                                     
+                                    // Validate: only accept complete, known currency codes
+                                    if (curr && typeof CurrencyComponent !== 'undefined' && !CurrencyComponent.getCurrencyByCode(curr)) curr = '';
+                                    
                                     if (curr && !sharedCurrency) sharedCurrency = curr;
 
                                     var priceInput = tier.querySelector('.fieldset-sessionpricing-input-price');
@@ -4850,14 +4853,6 @@ const MemberModule = (function() {
                                                 throw new Error('[Member] CurrencyComponent.parseInput is required');
                                             }
                                             var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
-                                            if (Number.isFinite(numericValue)) {
-                                                price = numericValue.toString();
-                                                allPrices.push(numericValue);
-                                            }
-                                        } else {
-                                            // No currency selected - support both dot and comma
-                                            var normalized = rawPrice.replace(/,/g, '.');
-                                            var numericValue = parseFloat(normalized.replace(/[^0-9.-]/g, ''));
                                             if (Number.isFinite(numericValue)) {
                                                 price = numericValue.toString();
                                                 allPrices.push(numericValue);
@@ -4995,6 +4990,9 @@ const MemberModule = (function() {
                                     
                                     if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
                                     
+                                    // Validate: only accept complete, known currency codes
+                                    if (curr && typeof CurrencyComponent !== 'undefined' && !CurrencyComponent.getCurrencyByCode(curr)) curr = '';
+                                    
                                     if (curr && !tpSharedCurrency) tpSharedCurrency = curr;
 
                                     var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
@@ -5007,13 +5005,6 @@ const MemberModule = (function() {
                                                 throw new Error('[Member] CurrencyComponent.parseInput is required');
                                             }
                                             var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
-                                            if (Number.isFinite(numericValue)) {
-                                                price = numericValue.toString();
-                                                tpAllPrices.push(numericValue);
-                                            }
-                                        } else {
-                                            var normalized = rawPrice.replace(/,/g, '.');
-                                            var numericValue = parseFloat(normalized.replace(/[^0-9.-]/g, ''));
                                             if (Number.isFinite(numericValue)) {
                                                 price = numericValue.toString();
                                                 tpAllPrices.push(numericValue);
@@ -5147,6 +5138,8 @@ const MemberModule = (function() {
                     var item_name = itemNameInput ? String(itemNameInput.value || '').trim() : '';
                     var currencyInput = el.querySelector('input.component-currencycompact-menu-button-input');
                     var currency = currencyInput ? String(currencyInput.value || '').trim() : '';
+                    // Validate: only accept complete, known currency codes
+                    if (currency && typeof CurrencyComponent !== 'undefined' && !CurrencyComponent.getCurrencyByCode(currency)) currency = '';
                     var priceInput = el.querySelector('input.fieldset-itempricing-input-itemprice');
                     var rawPrice = priceInput ? String(priceInput.value || '').trim() : '';
                     
@@ -5160,10 +5153,6 @@ const MemberModule = (function() {
                             }
                             var numericValue = CurrencyComponent.parseInput(rawPrice, currency);
                             item_price = Number.isFinite(numericValue) ? numericValue.toString() : '';
-                        } else {
-                            // No currency selected - support both dot and comma
-                            var normalized = rawPrice.replace(/,/g, '.');
-                            item_price = normalized.replace(/[^0-9.-]/g, '');
                         }
                     }
                     
