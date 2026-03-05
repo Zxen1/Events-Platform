@@ -3020,6 +3020,13 @@ const PostModule = (function() {
    * @returns {HTMLElement} Detail view element
    */
 
+  function setTooltipDirs(wrap) {
+    wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
+      var c = item.closest('.post-links-container, .post-amenities-container'), cr = c && c.getBoundingClientRect();
+      item.setAttribute('data-tooltip-dir', cr && (item.getBoundingClientRect().left - cr.left) > cr.width * 0.75 ? 'left' : 'right');
+    });
+  }
+
   function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
@@ -3184,9 +3191,8 @@ const PostModule = (function() {
       });
 
       var iconLinks = [];
-      var linkFlipIdx = Math.ceil(linkData.length * 0.75);
       linkData.forEach(function(d, idx) {
-        var dir = idx >= linkFlipIdx ? 'left' : 'right';
+        var dir = 'right';
         iconLinks.push(
           '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '">' +
             '<span class="post-links-item" data-tooltip="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
@@ -3227,9 +3233,8 @@ const PostModule = (function() {
       });
 
       var partsAmen = [];
-      var amenFlipIdx = Math.ceil(amenData.length * 0.75);
       amenData.forEach(function(d, idx) {
-        var dir = idx >= amenFlipIdx ? 'left' : 'right';
+        var dir = 'right';
         var yn = d.active ? 'Yes' : 'No';
         partsAmen.push(
           '<span class="post-amenities-item' + (d.active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(d.label + ': ' + yn) + '" data-tooltip="' + escapeHtml(d.active ? d.label : 'No ' + d.label) + '" data-tooltip-dir="' + dir + '">' +
@@ -4135,6 +4140,7 @@ const PostModule = (function() {
         descEl.setAttribute('aria-expanded', 'true');
         showExpanded();
         syncLocationWallpaper(true);
+        setTooltipDirs(wrap);
       });
       
       // Also handle keyboard for accessibility (only expand, not collapse)
@@ -4147,6 +4153,7 @@ const PostModule = (function() {
           descEl.setAttribute('aria-expanded', 'true');
           showExpanded();
           syncLocationWallpaper(true);
+          setTooltipDirs(wrap);
         }
       });
     }
