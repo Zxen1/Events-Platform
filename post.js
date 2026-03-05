@@ -306,7 +306,7 @@ const PostModule = (function() {
       if (!target) return;
       var rect = target.getBoundingClientRect();
       var containerRect = postListEl.getBoundingClientRect();
-      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 150 ? 'left' : 'right');
+      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 200 ? 'left' : 'right');
     });
   }
 
@@ -3193,8 +3193,8 @@ const PostModule = (function() {
         if (!iconUrl) return;
 
         iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" data-tooltip="' + escapeHtml(label) + '">' +
-            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
+          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '">' +
+            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(iconUrl) + ')" data-tooltip="' + escapeHtml(label) + '"></span>' +
           '</a>'
         );
       });

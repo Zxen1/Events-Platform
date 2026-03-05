@@ -1595,39 +1595,47 @@
 
 /* -------------------------------------------------------
    TOOLTIP PILLS — amenity icons and link icons
-   Pill ::after expands from icon width to reveal label.
-   JS sets data-tooltip-dir="left"|"right" on mouseover.
-   Default (no attribute or "right"): expands rightward.
-   "left": expands leftward, icon anchored on right of pill.
+   Amenities: ::after on .post-amenities-item (span).
+   Links: ::after on .post-links-icon (span inside a).
+   Both use the same pill style. JS sets data-tooltip-dir
+   on the item/.post-links-link for direction control.
    ------------------------------------------------------- */
 
-.post-amenities-item,
-.post-links-link {
+.post-amenities-item {
   position: relative;
   overflow: visible;
 }
 
-/* Icon spans sit above the pill (z-index: 2 > pill z-index: 1) */
-.post-amenities-icon,
-.post-links-icon {
+.post-links-link {
+  overflow: visible;
+}
+
+/* Amenity icon above its pill */
+.post-amenities-icon {
   position: relative;
   z-index: 2;
 }
 
-/* Pill: starts as a 30px circle (icon only), expands on hover */
+/* Link icon: relative so ::after is positioned within it */
+.post-links-icon {
+  position: relative;
+  overflow: visible;
+}
+
+/* Base pill styles — shared by amenities (::after on item) and links (::after on icon span) */
 .post-amenities-item::after,
-.post-links-link::after {
+.post-links-icon::after {
   content: attr(data-tooltip);
   position: absolute;
-  top: 3px;
+  top: 0;
   left: 3px;
-  height: 30px;
+  height: 36px;
   width: 30px;
   overflow: hidden;
-  background: rgba(10, 10, 18, 0.82);
-  border-radius: 15px;
+  background: rgba(59, 130, 246, 0.9);
+  border-radius: 18px;
   font-size: 12px;
-  line-height: 30px;
+  line-height: 36px;
   color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
   padding-left: 35px;
@@ -1638,24 +1646,46 @@
   transition: width 0.22s ease, opacity 0.15s ease;
 }
 
-/* Right-expand (default) */
-.post-amenities-item:not([data-tooltip-dir="left"]):hover::after,
-.post-links-link:not([data-tooltip-dir="left"]):hover::after {
+/* Link icon pill: offset to align with parent item bounds */
+.post-links-icon::after {
+  top: -3px;
+  left: 0;
+}
+
+/* Right-expand (default) — amenities */
+.post-amenities-item:not([data-tooltip-dir="left"]):hover::after {
   width: 150px;
   opacity: 1;
 }
 
-/* Left-expand: pill grows leftward, icon on right side of pill */
-.post-amenities-item[data-tooltip-dir="left"]::after,
-.post-links-link[data-tooltip-dir="left"]::after {
+/* Right-expand (default) — links */
+.post-links-link:not([data-tooltip-dir="left"]):hover .post-links-icon::after {
+  width: 150px;
+  opacity: 1;
+}
+
+/* Left-expand: pill grows leftward, icon on right side — amenities */
+.post-amenities-item[data-tooltip-dir="left"]::after {
   left: auto;
   right: 3px;
   padding-left: 12px;
   padding-right: 35px;
 }
 
-.post-amenities-item[data-tooltip-dir="left"]:hover::after,
-.post-links-link[data-tooltip-dir="left"]:hover::after {
+.post-amenities-item[data-tooltip-dir="left"]:hover::after {
+  width: 150px;
+  opacity: 1;
+}
+
+/* Left-expand — links */
+.post-links-link[data-tooltip-dir="left"] .post-links-icon::after {
+  left: auto;
+  right: 0;
+  padding-left: 12px;
+  padding-right: 35px;
+}
+
+.post-links-link[data-tooltip-dir="left"]:hover .post-links-icon::after {
   width: 150px;
   opacity: 1;
 }
