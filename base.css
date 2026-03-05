@@ -473,7 +473,7 @@
   box-sizing: border-box;
 }
 
-/* Button Class 8: CTA button (full width, 44px, orange — Get Tickets / Shop Now) */
+/* Button Class 8: CTA button (full width, 44px, blue — Get Tickets / Shop Now) */
 .button-class-8 {
   display: flex;
   align-items: center;
@@ -482,8 +482,8 @@
   height: 44px;
   padding: 0 16px;
   border-radius: 5px;
-  background: var(--orange-500);
-  border: 1px solid var(--orange-600);
+  background: var(--blue-500);
+  border: 1px solid var(--blue-600);
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -562,8 +562,8 @@
   }
 
   .button-class-8:hover {
-    background: var(--orange-600);
-    border-color: var(--orange-700);
+    background: var(--blue-600);
+    border-color: var(--blue-700);
   }
 
   .input-class-1:hover {
