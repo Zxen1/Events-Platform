@@ -796,6 +796,7 @@
   align-items: center;
   column-gap: 12px;
   height: 36px;
+  margin-bottom: 10px;
 }
 
 .filter-amenities-row:last-child {
@@ -820,7 +821,7 @@
 
 /* Name — identical to fieldset-amenities-row-text */
 .filter-amenities-row-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
 }
 
@@ -843,7 +844,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #ccc;
   padding: 0;
   border: none;
@@ -886,7 +887,7 @@
 }
 
 .filter-amenities-option-text {
-  font-size: 14px;
+  font-size: 13px;
   color: inherit;
 }
 
