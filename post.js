@@ -3163,29 +3163,32 @@ const PostModule = (function() {
         return 0;
       });
 
-      var iconLinks = [];
+      var linkData = [];
       sortedLinks.forEach(function(l) {
         var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
         var url = (l.external_url === null || l.external_url === undefined) ? '' : String(l.external_url).trim();
         if (!type && !url) return;
         if (type.toLowerCase() === 'website' && url) hasWebsiteLink = true;
         if (!url) return;
-
         var label = (l.label === null || l.label === undefined) ? '' : String(l.label).trim();
         if (!label) label = linkTypeToLabel(type);
-
         var filename = (l.filename === null || l.filename === undefined) ? '' : String(l.filename).trim();
-        if (!filename) return; // icon-strip requires an icon filename
-
+        if (!filename) return;
         var iconUrl = '';
         if (window.App && typeof App.getImageUrl === 'function') {
           iconUrl = App.getImageUrl('links', filename);
         }
         if (!iconUrl) return;
+        linkData.push({ url: url, label: label, iconUrl: iconUrl });
+      });
 
+      var iconLinks = [];
+      var linkHalfIdx = Math.ceil(linkData.length / 2);
+      linkData.forEach(function(d, idx) {
+        var dir = idx >= linkHalfIdx ? 'left' : 'right';
         iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '">' +
-            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(iconUrl) + ')" data-tooltip="' + escapeHtml(label) + '"></span>' +
+          '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
+            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(d.iconUrl) + ')" data-tooltip="' + escapeHtml(d.label) + '"></span>' +
           '</a>'
         );
       });
