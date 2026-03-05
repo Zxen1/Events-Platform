@@ -964,8 +964,15 @@ const FieldsetBuilder = (function(){
         }
     }
     
-    // URL auto-prepend https://
+    // URL auto-prepend https:// and strip spaces
     function autoUrlProtocol(input) {
+        input.addEventListener('input', function() {
+            if (this.value.indexOf(' ') !== -1) {
+                var pos = this.selectionStart;
+                this.value = this.value.replace(/ /g, '');
+                this.setSelectionRange(pos - 1, pos - 1);
+            }
+        });
         input.addEventListener('blur', function() {
             var val = this.value.trim();
             if (val && !val.match(/^https?:\/\//i)) {
