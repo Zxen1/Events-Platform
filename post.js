@@ -1702,6 +1702,21 @@ const PostModule = (function() {
       var slot = document.createElement('div');
       slot.className = 'post-slot';
       slot.dataset.id = String(post.id);
+
+      // Countdown status bar (event posts only)
+      var _cardSett = App.getState('settings') || {};
+      if (_cardSett.countdown_postcards) {
+        var _cardPick = pickMapCardInCurrentBounds(post);
+        var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
+        if (_cardBarResult) {
+          if (_cardSett.countdown_postcards_mode === 'soonest_only') {
+            _cardBarResult.bar.classList.add('post-card-status-bar--mode-soonest');
+          }
+          card.classList.add('post-card--countdown-' + _cardBarResult.state);
+          slot.appendChild(_cardBarResult.bar);
+        }
+      }
+
       slot.appendChild(anchor);
       postListEl.appendChild(slot);
 
@@ -2547,6 +2562,48 @@ const PostModule = (function() {
     var _botS = postListEl.querySelector('.bottomSlack');
     if (_topS) try { postListEl.insertBefore(_topS, postListEl.firstChild); } catch (_eTopS) {}
     if (_botS) try { postListEl.appendChild(_botS); } catch (_eBotS) {}
+
+    // Show/hide countdown bars for 'soonest_only' mode based on current sort.
+    if (sortKey === 'soon') {
+      postListEl.classList.add('post-list--sort-soon');
+    } else {
+      postListEl.classList.remove('post-list--sort-soon');
+    }
+  }
+
+  /**
+   * Build a countdown status bar element for event posts.
+   * Uses first_session_date (mapCard) as start and expires_at (post) as end.
+   * @param {Object} post - Post data (needs expires_at)
+   * @param {Object} mapCard - Map card data (needs first_session_date)
+   * @returns {{ bar: HTMLElement, state: string }|null}
+   */
+  function buildCountdownStatusBar(post, mapCard) {
+    var firstSessionDate = mapCard && mapCard.first_session_date;
+    var expiresAt = post && post.expires_at;
+    if (!firstSessionDate || !expiresAt) return null;
+
+    var now = new Date();
+    var startDate = new Date(firstSessionDate);
+    var endDate = new Date(expiresAt);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
+
+    var state, label;
+    if (now < startDate) {
+      state = 'coming-soon';
+      label = 'Coming Soon';
+    } else if (now <= endDate) {
+      state = 'now-showing';
+      label = 'Now Showing';
+    } else {
+      state = 'finished';
+      label = 'Finished';
+    }
+
+    var bar = document.createElement('div');
+    bar.className = 'post-card-status-bar post-card-status-bar--' + state;
+    bar.textContent = label;
+    return { bar: bar, state: state };
   }
 
   /**
@@ -3404,6 +3461,16 @@ const PostModule = (function() {
     // Note: cardEl is kept for restoration when closing, but header is used for display
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
+
+    // Countdown status bar in expanded post view (between header and body)
+    var _postSett = App.getState('settings') || {};
+    if (_postSett.countdown_posts) {
+      var _postBarResult = buildCountdownStatusBar(post, activeLoc);
+      if (_postBarResult) {
+        contentWrap.appendChild(_postBarResult.bar);
+      }
+    }
+
     contentWrap.appendChild(postBody);
 
     // Event handlers

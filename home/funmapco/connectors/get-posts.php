@@ -501,6 +501,7 @@ try {
             mc.ticket_url,
             mc.session_summary,
             mc.price_summary,
+            (SELECT MIN(ps.session_date) FROM post_sessions ps WHERE ps.post_map_card_id = mc.id) AS first_session_date,
             (
                 EXISTS (SELECT 1 FROM post_ticket_pricing ptp WHERE ptp.post_map_card_id = mc.id AND ptp.promo_option IS NOT NULL AND ptp.promo_option != 'none')
                 OR EXISTS (SELECT 1 FROM post_item_pricing pip WHERE pip.post_map_card_id = mc.id AND pip.promo_option IS NOT NULL AND pip.promo_option != 'none')
@@ -611,6 +612,7 @@ try {
                 'ticket_url' => $row['ticket_url'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
+                'first_session_date' => $row['first_session_date'],
                 'has_promo' => !empty($row['has_promo']),
                 'passes_filter' => !$hasUserFilters || isset($matchedMapCardIds[(int)$row['post_map_card_id']]) ? 1 : 0,
                 'library_wallpapers' => [], // Will be populated below
