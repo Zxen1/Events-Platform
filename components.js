@@ -1656,8 +1656,73 @@ const CurrencyComponent = (function(){
         sanitizeInput: sanitizeInput,
         formatForDisplay: formatForDisplay,
         formatWithSymbol: formatWithSymbol,
-        stripSymbol: stripSymbol
+        stripSymbol: stripSymbol,
+        createMoneyInput: createMoneyInput
     };
+
+    // Creates a fully configured money input element.
+    // getCurrencyCode: function that returns the active currency code at call time.
+    // Returns { element, getValue, setValue, reformat }
+    function createMoneyInput(getCurrencyCode) {
+        if (typeof getCurrencyCode !== 'function') {
+            throw new Error('[CurrencyComponent] createMoneyInput: getCurrencyCode must be a function');
+        }
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('data-input-type', 'money');
+        input.autocomplete = 'off';
+
+        input.addEventListener('input', function() {
+            var code = getCurrencyCode();
+            if (!code) return;
+            this.value = sanitizeInput(this.value, code);
+        });
+
+        input.addEventListener('focus', function() {
+            var v = String(this.value || '').trim();
+            if (v === '') return;
+            var code = getCurrencyCode();
+            if (!code) return;
+            this.value = stripSymbol(v, code);
+        });
+
+        input.addEventListener('blur', function() {
+            var v = String(this.value || '').trim();
+            if (v === '') return;
+            var code = getCurrencyCode();
+            if (!code) return;
+            var formatted = formatWithSymbol(v, code, { trimZeroDecimals: false });
+            if (formatted !== '') this.value = formatted;
+        });
+
+        return {
+            element: input,
+            getValue: function() {
+                var code = getCurrencyCode();
+                if (!code) return 0;
+                return parseInput(String(input.value || ''), code);
+            },
+            setValue: function(amount) {
+                var code = getCurrencyCode();
+                if (!code || amount === '' || amount === null || amount === undefined) {
+                    input.value = (amount !== null && amount !== undefined) ? String(amount) : '';
+                    return;
+                }
+                var formatted = formatWithSymbol(String(amount), code, { trimZeroDecimals: false });
+                input.value = formatted !== '' ? formatted : String(amount);
+            },
+            reformat: function(newCode) {
+                var v = String(input.value || '').trim();
+                if (v === '' || !newCode) return;
+                var numeric = parseInput(v, getCurrencyCode());
+                if (!Number.isFinite(numeric)) return;
+                var formatted = formatWithSymbol(String(numeric), newCode, { trimZeroDecimals: false });
+                if (formatted !== '') input.value = formatted;
+            }
+        };
+    }
+
 })();
 
 /* ============================================================================
