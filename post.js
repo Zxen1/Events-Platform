@@ -1043,6 +1043,10 @@ const PostModule = (function() {
     if (typeof lastZoom !== 'number' || lastZoom < threshold) {
       return Promise.resolve([]);
     }
+    if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+      throw new Error('[Post] App.whenStartupSettingsReady is required before rendering postcard icons.');
+    }
+    var settingsReadyPromise = App.whenStartupSettingsReady();
 
     postsError = null;
 
@@ -1128,14 +1132,18 @@ const PostModule = (function() {
         if (myToken !== postsRequestToken) return [];
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
-          renderPostList(data.posts);
-          // Emit counts for the current viewport (server-filtered)
-          emitFilterCounts(data.posts);
-          // Refresh map clusters with new post data
-          if (window.MapModule && MapModule.refreshClusters) {
-            MapModule.refreshClusters();
-          }
-          return data.posts;
+          return settingsReadyPromise.then(function() {
+            // Request may have gone stale while waiting for startup settings.
+            if (myToken !== postsRequestToken) return [];
+            renderPostList(data.posts);
+            // Emit counts for the current viewport (server-filtered)
+            emitFilterCounts(data.posts);
+            // Refresh map clusters with new post data
+            if (window.MapModule && MapModule.refreshClusters) {
+              MapModule.refreshClusters();
+            }
+            return data.posts;
+          });
         } else {
           postsError = data.message || 'Unknown error';
           renderPostsEmptyState();
