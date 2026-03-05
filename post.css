@@ -1525,6 +1525,7 @@
   border-radius: 0;
   padding: 0;
   flex: 0 0 auto;
+  overflow: visible;
 }
 
 .post-links-item {
@@ -1738,6 +1739,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.post-info-row .post-links-link {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: unset;
 }
 
 .post-info-row a:hover {
