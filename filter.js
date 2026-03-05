@@ -122,6 +122,7 @@ const FilterModule = (function() {
                 expired:         expiredInput ? expiredInput.checked : false,
                 favourites:      favouritesOn,
                 sort:            currentSort,
+                amenities:       Object.keys(amenitiesState).length > 0 ? amenitiesState : null,
                 categories:      getCategoryState(),
                 map:             getMapState(),
                 subcategoryKeys: getSelectedSubcategoryKeys()
