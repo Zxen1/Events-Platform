@@ -1488,7 +1488,6 @@
   width: 100%;
   max-width: 100%;
   margin-left: -10px;
-  width: calc(100% + 10px);
   padding: 0 10px;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
