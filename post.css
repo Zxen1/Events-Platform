@@ -1606,6 +1606,10 @@
   overflow: visible;
 }
 
+.post-amenities-item:hover {
+  z-index: 3;
+}
+
 .post-links-link {
   overflow: visible;
 }
