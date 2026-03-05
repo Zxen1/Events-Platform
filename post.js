@@ -2922,9 +2922,18 @@ const PostModule = (function() {
 
 
     requestAnimationFrame(function() {
-      var postRight = detail.getBoundingClientRect().right;
       detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
-        item.setAttribute('data-tooltip-dir', item.getBoundingClientRect().left > postRight - 200 ? 'left' : 'right');
+        try {
+          var strip = item.parentElement;
+          var visibleRight = strip ? strip.getBoundingClientRect().right : detail.getBoundingClientRect().right;
+          var itemRect = item.getBoundingClientRect();
+          var pillWidth = item.offsetWidth || 36;
+          var text = item.getAttribute('data-tooltip') || '';
+          if (text.length > 0) { pillWidth = Math.max(pillWidth, text.length * 7 + 50); }
+          item.setAttribute('data-tooltip-dir', itemRect.right + pillWidth > visibleRight ? 'left' : 'right');
+        } catch (_eTTDir) {
+          item.setAttribute('data-tooltip-dir', 'right');
+        }
       });
     });
 
