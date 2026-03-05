@@ -1610,15 +1610,13 @@ const FilterModule = (function() {
 
     function resetAmenityRow(row) {
         row.dataset.value = '';
-        var iconImg = row.querySelector('.filter-amenities-row-image');
-        var nameEl  = row.querySelector('.filter-amenities-row-text');
-        var yesBtn  = row.querySelector('.filter-amenities-option--yes');
-        var noBtn   = row.querySelector('.filter-amenities-option--no');
-        var clrBtn  = row.querySelector('.filter-amenities-clear');
+        var iconImg  = row.querySelector('.filter-amenities-row-image');
+        var nameEl   = row.querySelector('.filter-amenities-row-text');
+        var selImgs  = row.querySelectorAll('.filter-amenities-option-radio--selected');
+        var clrBtn   = row.querySelector('.filter-amenities-clear');
         if (iconImg) { iconImg.classList.remove('filter-amenities-row-image--yes', 'filter-amenities-row-image--no'); }
         if (nameEl)  { nameEl.classList.remove('filter-amenities-row-text--no'); }
-        if (yesBtn)  { yesBtn.classList.remove('filter-amenities-option--active'); }
-        if (noBtn)   { noBtn.classList.remove('filter-amenities-option--active'); }
+        selImgs.forEach(function(img) { img.style.display = 'none'; });
         if (clrBtn)  { clrBtn.classList.remove('active'); }
     }
 
@@ -1632,6 +1630,19 @@ const FilterModule = (function() {
                 var allAmenities = (res.dropdown_options && Array.isArray(res.dropdown_options.amenity))
                     ? res.dropdown_options.amenity : [];
                 if (!allAmenities.length) return;
+
+                // Get radio icons from system_images — same pattern as fieldsets.js
+                function getSystemIconUrl(settingKey) {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys[settingKey] ? String(sys[settingKey]).trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (_e) { return ''; }
+                }
+                var radioUrl         = getSystemIconUrl('icon_radio');
+                var radioSelectedUrl = getSystemIconUrl('icon_radio_selected');
 
                 var accordion = document.createElement('div');
                 accordion.className = 'filter-amenities-accordion accordion-class-2';
@@ -1661,49 +1672,77 @@ const FilterModule = (function() {
                     row.dataset.amenity = amenityName;
                     row.dataset.value   = '';
 
+                    // Icon — exact same as fieldsets.js
                     var iconImg = document.createElement('img');
                     iconImg.className = 'filter-amenities-row-image';
                     iconImg.alt = '';
                     if (filename && window.App) {
-                        iconImg.src = App.getImageUrl('amenities', filename);
+                        var cleanFilename = filename.replace(/\.svg$/i, '');
+                        iconImg.src = App.getImageUrl('amenities', cleanFilename + '.svg');
                     }
 
+                    // Name
                     var nameEl = document.createElement('span');
                     nameEl.className = 'filter-amenities-row-text';
                     nameEl.textContent = amenityName;
 
+                    // Yes/No options — exact same structure as fieldsets.js amenity buttons
                     var optionsEl = document.createElement('div');
-                    optionsEl.className = 'filter-amenities-row-options';
+                    optionsEl.className = 'filter-amenities-row-container';
 
-                    var yesBtn = document.createElement('button');
-                    yesBtn.type = 'button';
-                    yesBtn.className = 'filter-amenities-option filter-amenities-option--yes';
-                    yesBtn.textContent = 'Yes';
+                    function makeOptionBtn(label) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'filter-amenities-option';
 
-                    var noBtn = document.createElement('button');
-                    noBtn.type = 'button';
-                    noBtn.className = 'filter-amenities-option filter-amenities-option--no';
-                    noBtn.textContent = 'No';
+                        var iconWrap = document.createElement('span');
+                        iconWrap.className = 'filter-amenities-option-image';
 
-                    optionsEl.appendChild(yesBtn);
-                    optionsEl.appendChild(noBtn);
+                        var radioImg = document.createElement('img');
+                        radioImg.className = 'filter-amenities-option-radio';
+                        radioImg.src = radioUrl;
+                        radioImg.alt = '';
+                        iconWrap.appendChild(radioImg);
 
-                    var clearBtn = document.createElement('button');
-                    clearBtn.type = 'button';
-                    clearBtn.className = 'clear-button filter-amenities-clear';
-                    clearBtn.setAttribute('aria-label', 'Clear amenity filter');
+                        var radioSelImg = document.createElement('img');
+                        radioSelImg.className = 'filter-amenities-option-radio--selected';
+                        radioSelImg.src = radioSelectedUrl;
+                        radioSelImg.alt = '';
+                        radioSelImg.style.display = 'none';
+                        iconWrap.appendChild(radioSelImg);
+
+                        btn.appendChild(iconWrap);
+
+                        var textEl = document.createElement('span');
+                        textEl.className = 'filter-amenities-option-text';
+                        textEl.textContent = label;
+                        btn.appendChild(textEl);
+
+                        return { btn: btn, radioSelImg: radioSelImg };
+                    }
+
+                    var yes = makeOptionBtn('Yes');
+                    var no  = makeOptionBtn('No');
+                    optionsEl.appendChild(yes.btn);
+                    optionsEl.appendChild(no.btn);
+
+                    // Clear (X) button — same component as keyword/price/date X buttons
+                    var clearBtn = ClearButtonComponent.create({
+                        className: 'filter-amenities-clear',
+                        ariaLabel: 'Clear amenity filter'
+                    });
 
                     function applyRowState(val) {
                         row.dataset.value = val;
                         iconImg.classList.toggle('filter-amenities-row-image--yes', val === 'yes');
                         iconImg.classList.toggle('filter-amenities-row-image--no',  val === 'no');
                         nameEl.classList.toggle('filter-amenities-row-text--no', val === 'no');
-                        yesBtn.classList.toggle('filter-amenities-option--active', val === 'yes');
-                        noBtn.classList.toggle('filter-amenities-option--active',  val === 'no');
+                        yes.radioSelImg.style.display = (val === 'yes') ? '' : 'none';
+                        no.radioSelImg.style.display  = (val === 'no')  ? '' : 'none';
                         clearBtn.classList.toggle('active', val !== '');
                     }
 
-                    yesBtn.addEventListener('click', function(e) {
+                    yes.btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         var newVal = (amenitiesState[amenityName] === 'yes') ? '' : 'yes';
@@ -1714,7 +1753,7 @@ const FilterModule = (function() {
                         saveFilters();
                     });
 
-                    noBtn.addEventListener('click', function(e) {
+                    no.btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         var newVal = (amenitiesState[amenityName] === 'no') ? '' : 'no';

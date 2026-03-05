@@ -746,32 +746,38 @@
 
 .filter-amenities-accordion-header-text {
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   color: #fff;
 }
 
 .filter-amenities-accordion-header-arrow {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  position: relative;
-  transition: transform 0.2s ease;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-amenities-accordion-header-arrow::before {
   content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-right: 2px solid rgba(255,255,255,0.6);
-  border-bottom: 2px solid rgba(255,255,255,0.6);
-  transform: translate(-50%, -60%) rotate(45deg);
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
 }
 
 .filter-amenities-accordion-header-arrow--open::before {
-  transform: translate(-50%, -40%) rotate(-135deg);
+  transform: rotate(180deg);
 }
 
 .filter-amenities-accordion-body {
@@ -783,12 +789,12 @@
   display: block;
 }
 
-/* Row: icon | name | options | clear */
+/* Row: icon(24) | name(1fr) | options(auto) | clear(36) — matches fieldset-amenities-row */
 .filter-amenities-row {
   display: grid;
-  grid-template-columns: 24px 1fr auto auto;
+  grid-template-columns: 24px 1fr auto 36px;
   align-items: center;
-  column-gap: 10px;
+  column-gap: 12px;
   height: 36px;
 }
 
@@ -796,12 +802,12 @@
   margin-bottom: 0;
 }
 
+/* Icon states — identical to fieldset-amenities-row-image */
 .filter-amenities-row-image {
   width: 24px;
   height: 24px;
   object-fit: contain;
-  filter: brightness(0) invert(0.5);
-  flex-shrink: 0;
+  filter: brightness(0) invert(1);
 }
 
 .filter-amenities-row-image--yes {
@@ -809,74 +815,92 @@
 }
 
 .filter-amenities-row-image--no {
-  filter: brightness(0) invert(0.3);
+  filter: brightness(0) invert(0.4);
 }
 
+/* Name — identical to fieldset-amenities-row-text */
 .filter-amenities-row-text {
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #fff;
 }
 
 .filter-amenities-row-text--no {
-  color: #555;
+  color: #666;
 }
 
-.filter-amenities-row-options {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+/* Options container — identical to fieldset-amenities-row-options */
+.filter-amenities-row-container {
+  display: grid;
+  grid-auto-flow: column;
+  column-gap: 16px;
+  height: 100%;
+  align-self: stretch;
 }
 
+/* Option button — identical to fieldset-amenities-option */
 .filter-amenities-option {
-  height: 26px;
-  padding: 0 8px;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(0,0,0,0.2);
-  color: rgba(255,255,255,0.5);
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-size: 14px;
+  color: #ccc;
+  padding: 0;
+  border: none;
+  background: transparent;
+  transition: color 0.15s;
+  height: 100%;
 }
 
 .filter-amenities-option:hover {
   color: #fff;
-  border-color: rgba(255,255,255,0.3);
 }
 
-.filter-amenities-option--yes.filter-amenities-option--active {
-  background: var(--blue-950);
-  border-color: var(--blue-600);
-  color: #fff;
-}
-
-.filter-amenities-option--no.filter-amenities-option--active {
-  background: rgba(0,0,0,0.4);
-  border-color: rgba(255,255,255,0.2);
-  color: #555;
-}
-
-.filter-amenities-clear {
+/* Radio icon wrapper — identical to fieldset-amenities-option-icon */
+.filter-amenities-option-image {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  flex: 0 0 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
+}
+
+.filter-amenities-option-radio {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+
+.filter-amenities-option-radio--selected {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  display: block;
+  object-fit: contain;
+}
+
+.filter-amenities-option-text {
+  font-size: 14px;
+  color: inherit;
+}
+
+/* Clear X button — matches filter-keyword-clear / filter-price-clear */
+.filter-amenities-clear {
+  color: rgba(255,255,255,0.5);
   border-radius: 5px;
   background: rgba(0,0,0,0.2);
-  cursor: pointer;
   border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.2);
-  flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .filter-amenities-clear:hover {
-  color: rgba(255,255,255,0.5);
+  color: #fff;
 }
 
 .filter-amenities-clear.active {
