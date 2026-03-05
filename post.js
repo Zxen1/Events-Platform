@@ -2588,8 +2588,9 @@ const PostModule = (function() {
     var endDate = new Date(expiresAt);
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
 
+    var twentyFourHoursBefore = new Date(startDate.getTime() - 24 * 60 * 60 * 1000);
     var state, label;
-    if (now < startDate) {
+    if (now < twentyFourHoursBefore) {
       state = 'comingsoon';
       label = 'Coming Soon';
     } else if (now <= endDate) {
@@ -2597,7 +2598,7 @@ const PostModule = (function() {
       label = 'Now Showing';
     } else {
       state = 'finished';
-      label = 'Finished';
+      label = 'Event Ended';
     }
 
     var bar = document.createElement('div');
