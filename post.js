@@ -305,8 +305,9 @@ const PostModule = (function() {
         : null;
       if (!target) return;
       var rect = target.getBoundingClientRect();
-      var containerRect = postPanelContentEl.getBoundingClientRect();
-      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 200 ? 'left' : 'right');
+      var strip = target.closest('.post-amenities-strip') || target.parentNode;
+      var containerRect = strip.getBoundingClientRect();
+      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < (containerRect.width / 2) ? 'left' : 'right');
     }, true);
   }
 
