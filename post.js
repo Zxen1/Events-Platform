@@ -3187,8 +3187,8 @@ const PostModule = (function() {
       linkData.forEach(function(d, idx) {
         var dir = idx >= linkHalfIdx ? 'left' : 'right';
         iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
-            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(d.iconUrl) + ')" data-tooltip="' + escapeHtml(d.label) + '"></span>' +
+          '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '" data-tooltip="' + escapeHtml(d.label) + '">' +
+            '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(d.iconUrl) + ')"></span>' +
           '</a>'
         );
       });

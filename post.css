@@ -1511,6 +1511,7 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .post-links-link {
@@ -1612,6 +1613,7 @@
 }
 
 .post-links-link {
+  position: relative;
   overflow: visible;
 }
 
@@ -1621,15 +1623,16 @@
   z-index: 2;
 }
 
-/* Link icon: relative so ::after is positioned within it */
+/* Link icon above its pill */
 .post-links-icon {
   position: relative;
+  z-index: 2;
   overflow: visible;
 }
 
-/* Base pill styles — shared by amenities (::after on item) and links (::after on icon span) */
+/* Base pill styles — shared by amenities (::after on item) and links (::after on link anchor) */
 .post-amenities-item::after,
-.post-links-icon::after {
+.post-links-link::after {
   content: attr(data-tooltip);
   position: absolute;
   top: 0;
@@ -1652,43 +1655,23 @@
   transition: opacity 0.15s ease;
 }
 
-/* Link icon pill: offset to align with parent item bounds */
-.post-links-icon::after {
-  top: -3px;
-  left: 0;
-}
-
-/* Right-expand (default) — amenities */
-.post-amenities-item:not([data-tooltip-dir="left"]):hover::after {
+/* Right-expand (default) — amenities and links */
+.post-amenities-item:not([data-tooltip-dir="left"]):hover::after,
+.post-links-link:not([data-tooltip-dir="left"]):hover::after {
   opacity: 1;
 }
 
-/* Right-expand (default) — links */
-.post-links-link:not([data-tooltip-dir="left"]):hover .post-links-icon::after {
-  opacity: 1;
-}
-
-/* Left-expand: pill grows leftward, icon on right side — amenities */
-.post-amenities-item[data-tooltip-dir="left"]::after {
+/* Left-expand: pill grows leftward, icon on right side — amenities and links */
+.post-amenities-item[data-tooltip-dir="left"]::after,
+.post-links-link[data-tooltip-dir="left"]::after {
   left: auto;
   right: 0;
   padding-left: 12px;
   padding-right: 35px;
 }
 
-.post-amenities-item[data-tooltip-dir="left"]:hover::after {
-  opacity: 1;
-}
-
-/* Left-expand — links */
-.post-links-link[data-tooltip-dir="left"] .post-links-icon::after {
-  left: auto;
-  right: 0;
-  padding-left: 12px;
-  padding-right: 35px;
-}
-
-.post-links-link[data-tooltip-dir="left"]:hover .post-links-icon::after {
+.post-amenities-item[data-tooltip-dir="left"]:hover::after,
+.post-links-link[data-tooltip-dir="left"]:hover::after {
   opacity: 1;
 }
 
