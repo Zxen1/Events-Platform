@@ -2162,6 +2162,9 @@ const MapModule = (function() {
           if (Array.isArray(saved.subcategoryKeys) && saved.subcategoryKeys.length) {
             qs.set('subcategory_keys', saved.subcategoryKeys.map(String).join(','));
           }
+          if (saved.amenities && typeof saved.amenities === 'object' && Object.keys(saved.amenities).length > 0) {
+            qs.set('amenities', JSON.stringify(saved.amenities));
+          }
         }
       }
     } catch (_e) {}

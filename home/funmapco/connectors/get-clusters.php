@@ -69,6 +69,13 @@ try {
             if ($k !== '') $subcategoryKeys[] = $k;
         }
     }
+    $amenitiesFilter = [];
+    if (!empty($_GET['amenities'])) {
+        $decoded = json_decode($_GET['amenities'], true);
+        if (is_array($decoded)) {
+            $amenitiesFilter = $decoded;
+        }
+    }
     
     // Calculate grid size based on zoom (same logic as client-side)
     if ($zoom >= 7.5) {
@@ -136,6 +143,20 @@ try {
         $where[] = "pmc.subcategory_key IN ($placeholders)";
         foreach ($subcategoryKeys as $k) {
             $params[] = $k;
+            $types .= 's';
+        }
+    }
+
+    foreach ($amenitiesFilter as $amenityKey => $amenityVal) {
+        $amenityKey = trim((string)$amenityKey);
+        if ($amenityKey === '') continue;
+        if ($amenityVal === 'yes') {
+            $where[] = 'EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 1)';
+            $params[] = $amenityKey;
+            $types .= 's';
+        } elseif ($amenityVal === 'no') {
+            $where[] = 'EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 0)';
+            $params[] = $amenityKey;
             $types .= 's';
         }
     }
