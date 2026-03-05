@@ -1733,18 +1733,12 @@
 }
 
 /* Info row links */
-.post-info-row a {
+.post-info-row a:not(.post-links-link) {
   color: var(--blue-400, #60a5fa);
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.post-info-row .post-links-link {
-  overflow: visible;
-  text-overflow: unset;
-  white-space: unset;
 }
 
 .post-info-row a:hover {
