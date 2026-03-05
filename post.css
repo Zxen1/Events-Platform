@@ -995,7 +995,7 @@
 .post-header {
   display: grid;
   grid-template-columns: 50px 1fr auto;
-  gap: 0 10px;
+  gap: 10px;
   align-items: center;
   position: sticky;
   top: 0;
@@ -1775,12 +1775,8 @@
   grid-column: 1 / -1;
   margin-left: -10px;
   margin-right: -10px;
-  margin-top: -10px;
+  margin-bottom: -10px;
   justify-content: center;
-}
-
-.post-slot:has(> .post) > .post-statusbar {
-  display: none;
 }
 
 .post-statusbar--comingsoon {
