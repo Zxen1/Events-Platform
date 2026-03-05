@@ -1742,11 +1742,14 @@ const FilterModule = (function() {
                         clearBtn.classList.toggle('active', val !== '');
                     }
 
+                    // Convert display name to DB key — same as add-post.php line 1070
+                    var amenityKey = amenityName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+
                     yes.btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        var newVal = (amenitiesState[amenityName] === 'yes') ? '' : 'yes';
-                        if (newVal === '') { delete amenitiesState[amenityName]; } else { amenitiesState[amenityName] = newVal; }
+                        var newVal = (amenitiesState[amenityKey] === 'yes') ? '' : 'yes';
+                        if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
                         updateResetBtn();
                         applyFilters();
@@ -1756,8 +1759,8 @@ const FilterModule = (function() {
                     no.btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        var newVal = (amenitiesState[amenityName] === 'no') ? '' : 'no';
-                        if (newVal === '') { delete amenitiesState[amenityName]; } else { amenitiesState[amenityName] = newVal; }
+                        var newVal = (amenitiesState[amenityKey] === 'no') ? '' : 'no';
+                        if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
                         updateResetBtn();
                         applyFilters();
@@ -1767,7 +1770,7 @@ const FilterModule = (function() {
                     clearBtn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        delete amenitiesState[amenityName];
+                        delete amenitiesState[amenityKey];
                         applyRowState('');
                         updateResetBtn();
                         applyFilters();
@@ -1781,8 +1784,8 @@ const FilterModule = (function() {
                     body.appendChild(row);
 
                     // Restore state if saved before DOM existed
-                    if (amenitiesState[amenityName]) {
-                        applyRowState(amenitiesState[amenityName]);
+                    if (amenitiesState[amenityKey]) {
+                        applyRowState(amenitiesState[amenityKey]);
                     }
                 });
 

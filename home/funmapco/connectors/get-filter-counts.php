@@ -206,7 +206,7 @@ try {
       $paramsFiltered[] = $amenityKey;
       $typesFiltered .= 's';
     } elseif ($amenityVal === 'no') {
-      $whereFiltered[] = 'NOT EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 1)';
+      $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 0)';
       $paramsFiltered[] = $amenityKey;
       $typesFiltered .= 's';
     }
