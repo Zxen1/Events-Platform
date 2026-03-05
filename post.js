@@ -1365,7 +1365,7 @@ const PostModule = (function() {
     if (data.priceParts && data.priceParts.text) {
       var badgeHtml = data.priceParts.flagUrl 
         ? '<img class="' + classPrefix + '-image-badge" src="' + data.priceParts.flagUrl + '" alt="' + data.priceParts.countryCode + '" title="Currency: ' + data.priceParts.countryCode.toUpperCase() + '">'
-        : '💰';
+        : '';
       var promoTagHtml = data.hasPromo ? '<span class="' + classPrefix + '-tag-promo">Promo</span>' : '';
       html.push('<div class="' + classPrefix + '-row-price"><span class="' + classPrefix + '-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(data.priceParts.text) + '</span>' + promoTagHtml + '</div>');
     }
