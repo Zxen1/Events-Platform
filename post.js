@@ -297,6 +297,18 @@ const PostModule = (function() {
     // iOS: nudge scroll position off boundaries to prevent scroll lock.
     try { fixIOSScrollBoundary(postListEl); } catch (_eIOSFix0) {}
     try { fixIOSScrollBoundary(recentPanelContentEl); } catch (_eIOSFix1) {}
+
+    // Tooltip pill direction: set data-tooltip-dir on hover so CSS knows which way to expand.
+    // Default is right; flip to left when icon is within 150px of the container's right edge.
+    postListEl.addEventListener('mouseover', function(e) {
+      var target = e.target && typeof e.target.closest === 'function'
+        ? e.target.closest('.post-amenities-item, .post-links-link')
+        : null;
+      if (!target) return;
+      var rect = target.getBoundingClientRect();
+      var containerRect = postListEl.getBoundingClientRect();
+      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 150 ? 'left' : 'right');
+    });
   }
 
   function bindAppEvents() {
@@ -3182,7 +3194,7 @@ const PostModule = (function() {
         if (!iconUrl) return;
 
         iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label + ': ' + url) + '">' +
+          '<a class="post-links-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(label) + '" data-tooltip="' + escapeHtml(label) + '">' +
             '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
           '</a>'
         );
@@ -3220,7 +3232,7 @@ const PostModule = (function() {
         var yn = active ? 'Yes' : 'No';
 
         partsAmen.push(
-          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" title="' + escapeHtml(label + ': ' + yn) + '" aria-label="' + escapeHtml(label + ': ' + yn) + '">' +
+          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(label + ': ' + yn) + '" data-tooltip="' + escapeHtml(label) + '">' +
             '<span class="post-amenities-icon" style="--post-amenities-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
           '</span>'
         );
