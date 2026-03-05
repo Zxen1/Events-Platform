@@ -1773,6 +1773,8 @@
 
 .post-header .post-statusbar {
   grid-column: 1 / -1;
+  margin-left: -10px;
+  margin-right: -10px;
 }
 
 .post-statusbar--comingsoon {
