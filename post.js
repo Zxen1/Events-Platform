@@ -2922,8 +2922,9 @@ const PostModule = (function() {
 
 
     requestAnimationFrame(function() {
+      var postRight = detail.getBoundingClientRect().right;
       detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
-        item.setAttribute('data-tooltip-dir', item.getBoundingClientRect().right > window.innerWidth - 200 ? 'left' : 'right');
+        item.setAttribute('data-tooltip-dir', item.getBoundingClientRect().right > postRight - 200 ? 'left' : 'right');
       });
     });
 
