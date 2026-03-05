@@ -298,7 +298,7 @@ const PostModule = (function() {
     try { fixIOSScrollBoundary(postListEl); } catch (_eIOSFix0) {}
     try { fixIOSScrollBoundary(recentPanelContentEl); } catch (_eIOSFix1) {}
 
-    // data-tooltip-dir is set at render time in the HTML (right half = left, left half = right).
+    // data-tooltip-dir is set at render time: right for first 75%, left for final 25%.
   }
 
   function bindAppEvents() {
@@ -2920,15 +2920,6 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-
-    requestAnimationFrame(function() { requestAnimationFrame(function() {
-      detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
-        var c = item.closest('.post-links-container, .post-amenities-container');
-        var pillWidth = Math.max(36, (item.getAttribute('data-tooltip') || '').length * 7 + 50);
-        item.setAttribute('data-tooltip-dir', c && item.getBoundingClientRect().right + pillWidth > c.getBoundingClientRect().right ? 'left' : 'right');
-      });
-    }); });
-
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
         requestAnimationFrame(function() {
@@ -3193,8 +3184,9 @@ const PostModule = (function() {
       });
 
       var iconLinks = [];
+      var linkFlipIdx = Math.ceil(linkData.length * 0.75);
       linkData.forEach(function(d, idx) {
-        var dir = 'right';
+        var dir = idx >= linkFlipIdx ? 'left' : 'right';
         iconLinks.push(
           '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '">' +
             '<span class="post-links-item" data-tooltip="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
@@ -3212,7 +3204,7 @@ const PostModule = (function() {
       }
     }
 
-    // Amenities strip (show only amenities for this post/location; grey inactive, white active)
+    // Amenities (show only amenities for this post/location; grey inactive, white active)
     var amenitiesStripRowHtml = '';
     if (amenitiesList && amenitiesList.length) {
       var amenData = [];
@@ -3235,8 +3227,9 @@ const PostModule = (function() {
       });
 
       var partsAmen = [];
+      var amenFlipIdx = Math.ceil(amenData.length * 0.75);
       amenData.forEach(function(d, idx) {
-        var dir = 'right';
+        var dir = idx >= amenFlipIdx ? 'left' : 'right';
         var yn = d.active ? 'Yes' : 'No';
         partsAmen.push(
           '<span class="post-amenities-item' + (d.active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(d.label + ': ' + yn) + '" data-tooltip="' + escapeHtml(d.active ? d.label : 'No ' + d.label) + '" data-tooltip-dir="' + dir + '">' +
@@ -3247,7 +3240,7 @@ const PostModule = (function() {
 
       if (partsAmen.length) {
         amenitiesStripRowHtml =
-          '<div class="post-info-row post-info-row-amenitiesstrip">' +
+          '<div class="post-info-row post-info-row-amenities">' +
             '<div class="post-amenities-container">' + partsAmen.join('') + '</div>' +
           '</div>';
       }
@@ -3364,7 +3357,7 @@ const PostModule = (function() {
           escapeHtml: escapeHtml,
           isLocationFiltered: isLocationFiltered
         }),
-        // Amenities (icon strip) — location-specific, so it sits under the location menu
+        // Amenities icons — location-specific, so it sits under the location menu
         amenitiesStripRowHtml || '',
         // Session component (dates button + ticket container)
         PostSessionComponent.render({
@@ -3383,7 +3376,7 @@ const PostModule = (function() {
         // CTA buttons
         ticketsUrl ? '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Get Tickets</a>' : '',
         itemUrl ? '<a href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Shop Now</a>' : '',
-        // Links (icon strip)
+        // Links icons
         linksStripRowHtml || '',
         // Public email
         publicEmail ? (function() {
@@ -3405,7 +3398,7 @@ const PostModule = (function() {
             '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
           '</div>';
         })() : '',
-        // Amenities summary is no longer rendered here; amenities display uses the icon strip only.
+        // Amenities summary is no longer rendered here; amenities display uses the icon container only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +
           '🏷️ ' + escapeHtml(couponCode) +
