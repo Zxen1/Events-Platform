@@ -1485,11 +1485,10 @@
 
 /* Info row - each line of info */
 .post-cta-button {
-  width: 100%;
-  max-width: 100%;
-  margin-left: -10px;
+  width: auto;
+  max-width: none;
+  margin: 0 -10px 10px;
   padding: 0 10px;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
 .post-info-row {
