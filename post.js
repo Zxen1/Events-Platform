@@ -2920,6 +2920,8 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
+    try { setTooltipDirections(detail); } catch (_eTTDir) {}
+
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
         requestAnimationFrame(function() {
@@ -3019,6 +3021,24 @@ const PostModule = (function() {
    * @param {number} [activeMapCardIndex] - Which map card/location should be active for this open view
    * @returns {HTMLElement} Detail view element
    */
+
+  function setTooltipDirections(el) {
+    var strip = el.querySelector('.post-links-strip, .post-amenities-strip');
+    if (!strip) return;
+    var containerRect = strip.getBoundingClientRect();
+    var items = el.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]');
+    items.forEach(function(item) {
+      var text = item.getAttribute('data-tooltip') || '';
+      var estimatedPillWidth = text.length * 7 + 50;
+      var itemRect = item.getBoundingClientRect();
+      if (itemRect.right + estimatedPillWidth > containerRect.right) {
+        item.setAttribute('data-tooltip-dir', 'left');
+      } else {
+        item.setAttribute('data-tooltip-dir', 'right');
+      }
+    });
+  }
+
   function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
@@ -3183,9 +3203,8 @@ const PostModule = (function() {
       });
 
       var iconLinks = [];
-      var linkHalfIdx = Math.ceil(linkData.length / 2);
       linkData.forEach(function(d, idx) {
-        var dir = idx >= linkHalfIdx ? 'left' : 'right';
+        var dir = 'right';
         iconLinks.push(
           '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '">' +
             '<span class="post-links-item" data-tooltip="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
@@ -3226,9 +3245,8 @@ const PostModule = (function() {
       });
 
       var partsAmen = [];
-      var halfIdx = Math.ceil(amenData.length / 2);
       amenData.forEach(function(d, idx) {
-        var dir = idx >= halfIdx ? 'left' : 'right';
+        var dir = 'right';
         var yn = d.active ? 'Yes' : 'No';
         partsAmen.push(
           '<span class="post-amenities-item' + (d.active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(d.label + ': ' + yn) + '" data-tooltip="' + escapeHtml(d.active ? d.label : 'No ' + d.label) + '" data-tooltip-dir="' + dir + '">' +

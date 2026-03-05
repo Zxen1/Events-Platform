@@ -1629,6 +1629,11 @@
   z-index: 2;
 }
 
+.post-links-item:hover .post-links-icon {
+  width: 24px;
+  height: 24px;
+}
+
 /* Base pill styles */
 .post-amenities-item::after,
 .post-links-item::after {
