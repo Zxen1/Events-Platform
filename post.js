@@ -2899,7 +2899,7 @@ const PostModule = (function() {
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
       // The slot stays in the DOM — TopSlack anchor remains connected.
-      // Swap countdown bars in-place so open post aligns exactly with postcard position.
+      // If open-post countdown is enabled, hide the slot countdown bar to avoid duplicates.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       var cardStatusBar = null;
       try {
@@ -2908,16 +2908,11 @@ const PostModule = (function() {
         var fallbackCardBar = slot.querySelector('.post-statusbar--slot-card');
         if (fallbackCardBar && fallbackCardBar.parentElement === slot) cardStatusBar = fallbackCardBar;
       }
-      if (cardStatusBar) {
+      var openHeaderBar = null;
+      try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
+      if (cardStatusBar && openHeaderBar) {
         cardStatusBar.style.display = 'none';
         detail.__hiddenSlotStatusBar = cardStatusBar;
-      }
-      if (detail.__openSlotStatusBar) {
-        if (cardStatusBar && cardStatusBar.parentElement === slot) {
-          slot.insertBefore(detail.__openSlotStatusBar, cardStatusBar);
-        } else {
-          slot.appendChild(detail.__openSlotStatusBar);
-        }
       }
       if (cardToHide) {
         cardToHide.style.display = 'none';
@@ -3023,9 +3018,6 @@ const PostModule = (function() {
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
         openPostEl.__hiddenSlotStatusBar.style.display = '';
-      }
-      if (openPostEl.__openSlotStatusBar && openPostEl.__openSlotStatusBar.parentElement) {
-        openPostEl.__openSlotStatusBar.parentElement.removeChild(openPostEl.__openSlotStatusBar);
       }
       // Remove the detail view from the slot
       openPostEl.remove();
@@ -3517,15 +3509,12 @@ const PostModule = (function() {
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
 
-    // Countdown status bar for open post.
-    // Do NOT append inside .post-header: it must swap into the slot-level bar position
-    // so open/close alignment matches postcard bars exactly.
+    // Countdown status bar for open post (inside sticky header, at top row).
     var _postSett = App.getState('settings') || {};
     if (_postSett.countdown_posts) {
       var _postBarResult = buildCountdownStatusBar(post, activeLoc);
       if (_postBarResult) {
-        _postBarResult.bar.classList.add('post-statusbar--slot-open');
-        wrap.__openSlotStatusBar = _postBarResult.bar;
+        postHeader.insertBefore(_postBarResult.bar, postHeader.firstChild);
       }
     }
 
@@ -4242,9 +4231,6 @@ const PostModule = (function() {
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
         openPostEl.__hiddenSlotStatusBar.style.display = '';
-      }
-      if (openPostEl.__openSlotStatusBar && openPostEl.__openSlotStatusBar.parentElement) {
-        openPostEl.__openSlotStatusBar.parentElement.removeChild(openPostEl.__openSlotStatusBar);
       }
       openPostEl.remove();
       // Restore the hidden card
