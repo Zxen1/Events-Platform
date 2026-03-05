@@ -2921,21 +2921,13 @@ const PostModule = (function() {
     }
 
 
-    requestAnimationFrame(function() {
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
       detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
-        try {
-          var strip = item.closest('.post-links-container, .post-amenities-container');
-          var visibleRight = strip ? strip.getBoundingClientRect().right : detail.getBoundingClientRect().right;
-          var itemRect = item.getBoundingClientRect();
-          var pillWidth = item.offsetWidth || 36;
-          var text = item.getAttribute('data-tooltip') || '';
-          if (text.length > 0) { pillWidth = Math.max(pillWidth, text.length * 7 + 50); }
-          item.setAttribute('data-tooltip-dir', itemRect.right + pillWidth > visibleRight ? 'left' : 'right');
-        } catch (_eTTDir) {
-          item.setAttribute('data-tooltip-dir', 'right');
-        }
+        var c = item.closest('.post-links-container, .post-amenities-container');
+        var pillWidth = Math.max(36, (item.getAttribute('data-tooltip') || '').length * 7 + 50);
+        item.setAttribute('data-tooltip-dir', c && item.getBoundingClientRect().right + pillWidth > c.getBoundingClientRect().right ? 'left' : 'right');
       });
-    });
+    }); });
 
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
