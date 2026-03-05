@@ -57,18 +57,18 @@
      */
     function buildStatusBar(post) {
         var bar = document.createElement('div');
-        bar.className = 'posteditor-status-bar';
+        bar.className = 'posteditor-statusbar';
 
         var leftSpan = document.createElement('span');
-        leftSpan.className = 'posteditor-status-bar-left';
+        leftSpan.className = 'posteditor-statusbar-left';
         var statusSpan = document.createElement('span');
-        statusSpan.className = 'posteditor-status-bar-status';
+        statusSpan.className = 'posteditor-statusbar-status';
         var tierSpan = document.createElement('span');
-        tierSpan.className = 'posteditor-status-bar-tier';
+        tierSpan.className = 'posteditor-statusbar-tier';
         var countdownSpan = document.createElement('span');
-        countdownSpan.className = 'posteditor-status-bar-countdown';
+        countdownSpan.className = 'posteditor-statusbar-countdown';
         var dateSpan = document.createElement('span');
-        dateSpan.className = 'posteditor-status-bar-date';
+        dateSpan.className = 'posteditor-statusbar-date';
 
         // Determine status and color
         var status = '';
@@ -84,20 +84,20 @@
 
         if (isDeleted) {
             status = 'DELETED';
-            colorClass = 'posteditor-status-bar--black';
+            colorClass = 'posteditor-statusbar--black';
             var deletedAt = new Date(post.deleted_at);
             var removalDate = new Date(deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
             countdownSpan.textContent = 'Removal in ' + formatCountdown(removalDate, now);
             dateSpan.textContent = formatStatusDate(deletedAt);
         } else if (isExpiredByDb || isExpiredByTime) {
             status = 'EXPIRED';
-            colorClass = 'posteditor-status-bar--black';
+            colorClass = 'posteditor-statusbar--black';
             if (expiresAt) {
                 dateSpan.textContent = formatStatusDate(expiresAt);
             }
         } else if (visibility === 'hidden') {
             status = 'HIDDEN';
-            colorClass = 'posteditor-status-bar--darkgray';
+            colorClass = 'posteditor-statusbar--darkgray';
             if (expiresAt) {
                 dateSpan.textContent = formatStatusDate(expiresAt);
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
@@ -109,17 +109,17 @@
                 var daysRemaining = msRemaining / (1000 * 60 * 60 * 24);
                 status = 'ACTIVE';
                 if (daysRemaining >= 7) {
-                    colorClass = 'posteditor-status-bar--green';
+                    colorClass = 'posteditor-statusbar--green';
                 } else if (daysRemaining >= 3) {
-                    colorClass = 'posteditor-status-bar--yellow';
+                    colorClass = 'posteditor-statusbar--yellow';
                 } else {
-                    colorClass = 'posteditor-status-bar--red';
+                    colorClass = 'posteditor-statusbar--red';
                 }
                 dateSpan.textContent = formatStatusDate(expiresAt);
                 countdownSpan.textContent = formatCountdown(expiresAt, now);
             } else {
                 status = 'ACTIVE';
-                colorClass = 'posteditor-status-bar--green';
+                colorClass = 'posteditor-statusbar--green';
             }
         }
 
@@ -532,7 +532,7 @@
                 oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
             }
 
-            var oldBar = postContainer.querySelector('.posteditor-status-bar');
+            var oldBar = postContainer.querySelector('.posteditor-statusbar');
             if (oldBar) {
                 oldBar.parentNode.replaceChild(buildStatusBar(post), oldBar);
             }
@@ -971,7 +971,7 @@
                     hideInput.checked = !hideInput.checked;
                     hideSlider.classList.toggle('component-switch-slider--on-default');
                     // Rebuild modal status bar
-                    var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                    var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
                     if (oldModalBar) {
                         var newModalBar = buildStatusBar(post);
                         oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
@@ -979,7 +979,7 @@
                     // Rebuild Post Editor card status bar
                     var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
                     if (postItem) {
-                        var oldBar = postItem.querySelector('.posteditor-status-bar');
+                        var oldBar = postItem.querySelector('.posteditor-statusbar');
                         if (oldBar) {
                             var newBar = buildStatusBar(post);
                             oldBar.parentNode.replaceChild(newBar, oldBar);
@@ -1035,14 +1035,14 @@
                                         }
                                         deleteItem.style.display = 'none';
                                         restoreItem.style.display = '';
-                                        var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                        var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
                                         if (oldModalBar) {
                                             var newModalBar = buildStatusBar(post);
                                             oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                                         }
                                         var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
                                         if (postItem) {
-                                            var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                            var oldBar = postItem.querySelector('.posteditor-statusbar');
                                             if (oldBar) {
                                                 var newBar = buildStatusBar(post);
                                                 oldBar.parentNode.replaceChild(newBar, oldBar);
@@ -1117,14 +1117,14 @@
                                         }
                                         restoreItem.style.display = 'none';
                                         deleteItem.style.display = '';
-                                        var oldModalBar = modalContainer.querySelector('.posteditor-status-bar');
+                                        var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
                                         if (oldModalBar) {
                                             var newModalBar = buildStatusBar(post);
                                             oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                                         }
                                         var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
                                         if (postItem) {
-                                            var oldBar = postItem.querySelector('.posteditor-status-bar');
+                                            var oldBar = postItem.querySelector('.posteditor-statusbar');
                                             if (oldBar) {
                                                 var newBar = buildStatusBar(post);
                                                 oldBar.parentNode.replaceChild(newBar, oldBar);

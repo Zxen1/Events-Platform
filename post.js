@@ -1710,7 +1710,7 @@ const PostModule = (function() {
         var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
         if (_cardBarResult) {
           if (_cardSett.countdown_postcards_mode === 'soonest_only') {
-            _cardBarResult.bar.classList.add('post-status-bar--modesoonest');
+            _cardBarResult.bar.classList.add('post-statusbar--modesoonest');
           }
           card.classList.add('post-card--countdown' + _cardBarResult.state);
           slot.appendChild(_cardBarResult.bar);
@@ -2601,7 +2601,7 @@ const PostModule = (function() {
     }
 
     var bar = document.createElement('div');
-    bar.className = 'post-status-bar post-status-bar--' + state;
+    bar.className = 'post-statusbar post-statusbar--' + state;
     bar.textContent = label;
     return { bar: bar, state: state };
   }
@@ -4848,7 +4848,7 @@ const PostModule = (function() {
    * (tracked by post_map_card_id), not the post as a whole. This means:
    * - A multi-location post produces separate recent cards per visited location
    * - The location line always shows the specific location name, never "X Locations"
-   * Structure: .recent-card-wrapper > .recent-status-bar + .recent-card
+   * Structure: .recent-card-wrapper > .recent-statusbar + .recent-card
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
    * @returns {HTMLElement|null} Recent card wrapper element
    */
@@ -4931,15 +4931,15 @@ const PostModule = (function() {
     // Add status bar above card (timestamp + optional status)
     if (lastOpenedText || entry.unavailable) {
       var statusBar = document.createElement('div');
-      statusBar.className = 'recent-status-bar';
+      statusBar.className = 'recent-statusbar';
       if (entry.unavailable) {
-        statusBar.classList.add('recent-status-bar--unavailable');
+        statusBar.classList.add('recent-statusbar--unavailable');
       }
       
       // Timestamp (left side)
       if (lastOpenedText) {
         var timestampSpan = document.createElement('span');
-        timestampSpan.className = 'recent-status-bar-timestamp';
+        timestampSpan.className = 'recent-statusbar-timestamp';
         timestampSpan.textContent = lastOpenedText;
         statusBar.appendChild(timestampSpan);
       }
@@ -4947,7 +4947,7 @@ const PostModule = (function() {
       // Status text (right side) - shown when unavailable
       if (entry.unavailable) {
         var statusSpan = document.createElement('span');
-        statusSpan.className = 'recent-status-bar-status';
+        statusSpan.className = 'recent-statusbar-status';
         statusSpan.textContent = 'unavailable';
         statusBar.appendChild(statusSpan);
       }

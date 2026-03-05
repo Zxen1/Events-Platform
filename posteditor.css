@@ -105,7 +105,7 @@
    STATUS BAR (above post cards and inside manage modal)
    ============================================================================ */
 
-.posteditor-status-bar {
+.posteditor-statusbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -116,52 +116,52 @@
   white-space: nowrap;
 }
 
-.posteditor-status-bar-left {
+.posteditor-statusbar-left {
   flex-shrink: 0;
 }
 
-.posteditor-status-bar-status {
+.posteditor-statusbar-status {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
 
-.posteditor-status-bar-tier {
+.posteditor-statusbar-tier {
   margin-left: 6px;
 }
 
-.posteditor-status-bar-countdown {
+.posteditor-statusbar-countdown {
   flex-shrink: 0;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.85);
 }
 
-.posteditor-status-bar-date {
+.posteditor-statusbar-date {
   flex-shrink: 0;
   color: rgba(255, 255, 255, 0.6);
 }
 
 /* Color states */
-.posteditor-status-bar--green {
+.posteditor-statusbar--green {
   background: var(--green-900);
 }
 
-.posteditor-status-bar--yellow {
+.posteditor-statusbar--yellow {
   background: var(--yellow-900);
 }
 
-.posteditor-status-bar--red {
+.posteditor-statusbar--red {
   background: var(--red-900);
 }
 
-.posteditor-status-bar--gray {
+.posteditor-statusbar--gray {
   background: var(--gray-500);
 }
 
-.posteditor-status-bar--darkgray {
+.posteditor-statusbar--darkgray {
   background: #444;
 }
 
-.posteditor-status-bar--black {
+.posteditor-statusbar--black {
   background: #000;
 }
 
@@ -180,27 +180,27 @@
 }
 
 /* Hover border color matches status bar color — uses box-shadow to match post/recent panel technique */
-.posteditor-item:has(.posteditor-status-bar--green):hover {
+.posteditor-item:has(.posteditor-statusbar--green):hover {
   box-shadow: inset 0 0 0 1px var(--green-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--yellow):hover {
+.posteditor-item:has(.posteditor-statusbar--yellow):hover {
   box-shadow: inset 0 0 0 1px var(--yellow-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--red):hover {
+.posteditor-item:has(.posteditor-statusbar--red):hover {
   box-shadow: inset 0 0 0 1px var(--red-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--gray):hover {
+.posteditor-item:has(.posteditor-statusbar--gray):hover {
   box-shadow: inset 0 0 0 1px var(--gray-500);
 }
 
-.posteditor-item:has(.posteditor-status-bar--darkgray):hover {
+.posteditor-item:has(.posteditor-statusbar--darkgray):hover {
   box-shadow: inset 0 0 0 1px #444;
 }
 
-.posteditor-item:has(.posteditor-status-bar--black):hover {
+.posteditor-item:has(.posteditor-statusbar--black):hover {
   box-shadow: inset 0 0 0 1px #000;
 }
 
@@ -306,57 +306,57 @@
 }
 
 /* Expanded post frame in Post Editor — color matches status bar */
-.posteditor-item:has(.posteditor-status-bar--green) .post::after {
+.posteditor-item:has(.posteditor-statusbar--green) .post::after {
   border-left-color: var(--green-900);
   border-right-color: var(--green-900);
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--green) .post-header {
+.posteditor-item:has(.posteditor-statusbar--green) .post-header {
   border-top-color: var(--green-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--yellow) .post::after {
+.posteditor-item:has(.posteditor-statusbar--yellow) .post::after {
   border-left-color: var(--yellow-900);
   border-right-color: var(--yellow-900);
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--yellow) .post-header {
+.posteditor-item:has(.posteditor-statusbar--yellow) .post-header {
   border-top-color: var(--yellow-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--red) .post::after {
+.posteditor-item:has(.posteditor-statusbar--red) .post::after {
   border-left-color: var(--red-900);
   border-right-color: var(--red-900);
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--red) .post-header {
+.posteditor-item:has(.posteditor-statusbar--red) .post-header {
   border-top-color: var(--red-900);
 }
 
-.posteditor-item:has(.posteditor-status-bar--gray) .post::after {
+.posteditor-item:has(.posteditor-statusbar--gray) .post::after {
   border-left-color: var(--gray-500);
   border-right-color: var(--gray-500);
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--gray) .post-header {
+.posteditor-item:has(.posteditor-statusbar--gray) .post-header {
   border-top-color: var(--gray-500);
 }
 
-.posteditor-item:has(.posteditor-status-bar--darkgray) .post::after {
+.posteditor-item:has(.posteditor-statusbar--darkgray) .post::after {
   border-left-color: #444;
   border-right-color: #444;
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--darkgray) .post-header {
+.posteditor-item:has(.posteditor-statusbar--darkgray) .post-header {
   border-top-color: #444;
 }
 
-.posteditor-item:has(.posteditor-status-bar--black) .post::after {
+.posteditor-item:has(.posteditor-statusbar--black) .post::after {
   border-left-color: #000;
   border-right-color: #000;
   border-bottom-color: transparent;
 }
-.posteditor-item:has(.posteditor-status-bar--black) .post-header {
+.posteditor-item:has(.posteditor-statusbar--black) .post-header {
   border-top-color: #000;
 }
 
@@ -988,22 +988,22 @@
 }
 
 /* Modal border color matches status bar */
-.posteditor-modal-container:has(.posteditor-status-bar--green) {
+.posteditor-modal-container:has(.posteditor-statusbar--green) {
   border-color: var(--green-900);
 }
-.posteditor-modal-container:has(.posteditor-status-bar--yellow) {
+.posteditor-modal-container:has(.posteditor-statusbar--yellow) {
   border-color: var(--yellow-900);
 }
-.posteditor-modal-container:has(.posteditor-status-bar--red) {
+.posteditor-modal-container:has(.posteditor-statusbar--red) {
   border-color: var(--red-900);
 }
-.posteditor-modal-container:has(.posteditor-status-bar--gray) {
+.posteditor-modal-container:has(.posteditor-statusbar--gray) {
   border-color: var(--gray-500);
 }
-.posteditor-modal-container:has(.posteditor-status-bar--darkgray) {
+.posteditor-modal-container:has(.posteditor-statusbar--darkgray) {
   border-color: #444;
 }
-.posteditor-modal-container:has(.posteditor-status-bar--black) {
+.posteditor-modal-container:has(.posteditor-statusbar--black) {
   border-color: #000;
 }
 

@@ -283,8 +283,8 @@
   margin-bottom: 0;
 }
 
-/* Status bar above recent card - purple for Recent panel distinction */
-.recent-status-bar {
+/* Statusbar above recent card - purple for Recent panel distinction */
+.recent-statusbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -296,19 +296,19 @@
   padding: 2px 4px;
 }
 
-.recent-status-bar-timestamp {
+.recent-statusbar-timestamp {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 
-.recent-status-bar-status {
+.recent-statusbar-status {
   flex-shrink: 0;
 }
 
 /* Unavailable state - gray background */
-.recent-status-bar--unavailable {
+.recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
@@ -1759,7 +1759,7 @@
    States: coming-soon (blue), now-showing (green), finished (dark).
    Border color on the post-card mirrors the bar color.
    ------------------------------------------------------------------------- */
-.post-status-bar {
+.post-statusbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1770,24 +1770,24 @@
   padding: 2px 4px;
 }
 
-.post-status-bar--comingsoon {
+.post-statusbar--comingsoon {
   background: #2563eb;
 }
 
-.post-status-bar--nowshowing {
+.post-statusbar--nowshowing {
   background: #16a34a;
 }
 
-.post-status-bar--finished {
+.post-statusbar--finished {
   background: #111827;
 }
 
 /* Soonest-only mode: hidden until .post-list--sortsoon is applied */
-.post-status-bar--modesoonest {
+.post-statusbar--modesoonest {
   display: none;
 }
 
-.post-list--sortsoon .post-status-bar--modesoonest {
+.post-list--sortsoon .post-statusbar--modesoonest {
   display: flex;
 }
 
