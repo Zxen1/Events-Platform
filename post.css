@@ -1527,6 +1527,15 @@
   flex: 0 0 auto;
 }
 
+.post-links-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+}
+
 .post-links-link:hover {
   text-decoration: none;
 }
@@ -1597,42 +1606,31 @@
 
 /* -------------------------------------------------------
    TOOLTIP PILLS — amenity icons and link icons
-   Amenities: ::after on .post-amenities-item (span).
-   Links: ::after on .post-links-icon (span inside a).
-   Both use the same pill style. JS sets data-tooltip-dir
-   on the item/.post-links-link for direction control.
+   Both use ::after on a 36px span container.
+   JS sets data-tooltip and data-tooltip-dir on that span.
    ------------------------------------------------------- */
 
-.post-amenities-item {
+.post-amenities-item,
+.post-links-item {
   position: relative;
   overflow: visible;
 }
 
-.post-amenities-item:hover {
+.post-amenities-item:hover,
+.post-links-item:hover {
   z-index: 3;
 }
 
-.post-links-link {
-  position: relative;
-  overflow: visible;
-}
-
-/* Amenity icon above its pill */
-.post-amenities-icon {
-  position: relative;
-  z-index: 2;
-}
-
-/* Link icon above its pill */
+/* Icons sit above pill */
+.post-amenities-icon,
 .post-links-icon {
   position: relative;
   z-index: 2;
-  overflow: visible;
 }
 
-/* Base pill styles — shared by amenities (::after on item) and links (::after on link anchor) */
+/* Base pill styles */
 .post-amenities-item::after,
-.post-links-link::after {
+.post-links-item::after {
   content: attr(data-tooltip);
   position: absolute;
   top: 0;
@@ -1655,15 +1653,15 @@
   transition: opacity 0.15s ease;
 }
 
-/* Right-expand (default) — amenities and links */
+/* Right-expand (default) */
 .post-amenities-item:not([data-tooltip-dir="left"]):hover::after,
-.post-links-link:not([data-tooltip-dir="left"]):hover::after {
+.post-links-item:not([data-tooltip-dir="left"]):hover::after {
   opacity: 1;
 }
 
-/* Left-expand: pill grows leftward, icon on right side — amenities and links */
+/* Left-expand */
 .post-amenities-item[data-tooltip-dir="left"]::after,
-.post-links-link[data-tooltip-dir="left"]::after {
+.post-links-item[data-tooltip-dir="left"]::after {
   left: auto;
   right: 0;
   padding-left: 12px;
@@ -1671,7 +1669,7 @@
 }
 
 .post-amenities-item[data-tooltip-dir="left"]:hover::after,
-.post-links-link[data-tooltip-dir="left"]:hover::after {
+.post-links-item[data-tooltip-dir="left"]:hover::after {
   opacity: 1;
 }
 
