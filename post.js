@@ -307,7 +307,7 @@ const PostModule = (function() {
       var rect = target.getBoundingClientRect();
       var containerRect = postPanelContentEl.getBoundingClientRect();
       target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 200 ? 'left' : 'right');
-    });
+    }, true);
   }
 
   function bindAppEvents() {

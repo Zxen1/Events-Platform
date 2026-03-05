@@ -1632,9 +1632,9 @@
   content: attr(data-tooltip);
   position: absolute;
   top: 0;
-  left: 3px;
+  left: 0;
   height: 36px;
-  width: 30px;
+  width: 36px;
   overflow: hidden;
   background: rgba(59, 130, 246, 0.9);
   border-radius: 18px;
@@ -1658,26 +1658,26 @@
 
 /* Right-expand (default) — amenities */
 .post-amenities-item:not([data-tooltip-dir="left"]):hover::after {
-  width: 150px;
+  width: 175px;
   opacity: 1;
 }
 
 /* Right-expand (default) — links */
 .post-links-link:not([data-tooltip-dir="left"]):hover .post-links-icon::after {
-  width: 150px;
+  width: 175px;
   opacity: 1;
 }
 
 /* Left-expand: pill grows leftward, icon on right side — amenities */
 .post-amenities-item[data-tooltip-dir="left"]::after {
   left: auto;
-  right: 3px;
+  right: 0;
   padding-left: 12px;
   padding-right: 35px;
 }
 
 .post-amenities-item[data-tooltip-dir="left"]:hover::after {
-  width: 150px;
+  width: 175px;
   opacity: 1;
 }
 
@@ -1690,7 +1690,7 @@
 }
 
 .post-links-link[data-tooltip-dir="left"]:hover .post-links-icon::after {
-  width: 150px;
+  width: 175px;
   opacity: 1;
 }
 
