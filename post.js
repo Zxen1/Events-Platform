@@ -305,7 +305,7 @@ const PostModule = (function() {
         : null;
       if (!target) return;
       var rect = target.getBoundingClientRect();
-      var containerRect = postListEl.getBoundingClientRect();
+      var containerRect = postPanelContentEl.getBoundingClientRect();
       target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 200 ? 'left' : 'right');
     });
   }
@@ -3231,7 +3231,7 @@ const PostModule = (function() {
         var yn = active ? 'Yes' : 'No';
 
         partsAmen.push(
-          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(label + ': ' + yn) + '" data-tooltip="' + escapeHtml(label) + '">' +
+          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(label + ': ' + yn) + '" data-tooltip="' + escapeHtml(active ? label : 'No ' + label) + '">' +
             '<span class="post-amenities-icon" style="--post-amenities-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
           '</span>'
         );
