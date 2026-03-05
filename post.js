@@ -2924,7 +2924,7 @@ const PostModule = (function() {
     requestAnimationFrame(function() {
       detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
         try {
-          var strip = item.closest('.post-links-strip, .post-amenities-strip');
+          var strip = item.closest('.post-links-container, .post-amenities-container');
           var visibleRight = strip ? strip.getBoundingClientRect().right : detail.getBoundingClientRect().right;
           var itemRect = item.getBoundingClientRect();
           var pillWidth = item.offsetWidth || 36;
@@ -3215,7 +3215,7 @@ const PostModule = (function() {
       if (iconLinks.length) {
         linksStripRowHtml =
           '<div class="post-info-row post-info-row-links">' +
-            '<div class="post-links-strip">' + iconLinks.join('') + '</div>' +
+            '<div class="post-links-container">' + iconLinks.join('') + '</div>' +
           '</div>';
       }
     }
@@ -3256,7 +3256,7 @@ const PostModule = (function() {
       if (partsAmen.length) {
         amenitiesStripRowHtml =
           '<div class="post-info-row post-info-row-amenitiesstrip">' +
-            '<div class="post-amenities-strip">' + partsAmen.join('') + '</div>' +
+            '<div class="post-amenities-container">' + partsAmen.join('') + '</div>' +
           '</div>';
       }
     }

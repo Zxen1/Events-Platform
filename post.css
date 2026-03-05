@@ -1506,7 +1506,7 @@
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
-.post-links-strip {
+.post-links-container {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1561,7 +1561,7 @@
   background-color: #fff;
 }
 
-.post-amenities-strip {
+.post-amenities-container {
   display: flex;
   align-items: center;
   gap: 10px;
