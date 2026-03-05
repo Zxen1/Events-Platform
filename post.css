@@ -1643,12 +1643,13 @@
   line-height: 36px;
   color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
-  padding-left: 35px;
-  padding-right: 12px;
+  padding-left: 40px;
+  padding-right: 10px;
+  width: max-content;
   opacity: 0;
   pointer-events: none;
   z-index: 1;
-  transition: width 0.22s ease, opacity 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 /* Link icon pill: offset to align with parent item bounds */
@@ -1659,13 +1660,11 @@
 
 /* Right-expand (default) — amenities */
 .post-amenities-item:not([data-tooltip-dir="left"]):hover::after {
-  width: 175px;
   opacity: 1;
 }
 
 /* Right-expand (default) — links */
 .post-links-link:not([data-tooltip-dir="left"]):hover .post-links-icon::after {
-  width: 175px;
   opacity: 1;
 }
 
@@ -1678,7 +1677,6 @@
 }
 
 .post-amenities-item[data-tooltip-dir="left"]:hover::after {
-  width: 175px;
   opacity: 1;
 }
 
@@ -1691,7 +1689,6 @@
 }
 
 .post-links-link[data-tooltip-dir="left"]:hover .post-links-icon::after {
-  width: 175px;
   opacity: 1;
 }
 
