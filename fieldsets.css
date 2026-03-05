@@ -200,6 +200,11 @@
     border-color: #ef4444;
 }
 
+.fieldset-textarea:hover + .component-textarearesize-handle,
+.fieldset-textarea:focus + .component-textarearesize-handle {
+    border-color: var(--blue-500);
+}
+
 /* ----------------------------------------------------------------------------
    FIELDSET MENU
    Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
