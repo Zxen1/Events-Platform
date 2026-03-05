@@ -2920,7 +2920,12 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-    try { requestAnimationFrame(function() { setTooltipDirections(detail); }); } catch (_eTTDir) {}
+
+    requestAnimationFrame(function() {
+      detail.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
+        item.setAttribute('data-tooltip-dir', item.getBoundingClientRect().right > window.innerWidth - 200 ? 'left' : 'right');
+      });
+    });
 
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
@@ -3021,23 +3026,6 @@ const PostModule = (function() {
    * @param {number} [activeMapCardIndex] - Which map card/location should be active for this open view
    * @returns {HTMLElement} Detail view element
    */
-
-  function setTooltipDirections(el) {
-    var strip = el.querySelector('.post-links-strip, .post-amenities-strip');
-    if (!strip) return;
-    var containerRect = strip.getBoundingClientRect();
-    var items = el.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]');
-    items.forEach(function(item) {
-      var text = item.getAttribute('data-tooltip') || '';
-      var estimatedPillWidth = text.length * 7 + 50;
-      var itemRect = item.getBoundingClientRect();
-      if (itemRect.right + estimatedPillWidth > containerRect.right) {
-        item.setAttribute('data-tooltip-dir', 'left');
-      } else {
-        item.setAttribute('data-tooltip-dir', 'right');
-      }
-    });
-  }
 
   function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
     // Get all map cards (locations)
