@@ -351,6 +351,10 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 Before sifting through large amounts of code to find a bug, add a temporary `console.error` to surface the real error.
 Remove it after the fix.
 
+### Use Browser DevTools First
+For 500 errors, ask the user to check the Network tab Response body. For JS bugs, use `console.error` or type directly into the console to inspect variables and trace logic.
+Never read through code hunting for a runtime error when DevTools can surface it in seconds.
+
 ---
 
 ## IF UNSURE
