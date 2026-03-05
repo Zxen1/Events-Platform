@@ -298,17 +298,7 @@ const PostModule = (function() {
     try { fixIOSScrollBoundary(postListEl); } catch (_eIOSFix0) {}
     try { fixIOSScrollBoundary(recentPanelContentEl); } catch (_eIOSFix1) {}
 
-    // Tooltip pill direction: set data-tooltip-dir before hover so CSS expands the correct way.
-    postListEl.addEventListener('mouseover', function(e) {
-      var target = e.target && typeof e.target.closest === 'function'
-        ? e.target.closest('.post-amenities-item, .post-links-link')
-        : null;
-      if (!target) return;
-      var rect = target.getBoundingClientRect();
-      var strip = target.closest('.post-amenities-strip') || target.parentNode;
-      var containerRect = strip.getBoundingClientRect();
-      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < (containerRect.width / 2) ? 'left' : 'right');
-    }, true);
+    // data-tooltip-dir is set at render time in the HTML (right half = left, left half = right).
   }
 
   function bindAppEvents() {
@@ -3211,7 +3201,7 @@ const PostModule = (function() {
     // Amenities strip (show only amenities for this post/location; grey inactive, white active)
     var amenitiesStripRowHtml = '';
     if (amenitiesList && amenitiesList.length) {
-      var partsAmen = [];
+      var amenData = [];
       amenitiesList.forEach(function(a) {
         if (!a) return;
         var key = (a.key === null || a.key === undefined) ? '' : String(a.key).trim();
@@ -3220,20 +3210,24 @@ const PostModule = (function() {
         if (!label) label = key;
         var filename = (a.filename === null || a.filename === undefined) ? '' : String(a.filename).trim();
         if (!filename) return;
-
         var iconUrl = '';
         if (window.App && typeof App.getImageUrl === 'function') {
           iconUrl = App.getImageUrl('amenities', filename);
         }
         if (!iconUrl) return;
-
         var active = false;
         try { active = !!(a.value === 1 || a.value === '1' || a.value === true); } catch (_eAct) { active = false; }
-        var yn = active ? 'Yes' : 'No';
+        amenData.push({ label: label, iconUrl: iconUrl, active: active });
+      });
 
+      var partsAmen = [];
+      var halfIdx = Math.ceil(amenData.length / 2);
+      amenData.forEach(function(d, idx) {
+        var dir = idx >= halfIdx ? 'left' : 'right';
+        var yn = d.active ? 'Yes' : 'No';
         partsAmen.push(
-          '<span class="post-amenities-item' + (active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(label + ': ' + yn) + '" data-tooltip="' + escapeHtml(active ? label : 'No ' + label) + '">' +
-            '<span class="post-amenities-icon" style="--post-amenities-mask:url(' + escapeHtml(iconUrl) + ')"></span>' +
+          '<span class="post-amenities-item' + (d.active ? ' post-amenities-item--active' : '') + '" aria-label="' + escapeHtml(d.label + ': ' + yn) + '" data-tooltip="' + escapeHtml(d.active ? d.label : 'No ' + d.label) + '" data-tooltip-dir="' + dir + '">' +
+            '<span class="post-amenities-icon" style="--post-amenities-mask:url(' + escapeHtml(d.iconUrl) + ')"></span>' +
           '</span>'
         );
       });
