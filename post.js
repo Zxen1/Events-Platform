@@ -1722,6 +1722,7 @@ const PostModule = (function() {
         var _cardPick = pickMapCardInCurrentBounds(post);
         var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
         if (_cardBarResult) {
+          _cardBarResult.bar.classList.add('post-statusbar--slot-card');
           if (_cardSett.countdown_postcards_mode === 'soonest_only') {
             _cardBarResult.bar.classList.add('post-statusbar--modesoonest');
           }
@@ -2898,8 +2899,26 @@ const PostModule = (function() {
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
       // The slot stays in the DOM — TopSlack anchor remains connected.
-      // Other slot children (status bars, Edit/Manage buttons) remain visible.
+      // Swap countdown bars in-place so open post aligns exactly with postcard position.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
+      var cardStatusBar = null;
+      try {
+        cardStatusBar = slot.querySelector(':scope > .post-statusbar--slot-card');
+      } catch (_eCardBarScope) {
+        var fallbackCardBar = slot.querySelector('.post-statusbar--slot-card');
+        if (fallbackCardBar && fallbackCardBar.parentElement === slot) cardStatusBar = fallbackCardBar;
+      }
+      if (cardStatusBar) {
+        cardStatusBar.style.display = 'none';
+        detail.__hiddenSlotStatusBar = cardStatusBar;
+      }
+      if (detail.__openSlotStatusBar) {
+        if (cardStatusBar && cardStatusBar.parentElement === slot) {
+          slot.insertBefore(detail.__openSlotStatusBar, cardStatusBar);
+        } else {
+          slot.appendChild(detail.__openSlotStatusBar);
+        }
+      }
       if (cardToHide) {
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
@@ -3001,6 +3020,13 @@ const PostModule = (function() {
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
+      // Restore slot-level countdown bars to pre-open state.
+      if (openPostEl.__hiddenSlotStatusBar) {
+        openPostEl.__hiddenSlotStatusBar.style.display = '';
+      }
+      if (openPostEl.__openSlotStatusBar && openPostEl.__openSlotStatusBar.parentElement) {
+        openPostEl.__openSlotStatusBar.parentElement.removeChild(openPostEl.__openSlotStatusBar);
+      }
       // Remove the detail view from the slot
       openPostEl.remove();
       // Restore the hidden card
@@ -3491,12 +3517,15 @@ const PostModule = (function() {
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
 
-    // Countdown status bar — inside postHeader at the bottom (sticky with header)
+    // Countdown status bar for open post.
+    // Do NOT append inside .post-header: it must swap into the slot-level bar position
+    // so open/close alignment matches postcard bars exactly.
     var _postSett = App.getState('settings') || {};
     if (_postSett.countdown_posts) {
       var _postBarResult = buildCountdownStatusBar(post, activeLoc);
       if (_postBarResult) {
-        postHeader.appendChild(_postBarResult.bar);
+        _postBarResult.bar.classList.add('post-statusbar--slot-open');
+        wrap.__openSlotStatusBar = _postBarResult.bar;
       }
     }
 
@@ -4210,6 +4239,13 @@ const PostModule = (function() {
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
+      // Restore slot-level countdown bars to pre-open state.
+      if (openPostEl.__hiddenSlotStatusBar) {
+        openPostEl.__hiddenSlotStatusBar.style.display = '';
+      }
+      if (openPostEl.__openSlotStatusBar && openPostEl.__openSlotStatusBar.parentElement) {
+        openPostEl.__openSlotStatusBar.parentElement.removeChild(openPostEl.__openSlotStatusBar);
+      }
       openPostEl.remove();
       // Restore the hidden card
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
