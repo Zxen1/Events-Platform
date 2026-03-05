@@ -1710,7 +1710,7 @@ const PostModule = (function() {
         var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
         if (_cardBarResult) {
           if (_cardSett.countdown_postcards_mode === 'soonest_only') {
-            _cardBarResult.bar.classList.add('post-card-status-bar--mode-soonest');
+            _cardBarResult.bar.classList.add('post-status-bar--mode-soonest');
           }
           card.classList.add('post-card--countdown-' + _cardBarResult.state);
           slot.appendChild(_cardBarResult.bar);
@@ -2601,7 +2601,7 @@ const PostModule = (function() {
     }
 
     var bar = document.createElement('div');
-    bar.className = 'post-card-status-bar post-card-status-bar--' + state;
+    bar.className = 'post-status-bar post-status-bar--' + state;
     bar.textContent = label;
     return { bar: bar, state: state };
   }

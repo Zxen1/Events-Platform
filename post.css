@@ -1759,52 +1759,51 @@
    States: coming-soon (blue), now-showing (green), finished (dark).
    Border color on the post-card mirrors the bar color.
    ------------------------------------------------------------------------- */
-.post-card-status-bar {
+.post-status-bar {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  gap: 10px;
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 3px 4px;
+  margin: 0;
   color: #fff;
-  border-radius: 5px 5px 0 0;
+  padding: 2px 4px;
 }
 
-.post-card-status-bar--coming-soon {
+.post-status-bar--coming-soon {
   background: #2563eb;
 }
 
-.post-card-status-bar--now-showing {
+.post-status-bar--now-showing {
   background: #16a34a;
 }
 
-.post-card-status-bar--finished {
+.post-status-bar--finished {
   background: #111827;
 }
 
 /* Soonest-only mode: hidden until .post-list--sort-soon is applied */
-.post-card-status-bar--mode-soonest {
+.post-status-bar--mode-soonest {
   display: none;
 }
 
-.post-list--sort-soon .post-card-status-bar--mode-soonest {
+.post-list--sort-soon .post-status-bar--mode-soonest {
   display: flex;
 }
 
-/* Postcard border mirrors countdown bar color */
-.post-card--countdown-coming-soon {
+/* Postcard border mirrors countdown bar color; :hover included to prevent override */
+.post-card--countdown-coming-soon,
+.post-card--countdown-coming-soon:hover {
   box-shadow: inset 0 0 0 1px #2563eb;
-  border-radius: 0 0 8px 8px;
 }
 
-.post-card--countdown-now-showing {
+.post-card--countdown-now-showing,
+.post-card--countdown-now-showing:hover {
   box-shadow: inset 0 0 0 1px #16a34a;
-  border-radius: 0 0 8px 8px;
 }
 
-.post-card--countdown-finished {
+.post-card--countdown-finished,
+.post-card--countdown-finished:hover {
   box-shadow: inset 0 0 0 1px #111827;
-  border-radius: 0 0 8px 8px;
 }
+
