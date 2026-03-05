@@ -3023,7 +3023,7 @@ const PostModule = (function() {
   function setTooltipDirs(wrap) {
     wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
       var c = item.closest('.post-links-container, .post-amenities-container'), cr = c && c.getBoundingClientRect();
-      item.setAttribute('data-tooltip-dir', cr && (item.getBoundingClientRect().left - cr.left) > cr.width * 0.75 ? 'left' : 'right');
+      item.setAttribute('data-tooltip-dir', cr && (item.getBoundingClientRect().left - cr.left) > cr.width * 0.60 ? 'left' : 'right');
     });
   }
 
