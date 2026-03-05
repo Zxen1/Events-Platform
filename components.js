@@ -1433,8 +1433,10 @@ const CurrencyComponent = (function(){
         var intPart = parts[0];
         var decPart = parts[1] || '';
         
-        // Thousands separators intentionally not applied — they cause parse corruption
-        // when stored values are re-read (dot-as-thousands stripped from decimal values).
+        // Add thousands separators
+        if (thousSep) {
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousSep);
+        }
         
         // Build the number string - trim .00 if whole number and requested
         var numStr;

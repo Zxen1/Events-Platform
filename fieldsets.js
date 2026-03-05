@@ -5486,9 +5486,9 @@ const FieldsetBuilder = (function(){
                         priceInputs.forEach(function(inp) {
                             var val = String(inp.value || '').trim();
                             if (val === '') return;
-                            var numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
-                            if (!Number.isFinite(numericValue)) return;
-                            if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput && CurrencyComponent.formatWithSymbol) {
+                                var numericValue = CurrencyComponent.parseInput(val, initialCurrValue);
+                                if (!Number.isFinite(numericValue)) return;
                                 inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), initialCurrValue, { trimZeroDecimals: false });
                             }
                         });
