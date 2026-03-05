@@ -298,16 +298,61 @@ const PostModule = (function() {
     try { fixIOSScrollBoundary(postListEl); } catch (_eIOSFix0) {}
     try { fixIOSScrollBoundary(recentPanelContentEl); } catch (_eIOSFix1) {}
 
-    // Tooltip pill direction: set data-tooltip-dir on hover so CSS knows which way to expand.
-    // Default is right; flip to left when icon is within 150px of the container's right edge.
+    // Tooltip pill: single fixed-position element appended to body so it escapes overflow:hidden.
+    var iconTooltipEl = document.createElement('div');
+    iconTooltipEl.className = 'post-icon-tooltip';
+    document.body.appendChild(iconTooltipEl);
+    var iconTooltipHideTimer = null;
+
+    function showIconTooltip(target) {
+      if (iconTooltipHideTimer) { clearTimeout(iconTooltipHideTimer); iconTooltipHideTimer = null; }
+      var label = target.dataset.tooltip || '';
+      iconTooltipEl.textContent = label;
+
+      // Measure expanded width before animating
+      iconTooltipEl.style.transition = 'none';
+      iconTooltipEl.style.width = 'auto';
+      iconTooltipEl.style.opacity = '0';
+      var expandedWidth = iconTooltipEl.scrollWidth;
+
+      var rect = target.getBoundingClientRect();
+      var top = rect.top + 3;
+      var goLeft = (window.innerWidth - rect.right - 6) < expandedWidth;
+
+      iconTooltipEl.style.top = top + 'px';
+      iconTooltipEl.style.width = '0';
+      if (goLeft) {
+        iconTooltipEl.style.left = '';
+        iconTooltipEl.style.right = (window.innerWidth - rect.left + 4) + 'px';
+      } else {
+        iconTooltipEl.style.right = '';
+        iconTooltipEl.style.left = (rect.right + 4) + 'px';
+      }
+
+      // Force reflow then animate
+      void iconTooltipEl.offsetWidth;
+      iconTooltipEl.style.transition = '';
+      iconTooltipEl.style.width = expandedWidth + 'px';
+      iconTooltipEl.style.opacity = '1';
+    }
+
+    function hideIconTooltip() {
+      iconTooltipEl.style.opacity = '0';
+      iconTooltipHideTimer = setTimeout(function() {
+        iconTooltipEl.style.width = '0';
+      }, 220);
+    }
+
     postListEl.addEventListener('mouseover', function(e) {
       var target = e.target && typeof e.target.closest === 'function'
         ? e.target.closest('.post-amenities-item, .post-links-link')
         : null;
-      if (!target) return;
-      var rect = target.getBoundingClientRect();
-      var containerRect = postListEl.getBoundingClientRect();
-      target.setAttribute('data-tooltip-dir', (containerRect.right - rect.right) < 150 ? 'left' : 'right');
+      if (!target || !target.dataset.tooltip) { hideIconTooltip(); return; }
+      showIconTooltip(target);
+    });
+
+    postListEl.addEventListener('mouseleave', function() {
+      hideIconTooltip();
     });
   }
 
