@@ -2920,7 +2920,7 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-    try { setTooltipDirections(detail); } catch (_eTTDir) {}
+    try { requestAnimationFrame(function() { setTooltipDirections(detail); }); } catch (_eTTDir) {}
 
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
