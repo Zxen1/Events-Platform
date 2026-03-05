@@ -1485,6 +1485,9 @@
 
 /* Info row - each line of info */
 .post-cta-button {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 10px;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
