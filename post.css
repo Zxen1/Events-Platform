@@ -1771,6 +1771,10 @@
   text-transform: uppercase;
 }
 
+.post-header .post-statusbar {
+  grid-column: 1 / -1;
+}
+
 .post-statusbar--comingsoon {
   background: #2563eb;
 }
