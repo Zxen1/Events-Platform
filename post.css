@@ -1594,28 +1594,70 @@
 }
 
 /* -------------------------------------------------------
-   TOOLTIP PILL — shared fixed-position element (appended
-   to document.body by post.js so it escapes overflow:hidden).
-   JS positions, sizes and shows/hides it on icon hover.
+   TOOLTIP PILLS — amenity icons and link icons
+   Pill ::after expands from icon width to reveal label.
+   JS sets data-tooltip-dir="left"|"right" on mouseover.
+   Default (no attribute or "right"): expands rightward.
+   "left": expands leftward, icon anchored on right of pill.
    ------------------------------------------------------- */
 
-.post-icon-tooltip {
-  position: fixed;
+.post-amenities-item,
+.post-links-link {
+  position: relative;
+  overflow: visible;
+}
+
+/* Icon spans sit above the pill (z-index: 2 > pill z-index: 1) */
+.post-amenities-icon,
+.post-links-icon {
+  position: relative;
+  z-index: 2;
+}
+
+/* Pill: starts as a 30px circle (icon only), expands on hover */
+.post-amenities-item::after,
+.post-links-link::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 3px;
+  left: 3px;
   height: 30px;
-  line-height: 30px;
+  width: 30px;
+  overflow: hidden;
   background: rgba(10, 10, 18, 0.82);
   border-radius: 15px;
   font-size: 12px;
+  line-height: 30px;
   color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: var(--layer-popover);
-  padding: 0 12px;
-  box-sizing: border-box;
-  width: 0;
+  padding-left: 35px;
+  padding-right: 12px;
   opacity: 0;
+  pointer-events: none;
+  z-index: 1;
   transition: width 0.22s ease, opacity 0.15s ease;
+}
+
+/* Right-expand (default) */
+.post-amenities-item:not([data-tooltip-dir="left"]):hover::after,
+.post-links-link:not([data-tooltip-dir="left"]):hover::after {
+  width: 150px;
+  opacity: 1;
+}
+
+/* Left-expand: pill grows leftward, icon on right side of pill */
+.post-amenities-item[data-tooltip-dir="left"]::after,
+.post-links-link[data-tooltip-dir="left"]::after {
+  left: auto;
+  right: 3px;
+  padding-left: 12px;
+  padding-right: 35px;
+}
+
+.post-amenities-item[data-tooltip-dir="left"]:hover::after,
+.post-links-link[data-tooltip-dir="left"]:hover::after {
+  width: 150px;
+  opacity: 1;
 }
 
 /* Venue info - venue name (bold) + address */
