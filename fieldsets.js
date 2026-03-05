@@ -3260,21 +3260,9 @@ const FieldsetBuilder = (function(){
                 ipPromoValueInput.style.height = '36px';
                 ipPromoValueInput.style.padding = '0 12px';
                 ipPromoValueInput.style.borderRadius = '5px';
-                // Only allow numbers and decimal, track completeness
+                // Only allow whole numbers (integers)
                 ipPromoValueInput.addEventListener('input', function() {
-                    var isFixed = ipPromoTypeFixed.classList.contains('fieldset-itempricing-promo-type-btn--active');
-                    if (isFixed) {
-                        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                            throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
-                        }
-                        var code = ipGetSelectedCurrencyCode();
-                        if (code) this.value = CurrencyComponent.sanitizeInput(this.value, code);
-                    } else {
-                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                        var parts = raw.split('.');
-                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                        this.value = raw;
-                    }
+                    this.value = String(this.value || '').replace(/[^0-9]/g, '');
                     ipPromoDiscountReq.classList.toggle('fieldset-label-required--complete', !!this.value);
                 });
                 // Set initial completeness state for discount
@@ -4970,21 +4958,9 @@ const FieldsetBuilder = (function(){
                     promoValueInput.style.height = '36px';
                     promoValueInput.style.padding = '0 12px';
                     promoValueInput.style.borderRadius = '5px';
-                    // Only allow numbers and decimal, track completeness
+                    // Only allow whole numbers (integers)
                     promoValueInput.addEventListener('input', function() {
-                        var isFixed = promoTypeFixed.classList.contains('fieldset-ticketpricing-promo-type-btn--active');
-                        if (isFixed) {
-                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
-                            }
-                            var code = tpGetTicketCurrencyCode();
-                            if (code) this.value = CurrencyComponent.sanitizeInput(this.value, code);
-                        } else {
-                            var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                            var parts = raw.split('.');
-                            if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                            this.value = raw;
-                        }
+                        this.value = String(this.value || '').replace(/[^0-9]/g, '');
                         promoDiscountReq.classList.toggle('fieldset-label-required--complete', !!this.value);
                     });
                     // Set initial completeness state for discount
