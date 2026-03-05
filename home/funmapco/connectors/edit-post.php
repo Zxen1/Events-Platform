@@ -1220,9 +1220,9 @@ foreach ($byLoc as $locNum => $entries) {
     // Links
     if (is_array($card['links_data']) && count($card['links_data']) > 0) {
       if (table_exists($mysqli, 'post_links')) {
-        $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, external_url, sort_order, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 1, NOW(), NOW())");
+        $stmtLinks = $mysqli->prepare("INSERT INTO post_links (post_map_card_id, link_type, external_url, is_active, created_at, updated_at) VALUES (?, ?, ?, 1, NOW(), NOW())");
         if ($stmtLinks) {
-          $sortOrder = 0;
+          $linkCount = 0;
           foreach ($card['links_data'] as $lnk) {
             if (!is_array($lnk)) continue;
             $t = isset($lnk['link_type']) ? trim((string)$lnk['link_type']) : (isset($lnk['type']) ? trim((string)$lnk['type']) : '');
@@ -1230,10 +1230,10 @@ foreach ($byLoc as $locNum => $entries) {
             $t = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '_', $t));
             $t = trim($t, '_');
             if ($t === '' || $u === '') continue;
-            if ($sortOrder >= 10) break;
-            $stmtLinks->bind_param('issi', $mapCardId, $t, $u, $sortOrder);
+            if ($linkCount >= 10) break;
+            $stmtLinks->bind_param('iss', $mapCardId, $t, $u);
             $stmtLinks->execute();
-            $sortOrder++;
+            $linkCount++;
           }
           $stmtLinks->close();
         }
