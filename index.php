@@ -384,6 +384,11 @@ if (empty($ogTitle)) {
           </div>
         </section>
         
+        <!-- Amenities Filter Container -->
+        <section class="filter-amenities-container" aria-label="Amenities">
+          <!-- Populated by JavaScript from database -->
+        </section>
+
         <!-- Category Filter Container -->
         <section class="filter-categoryfilter-container" aria-label="Categories">
           <!-- Populated by JavaScript from database -->

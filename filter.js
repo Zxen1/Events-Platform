@@ -63,6 +63,10 @@ const FilterModule = (function() {
     var sortGeoIconBtnEl = null;       // Geolocate icon in the sort button (shown when sort is 'nearest')
     var closeBtn = null;
     
+    // Amenities
+    var amenitiesState = {};       // { "Wheelchair Access": "yes"|"no" }
+    var amenitiesContainer = null;
+
     // Filter basics
     var keywordInput = null;
     var keywordClear = null;
@@ -360,6 +364,10 @@ const FilterModule = (function() {
             expiredInput.checked = saved.expired;
             syncExpiredToggleUi();
         }
+        if (saved.amenities && typeof saved.amenities === 'object') {
+            amenitiesState = saved.amenities;
+            // DOM rows may not exist yet (async load) — initAmenityFilter reads amenitiesState when building rows
+        }
         if (saved.favourites !== undefined) {
             favouritesOn = saved.favourites;
             if (favouritesBtn) {
@@ -450,6 +458,7 @@ const FilterModule = (function() {
         initFavouritesButton();
         initSortMenu();
         initFilterBasics();
+        initAmenityFilter();   // Amenities restore their state after loading
         initCategoryFilter(); // Categories restore their state after loading
         initHeaderDrag();
         initBackdropClose();
@@ -1277,10 +1286,11 @@ const FilterModule = (function() {
                        (priceMaxInput && priceMaxInput.value.trim() !== '');
         var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
         var hasExpired = expiredInput && expiredInput.checked;
+        var hasAmenities = Object.keys(amenitiesState).length > 0;
         
         // Categories have their own Reset All Categories button — they do not
         // affect the Reset All Filters button state.
-        var active = hasKeyword || hasPrice || hasDate || hasExpired;
+        var active = hasKeyword || hasPrice || hasDate || hasExpired || hasAmenities;
         setResetFiltersActive(active);
     }
     
@@ -1305,6 +1315,7 @@ const FilterModule = (function() {
             expired: expiredInput ? expiredInput.checked : false,
             favourites: favouritesOn,
             sort: currentSort,
+            amenities: Object.keys(amenitiesState).length > 0 ? amenitiesState : null,
             // Category filter
             categories: getCategoryState(),
             subcategoryKeys: getSelectedSubcategoryKeys()
@@ -1561,6 +1572,13 @@ const FilterModule = (function() {
         rebuildCalendar();
         clearDateRange();
         clearGeocoder();
+        // Reset amenities
+        amenitiesState = {};
+        if (amenitiesContainer) {
+            amenitiesContainer.querySelectorAll('.filter-amenities-row').forEach(function(row) {
+                resetAmenityRow(row);
+            });
+        }
         updateClearButtons();
         
         // applyFilters() reads the current DOM state (including categories) and
@@ -1583,6 +1601,167 @@ const FilterModule = (function() {
         } else if (expiredInput.checked) {
             btn.classList.add('filter-expired-btn--selected');
         }
+    }
+
+
+    /* --------------------------------------------------------------------------
+       AMENITY FILTER
+       -------------------------------------------------------------------------- */
+
+    function resetAmenityRow(row) {
+        row.dataset.value = '';
+        var iconImg = row.querySelector('.filter-amenities-row-image');
+        var nameEl  = row.querySelector('.filter-amenities-row-text');
+        var yesBtn  = row.querySelector('.filter-amenities-option--yes');
+        var noBtn   = row.querySelector('.filter-amenities-option--no');
+        var clrBtn  = row.querySelector('.filter-amenities-clear');
+        if (iconImg) { iconImg.classList.remove('filter-amenities-row-image--yes', 'filter-amenities-row-image--no'); }
+        if (nameEl)  { nameEl.classList.remove('filter-amenities-row-text--no'); }
+        if (yesBtn)  { yesBtn.classList.remove('filter-amenities-option--active'); }
+        if (noBtn)   { noBtn.classList.remove('filter-amenities-option--active'); }
+        if (clrBtn)  { clrBtn.classList.remove('active'); }
+    }
+
+    function initAmenityFilter() {
+        amenitiesContainer = panelEl.querySelector('.filter-amenities-container');
+        if (!amenitiesContainer) return;
+
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                var allAmenities = (res.dropdown_options && Array.isArray(res.dropdown_options.amenity))
+                    ? res.dropdown_options.amenity : [];
+                if (!allAmenities.length) return;
+
+                var accordion = document.createElement('div');
+                accordion.className = 'filter-amenities-accordion accordion-class-2';
+
+                var header = document.createElement('div');
+                header.className = 'filter-amenities-accordion-header accordion-header';
+
+                var headerText = document.createElement('span');
+                headerText.className = 'filter-amenities-accordion-header-text';
+                headerText.textContent = 'Amenities';
+
+                var headerArrow = document.createElement('span');
+                headerArrow.className = 'filter-amenities-accordion-header-arrow';
+
+                header.appendChild(headerText);
+                header.appendChild(headerArrow);
+
+                var body = document.createElement('div');
+                body.className = 'filter-amenities-accordion-body accordion-body';
+
+                allAmenities.forEach(function(item) {
+                    var amenityName = item.value;
+                    var filename    = item.filename || '';
+
+                    var row = document.createElement('div');
+                    row.className = 'filter-amenities-row';
+                    row.dataset.amenity = amenityName;
+                    row.dataset.value   = '';
+
+                    var iconImg = document.createElement('img');
+                    iconImg.className = 'filter-amenities-row-image';
+                    iconImg.alt = '';
+                    if (filename && window.App) {
+                        iconImg.src = App.getImageUrl('amenities', filename);
+                    }
+
+                    var nameEl = document.createElement('span');
+                    nameEl.className = 'filter-amenities-row-text';
+                    nameEl.textContent = amenityName;
+
+                    var optionsEl = document.createElement('div');
+                    optionsEl.className = 'filter-amenities-row-options';
+
+                    var yesBtn = document.createElement('button');
+                    yesBtn.type = 'button';
+                    yesBtn.className = 'filter-amenities-option filter-amenities-option--yes';
+                    yesBtn.textContent = 'Yes';
+
+                    var noBtn = document.createElement('button');
+                    noBtn.type = 'button';
+                    noBtn.className = 'filter-amenities-option filter-amenities-option--no';
+                    noBtn.textContent = 'No';
+
+                    optionsEl.appendChild(yesBtn);
+                    optionsEl.appendChild(noBtn);
+
+                    var clearBtn = document.createElement('button');
+                    clearBtn.type = 'button';
+                    clearBtn.className = 'clear-button filter-amenities-clear';
+                    clearBtn.setAttribute('aria-label', 'Clear amenity filter');
+
+                    function applyRowState(val) {
+                        row.dataset.value = val;
+                        iconImg.classList.toggle('filter-amenities-row-image--yes', val === 'yes');
+                        iconImg.classList.toggle('filter-amenities-row-image--no',  val === 'no');
+                        nameEl.classList.toggle('filter-amenities-row-text--no', val === 'no');
+                        yesBtn.classList.toggle('filter-amenities-option--active', val === 'yes');
+                        noBtn.classList.toggle('filter-amenities-option--active',  val === 'no');
+                        clearBtn.classList.toggle('active', val !== '');
+                    }
+
+                    yesBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var newVal = (amenitiesState[amenityName] === 'yes') ? '' : 'yes';
+                        if (newVal === '') { delete amenitiesState[amenityName]; } else { amenitiesState[amenityName] = newVal; }
+                        applyRowState(newVal);
+                        updateResetBtn();
+                        applyFilters();
+                        saveFilters();
+                    });
+
+                    noBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var newVal = (amenitiesState[amenityName] === 'no') ? '' : 'no';
+                        if (newVal === '') { delete amenitiesState[amenityName]; } else { amenitiesState[amenityName] = newVal; }
+                        applyRowState(newVal);
+                        updateResetBtn();
+                        applyFilters();
+                        saveFilters();
+                    });
+
+                    clearBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        delete amenitiesState[amenityName];
+                        applyRowState('');
+                        updateResetBtn();
+                        applyFilters();
+                        saveFilters(true);
+                    });
+
+                    row.appendChild(iconImg);
+                    row.appendChild(nameEl);
+                    row.appendChild(optionsEl);
+                    row.appendChild(clearBtn);
+                    body.appendChild(row);
+
+                    // Restore state if saved before DOM existed
+                    if (amenitiesState[amenityName]) {
+                        applyRowState(amenitiesState[amenityName]);
+                    }
+                });
+
+                header.addEventListener('click', function() {
+                    var isOpen = accordion.classList.contains('filter-amenities-accordion--open');
+                    accordion.classList.toggle('filter-amenities-accordion--open', !isOpen);
+                    accordion.classList.toggle('accordion-class-2--open', !isOpen);
+                    headerArrow.classList.toggle('filter-amenities-accordion-header-arrow--open', !isOpen);
+                    body.classList.toggle('filter-amenities-accordion-body--open', !isOpen);
+                });
+
+                accordion.appendChild(header);
+                accordion.appendChild(body);
+                amenitiesContainer.appendChild(accordion);
+            })
+            .catch(function(err) {
+                console.error('[Filter] Failed to load amenities:', err);
+            });
     }
 
 

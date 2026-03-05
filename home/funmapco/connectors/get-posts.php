@@ -18,6 +18,7 @@
  *   - date_end (YYYY-MM-DD): Session date range end
  *   - expired (0/1): Include expired posts
  *   - visibility (string): Filter by visibility status (default: active)
+ *   - amenities (string): JSON object { "amenity_key": "yes"|"no" } — yes = must have, no = must not have
  * 
  * Response:
  *   {
@@ -147,8 +148,15 @@ try {
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
+    $amenitiesFilter = [];
+    if (!empty($_GET['amenities'])) {
+        $decoded = json_decode($_GET['amenities'], true);
+        if (is_array($decoded)) {
+            $amenitiesFilter = $decoded;
+        }
+    }
 
-    $hasUserFilters = ($keyword !== '' || $dateStart !== '' || $dateEnd !== '' || $minPrice !== null || $maxPrice !== null || $subcategoryKey !== '' || !empty($subcategoryKeys));
+    $hasUserFilters = ($keyword !== '' || $dateStart !== '' || $dateEnd !== '' || $minPrice !== null || $maxPrice !== null || $subcategoryKey !== '' || !empty($subcategoryKeys) || !empty($amenitiesFilter));
     
     // Show contact details if:
     // 1. User is logged in (cookie/header present), OR
@@ -262,6 +270,21 @@ try {
             $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = mc.id AND ip.item_price <= ?))';
             $params[] = $maxPrice; $params[] = $maxPrice;
             $types .= 'dd';
+        }
+    }
+
+    // Amenities filter (YES = must have amenity set to 1, NO = must not have amenity set to 1)
+    foreach ($amenitiesFilter as $amenityKey => $amenityVal) {
+        $amenityKey = trim((string)$amenityKey);
+        if ($amenityKey === '') continue;
+        if ($amenityVal === 'yes') {
+            $where[] = 'EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = mc.id AND pa.amenity_key = ? AND pa.value = 1)';
+            $params[] = $amenityKey;
+            $types .= 's';
+        } elseif ($amenityVal === 'no') {
+            $where[] = 'NOT EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = mc.id AND pa.amenity_key = ? AND pa.value = 1)';
+            $params[] = $amenityKey;
+            $types .= 's';
         }
     }
 

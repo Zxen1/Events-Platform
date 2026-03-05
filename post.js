@@ -1060,6 +1060,9 @@ const PostModule = (function() {
       if (f.dateStart) params.append('date_start', String(f.dateStart));
       if (f.dateEnd) params.append('date_end', String(f.dateEnd));
       if (f.expired) params.append('expired', '1');
+      if (f.amenities && typeof f.amenities === 'object' && Object.keys(f.amenities).length > 0) {
+        params.append('amenities', JSON.stringify(f.amenities));
+      }
       if (Array.isArray(f.subcategoryKeys)) {
         // IMPORTANT: empty array means "no subcategories selected" → show nothing (don't fetch worldwide).
         if (f.subcategoryKeys.length === 0) {
