@@ -12957,6 +12957,12 @@ const PostSessionComponent = (function() {
                         for (var i = 0; i < fullPost.map_cards.length; i++) {
                             if (String(fullPost.map_cards[i].id) === locId) {
                                 sessions = fullPost.map_cards[i].sessions || [];
+                                if (loc && fullPost.map_cards[i].pricing_groups) {
+                                    loc.pricing_groups = fullPost.map_cards[i].pricing_groups;
+                                }
+                                if (loc && fullPost.map_cards[i].age_ratings) {
+                                    loc.age_ratings = fullPost.map_cards[i].age_ratings;
+                                }
                                 break;
                             }
                         }
