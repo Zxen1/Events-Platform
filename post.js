@@ -3463,12 +3463,12 @@ const PostModule = (function() {
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
 
-    // Countdown status bar — inside postHeader at the bottom (sticky with header)
+    // Countdown status bar — inside postHeader at the top (sticky with header)
     var _postSett = App.getState('settings') || {};
     if (_postSett.countdown_posts) {
       var _postBarResult = buildCountdownStatusBar(post, activeLoc);
       if (_postBarResult) {
-        postHeader.appendChild(_postBarResult.bar);
+        postHeader.insertBefore(_postBarResult.bar, postHeader.firstChild);
       }
     }
 
