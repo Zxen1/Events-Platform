@@ -1000,7 +1000,7 @@
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--blue-500);
