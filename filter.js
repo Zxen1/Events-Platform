@@ -2376,6 +2376,9 @@ const FilterModule = (function() {
         if (st.dateStart) qs.set('date_start', String(st.dateStart));
         if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
         if (st.expired) qs.set('expired', '1');
+        if (st.amenities && typeof st.amenities === 'object' && Object.keys(st.amenities).length > 0) {
+            qs.set('amenities', JSON.stringify(st.amenities));
+        }
         if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
             qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
         }

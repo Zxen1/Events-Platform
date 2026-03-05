@@ -100,6 +100,11 @@ try {
   $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
   $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
   $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
+  $amenitiesFilter = [];
+  if (!empty($_GET['amenities'])) {
+    $decoded = json_decode($_GET['amenities'], true);
+    if (is_array($decoded)) $amenitiesFilter = $decoded;
+  }
 
   // Subcategory selection (comma-separated subcategory_key)
   $subcategoryKeys = [];
@@ -190,6 +195,20 @@ try {
       $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.post_map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.post_map_card_id = pmc.id AND ip.item_price <= ?))';
       $paramsFiltered[] = $max; $paramsFiltered[] = $max;
       $typesFiltered .= 'dd';
+    }
+  }
+
+  foreach ($amenitiesFilter as $amenityKey => $amenityVal) {
+    $amenityKey = trim((string)$amenityKey);
+    if ($amenityKey === '') continue;
+    if ($amenityVal === 'yes') {
+      $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 1)';
+      $paramsFiltered[] = $amenityKey;
+      $typesFiltered .= 's';
+    } elseif ($amenityVal === 'no') {
+      $whereFiltered[] = 'NOT EXISTS (SELECT 1 FROM post_amenities pa WHERE pa.post_map_card_id = pmc.id AND pa.amenity_key = ? AND pa.value = 1)';
+      $paramsFiltered[] = $amenityKey;
+      $typesFiltered .= 's';
     }
   }
 
