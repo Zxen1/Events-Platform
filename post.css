@@ -1768,6 +1768,8 @@
   margin: 0;
   color: #fff;
   padding: 2px 4px;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .post-statusbar--comingsoon {
