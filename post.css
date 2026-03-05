@@ -1755,7 +1755,7 @@
 
 /* -------------------------------------------------------------------------
    Event Countdown Status Bar
-   Appears above postcards and between header/body in expanded post view.
+   Appears above Post Cards and between header/body in Posts.
    States: coming-soon (blue), now-showing (green), finished (dark).
    Border color on the post-card mirrors the bar color.
    ------------------------------------------------------------------------- */
@@ -1770,11 +1770,11 @@
   padding: 2px 4px;
 }
 
-.post-status-bar--coming-soon {
+.post-status-bar--comingsoon {
   background: #2563eb;
 }
 
-.post-status-bar--now-showing {
+.post-status-bar--nowshowing {
   background: #16a34a;
 }
 
@@ -1782,28 +1782,28 @@
   background: #111827;
 }
 
-/* Soonest-only mode: hidden until .post-list--sort-soon is applied */
-.post-status-bar--mode-soonest {
+/* Soonest-only mode: hidden until .post-list--sortsoon is applied */
+.post-status-bar--modesoonest {
   display: none;
 }
 
-.post-list--sort-soon .post-status-bar--mode-soonest {
+.post-list--sortsoon .post-status-bar--modesoonest {
   display: flex;
 }
 
 /* Postcard border mirrors countdown bar color; :hover included to prevent override */
-.post-card--countdown-coming-soon,
-.post-card--countdown-coming-soon:hover {
+.post-card--countdowncomingsoon,
+.post-card--countdowncomingsoon:hover {
   box-shadow: inset 0 0 0 1px #2563eb;
 }
 
-.post-card--countdown-now-showing,
-.post-card--countdown-now-showing:hover {
+.post-card--countdownnowshowing,
+.post-card--countdownnowshowing:hover {
   box-shadow: inset 0 0 0 1px #16a34a;
 }
 
-.post-card--countdown-finished,
-.post-card--countdown-finished:hover {
+.post-card--countdownfinished,
+.post-card--countdownfinished:hover {
   box-shadow: inset 0 0 0 1px #111827;
 }
 

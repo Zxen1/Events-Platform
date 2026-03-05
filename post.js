@@ -1710,9 +1710,9 @@ const PostModule = (function() {
         var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
         if (_cardBarResult) {
           if (_cardSett.countdown_postcards_mode === 'soonest_only') {
-            _cardBarResult.bar.classList.add('post-status-bar--mode-soonest');
+            _cardBarResult.bar.classList.add('post-status-bar--modesoonest');
           }
-          card.classList.add('post-card--countdown-' + _cardBarResult.state);
+          card.classList.add('post-card--countdown' + _cardBarResult.state);
           slot.appendChild(_cardBarResult.bar);
         }
       }
@@ -2565,9 +2565,9 @@ const PostModule = (function() {
 
     // Show/hide countdown bars for 'soonest_only' mode based on current sort.
     if (sortKey === 'soon') {
-      postListEl.classList.add('post-list--sort-soon');
+      postListEl.classList.add('post-list--sortsoon');
     } else {
-      postListEl.classList.remove('post-list--sort-soon');
+      postListEl.classList.remove('post-list--sortsoon');
     }
   }
 
@@ -2590,10 +2590,10 @@ const PostModule = (function() {
 
     var state, label;
     if (now < startDate) {
-      state = 'coming-soon';
+      state = 'comingsoon';
       label = 'Coming Soon';
     } else if (now <= endDate) {
-      state = 'now-showing';
+      state = 'nowshowing';
       label = 'Now Showing';
     } else {
       state = 'finished';
@@ -3462,7 +3462,7 @@ const PostModule = (function() {
     contentWrap.appendChild(cardEl);
     contentWrap.appendChild(postHeader);
 
-    // Countdown status bar in expanded post view (between header and body)
+    // Countdown status bar in Post (between header and body)
     var _postSett = App.getState('settings') || {};
     if (_postSett.countdown_posts) {
       var _postBarResult = buildCountdownStatusBar(post, activeLoc);
