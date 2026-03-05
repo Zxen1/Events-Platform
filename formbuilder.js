@@ -4667,6 +4667,26 @@
             }
         });
 
+        // Re-sync ticket URL on focusout so that the https:// added by autoUrlProtocol is included.
+        // focusout bubbles, so by the time it reaches container the direct blur handler has already run.
+        container.addEventListener('focusout', function(e) {
+            var input = e.target;
+            if (!input || !input.closest) return;
+            var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
+            if (!ticketFs) return;
+            var locContainer = input.closest('.member-location-container[data-location-number]');
+            if (!locContainer) return;
+            if (parseInt(locContainer.dataset.locationNumber, 10) !== 1) return;
+            var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
+            allLocs.forEach(function(loc) {
+                if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
+                var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
+                    fs._setValue(input.value);
+                }
+            });
+        });
+
         // Location wallpaper: install non-invasive listeners (lat/lng change -> refresh active wallpaper)
         try {
             if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.install === 'function') {
