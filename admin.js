@@ -5148,6 +5148,7 @@ const AdminModule = (function() {
         initImagePicker('adminEmailLogoPicker', 'email_logo');
         initImagePicker('adminFaviconPicker', 'favicon');
         initImagePicker('adminIconFilterPicker', 'icon_filter');
+        initImagePicker('adminIconFilterWorldwidePicker', 'icon_filter_worldwide');
         initImagePicker('adminIconRecentPicker', 'icon_recent');
         initImagePicker('adminIconPostsPicker', 'icon_posts');
         initImagePicker('adminIconMapPicker', 'icon_map');

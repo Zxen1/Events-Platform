@@ -607,6 +607,10 @@ if (empty($ogTitle)) {
                   <div id="adminIconFilterPicker" data-setting-key="icon_filter"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
+                  <label class="admin-settings-field-label">Header Icon: Filter Worldwide</label>
+                  <div id="adminIconFilterWorldwidePicker" data-setting-key="icon_filter_worldwide"></div>
+                </div>
+                <div class="admin-settings-field admin-settings-field--imagepicker">
                   <label class="admin-settings-field-label">Header Icon: Recent</label>
                   <div id="adminIconRecentPicker" data-setting-key="icon_recent"></div>
                 </div>
