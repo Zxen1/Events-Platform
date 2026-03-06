@@ -1467,6 +1467,71 @@ if ($detectedCurrency !== null && $memberId > 0) {
   }
 }
 
+// Post-save state recheck:
+// If this edited post has future sessions (UTC-12 day boundary), keep post-level
+// expiry in sync and un-expire stale records without touching payment gating logic.
+$stmtState = $mysqli->prepare("SELECT visibility, expires_at FROM posts WHERE id = ? LIMIT 1");
+if ($stmtState) {
+  $stmtState->bind_param('i', $postId);
+  if ($stmtState->execute()) {
+    $stmtState->bind_result($curVisibility, $curExpiresAt);
+    if ($stmtState->fetch()) {
+      $stmtState->close();
+
+      $stmtFuture = $mysqli->prepare(
+        "SELECT MAX(TIMESTAMP(DATE_ADD(ps.session_date, INTERVAL 1 DAY), '11:59:59')) AS max_future_expiry_utc
+         FROM post_sessions ps
+         INNER JOIN post_map_cards pmc ON pmc.id = ps.post_map_card_id
+         WHERE pmc.post_id = ?
+           AND ps.session_date >= DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 12 HOUR))"
+      );
+      if ($stmtFuture) {
+        $stmtFuture->bind_param('i', $postId);
+        if ($stmtFuture->execute()) {
+          $stmtFuture->bind_result($maxFutureExpiryUtc);
+          if ($stmtFuture->fetch()) {
+            $newExpiry = null;
+            if (is_string($maxFutureExpiryUtc) && trim($maxFutureExpiryUtc) !== '') {
+              $newExpiry = trim($maxFutureExpiryUtc);
+            }
+            if ($newExpiry !== null && $curVisibility !== 'deleted') {
+              $setActiveClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
+              if (!empty($curExpiresAt)) {
+                $stmtSync = $mysqli->prepare(
+                  "UPDATE posts
+                   SET expires_at = GREATEST(expires_at, ?)$setActiveClause, updated_at = NOW()
+                   WHERE id = ?"
+                );
+                if ($stmtSync) {
+                  $stmtSync->bind_param('si', $newExpiry, $postId);
+                  $stmtSync->execute();
+                  $stmtSync->close();
+                }
+              } else {
+                $stmtSync = $mysqli->prepare(
+                  "UPDATE posts
+                   SET expires_at = ?$setActiveClause, updated_at = NOW()
+                   WHERE id = ?"
+                );
+                if ($stmtSync) {
+                  $stmtSync->bind_param('si', $newExpiry, $postId);
+                  $stmtSync->execute();
+                  $stmtSync->close();
+                }
+              }
+            }
+          }
+        }
+        $stmtFuture->close();
+      }
+    } else {
+      $stmtState->close();
+    }
+  } else {
+    $stmtState->close();
+  }
+}
+
 $mysqli->commit();
 echo json_encode(['success'=>true, 'message_key'=>'msg_post_edit_success']);
 exit;
