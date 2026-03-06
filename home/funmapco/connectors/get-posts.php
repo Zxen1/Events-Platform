@@ -19,6 +19,7 @@
  *   - expired (0/1): Include expired posts
  *   - visibility (string): Filter by visibility status (default: active)
  *   - amenities (string): JSON object { "amenity_key": "yes"|"no" } — yes = must have, no = must not have
+ *   - show18_plus (0/1): Include posts where any map card has age_rating >= 18 (default: hidden)
  * 
  * Response:
  *   {
@@ -143,6 +144,7 @@ try {
     $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
     $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
+    $show18Plus = isset($_GET['show18_plus']) && ((string)$_GET['show18_plus'] === '1' || (string)$_GET['show18_plus'] === 'true');
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
     $full = isset($_GET['full']) ? (int)$_GET['full'] : 0; // NEW: Only join extra tables if requested (e.g. for editing)
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
@@ -286,6 +288,11 @@ try {
             $params[] = $amenityKey;
             $types .= 's';
         }
+    }
+
+    // Age rating filter - hide map cards with age_rating >= 18 unless show18Plus is set
+    if (!$show18Plus) {
+        $where[] = '(mc.age_rating IS NULL OR CAST(mc.age_rating AS UNSIGNED) < 18)';
     }
 
     // Single post by ID filter

@@ -378,6 +378,13 @@ if (empty($ogTitle)) {
               <button class="clear-button filter-daterange-clear" type="button" aria-label="Clear date"></button>
             </div>
           </div>
+          <div class="filter-show18plus-row row-class-1">
+            <span class="filter-show18plus-label">Show 18+ Posts</span>
+            <label class="component-switch">
+              <input type="checkbox" class="filter-show18plus-input component-switch-input" aria-label="Show 18+ posts">
+              <span class="component-switch-slider"></span>
+            </label>
+          </div>
           <input class="filter-expired-input" type="checkbox" style="display:none">
           <div class="filter-calendar-container" aria-hidden="true">
             <div class="filter-calendar"></div>

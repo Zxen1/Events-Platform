@@ -76,6 +76,8 @@ const FilterModule = (function() {
     var daterangeInput = null;
     var daterangeClear = null;
     var expiredInput = null;
+    var show18PlusInput = null;
+    var show18PlusSlider = null;
     var calendarContainer = null;
     var calendarInstance = null;
     var dateStart = null;
@@ -390,6 +392,10 @@ const FilterModule = (function() {
         if (expiredInput && saved.expired !== undefined) {
             expiredInput.checked = saved.expired;
             syncExpiredToggleUi();
+        }
+        if (show18PlusInput && saved.show18Plus !== undefined) {
+            show18PlusInput.checked = saved.show18Plus;
+            syncShow18PlusSlider();
         }
         if (saved.amenities && typeof saved.amenities === 'object') {
             amenitiesState = saved.amenities;
@@ -1289,7 +1295,18 @@ const FilterModule = (function() {
         
         // Expired toggle (hidden checkbox, controlled by button inside calendar actions)
         expiredInput = container.querySelector('.filter-expired-input');
-        
+
+        // Show 18+ toggle
+        show18PlusInput = container.querySelector('.filter-show18plus-input');
+        show18PlusSlider = show18PlusInput ? show18PlusInput.nextElementSibling : null;
+        if (show18PlusInput) {
+            show18PlusInput.addEventListener('change', function() {
+                syncShow18PlusSlider();
+                applyFilters();
+                updateClearButtons();
+            });
+        }
+
         updateClearButtons();
     }
     
@@ -1322,11 +1339,12 @@ const FilterModule = (function() {
                        (priceMaxInput && priceMaxInput.value.trim() !== '');
         var hasDate = (daterangeInput && daterangeInput.value.trim() !== '') || dateStart || dateEnd;
         var hasExpired = expiredInput && expiredInput.checked;
+        var has18Plus = show18PlusInput && show18PlusInput.checked;
         var hasAmenities = Object.keys(amenitiesState).length > 0;
         
         // Categories have their own Reset All Categories button — they do not
         // affect the Reset All Filters button state.
-        var active = hasKeyword || hasPrice || hasDate || hasExpired || hasAmenities;
+        var active = hasKeyword || hasPrice || hasDate || hasExpired || has18Plus || hasAmenities;
         setResetFiltersActive(active);
     }
     
@@ -1349,6 +1367,7 @@ const FilterModule = (function() {
             dateStart: dateStart,
             dateEnd: dateEnd,
             expired: expiredInput ? expiredInput.checked : false,
+            show18Plus: show18PlusInput ? show18PlusInput.checked : false,
             favourites: favouritesOn,
             sort: currentSort,
             amenities: Object.keys(amenitiesState).length > 0 ? amenitiesState : null,
@@ -1605,6 +1624,10 @@ const FilterModule = (function() {
         if (priceMaxInput) priceMaxInput.value = '';
         if (expiredInput) expiredInput.checked = false;
         syncExpiredToggleUi();
+        if (show18PlusInput) {
+            show18PlusInput.checked = false;
+            syncShow18PlusSlider();
+        }
         rebuildCalendar();
         clearDateRange();
         clearGeocoder();
@@ -1637,6 +1660,12 @@ const FilterModule = (function() {
         } else if (expiredInput.checked) {
             btn.classList.add('filter-expired-btn--selected');
         }
+    }
+
+
+    function syncShow18PlusSlider() {
+        if (!show18PlusSlider) return;
+        show18PlusSlider.classList.toggle('component-switch-slider--on-filter', !!(show18PlusInput && show18PlusInput.checked));
     }
 
 
@@ -2421,6 +2450,7 @@ const FilterModule = (function() {
         if (st.dateStart) qs.set('date_start', String(st.dateStart));
         if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
         if (st.expired) qs.set('expired', '1');
+        if (st.show18Plus) qs.set('show18_plus', '1');
         if (st.amenities && typeof st.amenities === 'object' && Object.keys(st.amenities).length > 0) {
             qs.set('amenities', JSON.stringify(st.amenities));
         }

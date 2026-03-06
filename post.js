@@ -1073,6 +1073,7 @@ const PostModule = (function() {
       if (f.dateStart) params.append('date_start', String(f.dateStart));
       if (f.dateEnd) params.append('date_end', String(f.dateEnd));
       if (f.expired) params.append('expired', '1');
+      if (f.show18Plus) params.append('show18_plus', '1');
       if (f.amenities && typeof f.amenities === 'object' && Object.keys(f.amenities).length > 0) {
         params.append('amenities', JSON.stringify(f.amenities));
       }
@@ -2486,6 +2487,16 @@ const PostModule = (function() {
             return false;
           }
         }
+      }
+
+      // Age rating filter - hide posts with any 18+ map card unless show18Plus is on
+      if (!filters.show18Plus) {
+        var any18Plus = mapCards.some(function(mc) {
+          if (!mc || mc.age_rating === null || mc.age_rating === undefined || mc.age_rating === '') return false;
+          var rating = parseFloat(mc.age_rating);
+          return Number.isFinite(rating) && rating >= 18;
+        });
+        if (any18Plus) return false;
       }
 
       // Favorites filter
@@ -5276,6 +5287,7 @@ const PostModule = (function() {
       if (f.dateStart) params.append('date_start', String(f.dateStart));
       if (f.dateEnd) params.append('date_end', String(f.dateEnd));
       if (f.expired) params.append('expired', '1');
+      if (f.show18Plus) params.append('show18_plus', '1');
       if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
         params.append('subcategory_keys', f.subcategoryKeys.map(String).join(','));
       }

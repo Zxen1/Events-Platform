@@ -100,6 +100,7 @@ try {
   $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
   $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
   $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
+  $show18Plus = isset($_GET['show18_plus']) && ((string)$_GET['show18_plus'] === '1' || (string)$_GET['show18_plus'] === 'true');
   $amenitiesFilter = [];
   if (!empty($_GET['amenities'])) {
     $decoded = json_decode($_GET['amenities'], true);
@@ -156,6 +157,11 @@ try {
     $paramsScope[] = $bounds['sw_lng'];
     $paramsScope[] = $bounds['ne_lng'];
     $typesScope .= 'dddd';
+  }
+
+  // Age rating filter - applies to both total_available and total_showing
+  if (!$show18Plus) {
+    $whereScope[] = '(pmc.age_rating IS NULL OR CAST(pmc.age_rating AS UNSIGNED) < 18)';
   }
 
   // User filters (excluding subcategory selection) apply on top of scope.
