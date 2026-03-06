@@ -524,34 +524,38 @@
 
     function refreshPostCard(postId) {
         var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
-        if (!postContainer) return;
         var user = getCurrentUser();
         var memberId = user ? parseInt(user.id, 10) : 0;
-        if (!memberId) return;
+        if (!memberId) return Promise.resolve(null);
 
-        fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId + '&post_id=' + encodeURIComponent(String(postId)) + '&_ts=' + Date.now(), {
+        return fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId + '&post_id=' + encodeURIComponent(String(postId)) + '&_ts=' + Date.now(), {
             cache: 'no-store'
         })
         .then(function(r) { return r.json(); })
         .then(function(res) {
-            if (!res || !res.success || !Array.isArray(res.posts) || !res.posts.length) return;
+            if (!res || !res.success || !Array.isArray(res.posts) || !res.posts.length) return null;
             var post = res.posts[0];
 
-            var oldCard = postContainer.querySelector('.post-card');
-            if (oldCard) {
-                oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
-            }
+            if (postContainer) {
+                var oldCard = postContainer.querySelector('.post-card');
+                if (oldCard) {
+                    oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
+                }
 
-            var oldBar = postContainer.querySelector('.posteditor-statusbar');
-            if (oldBar) {
-                oldBar.parentNode.replaceChild(buildStatusBar(post), oldBar);
+                var oldBar = postContainer.querySelector('.posteditor-statusbar');
+                if (oldBar) {
+                    oldBar.parentNode.replaceChild(buildStatusBar(post), oldBar);
+                }
             }
 
             if (editingPostsData[postId]) {
                 editingPostsData[postId].original = post;
             }
+            return post;
         })
-        .catch(function() {});
+        .catch(function() {
+            return null;
+        });
     }
 
     function renderPostCard(post) {
@@ -2648,12 +2652,21 @@
                     overlay.innerHTML =
                         '<div class="posteditor-placeholder-check">✓</div>' +
                         '<div class="posteditor-placeholder-text">Saved!</div>';
-                    setTimeout(function() {
-                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                        discardEdits(post.id);
-                        if (closeModalFn) closeModalFn();
-                        loadPosts();
-                    }, 2000);
+                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    refreshPostCard(post.id).then(function(updatedPost) {
+                        if (!updatedPost) return;
+                        post.visibility = updatedPost.visibility;
+                        post.expires_at = updatedPost.expires_at;
+                        post.deleted_at = updatedPost.deleted_at;
+                        var modalContainer = formContainer.closest('.posteditor-modal-container');
+                        if (modalContainer) {
+                            var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
+                            if (oldModalBar) {
+                                oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
+                            }
+                        }
+                    });
+                    updateFooterButtonState();
                     updateHeaderSaveDiscardState();
                     // Success toast (message system)
                     if (typeof window.getMessage === 'function') {
