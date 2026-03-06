@@ -2641,7 +2641,7 @@
                         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                         discardEdits(post.id);
                         if (closeModalFn) closeModalFn();
-                        refreshPostCard(post.id);
+                        loadPosts();
                     }, 2000);
                     updateHeaderSaveDiscardState();
                     // Success toast (message system)
