@@ -2915,6 +2915,13 @@ const PostModule = (function() {
         // Hiding via visibility avoids the ~20px jump caused by display:none reflow.
         cardStatusBar.style.visibility = 'hidden';
         detail.__hiddenSlotStatusBar = cardStatusBar;
+        // Make the open post bar occupy the exact same slot location as the postcard bar.
+        // Lift the entire detail by the hidden bar height so they visually swap 1:1.
+        var slotBarH = 0;
+        try { slotBarH = Math.round(cardStatusBar.getBoundingClientRect().height || 0); } catch (_eBarH) { slotBarH = 0; }
+        if (slotBarH > 0) {
+          detail.style.marginTop = '-' + slotBarH + 'px';
+        }
       }
       if (cardToHide) {
         cardToHide.style.display = 'none';
