@@ -2158,7 +2158,6 @@ const MapModule = (function() {
           if (saved.dateStart) qs.set('date_start', String(saved.dateStart));
           if (saved.dateEnd) qs.set('date_end', String(saved.dateEnd));
           if (saved.expired) qs.set('expired', '1');
-          if (saved.show18Plus) qs.set('show18_plus', '1');
           // Subcategory selection: send list of enabled subcategory keys if present
           if (Array.isArray(saved.subcategoryKeys) && saved.subcategoryKeys.length) {
             qs.set('subcategory_keys', saved.subcategoryKeys.map(String).join(','));
