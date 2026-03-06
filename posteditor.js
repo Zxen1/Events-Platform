@@ -522,6 +522,22 @@
         if (scrollParent) scrollParent.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function reorderPostListDom() {
+        if (!container || currentPosts.length === 0) return;
+
+        var sortedPosts = sortPostsWithFavorites(currentPosts);
+        var placeholder = document.getElementById('posteditor-uploading');
+
+        sortedPosts.forEach(function(post) {
+            var el = container.querySelector('.posteditor-item[data-post-id="' + post.id + '"]');
+            if (el) container.appendChild(el);
+        });
+
+        if (placeholder && placeholder.parentNode === container) {
+            container.insertBefore(placeholder, container.firstChild);
+        }
+    }
+
     function refreshPostCard(postId) {
         var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
         var user = getCurrentUser();
@@ -551,6 +567,14 @@
             if (editingPostsData[postId]) {
                 editingPostsData[postId].original = post;
             }
+
+            for (var i = 0; i < currentPosts.length; i++) {
+                if (String(currentPosts[i].id) === String(postId)) {
+                    currentPosts[i] = post;
+                    break;
+                }
+            }
+            reorderPostListDom();
             return post;
         })
         .catch(function() {
@@ -2652,8 +2676,7 @@
                     overlay.innerHTML =
                         '<div class="posteditor-placeholder-check">✓</div>' +
                         '<div class="posteditor-placeholder-text">Saved!</div>';
-                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                    refreshPostCard(post.id).then(function(updatedPost) {
+                    var refreshPromise = refreshPostCard(post.id).then(function(updatedPost) {
                         if (!updatedPost) return;
                         post.visibility = updatedPost.visibility;
                         post.expires_at = updatedPost.expires_at;
@@ -2665,6 +2688,12 @@
                                 oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
                             }
                         }
+                    });
+                    var minSavedAnimation = new Promise(function(resolve) {
+                        setTimeout(resolve, 900);
+                    });
+                    Promise.all([refreshPromise, minSavedAnimation]).then(function() {
+                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                     });
                     updateFooterButtonState();
                     updateHeaderSaveDiscardState();
