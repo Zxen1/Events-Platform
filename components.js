@@ -12567,23 +12567,39 @@ const PostSessionComponent = (function() {
             if (!activeLoc || !activeLoc.age_ratings) return [];
             var ratings = [];
             var seen = {};
-            var sessionRows = Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
-            sessionRows.forEach(function(s) {
-                var iso = String((s && s.date) || '').trim();
-                if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
-                var times = s && Array.isArray(s.times) ? s.times : [];
-                times.forEach(function(t) {
-                    var groupKey = '';
-                    if (t && typeof t === 'object' && t.ticket_group_key !== undefined && t.ticket_group_key !== null) {
-                        groupKey = String(t.ticket_group_key || '').trim();
-                    }
-                    if (!groupKey) return;
-                    var val = activeLoc.age_ratings[groupKey];
-                    if (val && !seen[val]) {
-                        seen[val] = true;
-                        ratings.push(val);
-                    }
+            var groupKeys = {};
+
+            // Prefer loaded sessionItems (single source used by summary + selected mode).
+            if (Array.isArray(sessionItems) && sessionItems.length) {
+                sessionItems.forEach(function(it) {
+                    var gk = it ? String(it.ticket_group_key || '').trim() : '';
+                    if (!gk) return;
+                    groupKeys[gk] = true;
                 });
+            } else {
+                // Fallback to location sessions when sessionItems are not built yet.
+                var sessionRows = Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
+                sessionRows.forEach(function(s) {
+                    var iso = String((s && s.date) || '').trim();
+                    if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
+                    var times = s && Array.isArray(s.times) ? s.times : [];
+                    times.forEach(function(t) {
+                        var gk = '';
+                        if (t && typeof t === 'object' && t.ticket_group_key !== undefined && t.ticket_group_key !== null) {
+                            gk = String(t.ticket_group_key || '').trim();
+                        }
+                        if (!gk) return;
+                        groupKeys[gk] = true;
+                    });
+                });
+            }
+
+            Object.keys(groupKeys).forEach(function(groupKey) {
+                var val = activeLoc.age_ratings[groupKey];
+                if (val && !seen[val]) {
+                    seen[val] = true;
+                    ratings.push(val);
+                }
             });
             // Sort by age rating order (all < 7 < 12 < 15 < 18 < 21)
             ratings.sort(function(a, b) {
@@ -12631,12 +12647,30 @@ const PostSessionComponent = (function() {
 
         // Check if any session in the current list has a promo
         function anySessionHasPromo() {
-            if (!sessionItems || !sessionItems.length) return false;
-            var checked = {};
-            for (var i = 0; i < sessionItems.length; i++) {
-                var key = sessionItems[i] ? String(sessionItems[i].ticket_group_key || '').trim() : '';
-                if (!key || checked[key]) continue;
-                checked[key] = true;
+            var keysToCheck = {};
+            if (sessionItems && sessionItems.length) {
+                for (var i = 0; i < sessionItems.length; i++) {
+                    var key = sessionItems[i] ? String(sessionItems[i].ticket_group_key || '').trim() : '';
+                    if (!key) continue;
+                    keysToCheck[key] = true;
+                }
+            } else {
+                var activeLoc = getActiveLocationForUi();
+                var sessionRows = activeLoc && Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
+                sessionRows.forEach(function(s) {
+                    var iso = String((s && s.date) || '').trim();
+                    if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
+                    var times = s && Array.isArray(s.times) ? s.times : [];
+                    times.forEach(function(t) {
+                        var key = (t && typeof t === 'object') ? String(t.ticket_group_key || '').trim() : '';
+                        if (!key) return;
+                        keysToCheck[key] = true;
+                    });
+                });
+            }
+            var keys = Object.keys(keysToCheck);
+            for (var ki = 0; ki < keys.length; ki++) {
+                var key = keys[ki];
                 if (ticketGroupHasPromo(key)) return true;
             }
             return false;
@@ -13436,6 +13470,12 @@ const PostSessionComponent = (function() {
             try { syncSessionOptionsOffset(); } catch (_eSyncSess2) {}
         };
         window.addEventListener('resize', sessionResizeHandler);
+
+        // Keep summary badge/icons accurate even before opening the session dropdown.
+        ensureSessionsLoaded().then(function() {
+            updateSessionButtonText();
+            updateTicketContainer();
+        });
 
         // Initial promo check (before sessions are loaded, use pricing_groups directly)
         try {
