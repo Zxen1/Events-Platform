@@ -2489,16 +2489,6 @@ const PostModule = (function() {
         }
       }
 
-      // Age rating filter - hide posts with any 18+ map card unless show18Plus is on
-      if (!filters.show18Plus) {
-        var any18Plus = mapCards.some(function(mc) {
-          if (!mc || mc.age_rating === null || mc.age_rating === undefined || mc.age_rating === '') return false;
-          var rating = parseFloat(mc.age_rating);
-          return Number.isFinite(rating) && rating >= 18;
-        });
-        if (any18Plus) return false;
-      }
-
       // Favorites filter
       if (filters.favourites) {
         if (!isFavorite(post.id)) {
