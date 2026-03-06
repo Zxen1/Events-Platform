@@ -61,6 +61,7 @@ try {
     $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
     $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
+    $show18Plus = isset($_GET['show18_plus']) && ((string)$_GET['show18_plus'] === '1' || (string)$_GET['show18_plus'] === 'true');
     $subcategoryKeys = [];
     if (!empty($_GET['subcategory_keys'])) {
         $raw = explode(',', (string)$_GET['subcategory_keys']);
@@ -145,6 +146,10 @@ try {
             $params[] = $k;
             $types .= 's';
         }
+    }
+
+    if (!$show18Plus) {
+        $where[] = '(pmc.age_rating IS NULL OR CAST(pmc.age_rating AS UNSIGNED) < 18)';
     }
 
     foreach ($amenitiesFilter as $amenityKey => $amenityVal) {

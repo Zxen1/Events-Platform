@@ -911,6 +911,20 @@
 }
 
 
+/* Show 18+ toggle row */
+.filter-show18plus-row {
+  justify-content: space-between;
+  padding-left: 10px;
+}
+
+.filter-show18plus-label {
+  color: #888;
+}
+
+.filter-show18plus-row:has(.filter-show18plus-input:checked) .filter-show18plus-label {
+  color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 530px) {
   .filter-panel {
