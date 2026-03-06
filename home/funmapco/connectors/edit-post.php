@@ -1487,42 +1487,43 @@ if ($stmtState) {
       );
       if ($stmtFuture) {
         $stmtFuture->bind_param('i', $postId);
+        $newExpiry = null;
         if ($stmtFuture->execute()) {
           $stmtFuture->bind_result($maxFutureExpiryUtc);
           if ($stmtFuture->fetch()) {
-            $newExpiry = null;
             if (is_string($maxFutureExpiryUtc) && trim($maxFutureExpiryUtc) !== '') {
               $newExpiry = trim($maxFutureExpiryUtc);
-            }
-            if ($newExpiry !== null && $curVisibility !== 'deleted') {
-              $setActiveClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
-              if (!empty($curExpiresAt)) {
-                $stmtSync = $mysqli->prepare(
-                  "UPDATE posts
-                   SET expires_at = GREATEST(expires_at, ?)$setActiveClause, updated_at = NOW()
-                   WHERE id = ?"
-                );
-                if ($stmtSync) {
-                  $stmtSync->bind_param('si', $newExpiry, $postId);
-                  $stmtSync->execute();
-                  $stmtSync->close();
-                }
-              } else {
-                $stmtSync = $mysqli->prepare(
-                  "UPDATE posts
-                   SET expires_at = ?$setActiveClause, updated_at = NOW()
-                   WHERE id = ?"
-                );
-                if ($stmtSync) {
-                  $stmtSync->bind_param('si', $newExpiry, $postId);
-                  $stmtSync->execute();
-                  $stmtSync->close();
-                }
-              }
             }
           }
         }
         $stmtFuture->close();
+
+        if ($newExpiry !== null && $curVisibility !== 'deleted') {
+          $setActiveClause = ($curVisibility === 'expired') ? ", visibility = 'active'" : '';
+          if (!empty($curExpiresAt)) {
+            $stmtSync = $mysqli->prepare(
+              "UPDATE posts
+               SET expires_at = GREATEST(expires_at, ?)$setActiveClause, updated_at = NOW()
+               WHERE id = ?"
+            );
+            if ($stmtSync) {
+              $stmtSync->bind_param('si', $newExpiry, $postId);
+              $stmtSync->execute();
+              $stmtSync->close();
+            }
+          } else {
+            $stmtSync = $mysqli->prepare(
+              "UPDATE posts
+               SET expires_at = ?$setActiveClause, updated_at = NOW()
+               WHERE id = ?"
+            );
+            if ($stmtSync) {
+              $stmtSync->bind_param('si', $newExpiry, $postId);
+              $stmtSync->execute();
+              $stmtSync->close();
+            }
+          }
+        }
       }
     } else {
       $stmtState->close();
