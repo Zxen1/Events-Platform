@@ -2911,7 +2911,9 @@ const PostModule = (function() {
       var openHeaderBar = null;
       try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
       if (cardStatusBar && openHeaderBar) {
-        cardStatusBar.style.display = 'none';
+        // Keep slot layout height stable for TopSlack anchoring.
+        // Hiding via visibility avoids the ~20px jump caused by display:none reflow.
+        cardStatusBar.style.visibility = 'hidden';
         detail.__hiddenSlotStatusBar = cardStatusBar;
       }
       if (cardToHide) {
@@ -3017,7 +3019,7 @@ const PostModule = (function() {
     if (slot) {
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
-        openPostEl.__hiddenSlotStatusBar.style.display = '';
+        openPostEl.__hiddenSlotStatusBar.style.visibility = '';
       }
       // Remove the detail view from the slot
       openPostEl.remove();
@@ -4230,7 +4232,7 @@ const PostModule = (function() {
     if (slot) {
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
-        openPostEl.__hiddenSlotStatusBar.style.display = '';
+        openPostEl.__hiddenSlotStatusBar.style.visibility = '';
       }
       openPostEl.remove();
       // Restore the hidden card
