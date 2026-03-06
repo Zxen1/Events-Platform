@@ -148,6 +148,7 @@ const FilterModule = (function() {
                 dateStart:       dateStart,
                 dateEnd:         dateEnd,
                 expired:         expiredInput ? expiredInput.checked : false,
+                show18Plus:      show18PlusInput ? show18PlusInput.checked : false,
                 favourites:      favouritesOn,
                 sort:            currentSort,
                 amenities:       Object.keys(amenitiesState).length > 0 ? amenitiesState : null,

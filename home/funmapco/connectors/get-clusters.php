@@ -149,7 +149,23 @@ try {
     }
 
     if (!$show18Plus) {
-        $where[] = '(pmc.age_rating IS NULL OR CAST(pmc.age_rating AS UNSIGNED) < 18)';
+        $where[] = "(
+            (pmc.age_rating IS NULL OR CAST(pmc.age_rating AS UNSIGNED) < 18)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM post_ticket_pricing tp18
+                WHERE tp18.post_map_card_id = pmc.id
+                  AND tp18.age_rating IS NOT NULL
+                  AND CAST(tp18.age_rating AS UNSIGNED) >= 18
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM post_item_pricing ip18
+                WHERE ip18.post_map_card_id = pmc.id
+                  AND ip18.age_rating IS NOT NULL
+                  AND CAST(ip18.age_rating AS UNSIGNED) >= 18
+            )
+        )";
     }
 
     foreach ($amenitiesFilter as $amenityKey => $amenityVal) {

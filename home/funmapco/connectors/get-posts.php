@@ -290,9 +290,26 @@ try {
         }
     }
 
-    // Age rating filter - hide map cards with age_rating >= 18 unless show18Plus is set
+    // Age rating filter - hide map cards if ANY age source is 18+ unless show18Plus is set.
+    // Sources: post_map_cards.age_rating + post_ticket_pricing.age_rating + post_item_pricing.age_rating
     if (!$show18Plus) {
-        $where[] = '(mc.age_rating IS NULL OR CAST(mc.age_rating AS UNSIGNED) < 18)';
+        $where[] = "(
+            (mc.age_rating IS NULL OR CAST(mc.age_rating AS UNSIGNED) < 18)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM post_ticket_pricing tp18
+                WHERE tp18.post_map_card_id = mc.id
+                  AND tp18.age_rating IS NOT NULL
+                  AND CAST(tp18.age_rating AS UNSIGNED) >= 18
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM post_item_pricing ip18
+                WHERE ip18.post_map_card_id = mc.id
+                  AND ip18.age_rating IS NOT NULL
+                  AND CAST(ip18.age_rating AS UNSIGNED) >= 18
+            )
+        )";
     }
 
     // Single post by ID filter
