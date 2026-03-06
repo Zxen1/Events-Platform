@@ -145,6 +145,7 @@ try {
     $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
     $show18Plus = isset($_GET['show18_plus']) && ((string)$_GET['show18_plus'] === '1' || (string)$_GET['show18_plus'] === 'true');
+    $utcMinus12TodaySql = "DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 12 HOUR))";
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
     $full = isset($_GET['full']) ? (int)$_GET['full'] : 0; // NEW: Only join extra tables if requested (e.g. for editing)
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
@@ -301,6 +302,13 @@ try {
                 WHERE tp18.post_map_card_id = mc.id
                   AND tp18.age_rating IS NOT NULL
                   AND CAST(tp18.age_rating AS UNSIGNED) >= 18
+                  AND EXISTS (
+                      SELECT 1
+                      FROM post_sessions ps18
+                      WHERE ps18.post_map_card_id = mc.id
+                        AND ps18.ticket_group_key = tp18.ticket_group_key
+                        AND ps18.session_date >= $utcMinus12TodaySql
+                  )
             )
             AND NOT EXISTS (
                 SELECT 1
@@ -550,7 +558,20 @@ try {
             mc.price_summary,
             (SELECT MIN(ps.session_date) FROM post_sessions ps WHERE ps.post_map_card_id = mc.id) AS first_session_date,
             (
-                EXISTS (SELECT 1 FROM post_ticket_pricing ptp WHERE ptp.post_map_card_id = mc.id AND ptp.promo_option IS NOT NULL AND ptp.promo_option != 'none')
+                EXISTS (
+                    SELECT 1
+                    FROM post_ticket_pricing ptp
+                    WHERE ptp.post_map_card_id = mc.id
+                      AND ptp.promo_option IS NOT NULL
+                      AND ptp.promo_option != 'none'
+                      AND EXISTS (
+                          SELECT 1
+                          FROM post_sessions psp
+                          WHERE psp.post_map_card_id = mc.id
+                            AND psp.ticket_group_key = ptp.ticket_group_key
+                            AND psp.session_date >= $utcMinus12TodaySql
+                      )
+                )
                 OR EXISTS (SELECT 1 FROM post_item_pricing pip WHERE pip.post_map_card_id = mc.id AND pip.promo_option IS NOT NULL AND pip.promo_option != 'none')
             ) AS has_promo
         FROM `posts` p

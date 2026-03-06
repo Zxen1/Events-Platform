@@ -12189,6 +12189,21 @@ const PostSessionComponent = (function() {
     // Age rating sort order (all is lowest, 21 is highest)
     var ageRatingSortOrder = { 'all': 1, '7': 2, '12': 3, '15': 4, '18': 5, '21': 6 };
 
+    // Site time policy: UTC-12 (Baker Island) day boundary.
+    // A session remains "current/future" for the whole UTC-12 date.
+    function getUtcMinus12TodayIso() {
+        var shifted = new Date(Date.now() - (12 * 60 * 60 * 1000));
+        return shifted.toISOString().slice(0, 10);
+    }
+
+    function isSessionDateCurrentOrFutureUtcMinus12(isoDate) {
+        var iso = String(isoDate || '').trim();
+        if (!iso) return false;
+        var d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : '';
+        if (!d) return false;
+        return d >= getUtcMinus12TodayIso();
+    }
+
     function getAgeRatingImageUrlStatic(value) {
         if (!value) return '';
         var filename = 'age-rating-' + value + '.svg';
@@ -12215,6 +12230,8 @@ const PostSessionComponent = (function() {
             var ratings = [];
             var seen = {};
             sessions.forEach(function(s) {
+                var iso = String((s && s.date) || '').trim();
+                if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
                 var times = s && Array.isArray(s.times) ? s.times : [];
                 times.forEach(function(t) {
                     var groupKey = '';
@@ -12552,6 +12569,8 @@ const PostSessionComponent = (function() {
             var seen = {};
             var sessionRows = Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
             sessionRows.forEach(function(s) {
+                var iso = String((s && s.date) || '').trim();
+                if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
                 var times = s && Array.isArray(s.times) ? s.times : [];
                 times.forEach(function(t) {
                     var groupKey = '';
@@ -13144,6 +13163,7 @@ const PostSessionComponent = (function() {
                 if (!s) return;
                 var iso = String(s.date || '').trim();
                 if (!iso) return;
+                if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
                 set[iso] = true;
                 if (!byDate[iso]) byDate[iso] = [];
                 var times = Array.isArray(s.times) ? s.times : [];
@@ -13428,6 +13448,8 @@ const PostSessionComponent = (function() {
                     var sessionGroupKeys = {};
                     var initSessions = Array.isArray(initLoc.sessions) ? initLoc.sessions : [];
                     initSessions.forEach(function(s) {
+                        var iso = String((s && s.date) || '').trim();
+                        if (!isSessionDateCurrentOrFutureUtcMinus12(iso)) return;
                         var times = s && Array.isArray(s.times) ? s.times : [];
                         times.forEach(function(t) {
                             var gk = (t && typeof t === 'object') ? String(t.ticket_group_key || '').trim() : '';

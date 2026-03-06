@@ -62,6 +62,7 @@ try {
     $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
     $show18Plus = isset($_GET['show18_plus']) && ((string)$_GET['show18_plus'] === '1' || (string)$_GET['show18_plus'] === 'true');
+    $utcMinus12TodaySql = "DATE(DATE_SUB(UTC_TIMESTAMP(), INTERVAL 12 HOUR))";
     $subcategoryKeys = [];
     if (!empty($_GET['subcategory_keys'])) {
         $raw = explode(',', (string)$_GET['subcategory_keys']);
@@ -157,6 +158,13 @@ try {
                 WHERE tp18.post_map_card_id = pmc.id
                   AND tp18.age_rating IS NOT NULL
                   AND CAST(tp18.age_rating AS UNSIGNED) >= 18
+                  AND EXISTS (
+                      SELECT 1
+                      FROM post_sessions ps18
+                      WHERE ps18.post_map_card_id = pmc.id
+                        AND ps18.ticket_group_key = tp18.ticket_group_key
+                        AND ps18.session_date >= $utcMinus12TodaySql
+                  )
             )
             AND NOT EXISTS (
                 SELECT 1
