@@ -887,7 +887,7 @@ const AdminModule = (function() {
                 if (titleInput) { titleInput.value = orig.title; }
                 if (titleDisplay) { titleDisplay.textContent = orig.title || 'Click to add title'; }
                 if (textInput) { textInput.value = orig.description; }
-                if (textDisplay) { textDisplay.textContent = orig.description || 'Click to add description'; }
+                if (textDisplay) { textDisplay.innerHTML = orig.description || 'Click to add description'; }
             });
         });
 
@@ -1307,11 +1307,11 @@ const AdminModule = (function() {
             textInput.focus();
         });
         textInput.addEventListener('input', function() {
-            textDisplay.textContent = textInput.value || 'Click to add description';
+            textDisplay.innerHTML = textInput.value || 'Click to add description';
             if (instructionsLoaded) notifyFieldChange();
         });
         textInput.addEventListener('blur', function() {
-            textDisplay.textContent = textInput.value || 'Click to add description';
+            textDisplay.innerHTML = textInput.value || 'Click to add description';
             textDisplay.classList.remove('admin-message-text-display--hidden');
             textInput.classList.add('admin-message-text-input--hidden');
             textInput.style.display = 'none';
