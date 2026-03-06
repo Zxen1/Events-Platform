@@ -370,7 +370,9 @@
         var memberId = parseInt(user.id, 10);
         if (!memberId) return;
 
-        fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId)
+        fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId + '&_ts=' + Date.now(), {
+            cache: 'no-store'
+        })
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res && res.success && Array.isArray(res.posts)) {
@@ -523,9 +525,17 @@
     function refreshPostCard(postId) {
         var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
         if (!postContainer) return;
+        var user = getCurrentUser();
+        var memberId = user ? parseInt(user.id, 10) : 0;
+        if (!memberId) return;
 
-        PostModule.loadPostById(postId).then(function(post) {
-            if (!post) return;
+        fetch('/gateway.php?action=get-posts&full=1&member_id=' + memberId + '&post_id=' + encodeURIComponent(String(postId)) + '&_ts=' + Date.now(), {
+            cache: 'no-store'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res || !res.success || !Array.isArray(res.posts) || !res.posts.length) return;
+            var post = res.posts[0];
 
             var oldCard = postContainer.querySelector('.post-card');
             if (oldCard) {
@@ -540,7 +550,8 @@
             if (editingPostsData[postId]) {
                 editingPostsData[postId].original = post;
             }
-        });
+        })
+        .catch(function() {});
     }
 
     function renderPostCard(post) {
@@ -2444,7 +2455,7 @@
                                 if (msg && window.ToastComponent && typeof ToastComponent.showSuccess === 'function') ToastComponent.showSuccess(msg);
                             });
                         }
-                        discardEdits(postId); closeModal(); refreshPostCard(postId);
+                        discardEdits(postId); closeModal(); loadPosts();
                     }).catch(function(err) {
                         if (typeof window.getMessage === 'function') {
                             window.getMessage('msg_admin_save_error_response', {}, false).then(function(msg) {
