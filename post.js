@@ -56,6 +56,8 @@ const PostModule = (function() {
   var currentMode = 'map';
   var lastZoom = null;
   var postsEnabled = false;
+  var currentSortKey = 'recommended';
+  var currentSortGeoLocation = null;
   var favToTop = false; // matches live site: "Favourites on top" is a sort behavior, not a filter
   var favSortDirty = true; // live-site behavior: fav changes don't reorder until user presses the toggle again
 
@@ -559,7 +561,9 @@ const PostModule = (function() {
 
     App.on('filter:sortChanged', function(data) {
       if (!data || !data.sort) return;
-      sortPosts(data.sort, data.userGeoLocation || null);
+      currentSortKey = String(data.sort || 'recommended');
+      currentSortGeoLocation = data.userGeoLocation || null;
+      sortPosts(currentSortKey, currentSortGeoLocation);
     });
 
     App.on('filter:favouritesToggle', function(data) {
@@ -581,6 +585,9 @@ const PostModule = (function() {
         if (restoredFs && restoredFs.favourites) {
           favToTop = true;
           favSortDirty = false;
+        }
+        if (restoredFs && restoredFs.sort) {
+          currentSortKey = String(restoredFs.sort || 'recommended');
         }
       }
     } catch (_eInitFavToTop) {}
@@ -1136,6 +1143,8 @@ const PostModule = (function() {
             // Request may have gone stale while waiting for startup settings.
             if (myToken !== postsRequestToken) return [];
             renderPostList(data.posts);
+            // Re-apply current UI sort after each fresh render (prevents server order from overriding UI sort).
+            sortPosts(currentSortKey, currentSortGeoLocation);
             // Emit counts for the current viewport (server-filtered)
             emitFilterCounts(data.posts);
             // Refresh map clusters with new post data
@@ -1451,7 +1460,7 @@ const PostModule = (function() {
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(post.created_at || 0).getTime() || 0);
       el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
-      el.dataset.sortSoonTs = String(getPostSoonestTimestamp(post) || '');
+      el.dataset.sortSoonTs = String(getMapCardSoonestTimestamp(mapCard) || '');
       if (mapCard && Number.isFinite(Number(mapCard.longitude)) && Number.isFinite(Number(mapCard.latitude))) {
         el.dataset.sortLng = String(mapCard.longitude);
         el.dataset.sortLat = String(mapCard.latitude);
@@ -2786,6 +2795,32 @@ const PostModule = (function() {
       }
     }
     return best;
+  }
+
+  function getMapCardSoonestTimestamp(mapCard) {
+    if (!mapCard || typeof mapCard !== 'object') return Number.POSITIVE_INFINITY;
+    var best = Number.POSITIVE_INFINITY;
+    var sessions = Array.isArray(mapCard.sessions) ? mapCard.sessions : [];
+    for (var i = 0; i < sessions.length; i++) {
+      var s = sessions[i];
+      if (!s) continue;
+      var dt = null;
+      var dateStr = s.date || s.session_date || '';
+      var timeStr = s.time || s.session_time || '';
+      if (dateStr) {
+        dt = new Date(String(dateStr) + (timeStr ? ('T' + String(timeStr)) : 'T00:00:00'));
+      }
+      var t = dt ? dt.getTime() : NaN;
+      if (Number.isFinite(t) && t < best) best = t;
+    }
+    if (best !== Number.POSITIVE_INFINITY) return best;
+    // Lightweight get-posts payload often provides first_session_date without full sessions.
+    if (mapCard.first_session_date) {
+      var first = new Date(String(mapCard.first_session_date));
+      var firstTs = first.getTime();
+      if (Number.isFinite(firstTs)) return firstTs;
+    }
+    return Number.POSITIVE_INFINITY;
   }
   
   function compareSoonest(a, b) {
