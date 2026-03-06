@@ -3440,6 +3440,7 @@ const PostModule = (function() {
           postId: post.id,
           datesText: datesText,
           ageRatings: activeLoc.age_ratings || {},
+          sessions: Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [],
           priceSummary: activeLoc.price_summary || '',
           escapeHtml: escapeHtml
         }),

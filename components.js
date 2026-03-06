@@ -12202,22 +12202,204 @@ const PostSessionComponent = (function() {
         var postId = options.postId || '';
         var datesText = options.datesText || '';
         var ageRatings = options.ageRatings || {};
+        var sessions = Array.isArray(options.sessions) ? options.sessions : [];
         var priceSummary = options.priceSummary || '';
         var escapeHtml = options.escapeHtml || function(s) { return s; };
 
         if (!datesText) return '';
 
-        // Build initial age rating icons from all unique ratings
+        // Build initial age rating icons from ticket groups that actually have sessions.
+        // This keeps the summary chips aligned with the selected map card's visible sessions.
         var ageRatingsHtml = '';
         if (ageRatings && typeof ageRatings === 'object') {
             var ratings = [];
             var seen = {};
-            Object.keys(ageRatings).forEach(function(key) {
-                var val = ageRatings[key];
-                if (val && !seen[val]) {
-                    seen[val] = true;
-                    ratings.push(val);
-                }
+            sessions.forEach(function(s) {
+                var times = s && Array.isArray(s.times) ? s.times : [];
+                times.forEach(function(t) {
+                    var groupKey = '';
+                    if (t && typeof t === 'object' && t.ticket_group_key !== undefined && t.ticket_group_key !== null) {
+                        groupKey = String(t.ticket_group_key || '').trim();
+                    }
+                    if (!groupKey) return;
+                    var val = ageRatings[groupKey];
+                    if (val && !seen[val]) {
+                        seen[val] = true;
+                        ratings.push(val);
+                    }
+                });
+            });
+            // If no session-linked ticket groups were found, show no age chips.
+            // The menu should represent available sessions only.
+            if (!ratings.length) {
+                ageRatingsHtml = '';
+            } else {
+                // Sort by age rating order
+                ratings.sort(function(a, b) {
+                    var orderA = ageRatingSortOrder[a] || 99;
+                    var orderB = ageRatingSortOrder[b] || 99;
+                    return orderA - orderB;
+                });
+                ageRatingsHtml = ratings.map(function(val) {
+                    var url = getAgeRatingImageUrlStatic(val);
+                    if (!url) return '';
+                    return '<img class="post-session-age-rating-icon" src="' + escapeHtml(url) + '" alt="' + escapeHtml(val) + '" title="Age rating: ' + escapeHtml(val === 'all' ? 'All Ages' : val + '+') + '">';
+                }).join('');
+            }
+        }
+
+        // Build initial price summary (flag + price range)
+        var ticketSummaryHtml = '';
+        if (priceSummary) {
+            // Parse [cc] prefix for flag
+            var priceMatch = priceSummary.match(/^\[([a-z0-9_-]+)\]\s*(.*)$/i);
+            var countryCode = priceMatch ? priceMatch[1].toLowerCase() : '';
+            var priceText = priceMatch ? priceMatch[2].trim() : priceSummary;
+            var flagUrl = '';
+            if (countryCode && window.App && typeof window.App.getImageUrl === 'function') {
+                flagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
+            }
+            ticketSummaryHtml = (flagUrl ? '<img class="post-session-ticket-flag" src="' + escapeHtml(flagUrl) + '" alt="' + escapeHtml(countryCode) + '">' : '') +
+                '<span class="post-session-ticket-text">' + escapeHtml(priceText) + '</span>';
+        }
+
+        var html = [];
+        html.push('<div class="post-session-container" data-post-id="' + postId + '">');
+        html.push('<button class="post-session-button" type="button" aria-haspopup="true" aria-expanded="false">');
+        html.push('<div class="post-session-text">');
+        html.push('<div class="post-session-text-main">');
+        html.push('<span class="post-session-date-left">' + escapeHtml(datesText) + '</span>');
+        html.push('<span class="post-session-time-right"></span>');
+        html.push('<span class="post-session-promo-tag"></span>');
+        html.push('<span class="post-session-age-ratings">' + ageRatingsHtml + '</span>');
+        html.push('</div>');
+        html.push('</div>');
+        html.push('<div class="post-session-arrow"></div>');
+        html.push('</button>');
+        html.push('<div class="post-session-options" aria-label="Session picker">');
+        html.push('<div class="post-session-calendar-slot">');
+        html.push('<div class="post-session-calendar-mount calendar-container" aria-label="Session calendar"></div>');
+        html.push('<div class="post-session-popover" aria-hidden="true"></div>');
+        html.push('</div>');
+        html.push('<div class="post-session-times">');
+        html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
+        html.push('</div>');
+        html.push('</div>');
+        // Prompt (directly below session menu, above price summary)
+        html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
+        // Ticket container (underneath prompt)
+        html.push('<div class="post-session-ticket-container">');
+        html.push('<div class="post-session-ticket-summary">' + ticketSummaryHtml + '</div>');
+        html.push('<div class="post-session-ticket-details"></div>');
+        html.push('</div>');
+        html.push('</div>');
+
+        return html.join('');
+    }
+
+    /**
+     * Initialize session component behavior
+     * @param {HTMLElement} wrap - The post wrapper element
+     * @param {Object} post - The post data object
+     * @param {Object} callbacks - Callback functions
+     * @param {Function} callbacks.escapeHtml - HTML escape function
+     * @param {Function} callbacks.getLocationListForUi - Returns ordered location list
+     * @param {Function} callbacks.getLocationSelectedIndex - Returns selected location index
+     * @param {Function} callbacks.closeLocationDropdown - Closes location dropdown
+     */
+    function init(wrap, post, callbacks) {
+        if (!wrap || !post) return null;
+
+        var sessionBtn = wrap.querySelector('.post-session-button');
+        var sessionArrow = wrap.querySelector('.post-session-arrow');
+        var sessionOptionsPanel = wrap.querySelector('.post-session-options');
+        var sessionCalendarMount = wrap.querySelector('.post-session-calendar-mount');
+        var sessionTimesList = wrap.querySelector('.post-session-times-list');
+        var sessionPopover = wrap.querySelector('.post-session-popover');
+        var ticketContainer = wrap.querySelector('.post-session-ticket-container');
+        var ticketSummary = wrap.querySelector('.post-session-ticket-summary');
+        var ticketPrompt = wrap.querySelector('.post-session-ticket-prompt');
+        var ticketDetails = wrap.querySelector('.post-session-ticket-details');
+
+        if (!sessionBtn) return null;
+        
+        // Load session select prompt message
+        if (ticketPrompt && typeof window.getMessage === 'function') {
+            var promptKey = ticketPrompt.getAttribute('data-message-key');
+            if (promptKey) {
+                window.getMessage(promptKey, {}, false).then(function(message) {
+                    if (message && ticketPrompt) {
+                        ticketPrompt.textContent = message;
+                    }
+                }).catch(function() {});
+            }
+        }
+
+        var escapeHtml = (callbacks && callbacks.escapeHtml) || function(s) { return String(s || ''); };
+
+        var sessionCalendarApi = null;
+        var sessionAvailableSet = null;
+        var sessionByDate = null;
+        var sessionItems = null;
+        var selectedSessionIso = '';
+        var selectedSessionTime = '';
+        var sessionsLoading = false;
+        var sessionPopoverIso = '';
+        var defaultSessionButtonDateText = '';
+        var closeSessionTimer = null;
+        var SESSION_SELECT_CLOSE_DELAY_MS = 500;
+        var hoverPreviewIso = '';
+        var sessionResizeHandler = null;
+
+        try {
+            var _dateInit = wrap.querySelector('.post-session-date-left');
+            if (_dateInit) defaultSessionButtonDateText = String(_dateInit.textContent || '');
+        } catch (_eInit0) {}
+
+        function getLocationListForUi() {
+            if (callbacks && callbacks.getLocationListForUi) return callbacks.getLocationListForUi();
+            return post.map_cards || [];
+        }
+
+        function syncSessionOptionsOffset() {
+            if (!sessionBtn || !sessionOptionsPanel) return;
+            try {
+                var h = sessionBtn.offsetHeight || 0;
+                if (!h) return;
+                sessionOptionsPanel.style.top = String(h) + 'px';
+            } catch (_eSessTop) {}
+        }
+
+        function getAgeRatingImageUrl(value) {
+            if (!value) return '';
+            var filename = 'age-rating-' + value + '.svg';
+            if (window.App && typeof window.App.getImageUrl === 'function') {
+                return window.App.getImageUrl('ageRatings', filename);
+            }
+            return '';
+        }
+
+        function getAllUniqueAgeRatings() {
+            var activeLoc = getActiveLocationForUi();
+            if (!activeLoc || !activeLoc.age_ratings) return [];
+            var ratings = [];
+            var seen = {};
+            // Only include age ratings from ticket groups that have actual sessions.
+            var sessionRows = Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
+            sessionRows.forEach(function(s) {
+                var times = s && Array.isArray(s.times) ? s.times : [];
+                times.forEach(function(t) {
+                    var groupKey = '';
+                    if (t && typeof t === 'object' && t.ticket_group_key !== undefined && t.ticket_group_key !== null) {
+                        groupKey = String(t.ticket_group_key || '').trim();
+                    }
+                    if (!groupKey) return;
+                    var val = activeLoc.age_ratings[groupKey];
+                    if (val && !seen[val]) {
+                        seen[val] = true;
+                        ratings.push(val);
+                    }
+                });
             });
             // Sort by age rating order
             ratings.sort(function(a, b) {
@@ -12368,12 +12550,21 @@ const PostSessionComponent = (function() {
             if (!activeLoc || !activeLoc.age_ratings) return [];
             var ratings = [];
             var seen = {};
-            Object.keys(activeLoc.age_ratings).forEach(function(key) {
-                var val = activeLoc.age_ratings[key];
-                if (val && !seen[val]) {
-                    seen[val] = true;
-                    ratings.push(val);
-                }
+            var sessionRows = Array.isArray(activeLoc.sessions) ? activeLoc.sessions : [];
+            sessionRows.forEach(function(s) {
+                var times = s && Array.isArray(s.times) ? s.times : [];
+                times.forEach(function(t) {
+                    var groupKey = '';
+                    if (t && typeof t === 'object' && t.ticket_group_key !== undefined && t.ticket_group_key !== null) {
+                        groupKey = String(t.ticket_group_key || '').trim();
+                    }
+                    if (!groupKey) return;
+                    var val = activeLoc.age_ratings[groupKey];
+                    if (val && !seen[val]) {
+                        seen[val] = true;
+                        ratings.push(val);
+                    }
+                });
             });
             // Sort by age rating order (all < 7 < 12 < 15 < 18 < 21)
             ratings.sort(function(a, b) {
@@ -13232,10 +13423,21 @@ const PostSessionComponent = (function() {
             if (initPromoEl) {
                 var initLoc = getActiveLocationForUi();
                 if (initLoc) {
-                    var pg = initLoc.pricing_groups || {};
-                    var pgKeys = Object.keys(pg);
-                    for (var pi = 0; pi < pgKeys.length; pi++) {
-                        if (ticketGroupHasPromo(pgKeys[pi])) {
+                    // Location-specific promo summary: only ticket groups that appear
+                    // in this location's sessions may influence the session button badge.
+                    var sessionGroupKeys = {};
+                    var initSessions = Array.isArray(initLoc.sessions) ? initLoc.sessions : [];
+                    initSessions.forEach(function(s) {
+                        var times = s && Array.isArray(s.times) ? s.times : [];
+                        times.forEach(function(t) {
+                            var gk = (t && typeof t === 'object') ? String(t.ticket_group_key || '').trim() : '';
+                            if (!gk) return;
+                            sessionGroupKeys[gk] = true;
+                        });
+                    });
+                    var keys = Object.keys(sessionGroupKeys);
+                    for (var pi = 0; pi < keys.length; pi++) {
+                        if (ticketGroupHasPromo(keys[pi])) {
                             initPromoEl.textContent = 'Promo';
                             break;
                         }
