@@ -43,6 +43,32 @@ const AdminModule = (function() {
     var tabButtons = null;
     var tabPanels = null;
 
+    function restorePanelUiState() {
+        try {
+            if (!window.App || typeof App.getUiState !== 'function') return;
+            var ui = App.getUiState() || {};
+            var s = ui && ui.adminPanel ? ui.adminPanel : null;
+            if (!s || typeof s !== 'object') return;
+            var home = String(s.home || '');
+            if (home === 'left' || home === 'right') panelHome = home;
+            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
+            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
+        } catch (_eRestoreAdminPanelUi) {}
+    }
+
+    function persistPanelUiState() {
+        try {
+            if (!window.App || typeof App.mergeUiState !== 'function') return;
+            App.mergeUiState({
+                adminPanel: {
+                    home: panelHome,
+                    dragged: !!panelDragged,
+                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : null
+                }
+            });
+        } catch (_ePersistAdminPanelUi) {}
+    }
+
     /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
        
@@ -283,6 +309,7 @@ const AdminModule = (function() {
             console.warn('[Admin] Admin panel not found');
             return;
         }
+        restorePanelUiState();
 
         bindEvents();
         initHeaderDrag();
@@ -377,6 +404,12 @@ const AdminModule = (function() {
                     panelContent.style.left  = '0px';
                     panelContent.style.right = 'auto';
                 }
+                try {
+                    var _left = parseFloat(panelContent.style.left);
+                    if (!Number.isFinite(_left)) _left = currentLeft;
+                    panelLastLeft = Math.max(0, _left);
+                } catch (_eAdminDragLeft) {}
+                persistPanelUiState();
             }
             
             document.addEventListener('mousemove', onMove);
@@ -563,6 +596,7 @@ const AdminModule = (function() {
             panelContent.style.right = 'auto';
             panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
+        persistPanelUiState();
         requestAnimationFrame(function() {
             panelContent.classList.remove('admin-panel-contents--hidden');
             panelContent.classList.add('admin-panel-contents--visible');
@@ -733,6 +767,7 @@ const AdminModule = (function() {
             panelContent.classList.toggle('admin-panel-contents--side-left', panelHome === 'left');
             panelContent.style.left = '';
             panelContent.style.right = '';
+            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }

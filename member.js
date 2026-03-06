@@ -68,6 +68,32 @@ const MemberModule = (function() {
     var closeTimer = null;      // pending close finalize timer
     var closeToken = 0;         // invalidates stale close finalizers
     var closeBtn = null;
+
+    function restorePanelUiState() {
+        try {
+            if (!window.App || typeof App.getUiState !== 'function') return;
+            var ui = App.getUiState() || {};
+            var s = ui && ui.memberPanel ? ui.memberPanel : null;
+            if (!s || typeof s !== 'object') return;
+            var home = String(s.home || '');
+            if (home === 'left' || home === 'right') panelHome = home;
+            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
+            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
+        } catch (_eRestoreMemberPanelUi) {}
+    }
+
+    function persistPanelUiState() {
+        try {
+            if (!window.App || typeof App.mergeUiState !== 'function') return;
+            App.mergeUiState({
+                memberPanel: {
+                    home: panelHome,
+                    dragged: !!panelDragged,
+                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : null
+                }
+            });
+        } catch (_ePersistMemberPanelUi) {}
+    }
     var tabButtons = null;
     var tabPanels = null;
     var createTabBtn = null;
@@ -237,6 +263,7 @@ const MemberModule = (function() {
             console.warn('[Member] Member panel not found');
             return;
         }
+        restorePanelUiState();
         
         bindEvents();
         initHeaderDrag();
@@ -363,6 +390,12 @@ const MemberModule = (function() {
                     panelContent.style.left  = '0px';
                     panelContent.style.right = 'auto';
                 }
+                try {
+                    var _left = parseFloat(panelContent.style.left);
+                    if (!Number.isFinite(_left)) _left = currentLeft;
+                    panelLastLeft = Math.max(0, _left);
+                } catch (_eMemberDragLeft) {}
+                persistPanelUiState();
             }
             
             document.addEventListener('mousemove', onMove);
@@ -2474,6 +2507,7 @@ const MemberModule = (function() {
             panelContent.style.right = 'auto';
             panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
+        persistPanelUiState();
         requestAnimationFrame(function() {
             panelContent.classList.remove('member-panel-contents--hidden');
             panelContent.classList.add('member-panel-contents--visible');
@@ -2561,6 +2595,7 @@ const MemberModule = (function() {
             panelContent.classList.toggle('member-panel-contents--side-left', panelHome === 'left');
             panelContent.style.left  = '';
             panelContent.style.right = '';
+            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }
