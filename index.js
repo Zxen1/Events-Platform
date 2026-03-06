@@ -340,6 +340,7 @@ const App = (function() {
     mapBounds: null,      // Current map viewport (for filtering)
     activePanel: null     // Which panel is open (filter/member/admin)
   };
+  const UI_STATE_STORAGE_KEY = 'funmap_ui_global';
 
   function getState(key) {
     return state[key];
@@ -349,6 +350,81 @@ const App = (function() {
     const oldValue = state[key];
     state[key] = value;
     emit(`state:${key}`, { key, value, oldValue });
+  }
+
+  function readUiStateStorage() {
+    try {
+      var raw = localStorage.getItem(UI_STATE_STORAGE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_eUiRead) {
+      return {};
+    }
+  }
+
+  function writeUiStateStorage(next) {
+    try {
+      var clean = next && typeof next === 'object' ? next : {};
+      localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(clean));
+    } catch (_eUiWrite) {}
+  }
+
+  function deepMergeUiState(base, patch) {
+    var out = Object.assign({}, base || {});
+    Object.keys(patch || {}).forEach(function(key) {
+      var pv = patch[key];
+      var bv = out[key];
+      if (pv && typeof pv === 'object' && !Array.isArray(pv) && bv && typeof bv === 'object' && !Array.isArray(bv)) {
+        out[key] = deepMergeUiState(bv, pv);
+      } else {
+        out[key] = pv;
+      }
+    });
+    return out;
+  }
+
+  function getUiState() {
+    return readUiStateStorage();
+  }
+
+  function mergeUiState(patch) {
+    var prev = readUiStateStorage();
+    var next = deepMergeUiState(prev, patch || {});
+    next.updated_at = Date.now();
+    writeUiStateStorage(next);
+    return next;
+  }
+
+  function hasDeepLinkIntent() {
+    try {
+      var qs = new URLSearchParams(window.location.search || '');
+      if (qs.get('post') || qs.get('post_key') || qs.get('register') || qs.get('post-editor') || qs.get('post-editor-key') || qs.get('profile')) {
+        return true;
+      }
+    } catch (_eQs) {}
+    try {
+      var path = String(window.location.pathname || '');
+      return path.indexOf('/post/') !== -1 || path.indexOf('/register') !== -1 || path.indexOf('/post-editor') !== -1 || path.indexOf('/profile') !== -1;
+    } catch (_ePath) {
+      return false;
+    }
+  }
+
+  function restoreGlobalUiPanels() {
+    if (hasDeepLinkIntent()) return;
+    var ui = readUiStateStorage();
+    var panels = (ui && ui.panels && typeof ui.panels === 'object') ? ui.panels : {};
+    var active = (ui && typeof ui.activePanel === 'string') ? ui.activePanel : '';
+    var panelToOpen = '';
+    if (active === 'filter' && panels.filterOpen) panelToOpen = 'filter';
+    else if (active === 'member' && panels.memberOpen) panelToOpen = 'member';
+    else if (active === 'admin' && panels.adminOpen) panelToOpen = 'admin';
+    else if (panels.filterOpen) panelToOpen = 'filter';
+    else if (panels.memberOpen) panelToOpen = 'member';
+    else if (panels.adminOpen) panelToOpen = 'admin';
+    if (!panelToOpen) return;
+    emit('panel:toggle', { panel: panelToOpen, show: true });
   }
 
 
@@ -819,6 +895,9 @@ const App = (function() {
     // Toggle slider (sliding pill for toggle-class-1)
     initToggleSliders();
 
+    // Restore top-level panel open state after core modules are initialized.
+    setTimeout(restoreGlobalUiPanels, 0);
+
     // App initialization complete
   }
   
@@ -1080,6 +1159,8 @@ const App = (function() {
     // State
     getState,
     setState,
+    getUiState,
+    mergeUiState,
     
     // Panel stack
     bringToTop,

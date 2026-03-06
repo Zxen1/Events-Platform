@@ -567,9 +567,23 @@ const AdminModule = (function() {
             panelContent.classList.remove('admin-panel-contents--hidden');
             panelContent.classList.add('admin-panel-contents--visible');
         });
+
+        // Restore last active admin tab on open.
+        try {
+            if (window.App && typeof App.getUiState === 'function') {
+                var ui = App.getUiState() || {};
+                var savedTab = ui && ui.admin ? String(ui.admin.tab || '') : '';
+                if (savedTab && panel.querySelector('.admin-tab-bar > .button-class-2[data-tab="' + savedTab + '"]')) {
+                    switchTab(savedTab);
+                }
+            }
+        } catch (_eAdminTabRestore) {}
         
         // Bring panel to front of stack
         App.bringToTop(panel);
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { adminOpen: true }, activePanel: 'admin' });
+        }
         
         // Update header button
         App.emit('admin:opened');
@@ -678,6 +692,9 @@ const AdminModule = (function() {
 
     function closePanel() {
         if (!panel || !panelContent) return;
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { adminOpen: false } });
+        }
         closeToken++;
         var myCloseToken = closeToken;
         
@@ -771,6 +788,9 @@ const AdminModule = (function() {
             initModerationTab();
         } else if (tabName === 'sitemap') {
             initSitemapTab();
+        }
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ admin: { tab: String(tabName || '') } });
         }
     }
 

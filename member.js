@@ -2478,6 +2478,17 @@ const MemberModule = (function() {
             panelContent.classList.remove('member-panel-contents--hidden');
             panelContent.classList.add('member-panel-contents--visible');
         });
+
+        // Restore last active member tab on open.
+        try {
+            if (window.App && typeof App.getUiState === 'function') {
+                var ui = App.getUiState() || {};
+                var savedTab = ui && ui.member ? String(ui.member.tab || '') : '';
+                if (savedTab && panel.querySelector('.member-tab-bar > .button-class-2[data-tab="' + savedTab + '"]')) {
+                    switchTab(savedTab);
+                }
+            }
+        } catch (_eMemberTabRestore) {}
         
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
@@ -2488,6 +2499,9 @@ const MemberModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panel);
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { memberOpen: true }, activePanel: 'member' });
+        }
         
         // Update header button
         App.emit('member:opened');
@@ -2499,6 +2513,9 @@ const MemberModule = (function() {
         if (isProfileDirty()) {
             confirmUnsavedProfileEdits(function() { closePanel(); });
             return;
+        }
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { memberOpen: false } });
         }
         
         // Remove focus from close button before hiding (fixes aria-hidden warning)
@@ -2609,6 +2626,9 @@ const MemberModule = (function() {
         // Initialize Register tab content when activated
         if (tabName === 'register') {
             initRegisterTab();
+        }
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ member: { tab: String(tabName || '') } });
         }
     }
 

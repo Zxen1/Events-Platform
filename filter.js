@@ -567,6 +567,9 @@ const FilterModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panelEl);
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { filterOpen: true }, activePanel: 'filter' });
+        }
 
         // Authoritative counts (worldwide + in-area)
         try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
@@ -620,6 +623,9 @@ const FilterModule = (function() {
     
     function closePanel() {
         if (!panelEl || !contentEl) return;
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { filterOpen: false } });
+        }
         closeToken++;
         var myCloseToken = closeToken;
 
