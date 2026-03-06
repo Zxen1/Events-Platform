@@ -235,15 +235,35 @@ const HeaderModule = (function() {
             }
         }
         
-        // Filter icon - use mask-image like admin buttons
-        var filterIcon = document.querySelector('.header-filter-button-icon');
-        if (filterIcon && systemImages.icon_filter) {
-            var iconUrl = window.App.getImageUrl('systemImages', systemImages.icon_filter);
+        // Filter icon - swaps between worldwide and local icon based on zoom vs postsLoadZoom
+        // zoom < threshold  → worldwide (clusters) → icon_filter_worldwide
+        // zoom >= threshold → local (map cards)    → icon_filter
+        function updateFilterIcon() {
+            var filterIcon = document.querySelector('.header-filter-button-icon');
+            if (!filterIcon) return;
+            var threshold = null;
+            try {
+                if (window.App && typeof window.App.getConfig === 'function') {
+                    threshold = window.App.getConfig('postsLoadZoom');
+                }
+            } catch (e) {}
+            var zoom = null;
+            try {
+                if (window.MapModule && typeof window.MapModule.getMap === 'function') {
+                    var m = window.MapModule.getMap();
+                    if (m && typeof m.getZoom === 'function') zoom = m.getZoom();
+                }
+            } catch (e) {}
+            var isWorldwide = (threshold === null || zoom === null || zoom < threshold);
+            var iconFile = isWorldwide ? systemImages.icon_filter_worldwide : systemImages.icon_filter;
+            if (!iconFile) return;
+            var iconUrl = window.App.getImageUrl('systemImages', iconFile);
             filterIcon.style.webkitMaskImage = 'url(' + iconUrl + ')';
             filterIcon.style.maskImage = 'url(' + iconUrl + ')';
-            // Let CSS control the background-color for proper state styling
             syncIconVisibility(filterIcon);
         }
+        updateFilterIcon();
+        App.on('map:boundsChanged', updateFilterIcon);
         
         // Header access button icons (Member / Admin / Fullscreen)
         if (systemImages.icon_member) {
