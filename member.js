@@ -2456,6 +2456,11 @@ const MemberModule = (function() {
         // Users expect the browser to preserve in-progress input when they leave and return.
         // The Create Post form is only reset on explicit actions (e.g. successful submit, explicit reset).
 
+        if (tabName === 'create' && currentUser && currentUser.deleted_at) {
+            showDepartingDisabledToast(departingCreateDisabledMsg);
+            return;
+        }
+
         // Only guard when leaving Profile tab with dirty edits
         var leavingProfile = false;
         if (tabButtons) {
@@ -5664,11 +5669,20 @@ const MemberModule = (function() {
         }).catch(function() {});
     }
 
+    function showDepartingDisabledToast(messageText) {
+        var msg = String(messageText || '').trim();
+        if (!msg) return;
+        if (window.ToastComponent && typeof ToastComponent.showWarning === 'function') {
+            ToastComponent.showWarning(msg);
+        }
+    }
+
     function updateDepartingState() {
         var departing = !!(currentUser && currentUser.deleted_at);
         if (departing) loadDepartingHintMessages();
         if (createTabBtn) {
-            createTabBtn.disabled = departing;
+            createTabBtn.disabled = false;
+            createTabBtn.setAttribute('aria-disabled', departing ? 'true' : 'false');
             createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
             createTabBtn.classList.toggle('member-departing-tooltip-target', departing);
             if (departing) {
@@ -5685,7 +5699,8 @@ const MemberModule = (function() {
             profileHideSwitch.classList.toggle('member-tab-btn--departing-disabled', departing);
         }
         document.querySelectorAll('.posteditor-button-manage').forEach(function(btn) {
-            btn.disabled = departing;
+            btn.disabled = false;
+            btn.setAttribute('aria-disabled', departing ? 'true' : 'false');
             btn.classList.toggle('member-tab-btn--departing-disabled', departing);
             btn.classList.toggle('member-departing-tooltip-target', departing);
             if (departing) {
@@ -7979,6 +7994,7 @@ const MemberModule = (function() {
         submitPostData: submitPostData,
         extractFieldValue: extractFieldValue,
         updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
+        showDepartingDisabledToast: showDepartingDisabledToast,
         getDepartingManageDisabledMessage: function() { return departingManageDisabledMsg; },
         openTermsModal: openTermsModal,
         getCheckoutOptions: function() { return checkoutOptions; },

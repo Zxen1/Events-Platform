@@ -620,11 +620,13 @@
         manageBtn.textContent = 'Manage';
         manageBtn.setAttribute('aria-selected', 'false');
         if (isDeparting) {
-            manageBtn.disabled = true;
+            manageBtn.disabled = false;
+            manageBtn.setAttribute('aria-disabled', 'true');
             manageBtn.classList.add('member-tab-btn--departing-disabled');
             manageBtn.classList.add('member-departing-tooltip-target');
+            var departingManageMsg = '';
             try {
-                var departingManageMsg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
+                departingManageMsg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
                     ? String(MemberModule.getDepartingManageDisabledMessage() || '')
                     : '';
                 if (departingManageMsg) {
@@ -632,6 +634,15 @@
                     manageBtn.setAttribute('aria-label', departingManageMsg);
                 }
             } catch (_eDepMsg) {}
+            manageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    if (window.MemberModule && typeof MemberModule.showDepartingDisabledToast === 'function') {
+                        MemberModule.showDepartingDisabledToast(departingManageMsg);
+                    }
+                } catch (_eDepToast) {}
+            });
         } else {
             manageBtn.addEventListener('click', function(e) {
                 e.preventDefault();
