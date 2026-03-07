@@ -5597,9 +5597,12 @@ const MemberModule = (function() {
     function createDepartingModal() {
         var daysRemainingLabel = '30 days';
         if (currentUser && currentUser.deleted_at) {
-            var deletedDate = new Date(currentUser.deleted_at.replace(' ', 'T') + 'Z');
+            // deleted_at is stored as a DB datetime string; do not force UTC ("Z")
+            // or the date can shift and incorrectly show 31 days remaining.
+            var deletedDate = new Date(String(currentUser.deleted_at || '').replace(' ', 'T'));
             var now = new Date();
             var daysElapsed = Math.floor((now - deletedDate) / (1000 * 60 * 60 * 24));
+            if (!isFinite(daysElapsed) || daysElapsed < 0) daysElapsed = 0;
             var daysCount = Math.max(0, 30 - daysElapsed);
             daysRemainingLabel = window.App && typeof App.pluralize === 'function'
                 ? App.pluralize(daysCount, 'day')
