@@ -1762,6 +1762,10 @@
   pointer-events: none;
 }
 
+.member-tab-btn--departing-disabled.member-departing-tooltip-target {
+  pointer-events: auto;
+}
+
 @media (max-width: 530px) {
   .departing-modal {
     width: 100%;

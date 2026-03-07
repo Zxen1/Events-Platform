@@ -622,6 +622,16 @@
         if (isDeparting) {
             manageBtn.disabled = true;
             manageBtn.classList.add('member-tab-btn--departing-disabled');
+            manageBtn.classList.add('member-departing-tooltip-target');
+            try {
+                var departingManageMsg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
+                    ? String(MemberModule.getDepartingManageDisabledMessage() || '')
+                    : '';
+                if (departingManageMsg) {
+                    manageBtn.title = departingManageMsg;
+                    manageBtn.setAttribute('aria-label', departingManageMsg);
+                }
+            } catch (_eDepMsg) {}
         } else {
             manageBtn.addEventListener('click', function(e) {
                 e.preventDefault();

@@ -230,6 +230,9 @@ const MemberModule = (function() {
 
     // Departing member modal
     var departingModalContainer = null;
+    var departingCreateDisabledMsg = 'Restore your account in Profile before using Create Post.';
+    var departingManageDisabledMsg = 'Restore your account in Profile before using Manage.';
+    var departingHintMessagesRequested = false;
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -5645,11 +5648,36 @@ const MemberModule = (function() {
         document.body.appendChild(departingModalContainer);
     }
 
+    function loadDepartingHintMessages() {
+        if (departingHintMessagesRequested) return;
+        departingHintMessagesRequested = true;
+        if (typeof window.getMessage !== 'function') return;
+
+        window.getMessage('msg_member_departing_create_disabled', {}, false).then(function(msg) {
+            if (msg) departingCreateDisabledMsg = String(msg);
+            updateDepartingState();
+        }).catch(function() {});
+
+        window.getMessage('msg_member_departing_manage_disabled', {}, false).then(function(msg) {
+            if (msg) departingManageDisabledMsg = String(msg);
+            updateDepartingState();
+        }).catch(function() {});
+    }
+
     function updateDepartingState() {
         var departing = !!(currentUser && currentUser.deleted_at);
+        if (departing) loadDepartingHintMessages();
         if (createTabBtn) {
             createTabBtn.disabled = departing;
             createTabBtn.classList.toggle('member-tab-btn--departing-disabled', departing);
+            createTabBtn.classList.toggle('member-departing-tooltip-target', departing);
+            if (departing) {
+                createTabBtn.title = departingCreateDisabledMsg;
+                createTabBtn.setAttribute('aria-label', departingCreateDisabledMsg);
+            } else {
+                createTabBtn.removeAttribute('title');
+                createTabBtn.removeAttribute('aria-label');
+            }
         }
         if (profileHideSwitch) {
             var switchInput = profileHideSwitch.querySelector('input');
@@ -5659,6 +5687,14 @@ const MemberModule = (function() {
         document.querySelectorAll('.posteditor-button-manage').forEach(function(btn) {
             btn.disabled = departing;
             btn.classList.toggle('member-tab-btn--departing-disabled', departing);
+            btn.classList.toggle('member-departing-tooltip-target', departing);
+            if (departing) {
+                btn.title = departingManageDisabledMsg;
+                btn.setAttribute('aria-label', departingManageDisabledMsg);
+            } else {
+                btn.removeAttribute('title');
+                btn.removeAttribute('aria-label');
+            }
         });
         if (profileDeleteBtn)  profileDeleteBtn.style.display  = departing ? 'none' : '';
         if (profileRestoreBtn) profileRestoreBtn.style.display = departing ? '' : 'none';
@@ -7943,6 +7979,7 @@ const MemberModule = (function() {
         submitPostData: submitPostData,
         extractFieldValue: extractFieldValue,
         updateHeaderSaveDiscardState: updateHeaderSaveDiscardState,
+        getDepartingManageDisabledMessage: function() { return departingManageDisabledMsg; },
         openTermsModal: openTermsModal,
         getCheckoutOptions: function() { return checkoutOptions; },
         handleDeepLink: handleDeepLink,
