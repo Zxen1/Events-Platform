@@ -6102,6 +6102,8 @@ const ThreeButtonDialogComponent = (function() {
 
 const ToastComponent = (function() {
     var containerEl = null;
+    var recentToastMap = {};
+    var TOAST_DEDUPE_MS = 900;
 
     function ensureContainer() {
         if (containerEl) return containerEl;
@@ -6116,6 +6118,14 @@ const ToastComponent = (function() {
     function show(message, variant, duration) {
         variant = variant || 'default';
         duration = duration || 2000;
+        var msgText = String(message || '');
+        var dedupeKey = variant + '::' + msgText;
+        var nowMs = Date.now();
+        var lastMs = recentToastMap[dedupeKey] || 0;
+        if (nowMs - lastMs < TOAST_DEDUPE_MS) {
+            return;
+        }
+        recentToastMap[dedupeKey] = nowMs;
 
         var container = ensureContainer();
 
@@ -6125,7 +6135,7 @@ const ToastComponent = (function() {
             toast.classList.add('component-toast--' + variant);
         }
         toast.setAttribute('role', 'status');
-        toast.textContent = message || '';
+        toast.textContent = msgText;
         container.appendChild(toast);
 
         // Trigger enter animation on next frame
