@@ -572,6 +572,13 @@ if (empty($ogTitle)) {
                 <span class="component-switch-slider"></span>
               </label>
             </div>
+            <div class="admin-settings-field admin-settings-field--toggle row-class-1">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Storefront System</span>
+              <label class="component-switch">
+                <input type="checkbox" class="component-switch-input" id="adminStorefrontEnabled" data-setting-key="storefront_enabled" />
+                <span class="component-switch-slider"></span>
+              </label>
+            </div>
           </div>
           
           <!-- Countdown Container -->
