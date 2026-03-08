@@ -624,35 +624,32 @@
             manageBtn.setAttribute('aria-disabled', 'true');
             manageBtn.classList.add('member-tab-btn--departing-disabled');
             manageBtn.classList.add('member-departing-tooltip-target');
-            var departingManageMsg = '';
             try {
-                departingManageMsg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
-                    ? String(MemberModule.getDepartingManageDisabledMessage() || '')
-                    : '';
-                if (departingManageMsg) {
-                    manageBtn.title = departingManageMsg;
-                    manageBtn.setAttribute('aria-label', departingManageMsg);
-                }
+                var initMsg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
+                    ? String(MemberModule.getDepartingManageDisabledMessage() || '') : '';
+                if (initMsg) { manageBtn.title = initMsg; manageBtn.setAttribute('aria-label', initMsg); }
             } catch (_eDepMsg) {}
-            manageBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        }
+        manageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var liveUser = window.MemberModule && typeof MemberModule.getCurrentUser === 'function'
+                ? MemberModule.getCurrentUser() : null;
+            if (liveUser && liveUser.deleted_at) {
                 try {
+                    var msg = (window.MemberModule && typeof MemberModule.getDepartingManageDisabledMessage === 'function')
+                        ? String(MemberModule.getDepartingManageDisabledMessage() || '') : '';
                     if (window.MemberModule && typeof MemberModule.showDepartingDisabledToast === 'function') {
-                        MemberModule.showDepartingDisabledToast(departingManageMsg);
+                        MemberModule.showDepartingDisabledToast(msg);
                     }
                 } catch (_eDepToast) {}
-            });
-        } else {
-            manageBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.PostModule && typeof PostModule.closePost === 'function') {
-                    PostModule.closePost(post.id);
-                }
-                openManageModal(post);
-            });
-        }
+                return;
+            }
+            if (window.PostModule && typeof PostModule.closePost === 'function') {
+                PostModule.closePost(post.id);
+            }
+            openManageModal(post);
+        });
 
         buttonRow.appendChild(manageBtn);
         postContainer.appendChild(buttonRow);
