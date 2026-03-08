@@ -197,7 +197,7 @@ try {
     $logStmt->close();
   }
 
-  svc_ok(['message' => $subject]);
+  svc_ok();
 } catch (Exception $e) {
   $logStmt = $mysqli->prepare(
     'INSERT INTO emails_sent (member_id, member_role, message_key, to_email, status, notes) VALUES (0, ?, ?, ?, ?, ?)'

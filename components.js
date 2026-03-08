@@ -2712,7 +2712,8 @@ const MemberAuthFieldsetsComponent = (function(){
         }
 
         function setVisible(el, visible) {
-            el.style.display = visible ? '' : 'none';
+            el.style.visibility  = visible ? '' : 'hidden';
+            el.style.pointerEvents = visible ? '' : 'none';
         }
 
         function showState(newState) {
@@ -2779,11 +2780,6 @@ const MemberAuthFieldsetsComponent = (function(){
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
-                        try {
-                            if (window.ToastComponent && typeof window.ToastComponent.showSuccess === 'function' && data.message) {
-                                window.ToastComponent.showSuccess(String(data.message));
-                            }
-                        } catch (e0) {}
                         showState('code-entry');
                         showCodeMsg('');
                         codeInput.value = '';
@@ -2865,14 +2861,6 @@ const MemberAuthFieldsetsComponent = (function(){
             });
             emailInput.addEventListener('blur', updateSendBtnState);
         }
-
-        // Source-of-truth initialization: registration must always start unverified.
-        setComplete(false);
-        showState('idle');
-        setSending(false);
-        showSendMsg('', false);
-        showCodeMsg('', false);
-        codeInput.value = '';
 
         updateSendBtnState();
         return fieldset;
