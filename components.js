@@ -2862,6 +2862,14 @@ const MemberAuthFieldsetsComponent = (function(){
             emailInput.addEventListener('blur', updateSendBtnState);
         }
 
+        // Source-of-truth initialization: registration must always start unverified.
+        setComplete(false);
+        showState('idle');
+        setSending(false);
+        showSendMsg('', false);
+        showCodeMsg('', false);
+        codeInput.value = '';
+
         updateSendBtnState();
         return fieldset;
     }
