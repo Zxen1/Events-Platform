@@ -20,7 +20,7 @@ if (empty($siteSettings['website_url'])) {
 }
 
 $websiteBase = rtrim($siteSettings['website_url'], '/');
-$runDeletionProcess711 = false; // SAFETY GUARD: change to true only when explicitly approved.
+$runDeletionProcess = false; // SAFETY GUARD: change to true only when explicitly approved.
 
 function cronSendEmail(
   mysqli $db,
@@ -158,7 +158,7 @@ function cronGetReminderSubject(array $needsAttention, array $recentlyExpired): 
   return 'Your FunMap listing report';
 }
 
-function cronRunReminder716(
+function cronRunReminderReport(
   mysqli $db,
   array $smtpConfig,
   array $siteSettings,
@@ -333,7 +333,7 @@ function cronRunReminder716(
   $runForTable('admins', 'admin');
 }
 
-function cronRunAccountDeletionWarning710(
+function cronRunAccountDeletionWarning(
   mysqli $db,
   array $smtpConfig,
   array $siteSettings
@@ -407,7 +407,7 @@ function cronGetInactivityCandidates(mysqli $db, string $table, string $role): a
   return $rows;
 }
 
-function cronRunInactivityWarning714(
+function cronRunInactivityWarning(
   mysqli $db,
   array $smtpConfig,
   array $siteSettings,
@@ -453,7 +453,7 @@ function cronRunInactivityWarning714(
   }
 }
 
-function cronRunInactivityClosure715(
+function cronRunInactivityClosure(
   mysqli $db,
   array $smtpConfig,
   array $siteSettings
@@ -529,7 +529,7 @@ function cronCdnDelete(string $fileUrl, string $storageZoneName, string $storage
   return $httpCode === 200 || $httpCode === 404;
 }
 
-function cronRunDeletionProcess711(
+function cronRunDeletionProcess(
   mysqli $db,
   array $smtpConfig,
   array $siteSettings
@@ -672,12 +672,12 @@ function cronRunDeletionProcess711(
   }
 }
 
-cronRunReminder716($mysqli, $smtpConfig, $siteSettings, $websiteBase);
-cronRunAccountDeletionWarning710($mysqli, $smtpConfig, $siteSettings);
-cronRunInactivityWarning714($mysqli, $smtpConfig, $siteSettings, $websiteBase);
-cronRunInactivityClosure715($mysqli, $smtpConfig, $siteSettings);
+cronRunReminderReport($mysqli, $smtpConfig, $siteSettings, $websiteBase);
+cronRunAccountDeletionWarning($mysqli, $smtpConfig, $siteSettings);
+cronRunInactivityWarning($mysqli, $smtpConfig, $siteSettings, $websiteBase);
+cronRunInactivityClosure($mysqli, $smtpConfig, $siteSettings);
 
-if ($runDeletionProcess711 === true) {
-  cronRunDeletionProcess711($mysqli, $smtpConfig, $siteSettings);
+if ($runDeletionProcess === true) {
+  cronRunDeletionProcess($mysqli, $smtpConfig, $siteSettings);
 }
 
