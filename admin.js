@@ -44,29 +44,11 @@ const AdminModule = (function() {
     var tabPanels = null;
 
     function restorePanelUiState() {
-        try {
-            if (!window.App || typeof App.getUiState !== 'function') return;
-            var ui = App.getUiState() || {};
-            var s = ui && ui.adminPanel ? ui.adminPanel : null;
-            if (!s || typeof s !== 'object') return;
-            var home = String(s.home || '');
-            if (home === 'left' || home === 'right') panelHome = home;
-            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
-            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
-        } catch (_eRestoreAdminPanelUi) {}
+        // Drag position is intentionally not restored on refresh.
     }
 
     function persistPanelUiState() {
-        try {
-            if (!window.App || typeof App.mergeUiState !== 'function') return;
-            App.mergeUiState({
-                adminPanel: {
-                    home: panelHome,
-                    dragged: !!panelDragged,
-                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : null
-                }
-            });
-        } catch (_ePersistAdminPanelUi) {}
+        // Drag position is intentionally not persisted.
     }
 
     /* --------------------------------------------------------------------------
