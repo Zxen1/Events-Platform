@@ -7932,6 +7932,9 @@ const MemberModule = (function() {
                     if (profileFormContainer && profileFormContainer.hidden) {
                         toggleProfileForm();
                     }
+                    setTimeout(function() {
+                        if (profileEditPasswordInput) profileEditPasswordInput.focus();
+                    }, 50);
                 }).catch(function() {
                     getMessage('msg_auth_reset_failed', {}, false).then(function(message) {
                         try { if (message && window.ToastComponent) ToastComponent.showError(message); } catch (_e) {}
