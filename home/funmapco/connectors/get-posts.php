@@ -634,6 +634,7 @@ try {
                 'subcategory_name' => (string)($row['subcategory_name'] ?? ''),
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'subcategory_color' => (string)($row['subcategory_color'] ?? ''),
+                'subcategory_type' => (string)($row['subcategory_type'] ?? ''),
                 'loc_qty' => (int)$row['loc_qty'],
                 'loc_paid' => (int)$row['loc_paid'],
                 'visibility' => $row['visibility'],
