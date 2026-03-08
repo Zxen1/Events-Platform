@@ -1956,20 +1956,9 @@ const PostModule = (function() {
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var uniquePostCount = Object.keys(uniquePostIds).length;
 
-      // Storefront detection: 2+ posts, same member, all general (not events).
-      // Mutually exclusive with isMultiPostVenue.
+      // Storefront detection: disabled pending investigation.
       var isStorefront = false;
-      var isMultiPostVenue = false;
-      if (uniquePostCount > 1) {
-        var firstMemberId = group[0].post.member_id;
-        var allSameMember = group.every(function(item) { return item.post.member_id === firstMemberId; });
-        var allGeneral = group.every(function(item) { return item.post.subcategory_type !== 'Events'; });
-        if (allSameMember && allGeneral) {
-          isStorefront = true;
-        } else {
-          isMultiPostVenue = true;
-        }
-      }
+      var isMultiPostVenue = uniquePostCount > 1;
 
       var firstItem = group[0];
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
