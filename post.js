@@ -1963,7 +1963,7 @@ const PostModule = (function() {
       if (uniquePostCount > 1) {
         var firstMemberId = group[0].post.member_id;
         var allSameMember = group.every(function(item) { return item.post.member_id === firstMemberId; });
-        var allGeneral = group.every(function(item) { return item.post.subcategory_type !== 'event'; });
+        var allGeneral = group.every(function(item) { return item.post.subcategory_type !== 'Events'; });
         if (allSameMember && allGeneral) {
           isStorefront = true;
         } else {
