@@ -111,6 +111,27 @@ const App = (function() {
   'use strict';
 
   /* --------------------------------------------------------------------------
+     FIELD INPUT TYPES
+     Defines behaviour rules for HTML input types site-wide.
+     One delegated listener on document covers every input on every panel —
+     no per-component overrides needed. Add rules here, nowhere else.
+     -------------------------------------------------------------------------- */
+  // checklist:  TODO
+  // date:       TODO
+  // decimal:    TODO
+  // dropdown:   TODO
+  // email:      TODO
+  // integer:    TODO
+  // money:      TODO
+  // password:   TODO
+  // radio:      TODO
+  // tel:        TODO
+  // text:       TODO
+  // textarea:   TODO
+  // time:       TODO
+  // url:        TODO
+
+  /* --------------------------------------------------------------------------
      MODULE REGISTRY
      Sections register themselves, others can find them
      -------------------------------------------------------------------------- */
