@@ -221,6 +221,11 @@ try {
         $types .= 'ss';
     }
 
+    // User-facing filters — subcategory, keyword, date, price, amenities, age rating.
+    // ALL skipped for member_id / post_id / post_key fetches (Post Editor, direct links, Recent).
+    // A member must always see all of their own posts. Filters only apply to public map queries.
+    if ($memberId <= 0 && $postId <= 0 && $postKey === '') {
+
     // Subcategory filters
     //
     // IMPORTANT:
@@ -293,8 +298,7 @@ try {
 
     // Age rating filter - hide map cards if ANY age source is 18+ unless show18Plus is set.
     // Sources: post_map_cards.age_rating + post_ticket_pricing.age_rating + post_item_pricing.age_rating
-    // Bypassed for member_id / post_id / post_key fetches (Post Editor, direct links, Recent) — filters never apply there.
-    if (!$show18Plus && $memberId <= 0 && $postId <= 0 && $postKey === '') {
+    if (!$show18Plus) {
         $where[] = "(
             (mc.age_rating IS NULL OR CAST(mc.age_rating AS UNSIGNED) < 18)
             AND NOT EXISTS (
@@ -320,6 +324,8 @@ try {
             )
         )";
     }
+
+    } // end user-facing filters (public map queries only)
 
     // Single post by ID filter
     if ($postId > 0) {
