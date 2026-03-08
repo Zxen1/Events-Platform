@@ -42,6 +42,8 @@ foreach ($authCandidates as $candidate) {
     if (is_file($candidate)) { require_once $candidate; break; }
 }
 
+require_once __DIR__ . '/site-errors.php';
+
 function verify_json_fail($key) {
     echo json_encode(['success' => false, 'error_key' => $key, 'message' => $key], JSON_UNESCAPED_SLASHES);
     exit;
@@ -368,6 +370,9 @@ try {
     verify_json_fail('unknown_type');
 
 } catch (Throwable $e) {
+    if (isset($mysqli) && $mysqli instanceof mysqli) {
+        logSiteError($mysqli, $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'verify', $e->getMessage());
+    }
     verify_json_fail('server_error');
 }
 ?>

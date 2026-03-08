@@ -84,6 +84,8 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
     exit;
 }
 
+require_once __DIR__ . '/site-errors.php';
+
 $rawInput = file_get_contents('php://input');
 $data = json_decode($rawInput, true);
 if (!is_array($data)) {
@@ -559,9 +561,16 @@ if ($subAction === 'capture') {
             "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, 'stripe', ?, ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
-        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        if (!$stmt) {
+            logSiteError($mysqli, 'payment-order', 'Stripe: DB prepare failed: ' . $mysqli->error, (int)($memberId ?? 0), (string)($memberRole ?? ''));
+            http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit;
+        }
         $stmt->bind_param('iisssssddddsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $quote, $discount, $couponId, $amount, $currency, $lineItemsJson, $description);
-        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        if (!$stmt->execute()) {
+            $dbErr = $mysqli->error; $stmt->close();
+            logSiteError($mysqli, 'payment-order', 'Stripe: DB execute failed: ' . $dbErr, (int)($memberId ?? 0), (string)($memberRole ?? ''));
+            http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit;
+        }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
 
@@ -615,9 +624,16 @@ if ($subAction === 'capture') {
             "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, 'paypal', ?, ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
         );
-        if (!$stmt) { http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        if (!$stmt) {
+            logSiteError($mysqli, 'payment-order', 'PayPal: DB prepare failed: ' . $mysqli->error, (int)($memberId ?? 0), (string)($memberRole ?? ''));
+            http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit;
+        }
         $stmt->bind_param('iisssssddddsss', $memberId, $postId, $transactionType, $memberRole, $checkoutKey, $paymentId, $paymentMethod, $quote, $discount, $couponId, $amount, $currency, $lineItemsJson, $description);
-        if (!$stmt->execute()) { $stmt->close(); http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit; }
+        if (!$stmt->execute()) {
+            $dbErr = $mysqli->error; $stmt->close();
+            logSiteError($mysqli, 'payment-order', 'PayPal: DB execute failed: ' . $dbErr, (int)($memberId ?? 0), (string)($memberRole ?? ''));
+            http_response_code(500); echo json_encode(['success' => false, 'message' => 'DB insert failed']); exit;
+        }
         $newTransactionId = (int)$stmt->insert_id;
         $stmt->close();
 

@@ -46,7 +46,14 @@ foreach ($authCandidates as $candidate) {
 }
 if ($authPath) require_once $authPath;
 
+require_once __DIR__ . '/site-errors.php';
+
 function fail($code, $msg){
+  if ($code >= 500) {
+    global $mysqli;
+    $action = $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'add-member';
+    if ($mysqli instanceof mysqli) logSiteError($mysqli, $action, $msg);
+  }
   http_response_code($code);
   echo json_encode(['success'=>false,'message'=>$msg,'error'=>$msg], JSON_UNESCAPED_SLASHES);
   exit;

@@ -117,11 +117,19 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
   fail_key(500, 'msg_post_create_error');
 }
 
+require_once __DIR__ . '/site-errors.php';
+
 function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$transactionActive): void
 {
   if ($transactionActive) {
     $mysqli->rollback();
     $transactionActive = false;
+  }
+  if ($code >= 500) {
+    global $memberId, $memberRole;
+    $action = $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'add-post';
+    $errDetail = $message . ($mysqli->error ? ': ' . $mysqli->error : '');
+    logSiteError($mysqli, $action, $errDetail, (int)($memberId ?? 0), (string)($memberRole ?? ''));
   }
   // No hardcoded strings: return a message key for UI.
   $dbg = [

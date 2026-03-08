@@ -38,7 +38,14 @@ foreach ($authCandidates as $candidate) {
   if (is_file($candidate)) { require_once $candidate; break; }
 }
 
+require_once __DIR__ . '/site-errors.php';
+
 function fail($code, $msg) {
+  if ($code >= 500) {
+    global $mysqli, $memberRole, $id;
+    $action = $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'delete-member';
+    if ($mysqli instanceof mysqli) logSiteError($mysqli, $action, $msg, (int)($id ?? 0), (string)($memberRole ?? ''));
+  }
   http_response_code($code);
   echo json_encode(['success' => false, 'error' => $msg]);
   exit;

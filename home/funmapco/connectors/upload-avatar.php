@@ -47,7 +47,16 @@ foreach ($authCandidates as $c) {
 }
 if ($authPath) require_once $authPath;
 
-function fail($code, $msg){http_response_code($code);echo json_encode(['success'=>false,'error'=>$msg]);exit;}
+require_once __DIR__ . '/site-errors.php';
+
+function fail($code, $msg){
+  if ($code >= 500) {
+    global $mysqli;
+    $action = $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'upload-avatar';
+    if ($mysqli instanceof mysqli) logSiteError($mysqli, $action, $msg);
+  }
+  http_response_code($code);echo json_encode(['success'=>false,'error'=>$msg]);exit;
+}
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}
 
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');

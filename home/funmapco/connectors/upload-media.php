@@ -40,8 +40,15 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
     exit;
 }
 
+require_once __DIR__ . '/site-errors.php';
+
 // Helper function for error responses
 function fail($code, $message) {
+    if ($code >= 500) {
+        global $mysqli;
+        $action = $GLOBALS['FUNMAP_GATEWAY_ACTION'] ?? 'upload-media';
+        if ($mysqli instanceof mysqli) logSiteError($mysqli, $action, $message);
+    }
     http_response_code($code);
     echo json_encode(['success' => false, 'error' => $message]);
     exit;
