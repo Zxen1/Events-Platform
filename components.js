@@ -2712,8 +2712,7 @@ const MemberAuthFieldsetsComponent = (function(){
         }
 
         function setVisible(el, visible) {
-            el.style.visibility  = visible ? '' : 'hidden';
-            el.style.pointerEvents = visible ? '' : 'none';
+            el.style.display = visible ? '' : 'none';
         }
 
         function showState(newState) {
@@ -2861,6 +2860,14 @@ const MemberAuthFieldsetsComponent = (function(){
             });
             emailInput.addEventListener('blur', updateSendBtnState);
         }
+
+        // Always initialize registration email verification as unverified on render.
+        setComplete(false);
+        showState('idle');
+        setSending(false);
+        showSendMsg('', false);
+        showCodeMsg('', false);
+        codeInput.value = '';
 
         updateSendBtnState();
         return fieldset;
