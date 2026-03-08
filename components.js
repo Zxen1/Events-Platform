@@ -2779,6 +2779,11 @@ const MemberAuthFieldsetsComponent = (function(){
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
+                        try {
+                            if (window.ToastComponent && typeof window.ToastComponent.showSuccess === 'function' && data.message) {
+                                window.ToastComponent.showSuccess(String(data.message));
+                            }
+                        } catch (e0) {}
                         showState('code-entry');
                         showCodeMsg('');
                         codeInput.value = '';
