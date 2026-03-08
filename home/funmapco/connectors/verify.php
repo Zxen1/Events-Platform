@@ -237,7 +237,7 @@ try {
         if ($upd) { $upd->bind_param('s', $token); $upd->execute(); $upd->close(); }
 
         $table = $row['member_role'] === 'admin' ? 'admins' : 'members';
-        $cols  = 'id, account_email, username, username_key, avatar_file, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, email_notifications';
+        $cols  = 'id, account_email, username, username_key, avatar_file, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
         $mStmt = $mysqli->prepare("SELECT {$cols} FROM `{$table}` WHERE id = ? LIMIT 1");
         if (!$mStmt) verify_json_fail('server_error');
         $mStmt->bind_param('i', $row['member_id']);
@@ -271,7 +271,6 @@ try {
                 'filters_hash'          => $mRow['filters_hash'] ?? null,
                 'filters_version'       => isset($mRow['filters_version']) ? (int)$mRow['filters_version'] : null,
                 'filters_updated_at'    => $mRow['filters_updated_at'] ?? null,
-                'email_notifications'   => isset($mRow['email_notifications']) ? (int)$mRow['email_notifications'] : 1,
             ],
         ], JSON_UNESCAPED_SLASHES);
         exit;
