@@ -2782,12 +2782,17 @@ const MemberAuthFieldsetsComponent = (function(){
                         try {
                             if (window.getMessage && window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                                 window.getMessage('msg_auth_verify_code_sent', {}, false).then(function(message) {
-                                    if (message) ToastComponent.showSuccess(message);
+                                    if (message) {
+                                        ToastComponent.showSuccess(message);
+                                        showCodeMsg(message, false);
+                                    }
                                 });
                             }
                         } catch (e0) {}
                         showState('code-entry');
-                        showCodeMsg('');
+                        if (!(window.getMessage && typeof window.getMessage === 'function')) {
+                            showCodeMsg('');
+                        }
                         codeInput.value = '';
                         requestAnimationFrame(function() { try { codeInput.focus(); } catch (e) {} });
                     } else {
