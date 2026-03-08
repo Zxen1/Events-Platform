@@ -4159,6 +4159,17 @@ const MemberModule = (function() {
         // Capture coupon ID before form reset clears appliedCoupon
         var submittingCouponId = appliedCoupon ? appliedCoupon.id : null;
 
+        // Capture quote/discount for free coupon posts before form reset clears checkout state
+        var submittingQuote = 0;
+        var submittingDiscount = 0;
+        if (!isAdminFree && !_transactionId && appliedCoupon) {
+            var freeChecked = formFields ? formFields.querySelector('input[type="radio"].member-checkout-duration-radio:checked, input[type="radio"].member-checkout-option-radio:checked') : null;
+            if (freeChecked) {
+                submittingQuote = parseFloat(freeChecked.dataset.basePrice || freeChecked.dataset.price) || 0;
+                submittingDiscount = parseFloat(submittingQuote.toFixed(2));
+            }
+        }
+
         // Immediately switch to Post Editor with loading placeholder (no delay)
         resetCreatePostForm();
         try { requestTabSwitch('posteditor'); } catch (e0) {}
@@ -4170,7 +4181,7 @@ const MemberModule = (function() {
         var finalLocations = extractLocationsFromPayload(validation.payload);
         captureMapImagesForLocations(finalLocations).then(function(mapImageData) {
             
-            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId, submittingCouponId)
+            submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta, mapImageData, _transactionId, submittingCouponId, submittingQuote, submittingDiscount)
             .then(function(result) {
                 isSubmittingPost = false;
                 updateSubmitButtonState();
@@ -5367,7 +5378,7 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData, transactionId, couponId) {
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta, mapImageData, transactionId, couponId, quote, discount) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
@@ -5397,6 +5408,8 @@ const MemberModule = (function() {
                 skip_payment: isAdminFree,
                 transaction_id: transactionId || null,
                 coupon_id: couponId || null,
+                quote: quote || 0,
+                discount: discount || 0,
                 loc_qty: payload.loc_qty || window._memberLocationQuantity || 1,
                 fields: payload.fields
             };

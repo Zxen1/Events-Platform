@@ -641,7 +641,7 @@ if ($manageAction !== '') {
       $spDesc     = 'Post #' . $postId . ' extras (admin)';
       $spTxStmt = $mysqli->prepare(
         "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
-         VALUES (?, ?, 'edit', ?, ?, NULL, NULL, NULL, 0, 0, NULL, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
+         VALUES (?, ?, 'edit', ?, ?, NULL, 'free', 'admin', 0, 0, NULL, 0, ?, NULL, ?, 'paid', NOW(), NOW())"
       );
       if ($spTxStmt) {
         $spTxStmt->bind_param('iissss', $memberId, $postId, $memberRole, $finalCheckoutKey, $spCurrency, $spDesc);
@@ -772,7 +772,7 @@ if ($manageAction !== '') {
       $cpDesc      = 'Post #' . $postId . ' extras';
       $cpTxStmt = $mysqli->prepare(
         "INSERT INTO transactions (member_id, post_id, transaction_type, member_role, checkout_key, payment_id, payment_gateway, payment_method, quote, discount, coupon_id, total, currency, line_items, description, status, created_at, updated_at)
-         VALUES (?, ?, 'edit', ?, ?, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
+         VALUES (?, ?, 'edit', ?, ?, NULL, 'free', 'coupon', ?, ?, ?, ?, ?, ?, ?, 'paid', NOW(), NOW())"
       );
       if ($cpTxStmt) {
         $cpTxStmt->bind_param('iissddidsss', $memberId, $postId, $memberRole, $finalCheckoutKey, $cpQuote, $cpDiscount, $couponId, $cpTotal, $cpCurrency, $cpLineItems, $cpDesc);
