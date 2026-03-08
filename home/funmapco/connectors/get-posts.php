@@ -534,6 +534,7 @@ try {
             sc.icon_path AS subcategory_icon_path,
             sc.subcategory_name AS subcategory_name,
             sc.color_hex AS subcategory_color,
+            sc.subcategory_type AS subcategory_type,
             mc.id AS post_map_card_id,
             mc.subcategory_key AS map_card_subcategory_key,
             mc.title,
