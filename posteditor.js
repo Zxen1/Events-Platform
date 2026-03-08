@@ -2397,8 +2397,13 @@
                         });
                     }
                     App.emit('post:updated', { post_id: postId });
-                    closeModal();
-                    refreshPostCard(postId);
+                    savePost(postId).then(function() {
+                        closeModal();
+                        refreshPostCard(postId);
+                    }).catch(function() {
+                        closeModal();
+                        refreshPostCard(postId);
+                    });
                 } else {
                     manageSubmitBtn.disabled = false;
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
