@@ -293,7 +293,8 @@ try {
 
     // Age rating filter - hide map cards if ANY age source is 18+ unless show18Plus is set.
     // Sources: post_map_cards.age_rating + post_ticket_pricing.age_rating + post_item_pricing.age_rating
-    if (!$show18Plus) {
+    // Bypassed for member_id / post_id / post_key fetches (Post Editor, direct links, Recent) — filters never apply there.
+    if (!$show18Plus && $memberId <= 0 && $postId <= 0 && $postKey === '') {
         $where[] = "(
             (mc.age_rating IS NULL OR CAST(mc.age_rating AS UNSIGNED) < 18)
             AND NOT EXISTS (
