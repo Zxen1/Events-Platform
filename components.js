@@ -2712,8 +2712,7 @@ const MemberAuthFieldsetsComponent = (function(){
         }
 
         function setVisible(el, visible) {
-            el.style.visibility  = visible ? '' : 'hidden';
-            el.style.pointerEvents = visible ? '' : 'none';
+            el.style.display = visible ? '' : 'none';
         }
 
         function showState(newState) {
