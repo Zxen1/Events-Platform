@@ -775,7 +775,7 @@
 /* Exposed layout: verbose row items with title + subcategory */
 .post-storefront-menu--exposed {
   flex-direction: column;
-  gap: 0;
+  gap: 8px;
   max-height: 220px;
   overflow-y: auto;
 }
