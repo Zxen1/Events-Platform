@@ -4018,14 +4018,11 @@ const PostModule = (function() {
         headerFavBtn.setAttribute('aria-pressed', String(nowPressed));
         headerFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
         
-        // Sync with card's fav button if present
-        if (cardEl) {
-          var cardFavBtn = cardEl.querySelector('.post-card-button-fav, .recent-card-button-fav');
-          if (cardFavBtn) {
-            cardFavBtn.setAttribute('aria-pressed', String(nowPressed));
-            cardFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
-          }
-        }
+        // Sync all instances of this post's fav button across the DOM
+        document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
+          otherBtn.setAttribute('aria-pressed', String(nowPressed));
+          otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+        });
         
         // Save favorite state to localStorage
         saveFavorite(postId, nowPressed);
