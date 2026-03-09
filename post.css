@@ -646,6 +646,10 @@
    Modelled on amenities/links tooltip pill pattern.
    ------------------------------------------------------- */
 
+.post-storefront-menu-container {
+  padding: 12px 10px 0;
+}
+
 .post-storefront-menu {
   display: flex;
   flex-wrap: wrap;
