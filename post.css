@@ -701,7 +701,6 @@
   display: block;
   position: relative;
   z-index: 2;
-  border: 2px solid transparent;
   transition: width 0.15s ease, height 0.15s ease;
 }
 
@@ -716,7 +715,8 @@
 }
 
 .post-storefront-menu-item--selected .post-storefront-menu-thumb {
-  border-color: rgba(59, 130, 246, 0.9);
+  outline: 2px solid rgba(59, 130, 246, 0.9);
+  outline-offset: -3px;
 }
 
 .post-storefront-menu-item-favstar {
