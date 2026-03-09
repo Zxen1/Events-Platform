@@ -241,3 +241,9 @@ There is an existing system that downgrades map cards when an area has 50+ posts
 ## Test
 
 Two general posts by admin at Coober Pedy, Australia. When both are visible in the post panel with storefront ON, they must merge into one storefront postcard. When the storefront is opened, the storefront menu shows two circular thumbnails. Selecting one shows that post's content below.
+
+---
+
+## Known Issues
+
+- **18+ filter breaks storefront**: When the 18+ filter is toggled, the storefront does not correctly revert to a single post or update its contents. The storefront must respect all filters — including the 18+ toggle — the same way multipost locations do. Needs investigation and fix.
