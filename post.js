@@ -694,6 +694,7 @@ const PostModule = (function() {
     var sfGroup = _sfGroupsByPostId[String(postId)];
     if (sfGroup && sfGroup.length > 1 && !options.storefrontPosts) {
       options.storefrontPosts = sfGroup;
+      options.sfOpenPostId = String(postId);
       var leadPost = sfGroup[0];
       var pick = pickMapCardInCurrentBounds(leadPost);
       if (pick && pick.mapCard && pick.mapCard.id !== undefined && pick.mapCard.id !== null) {
@@ -1761,24 +1762,27 @@ const PostModule = (function() {
       syncMapMarkerHover(lead.id, false);
     });
 
-    // Update overflow count after DOM insertion
+    // Update overflow count after layout (double rAF ensures element is in DOM and laid out)
     requestAnimationFrame(function() {
-      var row = el.querySelector('.post-card-row-storefront');
-      if (!row) return;
-      var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
-      if (!overflowEl) return;
-      var wraps = row.querySelectorAll('.post-card-row-storefront-wrap');
-      var rowRight = row.getBoundingClientRect().right;
-      var hiddenCount = 0;
-      for (var i = 0; i < wraps.length; i++) {
-        if (wraps[i].getBoundingClientRect().right > rowRight) hiddenCount++;
-      }
-      if (hiddenCount > 0) {
-        overflowEl.textContent = '+' + hiddenCount;
-        overflowEl.style.display = '';
-      } else {
-        overflowEl.style.display = 'none';
-      }
+      requestAnimationFrame(function() {
+        var row = el.querySelector('.post-card-row-storefront');
+        if (!row) return;
+        var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
+        if (!overflowEl) return;
+        if (!row.offsetParent) { overflowEl.style.display = 'none'; return; }
+        var wraps = row.querySelectorAll('.post-card-row-storefront-wrap');
+        var rowRight = row.getBoundingClientRect().right;
+        var hiddenCount = 0;
+        for (var i = 0; i < wraps.length; i++) {
+          if (wraps[i].getBoundingClientRect().right > rowRight) hiddenCount++;
+        }
+        if (hiddenCount > 0) {
+          overflowEl.textContent = '+' + hiddenCount;
+          overflowEl.style.display = '';
+        } else {
+          overflowEl.style.display = 'none';
+        }
+      });
     });
 
     return el;
@@ -3235,7 +3239,7 @@ const PostModule = (function() {
     }
 
     // Build the detail view with a fresh card (original stays hidden in the slot).
-    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts);
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts, options.sfOpenPostId);
 
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
@@ -3406,7 +3410,7 @@ const PostModule = (function() {
     });
   }
 
-  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts, sfOpenPostId) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
     var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
@@ -4163,9 +4167,10 @@ const PostModule = (function() {
         }
       });
 
-      // Auto-open first post in the menu
-      var firstMenuItem = wrap.querySelector('.post-storefront-menu-item');
-      if (firstMenuItem) firstMenuItem.click();
+      // Auto-open the requested post (from marquee/map click) or first in the menu
+      var targetItem = sfOpenPostId ? wrap.querySelector('.post-storefront-menu-item[data-post-id="' + sfOpenPostId + '"]') : null;
+      if (!targetItem) targetItem = wrap.querySelector('.post-storefront-menu-item');
+      if (targetItem) targetItem.click();
     }
 
     // Post header click closes the post (returns to post-card)
