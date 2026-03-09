@@ -1792,8 +1792,10 @@ const PostModule = (function() {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
-    var oldSummary = postListEl.querySelector('.post-panel-header');
+    var oldSummary = postPanelContentEl.querySelector('.post-panel-header');
     if (oldSummary) oldSummary.parentNode.removeChild(oldSummary);
+    var oldEmptySummary = postPanelContentEl.querySelector('.post-panel-empty-header');
+    if (oldEmptySummary) oldEmptySummary.parentNode.removeChild(oldEmptySummary);
 
     // Clear existing list content (cards), preserving slack elements.
     var _topS = postListEl.querySelector('.topSlack');
@@ -1870,7 +1872,7 @@ const PostModule = (function() {
         }
       } catch (_e) {}
       summaryEl.textContent = summaryText;
-      postListEl.insertBefore(summaryEl, postListEl.firstChild);
+      postPanelContentEl.insertBefore(summaryEl, postListEl);
     }
 
     // Storefront grouping: group posts by member + coordinates when enabled
@@ -5040,6 +5042,12 @@ const PostModule = (function() {
   function renderPostsEmptyState() {
     if (!postListEl) return;
 
+    // Remove any existing panel headers from the content container
+    var _oldH = postPanelContentEl.querySelector('.post-panel-header');
+    if (_oldH) _oldH.parentNode.removeChild(_oldH);
+    var _oldEH = postPanelContentEl.querySelector('.post-panel-empty-header');
+    if (_oldEH) _oldEH.parentNode.removeChild(_oldEH);
+
     // Always empty (no posts in this site yet), preserving slack elements.
     var _topS = postListEl.querySelector('.topSlack');
     var _botS = postListEl.querySelector('.bottomSlack');
@@ -5086,7 +5094,7 @@ const PostModule = (function() {
       }
     } catch (_e) {}
     summaryCopy.textContent = getFilterSummaryText();
-    wrap.appendChild(summaryCopy);
+    postPanelContentEl.insertBefore(summaryCopy, postListEl);
 
     var img = document.createElement('img');
     img.alt = 'Posts empty state image';
