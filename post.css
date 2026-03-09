@@ -623,7 +623,7 @@
    Rows 1–2 of the storefront postcard. 42px = 18px + 18px + 6px gap = two standard info rows.
    ------------------------------------------------------- */
 
-.post-card-storefront-row {
+.post-card-row-storefront {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -633,7 +633,7 @@
   margin-bottom: 6px;
 }
 
-.post-card-storefront-row-thumb {
+.post-card-row-storefront-thumb {
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -642,11 +642,11 @@
   flex: 0 0 42px;
 }
 
-.post-card-storefront-row-thumb--empty {
+.post-card-row-storefront-thumb--empty {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.post-card-storefront-row-overflow {
+.post-card-row-storefront-overflow {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;

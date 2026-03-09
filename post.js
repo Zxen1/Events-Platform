@@ -1624,8 +1624,8 @@ const PostModule = (function() {
       var rawUrl = getPostThumbnailUrl(p);
       var thumbSrc = rawUrl ? getCardThumbSrc(rawUrl) : '';
       return thumbSrc
-        ? '<img class="post-card-storefront-row-thumb" src="' + thumbSrc + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
-        : '<div class="post-card-storefront-row-thumb post-card-storefront-row-thumb--empty"></div>';
+        ? '<img class="post-card-row-storefront-thumb" src="' + thumbSrc + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
+        : '<div class="post-card-row-storefront-thumb post-card-row-storefront-thumb--empty"></div>';
     }).join('');
 
     // Build info rows (location + price only — no category row, no dates row)
@@ -1683,9 +1683,9 @@ const PostModule = (function() {
       '<div class="post-card-meta">',
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
-          '<div class="post-card-storefront-row" data-storefront-row>',
+          '<div class="post-card-row-storefront" data-storefront-row>',
             stripThumbsHtml,
-            '<span class="post-card-storefront-row-overflow"></span>',
+            '<span class="post-card-row-storefront-overflow"></span>',
           '</div>',
           locationRowHtml,
           priceRowHtml,
