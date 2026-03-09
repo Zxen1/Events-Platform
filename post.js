@@ -3969,16 +3969,18 @@ const PostModule = (function() {
           contentEl.innerHTML = '<div class="post-storefront-loading">Loading…</div>';
           loadPostById(selectedPost.id).then(function(fullPost) {
             if (!fullPost) { contentEl.innerHTML = ''; return; }
-            var innerDetail = buildPostDetail(fullPost, null, false, 0);
-            innerDetail.classList.add('post--expanded');
-            var descEl = innerDetail.querySelector('.post-description-text');
-            if (descEl) {
-              descEl.setAttribute('aria-expanded', 'true');
-              var fullText = descEl.getAttribute('data-full-text') || '';
-              descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+            var pick = pickMapCardInCurrentBounds(fullPost);
+            var mcIdx = 0;
+            if (pick && pick.mapCard && fullPost.map_cards) {
+              for (var mi = 0; mi < fullPost.map_cards.length; mi++) {
+                if (String(fullPost.map_cards[mi].id) === String(pick.mapCard.id)) { mcIdx = mi; break; }
+              }
             }
+            var tempDetail = buildPostDetail(fullPost, null, false, mcIdx);
+            var postBody = tempDetail.querySelector('.post-body');
             contentEl.innerHTML = '';
-            contentEl.appendChild(innerDetail);
+            wrap.classList.add('post--expanded');
+            if (postBody) contentEl.appendChild(postBody);
           });
         }
       });
