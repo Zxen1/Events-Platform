@@ -1618,13 +1618,22 @@ const PostModule = (function() {
       ? '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
 
-    // Storefront row: 42px circular post thumbnails
+    // Storefront row: 42px circular post thumbnails (favourites first)
+    var sfSorted = sfPosts.slice().sort(function(a, b) {
+      var aFav = isFavorite(a.id) ? 0 : 1;
+      var bFav = isFavorite(b.id) ? 0 : 1;
+      return aFav - bFav;
+    });
     var sfRowHtml = '<div class="post-card-row-storefront">';
-    sfPosts.forEach(function(p) {
+    sfSorted.forEach(function(p) {
       var rawUrl = getPostThumbnailUrl(p);
       var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
       if (miniUrl) {
+        var pFav = isFavorite(p.id);
+        sfRowHtml += '<span class="post-card-row-storefront-wrap">';
         sfRowHtml += '<img class="post-card-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
+        if (pFav) sfRowHtml += '<span class="post-card-row-storefront-favstar" aria-hidden="true"></span>';
+        sfRowHtml += '</span>';
       }
     });
     sfRowHtml += '<span class="post-card-row-storefront-overflow" style="display:none"></span>';
@@ -3667,12 +3676,21 @@ const PostModule = (function() {
         ? '<img class="post-header-image-minithumb" loading="lazy" src="' + sfMiniAvatar + '" alt="" referrerpolicy="no-referrer" />'
         : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
       title = 'Storefront: ' + (post.member_name || '');
+      var sfHeaderSorted = storefrontPosts.slice().sort(function(a, b) {
+        var aFav = isFavorite(a.id) ? 0 : 1;
+        var bFav = isFavorite(b.id) ? 0 : 1;
+        return aFav - bFav;
+      });
       var sfThumbRowHtml = '<div class="post-header-row-storefront">';
-      storefrontPosts.forEach(function(p) {
+      sfHeaderSorted.forEach(function(p) {
         var rawUrl = getPostThumbnailUrl(p);
         var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
         if (miniUrl) {
+          var pFav = isFavorite(p.id);
+          sfThumbRowHtml += '<span class="post-header-row-storefront-wrap">';
           sfThumbRowHtml += '<img class="post-header-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
+          if (pFav) sfThumbRowHtml += '<span class="post-header-row-storefront-favdot" aria-hidden="true"></span>';
+          sfThumbRowHtml += '</span>';
         }
       });
       sfThumbRowHtml += '<span class="post-header-row-storefront-overflow" style="display:none"></span>';
@@ -3888,6 +3906,11 @@ const PostModule = (function() {
           _isFav: isFavorite(p.id),
           _postId: String(p.id)
         };
+      });
+      sfMenuPosts.sort(function(a, b) {
+        var aFav = a._isFav ? 0 : 1;
+        var bFav = b._isFav ? 0 : 1;
+        return aFav - bFav;
       });
       var sfMenuDiv = document.createElement('div');
       sfMenuDiv.innerHTML = StorefrontMenuComponent.render(sfMenuPosts);
