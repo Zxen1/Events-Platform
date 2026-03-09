@@ -748,6 +748,14 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
 }
+.post-storefront-content .post-header {
+  position: static;
+}
+.post-storefront-loading {
+  padding: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
 
 /* Storefront row: circular post thumbnails on postcard */
 .post-card-row-storefront {

@@ -71,6 +71,7 @@ const PostModule = (function() {
   var postsError = null;
   var postsRequestToken = 0;
   var postsAbort = null;
+  var _sfGroupsByPostId = {};
 
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
@@ -689,16 +690,34 @@ const PostModule = (function() {
     options = options || {};
     var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee';
 
-    // No in-memory cache: always load the post fresh by ID.
-    // This keeps development honest (no stale snapshots masking filter/category bugs).
+    // Storefront: if this post belongs to a group, open the storefront instead
+    var sfGroup = _sfGroupsByPostId[String(postId)];
+    if (sfGroup && sfGroup.length > 1 && !options.storefrontPosts) {
+      options.storefrontPosts = sfGroup;
+      var leadPost = sfGroup[0];
+      var pick = pickMapCardInCurrentBounds(leadPost);
+      if (pick && pick.mapCard && pick.mapCard.id !== undefined && pick.mapCard.id !== null) {
+        options.postMapCardId = String(pick.mapCard.id);
+      }
+      if (shouldOpenPostsPanel && currentMode !== 'posts') {
+        var postsBtn = getModeButton('posts');
+        if (postsBtn && postsEnabled) {
+          postsBtn.click();
+          setTimeout(function() { openPost(leadPost, options); }, 50);
+          return;
+        }
+      }
+      openPost(leadPost, options);
+      return;
+    }
+
+    // Normal single-post path: load fresh by ID
     loadPostById(postId).then(function(post) {
       if (!post) {
         console.warn('[Post] Post not found:', postId);
         return;
       }
 
-      // If the caller didn't provide a location context, choose the in-area map card for this post.
-      // This keeps Marquee/Postcards aligned to the current map view without removing any locations.
       if (!options.postMapCardId) {
         try {
           var pick = pickMapCardInCurrentBounds(post);
@@ -708,15 +727,11 @@ const PostModule = (function() {
         } catch (_ePick) {}
       }
 
-      // For map card and marquee clicks, open the post in the Posts panel.
       if (shouldOpenPostsPanel && currentMode !== 'posts') {
         var postsBtn = getModeButton('posts');
         if (postsBtn && postsEnabled) {
           postsBtn.click();
-          // Wait for mode change then open
-          setTimeout(function() {
-            openPost(post, options);
-          }, 50);
+          setTimeout(function() { openPost(post, options); }, 50);
           return;
         }
       }
@@ -1884,6 +1899,10 @@ const PostModule = (function() {
         _sfGroups[key].forEach(function(p) { _sfLookup[p.id] = key; });
       });
     }
+    _sfGroupsByPostId = {};
+    Object.keys(_sfGroups).forEach(function(key) {
+      _sfGroups[key].forEach(function(p) { _sfGroupsByPostId[String(p.id)] = _sfGroups[key]; });
+    });
 
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
@@ -3947,7 +3966,15 @@ const PostModule = (function() {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
           addToRecentHistory(selectedPost, 0);
-          // TODO: render selected post content into contentEl
+          contentEl.innerHTML = '<div class="post-storefront-loading">Loading…</div>';
+          loadPostById(selectedPost.id).then(function(fullPost) {
+            if (!fullPost) { contentEl.innerHTML = ''; return; }
+            var innerDetail = buildPostDetail(fullPost, null, false, 0);
+            contentEl.innerHTML = '';
+            while (innerDetail.firstChild) {
+              contentEl.appendChild(innerDetail.firstChild);
+            }
+          });
         }
       });
     }
