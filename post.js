@@ -3970,10 +3970,15 @@ const PostModule = (function() {
           loadPostById(selectedPost.id).then(function(fullPost) {
             if (!fullPost) { contentEl.innerHTML = ''; return; }
             var innerDetail = buildPostDetail(fullPost, null, false, 0);
-            contentEl.innerHTML = '';
-            while (innerDetail.firstChild) {
-              contentEl.appendChild(innerDetail.firstChild);
+            innerDetail.classList.add('post--expanded');
+            var descEl = innerDetail.querySelector('.post-description-text');
+            if (descEl) {
+              descEl.setAttribute('aria-expanded', 'true');
+              var fullText = descEl.getAttribute('data-full-text') || '';
+              descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
             }
+            contentEl.innerHTML = '';
+            contentEl.appendChild(innerDetail);
           });
         }
       });
