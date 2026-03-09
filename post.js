@@ -1579,6 +1579,190 @@ const PostModule = (function() {
   }
 
   /**
+   * Render a storefront postcard (grouped general posts from same member at same location)
+   */
+  function renderStorefrontCard(sfPosts) {
+    var lead = sfPosts[0];
+    var el = document.createElement('article');
+    el.className = 'post-card';
+    el.dataset.id = String(lead.id);
+    el.dataset.postKey = lead.post_key || '';
+    el.dataset.storefront = '1';
+    el.setAttribute('tabindex', '0');
+
+    var pick = pickMapCardInCurrentBounds(lead);
+    var mapCard = pick.mapCard;
+    if (mapCard && mapCard.id !== undefined && mapCard.id !== null) el.dataset.postMapCardId = String(mapCard.id);
+
+    var title = 'Storefront: ' + (lead.member_name || '');
+
+    // Avatar as postcard thumbnail
+    var avatarUrl = resolveAvatarSrcForUser(lead.member_avatar, lead.member_id);
+    var thumbUrl = avatarUrl ? addImageClass(avatarUrl, 'thumbnail') : '';
+    var thumbHtml = thumbUrl
+      ? '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
+
+    // Storefront row: 42px circular post thumbnails
+    var sfRowHtml = '<div class="post-card-row-storefront">';
+    sfPosts.forEach(function(p) {
+      var rawUrl = getPostThumbnailUrl(p);
+      var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
+      if (miniUrl) {
+        sfRowHtml += '<img class="post-card-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
+      }
+    });
+    sfRowHtml += '<span class="post-card-row-storefront-overflow" style="display:none"></span>';
+    sfRowHtml += '</div>';
+
+    // Location from the in-bounds map card (storefronts exist at one specific location)
+    var locationDisplay = '';
+    var venueName = (mapCard && mapCard.venue_name) || '';
+    var suburb = (mapCard && mapCard.suburb) || '';
+    var city = (mapCard && mapCard.city) || '';
+    var stateName = (mapCard && mapCard.state) || '';
+    var countryName = (mapCard && mapCard.country_name) || '';
+    var locationType = (mapCard && mapCard.location_type) || '';
+    if (locationType === 'venue') {
+      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
+    } else if (locationType === 'city') {
+      var citySecond = stateName || countryName || '';
+      locationDisplay = (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
+    } else {
+      var addrSecond = stateName || countryName || '';
+      locationDisplay = (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || city || '');
+    }
+
+    // Price range across all posts
+    var sfPriceMin = Infinity, sfPriceMax = -Infinity;
+    var sfHasPromo = false;
+    var leadPriceParts = parsePriceSummary(mapCard ? mapCard.price_summary : '');
+    sfPosts.forEach(function(p) {
+      var mc = pickMapCardInCurrentBounds(p).mapCard;
+      var price = extractPrice(mc);
+      if (price > 0) {
+        if (price < sfPriceMin) sfPriceMin = price;
+        if (price > sfPriceMax) sfPriceMax = price;
+      }
+      if (mapCardHasPromo(mc)) sfHasPromo = true;
+    });
+    if (sfPriceMin !== Infinity && sfPriceMax !== -Infinity && sfPriceMin !== sfPriceMax) {
+      leadPriceParts.text = sfPriceMin + ' – ' + sfPriceMax;
+    }
+
+    // Build location row
+    var sett = App.getState('settings') || {};
+    var locIconUrl = sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', sett.badge_icon_location) : '';
+    var locBadge = locIconUrl ? '<img class="post-card-image-badge" src="' + locIconUrl + '" alt="" title="Venue">' : '';
+    var locRowHtml = locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge">' + locBadge + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '';
+
+    // Build price row
+    var priceRowHtml = '';
+    if (leadPriceParts && leadPriceParts.text) {
+      var badgeHtml = leadPriceParts.flagUrl
+        ? '<img class="post-card-image-badge" src="' + leadPriceParts.flagUrl + '" alt="' + leadPriceParts.countryCode + '" title="Currency: ' + leadPriceParts.countryCode.toUpperCase() + '">'
+        : '';
+      var promoTagHtml = sfHasPromo ? '<span class="post-card-tag-promo">Promo</span>' : '';
+      priceRowHtml = '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(leadPriceParts.text) + '</span>' + promoTagHtml + '</div>';
+    }
+
+    // Sort metadata from lead post
+    try {
+      el.dataset.sortSidebarAd = lead.sidebar_ad ? '1' : '0';
+      el.dataset.sortFeatured = lead.featured ? '1' : '0';
+      el.dataset.sortTitle = String(title || '').toLowerCase();
+      el.dataset.sortCreatedAt = String(new Date(lead.created_at || 0).getTime() || 0);
+      el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
+      el.dataset.sortSoonTs = '';
+      if (mapCard && Number.isFinite(Number(mapCard.longitude)) && Number.isFinite(Number(mapCard.latitude))) {
+        el.dataset.sortLng = String(mapCard.longitude);
+        el.dataset.sortLat = String(mapCard.latitude);
+      } else {
+        el.dataset.sortLng = '';
+        el.dataset.sortLat = '';
+      }
+    } catch (_eSortMeta) {}
+
+    var isFav = isFavorite(lead.id);
+
+    el.innerHTML = [
+      thumbHtml,
+      '<div class="post-card-meta">',
+        '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
+        '<div class="post-card-container-info">',
+          sfRowHtml,
+          locRowHtml,
+          priceRowHtml,
+        '</div>',
+      '</div>',
+      '<div class="post-card-container-actions">',
+        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+          '<span class="post-card-icon-fav" aria-hidden="true"></span>',
+        '</button>',
+      '</div>'
+    ].join('');
+
+    if (thumbUrl) {
+      wireCardThumbImage(el.querySelector('.post-card-image'), avatarUrl);
+    }
+
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('.post-card-button-fav')) return;
+      if (el.closest('.post')) {
+        closePost(lead.id);
+      } else {
+        openPost(lead, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
+      }
+    });
+
+    el.addEventListener('keydown', function(e) {
+      if (!e) return;
+      var k = String(e.key || e.code || '');
+      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+      if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
+      e.preventDefault();
+      openPost(lead, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
+    });
+
+    var favBtn = el.querySelector('.post-card-button-fav');
+    if (favBtn) {
+      favBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleFavorite(lead, favBtn);
+      });
+    }
+
+    el.addEventListener('mouseenter', function() {
+      el.classList.add('post-card--map-highlight');
+      syncMapMarkerHover(lead.id, true);
+    });
+    el.addEventListener('mouseleave', function() {
+      el.classList.remove('post-card--map-highlight');
+      syncMapMarkerHover(lead.id, false);
+    });
+
+    // Update overflow count after DOM insertion
+    requestAnimationFrame(function() {
+      var row = el.querySelector('.post-card-row-storefront');
+      if (!row) return;
+      var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
+      if (!overflowEl) return;
+      var thumbs = row.querySelectorAll('.post-card-row-storefront-thumb');
+      var rowRight = row.getBoundingClientRect().right;
+      var hiddenCount = 0;
+      for (var i = 0; i < thumbs.length; i++) {
+        if (thumbs[i].getBoundingClientRect().right > rowRight) hiddenCount++;
+      }
+      if (hiddenCount > 0) {
+        overflowEl.textContent = '+' + hiddenCount;
+        overflowEl.style.display = '';
+      }
+    });
+
+    return el;
+  }
+
+  /**
    * Render the post list
    * @param {Array} posts - Array of post data
    */
@@ -1682,6 +1866,25 @@ const PostModule = (function() {
       postListEl.insertBefore(summaryEl, postListEl.firstChild);
     }
 
+    // Storefront grouping: group posts by member + coordinates when enabled
+    var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
+    var _sfLookup = {};
+    var _sfGroups = {};
+    if (_sfEnabled) {
+      posts.forEach(function(p) {
+        if (p.subcategory_type === 'Events') return;
+        var pick = pickMapCardInCurrentBounds(p);
+        if (!pick.mapCard) return;
+        var key = p.member_id + ':' + pick.mapCard.latitude + ':' + pick.mapCard.longitude;
+        if (!_sfGroups[key]) _sfGroups[key] = [];
+        _sfGroups[key].push(p);
+      });
+      Object.keys(_sfGroups).forEach(function(key) {
+        if (_sfGroups[key].length < 2) { delete _sfGroups[key]; return; }
+        _sfGroups[key].forEach(function(p) { _sfLookup[p.id] = key; });
+      });
+    }
+
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
@@ -1718,7 +1921,18 @@ const PostModule = (function() {
 
         return;
       }
-      var card = renderPostCard(post);
+
+      // Storefront: skip non-lead posts, render storefront card for lead
+      var _sfKey = _sfLookup[post.id];
+      var card;
+      if (_sfKey) {
+        var _sfGroup = _sfGroups[_sfKey];
+        if (_sfGroup[0].id !== post.id) return;
+        card = renderStorefrontCard(_sfGroup);
+      } else {
+        card = renderPostCard(post);
+      }
+
       var anchor = document.createElement('div');
       anchor.setAttribute('data-slack-anchor', '');
       anchor.appendChild(card);
@@ -1726,18 +1940,20 @@ const PostModule = (function() {
       slot.className = 'post-slot';
       slot.dataset.id = String(post.id);
 
-      // Countdown status bar (event posts only)
-      var _cardSett = App.getState('settings') || {};
-      if (_cardSett.countdown_postcards) {
-        var _cardPick = pickMapCardInCurrentBounds(post);
-        var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
-        if (_cardBarResult) {
-          _cardBarResult.bar.classList.add('post-statusbar--slot-card');
-          if (_cardSett.countdown_postcards_mode === 'soonest_only') {
-            _cardBarResult.bar.classList.add('post-statusbar--modesoonest');
+      // Countdown status bar (event posts only, not storefronts)
+      if (!_sfKey) {
+        var _cardSett = App.getState('settings') || {};
+        if (_cardSett.countdown_postcards) {
+          var _cardPick = pickMapCardInCurrentBounds(post);
+          var _cardBarResult = buildCountdownStatusBar(post, _cardPick.mapCard);
+          if (_cardBarResult) {
+            _cardBarResult.bar.classList.add('post-statusbar--slot-card');
+            if (_cardSett.countdown_postcards_mode === 'soonest_only') {
+              _cardBarResult.bar.classList.add('post-statusbar--modesoonest');
+            }
+            card.classList.add('post-card--countdown' + _cardBarResult.state);
+            slot.appendChild(_cardBarResult.bar);
           }
-          card.classList.add('post-card--countdown' + _cardBarResult.state);
-          slot.appendChild(_cardBarResult.bar);
         }
       }
 

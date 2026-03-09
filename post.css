@@ -612,6 +612,31 @@
   min-width: 0;
 }
 
+/* Storefront row: circular post thumbnails on postcard */
+.post-card-row-storefront {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.post-card-row-storefront-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.post-card-row-storefront-overflow {
+  font-size: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* Prevent double-up on last row */
 .post-card-container-info > *:last-child,
 .recent-card-container-info > *:last-child {
