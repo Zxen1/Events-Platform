@@ -1603,6 +1603,7 @@ const PostModule = (function() {
     el.dataset.id = String(lead.id);
     el.dataset.postKey = lead.post_key || '';
     el.dataset.storefront = '1';
+    el.dataset.sfIds = sfPosts.map(function(p) { return p.id; }).join(',');
     el.setAttribute('tabindex', '0');
 
     var pick = pickMapCardInCurrentBounds(lead);
@@ -4751,6 +4752,7 @@ const PostModule = (function() {
 
     // Save to localStorage
     saveFavorite(post.id, newFav);
+    syncStorefrontFavIndicators(post.id);
     // Live-site behavior: do NOT reorder immediately on star/unstar.
     if (favToTop) {
       favSortDirty = true;
@@ -4781,6 +4783,17 @@ const PostModule = (function() {
     } catch (e) {
       // ignore
     }
+  }
+
+  function syncStorefrontFavIndicators(postId) {
+    var cards = document.querySelectorAll('.post-card[data-storefront="1"][data-sf-ids]');
+    cards.forEach(function(card) {
+      var ids = (card.dataset.sfIds || '').split(',');
+      if (ids.indexOf(String(postId)) === -1) return;
+      var hasFav = ids.some(function(id) { return isFavorite(id); });
+      var indicator = card.querySelector('.post-card-button-fav');
+      if (indicator) indicator.setAttribute('aria-pressed', hasFav ? 'true' : 'false');
+    });
   }
 
   /**
@@ -5608,6 +5621,7 @@ const PostModule = (function() {
 
     // Save to localStorage
     saveFavorite(postId, newFav);
+    syncStorefrontFavIndicators(postId);
 
     // Update other instances (both post-card and recent-card)
     document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
