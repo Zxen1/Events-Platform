@@ -3176,7 +3176,7 @@ const PostModule = (function() {
     }
 
     // Build the detail view with a fresh card (original stays hidden in the slot).
-    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts);
 
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
@@ -3344,7 +3344,7 @@ const PostModule = (function() {
     });
   }
 
-  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
     var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
@@ -3646,25 +3646,70 @@ const PostModule = (function() {
       ? '<img class="post-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
       : '💰';
     
-    // Post header: thumbnail, title + category, actions
+    // Storefront header override
+    if (storefrontPosts && storefrontPosts.length > 1) {
+      var sfAvatarUrl = resolveAvatarSrcForUser(post.member_avatar, post.member_id);
+      var sfMiniAvatar = sfAvatarUrl ? addImageClass(sfAvatarUrl, 'minithumb') : '';
+      thumbHtml = sfMiniAvatar
+        ? '<img class="post-header-image-minithumb" loading="lazy" src="' + sfMiniAvatar + '" alt="" referrerpolicy="no-referrer" />'
+        : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
+      title = 'Storefront: ' + (post.member_name || '');
+      var sfThumbRowHtml = '<div class="post-header-row-storefront">';
+      storefrontPosts.forEach(function(p) {
+        var rawUrl = getPostThumbnailUrl(p);
+        var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
+        if (miniUrl) {
+          sfThumbRowHtml += '<img class="post-header-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
+        }
+      });
+      sfThumbRowHtml += '<span class="post-header-row-storefront-overflow" style="display:none"></span>';
+      sfThumbRowHtml += '</div>';
+      infoIconHtml = '';
+      displayName = '';
+    }
+
+    // Post header: thumbnail, title + category (or storefront thumbs), actions
+    var sfHeaderInfoRow = (storefrontPosts && storefrontPosts.length > 1)
+      ? sfThumbRowHtml
+      : '<div class="post-info-row post-info-row-cat">' + infoIconHtml + '<span class="post-info-text">' + escapeHtml(displayName) + '</span></div>';
+
+    var sfActionsDisabled = (storefrontPosts && storefrontPosts.length > 1);
+
     postHeader.innerHTML = [
       thumbHtml,
       '<div class="post-header-meta">',
         '<div class="post-header-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="post-info-row post-info-row-cat">',
-          infoIconHtml,
-          '<span class="post-info-text">' + escapeHtml(displayName) + '</span>',
-        '</div>',
+        sfHeaderInfoRow,
       '</div>',
       '<div class="post-header-actions">',
-        '<button class="post-button-share" aria-label="Share post">',
+        '<button class="post-button-share' + (sfActionsDisabled ? ' post-header-button--disabled' : '') + '" aria-label="Share post"' + (sfActionsDisabled ? ' disabled' : '') + '>',
           '<div class="post-icon-share"></div>',
         '</button>',
-        '<button class="post-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+        '<button class="post-header-button-fav' + (sfActionsDisabled ? ' post-header-button--disabled' : '') + '" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '"' + (sfActionsDisabled ? ' disabled' : '') + '>',
           '<div class="post-header-icon-fav"></div>',
         '</button>',
       '</div>'
     ].join('');
+
+    // Storefront header thumb row overflow
+    if (storefrontPosts && storefrontPosts.length > 1) {
+      requestAnimationFrame(function() {
+        var row = postHeader.querySelector('.post-header-row-storefront');
+        if (!row) return;
+        var overflowEl = row.querySelector('.post-header-row-storefront-overflow');
+        if (!overflowEl) return;
+        var thumbs = row.querySelectorAll('.post-header-row-storefront-thumb');
+        var rowRight = row.getBoundingClientRect().right;
+        var hiddenCount = 0;
+        for (var i = 0; i < thumbs.length; i++) {
+          if (thumbs[i].getBoundingClientRect().right > rowRight) hiddenCount++;
+        }
+        if (hiddenCount > 0) {
+          overflowEl.textContent = '+' + hiddenCount;
+          overflowEl.style.display = '';
+        }
+      });
+    }
 
     // Create post body - proper class naming
     var postBody = document.createElement('div');

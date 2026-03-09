@@ -612,6 +612,35 @@
   min-width: 0;
 }
 
+/* Storefront row: 18px circular post thumbnails in post header */
+.post-header-row-storefront {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.post-header-row-storefront-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.post-header-row-storefront-overflow {
+  font-size: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.post-header-button--disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 /* Storefront row: circular post thumbnails on postcard */
 .post-card-row-storefront {
   display: flex;

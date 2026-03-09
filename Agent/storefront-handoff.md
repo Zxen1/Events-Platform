@@ -60,22 +60,14 @@ When `openPost` is called with `storefrontPosts` in options:
 `setupPostDetailEvents` with storefront:
 - Init `StorefrontComponent.init()` with `onPostSelected` (fills content slot with selected post's location, description, images — lean, no interactive dropdowns) and `onAddToRecent` callbacks
 
-### StorefrontComponent (components.js)
+### Storefront in post.js (no component)
 
-IIFE after `PostPriceComponent`. Model on `PostSessionComponent`. Keep lean.
+All storefront logic lives in post.js as conditional branches, same as multipost. No separate component file.
 
-`render(options)` — returns HTML with:
-- `.post-storefront-menu` — row of 50px circular thumbnails (one per post)
-- `.post-storefront-prompt` with `data-message-key="msg_storefront_select_prompt"`
-- `.post-storefront-subheader` (hidden until post selected)
-- `.post-storefront-content` (empty until post selected)
-
-`init(wrap, posts, callbacks)`:
-- Load prompt message via `window.getMessage`
-- Tooltip directions: same pattern as `setTooltipDirs()` in post.js (60% width threshold)
-- On click: highlight selected, show title as subheader, hide prompt, call `onPostSelected`, call `onAddToRecent`
-
-Export as `window.StorefrontComponent`.
+- **Post header:** when `storefrontPosts` is present, override thumbnail to avatar, title to "Storefront: [Member Name]", subcategory row to 18px mini thumb row, grey out share/fav buttons
+- **Storefront menu:** built inline in `buildPostDetail` when storefront is detected. Row of 50px circular thumbnails with hover/tap tooltips (modelled on amenities/links pattern)
+- **Prompt message:** loaded via `window.getMessage` on `data-message-key="msg_storefront_select_prompt"`
+- **Post selection:** click handler on menu thumbnails shows selected post content below
 
 ### Map Card Marker (post.js)
 
@@ -221,8 +213,8 @@ The storefront has four visual phases that need building, matching the site's st
 - Marquee — never shown
 - Database — never mentioned in any way
 
-### StorefrontComponent (components.js)
-The storefront is built as a component called `StorefrontComponent` in the components file. Modelled on `PostSessionComponent` (IIFE structure, `render()` + `init()` pattern). The storefront menu inside it is modelled on the amenities and links fieldsets — hovering/tapping each circular thumbnail shows a label beside it, same interaction pattern.
+### No component — conditional branches only
+The storefront does NOT use a standalone component. It follows the multipost pattern: conditional `if (isStorefront)` branches in post.js wherever `if (isMultiPost)` already exists. No IIFE, no render/init, no window export. The storefront menu interaction is modelled on the amenities and links fieldsets — hovering/tapping each circular thumbnail shows a label beside it, same pattern.
 
 ### Counters
 Counters throughout the system count individual post map cards as per the `post_map_cards` table. A storefront of 50 posts shows 50 in the counter, not 1. Counters are never adjusted for storefronts.
