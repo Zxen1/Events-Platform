@@ -715,9 +715,10 @@
   height: 42px;
 }
 
+/* Grid: selected thumb border (grid commented out — row highlight used instead)
 .post-storefront-menu-item--selected .post-storefront-menu-thumb {
   border-color: rgba(59, 130, 246, 0.9);
-}
+} */
 
 .post-storefront-menu-item-favstar {
   position: absolute;
@@ -773,18 +774,29 @@
   opacity: 1;
 }
 
-/* Exposed layout (4 or fewer posts): row items with title + subcategory */
+/* Exposed layout: verbose row items with title + subcategory */
 .post-storefront-menu--exposed {
   flex-direction: column;
-  gap: 8px;
-  max-height: none;
-  overflow-y: visible;
+  gap: 0;
+  max-height: 220px;
+  overflow-y: auto;
 }
 .post-storefront-menu--exposed .post-storefront-menu-item {
   width: 100%;
   height: 42px;
   gap: 10px;
   justify-content: flex-start;
+  padding: 4px 6px;
+  border-radius: 5px;
+}
+.post-storefront-menu--exposed .post-storefront-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.post-storefront-menu--exposed .post-storefront-menu-item--selected {
+  background: rgba(59, 130, 246, 0.25);
+}
+.post-storefront-menu--exposed .post-storefront-menu-item--selected:hover {
+  background: rgba(59, 130, 246, 0.3);
 }
 .post-storefront-menu--exposed .post-storefront-menu-item-favstar {
   right: auto;

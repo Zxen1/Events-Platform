@@ -14267,7 +14267,10 @@ const StorefrontMenuComponent = (function() {
 
     function render(posts) {
         var html = [];
+        /* GRID LAYOUT (commented out — verbose for all counts)
         var isExposed = posts.length <= 4;
+        */
+        var isExposed = true;
         html.push('<div class="post-storefront-menu-container">');
         html.push('<div class="post-storefront-menu' + (isExposed ? ' post-storefront-menu--exposed' : '') + '" aria-label="Storefront menu">');
         posts.forEach(function(p, i) {
