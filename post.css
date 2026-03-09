@@ -874,11 +874,6 @@
   pointer-events: none;
 }
 
-.post-card-row-storefront-overflow {
-  font-size: 12px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
 
 /* Prevent double-up on last row */
 .post-card-container-info > *:last-child,

@@ -1641,7 +1641,6 @@ const PostModule = (function() {
         sfRowHtml += '</span>';
       }
     });
-    sfRowHtml += '<span class="post-card-row-storefront-overflow" style="display:none"></span>';
     sfRowHtml += '</div>';
 
     // Location from the in-bounds map card (storefronts exist at one specific location)
@@ -1760,29 +1759,6 @@ const PostModule = (function() {
     el.addEventListener('mouseleave', function() {
       el.classList.remove('post-card--map-highlight');
       syncMapMarkerHover(lead.id, false);
-    });
-
-    // Update overflow count after layout (double rAF ensures element is in DOM and laid out)
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        var row = el.querySelector('.post-card-row-storefront');
-        if (!row) return;
-        var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
-        if (!overflowEl) return;
-        if (!row.offsetParent) { overflowEl.style.display = 'none'; return; }
-        var wraps = row.querySelectorAll('.post-card-row-storefront-wrap');
-        var rowRight = row.getBoundingClientRect().right;
-        var hiddenCount = 0;
-        for (var i = 0; i < wraps.length; i++) {
-          if (wraps[i].getBoundingClientRect().right > rowRight) hiddenCount++;
-        }
-        if (hiddenCount > 0) {
-          overflowEl.textContent = '+' + hiddenCount;
-          overflowEl.style.display = '';
-        } else {
-          overflowEl.style.display = 'none';
-        }
-      });
     });
 
     return el;
@@ -4137,8 +4113,7 @@ const PostModule = (function() {
                     if (pcRow) {
                       var pcWraps = Array.prototype.slice.call(pcRow.querySelectorAll('.post-card-row-storefront-wrap'));
                       pcWraps.sort(_sfSortByFavTs);
-                      var pcOverflow = pcRow.querySelector('.post-card-row-storefront-overflow');
-                      pcWraps.forEach(function(w) { pcRow.insertBefore(w, pcOverflow); });
+                      pcWraps.forEach(function(w) { pcRow.appendChild(w); });
                     }
                   }
 
