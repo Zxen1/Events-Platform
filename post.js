@@ -3696,19 +3696,30 @@ const PostModule = (function() {
       ? sfThumbRowHtml
       : '<div class="post-info-row post-info-row-cat">' + infoIconHtml + '<span class="post-info-text">' + escapeHtml(displayName) + '</span></div>';
 
-    var sfActionsDisabled = (storefrontPosts && storefrontPosts.length > 1);
-    if (sfActionsDisabled) postHeader.classList.add('post-header--storefront');
+    var isSfHeader = (storefrontPosts && storefrontPosts.length > 1);
+    if (isSfHeader) postHeader.classList.add('post-header--storefront');
 
-    var actionsHtml = sfActionsDisabled ? '' : [
-      '<div class="post-header-actions">',
-        '<button class="post-button-share" aria-label="Share post">',
-          '<div class="post-icon-share"></div>',
-        '</button>',
-        '<button class="post-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
-          '<div class="post-header-icon-fav"></div>',
-        '</button>',
-      '</div>'
-    ].join('');
+    var actionsHtml;
+    if (isSfHeader) {
+      var sfHdrFav = storefrontPosts.some(function(sp) { return isFavorite(sp.id); });
+      var sfIds = storefrontPosts.map(function(sp) { return sp.id; }).join(',');
+      actionsHtml = '<div class="post-header-actions">' +
+        '<span class="post-header-button-fav post-header-button-fav--passive" aria-pressed="' + (sfHdrFav ? 'true' : 'false') + '" data-sf-ids="' + sfIds + '">' +
+          '<span class="post-header-icon-fav" aria-hidden="true"></span>' +
+        '</span>' +
+      '</div>';
+    } else {
+      actionsHtml = [
+        '<div class="post-header-actions">',
+          '<button class="post-button-share" aria-label="Share post">',
+            '<div class="post-icon-share"></div>',
+          '</button>',
+          '<button class="post-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+            '<div class="post-header-icon-fav"></div>',
+          '</button>',
+        '</div>'
+      ].join('');
+    }
 
     postHeader.innerHTML = [
       thumbHtml,
@@ -3894,7 +3905,9 @@ const PostModule = (function() {
           _post: p,
           _thumbUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : '',
           _title: (mc && mc.title) || p.checkout_title || '',
-          _subcategory: p.subcategory_name || ''
+          _subcategory: p.subcategory_name || '',
+          _isFav: isFavorite(p.id),
+          _postId: String(p.id)
         };
       });
       var sfMenuDiv = document.createElement('div');
@@ -4812,13 +4825,26 @@ const PostModule = (function() {
   }
 
   function syncStorefrontFavIndicators(postId) {
-    var cards = document.querySelectorAll('.post-card[data-storefront="1"][data-sf-ids]');
-    cards.forEach(function(card) {
+    var pid = String(postId);
+    // Postcard indicators
+    document.querySelectorAll('.post-card[data-storefront="1"][data-sf-ids]').forEach(function(card) {
       var ids = (card.dataset.sfIds || '').split(',');
-      if (ids.indexOf(String(postId)) === -1) return;
+      if (ids.indexOf(pid) === -1) return;
       var hasFav = ids.some(function(id) { return isFavorite(id); });
       var indicator = card.querySelector('.post-card-button-fav');
       if (indicator) indicator.setAttribute('aria-pressed', hasFav ? 'true' : 'false');
+    });
+    // Header indicators
+    document.querySelectorAll('.post-header-button-fav--passive[data-sf-ids]').forEach(function(el) {
+      var ids = (el.dataset.sfIds || '').split(',');
+      if (ids.indexOf(pid) === -1) return;
+      var hasFav = ids.some(function(id) { return isFavorite(id); });
+      el.setAttribute('aria-pressed', hasFav ? 'true' : 'false');
+    });
+    // Exposed menu item indicators
+    document.querySelectorAll('.post-storefront-menu-item-fav[data-post-id]').forEach(function(el) {
+      if (el.dataset.postId !== pid) return;
+      el.setAttribute('aria-pressed', isFavorite(pid) ? 'true' : 'false');
     });
   }
 

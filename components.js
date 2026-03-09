@@ -14283,6 +14283,11 @@ const StorefrontMenuComponent = (function() {
                 html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
                 if (sub) html.push('<span class="post-storefront-menu-item-sub">' + sub + '</span>');
                 html.push('</span>');
+                var favOn = p._isFav ? 'true' : 'false';
+                var pid = p._postId || '';
+                html.push('<span class="post-storefront-menu-item-fav" aria-pressed="' + favOn + '" data-post-id="' + pid + '">');
+                html.push('<span class="post-storefront-menu-item-fav-icon" aria-hidden="true"></span>');
+                html.push('</span>');
             }
             html.push('</span>');
         });
