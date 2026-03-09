@@ -14267,18 +14267,23 @@ const StorefrontMenuComponent = (function() {
 
     function render(posts) {
         var html = [];
+        var isExposed = posts.length <= 4;
         html.push('<div class="post-storefront-menu-container">');
-        html.push('<div class="post-storefront-menu" aria-label="Storefront menu">');
+        html.push('<div class="post-storefront-menu' + (isExposed ? ' post-storefront-menu--exposed' : '') + '" aria-label="Storefront menu">');
         posts.forEach(function(p, i) {
-            var thumbUrl = '';
-            if (p._thumbUrl) {
-                thumbUrl = p._thumbUrl;
-            }
+            var thumbUrl = p._thumbUrl || '';
             var title = (p._title || '').replace(/"/g, '&quot;');
+            var sub = (p._subcategory || '').replace(/"/g, '&quot;');
             html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-tooltip="' + title + '">');
             html.push(thumbUrl
                 ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
                 : '<span class="post-storefront-menu-thumb post-storefront-menu-thumb--empty"></span>');
+            if (isExposed) {
+                html.push('<span class="post-storefront-menu-item-meta">');
+                html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
+                if (sub) html.push('<span class="post-storefront-menu-item-sub">' + sub + '</span>');
+                html.push('</span>');
+            }
             html.push('</span>');
         });
         html.push('</div>');

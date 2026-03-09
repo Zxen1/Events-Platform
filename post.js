@@ -1698,7 +1698,7 @@ const PostModule = (function() {
       }
     } catch (_eSortMeta) {}
 
-    var isFav = isFavorite(lead.id);
+    var sfHasFav = sfPosts.some(function(p) { return isFavorite(p.id); });
 
     el.innerHTML = [
       thumbHtml,
@@ -1711,9 +1711,9 @@ const PostModule = (function() {
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
-        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+        '<span class="post-card-button-fav post-card-button-fav--passive" aria-pressed="' + (sfHasFav ? 'true' : 'false') + '" aria-label="Contains favourites">',
           '<span class="post-card-icon-fav" aria-hidden="true"></span>',
-        '</button>',
+        '</span>',
       '</div>'
     ].join('');
 
@@ -1738,14 +1738,6 @@ const PostModule = (function() {
       e.preventDefault();
       openPost(lead, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
     });
-
-    var favBtn = el.querySelector('.post-card-button-fav');
-    if (favBtn) {
-      favBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        toggleFavorite(lead, favBtn);
-      });
-    }
 
     el.addEventListener('mouseenter', function() {
       el.classList.add('post-card--map-highlight');
@@ -3693,6 +3685,7 @@ const PostModule = (function() {
       : '<div class="post-info-row post-info-row-cat">' + infoIconHtml + '<span class="post-info-text">' + escapeHtml(displayName) + '</span></div>';
 
     var sfActionsDisabled = (storefrontPosts && storefrontPosts.length > 1);
+    if (sfActionsDisabled) postHeader.classList.add('post-header--storefront');
 
     postHeader.innerHTML = [
       thumbHtml,
@@ -3884,7 +3877,8 @@ const PostModule = (function() {
         return {
           _post: p,
           _thumbUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : '',
-          _title: (mc && mc.title) || p.checkout_title || ''
+          _title: (mc && mc.title) || p.checkout_title || '',
+          _subcategory: p.subcategory_name || ''
         };
       });
       var sfMenuDiv = document.createElement('div');
