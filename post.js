@@ -3884,7 +3884,9 @@ const PostModule = (function() {
           _post: p,
           _thumbUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : '',
           _title: (mc && mc.title) || p.checkout_title || '',
-          _subcategory: p.subcategory_name || ''
+          _subcategory: p.subcategory_name || '',
+          _isFav: isFavorite(p.id),
+          _postId: String(p.id)
         };
       });
       var sfMenuDiv = document.createElement('div');
