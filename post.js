@@ -3972,7 +3972,7 @@ const PostModule = (function() {
     }
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts);
+    setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId);
 
     return wrap;
   }
@@ -4033,7 +4033,7 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts) {
+  function setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
