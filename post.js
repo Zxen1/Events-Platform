@@ -3977,9 +3977,14 @@ const PostModule = (function() {
               }
             }
             var tempDetail = buildPostDetail(fullPost, null, false, mcIdx);
+            var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
             contentEl.innerHTML = '';
             wrap.classList.add('post--expanded');
+            if (postHeader) {
+              postHeader.style.position = 'static';
+              contentEl.appendChild(postHeader);
+            }
             if (postBody) contentEl.appendChild(postBody);
           });
         }
