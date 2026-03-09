@@ -2828,9 +2828,21 @@ const PostModule = (function() {
       if (!aEl || !bEl) return 0;
 
       // Live-site behavior: "Favourites on top" only applies when not dirty.
+      // Storefronts: check if ANY post in the group is favourited (via data-sf-ids on the slot).
       if (favToTop && !favSortDirty) {
-        var favA = isFavorite(aEl && aEl.dataset ? aEl.dataset.id : '');
-        var favB = isFavorite(bEl && bEl.dataset ? bEl.dataset.id : '');
+        var favA = false, favB = false;
+        var sfIdsA = slotA.dataset.sfIds;
+        var sfIdsB = slotB.dataset.sfIds;
+        if (sfIdsA) {
+          favA = sfIdsA.split(',').some(function(id) { return isFavorite(id); });
+        } else {
+          favA = isFavorite(aEl && aEl.dataset ? aEl.dataset.id : '');
+        }
+        if (sfIdsB) {
+          favB = sfIdsB.split(',').some(function(id) { return isFavorite(id); });
+        } else {
+          favB = isFavorite(bEl && bEl.dataset ? bEl.dataset.id : '');
+        }
         if (favA !== favB) return (favB ? 1 : 0) - (favA ? 1 : 0);
       }
 
