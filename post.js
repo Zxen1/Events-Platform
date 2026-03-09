@@ -2143,14 +2143,16 @@ const PostModule = (function() {
       // Only include fields that affect marker visuals/behavior.
       // Keep this stable to avoid unnecessary remove/recreate cycles.
       var ids = [];
-      if (markerData && markerData.isMultiPost && Array.isArray(markerData.venuePostIds)) {
+      if (markerData && (markerData.isMultiPost || markerData.isStorefront) && Array.isArray(markerData.venuePostIds)) {
         ids = markerData.venuePostIds.map(String).slice().sort();
       } else if (markerData && markerData.id !== undefined && markerData.id !== null) {
         ids = [String(markerData.id)];
       }
       return [
         markerData && markerData.isMultiPost ? '1' : '0',
+        markerData && markerData.isStorefront ? '1' : '0',
         ids.join(','),
+        markerData && markerData.storefrontTitle ? String(markerData.storefrontTitle) : '',
         markerData && markerData.title ? String(markerData.title) : '',
         markerData && markerData.venue ? String(markerData.venue) : '',
         markerData && markerData.sub ? String(markerData.sub) : '',
