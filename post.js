@@ -3687,20 +3687,24 @@ const PostModule = (function() {
     var sfActionsDisabled = (storefrontPosts && storefrontPosts.length > 1);
     if (sfActionsDisabled) postHeader.classList.add('post-header--storefront');
 
+    var actionsHtml = sfActionsDisabled ? '' : [
+      '<div class="post-header-actions">',
+        '<button class="post-button-share" aria-label="Share post">',
+          '<div class="post-icon-share"></div>',
+        '</button>',
+        '<button class="post-header-button-fav" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '">',
+          '<div class="post-header-icon-fav"></div>',
+        '</button>',
+      '</div>'
+    ].join('');
+
     postHeader.innerHTML = [
       thumbHtml,
       '<div class="post-header-meta">',
         '<div class="post-header-text-title">' + escapeHtml(title) + '</div>',
         sfHeaderInfoRow,
       '</div>',
-      '<div class="post-header-actions">',
-        '<button class="post-button-share' + (sfActionsDisabled ? ' post-header-button--disabled' : '') + '" aria-label="Share post"' + (sfActionsDisabled ? ' disabled' : '') + '>',
-          '<div class="post-icon-share"></div>',
-        '</button>',
-        '<button class="post-header-button-fav' + (sfActionsDisabled ? ' post-header-button--disabled' : '') + '" aria-label="' + (isFav ? 'Remove from favorites' : 'Add to favorites') + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" data-post-id="' + post.id + '"' + (sfActionsDisabled ? ' disabled' : '') + '>',
-          '<div class="post-header-icon-fav"></div>',
-        '</button>',
-      '</div>'
+      actionsHtml
     ].join('');
 
     // Storefront header thumb row overflow
@@ -3976,7 +3980,6 @@ const PostModule = (function() {
             contentEl.innerHTML = '';
             wrap.classList.add('post--expanded');
             if (postHeader) {
-              postHeader.style.position = 'static';
               contentEl.appendChild(postHeader);
             }
             if (postBody) contentEl.appendChild(postBody);

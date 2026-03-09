@@ -642,6 +642,8 @@
 }
 .post-header--storefront {
   border-bottom: none;
+  position: static;
+  grid-template-columns: 50px 1fr;
 }
 
 /* -------------------------------------------------------
