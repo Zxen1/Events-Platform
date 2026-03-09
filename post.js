@@ -3966,7 +3966,7 @@ const PostModule = (function() {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
           addToRecentHistory(selectedPost, 0);
-          contentEl.innerHTML = '<div class="post-storefront-loading">Loading…</div>';
+          contentEl.innerHTML = '';
           loadPostById(selectedPost.id).then(function(fullPost) {
             if (!fullPost) { contentEl.innerHTML = ''; return; }
             var pick = pickMapCardInCurrentBounds(fullPost);
