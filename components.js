@@ -14256,4 +14256,101 @@ window.PostItemComponent = PostItemComponent;
 window.PostPriceComponent = PostPriceComponent;
 
 
+/* ============================================================================
+   StorefrontMenuComponent
+   Interactive thumbnail strip for storefront posts.
+   render() returns HTML, init() wires hover tooltips and click selection.
+   ============================================================================ */
+
+const StorefrontMenuComponent = (function() {
+    'use strict';
+
+    function render(posts) {
+        var html = [];
+        html.push('<div class="post-storefront-menu-container">');
+        html.push('<div class="post-storefront-menu" aria-label="Storefront menu">');
+        posts.forEach(function(p, i) {
+            var thumbUrl = '';
+            if (p._thumbUrl) {
+                thumbUrl = p._thumbUrl;
+            }
+            var title = (p._title || '').replace(/"/g, '&quot;');
+            html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-tooltip="' + title + '">');
+            html.push(thumbUrl
+                ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
+                : '<span class="post-storefront-menu-thumb post-storefront-menu-thumb--empty"></span>');
+            html.push('</span>');
+        });
+        html.push('</div>');
+        html.push('<div class="post-storefront-prompt" data-message-key="msg_storefront_select_prompt"></div>');
+        html.push('<div class="post-storefront-content"></div>');
+        html.push('</div>');
+        return html.join('');
+    }
+
+    function init(wrap, posts, callbacks) {
+        callbacks = callbacks || {};
+        var container = wrap.querySelector('.post-storefront-menu-container');
+        if (!container) return {};
+        var menu = container.querySelector('.post-storefront-menu');
+        var prompt = container.querySelector('.post-storefront-prompt');
+        var content = container.querySelector('.post-storefront-content');
+
+        // Load prompt message
+        if (prompt && typeof window.getMessage === 'function') {
+            var promptKey = prompt.getAttribute('data-message-key');
+            if (promptKey) {
+                window.getMessage(promptKey, {}, false).then(function(message) {
+                    if (message && prompt) prompt.textContent = message;
+                }).catch(function() {});
+            }
+        }
+
+        // Tooltip directions (same as setTooltipDirs pattern)
+        function updateTooltipDirs() {
+            if (!menu) return;
+            var cr = menu.getBoundingClientRect();
+            menu.querySelectorAll('.post-storefront-menu-item[data-tooltip]').forEach(function(item) {
+                item.setAttribute('data-tooltip-dir', (item.getBoundingClientRect().left - cr.left) > cr.width * 0.60 ? 'left' : 'right');
+            });
+        }
+        requestAnimationFrame(updateTooltipDirs);
+
+        // Click selection
+        var selectedIndex = -1;
+        if (menu) {
+            menu.addEventListener('click', function(e) {
+                var item = e.target.closest('.post-storefront-menu-item');
+                if (!item) return;
+                var idx = parseInt(item.dataset.index, 10);
+                if (isNaN(idx) || idx < 0 || idx >= posts.length) return;
+
+                // Highlight selected
+                menu.querySelectorAll('.post-storefront-menu-item').forEach(function(el) {
+                    el.classList.remove('post-storefront-menu-item--selected');
+                });
+                item.classList.add('post-storefront-menu-item--selected');
+                selectedIndex = idx;
+
+                // Hide prompt, show content
+                if (prompt) prompt.style.display = 'none';
+
+                if (callbacks.onPostSelected) {
+                    callbacks.onPostSelected(posts[idx], idx, content);
+                }
+            });
+        }
+
+        return {};
+    }
+
+    return {
+        render: render,
+        init: init
+    };
+})();
+
+window.StorefrontMenuComponent = StorefrontMenuComponent;
+
+
 

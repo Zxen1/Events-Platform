@@ -3855,10 +3855,28 @@ const PostModule = (function() {
       }
     }
 
-    contentWrap.appendChild(postBody);
+    // Storefront: inject menu between header and body, replace body with empty content slot
+    var sfMenuPosts = null;
+    if (storefrontPosts && storefrontPosts.length > 1) {
+      sfMenuPosts = storefrontPosts.map(function(p) {
+        var pick = pickMapCardInCurrentBounds(p);
+        var mc = pick.mapCard;
+        var rawUrl = getPostThumbnailUrl(p);
+        return {
+          _post: p,
+          _thumbUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : '',
+          _title: (mc && mc.title) || p.checkout_title || ''
+        };
+      });
+      var sfMenuDiv = document.createElement('div');
+      sfMenuDiv.innerHTML = StorefrontMenuComponent.render(sfMenuPosts);
+      contentWrap.appendChild(sfMenuDiv.firstChild);
+    } else {
+      contentWrap.appendChild(postBody);
+    }
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered);
+    setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts);
 
     return wrap;
   }
@@ -3919,9 +3937,20 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered) {
+  function setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
+
+    // Storefront menu init
+    if (sfMenuPosts && sfMenuPosts.length > 1) {
+      StorefrontMenuComponent.init(wrap, sfMenuPosts, {
+        onPostSelected: function(menuPost, idx, contentEl) {
+          var selectedPost = menuPost._post;
+          addToRecentHistory(selectedPost, 0);
+          // TODO: render selected post content into contentEl
+        }
+      });
+    }
 
     // Post header click closes the post (returns to post-card)
     var postHeader = wrap.querySelector('.post-header');

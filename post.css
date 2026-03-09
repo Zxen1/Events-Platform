@@ -641,6 +641,110 @@
   pointer-events: none;
 }
 
+/* -------------------------------------------------------
+   STOREFRONT MENU — 50px circular thumbnails with tooltip pills
+   Modelled on amenities/links tooltip pill pattern.
+   ------------------------------------------------------- */
+
+.post-storefront-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.post-storefront-menu-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.post-storefront-menu-item:hover {
+  z-index: 3;
+}
+
+.post-storefront-menu-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 2;
+  border: 2px solid transparent;
+  transition: width 0.15s ease, height 0.15s ease;
+}
+
+.post-storefront-menu-thumb--empty {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.post-storefront-menu-item:hover .post-storefront-menu-thumb {
+  width: 42px;
+  height: 42px;
+}
+
+.post-storefront-menu-item--selected .post-storefront-menu-thumb {
+  border-color: rgba(59, 130, 246, 0.9);
+}
+
+/* Tooltip pill (::after) */
+.post-storefront-menu-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 50px;
+  width: 50px;
+  overflow: hidden;
+  background: rgba(59, 130, 246, 0.9);
+  border-radius: 25px;
+  font-size: 12px;
+  line-height: 50px;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  padding-left: 55px;
+  padding-right: 10px;
+  width: max-content;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.15s ease;
+}
+
+/* Right-expand (default) */
+.post-storefront-menu-item:not([data-tooltip-dir="left"]):hover::after {
+  opacity: 1;
+}
+
+/* Left-expand */
+.post-storefront-menu-item[data-tooltip-dir="left"]::after {
+  left: auto;
+  right: 0;
+  padding-left: 12px;
+  padding-right: 55px;
+}
+
+.post-storefront-menu-item[data-tooltip-dir="left"]:hover::after {
+  opacity: 1;
+}
+
+.post-storefront-prompt {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 /* Storefront row: circular post thumbnails on postcard */
 .post-card-row-storefront {
   display: flex;
