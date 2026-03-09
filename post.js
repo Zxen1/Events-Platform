@@ -1562,189 +1562,6 @@ const PostModule = (function() {
   }
 
   /**
-   * Render a storefront postcard.
-   * Represents a group of 2+ general posts from the same member at the same location.
-   * Thumbnail: member avatar. Title: "Storefront: [Member Name]".
-   * Rows 1–2: 42px circular post thumbnails (entries strip).
-   * Row 3: location. Row 4: price range across all posts. Promo badge if any post has one.
-   * @param {Array} sfPosts - Posts in the storefront group, already in panel sort order
-   * @returns {HTMLElement} Postcard element
-   */
-  function renderStorefrontCard(sfPosts) {
-    if (!sfPosts || !sfPosts.length) return null;
-
-    // First post in sort order is the representative post for location / sort metadata
-    var leadPost = sfPosts[0];
-    var pick = pickMapCardInCurrentBounds(leadPost);
-    var mapCard = pick.mapCard;
-
-    // Title
-    var title = 'Storefront: ' + (leadPost.member_name || 'Unknown');
-
-    // Avatar as thumbnail (not circular — standard post-card-image class)
-    var avatarSrc = resolveAvatarSrcForUser(leadPost.member_avatar || '', leadPost.member_id);
-
-    // Location display (from lead post's map card)
-    var locType = (mapCard && mapCard.location_type) || '';
-    var venueName = (mapCard && mapCard.venue_name) || '';
-    var suburb = (mapCard && mapCard.suburb) || '';
-    var city = (mapCard && mapCard.city) || '';
-    var state = (mapCard && mapCard.state) || '';
-    var countryName = (mapCard && mapCard.country_name) || '';
-    var locationCount = leadPost.map_cards ? leadPost.map_cards.length : 1;
-    var locationDisplay = '';
-    if (locationCount > 1) {
-      locationDisplay = locationCount + ' Locations';
-    } else if (locType === 'venue') {
-      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
-    } else if (locType === 'city') {
-      var sfCitySecond = state || countryName || '';
-      locationDisplay = (city && sfCitySecond) ? city + ', ' + sfCitySecond : (city || sfCitySecond || '');
-    } else {
-      var sfAddrSecond = state || countryName || '';
-      locationDisplay = (suburb && sfAddrSecond) ? suburb + ', ' + sfAddrSecond : (suburb || sfAddrSecond || city || '');
-    }
-
-    // Price range across all posts (use first available price parts for currency flag)
-    var priceParts = null;
-    sfPosts.forEach(function(p) {
-      var mc = pickMapCardInCurrentBounds(p).mapCard;
-      var parts = parsePriceSummary(mc ? mc.price_summary : p.price_summary || '');
-      if (parts && parts.text && !priceParts) priceParts = parts;
-    });
-
-    // Promo badge: true if any visible post has a promo
-    var hasPromo = sfPosts.some(function(p) {
-      var mc = pickMapCardInCurrentBounds(p).mapCard;
-      return mapCardHasPromo(mc);
-    });
-
-    // Build entries strip thumbnails (42px circular)
-    var stripThumbsHtml = sfPosts.map(function(p) {
-      var rawUrl = getPostThumbnailUrl(p);
-      var thumbSrc = rawUrl ? getCardThumbSrc(rawUrl) : '';
-      return thumbSrc
-        ? '<img class="post-card-row-storefront-thumb" src="' + thumbSrc + '" alt="" loading="lazy" referrerpolicy="no-referrer" />'
-        : '<div class="post-card-row-storefront-thumb post-card-row-storefront-thumb--empty"></div>';
-    }).join('');
-
-    // Build info rows (location + price only — no category row, no dates row)
-    var sett = App.getState('settings') || {};
-    var locIconUrl = sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', sett.badge_icon_location) : '';
-    var locBadge = locIconUrl ? '<img class="post-card-image-badge" src="' + locIconUrl + '" alt="">' : '';
-    var locationRowHtml = locationDisplay
-      ? '<div class="post-card-row-loc"><span class="post-card-badge">' + locBadge + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>'
-      : '';
-
-    var priceRowHtml = '';
-    if (priceParts && priceParts.text) {
-      var priceBadgeHtml = priceParts.flagUrl
-        ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
-        : '';
-      var promoTagHtml = hasPromo ? '<span class="post-card-tag-promo">Promo</span>' : '';
-      priceRowHtml = '<div class="post-card-row-price"><span class="post-card-badge">' + priceBadgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span>' + promoTagHtml + '</div>';
-    }
-
-    var isFav = isFavorite(leadPost.id);
-
-    var el = document.createElement('article');
-    el.className = 'post-card post-card--storefront';
-    el.dataset.id = String(leadPost.id);
-    el.dataset.storefront = '1';
-    el.dataset.postKey = leadPost.post_key || '';
-    el.setAttribute('tabindex', '0');
-    try {
-      if (mapCard && mapCard.id !== undefined && mapCard.id !== null) el.dataset.postMapCardId = String(mapCard.id);
-    } catch (_eSfPmc) {}
-
-    // Sort metadata from lead post
-    try {
-      el.dataset.sortSidebarAd = leadPost.sidebar_ad ? '1' : '0';
-      el.dataset.sortFeatured = leadPost.featured ? '1' : '0';
-      el.dataset.sortTitle = title.toLowerCase();
-      el.dataset.sortCreatedAt = String(new Date(leadPost.created_at || 0).getTime() || 0);
-      el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
-      el.dataset.sortSoonTs = '';
-      if (mapCard && Number.isFinite(Number(mapCard.longitude)) && Number.isFinite(Number(mapCard.latitude))) {
-        el.dataset.sortLng = String(mapCard.longitude);
-        el.dataset.sortLat = String(mapCard.latitude);
-      } else {
-        el.dataset.sortLng = '';
-        el.dataset.sortLat = '';
-      }
-    } catch (_eSfSort) {}
-
-    var thumbHtml = avatarSrc
-      ? '<img class="post-card-image" loading="lazy" src="' + avatarSrc + '" alt="" referrerpolicy="no-referrer" />'
-      : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
-
-    el.innerHTML = [
-      thumbHtml,
-      '<div class="post-card-meta">',
-        '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="post-card-container-info">',
-          '<div class="post-card-row-storefront" data-storefront-row>',
-            stripThumbsHtml,
-            '<span class="post-card-row-storefront-overflow"></span>',
-          '</div>',
-          locationRowHtml,
-          priceRowHtml,
-        '</div>',
-      '</div>',
-      '<div class="post-card-container-actions">',
-        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-          '<span class="post-card-icon-fav" aria-hidden="true"></span>',
-        '</button>',
-      '</div>'
-    ].join('');
-
-    // Click: open storefront post view
-    el.addEventListener('click', function(e) {
-      if (e.target.closest('.post-card-button-fav')) return;
-      if (el.closest('.post')) {
-        closePost(leadPost.id);
-      } else {
-        openPost(leadPost, {
-          originEl: el,
-          postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '',
-          storefrontPosts: sfPosts
-        });
-      }
-    });
-
-    el.addEventListener('keydown', function(e) {
-      var k = String(e.key || e.code || '');
-      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
-      if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
-      e.preventDefault();
-      openPost(leadPost, {
-        originEl: el,
-        postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '',
-        storefrontPosts: sfPosts
-      });
-    });
-
-    var favBtn = el.querySelector('.post-card-button-fav');
-    if (favBtn) {
-      favBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        toggleFavorite(leadPost, favBtn);
-      });
-    }
-
-    el.addEventListener('mouseenter', function() {
-      el.classList.add('post-card--map-highlight');
-      syncMapMarkerHover(leadPost.id, true);
-    });
-    el.addEventListener('mouseleave', function() {
-      el.classList.remove('post-card--map-highlight');
-      syncMapMarkerHover(leadPost.id, false);
-    });
-
-    return el;
-  }
-
-  /**
    * Sync hover state between post card and map marker
    * @param {number|string} postId - Post ID
    * @param {boolean} isHovering - Whether hovering
@@ -1865,26 +1682,6 @@ const PostModule = (function() {
       postListEl.insertBefore(summaryEl, postListEl.firstChild);
     }
 
-    // Storefront grouping: detect groups of 2+ general posts from the same member at the same coords.
-    // Posts are already in panel sort order; sfGroups preserves that order within each group.
-    var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
-    var _sfByPostId = {}; // postId → sfKey
-    var _sfGroups = {};   // sfKey → [post, ...]
-    if (_sfEnabled && posts && posts.length) {
-      posts.forEach(function(p) {
-        if (!p || p.subcategory_type === 'Events') return;
-        var _mc = pickMapCardInCurrentBounds(p).mapCard;
-        if (!_mc) return;
-        var _sfKey = String(p.member_id) + '|' + String(_mc.latitude) + '|' + String(_mc.longitude);
-        if (!_sfGroups[_sfKey]) _sfGroups[_sfKey] = [];
-        _sfGroups[_sfKey].push(p);
-      });
-      Object.keys(_sfGroups).forEach(function(k) {
-        if (_sfGroups[k].length < 2) { delete _sfGroups[k]; return; }
-        _sfGroups[k].forEach(function(p) { _sfByPostId[String(p.id)] = k; });
-      });
-    }
-
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
@@ -1921,27 +1718,6 @@ const PostModule = (function() {
 
         return;
       }
-
-      // Storefront: render one card for the group leader; skip all other posts in the group
-      if (_sfEnabled) {
-        var _sfK = _sfByPostId[String(post.id)];
-        if (_sfK) {
-          var _sfG = _sfGroups[_sfK];
-          if (!_sfG || _sfG[0].id !== post.id) return;
-          var _sfCard = renderStorefrontCard(_sfG);
-          if (!_sfCard) return;
-          var _sfAnchor = document.createElement('div');
-          _sfAnchor.setAttribute('data-slack-anchor', '');
-          _sfAnchor.appendChild(_sfCard);
-          var _sfSlot = document.createElement('div');
-          _sfSlot.className = 'post-slot';
-          _sfSlot.dataset.id = String(post.id);
-          _sfSlot.appendChild(_sfAnchor);
-          postListEl.appendChild(_sfSlot);
-          return;
-        }
-      }
-
       var card = renderPostCard(post);
       var anchor = document.createElement('div');
       anchor.setAttribute('data-slack-anchor', '');
@@ -3143,10 +2919,8 @@ const PostModule = (function() {
       }
     }
 
-    // Add to recent history (storefronts are never added; individual post selections are added within the component)
-    if (!options.storefrontPosts) {
-      addToRecentHistory(post, mapCardIndex);
-    }
+    // Add to recent history
+    addToRecentHistory(post, mapCardIndex);
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
@@ -3177,7 +2951,7 @@ const PostModule = (function() {
     }
 
     // Build the detail view with a fresh card (original stays hidden in the slot).
-    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts || null);
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
 
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
@@ -3345,7 +3119,7 @@ const PostModule = (function() {
     });
   }
 
-  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
     var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
@@ -3647,15 +3421,6 @@ const PostModule = (function() {
       ? '<img class="post-info-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
       : '💰';
     
-    // Storefront header override: "Storefront: [Member Name]" + member avatar as thumbnail
-    if (storefrontPosts && storefrontPosts.length) {
-      title = 'Storefront: ' + (post.member_name || 'Unknown');
-      var sfAvatarSrc = resolveAvatarSrcForUser(post.member_avatar || '', post.member_id);
-      thumbHtml = sfAvatarSrc
-        ? '<img class="post-header-image-minithumb" loading="lazy" src="' + sfAvatarSrc + '" alt="" referrerpolicy="no-referrer" />'
-        : '<div class="post-header-image-minithumb post-header-image-minithumb--empty" aria-hidden="true"></div>';
-    }
-
     // Post header: thumbnail, title + category, actions
     postHeader.innerHTML = [
       thumbHtml,
@@ -3765,25 +3530,6 @@ const PostModule = (function() {
       '</div>'
     ].join('');
 
-    // Storefront body override: replace normal post body with storefront menu + content slot
-    if (storefrontPosts && storefrontPosts.length && window.StorefrontComponent) {
-      postBody.innerHTML = [
-        '<div class="post-details">',
-          StorefrontComponent.render({
-            posts: storefrontPosts.map(function(p) {
-              var rawUrl = getPostThumbnailUrl(p);
-              return {
-                id: p.id,
-                title: p.checkout_title || p.title || '',
-                thumbnailUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : ''
-              };
-            }),
-            escapeHtml: escapeHtml
-          }),
-        '</div>'
-      ].join('');
-    }
-
     // Build thumbnails - use 'minithumb' class (50x50) for small previews
     if (mediaUrls.length > 1) {
       var thumbRow = postBody.querySelector('.post-thumbs');
@@ -3842,7 +3588,7 @@ const PostModule = (function() {
     contentWrap.appendChild(postBody);
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered, storefrontPosts);
+    setupPostDetailEvents(wrap, post, isLocationFiltered);
 
     return wrap;
   }
@@ -3903,7 +3649,7 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered, storefrontPosts) {
+  function setupPostDetailEvents(wrap, post, isLocationFiltered) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
@@ -4004,89 +3750,6 @@ const PostModule = (function() {
 
     // Item pricing component initialization (async message loading)
     PostItemComponent.init(wrap);
-
-    // Storefront component initialization
-    if (storefrontPosts && storefrontPosts.length && window.StorefrontComponent) {
-      StorefrontComponent.init(wrap, storefrontPosts.map(function(p) {
-        var rawUrl = getPostThumbnailUrl(p);
-        return {
-          id: p.id,
-          title: p.checkout_title || p.title || '',
-          thumbnailUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : ''
-        };
-      }), {
-        escapeHtml: escapeHtml,
-        onPostSelected: function(selectedPost, contentEl) {
-          // Find the full post object from storefrontPosts (menu items are lightweight)
-          var fullPost = null;
-          for (var _i = 0; _i < storefrontPosts.length; _i++) {
-            if (String(storefrontPosts[_i].id) === String(selectedPost.id)) {
-              fullPost = storefrontPosts[_i];
-              break;
-            }
-          }
-          if (!fullPost || !contentEl) return;
-          var _mc = (fullPost.map_cards && fullPost.map_cards[0]) || {};
-          var _desc = _mc.description || '';
-          var _media = _mc.media_urls || [];
-          var _heroUrl = _media[0] ? addImageClass(_media[0], 'imagebox') : '';
-          // Location display
-          var _locType = _mc.location_type || '';
-          var _vname = _mc.venue_name || '';
-          var _sub = _mc.suburb || '';
-          var _cty = _mc.city || '';
-          var _st = _mc.state || '';
-          var _ctr = _mc.country_name || '';
-          var _locDisplay = '';
-          if (_locType === 'venue') {
-            _locDisplay = (_vname && _sub) ? _vname + ', ' + _sub : (_vname || _sub || _cty || '');
-          } else if (_locType === 'city') {
-            _locDisplay = (_cty && (_st || _ctr)) ? _cty + ', ' + (_st || _ctr) : (_cty || '');
-          } else {
-            _locDisplay = (_sub && (_st || _ctr)) ? _sub + ', ' + (_st || _ctr) : (_sub || _cty || '');
-          }
-          var _sett = App.getState('settings') || {};
-          var _locIcon = _sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', _sett.badge_icon_location) : '';
-          var _locBadge = _locIcon ? '<img class="post-info-image-badge" src="' + escapeHtml(_locIcon) + '" alt="">' : '';
-          var _html = ['<div class="post-info-container">'];
-          if (_locDisplay) {
-            _html.push('<div class="post-info-row post-info-row-loc"><span class="post-info-badge">' + _locBadge + '</span><span>' + escapeHtml(_locDisplay) + '</span></div>');
-          }
-          _html.push('</div>');
-          if (_desc) {
-            _html.push('<div class="post-description-container"><div class="post-description-text" tabindex="0" aria-expanded="false" data-full-text="' + escapeHtml(_desc) + '"></div></div>');
-          }
-          if (_media.length) {
-            _html.push('<div class="post-images-container"><div class="post-hero"><div class="post-track-hero">');
-            _html.push('<img class="post-image-hero post-image-hero--loading" src="' + escapeHtml(_heroUrl) + '" data-full="' + escapeHtml(_media[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />');
-            _html.push('</div></div>');
-            if (_media.length > 1) {
-              _html.push('<div class="post-thumbs">');
-              _media.forEach(function(url, i) {
-                _html.push('<img class="post-image-thumb' + (i === 0 ? ' post-image-thumb--active' : '') + '" src="' + escapeHtml(addImageClass(url, 'minithumb')) + '" alt="" data-index="' + i + '" data-full-url="' + escapeHtml(url) + '">');
-              });
-              _html.push('</div>');
-            }
-            _html.push('</div>');
-          }
-          contentEl.innerHTML = _html.join('');
-          // Truncate description for initial display (description toggle handles expand)
-          var _descEl = contentEl.querySelector('.post-description-text');
-          if (_descEl) {
-            var _full = _descEl.getAttribute('data-full-text') || '';
-            _descEl.textContent = _full.length > 180 ? _full.slice(0, 180) + '\u2026' : _full;
-          }
-        },
-        onAddToRecent: function(selectedPost) {
-          for (var _j = 0; _j < storefrontPosts.length; _j++) {
-            if (String(storefrontPosts[_j].id) === String(selectedPost.id)) {
-              addToRecentHistory(storefrontPosts[_j], 0);
-              return;
-            }
-          }
-        }
-      });
-    }
 
     // IMPORTANT:
     // Menu buttons stopPropagation() to avoid unwanted post-close/selection clicks.
