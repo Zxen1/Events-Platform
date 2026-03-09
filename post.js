@@ -4080,6 +4080,43 @@ const PostModule = (function() {
                       }
                     }
                   }
+                  // Reorder: favourites to front in menu, header thumbs, postcard thumbs
+                  var menuEl = wrap.querySelector('.post-storefront-menu');
+                  if (menuEl) {
+                    var menuItems = Array.prototype.slice.call(menuEl.querySelectorAll('.post-storefront-menu-item'));
+                    menuItems.sort(function(a, b) {
+                      var aF = a.querySelector('.post-storefront-menu-item-favstar') ? 0 : 1;
+                      var bF = b.querySelector('.post-storefront-menu-item-favstar') ? 0 : 1;
+                      return aF - bF;
+                    });
+                    menuItems.forEach(function(item) { menuEl.appendChild(item); });
+                  }
+                  var hdrRow = wrap.querySelector('.post-header-row-storefront');
+                  if (hdrRow) {
+                    var hdrWraps = Array.prototype.slice.call(hdrRow.querySelectorAll('.post-header-row-storefront-wrap'));
+                    hdrWraps.sort(function(a, b) {
+                      var aF = a.querySelector('.post-header-row-storefront-favdot') ? 0 : 1;
+                      var bF = b.querySelector('.post-header-row-storefront-favdot') ? 0 : 1;
+                      return aF - bF;
+                    });
+                    var hdrOverflow = hdrRow.querySelector('.post-header-row-storefront-overflow');
+                    hdrWraps.forEach(function(w) { hdrRow.insertBefore(w, hdrOverflow); });
+                  }
+                  var slot = wrap.closest('.post-slot');
+                  if (slot) {
+                    var pcRow = slot.querySelector('.post-card-row-storefront');
+                    if (pcRow) {
+                      var pcWraps = Array.prototype.slice.call(pcRow.querySelectorAll('.post-card-row-storefront-wrap'));
+                      pcWraps.sort(function(a, b) {
+                        var aF = a.querySelector('.post-card-row-storefront-favstar') ? 0 : 1;
+                        var bF = b.querySelector('.post-card-row-storefront-favstar') ? 0 : 1;
+                        return aF - bF;
+                      });
+                      var pcOverflow = pcRow.querySelector('.post-card-row-storefront-overflow');
+                      pcWraps.forEach(function(w) { pcRow.insertBefore(w, pcOverflow); });
+                    }
+                  }
+
                   // Storefront header passive indicator
                   var sfInd = wrap.querySelector('.post-header-fav-indicator[data-sf-ids]');
                   if (sfInd) {
