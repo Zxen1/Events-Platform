@@ -354,6 +354,7 @@ Remove it after the fix.
 ### Use Browser DevTools First
 For 500 errors, ask the user to check the Network tab Response body. For JS bugs, use `console.error` or type directly into the console to inspect variables and trace logic.
 Never read through code hunting for a runtime error when DevTools can surface it in seconds.
+For troubleshooting, always try the Console, Network tab, or tracking in DevTools first before reading code.
 
 ---
 
