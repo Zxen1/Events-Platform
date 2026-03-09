@@ -4138,6 +4138,12 @@ const PostModule = (function() {
               }
             }
             if (postBody) contentEl.appendChild(postBody);
+            var sfContainer = wrap.closest('.post-list');
+            if (sfContainer) {
+              requestAnimationFrame(function() {
+                sfContainer.scrollTo({ top: Math.max(0, wrap.offsetTop || 0), behavior: 'smooth' });
+              });
+            }
           });
         }
       });
