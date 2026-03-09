@@ -638,12 +638,7 @@
   width: 7px;
   height: 7px;
   background-color: #fbbf24;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   pointer-events: none;
 }
 
@@ -730,12 +725,7 @@
   width: 14px;
   height: 14px;
   background-color: #fbbf24;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   pointer-events: none;
   z-index: 2;
 }
@@ -877,12 +867,7 @@
   width: 12px;
   height: 12px;
   background-color: #fbbf24;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   pointer-events: none;
 }
 
