@@ -4024,6 +4024,23 @@ const PostModule = (function() {
           otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
         });
         
+        // Sync storefront menu thumb star
+        var thumbStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + postId + '"]');
+        if (!nowPressed && thumbStar) {
+          thumbStar.remove();
+        } else if (nowPressed && !thumbStar) {
+          var selectedItem = wrap.querySelector('.post-storefront-menu-item--selected');
+          if (selectedItem) {
+            var star = document.createElement('span');
+            star.className = 'post-storefront-menu-item-favstar';
+            star.setAttribute('aria-pressed', 'true');
+            star.setAttribute('data-post-id', String(postId));
+            star.setAttribute('aria-hidden', 'true');
+            var thumb = selectedItem.querySelector('.post-storefront-menu-thumb');
+            if (thumb) thumb.insertAdjacentElement('afterend', star);
+          }
+        }
+
         // Save favorite state to localStorage
         saveFavorite(postId, nowPressed);
         if (favToTop) {

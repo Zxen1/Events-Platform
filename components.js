@@ -14278,6 +14278,9 @@ const StorefrontMenuComponent = (function() {
             html.push(thumbUrl
                 ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
                 : '<span class="post-storefront-menu-thumb post-storefront-menu-thumb--empty"></span>');
+            if (p._isFav) {
+                html.push('<span class="post-storefront-menu-item-favstar" aria-pressed="true" data-post-id="' + (p._postId || '') + '" aria-hidden="true"></span>');
+            }
             if (isExposed) {
                 html.push('<span class="post-storefront-menu-item-meta">');
                 html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
