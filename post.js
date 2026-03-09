@@ -4791,7 +4791,6 @@ const PostModule = (function() {
 
     // Save to localStorage
     saveFavorite(post.id, newFav);
-    syncStorefrontFavIndicators(post.id);
     // Live-site behavior: do NOT reorder immediately on star/unstar.
     if (favToTop) {
       favSortDirty = true;
@@ -5673,7 +5672,6 @@ const PostModule = (function() {
 
     // Save to localStorage
     saveFavorite(postId, newFav);
-    syncStorefrontFavIndicators(postId);
 
     // Update other instances (both post-card and recent-card)
     document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
