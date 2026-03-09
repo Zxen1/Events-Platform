@@ -1912,6 +1912,22 @@ const PostModule = (function() {
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
+      // Storefront slots must be discarded if the group composition changed (filter results differ).
+      if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
+        var _slotWasSF = !!preservedOpenSlot.querySelector('.post-storefront-menu-container');
+        var _slotNowSF = !!_sfLookup[post.id];
+        var _sfGroupChanged = false;
+        if (_slotWasSF && _slotNowSF) {
+          var _oldIds = preservedOpenSlot.dataset.sfIds || '';
+          var _newGroup = _sfGroups[_sfLookup[post.id]] || [];
+          var _newIds = _newGroup.map(function(p) { return String(p.id); }).join(',');
+          if (_oldIds !== _newIds) _sfGroupChanged = true;
+        }
+        if (_slotWasSF !== _slotNowSF || _sfGroupChanged) {
+          preservedOpenSlot = null;
+          preservedOpenPostId = '';
+        }
+      }
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
         postListEl.appendChild(preservedOpenSlot);
@@ -1963,6 +1979,9 @@ const PostModule = (function() {
       var slot = document.createElement('div');
       slot.className = 'post-slot';
       slot.dataset.id = String(post.id);
+      if (_sfKey) {
+        slot.dataset.sfIds = _sfGroups[_sfKey].map(function(p) { return String(p.id); }).join(',');
+      }
 
       // Countdown status bar (event posts only, not storefronts)
       if (!_sfKey) {
@@ -3250,6 +3269,9 @@ const PostModule = (function() {
       slot = document.createElement('div');
       slot.className = 'post-slot';
       slot.dataset.id = String(post.id);
+      if (options.storefrontPosts && options.storefrontPosts.length > 1) {
+        slot.dataset.sfIds = options.storefrontPosts.map(function(p) { return String(p.id); }).join(',');
+      }
       slot.appendChild(detail);
       var topSlack = null;
       try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
