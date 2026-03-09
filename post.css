@@ -701,6 +701,7 @@
   display: block;
   position: relative;
   z-index: 2;
+  border: 2px solid transparent;
   transition: width 0.15s ease, height 0.15s ease;
 }
 
