@@ -1562,6 +1562,175 @@ const PostModule = (function() {
   }
 
   /**
+   * Build the storefront postcard row HTML — 42px circular post thumbnails.
+   * Overflow clips (CSS handles it); JS RAF updates the +N count after layout.
+   * @param {Array} sfPosts - Storefront posts array
+   * @returns {string} HTML string
+   */
+  function buildStorefrontCardRowHtml(sfPosts) {
+    var parts = [];
+    sfPosts.forEach(function(p) {
+      var mc = pickMapCardInCurrentBounds(p).mapCard;
+      var rawUrl = (mc && mc.media_urls && mc.media_urls.length) ? mc.media_urls[0] : '';
+      var thumbUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
+      if (thumbUrl) {
+        parts.push('<img class="post-card-row-storefront-thumb" src="' + thumbUrl + '" alt="" loading="lazy" referrerpolicy="no-referrer">');
+      } else {
+        parts.push('<div class="post-card-row-storefront-thumb post-card-row-storefront-thumb--empty" aria-hidden="true"></div>');
+      }
+    });
+    // +N element starts hidden; RAF in renderPostList measures and reveals it if needed.
+    parts.push('<span class="post-card-row-storefront-overflow" style="display:none" aria-hidden="true"></span>');
+    return '<div class="post-card-row-storefront">' + parts.join('') + '</div>';
+  }
+
+  /**
+   * Render a storefront postcard — represents multiple general posts by one member at one location.
+   * Modelled directly on renderPostCard. Same structure, same weight.
+   * @param {Array} sfPosts - Storefront posts array (already sorted; lead post is index 0)
+   * @returns {HTMLElement} Post card element
+   */
+  function renderStorefrontCard(sfPosts) {
+    var leadPost = sfPosts[0];
+    var el = document.createElement('article');
+    el.className = 'post-card';
+    el.dataset.id = String(leadPost.id);
+    el.dataset.postKey = leadPost.post_key || '';
+    el.dataset.storefront = '1';
+    el.setAttribute('tabindex', '0');
+
+    var pick = pickMapCardInCurrentBounds(leadPost);
+    var mapCard = pick.mapCard;
+    try {
+      if (mapCard && mapCard.id !== undefined && mapCard.id !== null) {
+        el.dataset.postMapCardId = String(mapCard.id);
+      }
+    } catch (_ePmc) {}
+
+    // Sort metadata from lead post (same as renderPostCard)
+    try {
+      var memberName = leadPost.member_name || '';
+      el.dataset.sortSidebarAd  = leadPost.sidebar_ad ? '1' : '0';
+      el.dataset.sortFeatured   = leadPost.featured ? '1' : '0';
+      el.dataset.sortTitle      = ('storefront:' + memberName).toLowerCase();
+      el.dataset.sortCreatedAt  = String(new Date(leadPost.created_at || 0).getTime() || 0);
+      el.dataset.sortPrice      = String(extractPrice(mapCard) || 0);
+      el.dataset.sortSoonTs     = '';
+      if (mapCard && Number.isFinite(Number(mapCard.longitude)) && Number.isFinite(Number(mapCard.latitude))) {
+        el.dataset.sortLng = String(mapCard.longitude);
+        el.dataset.sortLat = String(mapCard.latitude);
+      } else {
+        el.dataset.sortLng = '';
+        el.dataset.sortLat = '';
+      }
+    } catch (_eSortMeta) {}
+
+    // Avatar as thumbnail (not circular — uses standard post-card-image class)
+    var avatarSrc = resolveAvatarSrcForUser(leadPost.member_avatar || '', leadPost.member_id);
+    var title = 'Storefront: ' + (leadPost.member_name || '');
+
+    var thumbHtml = avatarSrc
+      ? '<img class="post-card-image" loading="lazy" src="' + avatarSrc + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
+
+    // Location from lead post's active map card
+    var venueName    = (mapCard && mapCard.venue_name)    || '';
+    var suburb       = (mapCard && mapCard.suburb)        || '';
+    var city         = (mapCard && mapCard.city)          || '';
+    var state        = (mapCard && mapCard.state)         || '';
+    var countryName  = (mapCard && mapCard.country_name)  || '';
+    var locationType = (mapCard && mapCard.location_type) || '';
+    var locationDisplay = '';
+    if (locationType === 'venue') {
+      locationDisplay = (venueName && suburb) ? venueName + ', ' + suburb : (venueName || suburb || city || '');
+    } else if (locationType === 'city') {
+      var sfCitySecond = state || countryName || '';
+      locationDisplay = (city && sfCitySecond) ? city + ', ' + sfCitySecond : (city || sfCitySecond || '');
+    } else {
+      var sfAddrSecond = state || countryName || '';
+      locationDisplay = (suburb && sfAddrSecond) ? suburb + ', ' + sfAddrSecond : (suburb || sfAddrSecond || city || '');
+    }
+
+    // Price from lead post's map card (representative for the group)
+    var priceParts = parsePriceSummary(mapCard ? mapCard.price_summary : '');
+
+    // Promo: true if any post in the group has a promo
+    var hasPromo = sfPosts.some(function(p) {
+      var mc = pickMapCardInCurrentBounds(p).mapCard;
+      return mapCardHasPromo(mc);
+    });
+
+    // Storefront row: circular thumbnails of each post
+    var storefrontRowHtml = buildStorefrontCardRowHtml(sfPosts);
+
+    // Location row (same structure as buildCardInfoRowsHtml)
+    var sett = App.getState('settings') || {};
+    var locIconUrl = sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', sett.badge_icon_location) : '';
+    var locBadge = locIconUrl ? '<img class="post-card-image-badge" src="' + locIconUrl + '" alt="" title="Venue">' : '';
+    var locationRowHtml = locationDisplay
+      ? '<div class="post-card-row-loc"><span class="post-card-badge">' + locBadge + '</span><span>' + escapeHtml(locationDisplay) + '</span></div>'
+      : '';
+
+    // Price row (same structure as buildCardInfoRowsHtml)
+    var priceRowHtml = '';
+    if (priceParts.text) {
+      var priceBadgeHtml = priceParts.flagUrl
+        ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+        : '';
+      var promoTagHtml = hasPromo ? '<span class="post-card-tag-promo">Promo</span>' : '';
+      priceRowHtml = '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + priceBadgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span>' + promoTagHtml + '</div>';
+    }
+
+    el.innerHTML = [
+      thumbHtml,
+      '<div class="post-card-meta">',
+        '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
+        '<div class="post-card-container-info">',
+          storefrontRowHtml,
+          locationRowHtml,
+          priceRowHtml,
+        '</div>',
+      '</div>',
+      '<div class="post-card-container-actions" aria-hidden="true"></div>'
+    ].join('');
+
+    // Click: open post with storefrontPosts option
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('.post-card-container-actions')) return;
+      if (el.closest('.post')) return;
+      openPost(leadPost, {
+        originEl: el,
+        postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '',
+        storefrontPosts: sfPosts
+      });
+    });
+
+    el.addEventListener('keydown', function(e) {
+      if (!e) return;
+      var k = String(e.key || e.code || '');
+      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+      e.preventDefault();
+      openPost(leadPost, {
+        originEl: el,
+        postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '',
+        storefrontPosts: sfPosts
+      });
+    });
+
+    // Map marker hover sync (keyed to lead post)
+    el.addEventListener('mouseenter', function() {
+      el.classList.add('post-card--map-highlight');
+      syncMapMarkerHover(leadPost.id, true);
+    });
+    el.addEventListener('mouseleave', function() {
+      el.classList.remove('post-card--map-highlight');
+      syncMapMarkerHover(leadPost.id, false);
+    });
+
+    return el;
+  }
+
+  /**
    * Sync hover state between post card and map marker
    * @param {number|string} postId - Post ID
    * @param {boolean} isHovering - Whether hovering
@@ -1682,6 +1851,36 @@ const PostModule = (function() {
       postListEl.insertBefore(summaryEl, postListEl.firstChild);
     }
 
+    // Build storefront groups before rendering: group posts by member_id + coordinates.
+    // Only general posts (subcategory_type !== 'Events') can form a storefront.
+    // Lead post = first post in the already-sorted array for each group.
+    var storefrontGroupMap = {};  // leadPostId -> sfPosts array
+    var storefrontSkipSet = {};   // postId -> true (non-lead posts to suppress)
+    var sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
+    if (sfEnabled && posts && posts.length) {
+      var sfBuckets = {};
+      posts.forEach(function(p) {
+        if (p.subcategory_type === 'Events') return;
+        var mc = pickMapCardInCurrentBounds(p).mapCard;
+        if (!mc) return;
+        var lat = Number(mc.latitude);
+        var lng = Number(mc.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        var key = String(p.member_id) + '|' + String(lat) + '|' + String(lng);
+        if (!sfBuckets[key]) sfBuckets[key] = [];
+        sfBuckets[key].push(p);
+      });
+      Object.keys(sfBuckets).forEach(function(key) {
+        var group = sfBuckets[key];
+        if (group.length < 2) return;
+        var leadId = String(group[0].id);
+        storefrontGroupMap[leadId] = group;
+        for (var si = 1; si < group.length; si++) {
+          storefrontSkipSet[String(group[si].id)] = true;
+        }
+      });
+    }
+
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
@@ -1718,6 +1917,25 @@ const PostModule = (function() {
 
         return;
       }
+
+      // Non-lead storefront posts are suppressed; the lead renders the whole group.
+      if (storefrontSkipSet[String(post.id)]) return;
+
+      // Lead post of a storefront group — render storefront card instead of individual postcard.
+      var sfPosts = storefrontGroupMap[String(post.id)];
+      if (sfPosts) {
+        var sfCard = renderStorefrontCard(sfPosts);
+        var sfAnchor = document.createElement('div');
+        sfAnchor.setAttribute('data-slack-anchor', '');
+        sfAnchor.appendChild(sfCard);
+        var sfSlot = document.createElement('div');
+        sfSlot.className = 'post-slot';
+        sfSlot.dataset.id = String(post.id);
+        sfSlot.appendChild(sfAnchor);
+        postListEl.appendChild(sfSlot);
+        return;
+      }
+
       var card = renderPostCard(post);
       var anchor = document.createElement('div');
       anchor.setAttribute('data-slack-anchor', '');
@@ -1748,6 +1966,31 @@ const PostModule = (function() {
     
     // If there was an open post but it is no longer in the filtered list, do not reinsert it.
     // That means it disappears because it's filtered out (expected).
+
+    // Update storefront overflow counts once cards are laid out in the DOM.
+    if (sfEnabled) {
+      requestAnimationFrame(function() {
+        try {
+          if (!postListEl) return;
+          postListEl.querySelectorAll('.post-card-row-storefront').forEach(function(row) {
+            var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
+            var thumbEls = Array.prototype.slice.call(row.querySelectorAll('.post-card-row-storefront-thumb'));
+            if (!overflowEl || !thumbEls.length) return;
+            var rowRight = row.getBoundingClientRect().right;
+            var hidden = 0;
+            thumbEls.forEach(function(th) {
+              if (th.getBoundingClientRect().right > rowRight + 1) hidden++;
+            });
+            if (hidden > 0) {
+              overflowEl.textContent = '+' + hidden;
+              overflowEl.style.display = '';
+            } else {
+              overflowEl.style.display = 'none';
+            }
+          });
+        } catch (_eSfOverflow) {}
+      });
+    }
 
     // Render markers on the map (only if above zoom threshold)
     var threshold = getPostsMinZoom();
@@ -1985,6 +2228,15 @@ const PostModule = (function() {
         markerData.isMultiPost = true;
         markerData.venuePostIds = Object.keys(uniquePostIds);
         markerData.venuePostCount = markerData.venuePostIds.length;
+      }
+
+      if (isStorefront) {
+        var sfLeadPost = group[0].post;
+        var sfAvatarSrc = resolveAvatarSrcForUser(sfLeadPost.member_avatar || '', sfLeadPost.member_id);
+        if (sfAvatarSrc) {
+          markerData.thumbnailUrl = sfAvatarSrc;
+        }
+        markerData.isStorefront = true;
       }
       
       markerData.venueKey = venueKey;
@@ -2897,6 +3149,7 @@ const PostModule = (function() {
     var originEl = options.originEl || null;
     var postMapCardId = options.postMapCardId;
     var autoExpand = !!options.autoExpand;
+    var storefrontPosts = options.storefrontPosts || null;
 
     if (!postMapCardId) {
       // Source of truth: MapModule active map card selection (no DOM scraping, no heuristics).
@@ -2919,8 +3172,11 @@ const PostModule = (function() {
       }
     }
 
-    // Add to recent history
-    addToRecentHistory(post, mapCardIndex);
+    // Storefronts are not added to recent history — they have no database record.
+    // Individual post selections inside the storefront menu are added instead (via StorefrontComponent callbacks).
+    if (!storefrontPosts) {
+      addToRecentHistory(post, mapCardIndex);
+    }
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
@@ -2951,7 +3207,7 @@ const PostModule = (function() {
     }
 
     // Build the detail view with a fresh card (original stays hidden in the slot).
-    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex);
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, { storefrontPosts: storefrontPosts });
 
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
@@ -3119,7 +3375,8 @@ const PostModule = (function() {
     });
   }
 
-  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, options) {
+    var storefrontPosts = (options && options.storefrontPosts) || null;
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
     var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
@@ -3383,13 +3640,23 @@ const PostModule = (function() {
       cardEl.classList.remove('post-card--map-highlight');
     }
 
+    // Storefront: override title and header thumbnail with member identity.
+    if (storefrontPosts) {
+      title = 'Storefront: ' + (post.member_name || '');
+    }
+
     // Build post header (unified header for both collapsed and expanded states)
     var postHeader = document.createElement('div');
     postHeader.className = 'post-header';
     
-    // Thumbnail for header uses minithumb size
-    var rawThumbUrl = getPostThumbnailUrl(post);
-    var miniThumbUrl = rawThumbUrl ? addImageClass(rawThumbUrl, 'minithumb') : '';
+    // Thumbnail for header uses minithumb size.
+    // Storefronts use the member avatar instead of a post image.
+    var rawThumbUrl = storefrontPosts
+      ? resolveAvatarSrcForUser(post.member_avatar || '', post.member_id)
+      : getPostThumbnailUrl(post);
+    var miniThumbUrl = rawThumbUrl
+      ? (storefrontPosts ? rawThumbUrl : addImageClass(rawThumbUrl, 'minithumb'))
+      : '';
     
     var thumbHtml = miniThumbUrl
       ? '<img class="post-header-image-minithumb" loading="lazy" src="' + miniThumbUrl + '" alt="" referrerpolicy="no-referrer" />'
@@ -3440,6 +3707,33 @@ const PostModule = (function() {
         '</button>',
       '</div>'
     ].join('');
+
+    // Storefront: replace body with the storefront component.
+    if (storefrontPosts) {
+      var sfItems = storefrontPosts.map(function(p) {
+        var sfMc = pickMapCardInCurrentBounds(p).mapCard;
+        var sfRawUrl = (sfMc && sfMc.media_urls && sfMc.media_urls.length) ? sfMc.media_urls[0] : '';
+        var sfThumbUrl = sfRawUrl ? addImageClass(sfRawUrl, 'minithumb') : '';
+        var sfTitle = (sfMc && sfMc.title) || p.checkout_title || p.title || '';
+        return { thumbUrl: sfThumbUrl, title: sfTitle };
+      });
+      var sfBodyHtml = window.StorefrontComponent
+        ? StorefrontComponent.render({ items: sfItems, escapeHtml: escapeHtml })
+        : '';
+      var sfBody = document.createElement('div');
+      sfBody.className = 'post-body';
+      sfBody.innerHTML = '<div class="post-details"><div class="post-info-container">' + sfBodyHtml + '</div></div>';
+
+      var sfContentWrap = document.createElement('div');
+      sfContentWrap.className = 'component-locationwallpaper-content';
+      wrap.appendChild(sfContentWrap);
+      sfContentWrap.appendChild(cardEl);
+      sfContentWrap.appendChild(postHeader);
+      sfContentWrap.appendChild(sfBody);
+
+      setupPostDetailEvents(wrap, post, isLocationFiltered, storefrontPosts);
+      return wrap;
+    }
 
     // Create post body - proper class naming
     var postBody = document.createElement('div');
@@ -3588,7 +3882,7 @@ const PostModule = (function() {
     contentWrap.appendChild(postBody);
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered);
+    setupPostDetailEvents(wrap, post, isLocationFiltered, null);
 
     return wrap;
   }
@@ -3649,7 +3943,122 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered) {
+  function renderStorefrontPostContent(selectedPost, contentEl) {
+    var mc = pickMapCardInCurrentBounds(selectedPost).mapCard || (selectedPost.map_cards && selectedPost.map_cards[0]) || {};
+    var description = mc.description || '';
+    var mediaUrls = mc.media_urls || [];
+    var heroUrl = mediaUrls[0] ? addImageClass(mediaUrls[0], 'imagebox') : '';
+
+    // Location display
+    var sfLocType    = mc.location_type || '';
+    var sfVenueName  = mc.venue_name    || '';
+    var sfSuburb     = mc.suburb        || '';
+    var sfCity       = mc.city          || '';
+    var sfState      = mc.state         || '';
+    var sfCountry    = mc.country_name  || '';
+    var sfLocDisplay = '';
+    if (sfLocType === 'venue') {
+      sfLocDisplay = (sfVenueName && sfSuburb) ? sfVenueName + ', ' + sfSuburb : (sfVenueName || sfSuburb || sfCity || '');
+    } else if (sfLocType === 'city') {
+      var sfCitySecond = sfState || sfCountry || '';
+      sfLocDisplay = (sfCity && sfCitySecond) ? sfCity + ', ' + sfCitySecond : (sfCity || sfCitySecond || '');
+    } else {
+      var sfAddrSecond = sfState || sfCountry || '';
+      sfLocDisplay = (sfSuburb && sfAddrSecond) ? sfSuburb + ', ' + sfAddrSecond : (sfSuburb || sfAddrSecond || sfCity || '');
+    }
+
+    var sett = App.getState('settings') || {};
+    var locIconUrl = sett.badge_icon_location ? App.getImageUrl('fieldsetIcons', sett.badge_icon_location) : '';
+    var locBadge = locIconUrl ? '<img class="post-info-image-badge" src="' + locIconUrl + '" alt="">' : '';
+
+    var html = [];
+    if (sfLocDisplay) {
+      html.push('<div class="post-info-row post-info-row-loc">');
+      html.push('<span class="post-info-badge">' + locBadge + '</span>');
+      html.push('<span>' + escapeHtml(sfLocDisplay) + '</span>');
+      html.push('</div>');
+    }
+    if (description) {
+      html.push('<div class="post-description-container">');
+      html.push('<div class="post-storefront-post-description post-description-text" tabindex="0" aria-expanded="false" data-full-text="' + escapeHtml(description) + '"></div>');
+      html.push('</div>');
+    }
+    if (heroUrl) {
+      html.push('<div class="post-images-container">');
+      html.push('<div class="post-hero post-hero--sf">');
+      html.push('<div class="post-track-hero">');
+      html.push('<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />');
+      html.push('</div>');
+      html.push('</div>');
+      if (mediaUrls.length > 1) {
+        html.push('<div class="post-thumbs post-thumbs--sf"></div>');
+      }
+      html.push('</div>');
+    }
+
+    contentEl.innerHTML = html.join('');
+
+    // Wire thumbnails
+    if (mediaUrls.length > 1) {
+      var thumbRow = contentEl.querySelector('.post-thumbs--sf');
+      if (thumbRow) {
+        mediaUrls.forEach(function(url, i) {
+          var img = document.createElement('img');
+          img.className = 'post-image-thumb' + (i === 0 ? ' post-image-thumb--active' : '');
+          img.src = addImageClass(url, 'minithumb');
+          img.alt = '';
+          img.dataset.index = String(i);
+          img.dataset.fullUrl = url;
+          thumbRow.appendChild(img);
+        });
+      }
+    }
+
+    // Wire hero image lightbox click
+    var sfHeroContainer = contentEl.querySelector('.post-hero--sf');
+    if (sfHeroContainer && mediaUrls.length > 0 && window.ImageModalComponent) {
+      sfHeroContainer.classList.add('post-hero--clickable');
+      sfHeroContainer.addEventListener('click', function() {
+        ImageModalComponent.open(mediaUrls[0], { images: mediaUrls, startIndex: 0 });
+      });
+    }
+
+    // Apply description truncation
+    requestAnimationFrame(function() {
+      try {
+        var descEl = contentEl.querySelector('.post-storefront-post-description');
+        if (!descEl) return;
+        var fullText = descEl.getAttribute('data-full-text') || '';
+        var result = truncateTextToLines(descEl, fullText, '... See more', 2);
+        if (result.needsTruncation) {
+          var textPart = result.truncated.replace(/\.\.\. See more$/, '');
+          descEl.innerHTML = escapeHtml(textPart).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
+        } else {
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seemore">See more</span>';
+        }
+        descEl.addEventListener('click', function(e) {
+          e.preventDefault();
+          descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seeless">See less</span>';
+          var seeLessEl = descEl.querySelector('.post-description-seeless');
+          if (seeLessEl) {
+            seeLessEl.addEventListener('click', function(ev) {
+              ev.preventDefault();
+              ev.stopPropagation();
+              var r2 = truncateTextToLines(descEl, fullText, '... See more', 2);
+              if (r2.needsTruncation) {
+                var tp2 = r2.truncated.replace(/\.\.\. See more$/, '');
+                descEl.innerHTML = escapeHtml(tp2).replace(/\n/g, '<br>') + '<span class="post-description-seemore">... See more</span>';
+              } else {
+                descEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + ' <span class="post-description-seemore">See more</span>';
+              }
+            });
+          }
+        });
+      } catch (_eSfDesc) {}
+    });
+  }
+
+  function setupPostDetailEvents(wrap, post, isLocationFiltered, storefrontPosts) {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
@@ -3750,6 +4159,18 @@ const PostModule = (function() {
 
     // Item pricing component initialization (async message loading)
     PostItemComponent.init(wrap);
+
+    // Storefront component initialization — wires menu selection, prompt, subheader, content slot.
+    if (storefrontPosts && window.StorefrontComponent) {
+      StorefrontComponent.init(wrap, storefrontPosts, {
+        onPostSelected: function(selectedPost, contentEl) {
+          renderStorefrontPostContent(selectedPost, contentEl);
+        },
+        onAddToRecent: function(selectedPost) {
+          addToRecentHistory(selectedPost, 0);
+        }
+      });
+    }
 
     // IMPORTANT:
     // Menu buttons stopPropagation() to avoid unwanted post-close/selection clicks.
