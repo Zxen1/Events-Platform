@@ -624,6 +624,7 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
 }
 .post-header-row-storefront-thumb {
   width: 18px;
@@ -639,7 +640,6 @@
   height: 7px;
   background-color: #fbbf24;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
   pointer-events: none;
 }
 
@@ -726,7 +726,6 @@
   height: 12px;
   background-color: #fbbf24;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
   pointer-events: none;
   z-index: 2;
 }
@@ -790,6 +789,7 @@
 .post-storefront-menu-item-thumbwrap {
   position: relative;
   flex-shrink: 0;
+  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
 }
 .post-storefront-menu--exposed .post-storefront-menu-thumb {
   width: 38px;
@@ -871,6 +871,7 @@
   width: 42px;
   height: 42px;
   flex-shrink: 0;
+  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
 }
 .post-card-row-storefront-thumb {
   width: 42px;
@@ -886,7 +887,6 @@
   height: 12px;
   background-color: #fbbf24;
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.8));
   pointer-events: none;
 }
 
