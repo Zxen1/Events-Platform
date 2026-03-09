@@ -1630,7 +1630,7 @@ const PostModule = (function() {
       var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
       if (miniUrl) {
         var pFav = isFavorite(p.id);
-        sfRowHtml += '<span class="post-card-row-storefront-wrap">';
+        sfRowHtml += '<span class="post-card-row-storefront-wrap" data-post-id="' + p.id + '">';
         sfRowHtml += '<img class="post-card-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
         if (pFav) sfRowHtml += '<span class="post-card-row-storefront-favstar" aria-hidden="true"></span>';
         sfRowHtml += '</span>';
@@ -3687,7 +3687,7 @@ const PostModule = (function() {
         var miniUrl = rawUrl ? addImageClass(rawUrl, 'minithumb') : '';
         if (miniUrl) {
           var pFav = isFavorite(p.id);
-          sfThumbRowHtml += '<span class="post-header-row-storefront-wrap">';
+          sfThumbRowHtml += '<span class="post-header-row-storefront-wrap" data-post-id="' + p.id + '">';
           sfThumbRowHtml += '<img class="post-header-row-storefront-thumb" src="' + miniUrl + '" alt="" />';
           if (pFav) sfThumbRowHtml += '<span class="post-header-row-storefront-favdot" aria-hidden="true"></span>';
           sfThumbRowHtml += '</span>';
@@ -4049,20 +4049,54 @@ const PostModule = (function() {
           otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
         });
         
-        // Sync storefront menu thumb star
-        var thumbStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + postId + '"]');
-        if (!nowPressed && thumbStar) {
-          thumbStar.remove();
-        } else if (nowPressed && !thumbStar) {
+        // Sync all storefront fav indicators for this post
+        var pid = String(postId);
+
+        // Menu thumb star
+        var menuStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + pid + '"]');
+        if (!nowPressed && menuStar) {
+          menuStar.remove();
+        } else if (nowPressed && !menuStar) {
           var selectedItem = wrap.querySelector('.post-storefront-menu-item--selected');
           if (selectedItem) {
-            var star = document.createElement('span');
-            star.className = 'post-storefront-menu-item-favstar';
-            star.setAttribute('aria-pressed', 'true');
-            star.setAttribute('data-post-id', String(postId));
-            star.setAttribute('aria-hidden', 'true');
-            var thumb = selectedItem.querySelector('.post-storefront-menu-thumb');
-            if (thumb) thumb.insertAdjacentElement('afterend', star);
+            var ms = document.createElement('span');
+            ms.className = 'post-storefront-menu-item-favstar';
+            ms.setAttribute('aria-pressed', 'true');
+            ms.setAttribute('data-post-id', pid);
+            ms.setAttribute('aria-hidden', 'true');
+            var menuThumb = selectedItem.querySelector('.post-storefront-menu-thumb');
+            if (menuThumb) menuThumb.insertAdjacentElement('afterend', ms);
+          }
+        }
+
+        // Header 18px dot
+        var hdrWrap = wrap.querySelector('.post-header-row-storefront-wrap[data-post-id="' + pid + '"]');
+        if (hdrWrap) {
+          var hdrDot = hdrWrap.querySelector('.post-header-row-storefront-favdot');
+          if (!nowPressed && hdrDot) {
+            hdrDot.remove();
+          } else if (nowPressed && !hdrDot) {
+            var dot = document.createElement('span');
+            dot.className = 'post-header-row-storefront-favdot';
+            dot.setAttribute('aria-hidden', 'true');
+            hdrWrap.appendChild(dot);
+          }
+        }
+
+        // Postcard 42px star
+        var slot = wrap.closest('.post-slot');
+        if (slot) {
+          var cardWrap = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
+          if (cardWrap) {
+            var cardStar = cardWrap.querySelector('.post-card-row-storefront-favstar');
+            if (!nowPressed && cardStar) {
+              cardStar.remove();
+            } else if (nowPressed && !cardStar) {
+              var cs = document.createElement('span');
+              cs.className = 'post-card-row-storefront-favstar';
+              cs.setAttribute('aria-hidden', 'true');
+              cardWrap.appendChild(cs);
+            }
           }
         }
 
