@@ -641,11 +641,28 @@
   border-bottom: none;
   position: static;
 }
-.post-header-button-fav--passive {
+.post-header-fav-indicator {
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
+}
+.post-header-fav-indicator[aria-pressed="true"] .post-header-icon-fav {
+  background-color: #fbbf24;
+  -webkit-mask-image: none;
+  mask-image: none;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
 }
 
 /* -------------------------------------------------------

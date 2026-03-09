@@ -3704,7 +3704,7 @@ const PostModule = (function() {
       var sfHdrFav = storefrontPosts.some(function(sp) { return isFavorite(sp.id); });
       var sfIds = storefrontPosts.map(function(sp) { return sp.id; }).join(',');
       actionsHtml = '<div class="post-header-actions">' +
-        '<span class="post-header-button-fav post-header-button-fav--passive" aria-pressed="' + (sfHdrFav ? 'true' : 'false') + '" data-sf-ids="' + sfIds + '">' +
+        '<span class="post-header-fav-indicator" aria-pressed="' + (sfHdrFav ? 'true' : 'false') + '" data-sf-ids="' + sfIds + '">' +
           '<span class="post-header-icon-fav" aria-hidden="true"></span>' +
         '</span>' +
       '</div>';
@@ -4835,7 +4835,7 @@ const PostModule = (function() {
       if (indicator) indicator.setAttribute('aria-pressed', hasFav ? 'true' : 'false');
     });
     // Header indicators
-    document.querySelectorAll('.post-header-button-fav--passive[data-sf-ids]').forEach(function(el) {
+    document.querySelectorAll('.post-header-fav-indicator[data-sf-ids]').forEach(function(el) {
       var ids = (el.dataset.sfIds || '').split(',');
       if (ids.indexOf(pid) === -1) return;
       var hasFav = ids.some(function(id) { return isFavorite(id); });
