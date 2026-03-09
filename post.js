@@ -3889,7 +3889,7 @@ const PostModule = (function() {
       });
       var sfMenuDiv = document.createElement('div');
       sfMenuDiv.innerHTML = StorefrontMenuComponent.render(sfMenuPosts);
-      contentWrap.appendChild(sfMenuDiv.firstChild);
+      while (sfMenuDiv.firstChild) contentWrap.appendChild(sfMenuDiv.firstChild);
     } else {
       contentWrap.appendChild(postBody);
     }

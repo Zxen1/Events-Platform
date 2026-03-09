@@ -14283,8 +14283,8 @@ const StorefrontMenuComponent = (function() {
         });
         html.push('</div>');
         html.push('<div class="post-storefront-prompt" data-message-key="msg_storefront_select_prompt"></div>');
-        html.push('<div class="post-storefront-content"></div>');
         html.push('</div>');
+        html.push('<div class="post-storefront-content"></div>');
         return html.join('');
     }
 
@@ -14294,7 +14294,7 @@ const StorefrontMenuComponent = (function() {
         if (!container) return {};
         var menu = container.querySelector('.post-storefront-menu');
         var prompt = container.querySelector('.post-storefront-prompt');
-        var content = container.querySelector('.post-storefront-content');
+        var content = wrap.querySelector('.post-storefront-content');
 
         // Load prompt message
         if (prompt && typeof window.getMessage === 'function') {
