@@ -1763,15 +1763,17 @@ const PostModule = (function() {
       if (!row) return;
       var overflowEl = row.querySelector('.post-card-row-storefront-overflow');
       if (!overflowEl) return;
-      var thumbs = row.querySelectorAll('.post-card-row-storefront-thumb');
+      var wraps = row.querySelectorAll('.post-card-row-storefront-wrap');
       var rowRight = row.getBoundingClientRect().right;
       var hiddenCount = 0;
-      for (var i = 0; i < thumbs.length; i++) {
-        if (thumbs[i].getBoundingClientRect().right > rowRight) hiddenCount++;
+      for (var i = 0; i < wraps.length; i++) {
+        if (wraps[i].getBoundingClientRect().right > rowRight) hiddenCount++;
       }
       if (hiddenCount > 0) {
         overflowEl.textContent = '+' + hiddenCount;
         overflowEl.style.display = '';
+      } else {
+        overflowEl.style.display = 'none';
       }
     });
 
