@@ -1902,6 +1902,15 @@ const PostModule = (function() {
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
+      // But if the slot was a storefront and the post no longer belongs to one (or vice versa), discard it.
+      if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
+        var _slotWasSF = !!preservedOpenSlot.querySelector('.post-storefront-menu-container');
+        var _slotNowSF = !!_sfLookup[post.id];
+        if (_slotWasSF !== _slotNowSF) {
+          preservedOpenSlot = null;
+          preservedOpenPostId = '';
+        }
+      }
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
         postListEl.appendChild(preservedOpenSlot);
@@ -3984,6 +3993,23 @@ const PostModule = (function() {
             wrap.classList.add('post--expanded');
             if (postHeader) {
               contentEl.appendChild(postHeader);
+              var hFavBtn = postHeader.querySelector('.post-header-button-fav');
+              if (hFavBtn) {
+                hFavBtn.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  var pid = fullPost.id;
+                  var wasOn = hFavBtn.getAttribute('aria-pressed') === 'true';
+                  var nowOn = !wasOn;
+                  hFavBtn.setAttribute('aria-pressed', String(nowOn));
+                  hFavBtn.setAttribute('aria-label', nowOn ? 'Remove from favorites' : 'Add to favorites');
+                  saveFavorite(pid, nowOn);
+                  syncStorefrontFavIndicators(pid);
+                  document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(ob) {
+                    ob.setAttribute('aria-pressed', String(nowOn));
+                  });
+                  if (favToTop) favSortDirty = true;
+                });
+              }
             }
             if (postBody) contentEl.appendChild(postBody);
           });
