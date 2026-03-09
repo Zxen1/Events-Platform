@@ -14278,12 +14278,14 @@ const StorefrontMenuComponent = (function() {
             var title = (p._title || '').replace(/"/g, '&quot;');
             var sub = (p._subcategory || '').replace(/"/g, '&quot;');
             html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-post-id="' + (p._postId || '') + '" data-tooltip="' + title + '">');
+            html.push('<span class="post-storefront-menu-item-thumbwrap">');
             html.push(thumbUrl
                 ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
                 : '<span class="post-storefront-menu-thumb post-storefront-menu-thumb--empty"></span>');
             if (p._isFav) {
                 html.push('<span class="post-storefront-menu-item-favstar" aria-pressed="true" data-post-id="' + (p._postId || '') + '" aria-hidden="true"></span>');
             }
+            html.push('</span>');
             if (isExposed) {
                 html.push('<span class="post-storefront-menu-item-meta">');
                 html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
