@@ -1876,6 +1876,7 @@ const PostModule = (function() {
         var _mc = p.map_cards && p.map_cards[0];
         if (!_mc) return;
         var _sfKey = String(p.member_id) + '|' + String(_mc.latitude) + '|' + String(_mc.longitude);
+        console.error('[Storefront] post', p.id, 'key:', _sfKey, 'type:', p.subcategory_type);
         if (!_sfGroups[_sfKey]) _sfGroups[_sfKey] = [];
         _sfGroups[_sfKey].push(p);
       });
@@ -1883,6 +1884,7 @@ const PostModule = (function() {
         if (_sfGroups[k].length < 2) { delete _sfGroups[k]; return; }
         _sfGroups[k].forEach(function(p) { _sfByPostId[String(p.id)] = k; });
       });
+      console.error('[Storefront] groups:', JSON.stringify(Object.keys(_sfGroups)), 'byPostId:', JSON.stringify(_sfByPostId));
     }
 
     // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
