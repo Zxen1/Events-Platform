@@ -786,11 +786,10 @@
   justify-content: flex-start;
   padding: 4px 6px;
 }
-.post-storefront-menu--exposed .post-storefront-menu-item {
-  position: static;
-}
-.post-storefront-menu--exposed .post-storefront-menu-thumb {
-  position: relative;
+.post-storefront-menu--exposed .post-storefront-menu-item-favstar {
+  right: auto;
+  left: 34px;
+  top: 4px;
 }
 .post-storefront-menu--exposed .post-storefront-menu-thumb {
   width: 38px;
