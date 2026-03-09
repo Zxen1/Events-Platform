@@ -13798,6 +13798,147 @@ const PostPriceComponent = (function() {
 })();
 
 
+/* ============================================================================
+   STOREFRONT COMPONENT
+   Renders and controls the storefront menu inside a post view.
+   A storefront groups 2+ general posts from the same member at the same
+   coordinates. It is a display-layer construct — no database record exists.
+   Modelled on PostSessionComponent. Hover pills follow the amenities/links pattern.
+   ============================================================================ */
+
+const StorefrontComponent = (function() {
+    'use strict';
+
+    /**
+     * Render the storefront menu section HTML.
+     * @param {Object}   options
+     * @param {Array}    options.posts        - Visible post objects [{ id, title, thumbnailUrl }]
+     * @param {Function} options.escapeHtml
+     * @returns {string} HTML string
+     */
+    function render(options) {
+        var posts      = Array.isArray(options.posts) ? options.posts : [];
+        var escapeHtml = options.escapeHtml || function(s) { return String(s || ''); };
+
+        var thumbsHtml = posts.map(function(p) {
+            var title  = escapeHtml(String(p.title || ''));
+            var src    = escapeHtml(String(p.thumbnailUrl || ''));
+            var postId = escapeHtml(String(p.id || ''));
+            return '<button class="post-storefront-menu-item" type="button" ' +
+                'data-post-id="' + postId + '" ' +
+                'data-tooltip="' + title + '" ' +
+                'aria-label="' + title + '">' +
+                '<img class="post-storefront-menu-thumb" src="' + src + '" alt="">' +
+                '</button>';
+        }).join('');
+
+        return [
+            '<div class="post-storefront-container">',
+                '<div class="post-storefront-menu" aria-label="Storefront listings">',
+                    thumbsHtml,
+                '</div>',
+                '<div class="post-storefront-prompt" data-message-key="msg_storefront_select_prompt"></div>',
+                '<div class="post-storefront-subheader"></div>',
+                '<div class="post-storefront-content"></div>',
+            '</div>'
+        ].join('');
+    }
+
+    /**
+     * Initialise storefront menu behaviour.
+     * @param {HTMLElement} wrap      - Post wrapper element containing the rendered storefront HTML
+     * @param {Array}       posts     - Visible post objects (same array passed to render)
+     * @param {Object}      callbacks
+     * @param {Function}    callbacks.escapeHtml
+     * @param {Function}    callbacks.onPostSelected(post, contentEl) - caller fills contentEl with post details
+     * @param {Function}    callbacks.onAddToRecent(post)             - adds individual post to recent history
+     */
+    function init(wrap, posts, callbacks) {
+        if (!wrap || !Array.isArray(posts) || !posts.length) return null;
+
+        var menu        = wrap.querySelector('.post-storefront-menu');
+        var promptEl    = wrap.querySelector('.post-storefront-prompt');
+        var subheaderEl = wrap.querySelector('.post-storefront-subheader');
+        var contentEl   = wrap.querySelector('.post-storefront-content');
+
+        if (!menu) return null;
+
+        var selectedPostId = null;
+
+        // Load prompt message — same pattern as PostSessionComponent ticket prompt
+        if (promptEl && typeof window.getMessage === 'function') {
+            var promptKey = promptEl.getAttribute('data-message-key');
+            if (promptKey) {
+                window.getMessage(promptKey, {}, false).then(function(msg) {
+                    if (msg && promptEl) promptEl.textContent = msg;
+                }).catch(function() {});
+            }
+        }
+
+        // Set tooltip pill directions — same pattern as setTooltipDirs() in post.js
+        function setMenuTooltipDirs() {
+            var menuRect = menu.getBoundingClientRect();
+            if (!menuRect.width) return;
+            menu.querySelectorAll('.post-storefront-menu-item[data-tooltip]').forEach(function(item) {
+                var itemRect = item.getBoundingClientRect();
+                var dir = (itemRect.left - menuRect.left) > menuRect.width * 0.60 ? 'left' : 'right';
+                item.setAttribute('data-tooltip-dir', dir);
+            });
+        }
+
+        setMenuTooltipDirs();
+
+        // Thumbnail click handler
+        menu.addEventListener('click', function(e) {
+            var item = e.target.closest('.post-storefront-menu-item');
+            if (!item) return;
+
+            var postId = item.getAttribute('data-post-id');
+            if (!postId) return;
+
+            var post = null;
+            for (var i = 0; i < posts.length; i++) {
+                if (String(posts[i].id) === postId) { post = posts[i]; break; }
+            }
+            if (!post) return;
+
+            // Update selected highlight
+            menu.querySelectorAll('.post-storefront-menu-item').forEach(function(btn) {
+                btn.classList.remove('post-storefront-menu-item--selected');
+            });
+            item.classList.add('post-storefront-menu-item--selected');
+            selectedPostId = postId;
+
+            // Show post title as subheader
+            if (subheaderEl) {
+                subheaderEl.textContent = post.title || '';
+                subheaderEl.classList.add('post-storefront-subheader--visible');
+            }
+
+            // Hide prompt
+            if (promptEl) promptEl.classList.add('post-storefront-prompt--hidden');
+
+            // Delegate content rendering to post.js
+            if (callbacks && typeof callbacks.onPostSelected === 'function') {
+                callbacks.onPostSelected(post, contentEl);
+            }
+
+            // Add individual post to recent history (storefront itself is never added)
+            if (callbacks && typeof callbacks.onAddToRecent === 'function') {
+                callbacks.onAddToRecent(post);
+            }
+        });
+
+        return {
+            getSelectedPostId: function() { return selectedPostId; }
+        };
+    }
+
+    return { render: render, init: init };
+
+})();
+
+
 /* ---------------------------------------------------------------------------
    iOS SCROLL BOUNDARY FIX
    On iOS, when a scrollable container is at exactly scrollTop 0 or at the max,
@@ -14254,6 +14395,7 @@ window.PostLocationComponent = PostLocationComponent;
 window.PostSessionComponent = PostSessionComponent;
 window.PostItemComponent = PostItemComponent;
 window.PostPriceComponent = PostPriceComponent;
+window.StorefrontComponent = StorefrontComponent;
 
 
 
