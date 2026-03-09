@@ -7383,6 +7383,8 @@ const MemberModule = (function() {
         }
         
         App.emit('member:logout');
+
+        window.location.reload();
     }
 
     /* --------------------------------------------------------------------------
