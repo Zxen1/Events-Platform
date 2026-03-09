@@ -624,7 +624,6 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);
 }
 .post-header-row-storefront-thumb {
   width: 18px;
@@ -789,7 +788,6 @@
 .post-storefront-menu-item-thumbwrap {
   position: relative;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);
 }
 .post-storefront-menu--exposed .post-storefront-menu-thumb {
   width: 38px;
@@ -871,7 +869,6 @@
   width: 42px;
   height: 42px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);
 }
 .post-card-row-storefront-thumb {
   width: 42px;
