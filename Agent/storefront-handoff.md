@@ -163,6 +163,89 @@ Storefronts are always general posts, never events. Under "Soonest" sort, events
 
 ---
 
+## Map Cards (map.js)
+
+Map cards come in two sizes: **small** and **big**.
+
+### Normal posts
+- **Small map card:** subcategory icon + title
+- **Big map card:** post thumbnail + title
+
+### Multipost locations
+- Both sizes swap the normal icon/thumbnail for a rainbow-colored multipost icon
+- Both sizes show the post count below the title
+
+### Storefront map cards
+- **Small map card:** multipost icon (same rainbow icon as multipost) + title + post count
+- **Big map card:** member avatar + title + post count
+- **Title** is always `"Storefront: [Member Name]"` with the same truncation as all other map cards
+- **Post count** displays the number of posts inside, same format as multipost map cards
+
+Map cards are created in `map.js`.
+
+### Filter behaviour
+Storefront map cards must react to filter changes instantaneously, exactly like multipost map cards already do. When filters reduce a storefront to a single post, it reverts to a normal standalone map card. When filters allow multiple posts at the same location, it instantly becomes a storefront map card. No delay, no animation — immediate.
+
+### Storefront appearance phases
+The storefront has four visual phases that need building, matching the site's standard post display flow:
+1. **Map card** — the marker on the map (small and big variants)
+2. **Postcard** — the card in the post panel list
+3. **Compressed post** — the postcard expanded to a compact post view
+4. **Expanded post** — the full-sized post view
+
+### Phase details
+
+**Postcard (post panel list)**
+- Thumbnail: member avatar, square with 5px border-radius (same shape as all other post thumbnails)
+- Title: `"Storefront: [Member Name]"`
+- Row 1–2: **Storefront row** — a single 42px-tall flex row of circular post thumbnails (the same thumbnails these posts would have on their own). As many whole circles as fit, then `"+N"` for overflow. This row replaces the subcategory and location rows
+- Row 3: location
+- Row 4: price range
+- No date row (storefronts are always general posts)
+
+**Compressed post (postcard expanded)**
+- Instead of two lines of text description, shows the first row of the storefront menu (circular post thumbnails)
+- Has the "see more" button just like regular compressed posts
+- Clicking anywhere along that row opens the full expanded storefront — it does not select an individual post from the gap
+
+**Expanded post (full view)**
+- Header: `"Storefront: [Member Name]"` with member avatar. **The storefront header is sticky** (unlike regular post headers which are not sticky)
+- Below the header: the interactive storefront menu (modelled on amenities/links hover/tap behaviour)
+- Default state: no post selected, prompt message shown
+- When a post is selected from the menu: post title and subcategory appear below the menu, then the full post content underneath — identical to any regular post from that point down
+- Switching posts: click a different thumbnail in the menu at any time
+
+### Where storefronts DO NOT appear
+- Post editor — never shown, posts are edited individually as normal
+- Recent panel — never shown (individual post selections inside the storefront are added to recent, but the storefront itself is not)
+- Marquee — never shown
+- Database — never mentioned in any way
+
+### StorefrontComponent (components.js)
+The storefront is built as a component called `StorefrontComponent` in the components file. Modelled on `PostSessionComponent` (IIFE structure, `render()` + `init()` pattern). The storefront menu inside it is modelled on the amenities and links fieldsets — hovering/tapping each circular thumbnail shows a label beside it, same interaction pattern.
+
+### Counters
+Counters throughout the system count individual post map cards as per the `post_map_cards` table. A storefront of 50 posts shows 50 in the counter, not 1. Counters are never adjusted for storefronts.
+
+### Multiple locations per post
+Each post can have (and usually does have) multiple locations. Storefront grouping uses the coordinates of the map card currently visible in the map bounds, not a fixed first location.
+
+### No database involvement
+Nothing in the database exists or needs to exist for storefronts. The grouping is purely display-layer logic: if a member has 2+ general (non-event) posts at exactly the same coordinates, they form a storefront. The only override is the `storefront_enabled` admin setting — when off, the site behaves as if storefronts don't exist.
+
+### Saturation system (do not touch)
+There is an existing system that downgrades map cards when an area has 50+ posts — featured become icons, standard become dots, premium stay visible. This code exists, has never been tested at scale, and must not be modified. The storefront work is limited to making storefront map cards look right and behave properly.
+
+---
+
+## Scope and Purpose
+
+**Line budget:** The entire storefront system should take no more than 150 lines of code. If you find yourself approaching that limit, stop immediately.
+
+**Why storefronts exist:** The site works perfectly without them. The concern is that without storefronts, members will pollute the website with posts from the same company scattered everywhere. The storefront system keeps single members confined to their own space. The incentive for members is that a single premium listing within a storefront causes all posts in that storefront to receive top-tier treatment while combined. This happens by default through the existing tier/sort system — do not build anything special for it. Just don't break it.
+
+---
+
 ## Test
 
 Two general posts by admin at Coober Pedy, Australia. When both are visible in the post panel with storefront ON, they must merge into one storefront postcard. When the storefront is opened, the storefront menu shows two circular thumbnails. Selecting one shows that post's content below.
