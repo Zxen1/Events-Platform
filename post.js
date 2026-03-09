@@ -1981,7 +1981,14 @@ const PostModule = (function() {
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
       if (!markerData) return;
 
-      if (isMultiPostVenue) {
+      if (isStorefront) {
+        var sfPost = firstItem.post;
+        markerData.isStorefront = true;
+        markerData.venuePostIds = Object.keys(uniquePostIds);
+        markerData.venuePostCount = Object.keys(uniquePostIds).length;
+        markerData.storefrontTitle = 'Storefront: ' + (sfPost.member_name || '');
+        markerData.storefrontAvatarUrl = resolveAvatarSrcForUser(sfPost.member_avatar, sfPost.member_id);
+      } else if (isMultiPostVenue) {
         markerData.isMultiPost = true;
         markerData.venuePostIds = Object.keys(uniquePostIds);
         markerData.venuePostCount = markerData.venuePostIds.length;

@@ -575,8 +575,8 @@ const MapModule = (function() {
    * Multi-post markers use multi_post_icon, single posts use subcategory icon
    */
   function getSmallIconUrl(post) {
-    // Multi-post markers use the multi-post icon
-    if (post.isMultiPost) {
+    // Storefront and multi-post markers both use the multi-post icon at small size
+    if (post.isStorefront || post.isMultiPost) {
       return getMultiPostIconUrl();
     }
     
@@ -591,6 +591,10 @@ const MapModule = (function() {
    * Get icon URL for big state (thumbnail for single posts, multi-post icon for multi)
    */
   function getBigIconUrl(post) {
+    // Storefront big card shows member avatar
+    if (post.isStorefront && post.storefrontAvatarUrl) {
+      return post.storefrontAvatarUrl;
+    }
     // Multi-post markers keep the multi-post icon
     if (post.isMultiPost) {
       return getSmallIconUrl(post);
@@ -2338,7 +2342,7 @@ const MapModule = (function() {
       lat: lat,
       venueKey: venueKey,
       // IMPORTANT: store IDs as STRINGS (matches live-site behavior and avoids number/string mismatches)
-      postIds: post.isMultiPost && Array.isArray(post.venuePostIds)
+      postIds: (post.isMultiPost || post.isStorefront) && Array.isArray(post.venuePostIds)
         ? post.venuePostIds.map(function(pid) { return String(pid); })
         : [String(post.id)]
     };
@@ -2363,10 +2367,17 @@ const MapModule = (function() {
     // Get icon URL based on state (thumbnail for big, subcategory icon for small/hover)
     const iconUrl = getIconUrl(post, state);
     
-    // Build label HTML based on whether this is a multi-post venue
+    // Build label HTML based on whether this is a storefront, multi-post venue, or single post
     let labelHTML = '';
     
-    if (post.isMultiPost && post.venuePostCount > 1) {
+    if (post.isStorefront && post.venuePostCount > 1) {
+      const truncatedTitle = shortenText(post.storefrontTitle || '', isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL);
+      const countLabel = post.venuePostCount + ' posts here';
+      labelHTML = `
+        <div class="map-card-title">${escapeHtml(truncatedTitle)}</div>
+        <div class="map-card-venue">${escapeHtml(countLabel)}</div>
+      `;
+    } else if (post.isMultiPost && post.venuePostCount > 1) {
       // Multi-post venue: show "X posts here" and venue name
       const countLabel = post.venuePostCount + ' posts here';
       const venueName = post.venue || '';
@@ -2866,7 +2877,14 @@ const MapModule = (function() {
       const isActive = newState === 'big';
       const post = entry.post;
       
-      if (post.isMultiPost && post.venuePostCount > 1) {
+      if (post.isStorefront && post.venuePostCount > 1) {
+        const truncatedTitle = shortenText(post.storefrontTitle || '', isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL);
+        const countLabel = post.venuePostCount + ' posts here';
+        labelsEl.innerHTML = `
+          <div class="map-card-title">${escapeHtml(truncatedTitle)}</div>
+          <div class="map-card-venue">${escapeHtml(countLabel)}</div>
+        `;
+      } else if (post.isMultiPost && post.venuePostCount > 1) {
         // Multi-post venue: show "X posts here" and venue name
         const countLabel = post.venuePostCount + ' posts here';
         const venueName = post.venue || '';
