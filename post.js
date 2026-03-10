@@ -3269,14 +3269,21 @@ const PostModule = (function() {
 
     // Storefront wallpaper: activate now that the element is in the DOM.
     // Must happen after insertion so the component can measure dimensions.
-    console.error('[SF-WP-DEBUG] detail.__wallpaperLocked=', !!detail.__wallpaperLocked, 'hasClass=', detail.classList.contains('component-locationwallpaper-container'), 'inDOM=', document.contains(detail));
     if (detail.__wallpaperLocked && detail.classList.contains('component-locationwallpaper-container')) {
       detail.setAttribute('data-active', 'true');
-      if (window.LocationWallpaperComponent &&
-          typeof LocationWallpaperComponent.install === 'function' &&
-          typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-        LocationWallpaperComponent.install(detail);
-        LocationWallpaperComponent.handleActiveContainerChange(detail, detail);
+      try {
+        if (window.LocationWallpaperComponent &&
+            typeof LocationWallpaperComponent.install === 'function' &&
+            typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+          LocationWallpaperComponent.install(detail);
+          console.error('[SF-WP-DEBUG] install done, calling handleActiveContainerChange');
+          LocationWallpaperComponent.handleActiveContainerChange(detail, detail);
+          console.error('[SF-WP-DEBUG] handleActiveContainerChange done, ctrl=', !!detail.__locationWallpaperCtrl, 'wallpaperRoot=', !!detail.querySelector('.component-locationwallpaper'));
+        } else {
+          console.error('[SF-WP-DEBUG] LocationWallpaperComponent not available');
+        }
+      } catch (e) {
+        console.error('[SF-WP-DEBUG] ERROR:', e);
       }
     }
 
