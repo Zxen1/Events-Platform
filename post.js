@@ -1128,10 +1128,8 @@ const PostModule = (function() {
 
     var fetchOpts = {};
     if (postsAbort) fetchOpts.signal = postsAbort.signal;
-    var isLoggedIn = window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn();
-    if (isLoggedIn) {
+    if (window.MemberModule && typeof MemberModule.isLoggedIn === 'function' && MemberModule.isLoggedIn()) {
       fetchOpts.headers = { 'X-Member-Auth': '1' };
-      if (requestKey.indexOf('full=') === -1) requestKey += '&full=1';
     }
     return fetch('/gateway.php?action=get-posts&' + requestKey, fetchOpts)
       .then(function(response) {
