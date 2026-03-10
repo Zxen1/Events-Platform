@@ -150,30 +150,7 @@ function cronBuildReminderSummary(mysqli $db, int $memberId, string $memberRole)
   return 'Your account: ' . (count($parts) ? implode(' · ', $parts) : 'no active listings');
 }
 
-function cronGetReminderSubject(array $needsAttention, array $recentlyExpired, string $siteName): string {
-  foreach ($needsAttention as $p) {
-    if ($p['type'] === 'deletion_warning') {
-      return 'Your ' . $siteName . ' listing will be permanently deleted soon';
-    }
-  }
-  foreach ($needsAttention as $p) {
-    if ($p['type'] === 'expiring') {
-      $days = (int)$p['days_remaining'];
-      return 'Your ' . $siteName . ' listing expires in ' . $days . ' ' . ($days === 1 ? 'day' : 'days');
-    }
-  }
-  foreach ($recentlyExpired as $p) {
-    if ($p['type'] === 'deleted') {
-      return 'Your ' . $siteName . ' listing has been permanently deleted';
-    }
-  }
-  foreach ($recentlyExpired as $p) {
-    if ($p['type'] === 'expired') {
-      return 'Your ' . $siteName . ' listing has expired';
-    }
-  }
-  return 'Your ' . $siteName . ' listing report';
-}
+// Subject is now static — set directly in admin_messages.message_name for template 716.
 
 function cronRunReminderReport(
   mysqli $db,
@@ -325,7 +302,6 @@ function cronRunReminderReport(
 
       $reportHtml  = cronBuildReminderReport($needsAttention, $recentlyExpired);
       $summaryLine = cronBuildReminderSummary($db, $memberId, $role);
-      $subject     = cronGetReminderSubject($needsAttention, $recentlyExpired, $siteName);
       $displayName = $username !== '' ? $username : 'there';
       $unsubUrl    = $websiteBase . '/unsubscribed.html?id=' . $memberId . '&email=' . rawurlencode($email);
 
@@ -335,7 +311,6 @@ function cronRunReminderReport(
         $memberId, $role, $username, $email,
         [
           'name'             => htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8'),
-          'trigger_subject'  => htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'),
           'summary'          => htmlspecialchars($summaryLine, ENT_QUOTES, 'UTF-8'),
           'reminder_report'  => $reportHtml,
           'unsubscribe_link' => htmlspecialchars($unsubUrl, ENT_QUOTES, 'UTF-8'),
