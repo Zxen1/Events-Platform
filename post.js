@@ -3273,13 +3273,17 @@ const PostModule = (function() {
       detail.setAttribute('data-active', 'true');
       (function(el) {
         requestAnimationFrame(function() {
-          if (!document.contains(el)) return;
-          if (window.LocationWallpaperComponent &&
-              typeof LocationWallpaperComponent.install === 'function' &&
-              typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-            LocationWallpaperComponent.install(el);
-            LocationWallpaperComponent.handleActiveContainerChange(el, el);
-          }
+          requestAnimationFrame(function() {
+            if (!document.contains(el)) return;
+            var r = el.getBoundingClientRect();
+            console.error('[SF-WP-DEBUG] rAF2 w=' + r.width + ' h=' + r.height);
+            if (window.LocationWallpaperComponent &&
+                typeof LocationWallpaperComponent.install === 'function' &&
+                typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+              LocationWallpaperComponent.install(el);
+              LocationWallpaperComponent.handleActiveContainerChange(el, el);
+            }
+          });
         });
       })(detail);
     }
