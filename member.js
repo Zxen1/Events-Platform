@@ -6962,46 +6962,10 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             
-            // Issue auth token cookie for API authentication (used by get-posts privacy)
-            fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
-            
-            render();
-            
-            // Apply member map settings
-            if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
-                window.MapModule.setMapLighting(currentUser.map_lighting);
-            }
-            if (currentUser.map_style && window.MapModule && window.MapModule.setMapStyle) {
-                window.MapModule.setMapStyle(currentUser.map_style);
-            }
-            
-            // Refresh map settings buttons
-            initMapLightingButtons();
-            initMapStyleButtons();
-            initWallpaperButtons();
-            
-            var displayName = currentUser.name || currentUser.account_email || currentUser.username;
-            
-            updateDepartingState();
-
-            // Show departing modal if account is in grace period, otherwise normal login toast
-            if (result.departing === true) {
-                openDepartingModal();
-            } else {
-                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                    if (message) {
-                        ToastComponent.showSuccess(message);
-                    }
-                });
-            }
-            // Brief follow-up: let user know their preferences were loaded from their account
-            setTimeout(function() {
-                try {
-                    getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
-                        if (message && window.ToastComponent) ToastComponent.showSuccess(message);
-                    });
-                } catch (_e) {}
-            }, 1200);
+            // Issue auth token cookie, then reload so the page fetches fresh auth-gated data
+            fetch('/gateway.php?action=issue-token').finally(function() {
+                window.location.reload();
+            });
             
         }).catch(function(err) {
             console.error('Login failed', err);
@@ -7378,7 +7342,9 @@ const MemberModule = (function() {
         
         App.emit('member:logout');
 
-        window.location.reload();
+        fetch('/gateway.php?action=issue-token&mode=clear').finally(function() {
+            window.location.reload();
+        });
     }
 
     /* --------------------------------------------------------------------------

@@ -80,7 +80,5 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 }
 $GLOBALS['FUNMAP_GATEWAY_ACTION'] = $action;
 
-header('Cache-Control: no-store, no-cache, must-revalidate');
-
 require_once $target;
 ?>

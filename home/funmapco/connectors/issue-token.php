@@ -11,6 +11,20 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 
 header('Content-Type: application/json');
 
+$mode = isset($_GET['mode']) ? $_GET['mode'] : '';
+if ($mode === 'clear') {
+	@setcookie('FUNMAP_TOKEN', '', [
+		'expires' => time() - 3600,
+		'path' => '/',
+		'domain' => '',
+		'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+		'httponly' => true,
+		'samesite' => 'Lax',
+	]);
+	echo json_encode(['success' => true]);
+	exit;
+}
+
 try {
 	$configCandidates = [
 		__DIR__ . '/../config/config-auth.php',
@@ -45,8 +59,8 @@ try {
 	$cookieValue = $API_KEY; // HttpOnly prevents JS access; sent automatically with same-origin requests
 	$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
 
-	// 30 minutes expiry for safety; can be renewed
-	$expires = time() + 30 * 60;
+	// Persist until explicit logout (30 days)
+	$expires = time() + 30 * 24 * 60 * 60;
 	$path = '/';
 	$domain = '';
 	$httpOnly = true;
