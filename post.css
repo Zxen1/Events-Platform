@@ -2063,6 +2063,22 @@
   display: block;
 }
 
+.post-info-row-email,
+.post-info-row-phone {
+  min-height: 36px;
+}
+
+.post-info-row-email .post-info-image-badge,
+.post-info-row-phone .post-info-image-badge {
+  width: 30px;
+  height: 30px;
+}
+
+.post-info-restricted {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
 /* Badge (emoji icons) */
 .post-info-badge {
   flex: 0 0 auto;

@@ -959,6 +959,13 @@ const PostModule = (function() {
   function refreshOpenModePanelForAuthChange() {
     var openMode = (currentMode === 'posts' || currentMode === 'recent') ? currentMode : '';
     if (!openMode) return;
+
+    // Close any open post so auth-gated data (email, phone, promos) is not preserved with stale values.
+    var openPostEl = postListEl && postListEl.querySelector('.post');
+    if (openPostEl && openPostEl.dataset && openPostEl.dataset.id) {
+      closePost(openPostEl.dataset.id);
+    }
+
     var openContentEl = openMode === 'posts' ? postPanelContentEl : recentPanelContentEl;
     if (openMode === 'posts') {
       if (!postPanelEl || !postPanelContentEl) return;
@@ -3822,20 +3829,25 @@ const PostModule = (function() {
           var sett = App.getState('settings') || {};
           var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
           var emailBadge = emailIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + emailIconUrl + '" alt=""></span>' : '';
-          return '<div class="post-info-row post-info-row-email">' +
-            emailBadge +
-            '<a href="mailto:' + escapeHtml(publicEmail) + '">' + escapeHtml(publicEmail) + '</a>' +
-          '</div>';
+          var isRestricted = publicEmail.toLowerCase() === 'members only';
+          if (isRestricted) publicEmail = 'Members Only';
+          var emailContent = isRestricted
+            ? '<span class="post-info-restricted">' + escapeHtml(publicEmail) + '</span>'
+            : '<a href="mailto:' + escapeHtml(publicEmail) + '">' + escapeHtml(publicEmail) + '</a>';
+          return '<div class="post-info-row post-info-row-email">' + emailBadge + emailContent + '</div>';
         })() : '',
         // Phone
         (phonePrefix || publicPhone) ? (function() {
           var sett = App.getState('settings') || {};
           var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
           var phoneBadge = phoneIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + phoneIconUrl + '" alt=""></span>' : '';
-          return '<div class="post-info-row post-info-row-phone">' +
-            phoneBadge +
-            '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phonePrefix + ' ' + publicPhone) + '</a>' +
-          '</div>';
+          var phoneDisplay = (phonePrefix + ' ' + publicPhone).trim();
+          var isRestricted = publicPhone.toLowerCase() === 'members only';
+          if (isRestricted) publicPhone = 'Members Only';
+          var phoneContent = isRestricted
+            ? '<span class="post-info-restricted">' + escapeHtml(publicPhone) + '</span>'
+            : '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phoneDisplay) + '</a>';
+          return '<div class="post-info-row post-info-row-phone">' + phoneBadge + phoneContent + '</div>';
         })() : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon container only.
         // Coupon code
