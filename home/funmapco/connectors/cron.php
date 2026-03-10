@@ -88,16 +88,13 @@ function cronFmtDate(string $datetime): string {
 // Triggers: post expiring in 7 days, post expired today, post deletion warning
 // at day 23 of grace period, post permanently deleted today.
 
-function cronBuildReminderReport(array $needsAttention, array $recentlyExpired): string {
-  $total    = count($needsAttention) + count($recentlyExpired);
-  $overflow = max(0, $total - 10);
-  $html     = '';
+function cronBuildReminderReport(array $upcoming, array $past): string {
+  $html = '';
 
-  if ($needsAttention) {
-    $shown = array_slice($needsAttention, 0, 10);
-    $html .= '<p style="font-size:13px;font-weight:bold;color:#333;margin:0 0 10px;">Needs attention:</p>';
-    foreach ($shown as $i => $p) {
-      $isLast = ($i === count($shown) - 1) && empty($recentlyExpired);
+  if ($upcoming) {
+    $html .= '<p style="font-size:13px;font-weight:bold;color:#333;margin:0 0 10px;">Next two weeks:</p>';
+    foreach ($upcoming as $i => $p) {
+      $isLast = ($i === count($upcoming) - 1) && empty($past);
       $gap    = $isLast ? '0' : '12px';
       $html  .= '<div style="margin:0 0 ' . $gap . ';">'
               . '<p style="font-size:14px;color:#333;margin:0 0 2px;">'
@@ -108,13 +105,11 @@ function cronBuildReminderReport(array $needsAttention, array $recentlyExpired):
     }
   }
 
-  $remainingSlots = 10 - count($needsAttention);
-  if ($recentlyExpired && $remainingSlots > 0) {
-    $shown = array_slice($recentlyExpired, 0, $remainingSlots);
+  if ($past) {
     $html .= '<p style="font-size:13px;font-weight:bold;color:#333;margin:'
-           . ($needsAttention ? '24px' : '0') . ' 0 10px;">Recently expired:</p>';
-    foreach ($shown as $i => $p) {
-      $gap   = ($i < count($shown) - 1) ? '12px' : '0';
+           . ($upcoming ? '24px' : '0') . ' 0 10px;">Past 30 days:</p>';
+    foreach ($past as $i => $p) {
+      $gap   = ($i < count($past) - 1) ? '12px' : '0';
       $html .= '<div style="margin:0 0 ' . $gap . ';">'
              . '<p style="font-size:14px;color:#aaa;margin:0 0 2px;">'
              . htmlspecialchars($p['status_line']) . ' · ' . htmlspecialchars(cronFmtDate($p['date']))
@@ -124,8 +119,8 @@ function cronBuildReminderReport(array $needsAttention, array $recentlyExpired):
     }
   }
 
-  if ($overflow > 0) {
-    $html .= '<p style="font-size:12px;color:#aaa;margin:12px 0 0;">+ ' . $overflow . ' more</p>';
+  if ($html !== '') {
+    $html = '<div style="margin:0 0 24px;">' . $html . '</div>';
   }
 
   return $html;
@@ -133,9 +128,7 @@ function cronBuildReminderReport(array $needsAttention, array $recentlyExpired):
 
 function cronBuildReminderSummary(mysqli $db, int $memberId, string $memberRole): string {
   $stmt = $db->prepare(
-    "SELECT
-       SUM(visibility = 'active')  AS live,
-       SUM(visibility = 'expired') AS expired_count
+    "SELECT SUM(visibility = 'active') AS live
      FROM posts
      WHERE member_id = ? AND member_role = ?"
   );
@@ -144,10 +137,9 @@ function cronBuildReminderSummary(mysqli $db, int $memberId, string $memberRole)
   $row = $stmt->get_result()->fetch_assoc();
   $stmt->close();
 
-  $parts = [];
-  if ((int)$row['live']          > 0) $parts[] = $row['live'] . ' live';
-  if ((int)$row['expired_count'] > 0) $parts[] = $row['expired_count'] . ' expired';
-  return 'Your account: ' . (count($parts) ? implode(' · ', $parts) : 'no active listings');
+  $count = (int)$row['live'];
+  if ($count === 0) return 'You have no active posts.';
+  return 'You have ' . $count . ' active ' . ($count === 1 ? 'post' : 'posts') . '.';
 }
 
 // Subject is now static — set directly in admin_messages.message_name for template 716.
@@ -195,8 +187,8 @@ function cronRunReminderReport(
          WHERE member_id = ? AND member_role = ? AND (
            (visibility = 'active'  AND DATE(expires_at) = CURDATE())
            OR (visibility = 'active'  AND DATE(expires_at) = DATE(DATE_ADD(NOW(), INTERVAL 7 DAY)))
-           OR (visibility = 'expired' AND DATE(expires_at) = DATE(DATE_SUB(NOW(), INTERVAL 23 DAY)))
            OR (visibility = 'deleted' AND DATE(deleted_at) = CURDATE())
+           OR (visibility = 'deleted' AND DATE(deleted_at) = DATE(DATE_SUB(NOW(), INTERVAL 23 DAY)))
          )"
       );
       $trigStmt->bind_param('is', $memberId, $role);
@@ -231,35 +223,41 @@ function cronRunReminderReport(
           'status_line'   => 'Expires in ' . $daysRemaining . ' ' . ($daysRemaining === 1 ? 'day' : 'days'),
         ];
       }
-
-      // Needs attention: expired posts within 14 days of permanent deletion (expired 16–30 days ago)
-      $warnStmt = $db->prepare(
-        "SELECT p.id, p.expires_at,
+      // Member-deleted posts within 14 days of permanent removal (deleted 16–30 days ago)
+      $delWarnStmt = $db->prepare(
+        "SELECT p.id, p.deleted_at,
                 (SELECT pmc.title FROM post_map_cards pmc
                  WHERE pmc.post_id = p.id ORDER BY pmc.id ASC LIMIT 1) AS title
          FROM posts p
-         WHERE p.member_id = ? AND p.member_role = ? AND p.visibility = 'expired'
-           AND p.expires_at BETWEEN DATE_SUB(NOW(), INTERVAL 30 DAY) AND DATE_SUB(NOW(), INTERVAL 16 DAY)
-         ORDER BY p.expires_at ASC"
+         WHERE p.member_id = ? AND p.member_role = ? AND p.visibility = 'deleted'
+           AND p.deleted_at BETWEEN DATE_SUB(NOW(), INTERVAL 30 DAY) AND DATE_SUB(NOW(), INTERVAL 16 DAY)
+         ORDER BY p.deleted_at ASC"
       );
-      $warnStmt->bind_param('is', $memberId, $role);
-      $warnStmt->execute();
-      $warnRows = $warnStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-      $warnStmt->close();
+      $delWarnStmt->bind_param('is', $memberId, $role);
+      $delWarnStmt->execute();
+      $delWarnRows = $delWarnStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+      $delWarnStmt->close();
 
-      $warnIds = [];
-      foreach ($warnRows as $row) {
-        $warnIds[]        = (int)$row['id'];
-        $deletionTs       = strtotime($row['expires_at']) + (30 * 86400);
-        $daysUntilDel     = max(0, (int)ceil(($deletionTs - time()) / 86400));
+      $delWarnIds = [];
+      foreach ($delWarnRows as $row) {
+        $delWarnIds[]     = (int)$row['id'];
+        $removalTs        = strtotime($row['deleted_at']) + (30 * 86400);
+        $daysUntilRemoval = max(0, (int)ceil(($removalTs - time()) / 86400));
         $needsAttention[] = [
           'type'        => 'deletion_warning',
-          'date'        => date('Y-m-d H:i:s', $deletionTs),
+          'date'        => date('Y-m-d H:i:s', $removalTs),
           'title'       => $row['title'] ?? '',
-          'status_line' => 'Scheduled for deletion in ' . $daysUntilDel . ' ' . ($daysUntilDel === 1 ? 'day' : 'days'),
+          'status_line' => 'Permanent removal in ' . $daysUntilRemoval . ' ' . ($daysUntilRemoval === 1 ? 'day' : 'days'),
         ];
       }
-      usort($needsAttention, fn($a, $b) => strtotime($a['date']) <=> strtotime($b['date']));
+
+      $typeOrder = ['expiring' => 0, 'deletion_warning' => 1];
+      usort($needsAttention, function ($a, $b) use ($typeOrder) {
+        $ta = $typeOrder[$a['type']] ?? 2;
+        $tb = $typeOrder[$b['type']] ?? 2;
+        if ($ta !== $tb) return $ta <=> $tb;
+        return strtotime($a['date']) <=> strtotime($b['date']);
+      });
 
       // Recently expired or member-deleted within 30 days
       $recentStmt = $db->prepare(
@@ -269,7 +267,7 @@ function cronRunReminderReport(
          FROM posts p
          WHERE p.member_id = ? AND p.member_role = ? AND (
            (p.visibility = 'expired' AND p.expires_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND p.expires_at < NOW())
-           OR (p.visibility = 'deleted' AND p.deleted_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))
+           OR (p.visibility = 'deleted' AND p.deleted_at > DATE_SUB(NOW(), INTERVAL 16 DAY))
          )
          ORDER BY COALESCE(p.deleted_at, p.expires_at) DESC"
       );
@@ -278,18 +276,17 @@ function cronRunReminderReport(
       $recentRows = $recentStmt->get_result()->fetch_all(MYSQLI_ASSOC);
       $recentStmt->close();
 
-      $recentlyExpired = [];
+      $past = [];
       foreach ($recentRows as $row) {
-        if (in_array((int)$row['id'], $warnIds, true)) continue;
         if ($row['visibility'] === 'deleted') {
-          $recentlyExpired[] = [
+          $past[] = [
             'type'        => 'deleted',
             'date'        => $row['deleted_at'],
             'title'       => $row['title'] ?? '',
-            'status_line' => 'Permanently deleted',
+            'status_line' => 'Deletion initiated',
           ];
         } else {
-          $recentlyExpired[] = [
+          $past[] = [
             'type'        => 'expired',
             'date'        => $row['expires_at'],
             'title'       => $row['title'] ?? '',
@@ -298,9 +295,9 @@ function cronRunReminderReport(
         }
       }
 
-      if (empty($needsAttention) && empty($recentlyExpired)) continue;
+      if (empty($needsAttention) && empty($past)) continue;
 
-      $reportHtml  = cronBuildReminderReport($needsAttention, $recentlyExpired);
+      $reportHtml  = cronBuildReminderReport($needsAttention, $past);
       $summaryLine = cronBuildReminderSummary($db, $memberId, $role);
       $displayName = $username !== '' ? $username : 'there';
       $unsubUrl    = $websiteBase . '/unsubscribed.html?id=' . $memberId . '&email=' . rawurlencode($email);
