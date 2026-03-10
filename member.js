@@ -7327,14 +7327,8 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
 
-        // Clear private user data from localStorage
-        try {
-            localStorage.removeItem('recentPosts');
-            localStorage.removeItem('postFavorites');
-            localStorage.removeItem('member_country_code');
-            localStorage.removeItem('member_timezone');
-            localStorage.removeItem('funmap_filters');
-        } catch (_eLsClr) {}
+        // Clear all cached state so the user sees a fresh instance after reload
+        try { localStorage.clear(); } catch (_eLsClr) {}
 
         render();
         
