@@ -59,8 +59,8 @@ try {
 	$cookieValue = $API_KEY; // HttpOnly prevents JS access; sent automatically with same-origin requests
 	$secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
 
-	// Persist until explicit logout (30 days)
-	$expires = time() + 30 * 24 * 60 * 60;
+	// 30 minutes expiry for safety; can be renewed
+	$expires = time() + 30 * 60;
 	$path = '/';
 	$domain = '';
 	$httpOnly = true;
