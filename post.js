@@ -4025,7 +4025,7 @@ const PostModule = (function() {
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
             contentEl.innerHTML = '';
-            wrap.classList.add('post--expanded');
+            wrap.classList.remove('post--expanded');
             if (postHeader) {
               contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
