@@ -163,6 +163,8 @@ if (defined('EMAIL_LIBRARY_MODE')) {
       $subject = str_replace('{' . $key . '}', (string)$value, $subject);
     }
 
+    $body = str_replace('{logo}', $logoHeader, $body);
+
     // Pluralization: {variable|singular|plural}
     $pluralCb = function (array $m) use ($placeholders): string {
       if (!array_key_exists($m[1], $placeholders)) return $m[0];
