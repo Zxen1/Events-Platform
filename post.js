@@ -4133,12 +4133,6 @@ const PostModule = (function() {
             new MutationObserver(function() {
               wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
             }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
-            var sfContainer = wrap.closest('.post-list');
-            if (sfContainer) {
-              requestAnimationFrame(function() {
-                sfContainer.scrollTo({ top: Math.max(0, wrap.offsetTop || 0), behavior: 'smooth' });
-              });
-            }
           });
         }
       });
