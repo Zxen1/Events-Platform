@@ -3267,6 +3267,18 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
+    // Storefront wallpaper: activate now that the element is in the DOM.
+    // Must happen after insertion so the component can measure dimensions.
+    if (detail.__wallpaperLocked && detail.classList.contains('component-locationwallpaper-container')) {
+      detail.setAttribute('data-active', 'true');
+      if (window.LocationWallpaperComponent &&
+          typeof LocationWallpaperComponent.install === 'function' &&
+          typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+        LocationWallpaperComponent.install(detail);
+        LocationWallpaperComponent.handleActiveContainerChange(detail, detail);
+      }
+    }
+
     if (shouldScrollToOpenHeaderTop && detail) {
       try {
         requestAnimationFrame(function() {
@@ -4140,17 +4152,6 @@ const PostModule = (function() {
           });
         }
       });
-
-      // Activate wallpaper immediately (storefront shares one location — stays locked until close)
-      if (wrap.classList.contains('component-locationwallpaper-container')) {
-        wrap.setAttribute('data-active', 'true');
-        if (window.LocationWallpaperComponent &&
-            typeof LocationWallpaperComponent.install === 'function' &&
-            typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-          LocationWallpaperComponent.install(wrap);
-          LocationWallpaperComponent.handleActiveContainerChange(wrap, wrap);
-        }
-      }
 
       // Auto-open the requested post (from marquee/map click) or first in the menu
       var targetItem = sfOpenPostId ? wrap.querySelector('.post-storefront-menu-item[data-post-id="' + sfOpenPostId + '"]') : null;
