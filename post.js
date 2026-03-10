@@ -3269,6 +3269,7 @@ const PostModule = (function() {
 
     // Storefront wallpaper: activate now that the element is in the DOM.
     // Must happen after insertion so the component can measure dimensions.
+    console.error('[SF-WP-DEBUG] detail.__wallpaperLocked=', !!detail.__wallpaperLocked, 'hasClass=', detail.classList.contains('component-locationwallpaper-container'), 'inDOM=', document.contains(detail));
     if (detail.__wallpaperLocked && detail.classList.contains('component-locationwallpaper-container')) {
       detail.setAttribute('data-active', 'true');
       if (window.LocationWallpaperComponent &&
