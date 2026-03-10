@@ -4130,6 +4130,9 @@ const PostModule = (function() {
               }
             }
             if (postBody) contentEl.appendChild(postBody);
+            new MutationObserver(function() {
+              wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
+            }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
             var sfContainer = wrap.closest('.post-list');
             if (sfContainer) {
               requestAnimationFrame(function() {
