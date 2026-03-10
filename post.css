@@ -854,6 +854,10 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
+.post-storefront-content > .post-header {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
 /* Storefront row: circular post thumbnails on postcard */
 .post-card-row-storefront {
   display: flex;
