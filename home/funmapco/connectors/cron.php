@@ -85,8 +85,8 @@ function cronFmtDate(string $datetime): string {
 // ─── Section 716 — Reminder report ───────────────────────────────────────────
 //
 // Batches all post-related reminders into one email per member per 7 days.
-// Triggers: post expiring in 7 days, post expired today, post deletion warning
-// at day 23 of grace period, post permanently deleted today.
+// Triggers: post expiring in 7 days, post expired today, member-deleted post
+// today, member-deleted post at day 23 (7 days from permanent removal).
 
 function cronBuildReminderReport(array $upcoming, array $past): string {
   $html = '';
@@ -238,9 +238,7 @@ function cronRunReminderReport(
       $delWarnRows = $delWarnStmt->get_result()->fetch_all(MYSQLI_ASSOC);
       $delWarnStmt->close();
 
-      $delWarnIds = [];
       foreach ($delWarnRows as $row) {
-        $delWarnIds[]     = (int)$row['id'];
         $removalTs        = strtotime($row['deleted_at']) + (30 * 86400);
         $daysUntilRemoval = max(0, (int)ceil(($removalTs - time()) / 86400));
         $needsAttention[] = [
