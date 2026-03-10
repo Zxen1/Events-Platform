@@ -3877,6 +3877,9 @@ const PostModule = (function() {
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
+      if (storefrontPosts && storefrontPosts.length > 1) {
+        wrap.__wallpaperLocked = true;
+      }
       // Store post ID for missing wallpaper flagging
       if (post && post.id) {
         wrap.dataset.postId = String(post.id);
@@ -4022,6 +4025,7 @@ const PostModule = (function() {
               }
             }
             var tempDetail = buildPostDetail(fullPost, null, false, mcIdx);
+            tempDetail.classList.remove('component-locationwallpaper-container');
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
             contentEl.innerHTML = '';
@@ -4136,6 +4140,17 @@ const PostModule = (function() {
           });
         }
       });
+
+      // Activate wallpaper immediately (storefront shares one location — stays locked until close)
+      if (wrap.classList.contains('component-locationwallpaper-container')) {
+        wrap.setAttribute('data-active', 'true');
+        if (window.LocationWallpaperComponent &&
+            typeof LocationWallpaperComponent.install === 'function' &&
+            typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+          LocationWallpaperComponent.install(wrap);
+          LocationWallpaperComponent.handleActiveContainerChange(wrap, wrap);
+        }
+      }
 
       // Auto-open the requested post (from marquee/map click) or first in the menu
       var targetItem = sfOpenPostId ? wrap.querySelector('.post-storefront-menu-item[data-post-id="' + sfOpenPostId + '"]') : null;
@@ -4726,6 +4741,8 @@ const PostModule = (function() {
       }
 
       function syncLocationWallpaper(isExpandedNow) {
+        // Storefront wallpaper is locked — sub-post expand/collapse must not touch it.
+        if (wrap.__wallpaperLocked) return;
         // Only for .post wrappers that were wired with lat/lng (component-locationwallpaper-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
         if (!wrap.classList || !wrap.classList.contains('component-locationwallpaper-container')) return;
@@ -4828,6 +4845,17 @@ const PostModule = (function() {
   function closePost(postId) {
     var openPostEl = document.querySelector('.post[data-id="' + postId + '"]');
     if (!openPostEl) return;
+
+    // Tear down locked wallpaper (storefronts) before removing the element
+    try {
+      if (openPostEl.__locationWallpaperCtrl && typeof openPostEl.__locationWallpaperCtrl.destroy === 'function') {
+        openPostEl.__locationWallpaperCtrl.destroy();
+      }
+      if (openPostEl.__wallpaperLocked && window.LocationWallpaperComponent &&
+          typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+        LocationWallpaperComponent.handleActiveContainerChange(null, null);
+      }
+    } catch (_eWp) {}
 
     // Find the slot wrapper
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');

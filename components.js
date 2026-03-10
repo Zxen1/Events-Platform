@@ -11642,6 +11642,11 @@ const LocationWallpaperComponent = (function() {
                     return;
                 }
 
+                // Locked wallpaper (storefronts) — never freeze on click-away
+                if (activeContainerEl && activeContainerEl.__wallpaperLocked) {
+                    return;
+                }
+
                 // Freeze previous container if clicking elsewhere
                 if (activeCtrl && activeContainerEl) {
                     try { activeCtrl.freeze(); } catch (_eF) {}
