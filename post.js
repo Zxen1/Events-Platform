@@ -3271,20 +3271,17 @@ const PostModule = (function() {
     // Must happen after insertion so the component can measure dimensions.
     if (detail.__wallpaperLocked && detail.classList.contains('component-locationwallpaper-container')) {
       detail.setAttribute('data-active', 'true');
-      try {
-        if (window.LocationWallpaperComponent &&
-            typeof LocationWallpaperComponent.install === 'function' &&
-            typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-          LocationWallpaperComponent.install(detail);
-          console.error('[SF-WP-DEBUG] install done, calling handleActiveContainerChange');
-          LocationWallpaperComponent.handleActiveContainerChange(detail, detail);
-          console.error('[SF-WP-DEBUG] handleActiveContainerChange done, ctrl=', !!detail.__locationWallpaperCtrl, 'wallpaperRoot=', !!detail.querySelector('.component-locationwallpaper'));
-        } else {
-          console.error('[SF-WP-DEBUG] LocationWallpaperComponent not available');
-        }
-      } catch (e) {
-        console.error('[SF-WP-DEBUG] ERROR:', e);
-      }
+      (function(el) {
+        requestAnimationFrame(function() {
+          if (!document.contains(el)) return;
+          if (window.LocationWallpaperComponent &&
+              typeof LocationWallpaperComponent.install === 'function' &&
+              typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+            LocationWallpaperComponent.install(el);
+            LocationWallpaperComponent.handleActiveContainerChange(el, el);
+          }
+        });
+      })(detail);
     }
 
     if (shouldScrollToOpenHeaderTop && detail) {
