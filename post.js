@@ -3619,7 +3619,7 @@ const PostModule = (function() {
           iconUrl: phoneIconUrl,
           label: phoneDisplay,
           href: phoneRestricted ? '' : 'tel:' + phonePrefix + publicPhone,
-          tooltipLabel: phoneRestricted ? 'Members Only' : 'Phone',
+          tooltipLabel: phoneRestricted ? 'Members Only' : phoneDisplay,
           isRestricted: phoneRestricted
         });
       }

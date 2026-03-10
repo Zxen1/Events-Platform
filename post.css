@@ -1792,6 +1792,7 @@
 
 .post-info-row-amenities {
   min-height: 36px;
+  margin-left: -10px;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
@@ -2104,6 +2105,7 @@
    ============================================================================ */
 
 .post-contact-container {
+  margin-left: -10px;
   margin-bottom: 10px;
 }
 
