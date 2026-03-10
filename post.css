@@ -2098,6 +2098,185 @@
 }
 
 /* ============================================================================
+   UNIFIED CONTACT SECTION (links, email, phone)
+   ≤3 items: row mode (icon + truncated label)
+   4+ items: icon strip mode (scrollable row of icons with tooltips)
+   ============================================================================ */
+
+.post-contact-container {
+  margin-bottom: 10px;
+}
+
+.post-contact-container:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Row mode --- */
+
+.post-contact-row {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  margin-bottom: 6px;
+}
+
+.post-contact-row:last-child {
+  margin-bottom: 0;
+}
+
+.post-contact-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.post-contact-link:hover {
+  text-decoration: underline;
+}
+
+.post-contact-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.post-contact-label--restricted {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.post-contact-row--restricted {
+  gap: 6px;
+  cursor: default;
+}
+
+/* --- Icon strip mode --- */
+
+.post-contact-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.post-contact-container--strip .post-contact-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+  gap: 0;
+}
+
+.post-contact-container--strip .post-contact-link:hover {
+  text-decoration: none;
+}
+
+.post-contact-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: visible;
+}
+
+.post-contact-item:hover {
+  z-index: 3;
+}
+
+.post-contact-item--restricted {
+  cursor: default;
+}
+
+/* --- Shared icon (CSS mask, white by default) --- */
+
+.post-contact-icon {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex: 0 0 auto;
+  background-color: #fff;
+  -webkit-mask-image: var(--post-contact-mask);
+  mask-image: var(--post-contact-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.post-contact-item .post-contact-icon {
+  position: relative;
+  z-index: 2;
+}
+
+.post-contact-item:hover .post-contact-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.post-contact-item--restricted .post-contact-icon,
+.post-contact-row--restricted .post-contact-icon {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* --- Tooltip pill (icon strip mode only) --- */
+
+.post-contact-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 36px;
+  width: 36px;
+  overflow: hidden;
+  background: rgba(59, 130, 246, 0.9);
+  border-radius: 18px;
+  font-size: 12px;
+  line-height: 36px;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  padding-left: 40px;
+  padding-right: 10px;
+  width: max-content;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.15s ease;
+}
+
+.post-contact-item:not([data-tooltip-dir="left"]):hover::after {
+  opacity: 1;
+}
+
+.post-contact-item[data-tooltip-dir="left"]::after {
+  left: auto;
+  right: 0;
+  padding-left: 12px;
+  padding-right: 35px;
+}
+
+.post-contact-item[data-tooltip-dir="left"]:hover::after {
+  opacity: 1;
+}
+
+/* ============================================================================
    POST PRICE COMPONENT
    TODO: Make self-contained in components.css like PostLocationComponent
    ============================================================================ */

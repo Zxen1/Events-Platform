@@ -3398,8 +3398,8 @@ const PostModule = (function() {
    */
 
   function setTooltipDirs(wrap) {
-    wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
-      var c = item.closest('.post-links-container, .post-amenities-container'), cr = c && c.getBoundingClientRect();
+    wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip], .post-contact-item[data-tooltip]').forEach(function(item) {
+      var c = item.closest('.post-links-container, .post-amenities-container, .post-contact-strip'), cr = c && c.getBoundingClientRect();
       item.setAttribute('data-tooltip-dir', cr && (item.getBoundingClientRect().left - cr.left) > cr.width * 0.60 ? 'left' : 'right');
     });
   }
@@ -3535,7 +3535,7 @@ const PostModule = (function() {
     }
 
     var hasWebsiteLink = false;
-    var linksStripRowHtml = '';
+    var linkData = [];
     if (linksArr && linksArr.length) {
       var sortedLinks = linksArr.slice().filter(function(l) { return !!l; }).sort(function(a, b) {
         var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
@@ -3548,7 +3548,6 @@ const PostModule = (function() {
         return 0;
       });
 
-      var linkData = [];
       sortedLinks.forEach(function(l) {
         var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
         var url = (l.external_url === null || l.external_url === undefined) ? '' : String(l.external_url).trim();
@@ -3564,26 +3563,116 @@ const PostModule = (function() {
           iconUrl = App.getImageUrl('links', filename);
         }
         if (!iconUrl) return;
-        linkData.push({ url: url, label: label, iconUrl: iconUrl });
+        linkData.push({ url: url, label: label, iconUrl: iconUrl, linkType: type });
       });
+    }
 
-      var iconLinks = [];
-      linkData.forEach(function(d, idx) {
-        var dir = 'right';
-        iconLinks.push(
-          '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '">' +
-            '<span class="post-links-item" data-tooltip="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
-              '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(d.iconUrl) + ')"></span>' +
-            '</span>' +
-          '</a>'
-        );
+    // === Unified Contact Section (links, email, phone) ===
+    var contactItems = [];
+    var sett = App.getState('settings') || {};
+
+    if (linkData.length) {
+      var websiteItems = [];
+      var otherLinkItems = [];
+      linkData.forEach(function(d) {
+        var item = {
+          type: 'link',
+          iconUrl: d.iconUrl,
+          label: d.label,
+          href: d.url,
+          tooltipLabel: d.label,
+          isRestricted: false
+        };
+        if (d.linkType && d.linkType.toLowerCase() === 'website') {
+          websiteItems.push(item);
+        } else {
+          otherLinkItems.push(item);
+        }
       });
+      contactItems = websiteItems.concat(otherLinkItems);
+    }
 
-      if (iconLinks.length) {
-        linksStripRowHtml =
-          '<div class="post-info-row post-info-row-links">' +
-            '<div class="post-links-container">' + iconLinks.join('') + '</div>' +
-          '</div>';
+    if (publicEmail) {
+      var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
+      if (emailIconUrl) {
+        var emailRestricted = publicEmail.toLowerCase() === 'members only';
+        if (emailRestricted) publicEmail = 'Members Only';
+        contactItems.push({
+          type: 'email',
+          iconUrl: emailIconUrl,
+          label: emailRestricted ? 'Members Only' : publicEmail,
+          href: emailRestricted ? '' : 'mailto:' + publicEmail,
+          tooltipLabel: emailRestricted ? 'Members Only' : 'Email',
+          isRestricted: emailRestricted
+        });
+      }
+    }
+
+    if (phonePrefix || publicPhone) {
+      var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
+      if (phoneIconUrl) {
+        var phoneRestricted = publicPhone.toLowerCase() === 'members only';
+        if (phoneRestricted) publicPhone = 'Members Only';
+        var phoneDisplay = phoneRestricted ? 'Members Only' : (phonePrefix + ' ' + publicPhone).trim();
+        contactItems.push({
+          type: 'phone',
+          iconUrl: phoneIconUrl,
+          label: phoneDisplay,
+          href: phoneRestricted ? '' : 'tel:' + phonePrefix + publicPhone,
+          tooltipLabel: phoneRestricted ? 'Members Only' : 'Phone',
+          isRestricted: phoneRestricted
+        });
+      }
+    }
+
+    var contactHtml = '';
+    if (contactItems.length) {
+      if (contactItems.length <= 3) {
+        var contactRows = [];
+        contactItems.forEach(function(item) {
+          var iconSpan = '<span class="post-contact-icon" style="--post-contact-mask:url(' + escapeHtml(item.iconUrl) + ')"></span>';
+          if (item.isRestricted) {
+            contactRows.push(
+              '<div class="post-contact-row post-contact-row--restricted">' +
+                iconSpan +
+                '<span class="post-contact-label post-contact-label--restricted">' + escapeHtml(item.label) + '</span>' +
+              '</div>'
+            );
+          } else {
+            var target = item.type === 'link' ? ' target="_blank" rel="noopener noreferrer"' : '';
+            contactRows.push(
+              '<div class="post-contact-row">' +
+                '<a class="post-contact-link" href="' + escapeHtml(item.href) + '"' + target + '>' +
+                  iconSpan +
+                  '<span class="post-contact-label">' + escapeHtml(item.label) + '</span>' +
+                '</a>' +
+              '</div>'
+            );
+          }
+        });
+        contactHtml = '<div class="post-contact-container">' + contactRows.join('') + '</div>';
+      } else {
+        var contactIcons = [];
+        contactItems.forEach(function(item) {
+          var iconSpan = '<span class="post-contact-icon" style="--post-contact-mask:url(' + escapeHtml(item.iconUrl) + ')"></span>';
+          if (item.isRestricted) {
+            contactIcons.push(
+              '<span class="post-contact-item post-contact-item--restricted" data-tooltip="' + escapeHtml(item.tooltipLabel) + '">' +
+                iconSpan +
+              '</span>'
+            );
+          } else {
+            var target = item.type === 'link' ? ' target="_blank" rel="noopener noreferrer"' : '';
+            contactIcons.push(
+              '<a class="post-contact-link" href="' + escapeHtml(item.href) + '"' + target + ' aria-label="' + escapeHtml(item.tooltipLabel) + '">' +
+                '<span class="post-contact-item" data-tooltip="' + escapeHtml(item.tooltipLabel) + '">' +
+                  iconSpan +
+                '</span>' +
+              '</a>'
+            );
+          }
+        });
+        contactHtml = '<div class="post-contact-container post-contact-container--strip"><div class="post-contact-strip">' + contactIcons.join('') + '</div></div>';
       }
     }
 
@@ -3822,33 +3911,8 @@ const PostModule = (function() {
         // CTA buttons
         ticketsUrl ? '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Get Tickets</a>' : '',
         itemUrl ? '<a href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Shop Now</a>' : '',
-        // Links icons
-        linksStripRowHtml || '',
-        // Public email
-        publicEmail ? (function() {
-          var sett = App.getState('settings') || {};
-          var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
-          var emailBadge = emailIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + emailIconUrl + '" alt=""></span>' : '';
-          var isRestricted = publicEmail.toLowerCase() === 'members only';
-          if (isRestricted) publicEmail = 'Members Only';
-          var emailContent = isRestricted
-            ? '<span class="post-info-restricted">' + escapeHtml(publicEmail) + '</span>'
-            : '<a href="mailto:' + escapeHtml(publicEmail) + '">' + escapeHtml(publicEmail) + '</a>';
-          return '<div class="post-info-row post-info-row-email">' + emailBadge + emailContent + '</div>';
-        })() : '',
-        // Phone
-        (phonePrefix || publicPhone) ? (function() {
-          var sett = App.getState('settings') || {};
-          var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
-          var phoneBadge = phoneIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + phoneIconUrl + '" alt=""></span>' : '';
-          var phoneDisplay = (phonePrefix + ' ' + publicPhone).trim();
-          var isRestricted = publicPhone.toLowerCase() === 'members only';
-          if (isRestricted) publicPhone = 'Members Only';
-          var phoneContent = isRestricted
-            ? '<span class="post-info-restricted">' + escapeHtml(publicPhone) + '</span>'
-            : '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phoneDisplay) + '</a>';
-          return '<div class="post-info-row post-info-row-phone">' + phoneBadge + phoneContent + '</div>';
-        })() : '',
+        // Unified contact section (links, email, phone)
+        contactHtml,
         // Amenities summary is no longer rendered here; amenities display uses the icon container only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +
