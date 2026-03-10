@@ -3275,8 +3275,6 @@ const PostModule = (function() {
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
             if (!document.contains(el)) return;
-            var r = el.getBoundingClientRect();
-            console.error('[SF-WP-DEBUG] rAF2 w=' + r.width + ' h=' + r.height);
             if (window.LocationWallpaperComponent &&
                 typeof LocationWallpaperComponent.install === 'function' &&
                 typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
@@ -3900,6 +3898,7 @@ const PostModule = (function() {
       wrap.classList.add('component-locationwallpaper-container');
       if (storefrontPosts && storefrontPosts.length > 1) {
         wrap.__wallpaperLocked = true;
+        wrap.dataset.storefrontWallpaper = '1';
       }
       // Store post ID for missing wallpaper flagging
       if (post && post.id) {

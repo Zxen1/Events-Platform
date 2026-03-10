@@ -1223,6 +1223,11 @@
   display: none;
 }
 
+/* Storefront wallpaper stays visible regardless of expand state */
+.post[data-storefront-wallpaper] .component-locationwallpaper {
+  display: block;
+}
+
 /* Post wallpaper should be square (no rounding) */
 .post .component-locationwallpaper {
   border-radius: 0;
