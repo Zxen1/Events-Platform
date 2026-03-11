@@ -1366,20 +1366,33 @@ const MapModule = (function() {
    * Handle Google Places geocoder result (from MapControlRowComponent)
    */
   function handleGeocoderResult(result, geocoderKey) {
-    // Geocoder result received
     if (!result || !result.center) return;
 
     const lng = result.center[0];
     const lat = result.center[1];
 
-    // Close panels (same as post location change)
+    // Snapshot which panels/mode are active before closing (reopen after landing)
+    var previousMode = '';
+    var reopenFilter = false;
+    var reopenMember = false;
+    var reopenAdmin = false;
+    try {
+      var activeBtn = document.querySelector('.header-modeswitch-button--active');
+      if (activeBtn && activeBtn.dataset && activeBtn.dataset.mode) previousMode = activeBtn.dataset.mode;
+      var fp = document.querySelector('.filter-panel');
+      if (fp && fp.classList.contains('show')) reopenFilter = true;
+      var mp = document.querySelector('.member-panel');
+      if (mp && mp.classList.contains('member-panel--show')) reopenMember = true;
+      var ap = document.querySelector('.admin-panel');
+      if (ap && ap.classList.contains('admin-panel--show')) reopenAdmin = true;
+    } catch (_eSnap) {}
+
+    // Switch to map mode (closes post panel) and close overlay panels
+    if (window.HeaderModule && typeof HeaderModule.setMode === 'function') {
+      HeaderModule.setMode('map');
+    }
     if (window.HeaderModule && typeof HeaderModule.closePanels === 'function') {
       HeaderModule.closePanels();
-    }
-
-    // Mobile: explicitly close filter panel so fly animation is visible
-    if (window.innerWidth <= 530 && window.FilterModule && typeof FilterModule.closePanel === 'function') {
-      FilterModule.closePanel();
     }
 
     // Close welcome modal on search
@@ -1392,7 +1405,6 @@ const MapModule = (function() {
 
     // Fly to location (Mapbox)
     if (map) {
-      // Use viewport bounds if available
       if (result.bbox && result.bbox.length === 4) {
         map.fitBounds([
           [result.bbox[0], result.bbox[1]],
@@ -1408,9 +1420,21 @@ const MapModule = (function() {
           essential: true
         });
       }
+
+      // Restore panels and mode after landing
+      var needsRestore = previousMode === 'posts' || previousMode === 'recent' || reopenFilter || reopenMember || reopenAdmin;
+      if (needsRestore) {
+        map.once('moveend', function() {
+          if (previousMode && previousMode !== 'map' && window.HeaderModule && typeof HeaderModule.setMode === 'function') {
+            HeaderModule.setMode(previousMode);
+          }
+          if (reopenFilter) App.emit('panel:toggle', { panel: 'filter', show: true });
+          if (reopenMember) App.emit('panel:toggle', { panel: 'member', show: true });
+          if (reopenAdmin) App.emit('panel:toggle', { panel: 'admin', show: true });
+        });
+      }
     }
 
-    // Emit event
     App.emit('map:placeSelected', {
       geocoder: geocoderKey,
       lat: lat,
