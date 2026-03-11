@@ -70,29 +70,9 @@ const MemberModule = (function() {
     var closeBtn = null;
 
     function restorePanelUiState() {
-        try {
-            if (!window.App || typeof App.getUiState !== 'function') return;
-            var ui = App.getUiState() || {};
-            var s = ui && ui.memberPanel ? ui.memberPanel : null;
-            if (!s || typeof s !== 'object') return;
-            var home = String(s.home || '');
-            if (home === 'left' || home === 'right') panelHome = home;
-            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
-            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
-        } catch (_eRestoreMemberPanelUi) {}
     }
 
     function persistPanelUiState() {
-        try {
-            if (!window.App || typeof App.mergeUiState !== 'function') return;
-            App.mergeUiState({
-                memberPanel: {
-                    home: panelHome,
-                    dragged: !!panelDragged,
-                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : null
-                }
-            });
-        } catch (_ePersistMemberPanelUi) {}
     }
     var tabButtons = null;
     var tabPanels = null;
@@ -2541,9 +2521,6 @@ const MemberModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panel);
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { memberOpen: true }, activePanel: 'member' });
-        }
         
         // Update header button
         App.emit('member:opened');
@@ -2556,10 +2533,6 @@ const MemberModule = (function() {
             confirmUnsavedProfileEdits(function() { closePanel(); });
             return;
         }
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { memberOpen: false } });
-        }
-        
         // Remove focus from close button before hiding (fixes aria-hidden warning)
         if (closeBtn && document.activeElement === closeBtn) {
             closeBtn.blur();
@@ -2669,9 +2642,6 @@ const MemberModule = (function() {
         // Initialize Register tab content when activated
         if (tabName === 'register') {
             initRegisterTab();
-        }
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ member: { tab: String(tabName || '') } });
         }
     }
 
