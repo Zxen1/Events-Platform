@@ -1367,6 +1367,7 @@ const MapModule = (function() {
    */
   function handleGeocoderResult(result, geocoderKey) {
     if (!result || !result.center) return;
+    console.error('[DEBUG] handleGeocoderResult called, key:', geocoderKey);
 
     const lng = result.center[0];
     const lat = result.center[1];
