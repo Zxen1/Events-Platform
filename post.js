@@ -1402,7 +1402,7 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        openPostById(post.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
       }
     });
 
@@ -1413,7 +1413,7 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPostById(post.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
     });
 
     // Favorite toggle handler
