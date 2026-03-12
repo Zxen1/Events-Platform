@@ -2147,9 +2147,10 @@ const PostModule = (function() {
     var tierStandard = [];  // everything else
 
     allMarkerData.forEach(function(item) {
-      if (item._effectiveSidebarAd === 1) {
+      var post = item._originalPost;
+      if (post.sidebar_ad === 1) {
         tierPremium.push(item);
-      } else if (item._effectiveFeatured === 1) {
+      } else if (post.featured === 1) {
         tierFeatured.push(item);
       } else {
         tierStandard.push(item);
