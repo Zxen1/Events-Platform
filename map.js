@@ -2981,7 +2981,7 @@ const MapModule = (function() {
    */
   function removeMapCardMarker(venueKey) {
     const entry = mapCardMarkers.get(venueKey);
-    if (!entry) return;
+    if (!entry || entry.type !== 'card') return;
 
     entry.marker.remove();
     mapCardMarkers.delete(venueKey);
@@ -3298,7 +3298,13 @@ const MapModule = (function() {
     getActivePostMapCardId,
     setActiveMapCardByPostMapCardId,
     // Expose current marker keys so PostModule can remove stale markers without "drift".
-    getMapCardMarkerVenueKeys: () => Array.from(mapCardMarkers.keys()),
+    getMapCardMarkerVenueKeys: () => {
+      const keys = [];
+      mapCardMarkers.forEach(function(entry, venueKey) {
+        if (entry.type === 'card') keys.push(venueKey);
+      });
+      return keys;
+    },
     // MapCards-style hover API (compat layer for PostModule)
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
     removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
