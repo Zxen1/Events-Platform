@@ -291,9 +291,10 @@
   gap: 10px;
   font-size: 12px;
   margin: 0;
-  background: var(--purple-500, #7c3aed);
+  background: rgba(124, 58, 237, 0.5);
   color: #fff;
   padding: 2px 4px;
+  transition: background-color 0.15s ease;
 }
 
 .recent-statusbar-timestamp {
@@ -309,6 +310,13 @@
 
 /* Unavailable state - gray background */
 .recent-statusbar--unavailable {
+  background: rgba(107, 114, 128, 0.5);
+}
+
+.recent-card-wrapper:hover .recent-statusbar {
+  background: var(--purple-500, #7c3aed);
+}
+.recent-card-wrapper:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
@@ -2355,14 +2363,27 @@
 }
 
 .post-statusbar--comingsoon {
-  background: #2563eb;
+  background: rgba(37, 99, 235, 0.5);
+  transition: background-color 0.15s ease;
 }
 
 .post-statusbar--nowshowing {
-  background: #16a34a;
+  background: rgba(22, 163, 74, 0.5);
+  transition: background-color 0.15s ease;
 }
 
 .post-statusbar--finished {
+  background: rgba(17, 24, 39, 0.5);
+  transition: background-color 0.15s ease;
+}
+
+.post-slot:hover .post-statusbar--comingsoon {
+  background: #2563eb;
+}
+.post-slot:hover .post-statusbar--nowshowing {
+  background: #16a34a;
+}
+.post-slot:hover .post-statusbar--finished {
   background: #111827;
 }
 
