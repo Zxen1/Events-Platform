@@ -2079,7 +2079,13 @@ const PostModule = (function() {
         }
       }
 
-      var firstItem = group[0];
+      // Lead item must be the highest-tier post so the tier classifier
+      // (sidebar_ad → featured → standard) correctly elevates location group markers.
+      var firstItem = group.reduce(function(best, item) {
+        var t = item.post.sidebar_ad === 1 ? 2 : (item.post.featured === 1 ? 1 : 0);
+        var b = best.post.sidebar_ad === 1 ? 2 : (best.post.featured === 1 ? 1 : 0);
+        return t > b ? item : best;
+      }, group[0]);
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
       if (!markerData) return;
 
