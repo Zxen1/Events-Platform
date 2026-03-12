@@ -2097,6 +2097,21 @@ const PostModule = (function() {
         markerData.venuePostCount = markerData.venuePostIds.length;
       }
       
+      // Promote storefront/multipost marker to highest tier in the group
+      if ((isStorefront || isMultiPostVenue) && uniquePostCount > 1) {
+        var highestSidebarAd = 0;
+        var highestFeatured = 0;
+        group.forEach(function(item) {
+          if (item.post.sidebar_ad === 1) highestSidebarAd = 1;
+          if (item.post.featured === 1) highestFeatured = 1;
+        });
+        if (highestSidebarAd && !markerData._originalPost.sidebar_ad) {
+          markerData._originalPost = Object.assign({}, markerData._originalPost, { sidebar_ad: 1 });
+        } else if (highestFeatured && !markerData._originalPost.featured) {
+          markerData._originalPost = Object.assign({}, markerData._originalPost, { featured: 1 });
+        }
+      }
+
       markerData.venueKey = venueKey;
       allMarkerData.push(markerData);
     });
@@ -3053,7 +3068,7 @@ const PostModule = (function() {
     }
     if (!container) return;
     var isMobileViewport = window.innerWidth <= 530;
-    var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
+    var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee' || options.source === 'map_icon' || options.source === 'map_dot'));
 
     // Close any existing open post in this container
     closeOpenPost(container);
