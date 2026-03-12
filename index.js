@@ -432,21 +432,6 @@ const App = (function() {
     }
   }
 
-  function restoreGlobalUiPanels() {
-    if (hasDeepLinkIntent()) return;
-    var ui = readUiStateStorage();
-    var panels = (ui && ui.panels && typeof ui.panels === 'object') ? ui.panels : {};
-    var active = (ui && typeof ui.activePanel === 'string') ? ui.activePanel : '';
-    var panelToOpen = '';
-    if (active === 'filter' && panels.filterOpen) panelToOpen = 'filter';
-    else if (active === 'member' && panels.memberOpen) panelToOpen = 'member';
-    else if (active === 'admin' && panels.adminOpen) panelToOpen = 'admin';
-    else if (panels.filterOpen) panelToOpen = 'filter';
-    else if (panels.memberOpen) panelToOpen = 'member';
-    else if (panels.adminOpen) panelToOpen = 'admin';
-    if (!panelToOpen) return;
-    emit('panel:toggle', { panel: panelToOpen, show: true });
-  }
 
 
   /* --------------------------------------------------------------------------
@@ -915,9 +900,6 @@ const App = (function() {
 
     // Toggle slider (sliding pill for toggle-class-1)
     initToggleSliders();
-
-    // Restore top-level panel open state after core modules are initialized.
-    setTimeout(restoreGlobalUiPanels, 0);
 
     // App initialization complete
   }

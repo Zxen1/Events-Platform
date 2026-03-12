@@ -69,31 +69,6 @@ const MemberModule = (function() {
     var closeToken = 0;         // invalidates stale close finalizers
     var closeBtn = null;
 
-    function restorePanelUiState() {
-        try {
-            if (!window.App || typeof App.getUiState !== 'function') return;
-            var ui = App.getUiState() || {};
-            var s = ui && ui.memberPanel ? ui.memberPanel : null;
-            if (!s || typeof s !== 'object') return;
-            var home = String(s.home || '');
-            if (home === 'left' || home === 'right') panelHome = home;
-            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
-            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
-        } catch (_eRestoreMemberPanelUi) {}
-    }
-
-    function persistPanelUiState() {
-        try {
-            if (!window.App || typeof App.mergeUiState !== 'function') return;
-            App.mergeUiState({
-                memberPanel: {
-                    home: panelHome,
-                    dragged: !!panelDragged,
-                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : null
-                }
-            });
-        } catch (_ePersistMemberPanelUi) {}
-    }
     var tabButtons = null;
     var tabPanels = null;
     var createTabBtn = null;
@@ -266,7 +241,6 @@ const MemberModule = (function() {
             console.warn('[Member] Member panel not found');
             return;
         }
-        restorePanelUiState();
         
         bindEvents();
         initHeaderDrag();
@@ -398,7 +372,6 @@ const MemberModule = (function() {
                     if (!Number.isFinite(_left)) _left = currentLeft;
                     panelLastLeft = Math.max(0, _left);
                 } catch (_eMemberDragLeft) {}
-                persistPanelUiState();
             }
             
             document.addEventListener('mousemove', onMove);
@@ -2515,7 +2488,6 @@ const MemberModule = (function() {
             panelContent.style.right = 'auto';
             panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
-        persistPanelUiState();
         requestAnimationFrame(function() {
             panelContent.classList.remove('member-panel-contents--hidden');
             panelContent.classList.add('member-panel-contents--visible');
@@ -2541,9 +2513,6 @@ const MemberModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panel);
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { memberOpen: true }, activePanel: 'member' });
-        }
         
         // Update header button
         App.emit('member:opened');
@@ -2556,10 +2525,6 @@ const MemberModule = (function() {
             confirmUnsavedProfileEdits(function() { closePanel(); });
             return;
         }
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { memberOpen: false } });
-        }
-        
         // Remove focus from close button before hiding (fixes aria-hidden warning)
         if (closeBtn && document.activeElement === closeBtn) {
             closeBtn.blur();
@@ -2603,7 +2568,6 @@ const MemberModule = (function() {
             panelContent.classList.toggle('member-panel-contents--side-left', panelHome === 'left');
             panelContent.style.left  = '';
             panelContent.style.right = '';
-            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }
@@ -2669,9 +2633,6 @@ const MemberModule = (function() {
         // Initialize Register tab content when activated
         if (tabName === 'register') {
             initRegisterTab();
-        }
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ member: { tab: String(tabName || '') } });
         }
     }
 
