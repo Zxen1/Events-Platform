@@ -341,12 +341,10 @@ const MarqueeModule = (function() {
     slide.href = getPostUrl(post);
 
     slide.addEventListener('mouseenter', function() {
-      var selector = '.post-card[data-id="' + post.id + '"], .recent-card[data-id="' + post.id + '"]';
-      document.querySelectorAll(selector).forEach(function(c) { c.classList.add('post-card--map-highlight'); });
+      highlightPostCards(String(post.id), true);
     });
     slide.addEventListener('mouseleave', function() {
-      var selector = '.post-card[data-id="' + post.id + '"], .recent-card[data-id="' + post.id + '"]';
-      document.querySelectorAll(selector).forEach(function(c) { c.classList.remove('post-card--map-highlight'); });
+      highlightPostCards(String(post.id), false);
     });
     
     const img = new Image();
@@ -585,6 +583,23 @@ const MarqueeModule = (function() {
     return postModule.getRawImageUrl(post);
   }
   
+  /**
+   * Highlight or unhighlight postcards matching a post ID.
+   * Also checks storefront slots whose data-sf-ids contain the post ID.
+   */
+  function highlightPostCards(postId, on) {
+    var cls = 'post-card--map-highlight';
+    document.querySelectorAll('.post-card[data-id="' + postId + '"], .recent-card[data-id="' + postId + '"]').forEach(function(c) {
+      c.classList.toggle(cls, on);
+    });
+    document.querySelectorAll('.post-slot[data-sf-ids]').forEach(function(slot) {
+      var ids = slot.dataset.sfIds || '';
+      if ((',' + ids + ',').indexOf(',' + postId + ',') === -1) return;
+      var card = slot.querySelector('.post-card');
+      if (card) card.classList.toggle(cls, on);
+    });
+  }
+
   /**
    * Format dates display for a marquee slide.
    * @param {string} dates - Pre-formatted date summary string
