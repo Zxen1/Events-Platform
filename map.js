@@ -650,15 +650,12 @@ const MapModule = (function() {
       /* Icon - center at lat/lng (0,0) */
       .map-card-icon {
         position: absolute;
-        left: -${SMALL_ICON_SIZE / 2}px;
-        top: -${SMALL_ICON_SIZE / 2}px;
+        left: 0;
+        top: 0;
+        transform: translate(-50%, -50%);
         border-radius: 50%;
         z-index: 2;
-        transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
-      }
-      .map-card-container.is-active .map-card-icon {
-        left: -${BIG_ICON_SIZE / 2}px;
-        top: -${BIG_ICON_SIZE / 2}px;
+        transition: width 0.2s ease, height 0.2s ease;
       }
       
       /* Pill - all positions from lat/lng (0,0) */
@@ -834,10 +831,6 @@ const MapModule = (function() {
       }
       .map-card-appearance--dot:not(.is-active) .map-card-icon {
         opacity: 0;
-        width: 30px;
-        height: 30px;
-        left: -15px;
-        top: -15px;
       }
       .map-card-appearance--dot[data-multipost]:not(.is-active)::after {
         background-image: var(--dot-icon);
