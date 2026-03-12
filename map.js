@@ -786,21 +786,25 @@ const MapModule = (function() {
         top: -20px;
         z-index: 1;
         pointer-events: none;
+        transform: scale(1);
+        opacity: 1;
+        transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
-      .map-card-appearance--icon.is-active::before { display: none; }
-      .map-card-appearance--icon.is-hovered::before,
       .map-card-appearance--icon.is-active::before {
+        transform: scale(0);
+        opacity: 0;
+      }
+      .map-card-appearance--icon.is-hovered::before {
         background: var(--blue-950);
         outline: 2px solid var(--blue-500);
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
-        .map-card-appearance--icon:hover::before {
+        .map-card-appearance--icon:not(.is-active):hover::before {
           background: var(--blue-950);
           outline: 2px solid var(--blue-500);
           outline-offset: -2px;
         }
-        .map-card-appearance--icon.is-active:hover::before { display: none; }
       }
 
       /* ── MAP DOT appearance ───────────────────────────────────────────────────
@@ -829,6 +833,9 @@ const MapModule = (function() {
         top: -10px;
         z-index: 1;
         pointer-events: none;
+        transform: scale(1);
+        opacity: 1;
+        transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
       .map-card-appearance--dot::after {
         content: '';
@@ -841,22 +848,26 @@ const MapModule = (function() {
         top: -7.5px;
         z-index: 2;
         pointer-events: none;
+        transform: scale(1);
+        opacity: 1;
+        transition: transform 0.2s ease, opacity 0.2s ease;
       }
       .map-card-appearance--dot.is-active::before,
-      .map-card-appearance--dot.is-active::after { display: none; }
+      .map-card-appearance--dot.is-active::after {
+        transform: scale(0);
+        opacity: 0;
+      }
       .map-card-appearance--dot.is-hovered::before {
         background: var(--blue-950);
         outline: 2px solid var(--blue-500);
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
-        .map-card-appearance--dot:hover::before {
+        .map-card-appearance--dot:not(.is-active):hover::before {
           background: var(--blue-950);
           outline: 2px solid var(--blue-500);
           outline-offset: -2px;
         }
-        .map-card-appearance--dot.is-active:hover::before,
-        .map-card-appearance--dot.is-active:hover::after { display: none; }
       }
 
     `;
