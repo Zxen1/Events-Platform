@@ -3303,6 +3303,38 @@ const AdminModule = (function() {
             });
         }
         
+        // Max Map Cards — Desktop slider
+        var maxCardsDesktopSlider = document.getElementById('adminMaxMapCardsDesktop');
+        var maxCardsDesktopDisplay = document.getElementById('adminMaxMapCardsDesktopDisplay');
+        if (maxCardsDesktopSlider && maxCardsDesktopDisplay) {
+            var initialMaxDesktop = mapTabData.max_map_cards_desktop !== undefined ? parseInt(mapTabData.max_map_cards_desktop, 10) : 50;
+            maxCardsDesktopSlider.value = initialMaxDesktop;
+            maxCardsDesktopDisplay.textContent = initialMaxDesktop.toString();
+            
+            registerField('map.max_map_cards_desktop', initialMaxDesktop);
+            
+            maxCardsDesktopSlider.addEventListener('input', function() {
+                maxCardsDesktopDisplay.textContent = Math.round(parseFloat(maxCardsDesktopSlider.value)).toString();
+                updateField('map.max_map_cards_desktop', parseInt(maxCardsDesktopSlider.value, 10));
+            });
+        }
+
+        // Max Map Cards — Mobile slider
+        var maxCardsMobileSlider = document.getElementById('adminMaxMapCardsMobile');
+        var maxCardsMobileDisplay = document.getElementById('adminMaxMapCardsMobileDisplay');
+        if (maxCardsMobileSlider && maxCardsMobileDisplay) {
+            var initialMaxMobile = mapTabData.max_map_cards_mobile !== undefined ? parseInt(mapTabData.max_map_cards_mobile, 10) : 20;
+            maxCardsMobileSlider.value = initialMaxMobile;
+            maxCardsMobileDisplay.textContent = initialMaxMobile.toString();
+            
+            registerField('map.max_map_cards_mobile', initialMaxMobile);
+            
+            maxCardsMobileSlider.addEventListener('input', function() {
+                maxCardsMobileDisplay.textContent = Math.round(parseFloat(maxCardsMobileSlider.value)).toString();
+                updateField('map.max_map_cards_mobile', parseInt(maxCardsMobileSlider.value, 10));
+            });
+        }
+
         // Default Wallpaper Mode buttons (default for new users; members override with their own preference)
         var wallpaperButtons = mapTabContainer.querySelectorAll('.admin-wallpaper-button');
         if (wallpaperButtons.length) {
@@ -3493,6 +3525,8 @@ const AdminModule = (function() {
             { id: 'adminStartingPitchMobile', displayId: 'adminStartingPitchMobileDisplay', fieldId: 'map.starting_pitch_mobile', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
             { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
+            { id: 'adminMaxMapCardsDesktop', displayId: 'adminMaxMapCardsDesktopDisplay', fieldId: 'map.max_map_cards_desktop', format: 'int' },
+            { id: 'adminMaxMapCardsMobile', displayId: 'adminMaxMapCardsMobileDisplay', fieldId: 'map.max_map_cards_mobile', format: 'int' },
             { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' }
         ];
         

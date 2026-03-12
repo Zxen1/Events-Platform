@@ -1155,6 +1155,20 @@ if (empty($ogTitle)) {
                 </div>
               </div>
             </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminMaxMapCardsDesktop">Max Map Cards — Desktop</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminMaxMapCardsDesktopDisplay" class="admin-slider-value">50</span>
+                <input type="range" id="adminMaxMapCardsDesktop" min="5" max="100" step="5" value="50" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminMaxMapCardsMobile">Max Map Cards — Mobile</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminMaxMapCardsMobileDisplay" class="admin-slider-value">20</span>
+                <input type="range" id="adminMaxMapCardsMobile" min="5" max="50" step="5" value="20" class="admin-spin-slider" />
+              </div>
+            </div>
             <!-- Default wallpaper mode for new users (members override with their own preference) -->
             <div class="admin-panel-field">
               <label class="admin-settings-field-label">Default Location Wallpaper</label>
