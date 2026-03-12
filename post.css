@@ -291,10 +291,9 @@
   gap: 10px;
   font-size: 12px;
   margin: 0;
-  background: rgba(124, 58, 237, 0.5);
+  background: var(--purple-500, #7c3aed);
   color: #fff;
   padding: 2px 4px;
-  transition: background-color 0.15s ease;
 }
 
 .recent-statusbar-timestamp {
@@ -310,13 +309,6 @@
 
 /* Unavailable state - gray background */
 .recent-statusbar--unavailable {
-  background: rgba(107, 114, 128, 0.5);
-}
-
-.recent-card-wrapper:hover .recent-statusbar {
-  background: var(--purple-500, #7c3aed);
-}
-.recent-card-wrapper:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
@@ -328,10 +320,11 @@
   align-items: flex-start;
   background-color: transparent;
   border: none;
+  box-shadow: inset 0 0 0 1px transparent;
   border-radius: 8px;
   padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
   transform: scale(1);
 }
 
@@ -348,10 +341,10 @@
 
 .post-card:hover,
 .post-card.post-card--map-highlight {
-  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 .recent-card:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px #7c3aed;
 }
 
 
@@ -369,6 +362,14 @@
   box-shadow: none;
   border-radius: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.post-panel-content .post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+
+.post-panel-content .post-card.post-card--map-highlight {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 .post-panel-content .post-card:last-child,
@@ -2365,27 +2366,14 @@
 }
 
 .post-statusbar--comingsoon {
-  background: rgba(37, 99, 235, 0.5);
-  transition: background-color 0.15s ease;
+  background: #2563eb;
 }
 
 .post-statusbar--nowshowing {
-  background: rgba(22, 163, 74, 0.5);
-  transition: background-color 0.15s ease;
+  background: #16a34a;
 }
 
 .post-statusbar--finished {
-  background: rgba(17, 24, 39, 0.5);
-  transition: background-color 0.15s ease;
-}
-
-.post-slot:hover .post-statusbar--comingsoon {
-  background: #2563eb;
-}
-.post-slot:hover .post-statusbar--nowshowing {
-  background: #16a34a;
-}
-.post-slot:hover .post-statusbar--finished {
   background: #111827;
 }
 
@@ -2398,4 +2386,19 @@
   display: flex;
 }
 
+/* Postcard border mirrors countdown bar color; :hover included to prevent override */
+.post-card--countdowncomingsoon,
+.post-card--countdowncomingsoon:hover {
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+.post-card--countdownnowshowing,
+.post-card--countdownnowshowing:hover {
+  box-shadow: inset 0 0 0 1px #16a34a;
+}
+
+.post-card--countdownfinished,
+.post-card--countdownfinished:hover {
+  box-shadow: inset 0 0 0 1px #111827;
+}
 
