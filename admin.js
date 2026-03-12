@@ -43,6 +43,13 @@ const AdminModule = (function() {
     var tabButtons = null;
     var tabPanels = null;
 
+    function restorePanelUiState() {
+        // Drag position is intentionally not restored on refresh.
+    }
+
+    function persistPanelUiState() {
+        // Drag position is intentionally not persisted.
+    }
 
     /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
@@ -284,6 +291,8 @@ const AdminModule = (function() {
             console.warn('[Admin] Admin panel not found');
             return;
         }
+        restorePanelUiState();
+
         bindEvents();
         initHeaderDrag();
         loadAutosaveSetting();
@@ -382,6 +391,7 @@ const AdminModule = (function() {
                     if (!Number.isFinite(_left)) _left = currentLeft;
                     panelLastLeft = Math.max(0, _left);
                 } catch (_eAdminDragLeft) {}
+                persistPanelUiState();
             }
             
             document.addEventListener('mousemove', onMove);
@@ -568,6 +578,7 @@ const AdminModule = (function() {
             panelContent.style.right = 'auto';
             panelDragged = !(openLeft <= 20 || openLeft >= (maxLeft - 20));
         }
+        persistPanelUiState();
         requestAnimationFrame(function() {
             panelContent.classList.remove('admin-panel-contents--hidden');
             panelContent.classList.add('admin-panel-contents--visible');
@@ -732,6 +743,7 @@ const AdminModule = (function() {
             panelContent.classList.toggle('admin-panel-contents--side-left', panelHome === 'left');
             panelContent.style.left = '';
             panelContent.style.right = '';
+            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panel); } catch (_eStack) {}
         }

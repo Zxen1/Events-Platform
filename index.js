@@ -432,6 +432,9 @@ const App = (function() {
     }
   }
 
+  function restoreGlobalUiPanels() {
+    // Removed: panels no longer restore on refresh. Site always starts fresh.
+  }
 
 
   /* --------------------------------------------------------------------------

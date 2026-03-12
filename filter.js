@@ -97,6 +97,11 @@ const FilterModule = (function() {
     // by any module via getFilterSummaryText without depending on panel DOM).
     var lastSummaryText = '';
 
+    function restorePanelUiState() {
+    }
+
+    function persistPanelUiState() {
+    }
 
 
     /* --------------------------------------------------------------------------
@@ -461,6 +466,7 @@ const FilterModule = (function() {
         headerEl = panelEl.querySelector('.filter-panel-header');
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
+        restorePanelUiState();
         
         initMapControls();
         initResetButtons();
@@ -659,6 +665,7 @@ const FilterModule = (function() {
             contentEl.setAttribute('data-side', panelHome === 'right' ? 'right' : 'left');
             contentEl.style.left = '';
             contentEl.style.right = '';
+            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
         }
@@ -2188,6 +2195,7 @@ const FilterModule = (function() {
                     if (!Number.isFinite(_left)) _left = currentLeft;
                     panelLastLeft = Math.max(0, _left);
                 } catch (_eDragLeft) {}
+                persistPanelUiState();
             }
 
             function onUp() {
