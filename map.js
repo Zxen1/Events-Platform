@@ -781,12 +781,13 @@ const MapModule = (function() {
       }
       .map-dot-ring {
         position: absolute;
-        left: -10px;
-        top: -10px;
-        width: 20px;
-        height: 20px;
+        left: -12.5px;
+        top: -12.5px;
+        width: 25px;
+        height: 25px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.7);
+        transition: background 0.15s ease, outline 0.15s ease;
       }
       .map-dot-fill {
         position: absolute;
@@ -796,8 +797,13 @@ const MapModule = (function() {
         height: 15px;
         border-radius: 50%;
       }
+      .map-dot-container.is-hovered {
+        z-index: 5;
+      }
       .map-dot-container.is-hovered .map-dot-ring {
-        background: rgba(0, 0, 0, 0.9);
+        background: #172554;
+        outline: 2px solid var(--blue-500);
+        outline-offset: -2px;
       }
       
       /* ============================================================
@@ -818,6 +824,7 @@ const MapModule = (function() {
         height: 40px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.7);
+        transition: background 0.15s ease, outline 0.15s ease;
       }
       .map-icon-image {
         position: absolute;
@@ -828,8 +835,13 @@ const MapModule = (function() {
         border-radius: 50%;
         object-fit: contain;
       }
+      .map-icon-container.is-hovered {
+        z-index: 5;
+      }
       .map-icon-container.is-hovered .map-icon-ring {
-        background: rgba(0, 0, 0, 0.9);
+        background: #172554;
+        outline: 2px solid var(--blue-500);
+        outline-offset: -2px;
       }
       
     `;
