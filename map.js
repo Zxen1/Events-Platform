@@ -775,6 +775,11 @@ const MapModule = (function() {
       ──────────────────────────────────────────────────────────────────────────── */
       .map-card-appearance--icon .map-card-pill { display: none; }
       .map-card-appearance--icon.is-active .map-card-pill { display: flex; }
+      .map-card-appearance--icon:not(.is-active) .map-card-icon {
+        left: 0;
+        top: 0;
+        transform: translate(-50%, -50%);
+      }
       .map-card-appearance--icon::before {
         content: '';
         position: absolute;
@@ -782,16 +787,16 @@ const MapModule = (function() {
         height: 40px;
         border-radius: 50%;
         background: rgba(0,0,0,0.7);
-        left: -20px;
-        top: -20px;
+        left: 0;
+        top: 0;
         z-index: 1;
         pointer-events: none;
-        transform: scale(1);
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
         transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
       .map-card-appearance--icon.is-active::before {
-        transform: scale(0);
+        transform: translate(-50%, -50%) scale(0);
         opacity: 0;
       }
       .map-card-appearance--icon.is-hovered::before {
@@ -829,11 +834,11 @@ const MapModule = (function() {
         height: 30px;
         border-radius: 50%;
         background: rgba(0,0,0,0.7);
-        left: -15px;
-        top: -15px;
+        left: 0;
+        top: 0;
         z-index: 1;
         pointer-events: none;
-        transform: scale(1);
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
         transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
@@ -844,17 +849,17 @@ const MapModule = (function() {
         height: 20px;
         border-radius: 50%;
         background: var(--dot-color);
-        left: -10px;
-        top: -10px;
+        left: 0;
+        top: 0;
         z-index: 2;
         pointer-events: none;
-        transform: scale(1);
+        transform: translate(-50%, -50%) scale(1);
         opacity: 1;
         transition: transform 0.2s ease, opacity 0.2s ease;
       }
       .map-card-appearance--dot.is-active::before,
       .map-card-appearance--dot.is-active::after {
-        transform: scale(0);
+        transform: translate(-50%, -50%) scale(0);
         opacity: 0;
       }
       .map-card-appearance--dot.is-hovered::before {
