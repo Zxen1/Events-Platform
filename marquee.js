@@ -339,6 +339,15 @@ const MarqueeModule = (function() {
     slide.dataset.id = post.id;
     slide.dataset.mapCardId = String(mapCard.id);
     slide.href = getPostUrl(post);
+
+    slide.addEventListener('mouseenter', function() {
+      var selector = '.post-card[data-id="' + post.id + '"], .recent-card[data-id="' + post.id + '"]';
+      document.querySelectorAll(selector).forEach(function(c) { c.classList.add('post-card--map-highlight'); });
+    });
+    slide.addEventListener('mouseleave', function() {
+      var selector = '.post-card[data-id="' + post.id + '"], .recent-card[data-id="' + post.id + '"]';
+      document.querySelectorAll(selector).forEach(function(c) { c.classList.remove('post-card--map-highlight'); });
+    });
     
     const img = new Image();
     img.className = 'marquee-slide-image';
