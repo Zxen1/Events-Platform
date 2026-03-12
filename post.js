@@ -1876,7 +1876,6 @@ const PostModule = (function() {
   // Cached random scores for each venue key, persisted between renders.
   // Only regenerated on zoom changes exceeding the reshuffle threshold.
   var priorityScoreCache = {};        // venueKey -> random score (0-1)
-  var lastReshuffleZoom = null;       // Zoom level at which the last reshuffle occurred
 
   /**
    * Convert a map card to marker-friendly format
@@ -2117,29 +2116,13 @@ const PostModule = (function() {
     var totalResultCount = allMarkerData.length;
     var isHighDensity = totalResultCount > MAX_MAP_CARDS;
 
-    // Determine whether to reshuffle random scores or reuse cached ones.
-    // Reshuffle only when zoom changes by more than the configured threshold.
-    var currentZoom = (typeof lastZoom === 'number') ? lastZoom : 0;
-    var reshuffleThreshold = (window.App && typeof App.getConfig === 'function')
-      ? App.getConfig('reshuffleZoomThreshold') : 0.5;
-    var needsReshuffle = (lastReshuffleZoom === null) ||
-      (Math.abs(currentZoom - lastReshuffleZoom) >= reshuffleThreshold);
-
-    if (needsReshuffle) {
-      // Full reshuffle: regenerate random scores for all venue keys
-      priorityScoreCache = {};
-      allMarkerData.forEach(function(item) {
+    // Assign random scores once per venue key — new venues get a score on first appearance,
+    // existing venues keep theirs. Scores never reshuffle on zoom to prevent erratic switching.
+    allMarkerData.forEach(function(item) {
+      if (priorityScoreCache[item.venueKey] === undefined) {
         priorityScoreCache[item.venueKey] = Math.random();
-      });
-      lastReshuffleZoom = currentZoom;
-    } else {
-      // Partial update: keep existing scores, assign new ones for unseen venue keys
-      allMarkerData.forEach(function(item) {
-        if (priorityScoreCache[item.venueKey] === undefined) {
-          priorityScoreCache[item.venueKey] = Math.random();
-        }
-      });
-    }
+      }
+    });
 
     // Classify each marker into its tier
     var tierPremium = [];   // sidebar_ad === 1
@@ -2147,10 +2130,9 @@ const PostModule = (function() {
     var tierStandard = [];  // everything else
 
     allMarkerData.forEach(function(item) {
-      var post = item._originalPost;
-      if (post.sidebar_ad === 1) {
+      if (item._effectiveSidebarAd === 1) {
         tierPremium.push(item);
-      } else if (post.featured === 1) {
+      } else if (item._effectiveFeatured === 1) {
         tierFeatured.push(item);
       } else {
         tierStandard.push(item);
@@ -2202,7 +2184,7 @@ const PostModule = (function() {
         appearance = isPremiumOrFeatured ? 'icon' : 'dot';
       }
 
-      if (appearance === 'dot') {
+      if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
         var subColor = post.subcategory_color;
         if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
         dotColorByKey[item.venueKey] = subColor;
