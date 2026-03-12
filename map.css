@@ -318,6 +318,91 @@
 }
 
 /* ============================================================================
+   MAP ICON MARKER
+   30px subcategory icon inside a 40px black 0.7-opacity circle.
+   Shares .map-card-container anchor and pointer manager with map cards.
+   ============================================================================ */
+
+.map-icon-ring {
+  position: absolute;
+  left: -20px;
+  top: -20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: outline 0.15s ease;
+}
+
+.map-icon-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: block;
+  pointer-events: none;
+}
+
+.map-icon-container.is-active .map-icon-ring,
+.map-icon-container.is-hovered .map-icon-ring {
+  background: var(--blue-950);
+  outline: 2px solid var(--blue-500);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .map-icon-container:hover .map-icon-ring {
+    background: var(--blue-950);
+    outline: 2px solid var(--blue-500);
+    outline-offset: -2px;
+  }
+}
+
+/* ============================================================================
+   MAP DOT MARKER
+   15px subcategory-colored fill inside a 20px black 0.7-opacity circle.
+   Shares .map-card-container anchor and pointer manager with map cards.
+   ============================================================================ */
+
+.map-dot-ring {
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: outline 0.15s ease;
+}
+
+.map-dot-fill {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.map-dot-container.is-active .map-dot-ring,
+.map-dot-container.is-hovered .map-dot-ring {
+  background: var(--blue-950);
+  outline: 2px solid var(--blue-500);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .map-dot-container:hover .map-dot-ring {
+    background: var(--blue-950);
+    outline: 2px solid var(--blue-500);
+    outline-offset: -2px;
+  }
+}
+
+/* ============================================================================
    POST LOCATION MARKER
    ============================================================================ */
 

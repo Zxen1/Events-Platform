@@ -79,8 +79,6 @@ const MapModule = (function() {
   }
   
   // High-Density Layers
-  let highDensityData = { type: 'FeatureCollection', features: [] };
-  const loadedIcons = new Set();
   
   // Pill dimensions
   const SMALL_PILL_WIDTH = 150;
@@ -106,19 +104,6 @@ const MapModule = (function() {
   function getMaxMapCards() {
     return (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
   }
-  function getDotSize() {
-    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotSize') : 8;
-  }
-  function getDotStrokeWidth() {
-    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotStroke') : 2;
-  }
-  function getIconDotSize() {
-    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerIconSize') : 30;
-  }
-  const DOT_SOURCE_ID = 'high-density-source';
-  const DOT_LAYER_ID = 'standard-dots';
-  const ICON_LAYER_ID = 'featured-icons';
-  const GLOW_LAYER_ID = 'marker-glow';
 
 
   /* State */
@@ -156,7 +141,6 @@ const MapModule = (function() {
   const MAP_VIEW_STORAGE_KEY = 'mapView';
   let hasSavedMapView = false;
   let saveMapViewTimer = null;
-  let hoveredPostId = null; // Track currently hovered post for map effects
 
   function loadSavedMapView() {
     try {
@@ -1007,8 +991,6 @@ const MapModule = (function() {
         // Initialize clusters
         initClusters();
         
-        // Initialize high-density layers (dots/icons)
-        initHighDensityLayers();
       });
       
       // Bind map events (deferred)
@@ -1830,186 +1812,6 @@ const MapModule = (function() {
   }
 
   /**
-   * Initialize high-density layers (dots and icons)
-   */
-  function initHighDensityLayers() {
-    if (!map) return;
-    
-    // Create source
-    if (!map.getSource(DOT_SOURCE_ID)) {
-      map.addSource(DOT_SOURCE_ID, {
-        type: 'geojson',
-        data: highDensityData,
-        generateId: true
-      });
-    }
-
-    // 1. Glow Layer (behind dots/icons)
-    if (!map.getLayer(GLOW_LAYER_ID)) {
-      map.addLayer({
-        id: GLOW_LAYER_ID,
-        type: 'circle',
-        source: DOT_SOURCE_ID,
-        minzoom: getMarkerZoomThreshold(),
-        paint: {
-          'circle-radius': [
-            'case',
-            ['boolean', ['feature-state', 'hover'], false],
-            ['case', ['==', ['get', 'type'], 'icon'], 25, 12],
-            0
-          ],
-          'circle-color': '#ffffff',
-          'circle-opacity': 0.3,
-          'circle-blur': 0.8
-        }
-      });
-    }
-
-    // 2. Standard Dots Layer
-    if (!map.getLayer(DOT_LAYER_ID)) {
-      map.addLayer({
-        id: DOT_LAYER_ID,
-        type: 'circle',
-        source: DOT_SOURCE_ID,
-        minzoom: getMarkerZoomThreshold(),
-        filter: ['==', ['get', 'type'], 'dot'],
-        paint: {
-          'circle-radius': getDotSize() / 2,
-          'circle-color': ['get', 'color'],
-          'circle-stroke-color': 'rgba(0,0,0,0.7)',
-          'circle-stroke-width': getDotStrokeWidth()
-        }
-      });
-    }
-
-      // 3. Featured Icons Layer (symbol)
-      if (!map.getLayer(ICON_LAYER_ID)) {
-        // Background for Icons (the 0.7 black ring)
-        // Agent Rules: Black ring at 0.7 opacity, fill at 0.4 for visibility
-        map.addLayer({
-          id: ICON_LAYER_ID + '-bg',
-          type: 'circle',
-          source: DOT_SOURCE_ID,
-          minzoom: getMarkerZoomThreshold(),
-          filter: ['==', ['get', 'type'], 'icon'],
-          paint: {
-            'circle-radius': getIconDotSize() / 2,
-            'circle-color': ['get', 'color'], // Use subcategory color for background too
-            'circle-opacity': 0.4,
-            'circle-stroke-color': 'rgba(0,0,0,0.7)',
-            'circle-stroke-width': getDotStrokeWidth()
-          }
-        });
-
-      map.addLayer({
-        id: ICON_LAYER_ID,
-        type: 'symbol',
-        source: DOT_SOURCE_ID,
-        minzoom: getMarkerZoomThreshold(),
-        filter: ['==', ['get', 'type'], 'icon'],
-        layout: {
-          'icon-image': ['get', 'iconId'],
-          'icon-size': 0.8, // Adjust to fit 30px well
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true
-        }
-      });
-    }
-
-    // Interaction handlers
-    [DOT_LAYER_ID, ICON_LAYER_ID].forEach(layerId => {
-      map.on('mouseenter', layerId, function(e) {
-        // Performance/Interaction Rule: Never trigger if below threshold
-        if (map.getZoom() < getMarkerZoomThreshold()) return;
-        
-        if (!e.features.length) return;
-        map.getCanvas().style.cursor = 'pointer';
-        
-        const feature = e.features[0];
-        const postId = feature.properties.postId;
-        
-        if (hoveredPostId !== null) {
-          map.setFeatureState({ source: DOT_SOURCE_ID, id: hoveredPostId }, { hover: false });
-        }
-        
-        hoveredPostId = feature.id;
-        map.setFeatureState({ source: DOT_SOURCE_ID, id: feature.id }, { hover: true });
-        
-        App.emit('map:markerHover', { postId: postId });
-      });
-
-      map.on('mouseleave', layerId, function() {
-        map.getCanvas().style.cursor = '';
-        if (hoveredPostId !== null) {
-          map.setFeatureState({ source: DOT_SOURCE_ID, id: hoveredPostId }, { hover: false });
-          hoveredPostId = null;
-        }
-        App.emit('map:markerLeave');
-      });
-
-      map.on('click', layerId, function(e) {
-        if (!e.features.length) return;
-        const postId = e.features[0].properties.postId;
-        App.emit('post:open', { id: postId, source: 'map_dot' });
-      });
-    });
-  }
-
-  /**
-   * Update the high-density data source
-   * @param {Object} geojson - FeatureCollection of dots and icons
-   */
-  function updateHighDensityData(geojson) {
-    highDensityData = geojson || { type: 'FeatureCollection', features: [] };
-    
-    if (!map) return;
-    const source = map.getSource(DOT_SOURCE_ID);
-    if (source) {
-      source.setData(highDensityData);
-    }
-
-    // Pre-load icons for symbol layer
-    if (highDensityData.features) {
-      highDensityData.features.forEach(f => {
-        if (f.properties.type === 'icon' && f.properties.iconId && f.properties.iconUrl) {
-          ensureIconLoaded(f.properties.iconId, f.properties.iconUrl);
-        }
-      });
-    }
-  }
-
-  /**
-   * Ensure an icon is loaded in Mapbox for symbol layers
-   */
-  function ensureIconLoaded(iconId, iconUrl) {
-    if (loadedIcons.has(iconId) || (map && map.hasImage(iconId))) return Promise.resolve(iconId);
-    
-    return new Promise(function(resolve) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        if (map && !map.hasImage(iconId)) {
-          map.addImage(iconId, img);
-        }
-        loadedIcons.add(iconId);
-        
-        // Force a redraw of the high-density layer now that the image is ready
-        const source = map.getSource(DOT_SOURCE_ID);
-        if (source && typeof source.setData === 'function') {
-          source.setData(highDensityData);
-        }
-        
-        resolve(iconId);
-      };
-      img.onerror = function() {
-        console.warn('[Map] Failed to load icon for high-density layer:', iconUrl);
-        resolve(null);
-      };
-      img.src = iconUrl;
-    });
-  }
-
-  /**
    * Initialize cluster system
    */
   function initClusters() {
@@ -2380,6 +2182,98 @@ const MapModule = (function() {
   }
 
   /**
+   * Create a map icon marker (Premium/Featured that missed a card slot).
+   * Visually: 30px subcategory icon centered inside a 40px black 0.7-opacity circle.
+   * Click/hover behavior is identical to map cards (shares mapCardMarkers and pointer manager).
+   */
+  function createMapIconMarker(post, lng, lat) {
+    if (!map || !post || !post.id) return null;
+
+    const el = document.createElement('div');
+    el.className = 'map-card-container map-icon-container';
+
+    const ring = document.createElement('div');
+    ring.className = 'map-icon-ring';
+
+    const img = document.createElement('img');
+    img.className = 'map-icon-image';
+    img.src = getSmallIconUrl(post);
+    img.width = 30;
+    img.height = 30;
+    img.alt = '';
+
+    ring.appendChild(img);
+    el.appendChild(ring);
+
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+    const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
+    el.dataset.venueKey = venueKey;
+    const entry = {
+      marker: marker,
+      element: el,
+      post: post,
+      state: 'small',
+      lng: lng,
+      lat: lat,
+      venueKey: venueKey,
+      postIds: (post.isMultiPost || post.isStorefront) && Array.isArray(post.venuePostIds)
+        ? post.venuePostIds.map(function(pid) { return String(pid); })
+        : [String(post.id)]
+    };
+    mapCardMarkers.set(venueKey, entry);
+    bindMapCardPointerManager();
+    return entry;
+  }
+
+  /**
+   * Create a map dot marker (Standard posts that missed a card slot).
+   * Visually: 15px subcategory-colored fill inside a 20px black 0.7-opacity circle.
+   * Click/hover behavior is identical to map cards (shares mapCardMarkers and pointer manager).
+   */
+  function createMapDotMarker(post, lng, lat, color) {
+    if (!map || !post || !post.id) return null;
+    if (!color) throw new Error('[Map] createMapDotMarker: color missing for post ID ' + post.id);
+
+    const el = document.createElement('div');
+    el.className = 'map-card-container map-dot-container';
+
+    const ring = document.createElement('div');
+    ring.className = 'map-dot-ring';
+
+    const fill = document.createElement('div');
+    fill.className = 'map-dot-fill';
+    fill.style.backgroundColor = color;
+
+    ring.appendChild(fill);
+    el.appendChild(ring);
+
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+    const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
+    el.dataset.venueKey = venueKey;
+    const entry = {
+      marker: marker,
+      element: el,
+      post: post,
+      state: 'small',
+      lng: lng,
+      lat: lat,
+      venueKey: venueKey,
+      postIds: (post.isMultiPost || post.isStorefront) && Array.isArray(post.venuePostIds)
+        ? post.venuePostIds.map(function(pid) { return String(pid); })
+        : [String(post.id)]
+    };
+    mapCardMarkers.set(venueKey, entry);
+    bindMapCardPointerManager();
+    return entry;
+  }
+
+  /**
    * Build map card HTML
    */
   function buildMapCardHTML(post, state) {
@@ -2550,17 +2444,6 @@ const MapModule = (function() {
     const pid = String(postId);
     const token = ++hoverToken;
     
-    // High-Density Glow: Apply highlight to dots/icons layers
-    if (map && map.getSource(DOT_SOURCE_ID)) {
-      const featureId = Number(pid);
-      if (!isNaN(featureId)) {
-        map.setFeatureState(
-          { source: DOT_SOURCE_ID, id: featureId },
-          { hover: isHovering }
-        );
-      }
-    }
-
     if (isHovering) {
       if (currentHoverPostIds && currentHoverPostIds.length) {
         setHoverGroupForPostIds(currentHoverPostIds, false);
@@ -3262,6 +3145,8 @@ const MapModule = (function() {
     
     // Map cards
     createMapCardMarker,
+    createMapIconMarker,
+    createMapDotMarker,
     removeMapCardMarker,
     clearAllMapCardMarkers,
     clearActiveMapCards,
@@ -3274,7 +3159,6 @@ const MapModule = (function() {
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
     removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
     refreshMapCardStyles,
-    updateHighDensityData,
     
     // Map card utilities (for PostModule)
     getMarkerLabelLines,
