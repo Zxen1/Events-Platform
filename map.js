@@ -786,7 +786,7 @@ const MapModule = (function() {
         height: 20px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.7);
-        transition: background 0.15s ease, outline 0.15s ease;
+        transition: background 0.15s ease;
       }
       .map-dot-fill {
         position: absolute;
@@ -823,7 +823,7 @@ const MapModule = (function() {
         height: 40px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.7);
-        transition: background 0.15s ease, outline 0.15s ease;
+        transition: background 0.15s ease;
       }
       .map-icon-image {
         position: absolute;
@@ -2350,7 +2350,7 @@ const MapModule = (function() {
       marker: marker,
       element: el,
       post: data,
-      state: 'default',
+      state: 'small',
       type: 'dot',
       lng: lng,
       lat: lat,
@@ -2388,7 +2388,7 @@ const MapModule = (function() {
       marker: marker,
       element: el,
       post: data,
-      state: 'default',
+      state: 'small',
       type: 'icon',
       lng: lng,
       lat: lat,
@@ -2451,37 +2451,28 @@ const MapModule = (function() {
   }
 
   /**
-   * Activate any marker to big state (cards, dots, icons — same path)
+   * Activate any marker to big state (identical for cards, dots, icons)
    */
   function activateMarker(entry) {
     if (!entry || !entry.element) return;
-    if (entry.type === 'dot' || entry.type === 'icon') {
-      entry._savedHTML = entry.element.innerHTML;
-      entry._savedClassName = entry.element.className;
-      entry.element.className = 'map-card-container is-active';
-      entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
-    } else {
-      updateMapCardStateByKey(entry.venueKey, 'big');
-      entry.element.classList.add('is-active');
-    }
+    entry._savedHTML = entry.element.innerHTML;
+    entry._savedClassName = entry.element.className;
+    entry.element.className = 'map-card-container is-active';
+    entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
     entry.state = 'big';
   }
 
   /**
-   * Deactivate any marker from big state (cards, dots, icons — same path)
+   * Deactivate any marker from big state (identical for cards, dots, icons)
    */
   function deactivateMarker(entry) {
     if (!entry || !entry.element) return;
-    if (entry._savedHTML) {
-      entry.element.className = entry._savedClassName;
-      entry.element.innerHTML = entry._savedHTML;
-      delete entry._savedHTML;
-      delete entry._savedClassName;
-    } else {
-      updateMapCardStateByKey(entry.venueKey, 'small');
-      entry.element.classList.remove('is-active');
-    }
-    entry.state = 'default';
+    if (!entry._savedHTML) return;
+    entry.element.className = entry._savedClassName;
+    entry.element.innerHTML = entry._savedHTML;
+    entry.state = 'small';
+    delete entry._savedHTML;
+    delete entry._savedClassName;
   }
 
   /* ------------------------------------------------------------------
