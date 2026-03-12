@@ -2224,19 +2224,9 @@ const PostModule = (function() {
       }
 
       if (type !== 'card') {
-        dotIconItems.push({
-          id: item.id,
-          venueKey: item.venueKey,
-          type: type,
-          color: subColor,
-          iconUrl: item.iconUrl,
-          lng: item.lng,
-          lat: item.lat,
-          _originalPost: post,
-          isMultiPost: item.isMultiPost,
-          isStorefront: item.isStorefront,
-          venuePostIds: item.venuePostIds
-        });
+        item.markerType = type;
+        item.color = subColor;
+        dotIconItems.push(item);
       }
     });
 

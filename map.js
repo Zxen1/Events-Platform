@@ -781,10 +781,10 @@ const MapModule = (function() {
       }
       .map-dot-ring {
         position: absolute;
-        left: -12.5px;
-        top: -12.5px;
-        width: 25px;
-        height: 25px;
+        left: -10px;
+        top: -10px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.7);
         transition: background 0.15s ease, outline 0.15s ease;
@@ -802,8 +802,8 @@ const MapModule = (function() {
       }
       .map-dot-container.is-hovered .map-dot-ring {
         background: #172554;
-        outline: 2px solid var(--blue-500);
-        outline-offset: -2px;
+        outline: 1px solid var(--blue-500);
+        outline-offset: -1px;
       }
       
       /* ============================================================
@@ -2350,7 +2350,7 @@ const MapModule = (function() {
     const entry = {
       marker: marker,
       element: el,
-      post: data._originalPost || data,
+      post: data,
       state: 'default',
       type: 'dot',
       lng: lng,
@@ -2388,7 +2388,7 @@ const MapModule = (function() {
     const entry = {
       marker: marker,
       element: el,
-      post: data._originalPost || data,
+      post: data,
       state: 'default',
       type: 'icon',
       lng: lng,
@@ -2431,7 +2431,7 @@ const MapModule = (function() {
     nextKeys.forEach(function(venueKey) {
       if (mapDotIconMarkers.has(venueKey)) return;
       var item = itemsByKey[venueKey];
-      if (item.type === 'icon') {
+      if (item.markerType === 'icon') {
         createMapIconMarker(item, item.lng, item.lat);
       } else {
         createMapDotMarker(item, item.lng, item.lat);
