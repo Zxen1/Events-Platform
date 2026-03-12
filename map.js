@@ -839,6 +839,17 @@ const MapModule = (function() {
         left: -15px;
         top: -15px;
       }
+      .map-card-appearance--dot[data-multipost]:not(.is-active) .map-card-icon {
+        opacity: 1;
+        width: 20px;
+        height: 20px;
+        left: 0;
+        top: 0;
+        transform: translate(-50%, -50%);
+      }
+      .map-card-appearance--dot[data-multipost]:not(.is-active)::after {
+        opacity: 0;
+      }
       .map-card-appearance--dot::before {
         content: '';
         position: absolute;
@@ -2266,10 +2277,13 @@ const MapModule = (function() {
     el.className = 'map-card-container';
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
-    } else if (appearance === 'dot') {
+    } else     if (appearance === 'dot') {
       if (!dotColor) throw new Error('[Map] createMapCardMarker: dotColor required for dot appearance (post ID ' + post.id + ')');
       el.classList.add('map-card-appearance--dot');
       el.style.setProperty('--dot-color', dotColor);
+      if (post.isMultiPost || post.isStorefront) {
+        el.dataset.multipost = '1';
+      }
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
 
