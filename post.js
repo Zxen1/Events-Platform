@@ -2105,6 +2105,12 @@ const PostModule = (function() {
         return Math.max(max, item.post.checkout_sort_order || 0);
       }, 0);
 
+      // If any post in the group has checkout_featured = 1, the group is featured.
+      // Featured groups are never dots — only non-featured groups can become dots.
+      markerData._groupIsFeatured = group.some(function(item) {
+        return (item.post.featured || 0) === 1;
+      });
+
       allMarkerData.push(markerData);
     });
 
@@ -2125,11 +2131,8 @@ const PostModule = (function() {
       }
     });
 
-    // Determine the two highest sort_order values present to classify into three tiers.
-    // Find the lowest checkout_sort_order in the current set — only that sort order becomes dots.
-    var lowestSortOrder = allMarkerData.reduce(function(min, item) {
-      return Math.min(min, item._groupMaxSortOrder || 0);
-    }, Infinity);
+    // checkout_featured = 1 means the tier is featured or above — never a dot.
+    // checkout_featured = 0 means the tier can become a dot when max map cards is exceeded.
 
     // Sort directly by checkout_sort_order descending, random score as tiebreaker.
     // Higher sort_order = higher priority. Fairness: one card per post before extras.
@@ -2161,12 +2164,11 @@ const PostModule = (function() {
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
-      var isLowestSortOrder = (item._groupMaxSortOrder || 0) === lowestSortOrder;
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
       var appearance = 'card';
       if (isHighDensity && !hasCardSlot) {
-        appearance = isLowestSortOrder ? 'dot' : 'icon';
+        appearance = item._groupIsFeatured ? 'icon' : 'dot';
       }
 
       if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
