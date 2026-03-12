@@ -1,0 +1,355 @@
+================================================================================
+FIELDSET SPLIT PLAN - DO NOT DELETE
+================================================================================
+
+This file tracks the refactoring of session_pricing into ticket_pricing and sessions.
+KEEP THIS FILE until the user confirms all testing is complete.
+
+================================================================================
+SOURCE
+================================================================================
+- File: fieldsets-new.js
+- Case: session_pricing (lines 2521-4607, ~2086 lines)
+- This is the ONLY source. Copy from here. Do not invent.
+
+================================================================================
+TARGETS
+================================================================================
+1. ticket_pricing (fieldset ID 28)
+   - Contains: ticket groups, age rating, currency, ticket areas, pricing tiers
+   - Location: Primary container (ABOVE the line)
+   - NOT location_specific
+   - Class prefix: fieldset-ticketpricing-*
+   - Function prefix: tp*
+
+2. sessions (fieldset ID 29)
+   - Contains: calendar, date picker, session times, ticket group selector
+   - Location: Location containers (BELOW the line)
+   - IS location_specific
+   - Class prefix: fieldset-sessions-*
+   - Function prefix: sess*
+   - Reads ticket group keys from ticket_pricing via _getTicketGroupKeys()
+
+================================================================================
+RULES (FROM AGENT ESSENTIALS)
+================================================================================
+- COPY AND PASTE ONLY
+- NO INVENTING
+- NO REWRITING
+- NO SIMPLIFYING
+- Replace "seating" with "ticketarea"
+- Replace "sp" prefix with "tp" or "sess"
+- Replace "fieldset-sessionpricing-" with "fieldset-ticketpricing-" or "fieldset-sessions-"
+
+================================================================================
+DATABASE REQUIREMENTS
+================================================================================
+[x] fieldsets table: ticket_pricing row (ID 28)
+[x] fieldsets table: sessions row (ID 29)
+[x] fieldsets table: fieldset_instruction column added
+[x] fieldsets table: fieldset_instruction populated for 28 and 29
+    - Ticket Pricing (28): "Ticket groups allow you to create age-specific and..."
+    - Sessions (29): "Click a date box on the left to open the date pick..."
+[x] subcategories table: Event types (101-106, 108, 109) updated with fieldset IDs 28, 29
+
+================================================================================
+FILE CHANGES CHECKLIST
+================================================================================
+
+get-form.php:
+[x] Check for fieldset_instruction column existence
+[x] Include fieldset_instruction in SELECT query
+[x] Add fieldset_instruction to $entry array
+[x] Add fieldset_instruction to $builtField arrays (2 locations)
+
+fieldsets-new.js:
+[x] ticket_pricing case added
+[x] sessions case added
+[x] All sp* functions copied to tp* for ticket_pricing
+[x] All sp* functions copied to sess* for sessions
+[x] fieldset-sessionpricing-* classes changed to fieldset-ticketpricing-*
+[x] fieldset-sessionpricing-* classes changed to fieldset-sessions-*
+[x] "seating" changed to "ticketarea" in ticket_pricing
+[x] ticket_pricing exposes _getTicketGroupKeys()
+[x] sessions calls sessGetTicketGroupKeys() to read from ticket_pricing
+[x] _setValue implemented for both
+[x] _getValue implemented for both
+[x] Instruction text read from fieldset_instruction (not hardcoded)
+
+fieldsets-new.css:
+[x] fieldset-ticketpricing-instruction
+[x] fieldset-ticketpricing-ticketgroups-container
+[x] fieldset-ticketpricing-ticketgroup-item and variants
+[x] fieldset-ticketpricing-pricing-button-add/remove
+[x] fieldset-sessions-instruction
+[x] fieldset-sessions-sessions-container
+[x] fieldset-sessions-session-row and variants
+[x] fieldset-sessions-session-button-add/remove
+[x] fieldset-sessions-ticketgroup-menu and variants
+[x] fieldset-sessions-calendar-popover
+
+formbuilder-new.js:
+[x] Instruction textarea for ticket_pricing and sessions
+[x] isLockedEventFieldset detection
+[x] isEventFieldsetTicketPricing detection
+[x] isEventFieldsetSessions detection
+[x] Required checkbox locked for event fieldsets
+[x] More menu disabled for event fieldsets (prevents deletion)
+[x] Sessions forced to location_specific
+[x] autoAddEventFieldsets() function
+[x] ticket_pricing auto-added above divider for Events type
+[x] sessions auto-added below divider for Events type
+[x] updateEventOnlyFieldsets() handles ticket_pricing, sessions, session_pricing
+[x] Fieldset menu greys out event-only fieldsets for General type
+
+member-new.js:
+[x] case 'ticket_pricing' added to getValue switch (form submission)
+[x] case 'sessions' added to getValue switch (form submission)
+[x] Extracts pricing_groups, age_ratings, price_summary from ticket_pricing
+[x] Extracts sessions, session_summary from sessions
+[x] Validation message handling updated for ticket_pricing and sessions
+[x] extractCurrencyFromPayload handles ticket_pricing
+[x] getMaxSelectedIso lookup checks sessions fieldset first, then session_pricing
+[x] case 'ticket_pricing' added to data loading (edit existing post)
+[x] case 'sessions' added to data loading (edit existing post)
+
+add-post.php:
+[x] Accepts both ticket_pricing and ticket-pricing baseType
+[x] Handles separate sessions fieldset (with sessions array)
+[x] Handles separate ticket_pricing fieldset (with pricing_groups)
+[x] Writes session_summary and price_summary to map card
+[x] Writes to post_sessions table from sessions fieldset
+[x] Writes to post_ticket_pricing table from ticket_pricing fieldset
+
+edit-post.php:
+[x] Accepts both ticket_pricing and ticket-pricing baseType
+[x] Handles separate sessions fieldset (with sessions array)
+[x] Handles separate ticket_pricing fieldset (with pricing_groups)
+[x] Writes session_summary and price_summary to map card
+[x] Writes to post_sessions table from sessions fieldset
+[x] Writes to post_ticket_pricing table from ticket_pricing fieldset
+
+================================================================================
+FUNCTIONALITY THAT MUST BE COPIED (from session_pricing)
+================================================================================
+[x] buildLabel call
+[x] instruction text display
+[x] capitalize() function
+[x] updateTierCompleteness() function
+[x] applyFieldsetRowItemClasses() calls
+[x] applyPlaceholder() calls
+[x] manuallyEdited tracking (dataset.manuallyEdited = 'true')
+[x] Price input focus handler (strips symbol)
+[x] Price input blur handler (formats with symbol)
+[x] Price input input handler (sanitizes)
+[x] updatePricePlaceholder() calls
+[x] Currency state management
+[x] Ticket group add/remove buttons
+[x] Pricing tier add/remove buttons
+[x] Ticket area add/remove buttons
+[x] Calendar date selection
+[x] Session time inputs with HH:MM formatting
+[x] Session time autofill logic
+[x] Session time sorting on blur
+[x] Ticket group dropdown for sessions
+
+================================================================================
+PREVIOUS ERRORS TO AVOID
+================================================================================
+1. DO NOT add language tags to code references
+2. DO NOT use "seating" - use "ticketarea"
+3. DO NOT use "sessionpricing" in new class names
+4. DO NOT invent simplified code - copy exactly
+5. DO NOT forget capitalize() function
+6. DO NOT forget manuallyEdited tracking
+7. DO NOT forget price focus/blur behavior
+8. DO NOT forget updateTierCompleteness()
+9. DO NOT use terminal commands
+10. DO NOT delete this file until testing is complete
+
+================================================================================
+INSTRUCTION SYSTEM FIX (2024-01-24)
+================================================================================
+Issue: Instructions weren't showing in forms and didn't trigger "Modified" state.
+Also: Placeholder and tooltip changes weren't triggering save/discard buttons.
+
+Root cause: captureFormbuilderState() used wrong selectors that couldn't find elements.
+
+Fixed:
+[x] formbuilder-new.js: Moved instructionInput declaration before checkModifiedState()
+[x] formbuilder-new.js: Added hasInstructionOverride to checkModifiedState()
+[x] formbuilder-new.js: Added instruction to currentState object
+[x] formbuilder-new.js: Added formbuilder-field-instruction class to textarea
+[x] formbuilder-new.js: Added formbuilder-field-placeholder class to textarea
+[x] formbuilder-new.js: Added formbuilder-field-tooltip class to textarea
+[x] formbuilder-new.js: Fixed captureFormbuilderState() to use correct selectors
+[x] formbuilder-new.js: Removed restriction - instruction now available for ALL fieldsets
+[x] save-form.php: Added instruction saving to fieldset_mods JSON
+[x] get-form.php: Added $customInstruction loading from fieldEdit
+[x] get-form.php: Added customInstruction to builtField array
+[x] fieldsets-new.js: Modified buildLabel() to accept optional instruction parameter
+[x] fieldsets-new.js: Updated ALL buildLabel calls to pass instruction (including ticket_pricing and sessions)
+[x] fieldsets-new.js: Removed biased ticket_pricing/sessions custom instruction handling
+[x] fieldsets-new.css: Added generic .fieldset-instruction class
+[x] fieldsets-new.css: Removed biased .fieldset-ticketpricing-instruction and .fieldset-sessions-instruction
+
+Instruction Not Showing Fix (2024-01-24):
+Root cause: ensureFieldDefaults() in member-new.js wasn't copying fieldset_instruction or customInstruction
+[x] member-new.js: Added fieldset_instruction to default object
+[x] member-new.js: Added customInstruction to default object  
+[x] member-new.js: Added copying logic for field.fieldset_instruction
+[x] member-new.js: Added copying logic for field.customInstruction
+
+================================================================================
+TICKET GROUP AUTOFILL FEATURE (2024-01-24)
+================================================================================
+When creating a new ticket group (B, C, D...), automatically copy from Group A:
+- Age Rating (menu)
+- Currency (menu)
+- Allocated Ticket Areas (Yes/No radio)
+- Ticket Areas (names and structure)
+- Pricing Tiers (names and structure)
+- Prices are ALWAYS left BLANK
+
+Manual Edit Tracking:
+- Per-element, per-group tracking (e.g. Group B's ageRating edited)
+- Elements tracked: ageRating, currency, allocatedAreas, ticketAreas
+- If a user edits an element, it stops autofilling for that element in that group
+- Adding/removing ticket areas or tiers marks ticketAreas as manually edited
+- Changes to Group A do NOT retroactively update existing groups (only new ones)
+
+Reset Condition:
+- When ticket groups reduced to 1, all manual edit tracking is reset
+- Next time a new group is added, full autofill resumes
+
+Implementation:
+[x] tpManualEditTracking object added
+[x] tpGetGroupAState() - extracts current state from Group A
+[x] tpIsManuallyEdited(groupKey, elementKey) - checks tracking
+[x] tpMarkAsManuallyEdited(groupKey, elementKey) - sets tracking
+[x] tpResetManualEditTracking() - clears all tracking
+[x] tpReplaceEditorFromPricing() accepts groupKey and autofillState
+[x] tpCreateTicketAreaBlock() accepts groupKey for tracking
+[x] tpCreatePricingTierBlock() accepts groupKey for tracking
+[x] tpAddTicketGroup() calls tpGetGroupAState() and passes to tpEnsureTicketGroup()
+[x] tpRemoveTicketGroup() remaps tracking when groups re-lettered
+[x] tpRemoveTicketGroup() resets tracking when reduced to 1 group
+
+Currency Autofill Fix (2024-01-24):
+[x] tpGetGroupAState() now extracts currency CODE only (not "USD - US Dollar")
+    - Applied same parsing as other currency extractions: split on " - " and take first part
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+[ ] 1. Clear browser cache (or use incognito mode)
+[ ] 2. Create NEW test post with Event subcategory
+[ ] 3. Verify ticket_pricing fieldset appears in primary container
+[ ] 4. Verify sessions fieldset appears in each location container
+[ ] 5. Fill out ticket groups (currency, age rating, ticket areas, pricing tiers)
+[ ] 6. Select dates in calendar and add session times
+[ ] 7. Select ticket groups for each session time
+[ ] 8. Submit the post
+[ ] 9. Verify post card shows:
+    - Date range (from session_summary)
+    - Price range (from price_summary)
+    - Venue menu
+    - Session/calendar menu
+    - Info block with ticket details
+[ ] 10. Edit the post and verify data loads correctly
+[ ] 11. Save the edit and verify post still displays correctly
+[ ] 12. Test with multiple locations (increase location quantity)
+
+AUTOFILL TESTING:
+[ ] 13. In ticket_pricing, fill out Group A completely (age, currency, areas, tiers, prices)
+[ ] 14. Click "+" to add Group B
+[ ] 15. Verify Group B has same Age Rating, Currency, Ticket Areas, Pricing Tiers as A
+[ ] 16. Verify Group B prices are BLANK
+[ ] 17. Edit Group B's Currency to something different
+[ ] 18. Add Group C
+[ ] 19. Verify Group C Currency matches Group A (not B's edited value)
+[ ] 20. Verify Group C Age Rating, Ticket Areas, Pricing Tiers match Group A
+[ ] 21. Delete Group B, verify Group C becomes B
+[ ] 22. Delete until only 1 group remains
+[ ] 23. Add a new group, verify full autofill works again
+
+INSTRUCTION TESTING:
+[ ] 24. Clear browser cache or use incognito mode
+[ ] 25. Create a new post with Event subcategory
+[ ] 26. Verify instruction text appears below "Ticket Pricing" label:
+    "Ticket groups allow you to create age-specific and..."
+[ ] 27. Verify instruction text appears below "Sessions" label:
+    "Click a date box on the left to open the date pick..."
+[ ] 28. If instructions don't show:
+    - Check Network tab in DevTools
+    - Look for get-form.php response
+    - Verify fieldset_instruction is in JSON response
+[ ] 29. In Form Builder, test custom instruction override:
+    - Select any fieldset, add instruction in Modify panel
+    - Verify "Discard" and "Save" buttons appear
+    - Save and verify custom instruction shows in post form
+
+================================================================================
+CLASS NAME REFERENCE
+================================================================================
+
+TICKET_PRICING classes (fieldset-ticketpricing-*):
+- fieldset-ticketpricing-instruction
+- fieldset-ticketpricing-ticketgroups-container
+- fieldset-ticketpricing-ticketgroup-item
+- fieldset-ticketpricing-ticketgroup-item--active
+- fieldset-ticketpricing-ticketgroup-item-header
+- fieldset-ticketpricing-ticketgroup-item-header-content
+- fieldset-ticketpricing-ticketgroup-header-label
+- fieldset-ticketpricing-ticketgroup-arrow
+- fieldset-ticketpricing-ticketgroup-arrow-icon
+- fieldset-ticketpricing-ticketgroup-button-add
+- fieldset-ticketpricing-ticketgroup-button-remove
+- fieldset-ticketpricing-ticketgroup-button-icon
+- fieldset-ticketpricing-ticketgroup-item-editorwrap
+- fieldset-ticketpricing-pricing-editor
+- fieldset-ticketpricing-pricing-ticketareas-container
+- fieldset-ticketpricing-pricing-ticketarea-block
+- fieldset-ticketpricing-ticketarea-label-row
+- fieldset-ticketpricing-ticketarea-input-row
+- fieldset-ticketpricing-input-ticketarea
+- fieldset-ticketpricing-pricing-tiers-container
+- fieldset-ticketpricing-tier-label-row
+- fieldset-ticketpricing-tier-input-row
+- fieldset-ticketpricing-pricing-tier-block
+- fieldset-ticketpricing-input-price
+- fieldset-ticketpricing-pricing-button-add
+- fieldset-ticketpricing-pricing-button-remove
+- fieldset-ticketpricing-pricing-button-icon
+
+SESSIONS classes (fieldset-sessions-*):
+- fieldset-sessions-instruction
+- fieldset-sessions-calendar-container
+- fieldset-sessions-calendar-popover
+- fieldset-sessions-calendar-popover--open
+- fieldset-sessions-calendar-popover-body
+- fieldset-sessions-sessions-container
+- fieldset-sessions-session-container-item
+- fieldset-sessions-session-row
+- fieldset-sessions-session-row--picker
+- fieldset-sessions-session-field-label
+- fieldset-sessions-session-field-label--picker
+- fieldset-sessions-session-field-label--selected
+- fieldset-sessions-session-field-label--open
+- fieldset-sessions-session-field-label-spacer
+- fieldset-sessions-session-field-time
+- fieldset-sessions-session-field-time-input
+- fieldset-sessions-session-button-add
+- fieldset-sessions-session-button-remove
+- fieldset-sessions-session-button-icon
+- fieldset-sessions-ticketgroup-menu
+- fieldset-sessions-ticketgroup-menu--open
+- fieldset-sessions-ticketgroup-menu-options
+- fieldset-sessions-ticketgroup-menu-option
+- fieldset-sessions-ticketgroup-menu-option-icon
+- fieldset-sessions-ticketgroup-menu-option-label
+- fieldset-sessions-ticketgroup-button-toggle
+- fieldset-sessions-ticketgroup-button-icon
+- fieldset-sessions-ticketgroup-button-label
+
+================================================================================
