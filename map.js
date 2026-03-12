@@ -1860,7 +1860,8 @@ const MapModule = (function() {
           ],
           'circle-color': '#ffffff',
           'circle-opacity': 0.3,
-          'circle-blur': 0.8
+          'circle-blur': 0.8,
+          'circle-emissive-strength': 1
         }
       });
     }
@@ -1876,8 +1877,8 @@ const MapModule = (function() {
         paint: {
           'circle-radius': getDotSize() / 2,
           'circle-color': ['get', 'color'],
-          'circle-stroke-color': 'rgba(0,0,0,0.7)',
-          'circle-stroke-width': getDotStrokeWidth()
+          'circle-stroke-width': 0,
+          'circle-emissive-strength': 1
         }
       });
     }
@@ -1894,10 +1895,9 @@ const MapModule = (function() {
           filter: ['==', ['get', 'type'], 'icon'],
           paint: {
             'circle-radius': getIconDotSize() / 2,
-            'circle-color': ['get', 'color'], // Use subcategory color for background too
-            'circle-opacity': 0.4,
-            'circle-stroke-color': 'rgba(0,0,0,0.7)',
-            'circle-stroke-width': getDotStrokeWidth()
+            'circle-color': ['get', 'color'],
+            'circle-stroke-width': 0,
+            'circle-emissive-strength': 1
           }
         });
 
@@ -1909,9 +1909,12 @@ const MapModule = (function() {
         filter: ['==', ['get', 'type'], 'icon'],
         layout: {
           'icon-image': ['get', 'iconId'],
-          'icon-size': 0.8, // Adjust to fit 30px well
+          'icon-size': 0.8,
           'icon-allow-overlap': true,
           'icon-ignore-placement': true
+        },
+        paint: {
+          'icon-emissive-strength': 1
         }
       });
     }
