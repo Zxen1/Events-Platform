@@ -78,7 +78,9 @@ const MapModule = (function() {
     return threshold;
   }
   
-  // High-Density (dots/icons as HTML markers — no native Mapbox layers)
+  // High-Density Layers
+  let highDensityData = { type: 'FeatureCollection', features: [] };
+  const loadedIcons = new Set();
   
   // Pill dimensions
   const SMALL_PILL_WIDTH = 150;
@@ -104,6 +106,19 @@ const MapModule = (function() {
   function getMaxMapCards() {
     return (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
   }
+  function getDotSize() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotSize') : 8;
+  }
+  function getDotStrokeWidth() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotStroke') : 2;
+  }
+  function getIconDotSize() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerIconSize') : 30;
+  }
+  const DOT_SOURCE_ID = 'high-density-source';
+  const DOT_LAYER_ID = 'standard-dots';
+  const ICON_LAYER_ID = 'featured-icons';
+  const GLOW_LAYER_ID = 'marker-glow';
 
 
   /* State */
@@ -141,6 +156,7 @@ const MapModule = (function() {
   const MAP_VIEW_STORAGE_KEY = 'mapView';
   let hasSavedMapView = false;
   let saveMapViewTimer = null;
+  let hoveredPostId = null; // Track currently hovered post for map effects
 
   function loadSavedMapView() {
     try {
@@ -313,7 +329,7 @@ const MapModule = (function() {
   }
   
   // Markers
-  let mapCardMarkers = new Map();    // venueKey -> { marker, element, state, type:'card' }
+  let mapCardMarkers = new Map();    // postId -> { marker, element, state }
   let clusterLayerVisible = true;
   let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
@@ -768,81 +784,6 @@ const MapModule = (function() {
         text-rendering: optimizeLegibility;
       }
       
-      /* ============================================================
-         MAP DOTS (small colored circles for standard-tier overflow)
-         ============================================================ */
-      .map-dot-container {
-        position: relative;
-        width: 0;
-        height: 0;
-        cursor: pointer;
-        z-index: 0;
-      }
-      .map-dot-ring {
-        position: absolute;
-        left: -10px;
-        top: -10px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.7);
-        transition: background 0.15s ease;
-      }
-      .map-dot-fill {
-        position: absolute;
-        left: -7.5px;
-        top: -7.5px;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-      }
-      .map-dot-container.is-hovered {
-        z-index: 5;
-      }
-      .map-dot-container.is-hovered .map-dot-ring {
-        background: #172554;
-        outline: 1px solid var(--blue-500);
-        outline-offset: -1px;
-      }
-      
-      /* ============================================================
-         MAP ICONS (subcategory icons for premium/featured overflow)
-         ============================================================ */
-      .map-icon-container {
-        position: relative;
-        width: 0;
-        height: 0;
-        cursor: pointer;
-        z-index: 0;
-      }
-      .map-icon-ring {
-        position: absolute;
-        left: -20px;
-        top: -20px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.7);
-        transition: background 0.15s ease;
-      }
-      .map-icon-image {
-        position: absolute;
-        left: -15px;
-        top: -15px;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        object-fit: contain;
-      }
-      .map-icon-container.is-hovered {
-        z-index: 5;
-      }
-      .map-icon-container.is-hovered .map-icon-ring {
-        background: #172554;
-        outline: 2px solid var(--blue-500);
-        outline-offset: -2px;
-      }
-      
     `;
     
     const style = document.createElement('style');
@@ -1065,6 +1006,9 @@ const MapModule = (function() {
         
         // Initialize clusters
         initClusters();
+        
+        // Initialize high-density layers (dots/icons)
+        initHighDensityLayers();
       });
       
       // Bind map events (deferred)
@@ -1885,6 +1829,185 @@ const MapModule = (function() {
     map.addImage(imageId, imageData, { pixelRatio: clusterBalloonPixelRatio });
   }
 
+  /**
+   * Initialize high-density layers (dots and icons)
+   */
+  function initHighDensityLayers() {
+    if (!map) return;
+    
+    // Create source
+    if (!map.getSource(DOT_SOURCE_ID)) {
+      map.addSource(DOT_SOURCE_ID, {
+        type: 'geojson',
+        data: highDensityData,
+        generateId: true
+      });
+    }
+
+    // 1. Glow Layer (behind dots/icons)
+    if (!map.getLayer(GLOW_LAYER_ID)) {
+      map.addLayer({
+        id: GLOW_LAYER_ID,
+        type: 'circle',
+        source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
+        paint: {
+          'circle-radius': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            ['case', ['==', ['get', 'type'], 'icon'], 25, 12],
+            0
+          ],
+          'circle-color': '#ffffff',
+          'circle-opacity': 0.3,
+          'circle-blur': 0.8
+        }
+      });
+    }
+
+    // 2. Standard Dots Layer
+    if (!map.getLayer(DOT_LAYER_ID)) {
+      map.addLayer({
+        id: DOT_LAYER_ID,
+        type: 'circle',
+        source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
+        filter: ['==', ['get', 'type'], 'dot'],
+        paint: {
+          'circle-radius': getDotSize() / 2,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-color': 'rgba(0,0,0,0.7)',
+          'circle-stroke-width': getDotStrokeWidth()
+        }
+      });
+    }
+
+      // 3. Featured Icons Layer (symbol)
+      if (!map.getLayer(ICON_LAYER_ID)) {
+        // Background for Icons (the 0.7 black ring)
+        // Agent Rules: Black ring at 0.7 opacity, fill at 0.4 for visibility
+        map.addLayer({
+          id: ICON_LAYER_ID + '-bg',
+          type: 'circle',
+          source: DOT_SOURCE_ID,
+          minzoom: getMarkerZoomThreshold(),
+          filter: ['==', ['get', 'type'], 'icon'],
+          paint: {
+            'circle-radius': getIconDotSize() / 2,
+            'circle-color': ['get', 'color'], // Use subcategory color for background too
+            'circle-opacity': 0.4,
+            'circle-stroke-color': 'rgba(0,0,0,0.7)',
+            'circle-stroke-width': getDotStrokeWidth()
+          }
+        });
+
+      map.addLayer({
+        id: ICON_LAYER_ID,
+        type: 'symbol',
+        source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
+        filter: ['==', ['get', 'type'], 'icon'],
+        layout: {
+          'icon-image': ['get', 'iconId'],
+          'icon-size': 0.8, // Adjust to fit 30px well
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true
+        }
+      });
+    }
+
+    // Interaction handlers
+    [DOT_LAYER_ID, ICON_LAYER_ID].forEach(layerId => {
+      map.on('mouseenter', layerId, function(e) {
+        // Performance/Interaction Rule: Never trigger if below threshold
+        if (map.getZoom() < getMarkerZoomThreshold()) return;
+        
+        if (!e.features.length) return;
+        map.getCanvas().style.cursor = 'pointer';
+        
+        const feature = e.features[0];
+        const postId = feature.properties.postId;
+        
+        if (hoveredPostId !== null) {
+          map.setFeatureState({ source: DOT_SOURCE_ID, id: hoveredPostId }, { hover: false });
+        }
+        
+        hoveredPostId = feature.id;
+        map.setFeatureState({ source: DOT_SOURCE_ID, id: feature.id }, { hover: true });
+        
+        App.emit('map:markerHover', { postId: postId });
+      });
+
+      map.on('mouseleave', layerId, function() {
+        map.getCanvas().style.cursor = '';
+        if (hoveredPostId !== null) {
+          map.setFeatureState({ source: DOT_SOURCE_ID, id: hoveredPostId }, { hover: false });
+          hoveredPostId = null;
+        }
+        App.emit('map:markerLeave');
+      });
+
+      map.on('click', layerId, function(e) {
+        if (!e.features.length) return;
+        const postId = e.features[0].properties.postId;
+        App.emit('post:open', { id: postId, source: 'map_dot' });
+      });
+    });
+  }
+
+  /**
+   * Update the high-density data source
+   * @param {Object} geojson - FeatureCollection of dots and icons
+   */
+  function updateHighDensityData(geojson) {
+    highDensityData = geojson || { type: 'FeatureCollection', features: [] };
+    
+    if (!map) return;
+    const source = map.getSource(DOT_SOURCE_ID);
+    if (source) {
+      source.setData(highDensityData);
+    }
+
+    // Pre-load icons for symbol layer
+    if (highDensityData.features) {
+      highDensityData.features.forEach(f => {
+        if (f.properties.type === 'icon' && f.properties.iconId && f.properties.iconUrl) {
+          ensureIconLoaded(f.properties.iconId, f.properties.iconUrl);
+        }
+      });
+    }
+  }
+
+  /**
+   * Ensure an icon is loaded in Mapbox for symbol layers
+   */
+  function ensureIconLoaded(iconId, iconUrl) {
+    if (loadedIcons.has(iconId) || (map && map.hasImage(iconId))) return Promise.resolve(iconId);
+    
+    return new Promise(function(resolve) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        if (map && !map.hasImage(iconId)) {
+          map.addImage(iconId, img);
+        }
+        loadedIcons.add(iconId);
+        
+        // Force a redraw of the high-density layer now that the image is ready
+        const source = map.getSource(DOT_SOURCE_ID);
+        if (source && typeof source.setData === 'function') {
+          source.setData(highDensityData);
+        }
+        
+        resolve(iconId);
+      };
+      img.onerror = function() {
+        console.warn('[Map] Failed to load icon for high-density layer:', iconUrl);
+        resolve(null);
+      };
+      img.src = iconUrl;
+    });
+  }
 
   /**
    * Initialize cluster system
@@ -2191,7 +2314,7 @@ const MapModule = (function() {
 
 
   /* --------------------------------------------------------------------------
-     MAP MARKERS (visibility + creation)
+     MAP CARDS (Markers)
      -------------------------------------------------------------------------- */
   
   /**
@@ -2206,10 +2329,6 @@ const MapModule = (function() {
       }
     });
   }
-
-  /* ------------------------------------------------------------------
-     MAP CARDS (HTML overlay markers with pill labels)
-     ------------------------------------------------------------------ */
 
   /**
    * Create a map card marker for a post
@@ -2242,10 +2361,10 @@ const MapModule = (function() {
       element: el,
       post: post,
       state: 'small',
-      type: 'card',
       lng: lng,
       lat: lat,
       venueKey: venueKey,
+      // IMPORTANT: store IDs as STRINGS (matches live-site behavior and avoids number/string mismatches)
       postIds: (post.isMultiPost || post.isStorefront) && Array.isArray(post.venuePostIds)
         ? post.venuePostIds.map(function(pid) { return String(pid); })
         : [String(post.id)]
@@ -2268,8 +2387,10 @@ const MapModule = (function() {
     const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
     const pillClass = `map-card-${state}`;
     
+    // Get icon URL based on state (thumbnail for big, subcategory icon for small/hover)
     const iconUrl = getIconUrl(post, state);
     
+    // Build label HTML based on whether this is a storefront, multi-post venue, or single post
     let labelHTML = '';
     
     if (post.isStorefront && post.venuePostCount > 1) {
@@ -2280,6 +2401,7 @@ const MapModule = (function() {
         <div class="map-card-venue">${escapeHtml(countLabel)}</div>
       `;
     } else if (post.isMultiPost && post.venuePostCount > 1) {
+      // Multi-post venue: show "X posts here" and venue name
       const countLabel = post.venuePostCount + ' posts here';
       const venueName = post.venue || '';
       const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
@@ -2289,16 +2411,20 @@ const MapModule = (function() {
         ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
       `;
     } else {
+      // Single post: show title, venue, and city
       const labels = getMarkerLabelLines(post, isActive);
       
       if (isActive) {
+        // Big card: Title (1 line if venue, 2 lines if no venue) + Venue + City
         if (labels.venueLine) {
+          // With venue: Title (1 line) + Venue + City
           labelHTML = `
             <div class="map-card-title">${escapeHtml(labels.line1)}</div>
             <div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>
             ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
           `;
         } else {
+          // Without venue: Title (2 lines) + City
           labelHTML = `
             <div class="map-card-title">${escapeHtml(labels.line1)}</div>
             ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
@@ -2306,6 +2432,7 @@ const MapModule = (function() {
           `;
         }
       } else {
+        // Small/hover card: show title only (2 lines)
         labelHTML = `
           <div class="map-card-title">${escapeHtml(labels.line1)}</div>
           ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
@@ -2313,6 +2440,7 @@ const MapModule = (function() {
       }
     }
     
+    // Icon is at center (0,0 = lat/lng), pill extends to the right
     return `
       <img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">
       <div class="map-card-pill ${pillClass}" data-id="${post.id}" data-state="${state}">
@@ -2322,162 +2450,6 @@ const MapModule = (function() {
       </div>
     `;
   }
-
-  /* ------------------------------------------------------------------
-     MAP DOTS & ICONS (HTML overlay markers)
-     ------------------------------------------------------------------ */
-
-  /**
-   * Create a map dot marker (HTML overlay)
-   */
-  function createMapDotMarker(data, lng, lat) {
-    if (!map || !data || !data.id) return null;
-
-    const el = document.createElement('div');
-    el.className = 'map-dot-container';
-    if (!data.color) throw new Error('[Map] createMapDotMarker: color missing for post ID ' + data.id);
-    el.innerHTML = '<div class="map-dot-ring"></div>' +
-      '<div class="map-dot-fill" style="background-color:' + data.color + '"></div>';
-
-    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([lng, lat])
-      .addTo(map);
-
-    const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
-    el.dataset.venueKey = venueKey;
-
-    const entry = {
-      marker: marker,
-      element: el,
-      post: data,
-      state: 'small',
-      type: 'dot',
-      lng: lng,
-      lat: lat,
-      venueKey: venueKey,
-      postIds: (data.isMultiPost || data.isStorefront) && Array.isArray(data.venuePostIds)
-        ? data.venuePostIds.map(function(pid) { return String(pid); })
-        : [String(data.id)]
-    };
-
-    mapCardMarkers.set(venueKey, entry);
-    bindMapCardPointerManager();
-    return entry;
-  }
-
-  /**
-   * Create a map icon marker (HTML overlay)
-   */
-  function createMapIconMarker(data, lng, lat) {
-    if (!map || !data || !data.id) return null;
-
-    const el = document.createElement('div');
-    el.className = 'map-icon-container';
-    if (!data.iconUrl) throw new Error('[Map] createMapIconMarker: iconUrl missing for post ID ' + data.id);
-    el.innerHTML = '<div class="map-icon-ring"></div>' +
-      '<img class="map-icon-image" src="' + data.iconUrl + '" alt="" />';
-
-    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([lng, lat])
-      .addTo(map);
-
-    const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
-    el.dataset.venueKey = venueKey;
-
-    const entry = {
-      marker: marker,
-      element: el,
-      post: data,
-      state: 'small',
-      type: 'icon',
-      lng: lng,
-      lat: lat,
-      venueKey: venueKey,
-      postIds: (data.isMultiPost || data.isStorefront) && Array.isArray(data.venuePostIds)
-        ? data.venuePostIds.map(function(pid) { return String(pid); })
-        : [String(data.id)]
-    };
-
-    mapCardMarkers.set(venueKey, entry);
-    bindMapCardPointerManager();
-    return entry;
-  }
-
-  /**
-   * Bulk update dot/icon markers (diff-based)
-   */
-  function updateMapDotIcons(items) {
-    if (!map) return;
-
-    var nextKeys = new Set();
-    var itemsByKey = {};
-
-    (items || []).forEach(function(item) {
-      var vk = item.venueKey || (item.lng.toFixed(6) + ',' + item.lat.toFixed(6));
-      nextKeys.add(vk);
-      itemsByKey[vk] = item;
-    });
-
-    // Remove dot/icon entries no longer in the set
-    mapCardMarkers.forEach(function(entry, venueKey) {
-      if ((entry.type === 'dot' || entry.type === 'icon') && !nextKeys.has(venueKey)) {
-        entry.marker.remove();
-        mapCardMarkers.delete(venueKey);
-      }
-    });
-
-    // Create markers that don't exist yet
-    nextKeys.forEach(function(venueKey) {
-      if (mapCardMarkers.has(venueKey)) return;
-      var item = itemsByKey[venueKey];
-      if (item.markerType === 'icon') {
-        createMapIconMarker(item, item.lng, item.lat);
-      } else {
-        createMapDotMarker(item, item.lng, item.lat);
-      }
-    });
-  }
-
-  /**
-   * Clear all dot/icon markers
-   */
-  function clearAllMapDotIconMarkers() {
-    mapCardMarkers.forEach(function(entry, venueKey) {
-      if (entry.type === 'dot' || entry.type === 'icon') {
-        entry.marker.remove();
-        mapCardMarkers.delete(venueKey);
-      }
-    });
-  }
-
-  /**
-   * Activate any marker to big state (identical for cards, dots, icons)
-   */
-  function activateMarker(entry) {
-    if (!entry || !entry.element) return;
-    entry._savedHTML = entry.element.innerHTML;
-    entry._savedClassName = entry.element.className;
-    entry.element.className = 'map-card-container is-active';
-    entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
-    entry.state = 'big';
-  }
-
-  /**
-   * Deactivate any marker from big state (identical for cards, dots, icons)
-   */
-  function deactivateMarker(entry) {
-    if (!entry || !entry.element) return;
-    if (!entry._savedHTML) return;
-    entry.element.className = entry._savedClassName;
-    entry.element.innerHTML = entry._savedHTML;
-    entry.state = 'small';
-    delete entry._savedHTML;
-    delete entry._savedClassName;
-  }
-
-  /* ------------------------------------------------------------------
-     SHARED MARKER LOOKUPS (cards + dots + icons)
-     ------------------------------------------------------------------ */
 
   /**
    * Find marker entry by post ID (searches through venue-keyed entries)
@@ -2509,17 +2481,15 @@ const MapModule = (function() {
   
   function setMarkerHoverState(entry, isHovering) {
     if (!entry || !entry.element) return;
+    // Never override the active/big state on hover (matches live-site expectation)
     if (entry.state === 'big') return;
     
     if (isHovering) {
       entry.element.classList.add('is-hovered');
+      updateMapCardStateByKey(entry.venueKey, 'hover');
     } else {
       entry.element.classList.remove('is-hovered');
-    }
-    
-    // Cards have a pill that also needs a state update
-    if (entry.type === 'card') {
-      updateMapCardStateByKey(entry.venueKey, isHovering ? 'hover' : 'small');
+      updateMapCardStateByKey(entry.venueKey, 'small');
     }
   }
   
@@ -2579,6 +2549,17 @@ const MapModule = (function() {
   function onMapCardHoverByPostId(postId, isHovering) {
     const pid = String(postId);
     const token = ++hoverToken;
+    
+    // High-Density Glow: Apply highlight to dots/icons layers
+    if (map && map.getSource(DOT_SOURCE_ID)) {
+      const featureId = Number(pid);
+      if (!isNaN(featureId)) {
+        map.setFeatureState(
+          { source: DOT_SOURCE_ID, id: featureId },
+          { hover: isHovering }
+        );
+      }
+    }
 
     if (isHovering) {
       if (currentHoverPostIds && currentHoverPostIds.length) {
@@ -2603,10 +2584,10 @@ const MapModule = (function() {
   function clearActiveMapCards() {
     try {
       // Clear active marker visuals
-      mapCardMarkers.forEach((entry) => {
+      mapCardMarkers.forEach((entry, venueKey) => {
         if (!entry || !entry.element) return;
         if (entry.state === 'big') {
-          deactivateMarker(entry);
+          updateMapCardStateByKey(venueKey, 'small');
         }
         entry.element.classList.remove('is-active');
       });
@@ -2714,7 +2695,7 @@ const MapModule = (function() {
 
   function getVenueKeyFromTarget(target) {
     if (!target || typeof target.closest !== 'function') return '';
-    const container = target.closest('.map-card-container, .map-dot-container, .map-icon-container');
+    const container = target.closest('.map-card-container');
     if (!container || !container.dataset) return '';
     return container.dataset.venueKey ? String(container.dataset.venueKey) : '';
   }
@@ -2843,17 +2824,20 @@ const MapModule = (function() {
     }
     const targetKey = targetEntry ? targetEntry.venueKey : null;
     
-    // Deactivate all other markers
+    // Deactivate all other cards
     mapCardMarkers.forEach((entry, venueKey) => {
       if (venueKey !== targetKey && entry.state === 'big') {
-        deactivateMarker(entry);
+        updateMapCardStateByKey(venueKey, 'small');
+        entry.element.classList.remove('is-active');
       }
     });
 
-    // Activate this marker
+    // Activate this card
     if (targetEntry) {
+      // Remember which marker is active for this post (multi-location posts)
       lastActiveVenueKeyByPostId.set(pid, targetKey);
-      activateMarker(targetEntry);
+      updateMapCardStateByKey(targetKey, 'big');
+      targetEntry.element.classList.add('is-active');
     }
   }
 
@@ -2878,10 +2862,6 @@ const MapModule = (function() {
       return '';
     }
   }
-
-  /* ------------------------------------------------------------------
-     MAP CARD STATE / REMOVAL
-     ------------------------------------------------------------------ */
 
   /**
    * Update map card visual state by venue key
@@ -2972,7 +2952,7 @@ const MapModule = (function() {
    */
   function removeMapCardMarker(venueKey) {
     const entry = mapCardMarkers.get(venueKey);
-    if (!entry || entry.type !== 'card') return;
+    if (!entry) return;
 
     entry.marker.remove();
     mapCardMarkers.delete(venueKey);
@@ -3289,19 +3269,12 @@ const MapModule = (function() {
     getActivePostMapCardId,
     setActiveMapCardByPostMapCardId,
     // Expose current marker keys so PostModule can remove stale markers without "drift".
-    getMapCardMarkerVenueKeys: () => {
-      const keys = [];
-      mapCardMarkers.forEach(function(entry, venueKey) {
-        if (entry.type === 'card') keys.push(venueKey);
-      });
-      return keys;
-    },
+    getMapCardMarkerVenueKeys: () => Array.from(mapCardMarkers.keys()),
     // MapCards-style hover API (compat layer for PostModule)
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
     removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
     refreshMapCardStyles,
-    updateMapDotIcons,
-    clearAllMapDotIconMarkers,
+    updateHighDensityData,
     
     // Map card utilities (for PostModule)
     getMarkerLabelLines,

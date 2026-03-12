@@ -236,11 +236,15 @@ const PostModule = (function() {
     // Map hover events (sync from high-density dots/icons)
     App.on('map:markerHover', function(data) {
       if (!data || !data.postId) return;
-      syncPostCardHoverFromMap([String(data.postId)], true);
+      var selector = '[data-id="' + data.postId + '"]';
+      var cards = document.querySelectorAll('.post-card' + selector + ', .recent-card' + selector);
+      cards.forEach(function(c) { c.classList.add('post-card--map-highlight'); });
     });
 
     App.on('map:markerLeave', function() {
-      syncPostCardHoverFromMap([], false);
+      document.querySelectorAll('.post-card--map-highlight').forEach(function(el) {
+        el.classList.remove('post-card--map-highlight');
+      });
     });
 
     App.on('map:ready', function(data) {
@@ -365,8 +369,8 @@ const PostModule = (function() {
             
             // 4. Clear map data
             if (window.MapModule) {
-              if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
-                MapModule.clearAllMapDotIconMarkers();
+              if (typeof MapModule.updateHighDensityData === 'function') {
+                MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
               }
               if (typeof MapModule.clearAllMapCardMarkers === 'function') {
                 MapModule.clearAllMapCardMarkers();
@@ -552,7 +556,7 @@ const PostModule = (function() {
    */
   function openPostById(postId, options) {
     options = options || {};
-    var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee' || options.source === 'map_icon' || options.source === 'map_dot';
+    var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee';
 
     // Storefront: if this post belongs to a group, open the storefront instead
     var sfGroup = _sfGroupsByPostId[String(postId)];
@@ -1946,8 +1950,8 @@ const PostModule = (function() {
     if (typeof lastZoom !== 'number' || lastZoom < threshold) {
       // We are below the breakpoint. Wipe everything and exit.
       if (window.MapModule) {
-        if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
-          MapModule.clearAllMapDotIconMarkers();
+        if (typeof MapModule.updateHighDensityData === 'function') {
+          MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
         }
         if (typeof MapModule.clearAllMapCardMarkers === 'function') {
           MapModule.clearAllMapCardMarkers();
@@ -2097,21 +2101,6 @@ const PostModule = (function() {
         markerData.venuePostCount = markerData.venuePostIds.length;
       }
       
-      // Promote storefront/multipost marker to highest tier in the group
-      if ((isStorefront || isMultiPostVenue) && uniquePostCount > 1) {
-        var highestSidebarAd = 0;
-        var highestFeatured = 0;
-        group.forEach(function(item) {
-          if (item.post.sidebar_ad === 1) highestSidebarAd = 1;
-          if (item.post.featured === 1) highestFeatured = 1;
-        });
-        if (highestSidebarAd && !markerData._originalPost.sidebar_ad) {
-          markerData._originalPost = Object.assign({}, markerData._originalPost, { sidebar_ad: 1 });
-        } else if (highestFeatured && !markerData._originalPost.featured) {
-          markerData._originalPost = Object.assign({}, markerData._originalPost, { featured: 1 });
-        }
-      }
-
       markerData.venueKey = venueKey;
       allMarkerData.push(markerData);
     });
@@ -2195,7 +2184,7 @@ const PostModule = (function() {
 
     // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots
     var cardSlots = new Set();
-    var dotIconItems = [];
+    var geojsonFeatures = [];
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
@@ -2223,16 +2212,33 @@ const PostModule = (function() {
         throw new Error('[Map] Subcategory key missing for post ID ' + item.id + ' (required for featured icons).');
       }
 
+      // Only add to GeoJSON if it's NOT a card. Cards are handled by DOM markers.
       if (type !== 'card') {
-        item.markerType = type;
-        item.color = subColor;
-        dotIconItems.push(item);
+        geojsonFeatures.push({
+          type: 'Feature',
+          id: item.id,
+          geometry: {
+            type: 'Point',
+            coordinates: [item.lng, item.lat]
+          },
+          properties: {
+            postId: item.id,
+            venueKey: item.venueKey,
+            type: type,
+            color: subColor,
+            iconId: subKey,
+            iconUrl: item.iconUrl
+          }
+        });
       }
     });
 
-    // Update dot/icon HTML markers
-    if (mapModule.updateMapDotIcons) {
-      mapModule.updateMapDotIcons(dotIconItems);
+    // Update Mapbox high-density layers
+    if (mapModule.updateHighDensityData) {
+      mapModule.updateHighDensityData({
+        type: 'FeatureCollection',
+        features: geojsonFeatures
+      });
     }
 
     // Prepare markers for DOM rendering (only those in cardSlots)
@@ -2477,8 +2483,8 @@ const PostModule = (function() {
 
     // Below threshold: no posts list should be shown; purge everything.
     if (window.MapModule) {
-      if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
-        MapModule.clearAllMapDotIconMarkers();
+      if (typeof MapModule.updateHighDensityData === 'function') {
+        MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
       }
       if (typeof MapModule.clearAllMapCardMarkers === 'function') {
         MapModule.clearAllMapCardMarkers();
@@ -3051,7 +3057,7 @@ const PostModule = (function() {
     }
     if (!container) return;
     var isMobileViewport = window.innerWidth <= 530;
-    var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee' || options.source === 'map_icon' || options.source === 'map_dot'));
+    var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
     // Close any existing open post in this container
     closeOpenPost(container);
