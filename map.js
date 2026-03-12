@@ -839,16 +839,10 @@ const MapModule = (function() {
         left: -15px;
         top: -15px;
       }
-      .map-card-appearance--dot[data-multipost]:not(.is-active) .map-card-icon {
-        opacity: 1;
-        width: 20px;
-        height: 20px;
-        left: 0;
-        top: 0;
-        transform: translate(-50%, -50%);
-      }
       .map-card-appearance--dot[data-multipost]:not(.is-active)::after {
-        opacity: 0;
+        background-image: var(--dot-icon);
+        background-size: cover;
+        background-color: transparent;
       }
       .map-card-appearance--dot::before {
         content: '';
@@ -2283,6 +2277,7 @@ const MapModule = (function() {
       el.style.setProperty('--dot-color', dotColor);
       if (post.isMultiPost || post.isStorefront) {
         el.dataset.multipost = '1';
+        el.style.setProperty('--dot-icon', 'url(' + getMultiPostIconUrl() + ')');
       }
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
