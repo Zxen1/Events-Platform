@@ -236,15 +236,11 @@ const PostModule = (function() {
     // Map hover events (sync from high-density dots/icons)
     App.on('map:markerHover', function(data) {
       if (!data || !data.postId) return;
-      var selector = '[data-id="' + data.postId + '"]';
-      var cards = document.querySelectorAll('.post-card' + selector + ', .recent-card' + selector);
-      cards.forEach(function(c) { c.classList.add('post-card--map-highlight'); });
+      syncPostCardHoverFromMap([String(data.postId)], true);
     });
 
     App.on('map:markerLeave', function() {
-      document.querySelectorAll('.post-card--map-highlight').forEach(function(el) {
-        el.classList.remove('post-card--map-highlight');
-      });
+      syncPostCardHoverFromMap([], false);
     });
 
     App.on('map:ready', function(data) {
@@ -556,7 +552,7 @@ const PostModule = (function() {
    */
   function openPostById(postId, options) {
     options = options || {};
-    var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee';
+    var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee' || options.source === 'map_icon' || options.source === 'map_dot';
 
     // Storefront: if this post belongs to a group, open the storefront instead
     var sfGroup = _sfGroupsByPostId[String(postId)];

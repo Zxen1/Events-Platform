@@ -1950,7 +1950,8 @@ const MapModule = (function() {
       map.on('click', layerId, function(e) {
         if (!e.features.length) return;
         const postId = e.features[0].properties.postId;
-        App.emit('post:open', { id: postId, source: 'map_dot' });
+        var markerType = (layerId === ICON_LAYER_ID) ? 'map_icon' : 'map_dot';
+        App.emit('post:open', { id: postId, source: markerType });
       });
     });
   }
