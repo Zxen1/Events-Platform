@@ -6253,8 +6253,11 @@ const WelcomeModalComponent = (function() {
                 placeholder: 'Search location...',
                 map: null, // Component will get map dynamically via MapModule.getMap()
                 onResult: function(result) {
-                    if (result && result.center && window.MapModule && typeof MapModule.handleGeocoderResult === 'function') {
-                        MapModule.handleGeocoderResult(result, 'welcome');
+                    if (result && result.center) {
+                        var map = window.MapModule && MapModule.getMap ? MapModule.getMap() : null;
+                        if (map) {
+                            map.flyTo({ center: result.center, zoom: App.getConfig('flyToZoom') });
+                        }
                     }
                     close();
                 }
