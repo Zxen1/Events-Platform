@@ -810,9 +810,15 @@ const MapModule = (function() {
          behaviour is unchanged.
       ──────────────────────────────────────────────────────────────────────────── */
       .map-card-appearance--dot .map-card-pill { display: none; }
-      .map-card-appearance--dot .map-card-icon { display: none; }
+      .map-card-appearance--dot .map-card-icon {
+        opacity: 0;
+        width: 20px;
+        height: 20px;
+        left: -10px;
+        top: -10px;
+      }
       .map-card-appearance--dot.is-active .map-card-pill { display: flex; }
-      .map-card-appearance--dot.is-active .map-card-icon { display: block; }
+      .map-card-appearance--dot.is-active .map-card-icon { opacity: 1; }
       .map-card-appearance--dot::before {
         content: '';
         position: absolute;
