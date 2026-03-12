@@ -365,8 +365,8 @@ const PostModule = (function() {
             
             // 4. Clear map data
             if (window.MapModule) {
-              if (typeof MapModule.updateHighDensityData === 'function') {
-                MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+              if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
+                MapModule.clearAllMapDotIconMarkers();
               }
               if (typeof MapModule.clearAllMapCardMarkers === 'function') {
                 MapModule.clearAllMapCardMarkers();
@@ -1946,8 +1946,8 @@ const PostModule = (function() {
     if (typeof lastZoom !== 'number' || lastZoom < threshold) {
       // We are below the breakpoint. Wipe everything and exit.
       if (window.MapModule) {
-        if (typeof MapModule.updateHighDensityData === 'function') {
-          MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+        if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
+          MapModule.clearAllMapDotIconMarkers();
         }
         if (typeof MapModule.clearAllMapCardMarkers === 'function') {
           MapModule.clearAllMapCardMarkers();
@@ -2195,7 +2195,7 @@ const PostModule = (function() {
 
     // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots
     var cardSlots = new Set();
-    var geojsonFeatures = [];
+    var dotIconItems = [];
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
@@ -2223,33 +2223,26 @@ const PostModule = (function() {
         throw new Error('[Map] Subcategory key missing for post ID ' + item.id + ' (required for featured icons).');
       }
 
-      // Only add to GeoJSON if it's NOT a card. Cards are handled by DOM markers.
       if (type !== 'card') {
-        geojsonFeatures.push({
-          type: 'Feature',
+        dotIconItems.push({
           id: item.id,
-          geometry: {
-            type: 'Point',
-            coordinates: [item.lng, item.lat]
-          },
-          properties: {
-            postId: item.id,
-            venueKey: item.venueKey,
-            type: type,
-            color: subColor,
-            iconId: subKey,
-            iconUrl: item.iconUrl
-          }
+          venueKey: item.venueKey,
+          type: type,
+          color: subColor,
+          iconUrl: item.iconUrl,
+          lng: item.lng,
+          lat: item.lat,
+          _originalPost: post,
+          isMultiPost: item.isMultiPost,
+          isStorefront: item.isStorefront,
+          venuePostIds: item.venuePostIds
         });
       }
     });
 
-    // Update Mapbox high-density layers
-    if (mapModule.updateHighDensityData) {
-      mapModule.updateHighDensityData({
-        type: 'FeatureCollection',
-        features: geojsonFeatures
-      });
+    // Update dot/icon HTML markers
+    if (mapModule.updateMapDotIcons) {
+      mapModule.updateMapDotIcons(dotIconItems);
     }
 
     // Prepare markers for DOM rendering (only those in cardSlots)
@@ -2494,8 +2487,8 @@ const PostModule = (function() {
 
     // Below threshold: no posts list should be shown; purge everything.
     if (window.MapModule) {
-      if (typeof MapModule.updateHighDensityData === 'function') {
-        MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+      if (typeof MapModule.clearAllMapDotIconMarkers === 'function') {
+        MapModule.clearAllMapDotIconMarkers();
       }
       if (typeof MapModule.clearAllMapCardMarkers === 'function') {
         MapModule.clearAllMapCardMarkers();
