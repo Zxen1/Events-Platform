@@ -332,7 +332,7 @@
   padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.15s ease;
-  /* transform: scale(1); */
+  transform: scale(1);
 }
 
 /* Post cards have margin-bottom; recent cards get it from wrapper */
