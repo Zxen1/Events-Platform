@@ -1367,7 +1367,6 @@ const MapModule = (function() {
    */
   function handleGeocoderResult(result, geocoderKey) {
     if (!result || !result.center) return;
-    console.error('[DEBUG] handleGeocoderResult called, key:', geocoderKey);
 
     const lng = result.center[0];
     const lat = result.center[1];
@@ -1388,12 +1387,10 @@ const MapModule = (function() {
       if (ap && ap.classList.contains('admin-panel--show')) reopenAdmin = true;
     } catch (_eSnap) {}
 
-    // Switch to map mode (closes post panel) and close overlay panels
-    if (window.HeaderModule && typeof HeaderModule.setMode === 'function') {
-      HeaderModule.setMode('map');
-    }
-    if (window.HeaderModule && typeof HeaderModule.closePanels === 'function') {
-      HeaderModule.closePanels();
+    // Close everything (same pattern as location menu: click the map button)
+    var mapBtn = document.querySelector('.header-modeswitch-button[data-mode="map"]');
+    if (mapBtn) {
+      mapBtn.click();
     }
 
     // Close welcome modal on search
@@ -1426,8 +1423,9 @@ const MapModule = (function() {
       var needsRestore = previousMode === 'posts' || previousMode === 'recent' || reopenFilter || reopenMember || reopenAdmin;
       if (needsRestore) {
         map.once('moveend', function() {
-          if (previousMode && previousMode !== 'map' && window.HeaderModule && typeof HeaderModule.setMode === 'function') {
-            HeaderModule.setMode(previousMode);
+          if (previousMode && previousMode !== 'map') {
+            var restoreBtn = document.querySelector('.header-modeswitch-button[data-mode="' + previousMode + '"]');
+            if (restoreBtn) restoreBtn.click();
           }
           if (reopenFilter) App.emit('panel:toggle', { panel: 'filter', show: true });
           if (reopenMember) App.emit('panel:toggle', { panel: 'member', show: true });
