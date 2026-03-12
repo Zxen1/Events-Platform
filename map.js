@@ -1377,7 +1377,7 @@ const MapModule = (function() {
     var reopenMember = false;
     var reopenAdmin = false;
     try {
-      var activeBtn = document.querySelector('.header-modeswitch-button--active');
+      var activeBtn = document.querySelector('.header-modeswitch > .button-class-1[aria-pressed="true"]');
       if (activeBtn && activeBtn.dataset && activeBtn.dataset.mode) previousMode = activeBtn.dataset.mode;
       var fp = document.querySelector('.filter-panel');
       if (fp && fp.classList.contains('show')) reopenFilter = true;
@@ -1388,7 +1388,7 @@ const MapModule = (function() {
     } catch (_eSnap) {}
 
     // Close everything (same pattern as location menu: click the map button)
-    var mapBtn = document.querySelector('.header-modeswitch-button[data-mode="map"]');
+    var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
     if (mapBtn) {
       mapBtn.click();
     }
@@ -1424,7 +1424,7 @@ const MapModule = (function() {
       if (needsRestore) {
         map.once('moveend', function() {
           if (previousMode && previousMode !== 'map') {
-            var restoreBtn = document.querySelector('.header-modeswitch-button[data-mode="' + previousMode + '"]');
+            var restoreBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="' + previousMode + '"]');
             if (restoreBtn) restoreBtn.click();
           }
           if (reopenFilter) App.emit('panel:toggle', { panel: 'filter', show: true });
