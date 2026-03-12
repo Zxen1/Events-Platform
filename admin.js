@@ -3704,7 +3704,7 @@ const AdminModule = (function() {
         var checkoutMsgEl = checkoutTabContainer.querySelector('[data-message-key="msg_checkout_settings"]');
         if (checkoutMsgEl && typeof window.getMessage === 'function') {
             window.getMessage('msg_checkout_settings', {}, true).then(function(message) {
-                if (message) checkoutMsgEl.textContent = message;
+                if (message) checkoutMsgEl.innerHTML = message;
             }).catch(function() {});
         }
 
