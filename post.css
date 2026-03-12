@@ -291,10 +291,9 @@
   gap: 10px;
   font-size: 12px;
   margin: 0;
-  background: rgba(124, 58, 237, 0.5);
+  background: var(--purple-500, #7c3aed);
   color: #fff;
   padding: 2px 4px;
-  transition: background-color 0.15s ease;
 }
 
 .recent-statusbar-timestamp {
@@ -310,13 +309,6 @@
 
 /* Unavailable state - gray background */
 .recent-statusbar--unavailable {
-  background: rgba(107, 114, 128, 0.5);
-}
-
-.recent-card-wrapper:hover .recent-statusbar {
-  background: var(--purple-500, #7c3aed);
-}
-.recent-card-wrapper:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
@@ -328,11 +320,11 @@
   align-items: flex-start;
   background-color: transparent;
   border: none;
+  box-shadow: inset 0 0 0 1px transparent;
   border-radius: 8px;
   padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-  transform: scale(1);
+  transition: box-shadow 0.2s ease;
 }
 
 /* Post cards have margin-bottom; recent cards get it from wrapper */
@@ -340,20 +332,12 @@
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
-.post-card:hover,
-.post-card.post-card--map-highlight,
-.recent-card:hover {
-  transform: scale(1.02);
-}
-
-.post-card:hover,
-.post-card.post-card--map-highlight {
-  background-color: rgba(255, 255, 255, 0.08);
+.post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 .recent-card:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px #7c3aed;
 }
-
 
 /* Card in post-panel */
 .post-panel-content .post-card {
@@ -369,6 +353,14 @@
   box-shadow: none;
   border-radius: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.post-panel-content .post-card:hover {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
+}
+
+.post-panel-content .post-card.post-card--map-highlight {
+  box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 
 .post-panel-content .post-card:last-child,
@@ -569,13 +561,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  color: rgba(255, 255, 255, 0.5);
-  transition: color 0.15s ease;
-}
-.post-card:hover .post-card-text-title,
-.post-card.post-card--map-highlight .post-card-text-title,
-.recent-card:hover .recent-card-text-title {
-  color: rgba(255, 255, 255, 0.92);
 }
 
 /* Info container */
@@ -588,13 +573,6 @@
   font-size: 13px;
   min-width: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.35);
-  transition: color 0.15s ease;
-}
-.post-card:hover .post-card-container-info,
-.post-card.post-card--map-highlight .post-card-container-info,
-.recent-card:hover .recent-card-container-info {
-  color: rgba(255, 255, 255, 0.92);
 }
 
 /* Info rows - single line with ellipsis truncation */
@@ -1553,11 +1531,12 @@
 
 .post-details {
   padding-left: 10px;
-  padding-right: 10px;
 }
 
 .post-details .post-location-container,
 .post-details .post-session-container {
+  margin-left: -10px;
+  width: calc(100% + 10px);
 }
 
 .post-details .post-session-ticket-prompt,
@@ -1583,6 +1562,10 @@
    ============================================================================ */
 
 .post-description-container {
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
@@ -1779,6 +1762,10 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
@@ -1786,7 +1773,7 @@
 .post-cta-button {
   width: auto;
   max-width: none;
-  margin: 0 0 10px 0;
+  margin: 0 0 10px -10px;
   padding: 0 10px;
 }
 
@@ -2111,185 +2098,6 @@
 }
 
 /* ============================================================================
-   UNIFIED CONTACT SECTION (links, email, phone)
-   ≤3 items: row mode (icon + truncated label)
-   4+ items: icon strip mode (scrollable row of icons with tooltips)
-   ============================================================================ */
-
-.post-contact-container {
-  margin-bottom: 10px;
-}
-
-.post-contact-container:last-child {
-  margin-bottom: 0;
-}
-
-/* --- Row mode --- */
-
-.post-contact-row {
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  margin-bottom: 6px;
-}
-
-.post-contact-row:last-child {
-  margin-bottom: 0;
-}
-
-.post-contact-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #fff;
-  text-decoration: none;
-  min-width: 0;
-}
-
-.post-contact-link:hover {
-  text-decoration: underline;
-}
-
-.post-contact-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
-}
-
-.post-contact-label--restricted {
-  color: rgba(255, 255, 255, 0.4);
-  font-style: italic;
-}
-
-.post-contact-row--restricted {
-  gap: 6px;
-  cursor: default;
-}
-
-/* --- Icon strip mode --- */
-
-.post-contact-strip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  width: 100%;
-}
-
-.post-contact-container--strip .post-contact-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  flex: 0 0 auto;
-  overflow: visible;
-  gap: 0;
-}
-
-.post-contact-container--strip .post-contact-link:hover {
-  text-decoration: none;
-}
-
-.post-contact-item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 auto;
-  position: relative;
-  overflow: visible;
-}
-
-.post-contact-item:hover {
-  z-index: 3;
-}
-
-.post-contact-item--restricted {
-  cursor: default;
-}
-
-/* --- Shared icon (CSS mask, white by default) --- */
-
-.post-contact-icon {
-  width: 30px;
-  height: 30px;
-  display: block;
-  flex: 0 0 auto;
-  background-color: #fff;
-  -webkit-mask-image: var(--post-contact-mask);
-  mask-image: var(--post-contact-mask);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-
-.post-contact-item .post-contact-icon {
-  position: relative;
-  z-index: 2;
-}
-
-.post-contact-item:hover .post-contact-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.post-contact-item--restricted .post-contact-icon,
-.post-contact-row--restricted .post-contact-icon {
-  background-color: rgba(255, 255, 255, 0.4);
-}
-
-/* --- Tooltip pill (icon strip mode only) --- */
-
-.post-contact-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 36px;
-  width: 36px;
-  overflow: hidden;
-  background: rgba(59, 130, 246, 0.9);
-  border-radius: 18px;
-  font-size: 12px;
-  line-height: 36px;
-  color: rgba(255, 255, 255, 0.92);
-  white-space: nowrap;
-  padding-left: 40px;
-  padding-right: 10px;
-  width: max-content;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity 0.15s ease;
-}
-
-.post-contact-item:not([data-tooltip-dir="left"]):hover::after {
-  opacity: 1;
-}
-
-.post-contact-item[data-tooltip-dir="left"]::after {
-  left: auto;
-  right: 0;
-  padding-left: 12px;
-  padding-right: 35px;
-}
-
-.post-contact-item[data-tooltip-dir="left"]:hover::after {
-  opacity: 1;
-}
-
-/* ============================================================================
    POST PRICE COMPONENT
    TODO: Make self-contained in components.css like PostLocationComponent
    ============================================================================ */
@@ -2365,27 +2173,14 @@
 }
 
 .post-statusbar--comingsoon {
-  background: rgba(37, 99, 235, 0.5);
-  transition: background-color 0.15s ease;
+  background: #2563eb;
 }
 
 .post-statusbar--nowshowing {
-  background: rgba(22, 163, 74, 0.5);
-  transition: background-color 0.15s ease;
+  background: #16a34a;
 }
 
 .post-statusbar--finished {
-  background: rgba(17, 24, 39, 0.5);
-  transition: background-color 0.15s ease;
-}
-
-.post-slot:hover .post-statusbar--comingsoon {
-  background: #2563eb;
-}
-.post-slot:hover .post-statusbar--nowshowing {
-  background: #16a34a;
-}
-.post-slot:hover .post-statusbar--finished {
   background: #111827;
 }
 
@@ -2398,4 +2193,19 @@
   display: flex;
 }
 
+/* Postcard border mirrors countdown bar color; :hover included to prevent override */
+.post-card--countdowncomingsoon,
+.post-card--countdowncomingsoon:hover {
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+.post-card--countdownnowshowing,
+.post-card--countdownnowshowing:hover {
+  box-shadow: inset 0 0 0 1px #16a34a;
+}
+
+.post-card--countdownfinished,
+.post-card--countdownfinished:hover {
+  box-shadow: inset 0 0 0 1px #111827;
+}
 

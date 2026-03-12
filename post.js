@@ -80,6 +80,130 @@ const PostModule = (function() {
   };
 
   /* --------------------------------------------------------------------------
+     UI PERSISTENCE (panel mode + scroll positions)
+     -------------------------------------------------------------------------- */
+
+  var UI_STATE_STORAGE_KEY = 'funmap_ui_state';
+  var uiScrollSaveTimers = { post: 0, recent: 0 };
+  var uiRestoreApplied = { post: false, recent: false };
+  var pendingModeRestore = ''; // 'map' | 'posts' | 'recent' | ''
+
+  function loadUiState() {
+    try {
+      var raw = localStorage.getItem(UI_STATE_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function writeUiState(next) {
+    try {
+      var clean = next && typeof next === 'object' ? next : {};
+      localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(clean));
+    } catch (_e) {}
+  }
+
+  function mergeUiState(patch) {
+    var prev = loadUiState() || {};
+    var next = Object.assign({}, prev, patch || {});
+    // Always include a timestamp for debugging / future migrations.
+    next.updated_at = Date.now();
+    writeUiState(next);
+    return next;
+  }
+
+  function scheduleSavePanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiScrollSaveTimers[panelKey]) {
+      clearTimeout(uiScrollSaveTimers[panelKey]);
+      uiScrollSaveTimers[panelKey] = 0;
+    }
+    uiScrollSaveTimers[panelKey] = setTimeout(function() {
+      uiScrollSaveTimers[panelKey] = 0;
+      try {
+        if (panelKey === 'post' && postListEl) {
+          mergeUiState({ postScrollTop: postListEl.scrollTop || 0 });
+        }
+        if (panelKey === 'recent' && recentPanelContentEl) {
+          mergeUiState({ recentScrollTop: recentPanelContentEl.scrollTop || 0 });
+        }
+      } catch (_e) {}
+    }, 180);
+  }
+
+  function bindUiPersistence() {
+    // Scroll positions (always-save, regardless of which mode is active).
+    try {
+      if (postListEl) {
+        postListEl.addEventListener('scroll', function() { scheduleSavePanelScroll('post'); }, { passive: true });
+      }
+    } catch (_ePostScroll) {}
+    try {
+      if (recentPanelContentEl) {
+        recentPanelContentEl.addEventListener('scroll', function() { scheduleSavePanelScroll('recent'); }, { passive: true });
+      }
+    } catch (_eRecentScroll) {}
+  }
+
+  function applySavedPanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiRestoreApplied[panelKey]) return;
+
+    var st = loadUiState() || {};
+    try {
+      if (panelKey === 'post' && postListEl && typeof st.postScrollTop === 'number') {
+        postListEl.scrollTop = Math.max(0, st.postScrollTop);
+        uiRestoreApplied.post = true;
+      }
+      if (panelKey === 'recent' && recentPanelContentEl && typeof st.recentScrollTop === 'number') {
+        recentPanelContentEl.scrollTop = Math.max(0, st.recentScrollTop);
+        uiRestoreApplied.recent = true;
+      }
+    } catch (_e) {}
+  }
+
+  function maybeRestoreModeOnBoot() {
+    // Deep links are authoritative: they decide the mode (recent) and scroll to top.
+    // Do not override that with a prior saved UI state.
+    try {
+      if (getDeepLinkKeyFromUrl()) return;
+    } catch (_eDLKey) {}
+
+    var st = loadUiState() || {};
+    var savedMode = st && st.mode ? String(st.mode) : '';
+    if (!savedMode) return;
+    if (savedMode !== 'map' && savedMode !== 'posts' && savedMode !== 'recent') return;
+
+    // If we can't restore posts yet (zoom gating), defer until map:ready updates postsEnabled.
+    pendingModeRestore = savedMode;
+    tryRestorePendingMode();
+  }
+
+  function tryRestorePendingMode() {
+    var m = pendingModeRestore;
+    if (!m) return;
+
+    if (m === 'posts' && !postsEnabled) {
+      return; // wait until postsEnabled is true
+    }
+
+    // Avoid click-toggles ("already active returns to map").
+    if (currentMode === m) {
+      pendingModeRestore = '';
+      return;
+    }
+
+    var btn = getModeButton(m);
+    if (!btn) return;
+    try { btn.click(); } catch (_eClick) {}
+    pendingModeRestore = '';
+  }
+
+  /* --------------------------------------------------------------------------
      INIT
      -------------------------------------------------------------------------- */
 
@@ -90,6 +214,7 @@ const PostModule = (function() {
     }
 
     ensurePanelsDom();
+    bindUiPersistence();
     bindAppEvents();
     bindModeButtons();
 
@@ -100,6 +225,9 @@ const PostModule = (function() {
     // Capture initial mode (HeaderModule already ran, but PostModule may have missed the event).
     currentMode = inferCurrentModeFromHeader() || 'map';
     applyMode(currentMode);
+    // Restore panel mode + scroll position from last session (guest + logged-in).
+    // (Account-wide persistence can be layered later; for now this is fast and robust.)
+    try { maybeRestoreModeOnBoot(); } catch (_eUiRestore) {}
 
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
@@ -185,6 +313,8 @@ const PostModule = (function() {
       if (!data || !data.mode) return;
       currentMode = data.mode;
       applyMode(currentMode);
+      // Persist last used mode so refresh returns to the same panel.
+      try { mergeUiState({ mode: currentMode }); } catch (_eModeStore) {}
 
       // Requirement: no map card should remain active when panels are closed / no open post is visible.
       // When we return to Map mode, clear active/big markers.
@@ -254,6 +384,8 @@ const PostModule = (function() {
           lastZoom = map.getZoom();
           updatePostsButtonState();
         }
+        // If we were waiting for zoom gating to allow restoring Posts mode, try now.
+        try { tryRestorePendingMode(); } catch (_eModeRestore) {}
         // If the page loads directly into a saved zoom>=threshold view, Mapbox may not emit a
         // boundsChanged/move event on its own. That would leave posts/map-cards empty until the user nudges the map.
         // Fix: kick an initial in-area load once on map:ready when we're already above threshold.
@@ -766,6 +898,9 @@ const PostModule = (function() {
           } catch (_eFocus2) {}
         }
 
+        // Restore the last scroll position for this panel (once per page load).
+        // This makes refresh feel like "nothing moved" for users browsing long lists.
+        try { applySavedPanelScroll(panelKey); } catch (_eScrollRestore) {}
       });
       return;
     }
@@ -1402,7 +1537,8 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        openPostById(post.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        // Open synchronously so TopSlack can anchor (same pattern as description toggle).
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
       }
     });
 
@@ -1413,7 +1549,8 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPostById(post.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      // Open synchronously so TopSlack can anchor (same pattern as description toggle).
+      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
     });
 
     // Favorite toggle handler
@@ -1601,7 +1738,7 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(lead.id);
       } else {
-        openPostById(lead.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
+        openPost(lead, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
       }
     });
 
@@ -1611,7 +1748,7 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPostById(lead.id, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
+      openPost(lead, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '', storefrontPosts: sfPosts });
     });
 
     el.addEventListener('mouseenter', function() {
@@ -3261,8 +3398,8 @@ const PostModule = (function() {
    */
 
   function setTooltipDirs(wrap) {
-    wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip], .post-contact-item[data-tooltip]').forEach(function(item) {
-      var c = item.closest('.post-links-container, .post-amenities-container, .post-contact-strip'), cr = c && c.getBoundingClientRect();
+    wrap.querySelectorAll('.post-links-item[data-tooltip], .post-amenities-item[data-tooltip]').forEach(function(item) {
+      var c = item.closest('.post-links-container, .post-amenities-container'), cr = c && c.getBoundingClientRect();
       item.setAttribute('data-tooltip-dir', cr && (item.getBoundingClientRect().left - cr.left) > cr.width * 0.60 ? 'left' : 'right');
     });
   }
@@ -3398,7 +3535,7 @@ const PostModule = (function() {
     }
 
     var hasWebsiteLink = false;
-    var linkData = [];
+    var linksStripRowHtml = '';
     if (linksArr && linksArr.length) {
       var sortedLinks = linksArr.slice().filter(function(l) { return !!l; }).sort(function(a, b) {
         var am = (a && a.menu_sort_order !== null && a.menu_sort_order !== undefined && isFinite(a.menu_sort_order)) ? parseInt(a.menu_sort_order, 10) : 9999;
@@ -3411,6 +3548,7 @@ const PostModule = (function() {
         return 0;
       });
 
+      var linkData = [];
       sortedLinks.forEach(function(l) {
         var type = (l.link_type === null || l.link_type === undefined) ? '' : String(l.link_type).trim();
         var url = (l.external_url === null || l.external_url === undefined) ? '' : String(l.external_url).trim();
@@ -3426,116 +3564,26 @@ const PostModule = (function() {
           iconUrl = App.getImageUrl('links', filename);
         }
         if (!iconUrl) return;
-        linkData.push({ url: url, label: label, iconUrl: iconUrl, linkType: type });
+        linkData.push({ url: url, label: label, iconUrl: iconUrl });
       });
-    }
 
-    // === Unified Contact Section (links, email, phone) ===
-    var contactItems = [];
-    var sett = App.getState('settings') || {};
-
-    if (linkData.length) {
-      var websiteItems = [];
-      var otherLinkItems = [];
-      linkData.forEach(function(d) {
-        var item = {
-          type: 'link',
-          iconUrl: d.iconUrl,
-          label: d.label,
-          href: d.url,
-          tooltipLabel: d.label,
-          isRestricted: false
-        };
-        if (d.linkType && d.linkType.toLowerCase() === 'website') {
-          websiteItems.push(item);
-        } else {
-          otherLinkItems.push(item);
-        }
+      var iconLinks = [];
+      linkData.forEach(function(d, idx) {
+        var dir = 'right';
+        iconLinks.push(
+          '<a class="post-links-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtml(d.label) + '">' +
+            '<span class="post-links-item" data-tooltip="' + escapeHtml(d.label) + '" data-tooltip-dir="' + dir + '">' +
+              '<span class="post-links-icon" style="--post-links-mask:url(' + escapeHtml(d.iconUrl) + ')"></span>' +
+            '</span>' +
+          '</a>'
+        );
       });
-      contactItems = websiteItems.concat(otherLinkItems);
-    }
 
-    if (publicEmail) {
-      var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
-      if (emailIconUrl) {
-        var emailRestricted = publicEmail.toLowerCase() === 'members only';
-        if (emailRestricted) publicEmail = 'Members Only';
-        contactItems.push({
-          type: 'email',
-          iconUrl: emailIconUrl,
-          label: emailRestricted ? 'Members Only' : publicEmail,
-          href: emailRestricted ? '' : 'mailto:' + publicEmail,
-          tooltipLabel: emailRestricted ? 'Members Only' : 'Email',
-          isRestricted: emailRestricted
-        });
-      }
-    }
-
-    if (phonePrefix || publicPhone) {
-      var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
-      if (phoneIconUrl) {
-        var phoneRestricted = publicPhone.toLowerCase() === 'members only';
-        if (phoneRestricted) publicPhone = 'Members Only';
-        var phoneDisplay = phoneRestricted ? 'Members Only' : (phonePrefix + ' ' + publicPhone).trim();
-        contactItems.push({
-          type: 'phone',
-          iconUrl: phoneIconUrl,
-          label: phoneDisplay,
-          href: phoneRestricted ? '' : 'tel:' + phonePrefix + publicPhone,
-          tooltipLabel: phoneRestricted ? 'Members Only' : phoneDisplay,
-          isRestricted: phoneRestricted
-        });
-      }
-    }
-
-    var contactHtml = '';
-    if (contactItems.length) {
-      if (contactItems.length <= 3) {
-        var contactRows = [];
-        contactItems.forEach(function(item) {
-          var iconSpan = '<span class="post-contact-icon" style="--post-contact-mask:url(' + escapeHtml(item.iconUrl) + ')"></span>';
-          if (item.isRestricted) {
-            contactRows.push(
-              '<div class="post-contact-row post-contact-row--restricted">' +
-                iconSpan +
-                '<span class="post-contact-label post-contact-label--restricted">' + escapeHtml(item.label) + '</span>' +
-              '</div>'
-            );
-          } else {
-            var target = item.type === 'link' ? ' target="_blank" rel="noopener noreferrer"' : '';
-            contactRows.push(
-              '<div class="post-contact-row">' +
-                '<a class="post-contact-link" href="' + escapeHtml(item.href) + '"' + target + '>' +
-                  iconSpan +
-                  '<span class="post-contact-label">' + escapeHtml(item.label) + '</span>' +
-                '</a>' +
-              '</div>'
-            );
-          }
-        });
-        contactHtml = '<div class="post-contact-container">' + contactRows.join('') + '</div>';
-      } else {
-        var contactIcons = [];
-        contactItems.forEach(function(item) {
-          var iconSpan = '<span class="post-contact-icon" style="--post-contact-mask:url(' + escapeHtml(item.iconUrl) + ')"></span>';
-          if (item.isRestricted) {
-            contactIcons.push(
-              '<span class="post-contact-item post-contact-item--restricted" data-tooltip="' + escapeHtml(item.tooltipLabel) + '">' +
-                iconSpan +
-              '</span>'
-            );
-          } else {
-            var target = item.type === 'link' ? ' target="_blank" rel="noopener noreferrer"' : '';
-            contactIcons.push(
-              '<a class="post-contact-link" href="' + escapeHtml(item.href) + '"' + target + ' aria-label="' + escapeHtml(item.tooltipLabel) + '">' +
-                '<span class="post-contact-item" data-tooltip="' + escapeHtml(item.tooltipLabel) + '">' +
-                  iconSpan +
-                '</span>' +
-              '</a>'
-            );
-          }
-        });
-        contactHtml = '<div class="post-contact-container post-contact-container--strip"><div class="post-contact-strip">' + contactIcons.join('') + '</div></div>';
+      if (iconLinks.length) {
+        linksStripRowHtml =
+          '<div class="post-info-row post-info-row-links">' +
+            '<div class="post-links-container">' + iconLinks.join('') + '</div>' +
+          '</div>';
       }
     }
 
@@ -3774,8 +3822,33 @@ const PostModule = (function() {
         // CTA buttons
         ticketsUrl ? '<a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Get Tickets</a>' : '',
         itemUrl ? '<a href="' + escapeHtml(itemUrl) + '" target="_blank" rel="noopener noreferrer" class="post-cta-button button-class-8">Shop Now</a>' : '',
-        // Unified contact section (links, email, phone)
-        contactHtml,
+        // Links icons
+        linksStripRowHtml || '',
+        // Public email
+        publicEmail ? (function() {
+          var sett = App.getState('settings') || {};
+          var emailIconUrl = sett.badge_icon_email ? App.getImageUrl('fieldsetIcons', sett.badge_icon_email) : '';
+          var emailBadge = emailIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + emailIconUrl + '" alt=""></span>' : '';
+          var isRestricted = publicEmail.toLowerCase() === 'members only';
+          if (isRestricted) publicEmail = 'Members Only';
+          var emailContent = isRestricted
+            ? '<span class="post-info-restricted">' + escapeHtml(publicEmail) + '</span>'
+            : '<a href="mailto:' + escapeHtml(publicEmail) + '">' + escapeHtml(publicEmail) + '</a>';
+          return '<div class="post-info-row post-info-row-email">' + emailBadge + emailContent + '</div>';
+        })() : '',
+        // Phone
+        (phonePrefix || publicPhone) ? (function() {
+          var sett = App.getState('settings') || {};
+          var phoneIconUrl = sett.badge_icon_phone ? App.getImageUrl('fieldsetIcons', sett.badge_icon_phone) : '';
+          var phoneBadge = phoneIconUrl ? '<span class="post-info-badge"><img class="post-info-image-badge" src="' + phoneIconUrl + '" alt=""></span>' : '';
+          var phoneDisplay = (phonePrefix + ' ' + publicPhone).trim();
+          var isRestricted = publicPhone.toLowerCase() === 'members only';
+          if (isRestricted) publicPhone = 'Members Only';
+          var phoneContent = isRestricted
+            ? '<span class="post-info-restricted">' + escapeHtml(publicPhone) + '</span>'
+            : '<a href="tel:' + escapeHtml(phonePrefix + publicPhone) + '">' + escapeHtml(phoneDisplay) + '</a>';
+          return '<div class="post-info-row post-info-row-phone">' + phoneBadge + phoneContent + '</div>';
+        })() : '',
         // Amenities summary is no longer rendered here; amenities display uses the icon container only.
         // Coupon code
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +

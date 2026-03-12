@@ -11,20 +11,6 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 
 header('Content-Type: application/json');
 
-$mode = isset($_GET['mode']) ? $_GET['mode'] : '';
-if ($mode === 'clear') {
-	@setcookie('FUNMAP_TOKEN', '', [
-		'expires' => time() - 3600,
-		'path' => '/',
-		'domain' => '',
-		'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-		'httponly' => true,
-		'samesite' => 'Lax',
-	]);
-	echo json_encode(['success' => true]);
-	exit;
-}
-
 try {
 	$configCandidates = [
 		__DIR__ . '/../config/config-auth.php',
