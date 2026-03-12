@@ -1531,6 +1531,7 @@
 
 .post-details {
   padding-left: 10px;
+  padding-right: 10px;
 }
 
 .post-details .post-location-container,
@@ -1762,10 +1763,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: calc(100% - 20px);
-  max-width: calc(100% - 20px);
-  margin-left: auto;
-  margin-right: auto;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
