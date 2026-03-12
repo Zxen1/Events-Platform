@@ -1563,10 +1563,6 @@
    ============================================================================ */
 
 .post-description-container {
-  width: calc(100% - 20px);
-  max-width: calc(100% - 20px);
-  margin-left: auto;
-  margin-right: auto;
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
