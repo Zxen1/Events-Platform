@@ -2375,19 +2375,4 @@
   display: flex;
 }
 
-/* Postcard border mirrors countdown bar color; :hover included to prevent override */
-.post-card--countdowncomingsoon,
-.post-card--countdowncomingsoon:hover {
-  box-shadow: inset 0 0 0 1px #2563eb;
-}
-
-.post-card--countdownnowshowing,
-.post-card--countdownnowshowing:hover {
-  box-shadow: inset 0 0 0 1px #16a34a;
-}
-
-.post-card--countdownfinished,
-.post-card--countdownfinished:hover {
-  box-shadow: inset 0 0 0 1px #111827;
-}
 
