@@ -597,6 +597,9 @@ const AdminModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panel);
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { adminOpen: true }, activePanel: 'admin' });
+        }
         
         // Update header button
         App.emit('admin:opened');
@@ -705,6 +708,9 @@ const AdminModule = (function() {
 
     function closePanel() {
         if (!panel || !panelContent) return;
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ panels: { adminOpen: false } });
+        }
         closeToken++;
         var myCloseToken = closeToken;
         
@@ -799,6 +805,9 @@ const AdminModule = (function() {
             initModerationTab();
         } else if (tabName === 'sitemap') {
             initSitemapTab();
+        }
+        if (window.App && typeof App.mergeUiState === 'function') {
+            App.mergeUiState({ admin: { tab: String(tabName || '') } });
         }
     }
 
