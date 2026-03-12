@@ -363,8 +363,10 @@
 
 .post-panel-content .post-card,
 .post-panel-content .post {
+  background-color: transparent;
   margin: 0;
   border: none;
+  box-shadow: none;
   border-radius: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
