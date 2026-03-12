@@ -531,6 +531,7 @@ try {
             p.created_at,
             co.checkout_featured,
             co.checkout_sidebar_ad,
+            co.sort_order AS checkout_sort_order,
             sc.icon_path AS subcategory_icon_path,
             sc.subcategory_name AS subcategory_name,
             sc.color_hex AS subcategory_color,
@@ -645,6 +646,7 @@ try {
                 'created_at' => $row['created_at'],
                 'featured' => (int)($row['checkout_featured'] ?? 0),
                 'sidebar_ad' => (int)($row['checkout_sidebar_ad'] ?? 0),
+                'checkout_sort_order' => (int)($row['checkout_sort_order'] ?? 0),
                 'map_cards' => [],
             ];
         }

@@ -1553,10 +1553,13 @@ const PostModule = (function() {
       priceRowHtml = '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(leadPriceParts.text) + '</span>' + promoTagHtml + '</div>';
     }
 
-    // Sort metadata from lead post
+    // Sort metadata: use highest-tier post in the group so the storefront ranks correctly.
+    var sfHighestTier = sfPosts.reduce(function(best, p) {
+      return (p.checkout_sort_order || 0) > (best.checkout_sort_order || 0) ? p : best;
+    }, sfPosts[0]);
     try {
-      el.dataset.sortSidebarAd = lead.sidebar_ad ? '1' : '0';
-      el.dataset.sortFeatured = lead.featured ? '1' : '0';
+      el.dataset.sortSidebarAd = sfHighestTier.sidebar_ad ? '1' : '0';
+      el.dataset.sortFeatured = sfHighestTier.featured ? '1' : '0';
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(lead.created_at || 0).getTime() || 0);
       el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
@@ -2097,21 +2100,21 @@ const PostModule = (function() {
       
       markerData.venueKey = venueKey;
 
-      // Effective tier: elevated to the highest tier among all posts in this location group.
-      // Used only for card/icon/dot classification — does not affect click handling or post IDs.
-      var groupHasPremium = group.some(function(item) { return item.post.sidebar_ad === 1; });
-      var groupHasFeatured = group.some(function(item) { return item.post.featured === 1; });
-      markerData._effectiveSidebarAd = groupHasPremium ? 1 : 0;
-      markerData._effectiveFeatured = (!groupHasPremium && groupHasFeatured) ? 1 : 0;
+      // For location groups: use the highest checkout_sort_order among all posts in the group.
+      // Single-post markers use their own checkout_sort_order directly.
+      // Highest sort_order = highest priority (premium = highest number)
+      markerData._groupMaxSortOrder = group.reduce(function(max, item) {
+        return Math.max(max, item.post.checkout_sort_order || 0);
+      }, 0);
 
       allMarkerData.push(markerData);
     });
 
     // --- Map Card Priority System ---
-    // Tiers: sidebar_ad (Premium) > featured (Featured) > standard
-    // Within each tier: randomized for fair exposure
-    // Fairness rule: one map card per post before any post gets a second
-    // Premium/Featured never become dots (always card or icon)
+    // Ranked by checkout_sort_order (higher = better). Any number of tiers supported.
+    // Within each tier: randomized for fair exposure.
+    // Fairness rule: one map card per post before any post gets a second.
+    // Only the lowest tier (tierStandard) can become dots.
     var MAX_MAP_CARDS = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
     var totalResultCount = allMarkerData.length;
     var isHighDensity = totalResultCount > MAX_MAP_CARDS;
@@ -2124,15 +2127,23 @@ const PostModule = (function() {
       }
     });
 
-    // Classify each marker into its tier
-    var tierPremium = [];   // sidebar_ad === 1
-    var tierFeatured = [];  // featured === 1, not sidebar_ad
+    // Determine the two highest sort_order values present to classify into three tiers.
+    var uniqueSortOrders = [];
+    allMarkerData.forEach(function(item) {
+      var so = item._groupMaxSortOrder;
+      if (uniqueSortOrders.indexOf(so) === -1) uniqueSortOrders.push(so);
+    });
+    uniqueSortOrders.sort(function(a, b) { return b - a; }); // descending: highest sort_order = highest priority
+
+    var tierPremium = [];   // highest checkout_sort_order
+    var tierFeatured = [];  // second highest checkout_sort_order
     var tierStandard = [];  // everything else
 
     allMarkerData.forEach(function(item) {
-      if (item._effectiveSidebarAd === 1) {
+      var so = item._groupMaxSortOrder;
+      if (so === uniqueSortOrders[0]) {
         tierPremium.push(item);
-      } else if (item._effectiveFeatured === 1) {
+      } else if (uniqueSortOrders.length > 1 && so === uniqueSortOrders[1]) {
         tierFeatured.push(item);
       } else {
         tierStandard.push(item);
@@ -2145,7 +2156,6 @@ const PostModule = (function() {
       var seenPostIds = {};
       var firstCards = [];
       var extraCards = [];
-      // Sort by cached random score so the split is randomized
       var shuffled = tierItems.slice().sort(function(a, b) {
         return (priorityScoreCache[a.venueKey] || 0) - (priorityScoreCache[b.venueKey] || 0);
       });
@@ -2161,27 +2171,29 @@ const PostModule = (function() {
       return firstCards.concat(extraCards);
     }
 
-    // Build the full priority list: Premium → Featured → Standard
+    // Build the full priority list: tierPremium → tierFeatured → tierStandard
     // Within each tier: first-cards (one per post) then extra-cards, all randomized
     var priorityList = applyFairnessRule(tierPremium)
       .concat(applyFairnessRule(tierFeatured))
       .concat(applyFairnessRule(tierStandard));
 
-    // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots.
-    // Premium/Featured → icon if they miss a card slot (never dot).
-    // Standard → dot if they miss a card slot (never icon).
+    // Assign appearance: top MAX_MAP_CARDS become cards, rest become icons or dots.
+    // tierStandard → dot if beyond card slots. tierPremium/tierFeatured → icon (never dot).
     // All three are the same map card marker — appearance is CSS only.
+    var tierStandardKeys = {};
+    tierStandard.forEach(function(item) { tierStandardKeys[item.venueKey] = true; });
+
     var appearanceByKey = {};
     var dotColorByKey = {};
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
-      var isPremiumOrFeatured = (item._effectiveSidebarAd === 1) || (item._effectiveFeatured === 1);
+      var isStandardTier = !!tierStandardKeys[item.venueKey];
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
       var appearance = 'card';
       if (isHighDensity && !hasCardSlot) {
-        appearance = isPremiumOrFeatured ? 'icon' : 'dot';
+        appearance = isStandardTier ? 'dot' : 'icon';
       }
 
       if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
