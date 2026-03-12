@@ -1536,8 +1536,6 @@
 
 .post-details .post-location-container,
 .post-details .post-session-container {
-  margin-left: -10px;
-  width: calc(100% + 10px);
 }
 
 .post-details .post-session-ticket-prompt,
@@ -1766,7 +1764,7 @@
 .post-cta-button {
   width: auto;
   max-width: none;
-  margin: 0 0 10px -10px;
+  margin: 0 0 10px 0;
   padding: 0 10px;
 }
 
@@ -1785,7 +1783,6 @@
 
 .post-info-row-amenities {
   min-height: 36px;
-  margin-left: -10px;
   margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
 }
 
