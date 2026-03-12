@@ -773,12 +773,14 @@ const MapModule = (function() {
          (hover, click, toggle, storefront, multi-post) is unchanged — same DOM,
          same JS, same event handlers as a regular map card marker.
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-appearance--icon .map-card-pill { display: none; }
-      .map-card-appearance--icon.is-active .map-card-pill { display: flex; }
-      .map-card-appearance--icon:not(.is-active) .map-card-icon {
-        left: 0;
-        top: 0;
-        transform: translate(-50%, -50%);
+      .map-card-appearance--icon .map-card-pill {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+      .map-card-appearance--icon.is-active .map-card-pill {
+        opacity: 1;
+        pointer-events: auto;
       }
       .map-card-appearance--icon::before {
         content: '';
@@ -818,7 +820,15 @@ const MapModule = (function() {
          element. Active state un-hides the pill (full big map card). All other
          behaviour is unchanged.
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-appearance--dot .map-card-pill { display: none; }
+      .map-card-appearance--dot .map-card-pill {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+      .map-card-appearance--dot.is-active .map-card-pill {
+        opacity: 1;
+        pointer-events: auto;
+      }
       .map-card-appearance--dot:not(.is-active) .map-card-icon {
         opacity: 0;
         width: 30px;
@@ -826,7 +836,6 @@ const MapModule = (function() {
         left: -15px;
         top: -15px;
       }
-      .map-card-appearance--dot.is-active .map-card-pill { display: flex; }
       .map-card-appearance--dot::before {
         content: '';
         position: absolute;
