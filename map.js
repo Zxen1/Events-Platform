@@ -2192,7 +2192,7 @@ const MapModule = (function() {
 
 
   /* --------------------------------------------------------------------------
-     MAP CARDS (Markers)
+     MAP MARKERS (visibility + creation)
      -------------------------------------------------------------------------- */
   
   /**
@@ -2207,6 +2207,10 @@ const MapModule = (function() {
       }
     });
   }
+
+  /* ------------------------------------------------------------------
+     MAP CARDS (HTML overlay markers with pill labels)
+     ------------------------------------------------------------------ */
 
   /**
    * Create a map card marker for a post
@@ -2258,6 +2262,73 @@ const MapModule = (function() {
   }
 
   /**
+   * Build map card HTML
+   */
+  function buildMapCardHTML(post, state) {
+    const isActive = state === 'big';
+    const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
+    const pillClass = `map-card-${state}`;
+    
+    const iconUrl = getIconUrl(post, state);
+    
+    let labelHTML = '';
+    
+    if (post.isStorefront && post.venuePostCount > 1) {
+      const truncatedTitle = shortenText(post.storefrontTitle || '', isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL);
+      const countLabel = post.venuePostCount + ' posts here';
+      labelHTML = `
+        <div class="map-card-title">${escapeHtml(truncatedTitle)}</div>
+        <div class="map-card-venue">${escapeHtml(countLabel)}</div>
+      `;
+    } else if (post.isMultiPost && post.venuePostCount > 1) {
+      const countLabel = post.venuePostCount + ' posts here';
+      const venueName = post.venue || '';
+      const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
+      
+      labelHTML = `
+        <div class="map-card-title">${escapeHtml(countLabel)}</div>
+        ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
+      `;
+    } else {
+      const labels = getMarkerLabelLines(post, isActive);
+      
+      if (isActive) {
+        if (labels.venueLine) {
+          labelHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            <div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>
+            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+          `;
+        } else {
+          labelHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
+          `;
+        }
+      } else {
+        labelHTML = `
+          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+        `;
+      }
+    }
+    
+    return `
+      <img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">
+      <div class="map-card-pill ${pillClass}" data-id="${post.id}" data-state="${state}">
+        <div class="map-card-labels">
+          ${labelHTML}
+        </div>
+      </div>
+    `;
+  }
+
+  /* ------------------------------------------------------------------
+     MAP DOTS & ICONS (HTML overlay markers)
+     ------------------------------------------------------------------ */
+
+  /**
    * Create a map dot marker (HTML overlay)
    */
   function createMapDotMarker(data, lng, lat) {
@@ -2265,8 +2336,9 @@ const MapModule = (function() {
 
     const el = document.createElement('div');
     el.className = 'map-dot-container';
+    if (!data.color) throw new Error('[Map] createMapDotMarker: color missing for post ID ' + data.id);
     el.innerHTML = '<div class="map-dot-ring"></div>' +
-      '<div class="map-dot-fill" style="background-color:' + (data.color || '#888') + '"></div>';
+      '<div class="map-dot-fill" style="background-color:' + data.color + '"></div>';
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
       .setLngLat([lng, lat])
@@ -2302,8 +2374,9 @@ const MapModule = (function() {
 
     const el = document.createElement('div');
     el.className = 'map-icon-container';
+    if (!data.iconUrl) throw new Error('[Map] createMapIconMarker: iconUrl missing for post ID ' + data.id);
     el.innerHTML = '<div class="map-icon-ring"></div>' +
-      '<img class="map-icon-image" src="' + (data.iconUrl || '') + '" alt="" />';
+      '<img class="map-icon-image" src="' + data.iconUrl + '" alt="" />';
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
       .setLngLat([lng, lat])
@@ -2377,76 +2450,35 @@ const MapModule = (function() {
   }
 
   /**
-   * Build map card HTML
+   * Promote a dot/icon to a big map card (on click/active)
    */
-  function buildMapCardHTML(post, state) {
-    const isActive = state === 'big';
-    const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
-    const pillClass = `map-card-${state}`;
-    
-    // Get icon URL based on state (thumbnail for big, subcategory icon for small/hover)
-    const iconUrl = getIconUrl(post, state);
-    
-    // Build label HTML based on whether this is a storefront, multi-post venue, or single post
-    let labelHTML = '';
-    
-    if (post.isStorefront && post.venuePostCount > 1) {
-      const truncatedTitle = shortenText(post.storefrontTitle || '', isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL);
-      const countLabel = post.venuePostCount + ' posts here';
-      labelHTML = `
-        <div class="map-card-title">${escapeHtml(truncatedTitle)}</div>
-        <div class="map-card-venue">${escapeHtml(countLabel)}</div>
-      `;
-    } else if (post.isMultiPost && post.venuePostCount > 1) {
-      // Multi-post venue: show "X posts here" and venue name
-      const countLabel = post.venuePostCount + ' posts here';
-      const venueName = post.venue || '';
-      const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
-      
-      labelHTML = `
-        <div class="map-card-title">${escapeHtml(countLabel)}</div>
-        ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
-      `;
-    } else {
-      // Single post: show title, venue, and city
-      const labels = getMarkerLabelLines(post, isActive);
-      
-      if (isActive) {
-        // Big card: Title (1 line if venue, 2 lines if no venue) + Venue + City
-        if (labels.venueLine) {
-          // With venue: Title (1 line) + Venue + City
-          labelHTML = `
-            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-            <div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>
-            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
-          `;
-        } else {
-          // Without venue: Title (2 lines) + City
-          labelHTML = `
-            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-            ${labels.cityLine ? `<div class="map-card-city">${escapeHtml(labels.cityLine)}</div>` : ''}
-          `;
-        }
-      } else {
-        // Small/hover card: show title only (2 lines)
-        labelHTML = `
-          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-        `;
-      }
-    }
-    
-    // Icon is at center (0,0 = lat/lng), pill extends to the right
-    return `
-      <img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">
-      <div class="map-card-pill ${pillClass}" data-id="${post.id}" data-state="${state}">
-        <div class="map-card-labels">
-          ${labelHTML}
-        </div>
-      </div>
-    `;
+  function promoteDotIconToBigCard(entry) {
+    if (!entry || !entry.element) return;
+    entry._savedType = entry.type;
+    entry._savedHTML = entry.element.innerHTML;
+    entry._savedClassName = entry.element.className;
+    entry.element.className = 'map-card-container is-active';
+    entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
+    entry.state = 'big';
   }
+
+  /**
+   * Restore a dot/icon back to its original form (on deactivate)
+   */
+  function restoreDotIconOriginal(entry) {
+    if (!entry || !entry._savedHTML) return;
+    entry.element.className = entry._savedClassName;
+    entry.element.innerHTML = entry._savedHTML;
+    entry.state = 'default';
+    entry.type = entry._savedType;
+    delete entry._savedHTML;
+    delete entry._savedClassName;
+    delete entry._savedType;
+  }
+
+  /* ------------------------------------------------------------------
+     SHARED MARKER LOOKUPS (cards + dots + icons)
+     ------------------------------------------------------------------ */
 
   /**
    * Find marker entry by post ID (searches through venue-keyed entries)
@@ -2596,6 +2628,12 @@ const MapModule = (function() {
         }
         entry.element.classList.remove('is-active');
       });
+      // Restore any promoted dot/icon markers
+      mapDotIconMarkers.forEach((entry) => {
+        if (entry.state === 'big') {
+          restoreDotIconOriginal(entry);
+        }
+      });
       // Clear hover group too (avoid sticky hover feeling)
       if (currentHoverPostIds && currentHoverPostIds.length) {
         setHoverGroupForPostIds(currentHoverPostIds, false);
@@ -2617,17 +2655,6 @@ const MapModule = (function() {
     const entry = findMarkerByVenueKey(venueKey);
     if (!entry) return;
     
-    // Dots and icons: always open the post directly (no big/active state)
-    if (entry.type === 'dot' || entry.type === 'icon') {
-      stopSpin();
-      var source = entry.type === 'dot' ? 'map_dot' : 'map_icon';
-      App.emit('post:open', {
-        id: entry.post && entry.post.id ? entry.post.id : null,
-        source: source
-      });
-      return;
-    }
-
     // Touch devices: first tap activates (brings to surface), second tap opens the post.
     // Desktop: single click opens (existing behavior), active click toggles close.
     let isTouch = false;
@@ -2848,12 +2875,22 @@ const MapModule = (function() {
       }
     });
 
-    // Activate this card
+    // Restore any previously active dot/icon back to its original form
+    mapDotIconMarkers.forEach((entry, venueKey) => {
+      if (venueKey !== targetKey && entry.state === 'big') {
+        restoreDotIconOriginal(entry);
+      }
+    });
+
+    // Activate this marker
     if (targetEntry) {
-      // Remember which marker is active for this post (multi-location posts)
       lastActiveVenueKeyByPostId.set(pid, targetKey);
-      updateMapCardStateByKey(targetKey, 'big');
-      targetEntry.element.classList.add('is-active');
+      if (targetEntry.type === 'dot' || targetEntry.type === 'icon') {
+        promoteDotIconToBigCard(targetEntry);
+      } else {
+        updateMapCardStateByKey(targetKey, 'big');
+        targetEntry.element.classList.add('is-active');
+      }
     }
   }
 
@@ -2878,6 +2915,10 @@ const MapModule = (function() {
       return '';
     }
   }
+
+  /* ------------------------------------------------------------------
+     MAP CARD STATE / REMOVAL
+     ------------------------------------------------------------------ */
 
   /**
    * Update map card visual state by venue key
