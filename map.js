@@ -314,7 +314,6 @@ const MapModule = (function() {
   
   // Markers
   let mapCardMarkers = new Map();    // venueKey -> { marker, element, state, type:'card' }
-  let mapDotIconMarkers = new Map();  // venueKey -> { marker, element, type:'dot'|'icon' }
   let clusterLayerVisible = true;
   let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
@@ -2243,10 +2242,10 @@ const MapModule = (function() {
       element: el,
       post: post,
       state: 'small',
+      type: 'card',
       lng: lng,
       lat: lat,
       venueKey: venueKey,
-      // IMPORTANT: store IDs as STRINGS (matches live-site behavior and avoids number/string mismatches)
       postIds: (post.isMultiPost || post.isStorefront) && Array.isArray(post.venuePostIds)
         ? post.venuePostIds.map(function(pid) { return String(pid); })
         : [String(post.id)]
@@ -2361,7 +2360,7 @@ const MapModule = (function() {
         : [String(data.id)]
     };
 
-    mapDotIconMarkers.set(venueKey, entry);
+    mapCardMarkers.set(venueKey, entry);
     bindMapCardPointerManager();
     return entry;
   }
@@ -2399,7 +2398,7 @@ const MapModule = (function() {
         : [String(data.id)]
     };
 
-    mapDotIconMarkers.set(venueKey, entry);
+    mapCardMarkers.set(venueKey, entry);
     bindMapCardPointerManager();
     return entry;
   }
@@ -2419,17 +2418,17 @@ const MapModule = (function() {
       itemsByKey[vk] = item;
     });
 
-    // Remove markers no longer in the set
-    mapDotIconMarkers.forEach(function(entry, venueKey) {
-      if (!nextKeys.has(venueKey)) {
+    // Remove dot/icon entries no longer in the set
+    mapCardMarkers.forEach(function(entry, venueKey) {
+      if ((entry.type === 'dot' || entry.type === 'icon') && !nextKeys.has(venueKey)) {
         entry.marker.remove();
-        mapDotIconMarkers.delete(venueKey);
+        mapCardMarkers.delete(venueKey);
       }
     });
 
     // Create markers that don't exist yet
     nextKeys.forEach(function(venueKey) {
-      if (mapDotIconMarkers.has(venueKey)) return;
+      if (mapCardMarkers.has(venueKey)) return;
       var item = itemsByKey[venueKey];
       if (item.markerType === 'icon') {
         createMapIconMarker(item, item.lng, item.lat);
@@ -2443,37 +2442,46 @@ const MapModule = (function() {
    * Clear all dot/icon markers
    */
   function clearAllMapDotIconMarkers() {
-    mapDotIconMarkers.forEach(function(entry) {
-      entry.marker.remove();
+    mapCardMarkers.forEach(function(entry, venueKey) {
+      if (entry.type === 'dot' || entry.type === 'icon') {
+        entry.marker.remove();
+        mapCardMarkers.delete(venueKey);
+      }
     });
-    mapDotIconMarkers.clear();
   }
 
   /**
-   * Promote a dot/icon to a big map card (on click/active)
+   * Activate any marker to big state (cards, dots, icons — same path)
    */
-  function promoteDotIconToBigCard(entry) {
+  function activateMarker(entry) {
     if (!entry || !entry.element) return;
-    entry._savedType = entry.type;
-    entry._savedHTML = entry.element.innerHTML;
-    entry._savedClassName = entry.element.className;
-    entry.element.className = 'map-card-container is-active';
-    entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
+    if (entry.type === 'dot' || entry.type === 'icon') {
+      entry._savedHTML = entry.element.innerHTML;
+      entry._savedClassName = entry.element.className;
+      entry.element.className = 'map-card-container is-active';
+      entry.element.innerHTML = buildMapCardHTML(entry.post, 'big');
+    } else {
+      updateMapCardStateByKey(entry.venueKey, 'big');
+      entry.element.classList.add('is-active');
+    }
     entry.state = 'big';
   }
 
   /**
-   * Restore a dot/icon back to its original form (on deactivate)
+   * Deactivate any marker from big state (cards, dots, icons — same path)
    */
-  function restoreDotIconOriginal(entry) {
-    if (!entry || !entry._savedHTML) return;
-    entry.element.className = entry._savedClassName;
-    entry.element.innerHTML = entry._savedHTML;
+  function deactivateMarker(entry) {
+    if (!entry || !entry.element) return;
+    if (entry._savedHTML) {
+      entry.element.className = entry._savedClassName;
+      entry.element.innerHTML = entry._savedHTML;
+      delete entry._savedHTML;
+      delete entry._savedClassName;
+    } else {
+      updateMapCardStateByKey(entry.venueKey, 'small');
+      entry.element.classList.remove('is-active');
+    }
     entry.state = 'default';
-    entry.type = entry._savedType;
-    delete entry._savedHTML;
-    delete entry._savedClassName;
-    delete entry._savedType;
   }
 
   /* ------------------------------------------------------------------
@@ -2490,11 +2498,6 @@ const MapModule = (function() {
         return entry;
       }
     }
-    for (const [key, entry] of mapDotIconMarkers) {
-      if (entry.postIds && entry.postIds.includes(target)) {
-        return entry;
-      }
-    }
     return null;
   }
   
@@ -2506,38 +2509,26 @@ const MapModule = (function() {
         out.push(entry);
       }
     }
-    for (const [key, entry] of mapDotIconMarkers) {
-      if (entry.postIds && entry.postIds.includes(target)) {
-        out.push(entry);
-      }
-    }
     return out;
   }
   
   function findMarkerByVenueKey(venueKey) {
-    return mapCardMarkers.get(venueKey) || mapDotIconMarkers.get(venueKey) || null;
+    return mapCardMarkers.get(venueKey) || null;
   }
   
   function setMarkerHoverState(entry, isHovering) {
     if (!entry || !entry.element) return;
-    // Never override the active/big state on hover (matches live-site expectation)
     if (entry.state === 'big') return;
-    
-    if (entry.type === 'dot' || entry.type === 'icon') {
-      if (isHovering) {
-        entry.element.classList.add('is-hovered');
-      } else {
-        entry.element.classList.remove('is-hovered');
-      }
-      return;
-    }
     
     if (isHovering) {
       entry.element.classList.add('is-hovered');
-      updateMapCardStateByKey(entry.venueKey, 'hover');
     } else {
       entry.element.classList.remove('is-hovered');
-      updateMapCardStateByKey(entry.venueKey, 'small');
+    }
+    
+    // Cards have a pill that also needs a state update
+    if (entry.type === 'card') {
+      updateMapCardStateByKey(entry.venueKey, isHovering ? 'hover' : 'small');
     }
   }
   
@@ -2621,18 +2612,12 @@ const MapModule = (function() {
   function clearActiveMapCards() {
     try {
       // Clear active marker visuals
-      mapCardMarkers.forEach((entry, venueKey) => {
+      mapCardMarkers.forEach((entry) => {
         if (!entry || !entry.element) return;
         if (entry.state === 'big') {
-          updateMapCardStateByKey(venueKey, 'small');
+          deactivateMarker(entry);
         }
         entry.element.classList.remove('is-active');
-      });
-      // Restore any promoted dot/icon markers
-      mapDotIconMarkers.forEach((entry) => {
-        if (entry.state === 'big') {
-          restoreDotIconOriginal(entry);
-        }
       });
       // Clear hover group too (avoid sticky hover feeling)
       if (currentHoverPostIds && currentHoverPostIds.length) {
@@ -2867,30 +2852,17 @@ const MapModule = (function() {
     }
     const targetKey = targetEntry ? targetEntry.venueKey : null;
     
-    // Deactivate all other cards
+    // Deactivate all other markers
     mapCardMarkers.forEach((entry, venueKey) => {
       if (venueKey !== targetKey && entry.state === 'big') {
-        updateMapCardStateByKey(venueKey, 'small');
-        entry.element.classList.remove('is-active');
-      }
-    });
-
-    // Restore any previously active dot/icon back to its original form
-    mapDotIconMarkers.forEach((entry, venueKey) => {
-      if (venueKey !== targetKey && entry.state === 'big') {
-        restoreDotIconOriginal(entry);
+        deactivateMarker(entry);
       }
     });
 
     // Activate this marker
     if (targetEntry) {
       lastActiveVenueKeyByPostId.set(pid, targetKey);
-      if (targetEntry.type === 'dot' || targetEntry.type === 'icon') {
-        promoteDotIconToBigCard(targetEntry);
-      } else {
-        updateMapCardStateByKey(targetKey, 'big');
-        targetEntry.element.classList.add('is-active');
-      }
+      activateMarker(targetEntry);
     }
   }
 
@@ -3327,7 +3299,6 @@ const MapModule = (function() {
     setActiveMapCardByPostMapCardId,
     // Expose current marker keys so PostModule can remove stale markers without "drift".
     getMapCardMarkerVenueKeys: () => Array.from(mapCardMarkers.keys()),
-    getMapDotIconMarkerVenueKeys: () => Array.from(mapDotIconMarkers.keys()),
     // MapCards-style hover API (compat layer for PostModule)
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
     removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
