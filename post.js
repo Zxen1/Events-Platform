@@ -2079,13 +2079,7 @@ const PostModule = (function() {
         }
       }
 
-      // Lead item must be the highest-tier post so the tier classifier
-      // (sidebar_ad → featured → standard) correctly elevates location group markers.
-      var firstItem = group.reduce(function(best, item) {
-        var t = item.post.sidebar_ad === 1 ? 2 : (item.post.featured === 1 ? 1 : 0);
-        var b = best.post.sidebar_ad === 1 ? 2 : (best.post.featured === 1 ? 1 : 0);
-        return t > b ? item : best;
-      }, group[0]);
+      var firstItem = group[0];
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
       if (!markerData) return;
 
@@ -2103,6 +2097,14 @@ const PostModule = (function() {
       }
       
       markerData.venueKey = venueKey;
+
+      // Effective tier: elevated to the highest tier among all posts in this location group.
+      // Used only for card/icon/dot classification — does not affect click handling or post IDs.
+      var groupHasPremium = group.some(function(item) { return item.post.sidebar_ad === 1; });
+      var groupHasFeatured = group.some(function(item) { return item.post.featured === 1; });
+      markerData._effectiveSidebarAd = groupHasPremium ? 1 : 0;
+      markerData._effectiveFeatured = (!groupHasPremium && groupHasFeatured) ? 1 : 0;
+
       allMarkerData.push(markerData);
     });
 
@@ -2145,10 +2147,9 @@ const PostModule = (function() {
     var tierStandard = [];  // everything else
 
     allMarkerData.forEach(function(item) {
-      var post = item._originalPost;
-      if (post.sidebar_ad === 1) {
+      if (item._effectiveSidebarAd === 1) {
         tierPremium.push(item);
-      } else if (post.featured === 1) {
+      } else if (item._effectiveFeatured === 1) {
         tierFeatured.push(item);
       } else {
         tierStandard.push(item);
@@ -2192,7 +2193,7 @@ const PostModule = (function() {
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
-      var isPremiumOrFeatured = (post.sidebar_ad === 1) || (post.featured === 1);
+      var isPremiumOrFeatured = (item._effectiveSidebarAd === 1) || (item._effectiveFeatured === 1);
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
       var appearance = 'card';
