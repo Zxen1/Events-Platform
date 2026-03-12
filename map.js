@@ -1860,8 +1860,7 @@ const MapModule = (function() {
           ],
           'circle-color': '#ffffff',
           'circle-opacity': 0.3,
-          'circle-blur': 0.8,
-          'circle-emissive-strength': 1
+          'circle-blur': 0.8
         }
       });
     }
@@ -1877,8 +1876,8 @@ const MapModule = (function() {
         paint: {
           'circle-radius': getDotSize() / 2,
           'circle-color': ['get', 'color'],
-          'circle-stroke-width': 0,
-          'circle-emissive-strength': 1
+          'circle-stroke-color': 'rgba(0,0,0,0.7)',
+          'circle-stroke-width': getDotStrokeWidth()
         }
       });
     }
@@ -1896,8 +1895,9 @@ const MapModule = (function() {
           paint: {
             'circle-radius': getIconDotSize() / 2,
             'circle-color': ['get', 'color'],
-            'circle-stroke-width': 0,
-            'circle-emissive-strength': 1
+            'circle-opacity': 0.4,
+            'circle-stroke-color': 'rgba(0,0,0,0.7)',
+            'circle-stroke-width': getDotStrokeWidth()
           }
         });
 
@@ -1912,9 +1912,6 @@ const MapModule = (function() {
           'icon-size': 0.8,
           'icon-allow-overlap': true,
           'icon-ignore-placement': true
-        },
-        paint: {
-          'icon-emissive-strength': 1
         }
       });
     }
