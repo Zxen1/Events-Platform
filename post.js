@@ -369,9 +369,6 @@ const PostModule = (function() {
             
             // 4. Clear map data
             if (window.MapModule) {
-              if (typeof MapModule.updateHighDensityData === 'function') {
-                MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
-              }
               if (typeof MapModule.clearAllMapCardMarkers === 'function') {
                 MapModule.clearAllMapCardMarkers();
               }
@@ -1950,9 +1947,6 @@ const PostModule = (function() {
     if (typeof lastZoom !== 'number' || lastZoom < threshold) {
       // We are below the breakpoint. Wipe everything and exit.
       if (window.MapModule) {
-        if (typeof MapModule.updateHighDensityData === 'function') {
-          MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
-        }
         if (typeof MapModule.clearAllMapCardMarkers === 'function') {
           MapModule.clearAllMapCardMarkers();
         }
@@ -2046,7 +2040,8 @@ const PostModule = (function() {
         markerData && markerData.venue ? String(markerData.venue) : '',
         markerData && markerData.sub ? String(markerData.sub) : '',
         markerData && markerData.iconUrl ? String(markerData.iconUrl) : '',
-        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : ''
+        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : '',
+        markerData && markerData.markerAppearance ? String(markerData.markerAppearance) : 'card'
       ].join('|');
     }
 
@@ -2182,71 +2177,38 @@ const PostModule = (function() {
       .concat(applyFairnessRule(tierFeatured))
       .concat(applyFairnessRule(tierStandard));
 
-    // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots
-    var cardSlots = new Set();
-    var geojsonFeatures = [];
+    // Assign display tiers: top MAX_MAP_CARDS become cards, rest become icons or dots.
+    // Premium/Featured → icon if they miss a card slot (never dot).
+    // Standard → dot if they miss a card slot (never icon).
+    // All three are the same map card marker — appearance is CSS only.
+    var appearanceByKey = {};
+    var dotColorByKey = {};
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
       var isPremiumOrFeatured = (post.sidebar_ad === 1) || (post.featured === 1);
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
-      if (hasCardSlot) {
-        cardSlots.add(item.venueKey);
-      }
-
-      // Display tier: card, icon, or dot
-      // Premium/Featured are NEVER dots — they become icons if they miss a card slot
-      var type = 'card';
+      var appearance = 'card';
       if (isHighDensity && !hasCardSlot) {
-        type = isPremiumOrFeatured ? 'icon' : 'dot';
+        appearance = isPremiumOrFeatured ? 'icon' : 'dot';
       }
 
-      // Validate required data (no fallbacks)
-      var subColor = post.subcategory_color;
-      if (!subColor) {
-        throw new Error('[Map] Subcategory color missing for post ID ' + item.id + ' (required for high-density dots).');
-      }
-      var subKey = item.sub;
-      if (!subKey) {
-        throw new Error('[Map] Subcategory key missing for post ID ' + item.id + ' (required for featured icons).');
+      if (appearance === 'dot') {
+        var subColor = post.subcategory_color;
+        if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
+        dotColorByKey[item.venueKey] = subColor;
       }
 
-      // Only add to GeoJSON if it's NOT a card. Cards are handled by DOM markers.
-      if (type !== 'card') {
-        geojsonFeatures.push({
-          type: 'Feature',
-          id: item.id,
-          geometry: {
-            type: 'Point',
-            coordinates: [item.lng, item.lat]
-          },
-          properties: {
-            postId: item.id,
-            venueKey: item.venueKey,
-            type: type,
-            color: subColor,
-            iconId: subKey,
-            iconUrl: item.iconUrl
-          }
-        });
-      }
+      appearanceByKey[item.venueKey] = appearance;
     });
 
-    // Update Mapbox high-density layers
-    if (mapModule.updateHighDensityData) {
-      mapModule.updateHighDensityData({
-        type: 'FeatureCollection',
-        features: geojsonFeatures
-      });
-    }
-
-    // Prepare markers for DOM rendering (only those in cardSlots)
+    // All marker types are the same HTML marker — prepare all for DOM rendering.
     allMarkerData.forEach(function(markerData) {
-      if (cardSlots.has(markerData.venueKey)) {
-        nextMarkerDataByKey[markerData.venueKey] = markerData;
-        nextSigByKey[markerData.venueKey] = buildMarkerSignature(markerData);
-      }
+      markerData.markerAppearance = appearanceByKey[markerData.venueKey] || 'card';
+      markerData.dotColor = dotColorByKey[markerData.venueKey] || '';
+      nextMarkerDataByKey[markerData.venueKey] = markerData;
+      nextSigByKey[markerData.venueKey] = buildMarkerSignature(markerData);
     });
 
     // Remove markers that are no longer needed (including those that switched to dots/icons)
@@ -2284,7 +2246,7 @@ const PostModule = (function() {
         mapModule.removeMapCardMarker(venueKey);
       }
       if (mapModule.createMapCardMarker) {
-        mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
+        mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
       }
     });
 
@@ -2483,9 +2445,6 @@ const PostModule = (function() {
 
     // Below threshold: no posts list should be shown; purge everything.
     if (window.MapModule) {
-      if (typeof MapModule.updateHighDensityData === 'function') {
-        MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
-      }
       if (typeof MapModule.clearAllMapCardMarkers === 'function') {
         MapModule.clearAllMapCardMarkers();
       }
