@@ -340,11 +340,11 @@
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
-/* .post-card:hover,
+.post-card:hover,
 .post-card.post-card--map-highlight,
 .recent-card:hover {
   transform: scale(1.02);
-} */
+}
 
 .post-card:hover,
 .post-card.post-card--map-highlight {
