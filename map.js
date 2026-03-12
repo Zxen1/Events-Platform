@@ -823,11 +823,14 @@ const MapModule = (function() {
       .map-card-appearance--dot .map-card-pill {
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.2s ease;
+        transform: scale(0);
+        transform-origin: left center;
+        transition: opacity 0.2s ease, transform 0.2s ease;
       }
       .map-card-appearance--dot.is-active .map-card-pill {
         opacity: 1;
         pointer-events: auto;
+        transform: scale(1);
       }
       .map-card-appearance--dot:not(.is-active) .map-card-icon {
         opacity: 0;
