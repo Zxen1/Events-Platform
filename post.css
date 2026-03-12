@@ -334,11 +334,13 @@
 }
 
 .post-card:hover,
+.post-card.post-card--map-highlight,
 .recent-card:hover {
   transform: scale(1.02);
 }
 
-.post-card:hover {
+.post-card:hover,
+.post-card.post-card--map-highlight {
   box-shadow: inset 0 0 0 1px var(--blue-500);
 }
 .recent-card:hover {
@@ -572,6 +574,7 @@
   transition: color 0.15s ease;
 }
 .post-card:hover .post-card-text-title,
+.post-card.post-card--map-highlight .post-card-text-title,
 .recent-card:hover .recent-card-text-title {
   color: rgba(255, 255, 255, 0.92);
 }
@@ -590,6 +593,7 @@
   transition: color 0.15s ease;
 }
 .post-card:hover .post-card-container-info,
+.post-card.post-card--map-highlight .post-card-container-info,
 .recent-card:hover .recent-card-container-info {
   color: rgba(255, 255, 255, 0.92);
 }
