@@ -97,31 +97,6 @@ const FilterModule = (function() {
     // by any module via getFilterSummaryText without depending on panel DOM).
     var lastSummaryText = '';
 
-    function restorePanelUiState() {
-        try {
-            if (!window.App || typeof App.getUiState !== 'function') return;
-            var ui = App.getUiState() || {};
-            var s = ui && ui.filterPanel ? ui.filterPanel : null;
-            if (!s || typeof s !== 'object') return;
-            var home = String(s.home || '');
-            if (home === 'left' || home === 'right') panelHome = home;
-            if (typeof s.dragged === 'boolean') panelDragged = !!s.dragged;
-            if (Number.isFinite(Number(s.lastLeft))) panelLastLeft = Math.max(0, Number(s.lastLeft));
-        } catch (_eRestorePanelUi) {}
-    }
-
-    function persistPanelUiState() {
-        try {
-            if (!window.App || typeof App.mergeUiState !== 'function') return;
-            App.mergeUiState({
-                filterPanel: {
-                    home: panelHome,
-                    dragged: !!panelDragged,
-                    lastLeft: Number.isFinite(Number(panelLastLeft)) ? Math.max(0, Number(panelLastLeft)) : 0
-                }
-            });
-        } catch (_ePersistPanelUi) {}
-    }
 
 
     /* --------------------------------------------------------------------------
@@ -486,7 +461,6 @@ const FilterModule = (function() {
         headerEl = panelEl.querySelector('.filter-panel-header');
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
-        restorePanelUiState();
         
         initMapControls();
         initResetButtons();
@@ -601,10 +575,6 @@ const FilterModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panelEl);
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { filterOpen: true }, activePanel: 'filter' });
-        }
-        persistPanelUiState();
 
         // Authoritative counts (worldwide + in-area)
         try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
@@ -658,9 +628,6 @@ const FilterModule = (function() {
     
     function closePanel() {
         if (!panelEl || !contentEl) return;
-        if (window.App && typeof App.mergeUiState === 'function') {
-            App.mergeUiState({ panels: { filterOpen: false } });
-        }
         closeToken++;
         var myCloseToken = closeToken;
 
@@ -692,7 +659,6 @@ const FilterModule = (function() {
             contentEl.setAttribute('data-side', panelHome === 'right' ? 'right' : 'left');
             contentEl.style.left = '';
             contentEl.style.right = '';
-            persistPanelUiState();
             closeTimer = null;
             try { App.removeFromStack(panelEl); } catch (_eStack) {}
         }
@@ -2222,7 +2188,6 @@ const FilterModule = (function() {
                     if (!Number.isFinite(_left)) _left = currentLeft;
                     panelLastLeft = Math.max(0, _left);
                 } catch (_eDragLeft) {}
-                persistPanelUiState();
             }
 
             function onUp() {
