@@ -590,6 +590,12 @@ const App = (function() {
           setConfig('flyToZoom', parseFloat(settings[flyToKey]));
         }
 
+        // Sync Max Map Cards from database (desktop or mobile based on viewport)
+        var maxCardsKey = isMobile ? 'max_map_cards_mobile' : 'max_map_cards_desktop';
+        if (settings[maxCardsKey] !== undefined) {
+          setConfig('maxMapCards', parseInt(settings[maxCardsKey], 10));
+        }
+
         // Sync Map Card Priority Reshuffle Zoom threshold from database
         if (settings.map_card_priority_reshuffle_zoom !== undefined) {
           setConfig('reshuffleZoomThreshold', parseFloat(settings.map_card_priority_reshuffle_zoom));
