@@ -1333,8 +1333,7 @@ const PostModule = (function() {
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
     try {
-      el.dataset.sortSidebarAd = post.sidebar_ad ? '1' : '0';
-      el.dataset.sortFeatured = post.featured ? '1' : '0';
+      el.dataset.sortCheckoutOrder = String(post.checkout_sort_order || 0);
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(post.created_at || 0).getTime() || 0);
       el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
@@ -1558,8 +1557,7 @@ const PostModule = (function() {
       return (p.checkout_sort_order || 0) > (best.checkout_sort_order || 0) ? p : best;
     }, sfPosts[0]);
     try {
-      el.dataset.sortSidebarAd = sfHighestTier.sidebar_ad ? '1' : '0';
-      el.dataset.sortFeatured = sfHighestTier.featured ? '1' : '0';
+      el.dataset.sortCheckoutOrder = String(sfHighestTier.checkout_sort_order || 0);
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(lead.created_at || 0).getTime() || 0);
       el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
@@ -2128,72 +2126,47 @@ const PostModule = (function() {
     });
 
     // Determine the two highest sort_order values present to classify into three tiers.
-    var uniqueSortOrders = [];
-    allMarkerData.forEach(function(item) {
-      var so = item._groupMaxSortOrder;
-      if (uniqueSortOrders.indexOf(so) === -1) uniqueSortOrders.push(so);
-    });
-    uniqueSortOrders.sort(function(a, b) { return b - a; }); // descending: highest sort_order = highest priority
+    // Find the lowest checkout_sort_order in the current set — only that sort order becomes dots.
+    var lowestSortOrder = allMarkerData.reduce(function(min, item) {
+      return Math.min(min, item._groupMaxSortOrder || 0);
+    }, Infinity);
 
-    var tierPremium = [];   // highest checkout_sort_order
-    var tierFeatured = [];  // second highest checkout_sort_order
-    var tierStandard = [];  // everything else
+    // Sort directly by checkout_sort_order descending, random score as tiebreaker.
+    // Higher sort_order = higher priority. Fairness: one card per post before extras.
+    var seenPostIds = {};
+    var firstPass = [];
+    var secondPass = [];
 
-    allMarkerData.forEach(function(item) {
-      var so = item._groupMaxSortOrder;
-      if (so === uniqueSortOrders[0]) {
-        tierPremium.push(item);
-      } else if (uniqueSortOrders.length > 1 && so === uniqueSortOrders[1]) {
-        tierFeatured.push(item);
+    allMarkerData.slice().sort(function(a, b) {
+      var diff = (b._groupMaxSortOrder || 0) - (a._groupMaxSortOrder || 0);
+      if (diff !== 0) return diff;
+      return (priorityScoreCache[b.venueKey] || 0) - (priorityScoreCache[a.venueKey] || 0);
+    }).forEach(function(item) {
+      var postId = String(item.id);
+      if (!seenPostIds[postId]) {
+        seenPostIds[postId] = true;
+        firstPass.push(item);
       } else {
-        tierStandard.push(item);
+        secondPass.push(item);
       }
     });
 
-    // Apply fairness rule within a tier: one card per post first, then extras.
-    // Returns items ordered: [firstCards (shuffled), extraCards (shuffled)]
-    function applyFairnessRule(tierItems) {
-      var seenPostIds = {};
-      var firstCards = [];
-      var extraCards = [];
-      var shuffled = tierItems.slice().sort(function(a, b) {
-        return (priorityScoreCache[a.venueKey] || 0) - (priorityScoreCache[b.venueKey] || 0);
-      });
-      shuffled.forEach(function(item) {
-        var postId = String(item.id);
-        if (!seenPostIds[postId]) {
-          seenPostIds[postId] = true;
-          firstCards.push(item);
-        } else {
-          extraCards.push(item);
-        }
-      });
-      return firstCards.concat(extraCards);
-    }
-
-    // Build the full priority list: tierPremium → tierFeatured → tierStandard
-    // Within each tier: first-cards (one per post) then extra-cards, all randomized
-    var priorityList = applyFairnessRule(tierPremium)
-      .concat(applyFairnessRule(tierFeatured))
-      .concat(applyFairnessRule(tierStandard));
+    var priorityList = firstPass.concat(secondPass);
 
     // Assign appearance: top MAX_MAP_CARDS become cards, rest become icons or dots.
-    // tierStandard → dot if beyond card slots. tierPremium/tierFeatured → icon (never dot).
-    // All three are the same map card marker — appearance is CSS only.
-    var tierStandardKeys = {};
-    tierStandard.forEach(function(item) { tierStandardKeys[item.venueKey] = true; });
-
+    // Only the lowest checkout_sort_order can become dots — all others become icons.
+    // All are the same map card marker — appearance is CSS only.
     var appearanceByKey = {};
     var dotColorByKey = {};
 
     priorityList.forEach(function(item, idx) {
       var post = item._originalPost;
-      var isStandardTier = !!tierStandardKeys[item.venueKey];
+      var isLowestSortOrder = (item._groupMaxSortOrder || 0) === lowestSortOrder;
       var hasCardSlot = idx < MAX_MAP_CARDS;
 
       var appearance = 'card';
       if (isHighDensity && !hasCardSlot) {
-        appearance = isStandardTier ? 'dot' : 'icon';
+        appearance = isLowestSortOrder ? 'dot' : 'icon';
       }
 
       if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
@@ -2654,14 +2627,10 @@ const PostModule = (function() {
 
       switch (sortKey) {
         case 'recommended':
-          // Tier 1: Premium (sidebar_ad), Tier 2: Featured, Tier 3: Standard
-          // Within each tier: most recently published first
-          var sidebarA = Number(a.sortSidebarAd) || 0;
-          var sidebarB = Number(b.sortSidebarAd) || 0;
-          if (sidebarA !== sidebarB) return sidebarB - sidebarA;
-          var featA = Number(a.sortFeatured) || 0;
-          var featB = Number(b.sortFeatured) || 0;
-          if (featA !== featB) return featB - featA;
+          // Higher checkout_sort_order = higher priority. Within same tier: most recently published first.
+          var orderA = Number(a.sortCheckoutOrder) || 0;
+          var orderB = Number(b.sortCheckoutOrder) || 0;
+          if (orderA !== orderB) return orderB - orderA;
           return (Number(b.sortCreatedAt) || 0) - (Number(a.sortCreatedAt) || 0);
         case 'az':
           return String(a.sortTitle || '').localeCompare(String(b.sortTitle || ''));
