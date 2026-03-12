@@ -816,21 +816,21 @@ const MapModule = (function() {
       .map-card-appearance--dot .map-card-pill { display: none; }
       .map-card-appearance--dot:not(.is-active) .map-card-icon {
         opacity: 0;
-        width: 20px;
-        height: 20px;
-        left: -10px;
-        top: -10px;
+        width: 30px;
+        height: 30px;
+        left: -15px;
+        top: -15px;
       }
       .map-card-appearance--dot.is-active .map-card-pill { display: flex; }
       .map-card-appearance--dot::before {
         content: '';
         position: absolute;
-        width: 20px;
-        height: 20px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         background: rgba(0,0,0,0.7);
-        left: -10px;
-        top: -10px;
+        left: -15px;
+        top: -15px;
         z-index: 1;
         pointer-events: none;
         transform: scale(1);
@@ -840,12 +840,12 @@ const MapModule = (function() {
       .map-card-appearance--dot::after {
         content: '';
         position: absolute;
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
         background: var(--dot-color);
-        left: -7.5px;
-        top: -7.5px;
+        left: -10px;
+        top: -10px;
         z-index: 2;
         pointer-events: none;
         transform: scale(1);
