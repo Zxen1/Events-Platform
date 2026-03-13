@@ -2272,6 +2272,7 @@ const MapModule = (function() {
     var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (post.isMultiPost || post.isStorefront) {
+      el.dataset.multipost = '1';
       el.style.setProperty('--pill-fill', '#222222');
       el.style.setProperty('--pill-bg-icon', 'url(' + getMultiPostIconUrl() + ')');
       el.style.setProperty('--pill-bg-size', '450px');
@@ -2289,7 +2290,6 @@ const MapModule = (function() {
       el.classList.add('map-card-appearance--dot');
       el.style.setProperty('--dot-color', dotColor);
       if (post.isMultiPost || post.isStorefront) {
-        el.dataset.multipost = '1';
         el.style.setProperty('--dot-icon', 'url(' + getMultiPostIconUrl() + ')');
       }
     }
