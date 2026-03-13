@@ -627,15 +627,15 @@ const MapModule = (function() {
       }
       .map-card-container.is-active { z-index: 6; }
       
-      /* Blue border for hover/active states */
+      /* Subcategory colour border for hover/active states */
       .map-card-container.is-active .map-card-pill {
-        outline: 2px solid var(--blue-500);
+        outline: 2px solid var(--subcat-color, var(--blue-500));
         outline-offset: -2px;
         border-radius: 30px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-container:hover .map-card-pill {
-          outline: 2px solid var(--blue-500);
+          outline: 2px solid var(--subcat-color, var(--blue-500));
           outline-offset: -2px;
           border-radius: 30px;
         }
@@ -679,26 +679,28 @@ const MapModule = (function() {
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
       }
       
-      /* Hover pill: same size, different background */
+      /* Hover pill: subcategory colour fill */
       .map-card-hover {
         left: -20px;
         top: -${SMALL_PILL_HEIGHT / 2}px;
         width: ${SMALL_PILL_WIDTH}px;
         height: ${SMALL_PILL_HEIGHT}px;
         padding-left: 40px;
-        background-image: url('${hoverPillUrl}');
-        background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+        background-image: none;
+        background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
+        border-radius: 20px;
       }
       
-      /* Big pill: left at -30, labels at +30 */
+      /* Big pill: subcategory colour fill */
       .map-card-big {
         left: -30px;
         top: -${BIG_PILL_HEIGHT / 2}px;
         width: ${BIG_PILL_WIDTH}px;
         height: ${BIG_PILL_HEIGHT}px;
         padding-left: 60px;
-        background-image: url('${bigPillUrl}');
-        background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
+        background-image: none;
+        background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
+        border-radius: 30px;
       }
       
       /* Labels */
@@ -799,14 +801,14 @@ const MapModule = (function() {
         opacity: 0;
       }
       .map-card-appearance--icon.is-hovered::before {
-        background: var(--blue-950);
-        outline: 2px solid var(--blue-500);
+        background: rgba(0,0,0,0.85);
+        outline: 2px solid var(--subcat-color, var(--blue-500));
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--icon:not(.is-active):hover::before {
-          background: var(--blue-950);
-          outline: 2px solid var(--blue-500);
+          background: rgba(0,0,0,0.85);
+          outline: 2px solid var(--subcat-color, var(--blue-500));
           outline-offset: -2px;
         }
       }
@@ -873,14 +875,14 @@ const MapModule = (function() {
         opacity: 0;
       }
       .map-card-appearance--dot.is-hovered::before {
-        background: var(--blue-950);
-        outline: 2px solid var(--blue-500);
+        background: rgba(0,0,0,0.85);
+        outline: 2px solid var(--subcat-color, var(--blue-500));
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--dot:not(.is-active):hover::before {
-          background: var(--blue-950);
-          outline: 2px solid var(--blue-500);
+          background: rgba(0,0,0,0.85);
+          outline: 2px solid var(--subcat-color, var(--blue-500));
           outline-offset: -2px;
         }
       }
@@ -911,10 +913,9 @@ const MapModule = (function() {
       if (pillEl) {
         switch (entry.state) {
           case 'big':
-            pillEl.style.backgroundImage = `url('${bigPillUrl}')`;
-            break;
           case 'hover':
-            pillEl.style.backgroundImage = `url('${hoverPillUrl}')`;
+            // hover/big pills use CSS background-color (var(--subcat-color)); clear any inline override
+            pillEl.style.backgroundImage = '';
             break;
           default:
             pillEl.style.backgroundImage = `url('${smallPillUrl}')`;
@@ -2262,6 +2263,10 @@ const MapModule = (function() {
     // Create marker element
     const el = document.createElement('div');
     el.className = 'map-card-container';
+    var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
+    var pillFill = (post.isMultiPost || post.isStorefront) ? '#1a1a1a' : subcatColor;
+    if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
+    if (pillFill) el.style.setProperty('--pill-fill', pillFill);
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
     } else     if (appearance === 'dot') {

@@ -1937,6 +1937,7 @@ const PostModule = (function() {
       sub: subcategoryKey,
       iconUrl: iconUrl,
       thumbnailUrl: thumbnailUrl,
+      subcategory_color: post.subcategory_color || '',
       lat: lat,
       lng: lng,
       isMultiLocation: isMultiLocation,
