@@ -2803,9 +2803,13 @@ const MapModule = (function() {
       pillEl.classList.add(`map-card-${newState}`);
       pillEl.setAttribute('data-state', newState);
       
-      // Update background-image inline to match new state
-      const pillUrl = getPillUrl(newState);
-      pillEl.style.backgroundImage = `url('${pillUrl}')`;
+      // hover/big pills use CSS background-color; only small pill uses background-image
+      if (newState === 'small') {
+        const pillUrl = getPillUrl(newState);
+        pillEl.style.backgroundImage = `url('${pillUrl}')`;
+      } else {
+        pillEl.style.backgroundImage = '';
+      }
     }
     
     // Update icon (size and image - thumbnail for big, category icon for small/hover)
