@@ -690,6 +690,9 @@ const MapModule = (function() {
         padding-left: 40px;
         background-image: none;
         background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: var(--pill-bg-size, 0) auto;
         border-radius: 20px;
         clip-path: inset(0 round 20px);
       }
@@ -703,6 +706,9 @@ const MapModule = (function() {
         padding-left: 60px;
         background-image: none;
         background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: var(--pill-bg-size, 0) auto;
         border-radius: 30px;
         clip-path: inset(0 round 30px);
       }
@@ -769,6 +775,10 @@ const MapModule = (function() {
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.2s ease;
+      }
+      .map-card-container[data-multipost] .map-card-hover,
+      .map-card-container[data-multipost] .map-card-big {
+        background-image: var(--pill-bg-icon);
       }
       .map-card-appearance--icon.is-active .map-card-pill {
         opacity: 1;
@@ -2263,6 +2273,8 @@ const MapModule = (function() {
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (post.isMultiPost || post.isStorefront) {
       el.style.setProperty('--pill-fill', '#222222');
+      el.style.setProperty('--pill-bg-icon', 'url(' + getMultiPostIconUrl() + ')');
+      el.style.setProperty('--pill-bg-size', '450px');
     } else if (subcatColor) {
       var _h = subcatColor.replace('#', '');
       var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.5);
