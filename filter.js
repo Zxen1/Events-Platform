@@ -1604,6 +1604,8 @@ const FilterModule = (function() {
             amenitiesContainer.querySelectorAll('.filter-amenities-row').forEach(function(row) {
                 resetAmenityRow(row);
             });
+            var amenityHeaderText = amenitiesContainer.querySelector('.filter-amenities-accordion-header-text');
+            if (amenityHeaderText) amenityHeaderText.textContent = 'Amenities';
         }
         updateClearButtons();
         
