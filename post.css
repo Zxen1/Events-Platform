@@ -1737,7 +1737,7 @@
   position: relative;
   display: flex;
   flex-wrap: nowrap;
-  gap: 5px;
+  gap: 8px;
   padding: 10px 10px; /* 10-12-6 Rule: 10px between elements inside containers */
   overflow-x: auto;
   overflow-y: hidden;
@@ -1771,16 +1771,22 @@
   object-fit: cover;
   object-position: center;
   aspect-ratio: 1/1;
-  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   position: relative;
   z-index: 1;
   flex-shrink: 0;
+  opacity: 0.45;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.post-image-thumb:hover {
+  transform: scale(1.08);
+  opacity: 0.7;
 }
 
 .post-image-thumb--active {
-  border-color: var(--blue-500);
+  opacity: 1;
 }
 
 /* ============================================================================
