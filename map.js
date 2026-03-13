@@ -800,6 +800,7 @@ const MapModule = (function() {
         position: relative;
         z-index: 1;
       }
+      .map-card-appearance--icon.is-hovered .map-card-pill,
       .map-card-appearance--icon.is-active .map-card-pill {
         opacity: 1;
         pointer-events: auto;
@@ -819,20 +820,19 @@ const MapModule = (function() {
         opacity: 1;
         transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
+      .map-card-appearance--icon.is-hovered::before,
       .map-card-appearance--icon.is-active::before {
         transform: translate(-50%, -50%) scale(0);
         opacity: 0;
       }
-      .map-card-appearance--icon.is-hovered::before {
-        background: var(--pill-fill, rgba(0,0,0,0.85));
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
-      }
       @media (hover: hover) and (pointer: fine) {
+        .map-card-appearance--icon:not(.is-active):hover .map-card-pill {
+          opacity: 1;
+          pointer-events: auto;
+        }
         .map-card-appearance--icon:not(.is-active):hover::before {
-          background: var(--pill-fill, rgba(0,0,0,0.85));
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
         }
       }
 
@@ -852,6 +852,7 @@ const MapModule = (function() {
         transform-origin: left center;
         transition: opacity 0.2s ease, transform 0.2s ease;
       }
+      .map-card-appearance--dot.is-hovered .map-card-pill,
       .map-card-appearance--dot.is-active .map-card-pill {
         opacity: 1;
         pointer-events: auto;
@@ -895,21 +896,23 @@ const MapModule = (function() {
         opacity: 1;
         transition: transform 0.2s ease, opacity 0.2s ease;
       }
+      .map-card-appearance--dot.is-hovered::before,
+      .map-card-appearance--dot.is-hovered::after,
       .map-card-appearance--dot.is-active::before,
       .map-card-appearance--dot.is-active::after {
         transform: translate(-50%, -50%) scale(0);
         opacity: 0;
       }
-      .map-card-appearance--dot.is-hovered::before {
-        background: var(--pill-fill, rgba(0,0,0,0.85));
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
-      }
       @media (hover: hover) and (pointer: fine) {
-        .map-card-appearance--dot:not(.is-active):hover::before {
-          background: var(--pill-fill, rgba(0,0,0,0.85));
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
+        .map-card-appearance--dot:not(.is-active):hover .map-card-pill {
+          opacity: 1;
+          pointer-events: auto;
+          transform: scale(1);
+        }
+        .map-card-appearance--dot:not(.is-active):hover::before,
+        .map-card-appearance--dot:not(.is-active):hover::after {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
         }
       }
 
