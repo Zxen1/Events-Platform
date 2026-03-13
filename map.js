@@ -618,14 +618,15 @@ const MapModule = (function() {
         width: 0;
         height: 0;
         cursor: pointer;
-        z-index: 1;
+        z-index: calc(var(--layer-base) + 3);
       }
       /* IMPORTANT: On touch devices, :hover causes "two tap" behavior.
          Only include hover selectors on hover-capable devices. */
       @media (hover: hover) and (pointer: fine) {
-        .map-card-container:hover { z-index: 5; }
+        .map-card-container:hover { z-index: calc(var(--layer-base) + 5); }
       }
-      .map-card-container.is-active { z-index: 6; }
+      .map-card-container.is-hovered { z-index: calc(var(--layer-base) + 5); }
+      .map-card-container.is-active { z-index: calc(var(--layer-base) + 6); }
       
       /* Subcategory colour border for hover/active states */
       .map-card-container.is-active .map-card-pill {
@@ -761,6 +762,9 @@ const MapModule = (function() {
          (hover, click, toggle, storefront, multi-post) is unchanged — same DOM,
          same JS, same event handlers as a regular map card marker.
       ──────────────────────────────────────────────────────────────────────────── */
+      .map-card-container.map-card-appearance--icon {
+        z-index: calc(var(--layer-base) + 2);
+      }
       .map-card-appearance--icon .map-card-pill {
         opacity: 0;
         pointer-events: none;
@@ -808,6 +812,9 @@ const MapModule = (function() {
          element. Active state un-hides the pill (full big map card). All other
          behaviour is unchanged.
       ──────────────────────────────────────────────────────────────────────────── */
+      .map-card-container.map-card-appearance--dot {
+        z-index: calc(var(--layer-base) + 1);
+      }
       .map-card-appearance--dot .map-card-pill {
         opacity: 0;
         pointer-events: none;

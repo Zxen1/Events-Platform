@@ -18,7 +18,8 @@
    --layer-marquee: 15    (ambient marquee)
    --layer-sticky: 10     (sticky headers within panels)
    --layer-content: 10    (primary content)
-   --layer-base: 0        (map/base)
+  --layer-base: 0        (map/base)
+  Map marker priority within base layer: cards > icons > dots; hover > base; active highest.
    
    ============================================================================ */
 
