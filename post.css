@@ -1257,13 +1257,19 @@
   border-radius: 0;
 }
 
+/* Collapsed post (wallpaper not yet active): tint the post background */
+.post .component-locationwallpaper-content:not(.component-locationwallpaper-content--active) {
+  background: var(--post-subcat-overlay, transparent);
+}
+
+/* Active wallpaper: tint above all wallpaper layers (map z-index:1/2, dimmer z-index:10) */
 .post .component-locationwallpaper::before {
   content: '';
   position: absolute;
   inset: 0;
   background: var(--post-subcat-overlay, transparent);
   pointer-events: none;
-  z-index: 1;
+  z-index: 11;
 }
 
 .post::after {
