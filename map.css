@@ -349,7 +349,7 @@
 
 .map-zoom-indicator {
   position: absolute;
-  bottom: calc(var(--safe-bottom, 0px) + 20px);
+  bottom: calc(var(--safe-bottom, 0px) + 10px);
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
