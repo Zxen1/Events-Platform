@@ -787,7 +787,7 @@ const MapModule = (function() {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: var(--pill-fill, rgba(0,0,0,0.7));
+        background: rgba(0,0,0,0.7);
         left: 0;
         top: 0;
         z-index: 1;
@@ -801,13 +801,13 @@ const MapModule = (function() {
         opacity: 0;
       }
       .map-card-appearance--icon.is-hovered::before {
-        background: rgba(0,0,0,0.85);
+        background: var(--pill-fill, rgba(0,0,0,0.85));
         outline: 2px solid var(--subcat-color, var(--blue-500));
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--icon:not(.is-active):hover::before {
-          background: rgba(0,0,0,0.85);
+          background: var(--pill-fill, rgba(0,0,0,0.85));
           outline: 2px solid var(--subcat-color, var(--blue-500));
           outline-offset: -2px;
         }
@@ -845,7 +845,7 @@ const MapModule = (function() {
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        background: var(--pill-fill, rgba(0,0,0,0.7));
+        background: rgba(0,0,0,0.7);
         left: 0;
         top: 0;
         z-index: 1;
@@ -875,13 +875,13 @@ const MapModule = (function() {
         opacity: 0;
       }
       .map-card-appearance--dot.is-hovered::before {
-        background: rgba(0,0,0,0.85);
+        background: var(--pill-fill, rgba(0,0,0,0.85));
         outline: 2px solid var(--subcat-color, var(--blue-500));
         outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--dot:not(.is-active):hover::before {
-          background: rgba(0,0,0,0.85);
+          background: var(--pill-fill, rgba(0,0,0,0.85));
           outline: 2px solid var(--subcat-color, var(--blue-500));
           outline-offset: -2px;
         }
