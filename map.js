@@ -786,7 +786,6 @@ const MapModule = (function() {
         background-position: center center;
         background-size: contain;
         transform: translate(-50%, -50%);
-        opacity: 0.35;
         filter: brightness(0.5);
         pointer-events: none;
         z-index: 0;
