@@ -762,7 +762,7 @@ const MapModule = (function() {
          (hover, click, toggle, storefront, multi-post) is unchanged — same DOM,
          same JS, same event handlers as a regular map card marker.
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-container.map-card-appearance--icon {
+      .map-card-container.map-card-appearance--icon:not(.is-hovered):not(.is-active) {
         z-index: calc(var(--layer-base) + 2);
       }
       .map-card-appearance--icon .map-card-pill {
@@ -812,7 +812,7 @@ const MapModule = (function() {
          element. Active state un-hides the pill (full big map card). All other
          behaviour is unchanged.
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-container.map-card-appearance--dot {
+      .map-card-container.map-card-appearance--dot:not(.is-hovered):not(.is-active) {
         z-index: calc(var(--layer-base) + 1);
       }
       .map-card-appearance--dot .map-card-pill {
