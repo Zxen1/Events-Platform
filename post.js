@@ -373,7 +373,7 @@ const PostModule = (function() {
                 MapModule.clearAllMapCardMarkers();
               }
             }
-            lastRenderedVenueMarkerSigByKey = {};
+            lastRenderedLocationMarkerSigByKey = {};
             
             // 5. Clear side panel list
             renderPostList([]);
@@ -1693,7 +1693,7 @@ const PostModule = (function() {
           if (window.MapModule && typeof MapModule.clearAllMapCardMarkers === 'function') {
             MapModule.clearAllMapCardMarkers();
           }
-          lastRenderedVenueMarkerSigByKey = {};
+          lastRenderedLocationMarkerSigByKey = {};
         }
       } catch (_eClear0) {}
 
@@ -1880,12 +1880,12 @@ const PostModule = (function() {
 
   // Track which venue markers are currently rendered so we can update in-place
   // (matches live-site behavior: don't clear everything on every refresh).
-  var lastRenderedVenueMarkerSigByKey = {};
+  var lastRenderedLocationMarkerSigByKey = {};
 
   // --- Map Card Priority System ---
   // Cached random scores for each venue key, persisted between renders.
   // Only regenerated on zoom changes exceeding the reshuffle threshold.
-  var priorityScoreCache = {};        // venueKey -> random score (0-1)
+  var priorityScoreCache = {};        // locationKey -> random score (0-1)
 
   /**
    * Convert a map card to marker-friendly format
@@ -1961,7 +1961,7 @@ const PostModule = (function() {
           MapModule.clearAllMapCardMarkers();
         }
       }
-      lastRenderedVenueMarkerSigByKey = {};
+      lastRenderedLocationMarkerSigByKey = {};
       return;
     }
 
@@ -1985,12 +1985,12 @@ const PostModule = (function() {
       return;
     }
 
-    // Live-site style: update markers in-place (diff by venueKey) to avoid flashing.
+    // Live-site style: update markers in-place (diff by locationKey) to avoid flashing.
 
     // First pass: collect all map cards and group by venue coordinates
     // Multi-post venues (same location, different posts) use multi_post_icon
     var COORD_PRECISION = 6;
-    var venueGroups = {}; // key: "lng,lat" -> array of {post, mapCard, index}
+    var locationGroups = {}; // key: "lng,lat" -> array of {post, mapCard, index}
     
     // Category/Subcategory filtering for map cards:
     // At zoom>=postsLoadZoom, the server filters POSTS by map-card subcategory keys (mc.subcategory_key).
@@ -2024,11 +2024,11 @@ const PostModule = (function() {
         var lng = mapCard.longitude;
         if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
         
-        var venueKey = lng.toFixed(COORD_PRECISION) + ',' + lat.toFixed(COORD_PRECISION);
-        if (!venueGroups[venueKey]) {
-          venueGroups[venueKey] = [];
+        var locationKey = lng.toFixed(COORD_PRECISION) + ',' + lat.toFixed(COORD_PRECISION);
+        if (!locationGroups[locationKey]) {
+          locationGroups[locationKey] = [];
         }
-        venueGroups[venueKey].push({ post: post, mapCard: mapCard, index: index });
+        locationGroups[locationKey].push({ post: post, mapCard: mapCard, index: index });
       });
     });
 
@@ -2036,8 +2036,8 @@ const PostModule = (function() {
       // Only include fields that affect marker visuals/behavior.
       // Keep this stable to avoid unnecessary remove/recreate cycles.
       var ids = [];
-      if (markerData && (markerData.isMultiPost || markerData.isStorefront) && Array.isArray(markerData.venuePostIds)) {
-        ids = markerData.venuePostIds.map(String).slice().sort();
+      if (markerData && (markerData.isMultiPost || markerData.isStorefront) && Array.isArray(markerData.locationPostIds)) {
+        ids = markerData.locationPostIds.map(String).slice().sort();
       } else if (markerData && markerData.id !== undefined && markerData.id !== null) {
         ids = [String(markerData.id)];
       }
@@ -2055,13 +2055,13 @@ const PostModule = (function() {
       ].join('|');
     }
 
-    // Second pass: build desired markers (one per venueKey), then diff-update.
+    // Second pass: build desired markers (one per locationKey), then diff-update.
     var nextSigByKey = {};
     var nextMarkerDataByKey = {};
 
     var allMarkerData = [];
-    Object.keys(venueGroups).forEach(function(venueKey) {
-      var group = venueGroups[venueKey];
+    Object.keys(locationGroups).forEach(function(locationKey) {
+      var group = locationGroups[locationKey];
       if (!group.length) return;
 
       var uniquePostIds = {};
@@ -2069,11 +2069,11 @@ const PostModule = (function() {
       var uniquePostCount = Object.keys(uniquePostIds).length;
 
       // Storefront detection: 2+ posts, same member, all general (not events).
-      // Mutually exclusive with isMultiPostVenue.
+      // Mutually exclusive with isMultiPostLocation.
       // Gated on storefront_enabled admin setting.
       var storefrontEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
       var isStorefront = false;
-      var isMultiPostVenue = false;
+      var isMultiPostLocation = false;
       if (uniquePostCount > 1) {
         if (storefrontEnabled) {
           var firstMemberId = group[0].post.member_id;
@@ -2082,10 +2082,10 @@ const PostModule = (function() {
           if (allSameMember && allGeneral) {
             isStorefront = true;
           } else {
-            isMultiPostVenue = true;
+            isMultiPostLocation = true;
           }
         } else {
-          isMultiPostVenue = true;
+          isMultiPostLocation = true;
         }
       }
 
@@ -2096,17 +2096,17 @@ const PostModule = (function() {
       if (isStorefront) {
         var sfPost = firstItem.post;
         markerData.isStorefront = true;
-        markerData.venuePostIds = Object.keys(uniquePostIds);
-        markerData.venuePostCount = Object.keys(uniquePostIds).length;
+        markerData.locationPostIds = Object.keys(uniquePostIds);
+        markerData.locationPostCount = Object.keys(uniquePostIds).length;
         markerData.storefrontTitle = 'Storefront: ' + (sfPost.member_name || '');
         markerData.storefrontAvatarUrl = resolveAvatarSrcForUser(sfPost.member_avatar, sfPost.member_id);
-      } else if (isMultiPostVenue) {
+      } else if (isMultiPostLocation) {
         markerData.isMultiPost = true;
-        markerData.venuePostIds = Object.keys(uniquePostIds);
-        markerData.venuePostCount = markerData.venuePostIds.length;
+        markerData.locationPostIds = Object.keys(uniquePostIds);
+        markerData.locationPostCount = markerData.locationPostIds.length;
       }
       
-      markerData.venueKey = venueKey;
+      markerData.locationKey = locationKey;
 
       // For location groups: use the highest checkout_sort_order among all posts in the group.
       // Single-post markers use their own checkout_sort_order directly.
@@ -2136,8 +2136,8 @@ const PostModule = (function() {
     // Assign random scores once per venue key — new venues get a score on first appearance,
     // existing venues keep theirs. Scores never reshuffle on zoom to prevent erratic switching.
     allMarkerData.forEach(function(item) {
-      if (priorityScoreCache[item.venueKey] === undefined) {
-        priorityScoreCache[item.venueKey] = Math.random();
+      if (priorityScoreCache[item.locationKey] === undefined) {
+        priorityScoreCache[item.locationKey] = Math.random();
       }
     });
 
@@ -2153,7 +2153,7 @@ const PostModule = (function() {
     allMarkerData.slice().sort(function(a, b) {
       var diff = (b._groupMaxSortOrder || 0) - (a._groupMaxSortOrder || 0);
       if (diff !== 0) return diff;
-      return (priorityScoreCache[b.venueKey] || 0) - (priorityScoreCache[a.venueKey] || 0);
+      return (priorityScoreCache[b.locationKey] || 0) - (priorityScoreCache[a.locationKey] || 0);
     }).forEach(function(item) {
       var postId = String(item.id);
       if (!seenPostIds[postId]) {
@@ -2184,45 +2184,45 @@ const PostModule = (function() {
       if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
         var subColor = post.subcategory_color;
         if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
-        dotColorByKey[item.venueKey] = subColor;
+        dotColorByKey[item.locationKey] = subColor;
       }
 
-      appearanceByKey[item.venueKey] = appearance;
+      appearanceByKey[item.locationKey] = appearance;
     });
 
     // All marker types are the same HTML marker — prepare all for DOM rendering.
     allMarkerData.forEach(function(markerData) {
-      markerData.markerAppearance = appearanceByKey[markerData.venueKey] || 'card';
-      markerData.dotColor = dotColorByKey[markerData.venueKey] || '';
-      nextMarkerDataByKey[markerData.venueKey] = markerData;
-      nextSigByKey[markerData.venueKey] = buildMarkerSignature(markerData);
+      markerData.markerAppearance = appearanceByKey[markerData.locationKey] || 'card';
+      markerData.dotColor = dotColorByKey[markerData.locationKey] || '';
+      nextMarkerDataByKey[markerData.locationKey] = markerData;
+      nextSigByKey[markerData.locationKey] = buildMarkerSignature(markerData);
     });
 
     // Remove markers that are no longer needed (including those that switched to dots/icons)
     if (mapModule.removeMapCardMarker) {
       // IMPORTANT: removals must be based on what markers actually exist on the map,
-      // not only on PostModule's lastRenderedVenueMarkerSigByKey (which can drift after refresh/rebuilds).
+      // not only on PostModule's lastRenderedLocationMarkerSigByKey (which can drift after refresh/rebuilds).
       var existingKeys = [];
       try {
-        if (typeof mapModule.getMapCardMarkerVenueKeys === 'function') {
-          existingKeys = mapModule.getMapCardMarkerVenueKeys() || [];
+        if (typeof mapModule.getMapCardMarkerLocationKeys === 'function') {
+          existingKeys = mapModule.getMapCardMarkerLocationKeys() || [];
         } else {
-          existingKeys = Object.keys(lastRenderedVenueMarkerSigByKey || {});
+          existingKeys = Object.keys(lastRenderedLocationMarkerSigByKey || {});
         }
       } catch (_eKeys) {
-        existingKeys = Object.keys(lastRenderedVenueMarkerSigByKey || {});
+        existingKeys = Object.keys(lastRenderedLocationMarkerSigByKey || {});
       }
 
-      existingKeys.forEach(function(venueKey) {
-        if (!nextSigByKey[venueKey]) mapModule.removeMapCardMarker(venueKey);
+      existingKeys.forEach(function(locationKey) {
+        if (!nextSigByKey[locationKey]) mapModule.removeMapCardMarker(locationKey);
       });
     }
 
     // Create/update markers that are new or changed
-    Object.keys(nextMarkerDataByKey).forEach(function(venueKey) {
-      var markerData = nextMarkerDataByKey[venueKey];
-      var nextSig = nextSigByKey[venueKey];
-      var prevSig = lastRenderedVenueMarkerSigByKey ? lastRenderedVenueMarkerSigByKey[venueKey] : null;
+    Object.keys(nextMarkerDataByKey).forEach(function(locationKey) {
+      var markerData = nextMarkerDataByKey[locationKey];
+      var nextSig = nextSigByKey[locationKey];
+      var prevSig = lastRenderedLocationMarkerSigByKey ? lastRenderedLocationMarkerSigByKey[locationKey] : null;
 
       if (prevSig && prevSig === nextSig) {
         return; // keep existing marker as-is
@@ -2230,14 +2230,14 @@ const PostModule = (function() {
 
       // Changed: remove then recreate (MapModule does not expose an update-by-key API)
       if (prevSig && mapModule.removeMapCardMarker) {
-        mapModule.removeMapCardMarker(venueKey);
+        mapModule.removeMapCardMarker(locationKey);
       }
       if (mapModule.createMapCardMarker) {
         mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
       }
     });
 
-    lastRenderedVenueMarkerSigByKey = nextSigByKey;
+    lastRenderedLocationMarkerSigByKey = nextSigByKey;
     
     // Preserve the active (big) state for the currently open post (if any).
     // Markers may have been updated above, so we re-apply the association here.
@@ -2436,7 +2436,7 @@ const PostModule = (function() {
         MapModule.clearAllMapCardMarkers();
       }
     }
-    lastRenderedVenueMarkerSigByKey = {};
+    lastRenderedLocationMarkerSigByKey = {};
     renderPostList([]); // Clear UI panel
     App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
   }
