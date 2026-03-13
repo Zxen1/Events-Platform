@@ -787,7 +787,7 @@ const MapModule = (function() {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: rgba(0,0,0,0.7);
+        background: var(--pill-fill, rgba(0,0,0,0.7));
         left: 0;
         top: 0;
         z-index: 1;
@@ -845,7 +845,7 @@ const MapModule = (function() {
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        background: rgba(0,0,0,0.7);
+        background: var(--pill-fill, rgba(0,0,0,0.7));
         left: 0;
         top: 0;
         z-index: 1;
