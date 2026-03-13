@@ -1281,6 +1281,14 @@ const PostModule = (function() {
     el.dataset.postKey = post.post_key || '';
     el.setAttribute('tabindex', '0');
 
+    if (post.subcategory_color) {
+      var _hex = post.subcategory_color.replace('#', '');
+      var _r = parseInt(_hex.substring(0, 2), 16);
+      var _g = parseInt(_hex.substring(2, 4), 16);
+      var _b = parseInt(_hex.substring(4, 6), 16);
+      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _r + ',' + _g + ',' + _b + ',0.15)');
+    }
+
     // Use the in-area map card for display (location context must match the current map view).
     var pick = pickMapCardInCurrentBounds(post);
     var mapCard = pick.mapCard;
