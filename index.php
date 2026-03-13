@@ -1140,21 +1140,6 @@ if (empty($ogTitle)) {
                 </label>
               </div>
             </div>
-            <div class="admin-panel-field">
-              <div class="admin-option-label row-class-1">
-                <span>Map Card Display</span>
-                <div class="admin-spin-type-toggles">
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Hover Only</span>
-                  </label>
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Always</span>
-                  </label>
-                </div>
-              </div>
-            </div>
             <div class="admin-panel-field admin-panel-field--spaced">
               <label class="admin-settings-field-label" for="adminMaxMapCardsDesktop">Max Map Cards — Desktop</label>
               <div class="admin-spin-control-row row-class-1">

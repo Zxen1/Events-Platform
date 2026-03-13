@@ -3289,25 +3289,6 @@ const AdminModule = (function() {
             });
         }
         
-        // Map Card Display radios
-        var mapCardDisplayRadios = mapTabContainer.querySelectorAll('input[name="adminMapCardDisplay"]');
-        if (mapCardDisplayRadios.length) {
-            var initialMapCardDisplay = mapTabData.map_card_display || 'hover_only';
-            mapCardDisplayRadios.forEach(function(radio) {
-                radio.checked = (radio.value === initialMapCardDisplay);
-            });
-            
-            registerField('map.map_card_display', initialMapCardDisplay);
-            
-            mapCardDisplayRadios.forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    if (radio.checked) {
-                        updateField('map.map_card_display', radio.value);
-                    }
-                });
-            });
-        }
-        
         // Max Map Cards — Desktop slider
         var maxCardsDesktopSlider = document.getElementById('adminMaxMapCardsDesktop');
         var maxCardsDesktopDisplay = document.getElementById('adminMaxMapCardsDesktopDisplay');
@@ -3573,8 +3554,7 @@ const AdminModule = (function() {
         
         // Reset radio groups
         var radioGroups = [
-            { name: 'adminSpinType', fieldId: 'map.spin_load_type' },
-            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' }
+            { name: 'adminSpinType', fieldId: 'map.spin_load_type' }
         ];
         
         radioGroups.forEach(function(rg) {

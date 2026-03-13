@@ -713,20 +713,6 @@ const MapModule = (function() {
         overflow: hidden;
       }
       
-      /* Hover Only Mode - hide pill, keep icon */
-      body[data-map-card-display="hover_only"] .map-card-pill {
-        display: none;
-      }
-      body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card-pill,
-      body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card-pill {
-        display: flex;
-      }
-      @media (hover: hover) and (pointer: fine) {
-        body[data-map-card-display="hover_only"] .map-card-container:hover .map-card-pill {
-          display: flex;
-        }
-      }
-      
       /* Text styling - inherits global font from base.css */
       .map-card-title {
         color: #fff;
