@@ -690,9 +690,6 @@ const MapModule = (function() {
         padding-left: 40px;
         background-image: none;
         background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-size: var(--pill-bg-size, 0) auto;
         border-radius: 20px;
         clip-path: inset(0 round 20px);
       }
@@ -706,9 +703,6 @@ const MapModule = (function() {
         padding-left: 60px;
         background-image: none;
         background-color: var(--pill-fill, var(--subcat-color, var(--blue-500)));
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-size: var(--pill-bg-size, 0) auto;
         border-radius: 30px;
         clip-path: inset(0 round 30px);
       }
@@ -778,7 +772,34 @@ const MapModule = (function() {
       }
       .map-card-container[data-multipost] .map-card-hover,
       .map-card-container[data-multipost] .map-card-big {
+        overflow: hidden;
+      }
+      .map-card-container[data-multipost] .map-card-hover::before,
+      .map-card-container[data-multipost] .map-card-big::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: var(--pill-bg-size, 0);
+        height: var(--pill-bg-size, 0);
         background-image: var(--pill-bg-icon);
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: contain;
+        transform: translate(-50%, -50%);
+        opacity: 0.35;
+        filter: brightness(0.5);
+        pointer-events: none;
+        z-index: 0;
+      }
+      .map-card-container[data-multipost] .map-card-hover::before {
+        left: 20px;
+      }
+      .map-card-container[data-multipost] .map-card-big::before {
+        left: 30px;
+      }
+      .map-card-container[data-multipost] .map-card-labels {
+        position: relative;
+        z-index: 1;
       }
       .map-card-appearance--icon.is-active .map-card-pill {
         opacity: 1;
