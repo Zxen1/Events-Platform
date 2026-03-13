@@ -2269,7 +2269,7 @@ const MapModule = (function() {
     var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (post.isMultiPost || post.isStorefront) {
-      el.style.setProperty('--pill-fill', '#1a1a1a');
+      el.style.setProperty('--pill-fill', '#222222');
     } else if (subcatColor) {
       var _h = subcatColor.replace('#', '');
       var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.5);
