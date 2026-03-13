@@ -768,10 +768,10 @@ const FieldsetBuilder = (function(){
         return /^(https?:\/\/)?.+\..+/.test(url);
     }
     
-    // Phone digits-only filter
+    // Phone digits-only filter (spaces allowed for readability)
     function makePhoneDigitsOnly(input) {
         input.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, '');
+            this.value = this.value.replace(/[^0-9 ]/g, '');
         });
     }
 
