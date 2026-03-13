@@ -2264,9 +2264,16 @@ const MapModule = (function() {
     const el = document.createElement('div');
     el.className = 'map-card-container';
     var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
-    var pillFill = (post.isMultiPost || post.isStorefront) ? '#1a1a1a' : subcatColor;
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
-    if (pillFill) el.style.setProperty('--pill-fill', pillFill);
+    if (post.isMultiPost || post.isStorefront) {
+      el.style.setProperty('--pill-fill', '#1a1a1a');
+    } else if (subcatColor) {
+      var _h = subcatColor.replace('#', '');
+      var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.55);
+      var _g = Math.round(parseInt(_h.substring(2,4), 16) * 0.55);
+      var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.55);
+      el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
+    }
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
     } else     if (appearance === 'dot') {
