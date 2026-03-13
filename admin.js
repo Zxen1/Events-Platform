@@ -2458,7 +2458,12 @@ const AdminModule = (function() {
         // Text display (click to edit)
         var textDisplay = document.createElement('div');
         textDisplay.className = 'admin-message-text-display';
-        textDisplay.innerHTML = originalValue;
+        if (message.supports_html) {
+            textDisplay.innerHTML = originalValue;
+        } else {
+            textDisplay.textContent = originalValue;
+            textDisplay.style.whiteSpace = 'pre-wrap';
+        }
         textDisplay.title = 'Click to edit';
         
         // Text input (hidden by default)
