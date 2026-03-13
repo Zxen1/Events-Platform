@@ -750,20 +750,6 @@
   color: #fff;
 }
 
-.filter-amenities-accordion-header--active {
-  background: var(--filter-active-color);
-}
-
-.filter-amenities-accordion-header-count {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 999px;
-  padding: 1px 7px;
-  line-height: 18px;
-}
-
 .filter-amenities-accordion-header-arrow {
   width: 20px;
   height: 20px;
