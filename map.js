@@ -629,14 +629,14 @@ const MapModule = (function() {
       
       /* Subcategory colour border for hover/active states */
       .map-card-container.is-active .map-card-pill {
-        outline: 2px solid var(--subcat-color, var(--blue-500));
-        outline-offset: -2px;
+        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+        /* outline-offset: -2px; */
         border-radius: 30px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-container:hover .map-card-pill {
-          outline: 2px solid var(--subcat-color, var(--blue-500));
-          outline-offset: -2px;
+          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+          /* outline-offset: -2px; */
           border-radius: 30px;
         }
       }
@@ -802,14 +802,14 @@ const MapModule = (function() {
       }
       .map-card-appearance--icon.is-hovered::before {
         background: var(--pill-fill, rgba(0,0,0,0.85));
-        outline: 2px solid var(--subcat-color, var(--blue-500));
-        outline-offset: -2px;
+        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+        /* outline-offset: -2px; */
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--icon:not(.is-active):hover::before {
           background: var(--pill-fill, rgba(0,0,0,0.85));
-          outline: 2px solid var(--subcat-color, var(--blue-500));
-          outline-offset: -2px;
+          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+          /* outline-offset: -2px; */
         }
       }
 
@@ -876,14 +876,14 @@ const MapModule = (function() {
       }
       .map-card-appearance--dot.is-hovered::before {
         background: var(--pill-fill, rgba(0,0,0,0.85));
-        outline: 2px solid var(--subcat-color, var(--blue-500));
-        outline-offset: -2px;
+        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+        /* outline-offset: -2px; */
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--dot:not(.is-active):hover::before {
           background: var(--pill-fill, rgba(0,0,0,0.85));
-          outline: 2px solid var(--subcat-color, var(--blue-500));
-          outline-offset: -2px;
+          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
+          /* outline-offset: -2px; */
         }
       }
 
@@ -2269,9 +2269,9 @@ const MapModule = (function() {
       el.style.setProperty('--pill-fill', '#1a1a1a');
     } else if (subcatColor) {
       var _h = subcatColor.replace('#', '');
-      var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.55);
-      var _g = Math.round(parseInt(_h.substring(2,4), 16) * 0.55);
-      var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.55);
+      var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.35);
+      var _g = Math.round(parseInt(_h.substring(2,4), 16) * 0.35);
+      var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.35);
       el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
     }
     if (appearance === 'icon') {
