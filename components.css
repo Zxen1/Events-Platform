@@ -1534,6 +1534,7 @@
     object-fit: contain;
     flex-shrink: 0;
     margin-right: 10px;
+    filter: brightness(0) invert(1);
 }
 
 .component-linkpicker-menu-button-text {
@@ -1580,6 +1581,7 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    filter: brightness(0) invert(1);
 }
 
 .component-linkpicker-menu-option-text {
