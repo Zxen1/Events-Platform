@@ -629,14 +629,14 @@ const MapModule = (function() {
       
       /* Subcategory colour border for hover/active states */
       .map-card-container.is-active .map-card-pill {
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
+        outline: 2px solid var(--subcat-color, var(--blue-500));
+        outline-offset: -2px;
         border-radius: 30px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-container:hover .map-card-pill {
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
+          outline: 2px solid var(--subcat-color, var(--blue-500));
+          outline-offset: -2px;
           border-radius: 30px;
         }
       }
@@ -802,14 +802,14 @@ const MapModule = (function() {
       }
       .map-card-appearance--icon.is-hovered::before {
         background: var(--pill-fill, rgba(0,0,0,0.85));
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
+        outline: 2px solid var(--subcat-color, var(--blue-500));
+        outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--icon:not(.is-active):hover::before {
           background: var(--pill-fill, rgba(0,0,0,0.85));
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
+          outline: 2px solid var(--subcat-color, var(--blue-500));
+          outline-offset: -2px;
         }
       }
 
@@ -876,14 +876,14 @@ const MapModule = (function() {
       }
       .map-card-appearance--dot.is-hovered::before {
         background: var(--pill-fill, rgba(0,0,0,0.85));
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
+        outline: 2px solid var(--subcat-color, var(--blue-500));
+        outline-offset: -2px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-appearance--dot:not(.is-active):hover::before {
           background: var(--pill-fill, rgba(0,0,0,0.85));
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
+          outline: 2px solid var(--subcat-color, var(--blue-500));
+          outline-offset: -2px;
         }
       }
 
