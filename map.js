@@ -858,7 +858,7 @@ const MapModule = (function() {
         pointer-events: auto;
         transform: scale(1);
       }
-      .map-card-appearance--dot:not(.is-active) .map-card-icon {
+      .map-card-appearance--dot:not(.is-hovered):not(.is-active) .map-card-icon {
         opacity: 0;
       }
       .map-card-appearance--dot[data-multipost]:not(.is-active)::after {
@@ -908,6 +908,9 @@ const MapModule = (function() {
           opacity: 1;
           pointer-events: auto;
           transform: scale(1);
+        }
+        .map-card-appearance--dot:not(.is-active):hover .map-card-icon {
+          opacity: 1;
         }
         .map-card-appearance--dot:not(.is-active):hover::before,
         .map-card-appearance--dot:not(.is-active):hover::after {

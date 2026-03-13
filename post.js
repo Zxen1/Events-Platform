@@ -1472,6 +1472,12 @@ const PostModule = (function() {
     el.dataset.storefront = '1';
     el.setAttribute('tabindex', '0');
     el.style.setProperty('--subcat-hover-bg', 'rgba(255,255,255,0.08)');
+    try {
+      var sfSettings = App.getState('settings') || {};
+      if (sfSettings.folder_system_images && sfSettings.multi_post_icon) {
+        el.style.setProperty('--card-bg-icon', 'url(' + sfSettings.folder_system_images + '/' + sfSettings.multi_post_icon + ')');
+      }
+    } catch (_eSfBgIcon) {}
 
     var pick = pickMapCardInCurrentBounds(lead);
     var mapCard = pick.mapCard;
@@ -5479,6 +5485,9 @@ const PostModule = (function() {
       var _recentB = parseInt(_recentHex.substring(4, 6), 16);
       el.style.setProperty('--subcat-hover-bg', 'rgba(' + _recentR + ',' + _recentG + ',' + _recentB + ',0.15)');
     }
+    if (entry.subcategory_icon_url) {
+      el.style.setProperty('--card-bg-icon', 'url(' + entry.subcategory_icon_url + ')');
+    }
     el.dataset.id = String(entry.id);
     // Store post_map_card_id for location-specific tracking
     if (entry.post_map_card_id) {
@@ -5657,6 +5666,18 @@ const PostModule = (function() {
               recentCardEl.style.setProperty('--subcat-hover-bg', 'rgba(' + _hydrR + ',' + _hydrG + ',' + _hydrB + ',0.15)');
             }
           } catch (_eRecentTint) {
+            // ignore
+          }
+        }
+        if (post.subcategory_icon_url) {
+          try {
+            var recentBgCardEl = (cardEl.classList && cardEl.classList.contains('recent-card'))
+              ? cardEl
+              : cardEl.querySelector('.recent-card');
+            if (recentBgCardEl) {
+              recentBgCardEl.style.setProperty('--card-bg-icon', 'url(' + post.subcategory_icon_url + ')');
+            }
+          } catch (_eRecentBgIcon) {
             // ignore
           }
         }

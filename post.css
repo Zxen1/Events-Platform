@@ -333,6 +333,33 @@
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.15s ease;
   transform: scale(1);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.recent-card > *,
+.post-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.recent-card::after,
+.post-card[data-storefront="1"]::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  width: 1200px;
+  height: 1200px;
+  background-image: var(--card-bg-icon);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: translate(-50%, -50%);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Post cards have margin-bottom; recent cards get it from wrapper */
