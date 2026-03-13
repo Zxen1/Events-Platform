@@ -727,6 +727,7 @@ const MapModule = (function() {
       /* Text styling - inherits global font from base.css */
       .map-card-title {
         color: #fff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         font-family: inherit;
         font-size: ${MARKER_LABEL_TEXT_SIZE}px;
         line-height: 1.3;
@@ -741,6 +742,7 @@ const MapModule = (function() {
       /* Venue Text (big cards only) */
       .map-card-venue {
         color: rgba(255,255,255,0.7);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         font-family: inherit;
         font-size: ${MARKER_LABEL_TEXT_SIZE - 1}px;
         line-height: 1.2;
@@ -755,6 +757,7 @@ const MapModule = (function() {
       /* City Text (big cards only) */
       .map-card-city {
         color: rgba(255,255,255,0.5);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         font-family: inherit;
         font-size: ${MARKER_LABEL_TEXT_SIZE - 1}px;
         line-height: 1.2;
@@ -2268,11 +2271,7 @@ const MapModule = (function() {
     if (post.isMultiPost || post.isStorefront) {
       el.style.setProperty('--pill-fill', '#1a1a1a');
     } else if (subcatColor) {
-      var _h = subcatColor.replace('#', '');
-      var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.35);
-      var _g = Math.round(parseInt(_h.substring(2,4), 16) * 0.35);
-      var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.35);
-      el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
+      el.style.setProperty('--pill-fill', subcatColor);
     }
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
