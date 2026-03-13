@@ -1686,11 +1686,28 @@ const FilterModule = (function() {
                 headerText.className = 'filter-amenities-accordion-header-text';
                 headerText.textContent = 'Amenities';
 
+                var headerCount = document.createElement('span');
+                headerCount.className = 'filter-amenities-accordion-header-count';
+                headerCount.style.display = 'none';
+
                 var headerArrow = document.createElement('span');
                 headerArrow.className = 'filter-amenities-accordion-header-arrow';
 
                 header.appendChild(headerText);
+                header.appendChild(headerCount);
                 header.appendChild(headerArrow);
+
+                function updateAmenityHeader() {
+                    var count = Object.keys(amenitiesState).length;
+                    if (count > 0) {
+                        headerCount.textContent = count;
+                        headerCount.style.display = '';
+                        header.classList.add('filter-amenities-accordion-header--active');
+                    } else {
+                        headerCount.style.display = 'none';
+                        header.classList.remove('filter-amenities-accordion-header--active');
+                    }
+                }
 
                 var body = document.createElement('div');
                 body.className = 'filter-amenities-accordion-body accordion-body';
@@ -1783,6 +1800,7 @@ const FilterModule = (function() {
                         var newVal = (amenitiesState[amenityKey] === 'yes') ? '' : 'yes';
                         if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters();
@@ -1794,6 +1812,7 @@ const FilterModule = (function() {
                         var newVal = (amenitiesState[amenityKey] === 'no') ? '' : 'no';
                         if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters();
@@ -1804,6 +1823,7 @@ const FilterModule = (function() {
                         e.stopPropagation();
                         delete amenitiesState[amenityKey];
                         applyRowState('');
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters(true);
@@ -1820,6 +1840,8 @@ const FilterModule = (function() {
                         applyRowState(amenitiesState[amenityKey]);
                     }
                 });
+
+                updateAmenityHeader();
 
                 header.addEventListener('click', function() {
                     var isOpen = accordion.classList.contains('filter-amenities-accordion--open');
