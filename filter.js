@@ -1692,6 +1692,11 @@ const FilterModule = (function() {
                 header.appendChild(headerText);
                 header.appendChild(headerArrow);
 
+                function updateAmenityHeader() {
+                    var count = Object.keys(amenitiesState).length;
+                    headerText.textContent = count > 0 ? 'Amenities (' + count + ')' : 'Amenities';
+                }
+
                 var body = document.createElement('div');
                 body.className = 'filter-amenities-accordion-body accordion-body';
 
@@ -1783,6 +1788,7 @@ const FilterModule = (function() {
                         var newVal = (amenitiesState[amenityKey] === 'yes') ? '' : 'yes';
                         if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters();
@@ -1794,6 +1800,7 @@ const FilterModule = (function() {
                         var newVal = (amenitiesState[amenityKey] === 'no') ? '' : 'no';
                         if (newVal === '') { delete amenitiesState[amenityKey]; } else { amenitiesState[amenityKey] = newVal; }
                         applyRowState(newVal);
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters();
@@ -1804,6 +1811,7 @@ const FilterModule = (function() {
                         e.stopPropagation();
                         delete amenitiesState[amenityKey];
                         applyRowState('');
+                        updateAmenityHeader();
                         updateResetBtn();
                         applyFilters();
                         saveFilters(true);
@@ -1820,6 +1828,8 @@ const FilterModule = (function() {
                         applyRowState(amenitiesState[amenityKey]);
                     }
                 });
+
+                updateAmenityHeader();
 
                 header.addEventListener('click', function() {
                     var isOpen = accordion.classList.contains('filter-amenities-accordion--open');
