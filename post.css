@@ -1257,6 +1257,15 @@
   border-radius: 0;
 }
 
+.post .component-locationwallpaper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--post-subcat-overlay, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .post::after {
   content: "";
   position: absolute;

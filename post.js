@@ -3530,6 +3530,13 @@ const PostModule = (function() {
     wrap.setAttribute('data-slack-anchor', '');
     wrap.dataset.id = String(post.id);
     wrap.dataset.postKey = post.post_key || '';
+    if (post.subcategory_color) {
+      var _pHex = post.subcategory_color.replace('#', '');
+      var _pR = parseInt(_pHex.substring(0, 2), 16);
+      var _pG = parseInt(_pHex.substring(2, 4), 16);
+      var _pB = parseInt(_pHex.substring(4, 6), 16);
+      wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _pR + ',' + _pG + ',' + _pB + ',0.15)');
+    }
     // Track the active location context for this open post (source-of-truth: post_map_card_id).
     try { wrap.setAttribute('data-post-map-card-id', String(activeLoc && activeLoc.id !== undefined && activeLoc.id !== null ? activeLoc.id : '')); } catch (_eAttr) {}
     // Store reference to post data for LocationWallpaperComponent library lookup
@@ -3917,6 +3924,15 @@ const PostModule = (function() {
           contentEl.innerHTML = '';
           loadPostById(selectedPost.id).then(function(fullPost) {
             if (!fullPost) { contentEl.innerHTML = ''; return; }
+            if (fullPost.subcategory_color) {
+              var _sfHex = fullPost.subcategory_color.replace('#', '');
+              var _sfR = parseInt(_sfHex.substring(0, 2), 16);
+              var _sfG = parseInt(_sfHex.substring(2, 4), 16);
+              var _sfB = parseInt(_sfHex.substring(4, 6), 16);
+              wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _sfR + ',' + _sfG + ',' + _sfB + ',0.15)');
+            } else {
+              wrap.style.removeProperty('--post-subcat-overlay');
+            }
             var pick = pickMapCardInCurrentBounds(fullPost);
             var mcIdx = 0;
             if (pick && pick.mapCard && fullPost.map_cards) {
