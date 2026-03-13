@@ -677,6 +677,7 @@ const MapModule = (function() {
         padding-left: 40px;
         background-image: url('${smallPillUrl}');
         background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+        clip-path: inset(0 round 20px);
       }
       
       /* Hover pill: subcategory colour fill */
