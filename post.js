@@ -5016,6 +5016,7 @@ const PostModule = (function() {
         thumb_url: rawThumbUrl || '',
         subcategory_key: subKey || '',
         subcategory_name: subName,
+        subcategory_color: post.subcategory_color || '',
         subcategory_icon_url: iconUrl,
         location_text: locText || '',
         dates_text: datesText || '',
@@ -5471,6 +5472,13 @@ const PostModule = (function() {
     if (entry.unavailable) {
       el.classList.add('recent-card--unavailable');
     }
+    if (entry.subcategory_color) {
+      var _recentHex = entry.subcategory_color.replace('#', '');
+      var _recentR = parseInt(_recentHex.substring(0, 2), 16);
+      var _recentG = parseInt(_recentHex.substring(2, 4), 16);
+      var _recentB = parseInt(_recentHex.substring(4, 6), 16);
+      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _recentR + ',' + _recentG + ',' + _recentB + ',0.15)');
+    }
     el.dataset.id = String(entry.id);
     // Store post_map_card_id for location-specific tracking
     if (entry.post_map_card_id) {
@@ -5629,12 +5637,29 @@ const PostModule = (function() {
   function hydrateRecentCardIfNeeded(cardEl, entry) {
     try {
       if (!cardEl || !entry || !entry.id) return;
-      if (entry.thumb_url) return;
+      if (entry.thumb_url && entry.subcategory_color) return;
       if (cardEl.dataset && cardEl.dataset.hydrating === '1') return;
       if (cardEl.dataset) cardEl.dataset.hydrating = '1';
 
       loadPostById(entry.id).then(function(post) {
         if (!post) return;
+
+        if (post.subcategory_color) {
+          try {
+            var recentCardEl = (cardEl.classList && cardEl.classList.contains('recent-card'))
+              ? cardEl
+              : cardEl.querySelector('.recent-card');
+            if (recentCardEl) {
+              var _hydrHex = post.subcategory_color.replace('#', '');
+              var _hydrR = parseInt(_hydrHex.substring(0, 2), 16);
+              var _hydrG = parseInt(_hydrHex.substring(2, 4), 16);
+              var _hydrB = parseInt(_hydrHex.substring(4, 6), 16);
+              recentCardEl.style.setProperty('--subcat-hover-bg', 'rgba(' + _hydrR + ',' + _hydrG + ',' + _hydrB + ',0.15)');
+            }
+          } catch (_eRecentTint) {
+            // ignore
+          }
+        }
 
         var rawThumb = getPostThumbnailUrl(post);
         if (rawThumb) {
@@ -5674,6 +5699,7 @@ const PostModule = (function() {
                 if (String(history[i].post_map_card_id || '') !== targetMapCardId) continue;
               }
               history[i].thumb_url = rawThumb;
+              history[i].subcategory_color = post.subcategory_color || '';
               // Keep title fresh too (safe improvement).
               if (!history[i].title) {
                 var mcTitle = '';
@@ -5691,6 +5717,23 @@ const PostModule = (function() {
             }
             localStorage.setItem('recentPosts', JSON.stringify(history));
           } catch (eStore) {
+            // ignore
+          }
+        } else {
+          try {
+            var historyNoThumb = JSON.parse(localStorage.getItem('recentPosts') || '[]');
+            if (!Array.isArray(historyNoThumb)) historyNoThumb = [];
+            var targetIdNoThumb = String(entry.id);
+            var targetMapCardIdNoThumb = (entry.post_map_card_id !== undefined && entry.post_map_card_id !== null) ? String(entry.post_map_card_id) : '';
+            for (var k = 0; k < historyNoThumb.length; k++) {
+              if (!historyNoThumb[k]) continue;
+              if (String(historyNoThumb[k].id) !== targetIdNoThumb) continue;
+              if (targetMapCardIdNoThumb && String(historyNoThumb[k].post_map_card_id || '') !== targetMapCardIdNoThumb) continue;
+              historyNoThumb[k].subcategory_color = post.subcategory_color || '';
+              break;
+            }
+            localStorage.setItem('recentPosts', JSON.stringify(historyNoThumb));
+          } catch (_eStoreTintOnly) {
             // ignore
           }
         }
