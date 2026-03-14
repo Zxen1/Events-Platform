@@ -774,7 +774,7 @@ const MapModule = (function() {
         background-position: center center;
         background-size: contain;
         transform: translate(-50%, -50%);
-        filter: brightness(0.5);
+        filter: brightness(1);
         pointer-events: none;
         z-index: 0;
       }
@@ -2306,9 +2306,9 @@ const MapModule = (function() {
       el.style.setProperty('--pill-bg-size', '450px');
     } else if (subcatColor) {
       var _h = subcatColor.replace('#', '');
-      var _r = Math.round(parseInt(_h.substring(0,2), 16) * 0.5);
-      var _g = Math.round(parseInt(_h.substring(2,4), 16) * 0.5);
-      var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.5);
+      var _r = parseInt(_h.substring(0,2), 16);
+      var _g = parseInt(_h.substring(2,4), 16);
+      var _b = parseInt(_h.substring(4,6), 16);
       el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
     }
 
