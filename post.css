@@ -749,7 +749,7 @@
 .post-storefront-menu-container {
   margin: 12px 10px 12px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 5px;
 }
@@ -934,7 +934,7 @@
 
 .post-storefront-prompt {
   margin: 0;
-  padding: 0 0 10px;
+  padding: 0;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
 }
