@@ -333,23 +333,25 @@
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.15s ease;
   transform: scale(1);
+}
+
+.post-card[data-storefront="1"] {
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
 
-.recent-card > *,
-.post-card > * {
+.post-card[data-storefront="1"] > * {
   position: relative;
   z-index: 1;
 }
 
-.recent-card::after,
+/* Storefront hover watermark */
 .post-card[data-storefront="1"]::after {
   content: "";
   position: absolute;
-  left: 20%;
-  top: 50%;
+  left: calc(10px + 50px);
+  top: calc(10px + 50px);
   width: 1200px;
   height: 1200px;
   background-image: var(--card-bg-icon);
@@ -357,9 +359,14 @@
   background-position: center;
   background-size: contain;
   transform: translate(-50%, -50%);
-  opacity: 0.15;
+  opacity: 0;
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.15s ease;
+}
+
+.post-card[data-storefront="1"]:hover::after {
+  opacity: 0.15;
 }
 
 /* Post cards have margin-bottom; recent cards get it from wrapper */

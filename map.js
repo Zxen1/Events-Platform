@@ -612,7 +612,12 @@ const MapModule = (function() {
     const bigPillUrl = getPillUrl('big');
     
     const css = `
-      /* Container = lat/lng point (0,0) - zero size anchor */
+      /* =======================================================================
+         MAP MARKER SYSTEM
+         Shared shell, state layering, and card/icon/dot appearances.
+      ======================================================================= */
+
+      /* Shell = lat/lng point (0,0) anchor */
       .map-card-container {
         position: relative;
         width: 0;
@@ -620,6 +625,8 @@ const MapModule = (function() {
         cursor: pointer;
         z-index: calc(var(--layer-base) + 3);
       }
+
+      /* State layering */
       /* IMPORTANT: On touch devices, :hover causes "two tap" behavior.
          Only include hover selectors on hover-capable devices. */
       @media (hover: hover) and (pointer: fine) {
@@ -628,16 +635,12 @@ const MapModule = (function() {
       .map-card-container.is-hovered { z-index: calc(var(--layer-base) + 5); }
       .map-card-container.is-active { z-index: calc(var(--layer-base) + 6); }
       
-      /* Subcategory colour border for hover/active states */
+      /* Shared pill radius states */
       .map-card-container.is-active .map-card-pill {
-        /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-        /* outline-offset: -2px; */
         border-radius: 30px;
       }
       @media (hover: hover) and (pointer: fine) {
         .map-card-container:hover .map-card-pill {
-          /* outline: 2px solid var(--subcat-color, var(--blue-500)); */
-          /* outline-offset: -2px; */
           border-radius: 30px;
         }
       }
@@ -648,7 +651,7 @@ const MapModule = (function() {
         }
       }
       
-      /* Icon - center at lat/lng (0,0) */
+      /* Shared icon shell */
       .map-card-icon {
         position: absolute;
         left: 0;
@@ -659,7 +662,7 @@ const MapModule = (function() {
         transition: width 0.2s ease, height 0.2s ease;
       }
       
-      /* Pill - all positions from lat/lng (0,0) */
+      /* Shared pill shell */
       .map-card-pill {
         position: absolute;
         display: flex;
@@ -669,7 +672,7 @@ const MapModule = (function() {
         transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, background-image 0.2s ease;
       }
       
-      /* Small pill: left at -20, labels at +20 */
+      /* Card appearance: default small, hover, active */
       .map-card-small {
         left: -20px;
         top: -${SMALL_PILL_HEIGHT / 2}px;
@@ -681,7 +684,6 @@ const MapModule = (function() {
         clip-path: inset(0 round 20px);
       }
       
-      /* Hover pill: subcategory colour fill */
       .map-card-hover {
         left: -20px;
         top: -${SMALL_PILL_HEIGHT / 2}px;
@@ -694,7 +696,6 @@ const MapModule = (function() {
         clip-path: inset(0 round 20px);
       }
       
-      /* Big pill: subcategory colour fill */
       .map-card-big {
         left: -30px;
         top: -${BIG_PILL_HEIGHT / 2}px;
@@ -707,14 +708,14 @@ const MapModule = (function() {
         clip-path: inset(0 round 30px);
       }
       
-      /* Labels */
+      /* Shared labels */
       .map-card-labels {
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
       
-      /* Text styling - inherits global font from base.css */
+      /* Shared text */
       .map-card-title {
         color: #fff;
         font-family: inherit;
@@ -728,7 +729,6 @@ const MapModule = (function() {
         text-rendering: optimizeLegibility;
       }
       
-      /* Venue Text (big cards only) */
       .map-card-venue {
         color: rgba(255,255,255,0.7);
         font-family: inherit;
@@ -742,7 +742,6 @@ const MapModule = (function() {
         text-rendering: optimizeLegibility;
       }
       
-      /* City Text (big cards only) */
       .map-card-city {
         color: rgba(255,255,255,0.5);
         font-family: inherit;
@@ -756,20 +755,9 @@ const MapModule = (function() {
         text-rendering: optimizeLegibility;
       }
 
-      /* ── MAP ICON appearance ──────────────────────────────────────────────────
-         Hides the pill. Shows the existing 30px icon with a 40px black 0.7 circle.
-         Active state un-hides the pill (full big map card). All other behaviour
-         (hover, click, toggle, storefront, multi-post) is unchanged — same DOM,
-         same JS, same event handlers as a regular map card marker.
+      /* Shared multipost/storefront pill artwork
+         Uses the same oversized icon treatment for hover and active pills.
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-container.map-card-appearance--icon:not(.is-hovered):not(.is-active) {
-        z-index: calc(var(--layer-base) + 2);
-      }
-      .map-card-appearance--icon .map-card-pill {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
       .map-card-container[data-multipost] .map-card-hover,
       .map-card-container[data-multipost] .map-card-big {
         overflow: hidden;
@@ -799,6 +787,19 @@ const MapModule = (function() {
       .map-card-container[data-multipost] .map-card-labels {
         position: relative;
         z-index: 1;
+      }
+
+      /* ── MAP ICON appearance ──────────────────────────────────────────────────
+         Compact marker with black circular backplate. Hover and active reveal
+         the same pill system as the default card marker.
+      ──────────────────────────────────────────────────────────────────────────── */
+      .map-card-container.map-card-appearance--icon:not(.is-hovered):not(.is-active) {
+        z-index: calc(var(--layer-base) + 2);
+      }
+      .map-card-appearance--icon .map-card-pill {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
       }
       .map-card-appearance--icon.is-hovered .map-card-pill,
       .map-card-appearance--icon.is-active .map-card-pill {
@@ -837,10 +838,8 @@ const MapModule = (function() {
       }
 
       /* ── MAP DOT appearance ───────────────────────────────────────────────────
-         Hides the pill and the icon. Shows a 15px subcategory-colored fill inside
-         a 20px black 0.7 circle. Color set via --dot-color CSS property on the
-         element. Active state un-hides the pill (full big map card). All other
-         behaviour is unchanged.
+         Minimal dot marker by default. Hover and active reveal the same pill
+         and subcategory icon treatment used by the other marker states.
       ──────────────────────────────────────────────────────────────────────────── */
       .map-card-container.map-card-appearance--dot:not(.is-hovered):not(.is-active) {
         z-index: calc(var(--layer-base) + 1);
@@ -2295,6 +2294,9 @@ const MapModule = (function() {
     // Create marker element
     const el = document.createElement('div');
     el.className = 'map-card-container';
+
+    /* Marker appearance inputs
+       Shared colour/icon variables feed the CSS marker system above. */
     var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (post.isMultiPost || post.isStorefront) {
@@ -2309,9 +2311,11 @@ const MapModule = (function() {
       var _b = Math.round(parseInt(_h.substring(4,6), 16) * 0.5);
       el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
     }
+
+    /* Marker appearance mode */
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
-    } else     if (appearance === 'dot') {
+    } else if (appearance === 'dot') {
       if (!dotColor) throw new Error('[Map] createMapCardMarker: dotColor required for dot appearance (post ID ' + post.id + ')');
       el.classList.add('map-card-appearance--dot');
       el.style.setProperty('--dot-color', dotColor);
@@ -2457,14 +2461,16 @@ const MapModule = (function() {
   
   function setMarkerHoverState(entry, isHovering) {
     if (!entry || !entry.element) return;
-    // Never override the active/big state on hover (matches live-site expectation)
-    if (entry.state === 'big') return;
     
     if (isHovering) {
+      // Never override the active/big state on hover.
+      if (entry.state === 'big') return;
       entry.element.classList.add('is-hovered');
       updateMapCardStateByKey(entry.locationKey, 'hover');
     } else {
       entry.element.classList.remove('is-hovered');
+      // Big markers keep their active state, but must still clear stale hover classes.
+      if (entry.state === 'big') return;
       updateMapCardStateByKey(entry.locationKey, 'small');
     }
   }
