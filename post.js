@@ -3655,7 +3655,15 @@ const PostModule = (function() {
       : '<div class="post-info-row post-info-row-cat">' + infoIconHtml + '<span class="post-info-text">' + escapeHtml(displayName) + '</span></div>';
 
     var sfActionsDisabled = (storefrontPosts && storefrontPosts.length > 1);
-    if (sfActionsDisabled) postHeader.classList.add('post-header--storefront');
+    if (sfActionsDisabled) {
+      postHeader.classList.add('post-header--storefront');
+      try {
+        var sfHeaderSettings = App.getState('settings') || {};
+        if (sfHeaderSettings.folder_system_images && sfHeaderSettings.multi_post_icon) {
+          postHeader.style.setProperty('--storefront-bg-icon', 'url(' + sfHeaderSettings.folder_system_images + '/' + sfHeaderSettings.multi_post_icon + ')');
+        }
+      } catch (_eSfHeaderBgIcon) {}
+    }
 
     var actionsHtml = sfActionsDisabled ? '' : [
       '<div class="post-header-actions">',
@@ -4071,12 +4079,12 @@ const PostModule = (function() {
       if (targetItem) targetItem.click();
     }
 
-    // Post header click closes the post (returns to post-card)
-    var postHeader = wrap.querySelector('.post-header');
+    // Post header click closes the post. Storefronts close from the storefront header only.
+    var postHeader = wrap.querySelector('.post-header--storefront') || wrap.querySelector('.post-header');
     if (postHeader) {
       postHeader.addEventListener('click', function(e) {
-        // Don't close if clicking buttons inside the header
-        if (e.target.closest('button')) return;
+        // Don't close if clicking interactive elements inside the header.
+        if (e.target.closest('button, a')) return;
         closePost(post.id);
       });
     }

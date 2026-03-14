@@ -710,6 +710,30 @@
   border-bottom: none;
   position: static;
   grid-template-columns: 50px 1fr;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.post-header--storefront > * {
+  position: relative;
+  z-index: 1;
+}
+
+.post-header--storefront::after {
+  content: "";
+  position: absolute;
+  left: 35px;
+  top: 35px;
+  width: 1200px;
+  height: 1200px;
+  background-image: var(--storefront-bg-icon);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: translate(-50%, -50%);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* -------------------------------------------------------
@@ -718,7 +742,11 @@
    ------------------------------------------------------- */
 
 .post-storefront-menu-container {
-  padding: 12px 10px 0;
+  margin: 12px 10px 0;
+  padding: 10px 10px 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
 }
 
 .post-storefront-menu {
@@ -910,6 +938,7 @@
 
 .post-storefront-content > .post-header {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: default;
 }
 
 /* Storefront row: circular post thumbnails on postcard */
@@ -1553,6 +1582,7 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
+  cursor: pointer;
   background: transparent;
   border: none;
   transition: background-color 0.2s ease;
