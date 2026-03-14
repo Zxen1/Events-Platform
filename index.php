@@ -1383,11 +1383,11 @@ if (empty($ogTitle)) {
             </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Theme</label>
-              <div class="member-theme-menu menu-class-1">
-                <div class="member-theme-menu-button menu-button">
+              <div class="member-theme-menu menu-class-3">
+                <button type="button" class="member-theme-menu-button menu-button">
                   <span class="member-theme-menu-button-text menu-text">Dark Colour Transparent</span>
                   <span class="member-theme-menu-button-arrow menu-arrow"></span>
-                </div>
+                </button>
                 <div class="member-theme-menu-options menu-options">
                   <div class="member-theme-menu-option menu-option" data-theme="dark-colour-transparent">Dark Colour Transparent</div>
                   <div class="member-theme-menu-option menu-option" data-theme="dark-blue-transparent">Dark Blue Transparent</div>
