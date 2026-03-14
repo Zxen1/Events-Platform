@@ -346,7 +346,7 @@
   z-index: 1;
 }
 
-/* Storefront hover watermark */
+/* Storefront hover background image */
 .post-card[data-storefront="1"]::after {
   content: "";
   position: absolute;
@@ -366,7 +366,7 @@
 }
 
 .post-card[data-storefront="1"]:hover::after {
-  opacity: 0.15;
+  opacity: 1;
 }
 
 /* Post cards have margin-bottom; recent cards get it from wrapper */
@@ -732,7 +732,7 @@
   background-position: center;
   background-size: contain;
   transform: translate(-50%, -50%);
-  opacity: 0.15;
+  opacity: 1;
   pointer-events: none;
   z-index: 0;
 }

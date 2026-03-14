@@ -1471,8 +1471,8 @@ const PostModule = (function() {
     el.dataset.postKey = lead.post_key || '';
     el.dataset.storefront = '1';
     el.setAttribute('tabindex', '0');
-    el.style.setProperty('--subcat-hover-bg', 'rgba(255,255,255,1)');
-    // Storefront hover watermark uses the same system icon as the map marker.
+    el.style.setProperty('--subcat-hover-bg', 'transparent');
+    // Storefront hover background image uses the same system icon as the map marker.
     try {
       var sfSettings = App.getState('settings') || {};
       if (sfSettings.folder_system_images && sfSettings.multi_post_icon) {
