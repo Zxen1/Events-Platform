@@ -4156,8 +4156,11 @@ const PostModule = (function() {
         var postId = post.id;
         var pid = String(postId);
         var nowPressed = headerFavBtn.getAttribute('aria-pressed') !== 'true';
+        console.error('[FAV DEBUG] header click — pid:', pid, 'nowPressed:', nowPressed);
         setFavoriteButtonState(headerFavBtn, nowPressed);
         syncCardFavoriteButtons(pid, nowPressed);
+        var cardBtns = document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav');
+        console.error('[FAV DEBUG] card buttons found:', cardBtns.length, 'aria-pressed values:', Array.from(cardBtns).map(function(b) { return b.getAttribute('aria-pressed'); }));
         saveFavorite(postId, nowPressed);
         updateStorefrontFavoriteDecorators(pid, nowPressed);
         syncStorefrontPassiveFavoriteButtons();
