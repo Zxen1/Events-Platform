@@ -4091,11 +4091,16 @@ const PostModule = (function() {
               contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
-                sfFavBtn.addEventListener('click', function(e) {
+                // buildPostDetail calls setupPostDetailEvents internally, which already attached a handler
+                // to this button using the wrong wrap (tempDetail). Strip it via clone before attaching
+                // the correct storefront-aware handler that uses the outer wrap.
+                var sfFavBtnClean = sfFavBtn.cloneNode(true);
+                sfFavBtn.parentNode.replaceChild(sfFavBtnClean, sfFavBtn);
+                sfFavBtnClean.addEventListener('click', function(e) {
                   e.stopPropagation();
                   var pid = String(fullPost.id);
-                  var nowPressed = sfFavBtn.getAttribute('aria-pressed') !== 'true';
-                  setFavoriteButtonState(sfFavBtn, nowPressed);
+                  var nowPressed = sfFavBtnClean.getAttribute('aria-pressed') !== 'true';
+                  setFavoriteButtonState(sfFavBtnClean, nowPressed);
                   syncCardFavoriteButtons(pid, nowPressed);
                   updateStorefrontFavoriteDecorators(pid, nowPressed);
                   sortStorefrontFavoriteRows();
