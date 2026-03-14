@@ -3543,7 +3543,7 @@ const PostModule = (function() {
       var _pR = parseInt(_pHex.substring(0, 2), 16);
       var _pG = parseInt(_pHex.substring(2, 4), 16);
       var _pB = parseInt(_pHex.substring(4, 6), 16);
-      wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _pR + ',' + _pG + ',' + _pB + ',0.05)');
+      wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _pR + ',' + _pG + ',' + _pB + ',0.15)');
     }
     // Track the active location context for this open post (source-of-truth: post_map_card_id).
     try { wrap.setAttribute('data-post-map-card-id', String(activeLoc && activeLoc.id !== undefined && activeLoc.id !== null ? activeLoc.id : '')); } catch (_eAttr) {}
@@ -3937,7 +3937,7 @@ const PostModule = (function() {
               var _sfR = parseInt(_sfHex.substring(0, 2), 16);
               var _sfG = parseInt(_sfHex.substring(2, 4), 16);
               var _sfB = parseInt(_sfHex.substring(4, 6), 16);
-              wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _sfR + ',' + _sfG + ',' + _sfB + ',0.05)');
+              wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _sfR + ',' + _sfG + ',' + _sfB + ',0.15)');
             } else {
               wrap.style.removeProperty('--post-subcat-overlay');
             }
