@@ -878,6 +878,8 @@
   gap: 10px;
   justify-content: flex-start;
   padding: 0;
+  background-color: var(--subcat-hover-bg, transparent);
+  border-radius: 5px;
 }
 .post-storefront-menu-item-thumbwrap {
   position: relative;

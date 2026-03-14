@@ -3840,11 +3840,20 @@ const PostModule = (function() {
         var pick = pickMapCardInCurrentBounds(p);
         var mc = pick.mapCard;
         var rawUrl = getPostThumbnailUrl(p);
+        var subcatHoverBg = '';
+        if (p.subcategory_color) {
+          var _sfHexMenu = p.subcategory_color.replace('#', '');
+          var _sfMenuR = parseInt(_sfHexMenu.substring(0, 2), 16);
+          var _sfMenuG = parseInt(_sfHexMenu.substring(2, 4), 16);
+          var _sfMenuB = parseInt(_sfHexMenu.substring(4, 6), 16);
+          subcatHoverBg = 'rgba(' + _sfMenuR + ',' + _sfMenuG + ',' + _sfMenuB + ',0.15)';
+        }
         return {
           _post: p,
           _thumbUrl: rawUrl ? addImageClass(rawUrl, 'minithumb') : '',
           _title: (mc && mc.title) || p.checkout_title || '',
           _subcategory: p.subcategory_name || '',
+          _subcatHoverBg: subcatHoverBg,
           _isFav: isFavorite(p.id),
           _postId: String(p.id)
         };

@@ -14279,7 +14279,8 @@ const StorefrontMenuComponent = (function() {
             var thumbUrl = p._thumbUrl || '';
             var title = (p._title || '').replace(/"/g, '&quot;');
             var sub = (p._subcategory || '').replace(/"/g, '&quot;');
-            html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-post-id="' + (p._postId || '') + '" data-tooltip="' + title + '">');
+            var itemStyle = p._subcatHoverBg ? ' style="--subcat-hover-bg: ' + p._subcatHoverBg.replace(/"/g, '&quot;') + ';"' : '';
+            html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-post-id="' + (p._postId || '') + '" data-tooltip="' + title + '"' + itemStyle + '>');
             html.push('<span class="post-storefront-menu-item-thumbwrap">');
             html.push(thumbUrl
                 ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
