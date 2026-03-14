@@ -1471,7 +1471,7 @@ const PostModule = (function() {
     el.dataset.postKey = lead.post_key || '';
     el.dataset.storefront = '1';
     el.setAttribute('tabindex', '0');
-    el.style.setProperty('--subcat-hover-bg', 'rgba(255,255,255,0.08)');
+    el.style.setProperty('--subcat-hover-bg', 'rgba(255,255,255,1)');
     // Storefront hover watermark uses the same system icon as the map marker.
     try {
       var sfSettings = App.getState('settings') || {};
