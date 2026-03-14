@@ -3969,14 +3969,23 @@ const PostModule = (function() {
               contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
-                sfFavBtn.addEventListener('click', function() {
+                sfFavBtn.addEventListener('click', function(e) {
+                  e.stopPropagation();
                   var pid = String(fullPost.id);
-                  var isOn = isFavorite(pid);
+                  var wasPressed = sfFavBtn.getAttribute('aria-pressed') === 'true';
+                  var nowPressed = !wasPressed;
+                  sfFavBtn.setAttribute('aria-pressed', String(nowPressed));
+                  sfFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+                  document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(otherBtn) {
+                    otherBtn.setAttribute('aria-pressed', String(nowPressed));
+                    otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
+                  });
+
                   // Menu thumb star
                   var menuStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + pid + '"]');
-                  if (!isOn && menuStar) {
+                  if (!nowPressed && menuStar) {
                     menuStar.remove();
-                  } else if (isOn && !menuStar) {
+                  } else if (nowPressed && !menuStar) {
                     var selItem = wrap.querySelector('.post-storefront-menu-item--selected');
                     if (selItem) {
                       var ms = document.createElement('span');
@@ -3992,8 +4001,8 @@ const PostModule = (function() {
                   var hdrW = wrap.querySelector('.post-header-row-storefront-wrap[data-post-id="' + pid + '"]');
                   if (hdrW) {
                     var hdrDot = hdrW.querySelector('.post-header-row-storefront-favdot');
-                    if (!isOn && hdrDot) hdrDot.remove();
-                    else if (isOn && !hdrDot) {
+                    if (!nowPressed && hdrDot) hdrDot.remove();
+                    else if (nowPressed && !hdrDot) {
                       var d = document.createElement('span');
                       d.className = 'post-header-row-storefront-favdot';
                       d.setAttribute('aria-hidden', 'true');
@@ -4006,8 +4015,8 @@ const PostModule = (function() {
                     var cw = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
                     if (cw) {
                       var cs = cw.querySelector('.post-card-row-storefront-favstar');
-                      if (!isOn && cs) cs.remove();
-                      else if (isOn && !cs) {
+                      if (!nowPressed && cs) cs.remove();
+                      else if (nowPressed && !cs) {
                         var s = document.createElement('span');
                         s.className = 'post-card-row-storefront-favstar';
                         s.setAttribute('aria-hidden', 'true');
@@ -4064,6 +4073,10 @@ const PostModule = (function() {
                       pcIds.forEach(function(w) { if (isFavorite(w.dataset.postId)) pcAny = true; });
                       pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
                     }
+                  }
+                  saveFavorite(pid, nowPressed);
+                  if (favToTop) {
+                    favSortDirty = true;
                   }
                 });
               }
