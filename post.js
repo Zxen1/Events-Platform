@@ -4891,17 +4891,10 @@ const PostModule = (function() {
 
     btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
 
-    var pid = String(post.id);
-
-    // Update all instances of this post's fav button (post-card, recent-card, and post-header)
-    document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(otherBtn) {
+    // Update all instances of this post's fav button (both post-card and recent-card)
+    document.querySelectorAll('[data-id="' + post.id + '"] .post-card-button-fav, [data-id="' + post.id + '"] .recent-card-button-fav').forEach(function(otherBtn) {
       if (otherBtn === btn) return;
       otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-    });
-    document.querySelectorAll('.post-header-button-fav[data-post-id="' + pid + '"]').forEach(function(hdrBtn) {
-      if (hdrBtn === btn) return;
-      hdrBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-      hdrBtn.setAttribute('aria-label', newFav ? 'Remove from favorites' : 'Add to favorites');
     });
 
     // Save to localStorage
@@ -5810,22 +5803,15 @@ const PostModule = (function() {
     var isFav = btn.getAttribute('aria-pressed') === 'true';
     var newFav = !isFav;
 
-    var pid = String(postId);
-
     btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
 
     // Save to localStorage
     saveFavorite(postId, newFav);
 
-    // Update other instances (post-card, recent-card, and post-header)
-    document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(otherBtn) {
+    // Update other instances (both post-card and recent-card)
+    document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
       if (otherBtn === btn) return;
       otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-    });
-    document.querySelectorAll('.post-header-button-fav[data-post-id="' + pid + '"]').forEach(function(hdrBtn) {
-      if (hdrBtn === btn) return;
-      hdrBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-      hdrBtn.setAttribute('aria-label', newFav ? 'Remove from favorites' : 'Add to favorites');
     });
 
     if (favToTop) {
