@@ -1311,12 +1311,12 @@
 
 /* Recent panel posts use purple border */
 .recent-panel-content .post::after {
-  border-left-color: #7c3aed;
-  border-right-color: #7c3aed;
-  border-bottom-color: #7c3aed;
+  /* border-left-color: #7c3aed; */
+  /* border-right-color: #7c3aed; */
+  /* border-bottom-color: #7c3aed; */
 }
 .recent-panel-content .post-header {
-  border-top-color: #7c3aed;
+  /* border-top-color: #7c3aed; */
 }
 
 .post-panel-content .post {
