@@ -162,7 +162,7 @@
   transition: background 0.2s, color 0.2s;
 }
 
-/* Active header buttons use blue-500 (text + icons inherit from currentColor) */
+/* Active header buttons use blue-500 + translucent bg (text + icons inherit from currentColor) */
 .header-bar .button-class-1[aria-pressed="true"],
 .header-bar .button-class-1[aria-expanded="true"],
 .header-bar .button-class-1.button--active,
@@ -170,6 +170,8 @@
 .header-bar .button-class-1.header-modeswitch-button--active {
   color: var(--blue-500);
   font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
 }
 /* Recent button uses purple when active */
 .header-bar .header-modeswitch-recent[aria-pressed="true"],
@@ -182,6 +184,9 @@
   cursor: not-allowed;
 }
 @media (hover: hover) and (pointer: fine) {
+  .header-modeswitch > .button-class-1:hover {
+    background: #222;
+  }
   .header-modeswitch > .button-class-1[aria-disabled="true"]:hover {
     background: transparent;
   }
