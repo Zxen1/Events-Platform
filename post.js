@@ -4037,6 +4037,8 @@ const PostModule = (function() {
     }
 
     function syncStorefrontPassiveFavoriteButtons() {
+      if (!sfMenuPosts || sfMenuPosts.length < 2) return;
+
       var sfInd = wrap.querySelector('.post-header-fav-indicator[data-sf-ids]');
       if (sfInd) {
         var ids = (sfInd.dataset.sfIds || '').split(',');
@@ -4136,10 +4138,12 @@ const PostModule = (function() {
     }
 
     // Post header click closes the post. Storefronts close from the storefront header only.
-    var postHeader = wrap.querySelector('.post-header--storefront') || wrap.querySelector('.post-header');
-    if (postHeader) {
-      postHeader.addEventListener('click', function(e) {
-        // Don't close if clicking interactive elements inside the header.
+    var isStorefront = sfMenuPosts && sfMenuPosts.length > 1;
+    var closeHeader = isStorefront
+      ? wrap.querySelector('.post-header--storefront')
+      : wrap.querySelector('.post-header');
+    if (closeHeader) {
+      closeHeader.addEventListener('click', function(e) {
         if (e.target.closest('button, a')) return;
         closePost(post.id);
       });
@@ -4814,18 +4818,7 @@ const PostModule = (function() {
     var key = post.post_key || post.id;
     var url = window.location.origin + '/post/' + encodeURIComponent(String(key));
 
-    // Use Web Share API if available, otherwise copy to clipboard
-    if (navigator.share) {
-      navigator.share({
-        title: title,
-        url: url
-      }).catch(function() {
-        // Share cancelled or failed - copy instead
-        copyToClipboard(url);
-      });
-    } else {
-      copyToClipboard(url);
-    }
+    copyToClipboard(url);
   }
 
   /**
