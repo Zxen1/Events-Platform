@@ -4046,12 +4046,14 @@ const PostModule = (function() {
 
       var slot = wrap.closest('.post-slot');
       if (slot) {
-        var pcFav = slot.querySelector('.post-card-button-fav');
-        if (pcFav) {
-          var pcIds = slot.querySelectorAll('.post-card-row-storefront-wrap[data-post-id]');
-          var pcAny = false;
-          pcIds.forEach(function(item) { if (isFavorite(item.dataset.postId)) pcAny = true; });
-          pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
+        var pcIds = slot.querySelectorAll('.post-card-row-storefront-wrap[data-post-id]');
+        if (pcIds.length) {
+          var pcFav = slot.querySelector('.post-card-button-fav');
+          if (pcFav) {
+            var pcAny = false;
+            pcIds.forEach(function(item) { if (isFavorite(item.dataset.postId)) pcAny = true; });
+            pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
+          }
         }
       }
     }
@@ -4156,11 +4158,8 @@ const PostModule = (function() {
         var postId = post.id;
         var pid = String(postId);
         var nowPressed = headerFavBtn.getAttribute('aria-pressed') !== 'true';
-        console.error('[FAV DEBUG] header click — pid:', pid, 'nowPressed:', nowPressed);
         setFavoriteButtonState(headerFavBtn, nowPressed);
         syncCardFavoriteButtons(pid, nowPressed);
-        var cardBtns = document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav');
-        console.error('[FAV DEBUG] card buttons found:', cardBtns.length, Array.from(cardBtns).map(function(b) { var p = b.closest('.post-card'); var inPost = b.closest('.post'); var inSlot = b.closest('.post-slot'); return 'aria=' + b.getAttribute('aria-pressed') + ' inPostDetail=' + !!inPost + ' cardHidden=' + (p ? p.style.display : 'n/a') + ' slotId=' + (inSlot ? inSlot.dataset.id : 'none'); }));
         saveFavorite(postId, nowPressed);
         updateStorefrontFavoriteDecorators(pid, nowPressed);
         syncStorefrontPassiveFavoriteButtons();
