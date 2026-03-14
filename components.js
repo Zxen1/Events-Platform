@@ -6123,6 +6123,8 @@ const ToastComponent = (function() {
     var containerEl = null;
     var recentToastMap = {};
     var TOAST_DEDUPE_MS = 900;
+    var SLIDE_MS = 250;
+    var COLLAPSE_MS = 200;
 
     function ensureContainer() {
         if (containerEl) return containerEl;
@@ -6132,6 +6134,20 @@ const ToastComponent = (function() {
         document.body.appendChild(c);
         containerEl = c;
         return c;
+    }
+
+    function dismiss(toast) {
+        toast.classList.remove('component-toast--show');
+
+        setTimeout(function() {
+            toast.style.transition = 'height ' + COLLAPSE_MS + 'ms ease, margin-bottom ' + COLLAPSE_MS + 'ms ease';
+            toast.style.height = '0';
+            toast.style.marginBottom = '0';
+
+            setTimeout(function() {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, COLLAPSE_MS);
+        }, SLIDE_MS);
     }
 
     function show(message, variant, duration) {
@@ -6157,17 +6173,12 @@ const ToastComponent = (function() {
         toast.textContent = msgText;
         container.appendChild(toast);
 
-        // Trigger enter animation on next frame
         requestAnimationFrame(function() {
             toast.classList.add('component-toast--show');
         });
 
-        // Auto-remove
         setTimeout(function() {
-            toast.classList.remove('component-toast--show');
-            setTimeout(function() {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 250);
+            dismiss(toast);
         }, duration);
     }
 

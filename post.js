@@ -5989,39 +5989,13 @@ const PostModule = (function() {
      ZOOM REQUIRED TOAST (Posts button disabled)
      -------------------------------------------------------------------------- */
 
-  function ensureZoomToastEl() {
-    var toast = document.querySelector('.map-zoom-toast');
-    if (toast) return toast;
-
-    toast = document.createElement('div');
-    toast.className = 'map-zoom-toast';
-    toast.setAttribute('aria-live', 'polite');
-    toast.setAttribute('role', 'status');
-    document.body.appendChild(toast);
-    return toast;
-  }
-
   function showZoomToast() {
-    var toast = ensureZoomToastEl();
-
-    var show = function(text) {
-      toast.textContent = (typeof text === 'string') ? text : '';
-      toast.classList.add('map-zoom-toast--show');
-      setTimeout(function() {
-        toast.classList.remove('map-zoom-toast--show');
-      }, 2000);
-    };
-
     if (typeof window.getMessage === 'function') {
       window.getMessage('msg_map_zoom_required', {}, false).then(function(text) {
-        show(text);
-      }).catch(function() {
-        show('');
-      });
+        if (text) ToastComponent.show(text);
+      }).catch(function() {});
       return;
     }
-
-    show('');
   }
 
   /* --------------------------------------------------------------------------
