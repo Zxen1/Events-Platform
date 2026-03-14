@@ -14282,7 +14282,7 @@ const StorefrontMenuComponent = (function() {
             '.post-storefront-menu-thumb { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; display: block; position: relative; z-index: 2; flex-shrink: 0; transition: width 0.15s ease, height 0.15s ease; }',
             '.post-storefront-menu-thumb--empty { background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.12); }',
             '.post-storefront-menu-item:hover .post-storefront-menu-thumb { width: 42px; height: 42px; }',
-            '.post-storefront-menu-item--selected .post-storefront-menu-thumb { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.9); }',
+            /* '.post-storefront-menu-item--selected .post-storefront-menu-thumb { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.9); }', */
             '.post-storefront-menu-item:hover, .post-storefront-menu-item--selected { background-color: var(--subcat-hover-bg, transparent); }',
             '.post-storefront-menu-item-favstar { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background-color: #fbbf24; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); pointer-events: none; z-index: 2; }',
             '.post-storefront-menu-item-meta { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding-right: 10px; box-sizing: border-box; }',
