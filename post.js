@@ -4145,6 +4145,8 @@ const PostModule = (function() {
     if (closeHeader) {
       closeHeader.addEventListener('click', function(e) {
         if (e.target.closest('button, a')) return;
+        var parentPost = closeHeader.closest('.post');
+        if (parentPost && parentPost.querySelector('.post-header--storefront') && !closeHeader.classList.contains('post-header--storefront')) return;
         closePost(post.id);
       });
     }
