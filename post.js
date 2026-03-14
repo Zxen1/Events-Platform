@@ -3846,7 +3846,7 @@ const PostModule = (function() {
           var _sfMenuR = parseInt(_sfHexMenu.substring(0, 2), 16);
           var _sfMenuG = parseInt(_sfHexMenu.substring(2, 4), 16);
           var _sfMenuB = parseInt(_sfHexMenu.substring(4, 6), 16);
-          subcatHoverBg = 'rgba(' + _sfMenuR + ',' + _sfMenuG + ',' + _sfMenuB + ',0.15)';
+          subcatHoverBg = 'rgba(' + _sfMenuR + ',' + _sfMenuG + ',' + _sfMenuB + ',1)';
         }
         return {
           _post: p,
