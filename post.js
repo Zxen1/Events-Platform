@@ -1286,7 +1286,7 @@ const PostModule = (function() {
       var _r = parseInt(_hex.substring(0, 2), 16);
       var _g = parseInt(_hex.substring(2, 4), 16);
       var _b = parseInt(_hex.substring(4, 6), 16);
-      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _r + ',' + _g + ',' + _b + ',0.15)');
+      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _r + ',' + _g + ',' + _b + ',1)');
     }
 
     // Use the in-area map card for display (location context must match the current map view).
@@ -3543,7 +3543,7 @@ const PostModule = (function() {
       var _pR = parseInt(_pHex.substring(0, 2), 16);
       var _pG = parseInt(_pHex.substring(2, 4), 16);
       var _pB = parseInt(_pHex.substring(4, 6), 16);
-      wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _pR + ',' + _pG + ',' + _pB + ',0.15)');
+      wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _pR + ',' + _pG + ',' + _pB + ',1)');
     }
     // Track the active location context for this open post (source-of-truth: post_map_card_id).
     try { wrap.setAttribute('data-post-map-card-id', String(activeLoc && activeLoc.id !== undefined && activeLoc.id !== null ? activeLoc.id : '')); } catch (_eAttr) {}
@@ -4070,7 +4070,7 @@ const PostModule = (function() {
               var _sfR = parseInt(_sfHex.substring(0, 2), 16);
               var _sfG = parseInt(_sfHex.substring(2, 4), 16);
               var _sfB = parseInt(_sfHex.substring(4, 6), 16);
-              wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _sfR + ',' + _sfG + ',' + _sfB + ',0.15)');
+              wrap.style.setProperty('--post-subcat-overlay', 'rgba(' + _sfR + ',' + _sfG + ',' + _sfB + ',1)');
             } else {
               wrap.style.removeProperty('--post-subcat-overlay');
             }
@@ -5487,7 +5487,7 @@ const PostModule = (function() {
       var _recentR = parseInt(_recentHex.substring(0, 2), 16);
       var _recentG = parseInt(_recentHex.substring(2, 4), 16);
       var _recentB = parseInt(_recentHex.substring(4, 6), 16);
-      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _recentR + ',' + _recentG + ',' + _recentB + ',0.15)');
+      el.style.setProperty('--subcat-hover-bg', 'rgba(' + _recentR + ',' + _recentG + ',' + _recentB + ',1)');
     }
     el.dataset.id = String(entry.id);
     // Store post_map_card_id for location-specific tracking
@@ -5664,7 +5664,7 @@ const PostModule = (function() {
               var _hydrR = parseInt(_hydrHex.substring(0, 2), 16);
               var _hydrG = parseInt(_hydrHex.substring(2, 4), 16);
               var _hydrB = parseInt(_hydrHex.substring(4, 6), 16);
-              recentCardEl.style.setProperty('--subcat-hover-bg', 'rgba(' + _hydrR + ',' + _hydrG + ',' + _hydrB + ',0.15)');
+              recentCardEl.style.setProperty('--subcat-hover-bg', 'rgba(' + _hydrR + ',' + _hydrG + ',' + _hydrB + ',1)');
             }
           } catch (_eRecentTint) {
             // ignore
