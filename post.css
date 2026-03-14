@@ -1028,6 +1028,7 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
+  cursor: pointer;
   background: transparent;
   border: none;
   transition: background-color 0.2s ease;
@@ -1361,6 +1362,7 @@
   grid-template-columns: 50px 1fr auto;
   gap: 10px;
   align-items: center;
+  cursor: pointer;
   position: sticky;
   top: 0;
   z-index: var(--layer-sticky);
@@ -1497,6 +1499,7 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
+  cursor: pointer;
   background: transparent;
   border: none;
   transition: background-color 0.2s ease;
@@ -1888,6 +1891,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
+  cursor: pointer;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -2109,6 +2113,7 @@
 /* Info row links */
 .post-info-row a:not(.post-links-link) {
   color: var(--blue-400, #60a5fa);
+  cursor: pointer;
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
