@@ -707,6 +707,7 @@
   pointer-events: none;
 }
 .post-header--storefront {
+  background: rgba(0, 0, 0, 0.1);
   border-bottom: none;
   position: static;
   grid-template-columns: 50px 1fr;
@@ -722,8 +723,8 @@
 .post-header--storefront::after {
   content: "";
   position: absolute;
-  left: 35px;
-  top: 35px;
+  left: calc(10px + 25px);
+  top: calc(10px + 25px + 20px);
   width: 1200px;
   height: 1200px;
   background-image: var(--storefront-bg-icon);
@@ -736,6 +737,10 @@
   z-index: 0;
 }
 
+.post-header--storefront:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* -------------------------------------------------------
    STOREFRONT MENU — 50px circular thumbnails with tooltip pills
    Modelled on amenities/links tooltip pill pattern.
@@ -743,8 +748,8 @@
 
 .post-storefront-menu-container {
   margin: 12px 10px 0;
-  padding: 10px 10px 0;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 5px;
 }
@@ -757,6 +762,7 @@
   max-height: 230px;
   overflow-y: auto;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
 .post-storefront-menu-item {
   display: inline-flex;

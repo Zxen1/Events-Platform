@@ -3963,6 +3963,9 @@ const PostModule = (function() {
             contentEl.innerHTML = '';
             wrap.classList.remove('post--expanded');
             if (postHeader) {
+              // Use a clean copy so the normal post-header close handler does not
+              // come along inside the storefront-selected post area.
+              postHeader = postHeader.cloneNode(true);
               contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
@@ -4062,6 +4065,13 @@ const PostModule = (function() {
                       pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
                     }
                   }
+                });
+              }
+              var sfShareBtn = postHeader.querySelector('.post-button-share');
+              if (sfShareBtn) {
+                sfShareBtn.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  sharePost(fullPost);
                 });
               }
             }
