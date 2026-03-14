@@ -6922,6 +6922,10 @@ const MemberModule = (function() {
             syncLocalProfilePrefsFromUser(currentUser);
             
             storeCurrent(currentUser);
+
+            // Flag for post-reload welcome toasts
+            var displayName = currentUser.name || currentUser.account_email || currentUser.username;
+            try { sessionStorage.setItem('justLoggedIn', displayName || ''); } catch (_e) {}
             
             // Issue auth token cookie, then reload so the page fetches fresh auth-gated data
             fetch('/gateway.php?action=issue-token').finally(function() {
@@ -7432,6 +7436,23 @@ const MemberModule = (function() {
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {
                     window.adminAuthManager.setAuthenticated(true, currentUser.username || currentUser.account_email);
+                }
+
+                // Show welcome toasts if this is a fresh login (post-reload)
+                var justLoggedIn;
+                try { justLoggedIn = sessionStorage.getItem('justLoggedIn'); } catch (_e) {}
+                if (justLoggedIn !== null && justLoggedIn !== undefined) {
+                    try { sessionStorage.removeItem('justLoggedIn'); } catch (_e2) {}
+                    setTimeout(function() {
+                        getMessage('msg_auth_login_success', { name: justLoggedIn }, false).then(function(message) {
+                            if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                        });
+                        setTimeout(function() {
+                            getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
+                                if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                            });
+                        }, 1200);
+                    }, 800);
                 }
             }
         } catch (e) {
