@@ -4102,10 +4102,10 @@ const PostModule = (function() {
                   var nowPressed = sfFavBtnClean.getAttribute('aria-pressed') !== 'true';
                   setFavoriteButtonState(sfFavBtnClean, nowPressed);
                   syncCardFavoriteButtons(pid, nowPressed);
+                  saveFavorite(pid, nowPressed);
                   updateStorefrontFavoriteDecorators(pid, nowPressed);
                   sortStorefrontFavoriteRows();
                   syncStorefrontPassiveFavoriteButtons();
-                  saveFavorite(pid, nowPressed);
                   if (favToTop) {
                     favSortDirty = true;
                   }
@@ -4158,10 +4158,9 @@ const PostModule = (function() {
         var nowPressed = headerFavBtn.getAttribute('aria-pressed') !== 'true';
         setFavoriteButtonState(headerFavBtn, nowPressed);
         syncCardFavoriteButtons(pid, nowPressed);
+        saveFavorite(postId, nowPressed);
         updateStorefrontFavoriteDecorators(pid, nowPressed);
         syncStorefrontPassiveFavoriteButtons();
-        // Save favorite state to localStorage
-        saveFavorite(postId, nowPressed);
         if (favToTop) {
           favSortDirty = true;
         }
