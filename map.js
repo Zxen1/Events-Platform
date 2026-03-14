@@ -2381,14 +2381,13 @@ const MapModule = (function() {
         <div class="map-card-venue">${escapeHtml(countLabel)}</div>
       `;
     } else if (post.isMultiPost && post.locationPostCount > 1) {
-      // Multi-post venue: show "X posts here" and venue name
-      const countLabel = post.locationPostCount + ' posts here';
       const venueName = post.venue || '';
       const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
+      const countLabel = post.locationPostCount + ' posts here';
       
       labelHTML = `
-        <div class="map-card-title">${escapeHtml(countLabel)}</div>
-        ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
+        ${truncatedVenue ? `<div class="map-card-title">${escapeHtml(truncatedVenue)}</div>` : ''}
+        <div class="map-card-venue">${escapeHtml(countLabel)}</div>
       `;
     } else {
       // Single post: show title, venue, and city
