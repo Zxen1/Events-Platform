@@ -3940,6 +3940,122 @@ const PostModule = (function() {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
+    function setFavoriteButtonState(button, isOn) {
+      if (!button) return;
+      button.setAttribute('aria-pressed', String(isOn));
+      button.setAttribute('aria-label', isOn ? 'Remove from favorites' : 'Add to favorites');
+    }
+
+    function syncCardFavoriteButtons(pid, isOn) {
+      document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(otherBtn) {
+        setFavoriteButtonState(otherBtn, isOn);
+      });
+    }
+
+    function updateStorefrontFavoriteDecorators(pid, isOn) {
+      var menuStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + pid + '"]');
+      if (!isOn && menuStar) {
+        menuStar.remove();
+      } else if (isOn && !menuStar) {
+        var selItem = wrap.querySelector('.post-storefront-menu-item--selected');
+        if (selItem) {
+          var ms = document.createElement('span');
+          ms.className = 'post-storefront-menu-item-favstar';
+          ms.setAttribute('aria-pressed', 'true');
+          ms.setAttribute('data-post-id', pid);
+          ms.setAttribute('aria-hidden', 'true');
+          var mt = selItem.querySelector('.post-storefront-menu-thumb');
+          if (mt) mt.insertAdjacentElement('afterend', ms);
+        }
+      }
+
+      var hdrWrap = wrap.querySelector('.post-header-row-storefront-wrap[data-post-id="' + pid + '"]');
+      if (hdrWrap) {
+        var hdrDot = hdrWrap.querySelector('.post-header-row-storefront-favdot');
+        if (!isOn && hdrDot) {
+          hdrDot.remove();
+        } else if (isOn && !hdrDot) {
+          var dot = document.createElement('span');
+          dot.className = 'post-header-row-storefront-favdot';
+          dot.setAttribute('aria-hidden', 'true');
+          hdrWrap.appendChild(dot);
+        }
+      }
+
+      var slot = wrap.closest('.post-slot');
+      if (slot) {
+        var cardWrap = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
+        if (cardWrap) {
+          var cardStar = cardWrap.querySelector('.post-card-row-storefront-favstar');
+          if (!isOn && cardStar) {
+            cardStar.remove();
+          } else if (isOn && !cardStar) {
+            var cs = document.createElement('span');
+            cs.className = 'post-card-row-storefront-favstar';
+            cs.setAttribute('aria-hidden', 'true');
+            cardWrap.appendChild(cs);
+          }
+        }
+      }
+    }
+
+    function sortStorefrontFavoriteRows() {
+      function sortByFavTs(a, b) {
+        var aTs = getFavoriteTimestamp(a.dataset.postId || '');
+        var bTs = getFavoriteTimestamp(b.dataset.postId || '');
+        var aF = aTs ? 0 : 1;
+        var bF = bTs ? 0 : 1;
+        if (aF !== bF) return aF - bF;
+        if (aTs && bTs) return bTs - aTs;
+        return 0;
+      }
+
+      var menuEl = wrap.querySelector('.post-storefront-menu');
+      if (menuEl) {
+        var menuItems = Array.prototype.slice.call(menuEl.querySelectorAll('.post-storefront-menu-item'));
+        menuItems.sort(sortByFavTs);
+        menuItems.forEach(function(item) { menuEl.appendChild(item); });
+      }
+
+      var hdrRow = wrap.querySelector('.post-header-row-storefront');
+      if (hdrRow) {
+        var hdrWraps = Array.prototype.slice.call(hdrRow.querySelectorAll('.post-header-row-storefront-wrap'));
+        hdrWraps.sort(sortByFavTs);
+        var hdrOverflow = hdrRow.querySelector('.post-header-row-storefront-overflow');
+        hdrWraps.forEach(function(item) { hdrRow.insertBefore(item, hdrOverflow); });
+      }
+
+      var slot = wrap.closest('.post-slot');
+      if (slot) {
+        var pcRow = slot.querySelector('.post-card-row-storefront');
+        if (pcRow) {
+          var pcWraps = Array.prototype.slice.call(pcRow.querySelectorAll('.post-card-row-storefront-wrap'));
+          pcWraps.sort(sortByFavTs);
+          pcWraps.forEach(function(item) { pcRow.appendChild(item); });
+        }
+      }
+    }
+
+    function syncStorefrontPassiveFavoriteButtons() {
+      var sfInd = wrap.querySelector('.post-header-fav-indicator[data-sf-ids]');
+      if (sfInd) {
+        var ids = (sfInd.dataset.sfIds || '').split(',');
+        var anyFav = ids.some(function(id) { return isFavorite(id); });
+        sfInd.setAttribute('aria-pressed', anyFav ? 'true' : 'false');
+      }
+
+      var slot = wrap.closest('.post-slot');
+      if (slot) {
+        var pcFav = slot.querySelector('.post-card-button-fav');
+        if (pcFav) {
+          var pcIds = slot.querySelectorAll('.post-card-row-storefront-wrap[data-post-id]');
+          var pcAny = false;
+          pcIds.forEach(function(item) { if (isFavorite(item.dataset.postId)) pcAny = true; });
+          pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
+        }
+      }
+    }
+
     // Storefront menu init
     if (sfMenuPosts && sfMenuPosts.length > 1) {
       StorefrontMenuComponent.init(wrap, sfMenuPosts, {
@@ -3972,117 +4088,18 @@ const PostModule = (function() {
             contentEl.innerHTML = '';
             wrap.classList.remove('post--expanded');
             if (postHeader) {
-              // Use a clean copy so the normal post-header close handler does not
-              // come along inside the storefront-selected post area.
-              postHeader = postHeader.cloneNode(true);
               contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
                 sfFavBtn.addEventListener('click', function(e) {
                   e.stopPropagation();
                   var pid = String(fullPost.id);
-                  var wasPressed = sfFavBtn.getAttribute('aria-pressed') === 'true';
-                  var nowPressed = !wasPressed;
-                  sfFavBtn.setAttribute('aria-pressed', String(nowPressed));
-                  sfFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
-                  document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav, [data-id="' + pid + '"] .recent-card-button-fav').forEach(function(otherBtn) {
-                    otherBtn.setAttribute('aria-pressed', String(nowPressed));
-                    otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
-                  });
-
-                  // Menu thumb star
-                  var menuStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + pid + '"]');
-                  if (!nowPressed && menuStar) {
-                    menuStar.remove();
-                  } else if (nowPressed && !menuStar) {
-                    var selItem = wrap.querySelector('.post-storefront-menu-item--selected');
-                    if (selItem) {
-                      var ms = document.createElement('span');
-                      ms.className = 'post-storefront-menu-item-favstar';
-                      ms.setAttribute('aria-pressed', 'true');
-                      ms.setAttribute('data-post-id', pid);
-                      ms.setAttribute('aria-hidden', 'true');
-                      var mt = selItem.querySelector('.post-storefront-menu-thumb');
-                      if (mt) mt.insertAdjacentElement('afterend', ms);
-                    }
-                  }
-                  // Header 18px dot
-                  var hdrW = wrap.querySelector('.post-header-row-storefront-wrap[data-post-id="' + pid + '"]');
-                  if (hdrW) {
-                    var hdrDot = hdrW.querySelector('.post-header-row-storefront-favdot');
-                    if (!nowPressed && hdrDot) hdrDot.remove();
-                    else if (nowPressed && !hdrDot) {
-                      var d = document.createElement('span');
-                      d.className = 'post-header-row-storefront-favdot';
-                      d.setAttribute('aria-hidden', 'true');
-                      hdrW.appendChild(d);
-                    }
-                  }
-                  // Postcard 42px star
-                  var slot = wrap.closest('.post-slot');
-                  if (slot) {
-                    var cw = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
-                    if (cw) {
-                      var cs = cw.querySelector('.post-card-row-storefront-favstar');
-                      if (!nowPressed && cs) cs.remove();
-                      else if (nowPressed && !cs) {
-                        var s = document.createElement('span');
-                        s.className = 'post-card-row-storefront-favstar';
-                        s.setAttribute('aria-hidden', 'true');
-                        cw.appendChild(s);
-                      }
-                    }
-                  }
-                  // Reorder: favourites to front (most recent first) in menu, header thumbs, postcard thumbs
-                  function _sfSortByFavTs(a, b) {
-                    var aTs = getFavoriteTimestamp(a.dataset.postId || '');
-                    var bTs = getFavoriteTimestamp(b.dataset.postId || '');
-                    var aF = aTs ? 0 : 1;
-                    var bF = bTs ? 0 : 1;
-                    if (aF !== bF) return aF - bF;
-                    if (aTs && bTs) return bTs - aTs;
-                    return 0;
-                  }
-                  var menuEl = wrap.querySelector('.post-storefront-menu');
-                  if (menuEl) {
-                    var menuItems = Array.prototype.slice.call(menuEl.querySelectorAll('.post-storefront-menu-item'));
-                    menuItems.sort(_sfSortByFavTs);
-                    menuItems.forEach(function(item) { menuEl.appendChild(item); });
-                  }
-                  var hdrRow = wrap.querySelector('.post-header-row-storefront');
-                  if (hdrRow) {
-                    var hdrWraps = Array.prototype.slice.call(hdrRow.querySelectorAll('.post-header-row-storefront-wrap'));
-                    hdrWraps.sort(_sfSortByFavTs);
-                    var hdrOverflow = hdrRow.querySelector('.post-header-row-storefront-overflow');
-                    hdrWraps.forEach(function(w) { hdrRow.insertBefore(w, hdrOverflow); });
-                  }
-                  var slot = wrap.closest('.post-slot');
-                  if (slot) {
-                    var pcRow = slot.querySelector('.post-card-row-storefront');
-                    if (pcRow) {
-                      var pcWraps = Array.prototype.slice.call(pcRow.querySelectorAll('.post-card-row-storefront-wrap'));
-                      pcWraps.sort(_sfSortByFavTs);
-                      pcWraps.forEach(function(w) { pcRow.appendChild(w); });
-                    }
-                  }
-
-                  // Storefront header passive indicator
-                  var sfInd = wrap.querySelector('.post-header-fav-indicator[data-sf-ids]');
-                  if (sfInd) {
-                    var ids = (sfInd.dataset.sfIds || '').split(',');
-                    var anyFav = ids.some(function(id) { return isFavorite(id); });
-                    sfInd.setAttribute('aria-pressed', anyFav ? 'true' : 'false');
-                  }
-                  // Storefront postcard passive indicator
-                  if (slot) {
-                    var pcFav = slot.querySelector('.post-card-button-fav');
-                    if (pcFav) {
-                      var pcIds = slot.querySelectorAll('.post-card-row-storefront-wrap[data-post-id]');
-                      var pcAny = false;
-                      pcIds.forEach(function(w) { if (isFavorite(w.dataset.postId)) pcAny = true; });
-                      pcFav.setAttribute('aria-pressed', pcAny ? 'true' : 'false');
-                    }
-                  }
+                  var nowPressed = sfFavBtn.getAttribute('aria-pressed') !== 'true';
+                  setFavoriteButtonState(sfFavBtn, nowPressed);
+                  syncCardFavoriteButtons(pid, nowPressed);
+                  updateStorefrontFavoriteDecorators(pid, nowPressed);
+                  sortStorefrontFavoriteRows();
+                  syncStorefrontPassiveFavoriteButtons();
                   saveFavorite(pid, nowPressed);
                   if (favToTop) {
                     favSortDirty = true;
@@ -4132,70 +4149,12 @@ const PostModule = (function() {
       headerFavBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var postId = post.id;
-        var wasPressed = headerFavBtn.getAttribute('aria-pressed') === 'true';
-        var nowPressed = !wasPressed;
-        
-        // Update this button
-        headerFavBtn.setAttribute('aria-pressed', String(nowPressed));
-        headerFavBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
-        
-        // Sync all instances of this post's fav button across the DOM
-        document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
-          otherBtn.setAttribute('aria-pressed', String(nowPressed));
-          otherBtn.setAttribute('aria-label', nowPressed ? 'Remove from favorites' : 'Add to favorites');
-        });
-        
-        // Sync all storefront fav indicators for this post
         var pid = String(postId);
-
-        // Menu thumb star
-        var menuStar = wrap.querySelector('.post-storefront-menu-item-favstar[data-post-id="' + pid + '"]');
-        if (!nowPressed && menuStar) {
-          menuStar.remove();
-        } else if (nowPressed && !menuStar) {
-          var selectedItem = wrap.querySelector('.post-storefront-menu-item--selected');
-          if (selectedItem) {
-            var ms = document.createElement('span');
-            ms.className = 'post-storefront-menu-item-favstar';
-            ms.setAttribute('aria-pressed', 'true');
-            ms.setAttribute('data-post-id', pid);
-            ms.setAttribute('aria-hidden', 'true');
-            var menuThumb = selectedItem.querySelector('.post-storefront-menu-thumb');
-            if (menuThumb) menuThumb.insertAdjacentElement('afterend', ms);
-          }
-        }
-
-        // Header 18px dot
-        var hdrWrap = wrap.querySelector('.post-header-row-storefront-wrap[data-post-id="' + pid + '"]');
-        if (hdrWrap) {
-          var hdrDot = hdrWrap.querySelector('.post-header-row-storefront-favdot');
-          if (!nowPressed && hdrDot) {
-            hdrDot.remove();
-          } else if (nowPressed && !hdrDot) {
-            var dot = document.createElement('span');
-            dot.className = 'post-header-row-storefront-favdot';
-            dot.setAttribute('aria-hidden', 'true');
-            hdrWrap.appendChild(dot);
-          }
-        }
-
-        // Postcard 42px star
-        var slot = wrap.closest('.post-slot');
-        if (slot) {
-          var cardWrap = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
-          if (cardWrap) {
-            var cardStar = cardWrap.querySelector('.post-card-row-storefront-favstar');
-            if (!nowPressed && cardStar) {
-              cardStar.remove();
-            } else if (nowPressed && !cardStar) {
-              var cs = document.createElement('span');
-              cs.className = 'post-card-row-storefront-favstar';
-              cs.setAttribute('aria-hidden', 'true');
-              cardWrap.appendChild(cs);
-            }
-          }
-        }
-
+        var nowPressed = headerFavBtn.getAttribute('aria-pressed') !== 'true';
+        setFavoriteButtonState(headerFavBtn, nowPressed);
+        syncCardFavoriteButtons(pid, nowPressed);
+        updateStorefrontFavoriteDecorators(pid, nowPressed);
+        syncStorefrontPassiveFavoriteButtons();
         // Save favorite state to localStorage
         saveFavorite(postId, nowPressed);
         if (favToTop) {

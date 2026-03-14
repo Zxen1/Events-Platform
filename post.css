@@ -742,8 +742,8 @@
 }
 
 /* -------------------------------------------------------
-   STOREFRONT MENU — 50px circular thumbnails with tooltip pills
-   Modelled on amenities/links tooltip pill pattern.
+   STOREFRONT MENU
+   Single scrollable menu block with full-width 52px rows.
    ------------------------------------------------------- */
 
 .post-storefront-menu-container {
@@ -771,19 +771,23 @@
   box-sizing: border-box;
 }
 .post-storefront-menu-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 52px;
+  height: 52px;
+  gap: 10px;
   position: relative;
   overflow: visible;
   cursor: pointer;
-  flex: 0 0 auto;
+  flex: 0 0 52px;
+  padding: 0;
+  border-radius: 0;
 }
 
 .post-storefront-menu-item:hover {
-  z-index: 3;
+  z-index: 1;
 }
 
 .post-storefront-menu-thumb {
@@ -802,15 +806,6 @@
   border: 2px solid rgba(255, 255, 255, 0.12);
 }
 
-.post-storefront-menu-item:hover .post-storefront-menu-thumb {
-  width: 42px;
-  height: 42px;
-}
-
-.post-storefront-menu-item--selected .post-storefront-menu-thumb {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.9);
-}
-
 .post-storefront-menu-item-favstar {
   position: absolute;
   top: 0;
@@ -822,93 +817,31 @@
   pointer-events: none;
   z-index: 2;
 }
-
-/* Tooltip pill (::after) */
-.post-storefront-menu-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 50px;
-  width: 50px;
-  overflow: hidden;
-  background: rgba(59, 130, 246, 0.9);
-  border-radius: 25px;
-  font-size: 12px;
-  line-height: 50px;
-  color: rgba(255, 255, 255, 0.92);
-  white-space: nowrap;
-  padding-left: 55px;
-  padding-right: 10px;
-  width: max-content;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-  transition: opacity 0.15s ease;
-}
-
-/* Right-expand (default) */
-.post-storefront-menu-item:not([data-tooltip-dir="left"]):hover::after {
-  opacity: 1;
-}
-
-/* Left-expand */
-.post-storefront-menu-item[data-tooltip-dir="left"]::after {
-  left: auto;
-  right: 0;
-  padding-left: 12px;
-  padding-right: 55px;
-}
-
-.post-storefront-menu-item[data-tooltip-dir="left"]:hover::after {
-  opacity: 1;
-}
-
-/* Exposed layout: verbose row items with title + subcategory */
-.post-storefront-menu--exposed {
-  gap: 0;
-  max-height: none;
-  overflow: visible;
-  padding: 0;
-}
-.post-storefront-menu--exposed .post-storefront-menu-item {
-  width: 100%;
-  min-height: 52px;
-  height: 52px;
-  gap: 10px;
-  justify-content: flex-start;
-  padding: 0;
-  align-items: center;
-  border-radius: 0;
-}
 .post-storefront-menu-item-thumbwrap {
   position: relative;
   flex-shrink: 0;
 }
-.post-storefront-menu--exposed .post-storefront-menu-item-thumbwrap {
+.post-storefront-menu-item-thumbwrap {
   margin-left: 10px;
 }
-.post-storefront-menu--exposed .post-storefront-menu-thumb {
+.post-storefront-menu-thumb {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
   transition: width 0.15s ease, height 0.15s ease;
 }
-.post-storefront-menu--exposed .post-storefront-menu-item:hover .post-storefront-menu-thumb {
+.post-storefront-menu-item:hover .post-storefront-menu-thumb {
   width: 42px;
   height: 42px;
 }
-.post-storefront-menu--exposed .post-storefront-menu-item:hover,
-.post-storefront-menu--exposed .post-storefront-menu-item--selected {
+.post-storefront-menu-item--selected .post-storefront-menu-thumb {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.9);
+}
+.post-storefront-menu-item:hover,
+.post-storefront-menu-item--selected {
   background-color: var(--subcat-hover-bg, transparent);
 }
-.post-storefront-menu--exposed .post-storefront-menu-item::after {
-  display: none;
-}
 .post-storefront-menu-item-meta {
-  display: none;
-}
-.post-storefront-menu--exposed .post-storefront-menu-item-meta {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -947,9 +880,6 @@
   color: rgba(59, 130, 246, 0.9);
 }
 
-.post-storefront-prompt {
-  display: none;
-}
 .post-storefront-loading {
   padding: 10px;
   font-size: 13px;

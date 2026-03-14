@@ -14269,18 +14269,14 @@ const StorefrontMenuComponent = (function() {
 
     function render(posts) {
         var html = [];
-        /* GRID LAYOUT (commented out — verbose for all counts)
-        var isExposed = posts.length <= 4;
-        */
-        var isExposed = true;
         html.push('<div class="post-storefront-menu-container">');
-        html.push('<div class="post-storefront-menu' + (isExposed ? ' post-storefront-menu--exposed' : '') + '" aria-label="Storefront menu">');
+        html.push('<div class="post-storefront-menu" aria-label="Storefront menu">');
         posts.forEach(function(p, i) {
             var thumbUrl = p._thumbUrl || '';
             var title = (p._title || '').replace(/"/g, '&quot;');
             var sub = (p._subcategory || '').replace(/"/g, '&quot;');
             var itemStyle = p._subcatHoverBg ? ' style="--subcat-hover-bg: ' + p._subcatHoverBg.replace(/"/g, '&quot;') + ';"' : '';
-            html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-post-id="' + (p._postId || '') + '" data-tooltip="' + title + '"' + itemStyle + '>');
+            html.push('<span class="post-storefront-menu-item" data-index="' + i + '" data-post-id="' + (p._postId || '') + '"' + itemStyle + '>');
             html.push('<span class="post-storefront-menu-item-thumbwrap">');
             html.push(thumbUrl
                 ? '<img class="post-storefront-menu-thumb" src="' + thumbUrl + '" alt="" />'
@@ -14289,16 +14285,13 @@ const StorefrontMenuComponent = (function() {
                 html.push('<span class="post-storefront-menu-item-favstar" aria-pressed="true" data-post-id="' + (p._postId || '') + '" aria-hidden="true"></span>');
             }
             html.push('</span>');
-            if (isExposed) {
-                html.push('<span class="post-storefront-menu-item-meta">');
-                html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
-                if (sub) html.push('<span class="post-storefront-menu-item-sub">' + sub + '</span>');
-                html.push('</span>');
-            }
+            html.push('<span class="post-storefront-menu-item-meta">');
+            html.push('<span class="post-storefront-menu-item-title">' + title + '</span>');
+            if (sub) html.push('<span class="post-storefront-menu-item-sub">' + sub + '</span>');
+            html.push('</span>');
             html.push('</span>');
         });
         html.push('</div>');
-        html.push('<div class="post-storefront-prompt" data-message-key="msg_storefront_select_prompt"></div>');
         html.push('</div>');
         html.push('<div class="post-storefront-content"></div>');
         return html.join('');
@@ -14309,31 +14302,9 @@ const StorefrontMenuComponent = (function() {
         var container = wrap.querySelector('.post-storefront-menu-container');
         if (!container) return {};
         var menu = container.querySelector('.post-storefront-menu');
-        var prompt = container.querySelector('.post-storefront-prompt');
         var content = wrap.querySelector('.post-storefront-content');
 
-        // Load prompt message
-        if (prompt && typeof window.getMessage === 'function') {
-            var promptKey = prompt.getAttribute('data-message-key');
-            if (promptKey) {
-                window.getMessage(promptKey, {}, false).then(function(message) {
-                    if (message && prompt) prompt.textContent = message;
-                }).catch(function() {});
-            }
-        }
-
-        // Tooltip directions (same as setTooltipDirs pattern)
-        function updateTooltipDirs() {
-            if (!menu) return;
-            var cr = menu.getBoundingClientRect();
-            menu.querySelectorAll('.post-storefront-menu-item[data-tooltip]').forEach(function(item) {
-                item.setAttribute('data-tooltip-dir', (item.getBoundingClientRect().left - cr.left) > cr.width * 0.60 ? 'left' : 'right');
-            });
-        }
-        requestAnimationFrame(updateTooltipDirs);
-
         // Click selection
-        var selectedIndex = -1;
         if (menu) {
             menu.addEventListener('click', function(e) {
                 var item = e.target.closest('.post-storefront-menu-item');
@@ -14346,10 +14317,6 @@ const StorefrontMenuComponent = (function() {
                     el.classList.remove('post-storefront-menu-item--selected');
                 });
                 item.classList.add('post-storefront-menu-item--selected');
-                selectedIndex = idx;
-
-                // Hide prompt, show content
-                if (prompt) prompt.style.display = 'none';
 
                 if (callbacks.onPostSelected) {
                     callbacks.onPostSelected(posts[idx], idx, content);
