@@ -291,7 +291,7 @@
   gap: 10px;
   font-size: 12px;
   margin: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: transparent;
   color: rgba(255, 255, 255, 0.6);
   padding: 2px 4px;
   transition: background-color 0.15s ease;
@@ -314,7 +314,7 @@
 }
 
 .recent-card-wrapper:hover .recent-statusbar {
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
 }
 .recent-card-wrapper:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
