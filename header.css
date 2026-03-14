@@ -169,6 +169,7 @@
 .header-bar .button-class-1.btn--active,
 .header-bar .button-class-1.header-modeswitch-button--active {
   color: var(--blue-500);
+  font-weight: 700;
 }
 /* Recent button uses purple when active */
 .header-bar .header-modeswitch-recent[aria-pressed="true"],
