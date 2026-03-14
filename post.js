@@ -4160,7 +4160,7 @@ const PostModule = (function() {
         setFavoriteButtonState(headerFavBtn, nowPressed);
         syncCardFavoriteButtons(pid, nowPressed);
         var cardBtns = document.querySelectorAll('[data-id="' + pid + '"] .post-card-button-fav');
-        console.error('[FAV DEBUG] card buttons found:', cardBtns.length, 'aria-pressed values:', Array.from(cardBtns).map(function(b) { return b.getAttribute('aria-pressed'); }));
+        console.error('[FAV DEBUG] card buttons found:', cardBtns.length, Array.from(cardBtns).map(function(b) { var p = b.closest('.post-card'); var inPost = b.closest('.post'); var inSlot = b.closest('.post-slot'); return 'aria=' + b.getAttribute('aria-pressed') + ' inPostDetail=' + !!inPost + ' cardHidden=' + (p ? p.style.display : 'n/a') + ' slotId=' + (inSlot ? inSlot.dataset.id : 'none'); }));
         saveFavorite(postId, nowPressed);
         updateStorefrontFavoriteDecorators(pid, nowPressed);
         syncStorefrontPassiveFavoriteButtons();
