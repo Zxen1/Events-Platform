@@ -747,11 +747,11 @@
    ------------------------------------------------------- */
 
 .post-storefront-menu-container {
-  margin: 12px 10px 0;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  margin: 12px 10px 12px;
+  background: var(--panel-bg);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 5px;
+  overflow: hidden;
 }
 
 .post-storefront-menu {
@@ -761,7 +761,7 @@
   width: 100%;
   max-height: 230px;
   overflow-y: auto;
-  margin-bottom: 10px;
+  padding: 10px 10px 0 10px;
   box-sizing: border-box;
 }
 .post-storefront-menu-item {
@@ -932,7 +932,8 @@
 }
 
 .post-storefront-prompt {
-  margin-bottom: 10px;
+  margin: 0;
+  padding: 0 10px 10px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
 }
