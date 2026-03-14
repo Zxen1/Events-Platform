@@ -866,19 +866,19 @@
 
 /* Exposed layout: verbose row items with title + subcategory */
 .post-storefront-menu--exposed {
-  gap: 10px;
+  gap: 0;
   max-height: none;
   overflow: visible;
   padding: 0;
 }
 .post-storefront-menu--exposed .post-storefront-menu-item {
   width: 100%;
-  min-height: 42px;
-  height: auto;
+  min-height: 52px;
+  height: 52px;
   gap: 10px;
   justify-content: flex-start;
   padding: 0;
-  background-color: var(--subcat-hover-bg, transparent);
+  align-items: center;
   border-radius: 5px;
 }
 .post-storefront-menu-item-thumbwrap {
@@ -894,6 +894,10 @@
 .post-storefront-menu--exposed .post-storefront-menu-item:hover .post-storefront-menu-thumb {
   width: 42px;
   height: 42px;
+}
+.post-storefront-menu--exposed .post-storefront-menu-item:hover,
+.post-storefront-menu--exposed .post-storefront-menu-item--selected {
+  background-color: var(--subcat-hover-bg, transparent);
 }
 .post-storefront-menu--exposed .post-storefront-menu-item::after {
   display: none;
