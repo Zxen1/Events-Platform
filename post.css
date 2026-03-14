@@ -1296,6 +1296,15 @@
   background: var(--post-subcat-overlay, transparent);
 }
 
+/* Storefront: tint starts at the selected post content, not the shared header/menu area. */
+.post[data-storefront-wallpaper] .component-locationwallpaper-content {
+  background: transparent;
+}
+
+.post[data-storefront-wallpaper] .post-storefront-content {
+  background: var(--post-subcat-overlay, transparent);
+}
+
 /* Active wallpaper: tint above all wallpaper layers (map z-index:1/2, dimmer z-index:10) */
 .post .component-locationwallpaper::before {
   content: '';
@@ -1304,6 +1313,10 @@
   background: var(--post-subcat-overlay, transparent);
   pointer-events: none;
   z-index: 11;
+}
+
+.post[data-storefront-wallpaper] .component-locationwallpaper::before {
+  background: transparent;
 }
 
 .post::after {
