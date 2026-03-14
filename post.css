@@ -1291,26 +1291,26 @@
   border-radius: 0;
 }
 
-/* Keep the subcategory tint on the post content whether wallpaper is active or not. */
+/* Post backdrop is neutral; separation comes from the header/top and post/bottom dividers. */
 .post .component-locationwallpaper-content {
-  background: var(--post-subcat-overlay, transparent);
+  background: transparent;
 }
 
-/* Storefront: tint starts at the selected post content, not the shared header/menu area. */
+/* Storefront keeps the same neutral backdrop. */
 .post[data-storefront-wallpaper] .component-locationwallpaper-content {
   background: transparent;
 }
 
 .post[data-storefront-wallpaper] .post-storefront-content {
-  background: var(--post-subcat-overlay, transparent);
+  background: transparent;
 }
 
-/* Active wallpaper: tint above all wallpaper layers (map z-index:1/2, dimmer z-index:10) */
+/* Active wallpaper tint disabled. */
 .post .component-locationwallpaper::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--post-subcat-overlay, transparent);
+  background: transparent;
   pointer-events: none;
   z-index: 11;
 }
@@ -1323,11 +1323,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  /* 3-sided frame: lid is owned by the sticky header so it doesn't scroll away */
-  /* border-left: 1px solid var(--blue-500); */
-  /* border-right: 1px solid var(--blue-500); */
-  /* border-bottom: 1px solid var(--blue-500); */
-  /* border-top: 0; */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   box-sizing: border-box;
   pointer-events: none;
   z-index: var(--layer-card); /* Corrected: Above Imagebox (10), below ImageModal (88) */
@@ -1371,7 +1367,7 @@
   background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  /* border-top: 1px solid var(--blue-500); */
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
