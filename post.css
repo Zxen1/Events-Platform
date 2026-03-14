@@ -965,6 +965,16 @@
 .recent-card:hover .recent-card-image-badge {
   opacity: 1;
 }
+.post-card-row-cat .post-card-icon-sub,
+.recent-card-row-cat .recent-card-icon-sub {
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+}
+.post-card:hover .post-card-row-cat .post-card-icon-sub,
+.post-card.post-card--map-highlight .post-card-row-cat .post-card-icon-sub,
+.recent-card:hover .recent-card-row-cat .recent-card-icon-sub {
+  opacity: 1;
+}
 
 /* Inline badge image (e.g. in post detail) */
 .post-image-badge--inline {
