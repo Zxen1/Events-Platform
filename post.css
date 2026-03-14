@@ -706,42 +706,6 @@
   opacity: 0.3;
   pointer-events: none;
 }
-.post-header--storefront {
-  background: rgba(0, 0, 0, 0.1);
-  border-top: none;
-  border-bottom: none;
-  position: static;
-  grid-template-columns: 50px 1fr;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.post-header--storefront > * {
-  position: relative;
-  z-index: 1;
-}
-
-.post-header--storefront::after {
-  content: "";
-  position: absolute;
-  left: calc(10px + 25px);
-  top: calc(10px + 25px + 20px);
-  width: 1200px;
-  height: 1200px;
-  background-image: var(--storefront-bg-icon);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  transform: translate(-50%, -50%);
-  opacity: 1;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.post-header--storefront:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
 /* Storefront menu CSS lives in StorefrontMenuComponent (components.js) */
 
 .post-storefront-loading {
@@ -1237,12 +1201,12 @@
     rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 0;
   box-shadow: none;
   padding: 10px;
   min-height: 70px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   max-height: 200px;
   box-sizing: border-box;
 }
@@ -1252,6 +1216,46 @@
     linear-gradient(var(--post-subcat-overlay, transparent), var(--post-subcat-overlay, transparent)),
     rgba(0, 0, 0, 0.1);
   box-shadow: none;
+}
+
+/* -------------------------------------------------------
+   STOREFRONT HEADER
+   Separated from .post-header to avoid cascade conflicts.
+   ------------------------------------------------------- */
+
+.post-header--storefront {
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  position: static;
+  grid-template-columns: 50px 1fr;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.post-header--storefront > * {
+  position: relative;
+  z-index: 1;
+}
+
+.post-header--storefront::after {
+  content: "";
+  position: absolute;
+  left: calc(10px + 25px);
+  top: calc(10px + 25px + 20px);
+  width: 1200px;
+  height: 1200px;
+  background-image: var(--storefront-bg-icon);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.post-header--storefront:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Header actions - horizontal layout to fit 70px header */
