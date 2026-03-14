@@ -877,9 +877,9 @@
   height: 52px;
   gap: 10px;
   justify-content: flex-start;
-  padding: 0;
+  padding: 0 10px;
   align-items: center;
-  border-radius: 5px;
+  border-radius: 0;
 }
 .post-storefront-menu-item-thumbwrap {
   position: relative;
