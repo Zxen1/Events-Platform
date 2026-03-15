@@ -11208,10 +11208,11 @@ const LocationWallpaperComponent = (function() {
                 if (!basicContainer) return;
                 var loaded = 0;
                 urls.forEach(function(url, idx) {
-                    if (!url || !basicImgs[idx]) return;
+                    var img = basicImgs[idx];
+                    if (!url || !img) return;
                     
-                    basicImgs[idx].onload = function() {
-                        basicImgs[idx].onload = null;
+                    img.onload = function() {
+                        img.onload = null;
                         loaded++;
                         if (loaded === 4) {
                             basicReady = true;
@@ -11226,7 +11227,7 @@ const LocationWallpaperComponent = (function() {
                             basicTimer = setInterval(advanceBasic, 18500);
                         }
                     };
-                    basicImgs[idx].src = url;
+                    img.src = url;
                 });
             }
 
