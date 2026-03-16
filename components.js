@@ -12174,9 +12174,15 @@ const PostLocationComponent = (function() {
                         var postsEnabled = callbacks && callbacks.isPostsEnabled ? callbacks.isPostsEnabled() : true;
                         if (postsBtn && postsEnabled) {
                             postsBtn.click();
-                            if (callbacks && callbacks.openPost) {
-                                callbacks.openPost(post, { postMapCardId: String(loc.id), autoExpand: true });
-                            }
+                            setTimeout(function() {
+                                if (callbacks && callbacks.loadPostById && callbacks.openPost) {
+                                    callbacks.loadPostById(post.id).then(function(freshPost) {
+                                        if (freshPost) {
+                                            callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
+                                        }
+                                    });
+                                }
+                            }, 50);
                         }
                     });
                 }
