@@ -2075,22 +2075,15 @@ const PostModule = (function() {
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var uniquePostCount = Object.keys(uniquePostIds).length;
 
-      // Storefront detection: 2+ posts, same member, all general (not events).
-      // Mutually exclusive with isMultiPostLocation.
-      // Gated on storefront_enabled admin setting.
-      var storefrontEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
+      // Storefront/multi-post detection: read from _sfGroupsByPostId (central governor,
+      // computed once in renderPostList). This ensures postcards, map markers, and
+      // openPostById all agree on storefront membership.
       var isStorefront = false;
       var isMultiPostLocation = false;
       if (uniquePostCount > 1) {
-        if (storefrontEnabled) {
-          var firstMemberId = group[0].post.member_id;
-          var allSameMember = group.every(function(item) { return item.post.member_id === firstMemberId; });
-          var allGeneral = group.every(function(item) { return item.post.subcategory_type !== 'Events'; });
-          if (allSameMember && allGeneral) {
-            isStorefront = true;
-          } else {
-            isMultiPostLocation = true;
-          }
+        var firstPostId = String(group[0].post.id);
+        if (_sfGroupsByPostId[firstPostId] && _sfGroupsByPostId[firstPostId].length > 1) {
+          isStorefront = true;
         } else {
           isMultiPostLocation = true;
         }
