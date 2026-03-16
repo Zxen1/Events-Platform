@@ -2473,8 +2473,10 @@ const MapModule = (function() {
     for (const [key, entry] of mapCardMarkers) {
       if (!entry || !entry.postIds) continue;
       if (!entry.postIds.includes(pid)) continue;
+      console.error('[DEBUG findMarkerByPostMapCardId] entry at ' + key + ' postIds=' + JSON.stringify(entry.postIds) + ' postMapCardIds=' + JSON.stringify(entry.postMapCardIds) + ' looking for pmc=' + pmc);
       if (entry.postMapCardIds && entry.postMapCardIds.includes(pmc)) return entry;
     }
+    console.error('[DEBUG findMarkerByPostMapCardId] NO MATCH for pid=' + pid + ' pmc=' + pmc + ' (total markers: ' + mapCardMarkers.size + ')');
     return null;
   }
   

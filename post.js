@@ -2282,14 +2282,17 @@ const PostModule = (function() {
     if (!window.MapModule) return;
     var pid = String(postId || '');
     var pmc = String(postMapCardId || '');
+    console.error('[DEBUG highlightMapMarker] pid=' + pid + ' pmc=' + pmc);
     if (!pid) return;
     if (pmc && typeof MapModule.setActiveMapCardByPostMapCardId === 'function') {
       try {
         var ok = MapModule.setActiveMapCardByPostMapCardId(pid, pmc);
+        console.error('[DEBUG highlightMapMarker] setActiveMapCardByPostMapCardId returned: ' + ok);
         if (ok) return;
-      } catch (_eSetByPmc) {}
+      } catch (_eSetByPmc) { console.error('[DEBUG highlightMapMarker] setActiveMapCardByPostMapCardId threw', _eSetByPmc); }
     }
     if (typeof MapModule.setActiveMapCard === 'function') {
+      console.error('[DEBUG highlightMapMarker] falling through to setActiveMapCard(pid)');
       MapModule.setActiveMapCard(pid);
     }
   }
