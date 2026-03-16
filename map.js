@@ -2850,6 +2850,7 @@ const MapModule = (function() {
   function updateMapCardStateByKey(locationKey, newState) {
     const entry = mapCardMarkers.get(locationKey);
     if (!entry || entry.state === newState) return;
+    console.error('[DEBUG updateMapCardStateByKey] ' + locationKey + ' ' + entry.state + ' -> ' + newState);
 
     entry.state = newState;
     
