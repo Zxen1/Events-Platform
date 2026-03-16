@@ -2321,9 +2321,11 @@ const MapModule = (function() {
     if (appearance === 'icon') {
       el.classList.add('map-card-appearance--icon');
     } else if (appearance === 'dot') {
-      if (!dotColor) throw new Error('[Map] createMapCardMarker: dotColor required for dot appearance (post ID ' + post.id + ')');
+      if (!dotColor && !post.isMultiPost && !post.isStorefront) {
+        throw new Error('[Map] createMapCardMarker: dotColor required for dot appearance (post ID ' + post.id + ')');
+      }
       el.classList.add('map-card-appearance--dot');
-      el.style.setProperty('--dot-color', dotColor);
+      if (dotColor) el.style.setProperty('--dot-color', dotColor);
       if (post.isMultiPost || post.isStorefront) {
         el.style.setProperty('--dot-icon', 'url(' + getMultiPostIconUrl() + ')');
       }
