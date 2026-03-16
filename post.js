@@ -1406,7 +1406,9 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        var freshPick = pickMapCardInCurrentBounds(post);
+        var freshPmcId = (freshPick && freshPick.mapCard && freshPick.mapCard.id != null) ? String(freshPick.mapCard.id) : '';
+        openPost(post, { originEl: el, postMapCardId: freshPmcId });
       }
     });
 
@@ -1417,7 +1419,9 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      var freshPick = pickMapCardInCurrentBounds(post);
+      var freshPmcId = (freshPick && freshPick.mapCard && freshPick.mapCard.id != null) ? String(freshPick.mapCard.id) : '';
+      openPost(post, { originEl: el, postMapCardId: freshPmcId });
     });
 
     // Favorite toggle handler
