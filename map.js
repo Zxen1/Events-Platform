@@ -1518,6 +1518,9 @@ const MapModule = (function() {
       if (ap && ap.classList.contains('admin-panel--show')) reopenAdmin = true;
     } catch (_eSnap) {}
 
+    // Capture pitch before any mode-switch resets it
+    var savedPitch = map ? map.getPitch() : startPitch;
+
     // Close everything (same pattern as location menu: click the map button)
     var mapBtn = document.querySelector('.header-modeswitch > .button-class-1[data-mode="map"]');
     if (mapBtn) {
@@ -1541,13 +1544,13 @@ const MapModule = (function() {
         ], {
           padding: 50,
           maxZoom: 15,
-          pitch: map.getPitch()
+          pitch: savedPitch
         });
       } else {
         map.flyTo({
           center: [lng, lat],
           zoom: App.getConfig('flyToZoom'),
-          pitch: map.getPitch(),
+          pitch: savedPitch,
           essential: true
         });
       }
