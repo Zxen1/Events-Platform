@@ -3981,7 +3981,7 @@ const MapControlRowComponent = (function(){
             // If we already have cached location, use it instantly
             if (cachedLocation) {
                 if (currentMap) {
-                    currentMap.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: App.getConfig('flyToZoom') });
+                    currentMap.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: App.getConfig('flyToZoom'), pitch: currentMap.getPitch() });
                     updateUserLocationMarker(cachedLocation.lat, cachedLocation.lng, currentMap);
                 }
                 onResult({
@@ -4009,7 +4009,7 @@ const MapControlRowComponent = (function(){
                     
                     var mapForFly = getMapInstance();
                     if (mapForFly) {
-                        mapForFly.flyTo({ center: [lng, lat], zoom: App.getConfig('flyToZoom') });
+                        mapForFly.flyTo({ center: [lng, lat], zoom: App.getConfig('flyToZoom'), pitch: mapForFly.getPitch() });
                         updateUserLocationMarker(lat, lng, mapForFly);
                     }
                     

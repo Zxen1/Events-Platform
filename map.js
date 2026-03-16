@@ -1540,12 +1540,14 @@ const MapModule = (function() {
           [result.bbox[2], result.bbox[3]]
         ], {
           padding: 50,
-          maxZoom: 15
+          maxZoom: 15,
+          pitch: map.getPitch()
         });
       } else {
         map.flyTo({
           center: [lng, lat],
           zoom: App.getConfig('flyToZoom'),
+          pitch: map.getPitch(),
           essential: true
         });
       }
