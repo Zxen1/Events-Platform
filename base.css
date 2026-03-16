@@ -344,7 +344,7 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: var(--blue-950);
+  background: var(--blue-600);
   border: 1px solid var(--blue-600);
   color: var(--website-white);
   font-weight: 600;
