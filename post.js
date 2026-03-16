@@ -2263,6 +2263,15 @@ const PostModule = (function() {
   }
 
   function restoreActiveMapCardFromOpenPost() {
+    var mapInstance = null;
+    try { mapInstance = window.MapModule && MapModule.getMap ? MapModule.getMap() : null; } catch (_eMap) { mapInstance = null; }
+    if (mapInstance) {
+      var isAnimating = (
+        (typeof mapInstance.isMoving === 'function' && mapInstance.isMoving()) ||
+        (typeof mapInstance.isEasing === 'function' && mapInstance.isEasing())
+      );
+      if (isAnimating) return;
+    }
     var openEl = null;
     try { openEl = document.querySelector('.post[data-id]'); } catch (_eEl) { openEl = null; }
     if (!openEl) return;
