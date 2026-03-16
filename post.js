@@ -556,9 +556,8 @@ const PostModule = (function() {
     var shouldOpenPostsPanel = !!options.fromMap || options.source === 'marquee';
 
     // Storefront: if this post belongs to a group, open the storefront instead
-    // Post Editor always opens posts individually — never as a storefront
     var sfGroup = _sfGroupsByPostId[String(postId)];
-    if (sfGroup && sfGroup.length > 1 && !options.storefrontPosts && options.source !== 'posteditor') {
+    if (sfGroup && sfGroup.length > 1 && !options.storefrontPosts) {
       options.storefrontPosts = sfGroup;
       options.sfOpenPostId = String(postId);
       var leadPost = sfGroup[0];
