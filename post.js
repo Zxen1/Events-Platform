@@ -1029,7 +1029,6 @@ const PostModule = (function() {
             if (window.MapModule && MapModule.refreshClusters) {
               MapModule.refreshClusters();
             }
-            App.emit('posts:loaded', { posts: data.posts });
             return data.posts;
           });
         } else {
@@ -2115,7 +2114,6 @@ const PostModule = (function() {
       }
       
       markerData.locationKey = locationKey;
-      markerData.allPostMapCardIds = group.map(function(item) { return String(item.mapCard.id); });
 
       // For location groups: use the highest checkout_sort_order among all posts in the group.
       // Single-post markers use their own checkout_sort_order directly.
@@ -2190,7 +2188,7 @@ const PostModule = (function() {
         appearance = item._groupIsFeatured ? 'icon' : 'dot';
       }
 
-      if (appearance === 'dot') {
+      if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
         var subColor = post.subcategory_color;
         if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
         dotColorByKey[item.locationKey] = subColor;
