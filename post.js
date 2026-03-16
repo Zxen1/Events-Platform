@@ -2114,6 +2114,7 @@ const PostModule = (function() {
       }
       
       markerData.locationKey = locationKey;
+      markerData.allPostMapCardIds = group.map(function(item) { return String(item.mapCard.id); });
 
       // For location groups: use the highest checkout_sort_order among all posts in the group.
       // Single-post markers use their own checkout_sort_order directly.
