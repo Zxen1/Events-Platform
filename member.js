@@ -3892,7 +3892,7 @@ const MemberModule = (function() {
             if (!adminSubmitBtn && submitBtn && submitBtn.parentNode) {
                 adminSubmitBtn = document.createElement('button');
                 adminSubmitBtn.type = 'button';
-                adminSubmitBtn.className = 'component-paymentsubmit-admin button-class-2c';
+                adminSubmitBtn.className = 'component-paymentsubmit-admin button-class-2e';
                 adminSubmitBtn.textContent = 'Admin: Submit Free';
                 adminSubmitBtn.disabled = true;
                 submitBtn.parentNode.appendChild(adminSubmitBtn);

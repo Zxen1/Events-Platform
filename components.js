@@ -4762,7 +4762,7 @@ const PaymentSubmitComponent = (function() {
         if (options.isAdmin) {
             adminBtn = document.createElement('button');
             adminBtn.type = 'button';
-            adminBtn.className = 'component-paymentsubmit-admin button-class-2c';
+            adminBtn.className = 'component-paymentsubmit-admin button-class-2e';
             adminBtn.textContent = adminLabel;
             adminBtn.disabled = true;
             container.appendChild(adminBtn);
