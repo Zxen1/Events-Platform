@@ -1406,9 +1406,7 @@ const PostModule = (function() {
       if (el.closest('.post')) {
         closePost(post.id);
       } else {
-        var freshPick = pickMapCardInCurrentBounds(post);
-        var freshPmcId = (freshPick && freshPick.mapCard && freshPick.mapCard.id != null) ? String(freshPick.mapCard.id) : '';
-        openPost(post, { originEl: el, postMapCardId: freshPmcId });
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
       }
     });
 
@@ -1419,9 +1417,7 @@ const PostModule = (function() {
       if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
       if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
       e.preventDefault();
-      var freshPick = pickMapCardInCurrentBounds(post);
-      var freshPmcId = (freshPick && freshPick.mapCard && freshPick.mapCard.id != null) ? String(freshPick.mapCard.id) : '';
-      openPost(post, { originEl: el, postMapCardId: freshPmcId });
+      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
     });
 
     // Favorite toggle handler
@@ -2079,15 +2075,22 @@ const PostModule = (function() {
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var uniquePostCount = Object.keys(uniquePostIds).length;
 
-      // Storefront/multi-post detection: read from _sfGroupsByPostId (central governor,
-      // computed once in renderPostList). This ensures postcards, map markers, and
-      // openPostById all agree on storefront membership.
+      // Storefront detection: 2+ posts, same member, all general (not events).
+      // Mutually exclusive with isMultiPostLocation.
+      // Gated on storefront_enabled admin setting.
+      var storefrontEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
       var isStorefront = false;
       var isMultiPostLocation = false;
       if (uniquePostCount > 1) {
-        var firstPostId = String(group[0].post.id);
-        if (_sfGroupsByPostId[firstPostId] && _sfGroupsByPostId[firstPostId].length > 1) {
-          isStorefront = true;
+        if (storefrontEnabled) {
+          var firstMemberId = group[0].post.member_id;
+          var allSameMember = group.every(function(item) { return item.post.member_id === firstMemberId; });
+          var allGeneral = group.every(function(item) { return item.post.subcategory_type !== 'Events'; });
+          if (allSameMember && allGeneral) {
+            isStorefront = true;
+          } else {
+            isMultiPostLocation = true;
+          }
         } else {
           isMultiPostLocation = true;
         }
@@ -2185,7 +2188,7 @@ const PostModule = (function() {
         appearance = item._groupIsFeatured ? 'icon' : 'dot';
       }
 
-      if (appearance === 'dot') {
+      if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
         var subColor = post.subcategory_color;
         if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
         dotColorByKey[item.locationKey] = subColor;
