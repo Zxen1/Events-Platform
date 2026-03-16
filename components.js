@@ -12173,16 +12173,18 @@ const PostLocationComponent = (function() {
                         var postsBtn = getModeButton ? getModeButton('posts') : null;
                         var postsEnabled = callbacks && callbacks.isPostsEnabled ? callbacks.isPostsEnabled() : true;
                         if (postsBtn && postsEnabled) {
-                            postsBtn.click();
-                            setTimeout(function() {
-                                if (callbacks && callbacks.loadPostById && callbacks.openPost) {
-                                    callbacks.loadPostById(post.id).then(function(freshPost) {
-                                        if (freshPost) {
-                                            callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
-                                        }
-                                    });
+                            App.once('posts:loaded', function(data) {
+                                if (!callbacks || !callbacks.openPost) return;
+                                var loaded = (data && data.posts) || [];
+                                var freshPost = null;
+                                for (var i = 0; i < loaded.length; i++) {
+                                    if (String(loaded[i].id) === String(post.id)) { freshPost = loaded[i]; break; }
                                 }
-                            }, 50);
+                                if (freshPost) {
+                                    callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
+                                }
+                            });
+                            postsBtn.click();
                         }
                     });
                 }
