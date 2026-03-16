@@ -78,6 +78,11 @@ Reverting is NOT allowed.
 
 If the agent believes reverting is necessary, the agent must ASK the user to revert to a backup themselves.
 
+### The `backups/` Folder Is Reference Only — Never Restore From It
+The `backups/` folder exists solely as a reference point for the agent to read. Never recommend restoring any file from it.
+Backup files are interwoven with database changes — restoring even a single file guarantees broken links.
+The user has their own external backup system; they handle restores entirely themselves without agent involvement.
+
 ### Minimize Context Usage
 The agent must minimize context (time/tokens) usage:
 - Keep responses short and high-signal (no long explanations unless asked)
