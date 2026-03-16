@@ -12173,7 +12173,8 @@ const PostLocationComponent = (function() {
                         var postsBtn = getModeButton ? getModeButton('posts') : null;
                         var postsEnabled = callbacks && callbacks.isPostsEnabled ? callbacks.isPostsEnabled() : true;
                         if (postsBtn && postsEnabled) {
-                            App.once('posts:loaded', function(data) {
+                            var _locFlyHandler = function(data) {
+                                App.off('posts:loaded', _locFlyHandler);
                                 if (!callbacks || !callbacks.openPost) return;
                                 var loaded = (data && data.posts) || [];
                                 var freshPost = null;
@@ -12183,7 +12184,8 @@ const PostLocationComponent = (function() {
                                 if (freshPost) {
                                     callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
                                 }
-                            });
+                            };
+                            App.on('posts:loaded', _locFlyHandler);
                             postsBtn.click();
                         }
                     });
