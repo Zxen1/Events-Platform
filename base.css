@@ -362,13 +362,19 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: var(--green-950);
-  border: 1px solid var(--green-600);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: var(--website-white);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   box-sizing: border-box;
+}
+.button-class-2c[aria-pressed="true"],
+.button-class-2c.button--selected {
+  background: var(--green-600);
+  border-color: var(--green-600);
+  color: var(--website-white);
 }
 .button-class-2c:disabled {
   opacity: 0.5;
@@ -533,6 +539,10 @@
   }
 
   .button-class-2c:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .button-class-2c[aria-pressed="true"]:hover,
+  .button-class-2c.button--selected:hover {
     background: var(--green-600);
   }
 

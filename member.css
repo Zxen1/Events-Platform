@@ -78,8 +78,8 @@
 }
 
 .member-supporterpayment-button[aria-pressed="true"] {
-  border-color: var(--green-500);
   background: var(--green-600);
+  border-color: var(--green-600);
 }
 
 .member-supporterpayment-input {
