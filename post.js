@@ -2188,7 +2188,7 @@ const PostModule = (function() {
         appearance = item._groupIsFeatured ? 'icon' : 'dot';
       }
 
-      if (appearance === 'dot' && !item.isMultiPost && !item.isStorefront) {
+      if (appearance === 'dot') {
         var subColor = post.subcategory_color;
         if (!subColor) throw new Error('[Map] Subcategory color missing for post ID ' + item.id);
         dotColorByKey[item.locationKey] = subColor;
