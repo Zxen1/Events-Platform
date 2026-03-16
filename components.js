@@ -11214,13 +11214,15 @@ const LocationWallpaperComponent = (function() {
                     img.onload = function() {
                         img.onload = null;
                         loaded++;
-                        if (loaded === 4) {
+                        if (loaded === 4 && basicImgs && basicImgs[0]) {
                             basicReady = true;
                             positionBasicImages();
                             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
                             requestAnimationFrame(function() {
                                 requestAnimationFrame(function() {
-                                    basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                    if (basicImgs && basicImgs[0]) {
+                                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                                    }
                                 });
                             });
                             if (basicTimer) clearInterval(basicTimer);
