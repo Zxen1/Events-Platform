@@ -72,6 +72,7 @@ const PostModule = (function() {
   var postsRequestToken = 0;
   var postsAbort = null;
   var _sfGroupsByPostId = {};
+  var _openPostTransition = false;
 
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
@@ -216,7 +217,9 @@ const PostModule = (function() {
     });
 
     // When a post is closed, clear active/big markers (there is no longer an "open post" context).
+    // Skip when openPost is transitioning (closing old post to open new one).
     App.on('post:closed', function() {
+      if (_openPostTransition) return;
       try {
         if (window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
           MapModule.clearActiveMapCards();
@@ -2282,17 +2285,14 @@ const PostModule = (function() {
     if (!window.MapModule) return;
     var pid = String(postId || '');
     var pmc = String(postMapCardId || '');
-    console.error('[DEBUG highlightMapMarker] pid=' + pid + ' pmc=' + pmc);
     if (!pid) return;
     if (pmc && typeof MapModule.setActiveMapCardByPostMapCardId === 'function') {
       try {
         var ok = MapModule.setActiveMapCardByPostMapCardId(pid, pmc);
-        console.error('[DEBUG highlightMapMarker] setActiveMapCardByPostMapCardId returned: ' + ok);
         if (ok) return;
-      } catch (_eSetByPmc) { console.error('[DEBUG highlightMapMarker] setActiveMapCardByPostMapCardId threw', _eSetByPmc); }
+      } catch (_eSetByPmc) {}
     }
     if (typeof MapModule.setActiveMapCard === 'function') {
-      console.error('[DEBUG highlightMapMarker] falling through to setActiveMapCard(pid)');
       MapModule.setActiveMapCard(pid);
     }
   }
@@ -3012,8 +3012,11 @@ const PostModule = (function() {
     var isMobileViewport = window.innerWidth <= 530;
     var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
-    // Close any existing open post in this container
+    // Close any existing open post in this container.
+    // Suppress post:closed → clearActiveMapCards (openPost will highlight the new marker itself).
+    _openPostTransition = true;
     closeOpenPost(container);
+    _openPostTransition = false;
 
     // Find the slot wrapper that holds the clicked card.
     // Post panel: .post-slot | Recent panel: .recent-card-wrapper | Post Editor: .posteditor-item
