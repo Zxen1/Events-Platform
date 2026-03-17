@@ -47,10 +47,17 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Favourite star — subtle shadow at rest lifts yellow off the white panel background */
-:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
-:root[data-theme="light"] .recent-card:not(:hover) .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+/* Favourite star — active state uses orange instead of yellow (better contrast on white) */
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #ea580c;
+}
+
+/* Favourite star — revert to yellow when card is hovered (yellow works on solid colour bg) */
+:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #fbbf24;
 }
 
 /* Postcards at rest — dark text (hover keeps solid bg + white text unchanged) */
