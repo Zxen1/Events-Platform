@@ -260,6 +260,15 @@ if (empty($ogTitle)) {
   <link rel="stylesheet" href="member.css?v=20251228i">
   <link rel="stylesheet" href="posteditor.css?v=20251228i">
   <link rel="stylesheet" href="marquee.css?v=20260226a">
+  <link rel="stylesheet" href="themes.css?v=20260317a">
+  <script>
+    (function() {
+      var t = localStorage.getItem('color_theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -1331,6 +1340,20 @@ if (empty($ogTitle)) {
           
           <!-- Map Settings (always visible) -->
           <div class="member-mapstyle-container">
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Colour Scheme</label>
+              <div class="member-theme-buttons toggle-class-1">
+                <button type="button" class="member-theme-button toggle-button" data-theme-mode="auto" aria-pressed="true">
+                  <span class="member-theme-button-text">Auto</span>
+                </button>
+                <button type="button" class="member-theme-button toggle-button" data-theme-mode="light" aria-pressed="false">
+                  <span class="member-theme-button-text">Light</span>
+                </button>
+                <button type="button" class="member-theme-button toggle-button" data-theme-mode="dark" aria-pressed="false">
+                  <span class="member-theme-button-text">Dark</span>
+                </button>
+              </div>
+            </div>
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Lighting</label>
               <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->

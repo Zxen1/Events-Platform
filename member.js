@@ -901,6 +901,9 @@ const MemberModule = (function() {
         // Note: Avatar picker/cropper UI is handled by AvatarPickerComponent + AvatarCropperComponent (components.js)
         // Note: unsaved changes dialogs are controlled from components.
         
+        // Colour Scheme (theme) buttons
+        initThemeButtons();
+
         // Map Lighting buttons
         initMapLightingButtons();
         
@@ -913,6 +916,32 @@ const MemberModule = (function() {
         // Panel toggle is handled by lazy init wrapper outside module
     }
     
+    function initThemeButtons() {
+        var themeButtons = panel.querySelectorAll('.member-theme-button');
+        if (!themeButtons.length) return;
+
+        var currentTheme = localStorage.getItem('color_theme') || 'auto';
+
+        themeButtons.forEach(function(btn) {
+            var mode = btn.dataset.themeMode;
+            btn.setAttribute('aria-pressed', mode === currentTheme ? 'true' : 'false');
+
+            btn.addEventListener('click', function() {
+                if (btn.getAttribute('aria-pressed') === 'true') return;
+
+                themeButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
+                btn.setAttribute('aria-pressed', 'true');
+
+                if (mode === 'light' || mode === 'dark') {
+                    document.documentElement.setAttribute('data-theme', mode);
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+                localStorage.setItem('color_theme', mode);
+            });
+        });
+    }
+
     function initMapLightingButtons() {
         var lightingButtons = panel.querySelectorAll('.member-lighting-button');
         if (!lightingButtons.length) return;
