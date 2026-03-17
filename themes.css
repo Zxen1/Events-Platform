@@ -47,6 +47,12 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
+/* Favourite star — active state (aria-pressed="true") gets blue-600 background */
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"],
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] {
+  background: #2563eb;
+}
+
 /* Postcards at rest — dark text (hover keeps solid bg + white text unchanged) */
 :root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-text-title {
   color: rgba(0, 0, 0, 0.85);
