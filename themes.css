@@ -42,6 +42,12 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .component-locationwallpaper::after {
+  background: rgba(255, 255, 255, var(--locationwallpaper-dimmer, 0.3));
+}
+
 /* ─── Post Panel ─────────────────────────────────────────────────────────── */
 
 /* Ghost posts (backdrop placeholder cards) */
