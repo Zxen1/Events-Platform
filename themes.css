@@ -46,3 +46,12 @@
 :root[data-theme="light"] .post-list::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
 }
+
+/* Postcards at rest — dark text (hover keeps solid bg + white text unchanged) */
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-text-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info {
+  color: rgba(0, 0, 0, 0.4);
+}
