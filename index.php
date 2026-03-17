@@ -1347,7 +1347,7 @@ if (empty($ogTitle)) {
         <section id="member-tab-profile" class="member-tab-contents member-tab-contents--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
           <!-- Map Settings (always visible) -->
-          <div class="member-mapstyle-container">
+          <div class="member-style-container">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Colour Scheme</label>
               <div class="member-theme-buttons toggle-class-1">
