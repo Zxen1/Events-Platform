@@ -114,5 +114,5 @@
 }
 
 :root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info {
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 0, 0, 0.45);
 }
