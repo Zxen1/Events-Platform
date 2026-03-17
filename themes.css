@@ -53,12 +53,11 @@
   background-color: #ea580c;
 }
 
-/* Favourite star — white background behind active star only when card is hovered,
-   so the orange star stays visible against any solid card hover colour */
-:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"],
-:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"],
-:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] {
-  background: #ffffff;
+/* Favourite star — revert to yellow when card is hovered (white text already works on solid bg) */
+:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #fbbf24;
 }
 
 /* Postcards at rest — dark text (hover keeps solid bg + white text unchanged) */
