@@ -2113,6 +2113,12 @@ const PostModule = (function() {
         markerData.locationPostIds = Object.keys(uniquePostIds);
         markerData.locationPostCount = markerData.locationPostIds.length;
       }
+
+      // Store all map card IDs in this location group so activation lookup can match
+      // any individual post's map card ID (not just the first item's).
+      if (isStorefront || isMultiPostLocation) {
+        markerData.locationMapCardIds = group.map(function(item) { return String(item.mapCard.id); });
+      }
       
       markerData.locationKey = locationKey;
 

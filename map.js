@@ -2651,7 +2651,13 @@ const MapModule = (function() {
       for (const [key, entry] of mapCardMarkers) {
         if (!entry || !entry.post || !entry.postIds) continue;
         if (!entry.postIds.includes(pid)) continue;
-        if (String(entry.post.post_map_card_id || '') !== pmc) continue;
+        const entryPmc = String(entry.post.post_map_card_id || '');
+        if (entryPmc !== pmc) {
+          // For storefront/multi-post markers, the first item's map card ID is stored.
+          // Check all map card IDs in the group before skipping.
+          const locationMcIds = Array.isArray(entry.post.locationMapCardIds) ? entry.post.locationMapCardIds : null;
+          if (!locationMcIds || locationMcIds.indexOf(pmc) === -1) continue;
+        }
         target = entry;
         break;
       }
