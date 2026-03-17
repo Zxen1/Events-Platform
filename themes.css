@@ -48,6 +48,26 @@
   background: rgba(255, 255, 255, var(--locationwallpaper-dimmer, 0.3));
 }
 
+/* ─── Post description ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .post-description-container {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-description-seemore,
+:root[data-theme="light"] .post-description-seeless {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] .post-description-seemore:hover,
+:root[data-theme="light"] .post-description-seeless:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-description-member {
+  color: rgba(0, 0, 0, 0.6);
+}
+
 /* ─── Post Panel ─────────────────────────────────────────────────────────── */
 
 /* Ghost posts (backdrop placeholder cards) */
