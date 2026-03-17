@@ -3140,6 +3140,14 @@ const PostModule = (function() {
     // Highlight the exact map marker for this location context
     highlightMapMarker(post.id, postMapCardId || '');
 
+    // Keep the hidden postcard's postMapCardId in sync with the selected location.
+    // When renderPostList preserves a slot across a fly-to, the hidden postcard retains
+    // the departure location's id. Syncing here ensures re-click uses the correct location.
+    if (slot && postMapCardId) {
+      var _syncHiddenCard = slot.querySelector('.post-card');
+      if (_syncHiddenCard) _syncHiddenCard.dataset.postMapCardId = postMapCardId;
+    }
+
     // If requested (fly destination), open the post in expanded mode.
     // IMPORTANT: The description truncation initializes on requestAnimationFrame; expand after that runs
     // to avoid applyTruncation overwriting the expanded DOM.
