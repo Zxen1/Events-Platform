@@ -4218,6 +4218,7 @@ const PostModule = (function() {
       buildPostDetail: buildPostDetail,
       addToRecentHistory: addToRecentHistory,
       openPost: openPost,
+      openPostById: openPostById,
       loadPostById: loadPostById,
       getModeButton: getModeButton,
       getCurrentMode: function() { return currentMode; },

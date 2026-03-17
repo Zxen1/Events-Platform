@@ -365,7 +365,8 @@
   transition: opacity 0.15s ease;
 }
 
-.post-card[data-storefront="1"]:hover::after {
+.post-card[data-storefront="1"]:hover::after,
+.post-card[data-storefront="1"].post-card--map-highlight::after {
   opacity: 1;
 }
 

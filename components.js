@@ -12175,12 +12175,8 @@ const PostLocationComponent = (function() {
                         if (postsBtn && postsEnabled) {
                             postsBtn.click();
                             setTimeout(function() {
-                                if (callbacks && callbacks.loadPostById && callbacks.openPost) {
-                                    callbacks.loadPostById(post.id).then(function(freshPost) {
-                                        if (freshPost) {
-                                            callbacks.openPost(freshPost, { postMapCardId: String(loc.id), autoExpand: true });
-                                        }
-                                    });
+                                if (callbacks && callbacks.openPostById) {
+                                    callbacks.openPostById(post.id, { postMapCardId: String(loc.id), autoExpand: true });
                                 }
                             }, 50);
                         }
