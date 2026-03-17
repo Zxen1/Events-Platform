@@ -26,6 +26,15 @@
 
 /* ─── Post Panel ─────────────────────────────────────────────────────────── */
 
+/* Ghost posts (backdrop placeholder cards) */
+:root[data-theme="light"] .post-backdrop-card-image,
+:root[data-theme="light"] .post-backdrop-card-title,
+:root[data-theme="light"] .post-backdrop-card-badge,
+:root[data-theme="light"] .post-backdrop-card-line {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+
 :root[data-theme="light"] .post-panel-content {
   background: rgba(255, 255, 255, 0.7);
 }

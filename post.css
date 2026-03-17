@@ -935,6 +935,7 @@
   overflow: hidden;
 }
 
+/* Ghost posts */
 .post-backdrop-card {
   display: grid;
   grid-template-columns: 100px 1fr;
