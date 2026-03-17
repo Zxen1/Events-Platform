@@ -904,6 +904,9 @@ const MemberModule = (function() {
         // Colour Scheme (theme) buttons
         initThemeButtons();
 
+        // Background Opacity buttons
+        initBgOpacityButtons();
+
         // Map Lighting buttons
         initMapLightingButtons();
         
@@ -938,6 +941,28 @@ const MemberModule = (function() {
                     document.documentElement.removeAttribute('data-theme');
                 }
                 localStorage.setItem('color_theme', mode);
+            });
+        });
+    }
+
+    function initBgOpacityButtons() {
+        var bgButtons = panel.querySelectorAll('.member-bgopacity-button');
+        if (!bgButtons.length) return;
+
+        var currentOpacity = localStorage.getItem('bg_opacity') || '0.8';
+
+        bgButtons.forEach(function(btn) {
+            var value = btn.dataset.bgOpacity;
+            btn.setAttribute('aria-pressed', value === currentOpacity ? 'true' : 'false');
+
+            btn.addEventListener('click', function() {
+                if (btn.getAttribute('aria-pressed') === 'true') return;
+
+                bgButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
+                btn.setAttribute('aria-pressed', 'true');
+
+                document.documentElement.style.setProperty('--bg-opacity', value);
+                localStorage.setItem('bg_opacity', value);
             });
         });
     }

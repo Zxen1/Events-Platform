@@ -267,6 +267,10 @@ if (empty($ogTitle)) {
       if (t === 'light' || t === 'dark') {
         document.documentElement.setAttribute('data-theme', t);
       }
+      var o = localStorage.getItem('bg_opacity');
+      if (o) {
+        document.documentElement.style.setProperty('--bg-opacity', o);
+      }
     })();
   </script>
 </head>
@@ -1359,6 +1363,23 @@ if (empty($ogTitle)) {
                 </button>
                 <button type="button" class="member-theme-button toggle-button" data-theme-mode="dark" aria-pressed="false">
                   <span class="member-theme-button-text">Dark</span>
+                </button>
+              </div>
+            </div>
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Background Opacity</label>
+              <div class="member-bgopacity-buttons toggle-class-1">
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
+                  <span class="member-bgopacity-button-text">40%</span>
+                </button>
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="false">
+                  <span class="member-bgopacity-button-text">60%</span>
+                </button>
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="true">
+                  <span class="member-bgopacity-button-text">80%</span>
+                </button>
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
+                  <span class="member-bgopacity-button-text">100%</span>
                 </button>
               </div>
             </div>
