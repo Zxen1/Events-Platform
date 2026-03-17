@@ -47,10 +47,10 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Favourite star — active state (aria-pressed="true") gets blue-600 background */
-:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"],
-:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] {
-  background: #2563eb;
+/* Favourite star — active state uses orange instead of yellow (better contrast on white) */
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #ea580c;
 }
 
 /* Postcards at rest — dark text (hover keeps solid bg + white text unchanged) */
