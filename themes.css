@@ -24,6 +24,16 @@
   }
 }
 
-:root[data-theme="light"] {
-  /* Manual light overrides go here */
+/* ─── Post Panel ─────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .post-panel-content {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="light"] .post-list {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+:root[data-theme="light"] .post-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
 }
