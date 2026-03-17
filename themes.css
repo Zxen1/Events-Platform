@@ -34,7 +34,7 @@
 /* ─── Header ─────────────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .header-bar {
-  background: rgba(255, 255, 255, var(--bg-opacity, 0.8));
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
 }
 
 /* button-class-1 hover (hardcoded in base.css, must override here) */
@@ -80,11 +80,11 @@
 
 
 :root[data-theme="light"] .post-panel-content {
-  background: rgba(255, 255, 255, var(--bg-opacity, 0.8));
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
 }
 
 :root[data-theme="light"] .recent-panel-content {
-  background: linear-gradient(rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15)), rgba(255, 255, 255, var(--bg-opacity, 0.8));
+  background: linear-gradient(rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15)), rgba(255, 255, 255, var(--bg-opacity, 0.6));
 }
 
 :root[data-theme="light"] .post-list {

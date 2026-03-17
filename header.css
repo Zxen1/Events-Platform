@@ -15,7 +15,7 @@
   left: 0;
   right: 0;
   z-index: var(--layer-header);
-  background: rgba(0, 0, 0, var(--bg-opacity, 0.8));
+  background: rgba(0, 0, 0, var(--bg-opacity, 0.6));
   box-sizing: border-box;
 }
 

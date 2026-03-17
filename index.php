@@ -1372,10 +1372,10 @@ if (empty($ogTitle)) {
                 <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
                   <span class="member-bgopacity-button-text">40%</span>
                 </button>
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="false">
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
                   <span class="member-bgopacity-button-text">60%</span>
                 </button>
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="true">
+                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
                   <span class="member-bgopacity-button-text">80%</span>
                 </button>
                 <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">

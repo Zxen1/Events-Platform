@@ -949,7 +949,7 @@ const MemberModule = (function() {
         var bgButtons = panel.querySelectorAll('.member-bgopacity-button');
         if (!bgButtons.length) return;
 
-        var currentOpacity = localStorage.getItem('bg_opacity') || '0.8';
+        var currentOpacity = localStorage.getItem('bg_opacity') || '0.6';
 
         bgButtons.forEach(function(btn) {
             var value = btn.dataset.bgOpacity;

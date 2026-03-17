@@ -72,7 +72,7 @@
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, var(--bg-opacity, 0.8));
+  background: rgba(0, 0, 0, var(--bg-opacity, 0.6));
   color: #fff;
 }
 
@@ -160,7 +160,7 @@
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
   box-sizing: border-box;
-  background: linear-gradient(rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15)), rgba(0, 0, 0, var(--bg-opacity, 0.8));
+  background: linear-gradient(rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15)), rgba(0, 0, 0, var(--bg-opacity, 0.6));
   color: #fff;
 }
 
