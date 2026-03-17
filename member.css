@@ -542,6 +542,10 @@
   opacity: 0;
 }
 
+.member-theme-buttons {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .member-style-buttons {
   grid-template-columns: repeat(2, 1fr);
 }
