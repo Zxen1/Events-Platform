@@ -24,6 +24,24 @@
   }
 }
 
+/* ─── Global variables ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] {
+  --website-gray: #555;
+  --website-white: #111;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .header-bar {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* button-class-1 hover (hardcoded in base.css, must override here) */
+:root[data-theme="light"] .button-class-1:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* ─── Post Panel ─────────────────────────────────────────────────────────── */
 
 /* Ghost posts (backdrop placeholder cards) */
