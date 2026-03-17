@@ -3359,6 +3359,22 @@ const AdminModule = (function() {
                 updateField('map.location_wallpaper_dimmer', parseFloat(dimmerSlider.value));
             });
         }
+
+        // Wallpaper Whiten slider (light theme overlay)
+        var whitenSlider = document.getElementById('adminLocationWallpaperWhiten');
+        var whitenDisplay = document.getElementById('adminLocationWallpaperWhitenDisplay');
+        if (whitenSlider && whitenDisplay) {
+            var initialWhiten = mapTabData.location_wallpaper_whiten !== undefined ? parseFloat(mapTabData.location_wallpaper_whiten) : 40;
+            whitenSlider.value = initialWhiten;
+            whitenDisplay.textContent = Math.round(initialWhiten).toString() + '%';
+
+            registerField('map.location_wallpaper_whiten', initialWhiten);
+
+            whitenSlider.addEventListener('input', function() {
+                whitenDisplay.textContent = Math.round(parseFloat(whitenSlider.value)).toString() + '%';
+                updateField('map.location_wallpaper_whiten', parseFloat(whitenSlider.value));
+            });
+        }
         
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();
@@ -3513,7 +3529,8 @@ const AdminModule = (function() {
             { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
             { id: 'adminMaxMapCardsDesktop', displayId: 'adminMaxMapCardsDesktopDisplay', fieldId: 'map.max_map_cards_desktop', format: 'int' },
             { id: 'adminMaxMapCardsMobile', displayId: 'adminMaxMapCardsMobileDisplay', fieldId: 'map.max_map_cards_mobile', format: 'int' },
-            { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' }
+            { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' },
+            { id: 'adminLocationWallpaperWhiten', displayId: 'adminLocationWallpaperWhitenDisplay', fieldId: 'map.location_wallpaper_whiten', format: 'percent' }
         ];
         
         sliders.forEach(function(s) {

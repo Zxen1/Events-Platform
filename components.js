@@ -10647,13 +10647,18 @@ const LocationWallpaperComponent = (function() {
 
         // Apply dimmer setting from admin
         var dimmerValue = 30; // Default 30%
+        var whitenValue = 40; // Default 40%
         try {
             var settings = App.getState('settings') || {};
             if (settings.location_wallpaper_dimmer !== undefined) {
                 dimmerValue = parseInt(settings.location_wallpaper_dimmer, 10) || 30;
             }
+            if (settings.location_wallpaper_whiten !== undefined) {
+                whitenValue = parseInt(settings.location_wallpaper_whiten, 10) || 40;
+            }
         } catch (e) {}
         root.style.setProperty('--locationwallpaper-dimmer', (dimmerValue / 100).toString());
+        root.style.setProperty('--locationwallpaper-whiten', (whitenValue / 100).toString());
 
         // Insert as first child so z-index rules can lift everything else above it.
         contentEl.insertBefore(root, contentEl.firstChild || null);

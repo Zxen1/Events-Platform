@@ -45,7 +45,7 @@
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
-  background: rgba(255, 255, 255, var(--locationwallpaper-dimmer, 0.3));
+  background: rgba(255, 255, 255, var(--locationwallpaper-whiten, 0.4));
 }
 
 /* ─── Post description ───────────────────────────────────────────────────── */

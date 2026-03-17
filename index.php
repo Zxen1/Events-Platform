@@ -1189,6 +1189,14 @@ if (empty($ogTitle)) {
                 <input type="range" id="adminLocationWallpaperDimmer" min="0" max="100" step="5" value="30" class="admin-spin-slider" />
               </div>
             </div>
+            <!-- Wallpaper whiten overlay for light theme -->
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminLocationWallpaperWhiten">Wallpaper Whiten (Light Theme)</label>
+              <div class="admin-spin-control-row row-class-1">
+                <span id="adminLocationWallpaperWhitenDisplay" class="admin-slider-value">40%</span>
+                <input type="range" id="adminLocationWallpaperWhiten" min="0" max="100" step="5" value="40" class="admin-spin-slider" />
+              </div>
+            </div>
           </div>
           
           <!-- Map Card Image Pickers -->
