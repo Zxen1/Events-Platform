@@ -474,19 +474,15 @@
 .post-panel-empty-header {
   font-size: 13px;
   width: 100%;
-  margin: 0;
+  margin: 0 0 10px 0;
   height: 30px;
   display: flex;
   align-items: center;
   padding-left: 20px;
-  background: var(--blue-900);
+  background: transparent;
   color: #fff;
   flex-shrink: 0;
   box-sizing: border-box;
-}
-.post-panel-header--active,
-.post-panel-empty-header--active {
-  background: var(--filter-active-color);
 }
 
 .post-panel-header-wrap {
@@ -494,11 +490,16 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  background: var(--blue-900);
+}
+
+.post-panel-header-wrap--active {
+  background: var(--filter-active-color);
 }
 
 .post-panel-sort-row {
   width: 100%;
-  padding: 10px 10px 0;
+  padding: 0 10px 10px;
   box-sizing: border-box;
   flex-shrink: 0;
 }

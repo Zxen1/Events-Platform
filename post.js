@@ -1900,13 +1900,15 @@ const PostModule = (function() {
   function renderPostPanelHeader(headerClassName) {
     var summaryText = getFilterSummaryText();
     if (!summaryText) return null;
+    var hasActiveFilter = postPanelHasActiveFilter();
 
     var wrap = document.createElement('div');
     wrap.className = 'post-panel-header-wrap';
+    if (hasActiveFilter) wrap.classList.add('post-panel-header-wrap--active');
 
     var summaryEl = document.createElement('div');
     summaryEl.className = 'msg--summary ' + headerClassName;
-    if (postPanelHasActiveFilter()) {
+    if (hasActiveFilter) {
       summaryEl.classList.add(headerClassName + '--active');
     }
     summaryEl.textContent = summaryText;
