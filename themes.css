@@ -133,7 +133,7 @@
 }
 
 :root[data-theme="light"] .filter-panel-content {
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18), -4px 0 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="light"] .filter-panel-header-title {
@@ -157,7 +157,7 @@
 }
 
 :root[data-theme="light"] .member-panel-contents {
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18), -4px 0 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="light"] .member-panel-header-title {
@@ -181,7 +181,7 @@
 }
 
 :root[data-theme="light"] .admin-panel-contents {
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18), -4px 0 12px rgba(0, 0, 0, 0.18);
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="light"] .admin-panel-header-title {
