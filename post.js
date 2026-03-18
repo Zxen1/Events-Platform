@@ -1711,7 +1711,7 @@ const PostModule = (function() {
     }
 
     var headerWrap = renderPostPanelHeader('post-panel-header');
-    if (headerWrap) postPanelContentEl.insertBefore(headerWrap, postListEl);
+    if (headerWrap) postListEl.appendChild(headerWrap);
 
     // Storefront grouping: group posts by member + coordinates when enabled
     var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
@@ -5291,7 +5291,7 @@ const PostModule = (function() {
     wrap.className = 'post-panel-empty';
 
     var headerWrap = renderPostPanelHeader('post-panel-empty-header');
-    if (headerWrap) postPanelContentEl.insertBefore(headerWrap, postListEl);
+    if (headerWrap) postListEl.appendChild(headerWrap);
 
     var img = document.createElement('img');
     img.alt = 'Posts empty state image';
