@@ -502,7 +502,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 10px 10px;
+  padding: 0 20px 10px 10px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -518,6 +518,7 @@
   height: 36px;
   margin-bottom: 0;
   padding: 0;
+  background: var(--dropdown-bg);
   justify-content: center;
   gap: 0;
 }
