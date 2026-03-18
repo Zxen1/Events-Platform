@@ -478,8 +478,8 @@
   height: 30px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   background: transparent;
   color: #fff;
   flex-shrink: 0;
