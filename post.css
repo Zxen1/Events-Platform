@@ -883,7 +883,7 @@
   width: 18px;
   height: 18px;
   background-color: #888;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
   -webkit-mask-image: var(--ui-icon-favourite-off);
   mask-image: var(--ui-icon-favourite-off);
   -webkit-mask-size: contain;
@@ -894,6 +894,11 @@
   mask-position: center;
   pointer-events: none;
 }
+
+.post-card:not(:hover):not(.post-card--map-highlight) .post-card-button-fav[aria-pressed="false"] .post-card-icon-fav {
+  opacity: 0;
+}
+
 .post-card:hover .post-card-icon-fav,
 .post-card.post-card--map-highlight .post-card-icon-fav,
 .recent-card:hover .recent-card-icon-fav {

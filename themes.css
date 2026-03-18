@@ -101,42 +101,13 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Favourite star — active state keeps yellow with a visible dark outline on white cards */
-:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
-:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
-  position: relative;
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::after,
-:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: #fbbf24;
-  -webkit-mask-image: var(--ui-icon-favourite-on);
-  mask-image: var(--ui-icon-favourite-on);
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  transform: scale(0.82);
-  pointer-events: none;
-}
-
-/* Favourite star — remove outline on solid hover/highlight backgrounds */
+/* Favourite star — active state keeps original yellow on white cards */
 :root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav,
 :root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
   background-color: #fbbf24;
-}
-
-:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::after,
-:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::after,
-:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav::after {
-  content: none;
 }
 
 /* Recent statusbar */
