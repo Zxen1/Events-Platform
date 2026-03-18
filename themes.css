@@ -131,6 +131,7 @@
   border-color: #ccc;
   color: rgba(0, 0, 0, 0.85);
   caret-color: rgba(0, 0, 0, 0.85);
+  color-scheme: light;
 }
 
 :root[data-theme="light"] .input-class-1:focus {
