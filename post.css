@@ -474,11 +474,11 @@
 .post-panel-empty-header {
   font-size: 13px;
   width: 100%;
-  margin: 0 0 6px 0;
+  margin: 0;
   height: 30px;
   display: flex;
   align-items: center;
-  padding-left: 20px;
+  padding-left: 0;
   background: transparent;
   color: #fff;
   flex-shrink: 0;
@@ -489,7 +489,10 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 10px;
   flex-shrink: 0;
+  padding: 10px;
+  box-sizing: border-box;
   background: var(--blue-900);
 }
 
@@ -502,7 +505,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 20px 10px 10px;
+  padding: 0;
   box-sizing: border-box;
   flex-shrink: 0;
 }
