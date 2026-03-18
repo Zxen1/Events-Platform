@@ -37,6 +37,12 @@
   background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
 }
 
+:root[data-theme="light"] .header-bar .header-modeswitch-recent[aria-pressed="true"],
+:root[data-theme="light"] .header-bar .header-modeswitch-recent.button--active,
+:root[data-theme="light"] .header-bar .header-modeswitch-recent.header-modeswitch-button--active {
+  color: #4c1d95;
+}
+
 /* button-class-1 hover (hardcoded in base.css, must override here) */
 :root[data-theme="light"] .button-class-1:hover {
   background: rgba(0, 0, 0, 0.08);
@@ -110,7 +116,7 @@
 
 /* Recent statusbar */
 :root[data-theme="light"] .recent-statusbar {
-  color: rgba(0, 0, 0, 0.6);
+  color: #4c1d95;
 }
 
 /* Postcards and recent cards at rest — dark text (hover keeps solid bg + white text unchanged) */
