@@ -2647,13 +2647,6 @@ const PostModule = (function() {
         }
       }
 
-      // Favorites filter
-      if (filters.favourites) {
-        if (!isFavorite(post.id)) {
-          return false;
-        }
-      }
-
       return true;
     });
   }
