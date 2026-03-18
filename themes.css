@@ -129,7 +129,7 @@
 :root[data-theme="light"] .filter-panel-content,
 :root[data-theme="light"] .filter-panel-header,
 :root[data-theme="light"] .filter-panel-body {
-  background: #f3f4f6;
+  background: #cccccc;
 }
 
 :root[data-theme="light"] .filter-panel-header-title {
@@ -149,7 +149,7 @@
 :root[data-theme="light"] .member-panel-contents,
 :root[data-theme="light"] .member-panel-header,
 :root[data-theme="light"] .member-panel-body {
-  background: #f3f4f6;
+  background: #cccccc;
 }
 
 :root[data-theme="light"] .member-panel-header-title {
@@ -169,7 +169,7 @@
 :root[data-theme="light"] .admin-panel-contents,
 :root[data-theme="light"] .admin-panel-header,
 :root[data-theme="light"] .admin-panel-body {
-  background: #f3f4f6;
+  background: #cccccc;
 }
 
 :root[data-theme="light"] .admin-panel-header-title {
