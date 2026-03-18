@@ -1,0 +1,205 @@
+/* ============================================================================
+   THEMES.CSS
+   ============================================================================
+
+   Colour-scheme overrides for the Dark / Light / Auto system.
+
+   The default site appearance (dark) lives entirely in base.css :root.
+   No overrides are needed to keep dark mode.
+
+   Light mode is applied in two ways:
+     1. Auto   — OS is set to light AND no data-theme attribute is set on <html>.
+     2. Manual — data-theme="light" on <html>, set by the theme toggle in member.js.
+
+   Manual dark (data-theme="dark") forces dark regardless of OS.
+
+   The toggle writes "auto" | "light" | "dark" to localStorage("color_theme").
+   The inline script in index.php reads that key on load to prevent flash.
+
+   ============================================================================ */
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    /* Auto light overrides go here */
+  }
+}
+
+/* ─── Global variables ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] {
+  --website-gray: #555;
+  --website-white: #111;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .header-bar {
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
+}
+
+/* button-class-1 hover (hardcoded in base.css, must override here) */
+:root[data-theme="light"] .button-class-1:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .component-locationwallpaper::after {
+  background: rgba(255, 255, 255, var(--locationwallpaper-whiten, 0.4));
+}
+
+/* ─── Post description ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .post-description-container {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-description-seemore,
+:root[data-theme="light"] .post-description-seeless {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] .post-description-seemore:hover,
+:root[data-theme="light"] .post-description-seeless:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-description-member {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Post Panel ─────────────────────────────────────────────────────────── */
+
+/* Ghost posts (backdrop placeholder cards) */
+:root[data-theme="light"] .post-backdrop-card-image,
+:root[data-theme="light"] .post-backdrop-card-title,
+:root[data-theme="light"] .post-backdrop-card-badge,
+:root[data-theme="light"] .post-backdrop-card-line {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+
+:root[data-theme="light"] .post-panel-content {
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .recent-panel-content {
+  background: linear-gradient(rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15)), rgba(255, 255, 255, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .post-list {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+:root[data-theme="light"] .post-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Favourite star — active state uses orange instead of yellow (better contrast on white) */
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #ea580c;
+}
+
+/* Favourite star — revert to yellow when card is hovered (yellow works on solid colour bg) */
+:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #fbbf24;
+}
+
+/* Recent statusbar */
+:root[data-theme="light"] .recent-statusbar {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Postcards and recent cards at rest — dark text (hover keeps solid bg + white text unchanged) */
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-text-title,
+:root[data-theme="light"] .recent-card:not(:hover) .recent-card-text-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info,
+:root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* ─── Filter Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .filter-panel-content,
+:root[data-theme="light"] .filter-panel-header,
+:root[data-theme="light"] .filter-panel-body {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .filter-panel-content {
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme="light"] .filter-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Member Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .member-panel-contents,
+:root[data-theme="light"] .member-panel-header,
+:root[data-theme="light"] .member-panel-body {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .member-panel-contents {
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme="light"] .member-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Admin Panel ────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .admin-panel-contents,
+:root[data-theme="light"] .admin-panel-header,
+:root[data-theme="light"] .admin-panel-body {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .admin-panel-contents {
+  box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.28), -8px 0 12px -10px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme="light"] .admin-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 530px) {
+  :root[data-theme="light"] .filter-panel-content,
+  :root[data-theme="light"] .member-panel-contents,
+  :root[data-theme="light"] .admin-panel-contents {
+    box-shadow: none;
+  }
+}
