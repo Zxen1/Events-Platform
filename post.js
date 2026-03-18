@@ -1900,7 +1900,7 @@ const PostModule = (function() {
   function createPostFavouritesButton() {
     var buttonEl = document.createElement('button');
     buttonEl.type = 'button';
-    buttonEl.className = 'filter-favourites-btn filter-favourites-btn--compact';
+    buttonEl.className = 'post-panel-favourites-btn button-class-9';
     buttonEl.setAttribute('aria-pressed', 'false');
     buttonEl.setAttribute('aria-label', 'Favourites on top');
     buttonEl.innerHTML = '<span class="filter-favourites-icon" aria-hidden="true"></span>';

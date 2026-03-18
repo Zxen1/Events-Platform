@@ -519,6 +519,28 @@
   margin-bottom: 10px;
 }
 
+/* Button Class 9: Menu-surface button (matches menu-class-1 trigger surface) */
+.button-class-9 {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #333;
+  color: #fff;
+  cursor: pointer;
+  box-sizing: border-box;
+  outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.button-class-9:focus,
+.button-class-9[aria-expanded="true"],
+.button-class-9.button--open {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: var(--blue-500);
+}
+
 /* ============================================================================
    INPUT CLASSES
    
