@@ -101,17 +101,19 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Favourite star — active state uses orange instead of yellow (better contrast on white) */
+/* Favourite star — active state keeps yellow with a subtle shadow on white cards */
 :root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
-  background-color: #ea580c;
+  background-color: #fbbf24;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
-/* Favourite star — revert to yellow when card is hovered (yellow works on solid colour bg) */
+/* Favourite star — remove shadow on solid hover/highlight backgrounds */
 :root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
   background-color: #fbbf24;
+  filter: none;
 }
 
 /* Recent statusbar */
