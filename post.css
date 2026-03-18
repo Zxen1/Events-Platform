@@ -478,7 +478,8 @@
   height: 30px;
   display: flex;
   align-items: center;
-  padding-left: 0;
+  justify-content: center;
+  text-align: center;
   background: transparent;
   color: #fff;
   flex-shrink: 0;
