@@ -123,3 +123,63 @@
 :root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
   color: rgba(0, 0, 0, 0.45);
 }
+
+/* ─── Filter Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .filter-panel-content,
+:root[data-theme="light"] .filter-panel-header,
+:root[data-theme="light"] .filter-panel-body {
+  background: #f3f4f6;
+}
+
+:root[data-theme="light"] .filter-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Member Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .member-panel-contents,
+:root[data-theme="light"] .member-panel-header,
+:root[data-theme="light"] .member-panel-body {
+  background: #f3f4f6;
+}
+
+:root[data-theme="light"] .member-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Admin Panel ────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .admin-panel-contents,
+:root[data-theme="light"] .admin-panel-header,
+:root[data-theme="light"] .admin-panel-body {
+  background: #f3f4f6;
+}
+
+:root[data-theme="light"] .admin-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
