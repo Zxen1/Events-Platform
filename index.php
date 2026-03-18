@@ -351,10 +351,6 @@ if (empty($ogTitle)) {
         <div class="filter-reset-box">
           <button class="filter-reset-btn" type="button" data-reset="categories" disabled>Reset All Categories</button>
         </div>
-        <button class="filter-favourites-btn" type="button" aria-pressed="false">
-          <span class="filter-favourites-icon" aria-hidden="true"></span>
-          <span>Favourites on top</span>
-        </button>
         
         <!-- Filter Basics Container -->
         <section class="filter-basics-container" aria-label="Filters">

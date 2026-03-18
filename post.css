@@ -497,16 +497,29 @@
   background: var(--filter-active-color);
 }
 
-.post-panel-sort-row {
+.post-panel-controls-row {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 0 10px 10px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
 
-.post-panel-sort-row .filter-sort-menu {
-  max-width: 100%;
+.post-panel-controls-row .filter-sort-menu {
+  flex: 1 1 auto;
   margin-bottom: 0;
+}
+
+.post-panel-controls-row .filter-favourites-btn--compact {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  margin-bottom: 0;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
 }
 
 /* Post panel empty state image */

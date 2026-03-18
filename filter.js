@@ -957,9 +957,15 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initFavouritesButton() {
-        favouritesBtn = panelEl.querySelector('.filter-favourites-btn');
-        
-        if (favouritesBtn) {
+        bindFavouritesButton(panelEl.querySelector('.filter-favourites-btn'));
+    }
+
+    function bindFavouritesButton(buttonEl) {
+        favouritesBtn = buttonEl || null;
+        if (!favouritesBtn) return;
+
+        if (!favouritesBtn.dataset.favouritesBound) {
+            favouritesBtn.dataset.favouritesBound = 'true';
             favouritesBtn.addEventListener('click', function() {
                 favouritesOn = !favouritesOn;
                 favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
@@ -967,8 +973,8 @@ const FilterModule = (function() {
                 App.emit('filter:favouritesToggle', { enabled: favouritesOn });
                 saveFilters();
             });
-            syncFavouritesButtonUi();
         }
+        syncFavouritesButtonUi();
     }
     
     function setFavouritesOn(on) {
@@ -2627,6 +2633,7 @@ const FilterModule = (function() {
         setResetFiltersActive: setResetFiltersActive,
         setResetCategoriesActive: setResetCategoriesActive,
         setFavouritesOn: setFavouritesOn,
+        bindFavouritesButton: bindFavouritesButton,
         setSort: setSort,
         bindSortMenu: bindSortMenu,
         getFilterState: getFilterState,

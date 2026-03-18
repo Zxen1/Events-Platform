@@ -1897,6 +1897,16 @@ const PostModule = (function() {
     return menuEl;
   }
 
+  function createPostFavouritesButton() {
+    var buttonEl = document.createElement('button');
+    buttonEl.type = 'button';
+    buttonEl.className = 'filter-favourites-btn filter-favourites-btn--compact';
+    buttonEl.setAttribute('aria-pressed', 'false');
+    buttonEl.setAttribute('aria-label', 'Favourites on top');
+    buttonEl.innerHTML = '<span class="filter-favourites-icon" aria-hidden="true"></span>';
+    return buttonEl;
+  }
+
   function renderPostPanelHeader(headerClassName) {
     var summaryText = getFilterSummaryText();
     if (!summaryText) return null;
@@ -1915,14 +1925,19 @@ const PostModule = (function() {
     wrap.appendChild(summaryEl);
 
     var sortRow = document.createElement('div');
-    sortRow.className = 'post-panel-sort-row';
+    sortRow.className = 'post-panel-controls-row';
     var sortMenuEl = createPostSortMenu();
+    var favouritesBtnEl = createPostFavouritesButton();
     sortRow.appendChild(sortMenuEl);
+    sortRow.appendChild(favouritesBtnEl);
     wrap.appendChild(sortRow);
 
     try {
       if (window.FilterModule && typeof FilterModule.bindSortMenu === 'function') {
         FilterModule.bindSortMenu(sortMenuEl);
+      }
+      if (window.FilterModule && typeof FilterModule.bindFavouritesButton === 'function') {
+        FilterModule.bindFavouritesButton(favouritesBtnEl);
       }
     } catch (_eBindSortMenu) {}
 
