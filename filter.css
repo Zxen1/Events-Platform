@@ -199,7 +199,6 @@
   align-items: stretch;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
-  background: #222222;
 }
 
 /* Bottom slack is provided by `.bottomSlack` elements. */
