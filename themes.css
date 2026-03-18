@@ -101,19 +101,44 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Favourite star — active state keeps yellow with a subtle shadow on white cards */
+/* Favourite star — active state keeps yellow with a visible dark outline on white cards */
 :root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  position: relative;
+  isolation: isolate;
   background-color: #fbbf24;
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 6px rgba(0, 0, 0, 0.8));
 }
 
-/* Favourite star — remove shadow on solid hover/highlight backgrounds */
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::before,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  -webkit-mask-image: var(--ui-icon-favourite-on);
+  mask-image: var(--ui-icon-favourite-on);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transform: scale(1.22);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Favourite star — remove outline on solid hover/highlight backgrounds */
 :root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 :root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
   background-color: #fbbf24;
-  filter: none;
+}
+
+:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::before,
+:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav::before,
+:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav::before {
+  content: none;
 }
 
 /* Recent statusbar */
