@@ -135,28 +135,7 @@
 }
 
 :root[data-theme="light"] .filter-panel-content {
-  position: relative;
-  box-shadow: none;
-}
-
-:root[data-theme="light"] .filter-panel-content::before,
-:root[data-theme="light"] .filter-panel-content::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  pointer-events: none;
-}
-
-:root[data-theme="light"] .filter-panel-content::before {
-  left: 0;
-  box-shadow: -8px 0 12px 0 rgba(0, 0, 0, 0.22);
-}
-
-:root[data-theme="light"] .filter-panel-content::after {
-  right: 0;
-  box-shadow: 8px 0 12px 0 rgba(0, 0, 0, 0.22);
+  box-shadow: 10px 0 14px -12px rgba(0, 0, 0, 0.28), -10px 0 14px -12px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="light"] .filter-panel-header-title {
@@ -180,28 +159,7 @@
 }
 
 :root[data-theme="light"] .member-panel-contents {
-  position: relative;
-  box-shadow: none;
-}
-
-:root[data-theme="light"] .member-panel-contents::before,
-:root[data-theme="light"] .member-panel-contents::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  pointer-events: none;
-}
-
-:root[data-theme="light"] .member-panel-contents::before {
-  left: 0;
-  box-shadow: -8px 0 12px 0 rgba(0, 0, 0, 0.22);
-}
-
-:root[data-theme="light"] .member-panel-contents::after {
-  right: 0;
-  box-shadow: 8px 0 12px 0 rgba(0, 0, 0, 0.22);
+  box-shadow: 10px 0 14px -12px rgba(0, 0, 0, 0.28), -10px 0 14px -12px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-theme="light"] .member-panel-header-title {
@@ -245,12 +203,5 @@
   :root[data-theme="light"] .member-panel-contents,
   :root[data-theme="light"] .admin-panel-contents {
     box-shadow: none;
-  }
-
-  :root[data-theme="light"] .filter-panel-content::before,
-  :root[data-theme="light"] .filter-panel-content::after,
-  :root[data-theme="light"] .member-panel-contents::before,
-  :root[data-theme="light"] .member-panel-contents::after {
-    content: none;
   }
 }
