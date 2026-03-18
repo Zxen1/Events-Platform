@@ -989,8 +989,8 @@ const FilterModule = (function() {
         if (!favouritesBtn) return;
         var icon = favouritesBtn.querySelector('.filter-favourites-icon');
         if (icon) icon.classList.toggle('filter-favourites-icon--active', !!favouritesOn);
-        favouritesBtn.setAttribute('aria-label', 'Favourites on top');
-        favouritesBtn.setAttribute('title', 'Favourites on top');
+        favouritesBtn.setAttribute('aria-label', 'Favourites first');
+        favouritesBtn.setAttribute('title', 'Favourites first');
     }
 
 

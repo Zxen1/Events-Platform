@@ -516,14 +516,23 @@
 }
 
 .post-panel-controls-row .post-panel-favourites-btn {
-  width: 36px;
-  min-width: 36px;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
   height: 36px;
   margin-bottom: 0;
-  padding: 0;
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.post-panel-controls-row .post-panel-favourites-btn[aria-pressed="true"] {
+  background: var(--blue-600);
+  border-color: var(--blue-500);
 }
 
 /* Post panel empty state image */
