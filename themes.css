@@ -129,7 +129,11 @@
 :root[data-theme="light"] .filter-panel-content,
 :root[data-theme="light"] .filter-panel-header,
 :root[data-theme="light"] .filter-panel-body {
-  background: #cccccc;
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .filter-panel-content {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .filter-panel-header-title {
@@ -149,7 +153,11 @@
 :root[data-theme="light"] .member-panel-contents,
 :root[data-theme="light"] .member-panel-header,
 :root[data-theme="light"] .member-panel-body {
-  background: #cccccc;
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .member-panel-contents {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .member-panel-header-title {
@@ -169,7 +177,11 @@
 :root[data-theme="light"] .admin-panel-contents,
 :root[data-theme="light"] .admin-panel-header,
 :root[data-theme="light"] .admin-panel-body {
-  background: #cccccc;
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .admin-panel-contents {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .admin-panel-header-title {
@@ -182,4 +194,12 @@
 
 :root[data-theme="light"] .admin-panel-actions-icon-btn:hover {
   background: rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 530px) {
+  :root[data-theme="light"] .filter-panel-content,
+  :root[data-theme="light"] .member-panel-contents,
+  :root[data-theme="light"] .admin-panel-contents {
+    box-shadow: none;
+  }
 }
