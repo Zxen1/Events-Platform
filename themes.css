@@ -150,19 +150,6 @@
   background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
 }
 
-:root[data-theme="light"] .filter-mapcontrol-row {
-  background-color: #fff;
-  border-color: #ccc;
-}
-
-:root[data-theme="light"] .filter-mapcontrol-row:focus-within {
-  background-color: #fff;
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-input {
-  color: rgba(0, 0, 0, 0.85);
-}
-
 :root[data-theme="light"] .filter-price-separator {
   color: rgba(0, 0, 0, 0.5);
 }
