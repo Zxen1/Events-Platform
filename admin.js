@@ -5165,7 +5165,8 @@ const AdminModule = (function() {
         initImagePicker('adminIconClearPicker', 'icon_clear');
         initImagePicker('adminIconAddImagePicker', 'icon_add_image');
         initImagePicker('adminIconTicketPicker', 'icon_ticket');
-        initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
+        initImagePicker('adminIconFavouriteOffPicker', 'icon_favourite_off');
+        initImagePicker('adminIconFavouriteOnPicker', 'icon_favourite_on');
         initImagePicker('adminIconPlusPicker', 'icon_plus');
         initImagePicker('adminIconMinusPicker', 'icon_minus');
         initImagePicker('adminIconCheckmarkPicker', 'icon_checkmark');

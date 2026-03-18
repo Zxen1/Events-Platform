@@ -714,8 +714,12 @@ if (empty($ogTitle)) {
                   <div id="adminIconTicketPicker" data-setting-key="icon_ticket"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
-                  <label class="admin-settings-field-label">Icon: Favourites (star)</label>
-                  <div id="adminIconFavouritesPicker" data-setting-key="icon_favourites"></div>
+                  <label class="admin-settings-field-label">Icon: Favourite Off</label>
+                  <div id="adminIconFavouriteOffPicker" data-setting-key="icon_favourite_off"></div>
+                </div>
+                <div class="admin-settings-field admin-settings-field--imagepicker">
+                  <label class="admin-settings-field-label">Icon: Favourite On</label>
+                  <div id="adminIconFavouriteOnPicker" data-setting-key="icon_favourite_on"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
                   <label class="admin-settings-field-label">Icon: Plus (+)</label>

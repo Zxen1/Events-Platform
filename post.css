@@ -870,8 +870,8 @@
   height: 18px;
   background-color: #888;
   transition: background-color 0.15s ease;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-image: var(--ui-icon-favourite-off);
+  mask-image: var(--ui-icon-favourite-off);
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -889,20 +889,8 @@
 .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
 .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
   background-color: #fbbf24;
-  -webkit-mask-image: none;
-  mask-image: none;
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
+  -webkit-mask-image: var(--ui-icon-favourite-on);
+  mask-image: var(--ui-icon-favourite-on);
 }
 
 /* Edit button */
@@ -1385,8 +1373,8 @@
   width: 18px;
   height: 18px;
   background-color: var(--button-text);
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-image: var(--ui-icon-favourite-off);
+  mask-image: var(--ui-icon-favourite-off);
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -1398,20 +1386,8 @@
 
 .post-header-button-fav[aria-pressed="true"] .post-header-icon-fav {
   background-color: #fbbf24;
-  -webkit-mask-image: none;
-  mask-image: none;
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
+  -webkit-mask-image: var(--ui-icon-favourite-on);
+  mask-image: var(--ui-icon-favourite-on);
 }
 
 .post.post--collapsed .post-button-share {

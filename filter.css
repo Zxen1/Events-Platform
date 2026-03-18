@@ -311,8 +311,8 @@
   flex-shrink: 0;
   display: block;
   background-color: currentColor;
-  -webkit-mask-image: var(--ui-icon-favourites);
-  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-image: var(--ui-icon-favourite-off);
+  mask-image: var(--ui-icon-favourite-off);
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -327,22 +327,9 @@
 }
 
 .filter-favourites-icon--active {
-  /* Solid yellow star when selected (not just outline) */
   background-color: #fbbf24;
-  -webkit-mask-image: none;
-  mask-image: none;
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
+  -webkit-mask-image: var(--ui-icon-favourite-on);
+  mask-image: var(--ui-icon-favourite-on);
 }
 
 /* Sort menu - uses menu-class-1 for appearance */

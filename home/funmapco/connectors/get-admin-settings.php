@@ -162,7 +162,7 @@ try {
         'icon_member', 'icon_admin', 'icon_fullscreen', 'icon_fullscreen_exit',
         'icon_geolocate', 'icon_compass',
         'icon_lighting_dawn', 'icon_lighting_day', 'icon_lighting_dusk', 'icon_lighting_night',
-        'icon_save', 'icon_discard', 'icon_close', 'icon_clear', 'icon_favourites',
+        'icon_save', 'icon_discard', 'icon_close', 'icon_clear', 'icon_favourite_off', 'icon_favourite_on',
         'icon_add_image',
         'icon_ticket',
         'icon_plus', 'icon_minus',
