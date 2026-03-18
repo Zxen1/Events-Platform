@@ -11152,6 +11152,7 @@ const LocationWallpaperComponent = (function() {
         var basicImgs = [];
         var basicIndex = 0;
         var basicTimer = null;
+        var basicLoadToken = 0;
         var basicOriginalHeight = 0;
         var basicReady = false;  // True only after all 4 images are loaded and animation can start
         var BASIC_WIDTH = 600;
@@ -11185,6 +11186,8 @@ const LocationWallpaperComponent = (function() {
             st.isActive = true;
             ensureResizeObserver();
             basicOriginalHeight = contentEl.offsetHeight || 400;
+            basicLoadToken++;
+            var currentBasicLoadToken = basicLoadToken;
 
             var cameras = getBasicModeCameras(getLocationTypeFromContainer(locationContainerEl), [lng, lat]);
             var bearings = [0, 90, 180, 270]; // N, E, S, W
@@ -11218,13 +11221,16 @@ const LocationWallpaperComponent = (function() {
                     
                     img.onload = function() {
                         img.onload = null;
+                        if (currentBasicLoadToken !== basicLoadToken || !basicContainer || !basicImgs.length || !basicImgs[0]) return;
                         loaded++;
                         if (loaded === 4) {
+                            if (currentBasicLoadToken !== basicLoadToken || !basicContainer || !basicImgs[0]) return;
                             basicReady = true;
                             positionBasicImages();
                             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
                             requestAnimationFrame(function() {
                                 requestAnimationFrame(function() {
+                                    if (currentBasicLoadToken !== basicLoadToken || !basicContainer || !basicImgs[0]) return;
                                     basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
                                 });
                             });
@@ -11344,6 +11350,7 @@ const LocationWallpaperComponent = (function() {
 
         function removeBasicMode() {
             stopBasicMode();
+            basicLoadToken++;
             if (basicContainer) { basicContainer.remove(); basicContainer = null; }
             basicImgs = []; basicIndex = 0;
             basicReady = false;
@@ -14297,7 +14304,7 @@ const StorefrontMenuComponent = (function() {
             '.post-storefront-menu-item:hover .post-storefront-menu-thumb { width: 42px; height: 42px; }',
             /* '.post-storefront-menu-item--selected .post-storefront-menu-thumb { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.9); }', */
             '.post-storefront-menu-item:hover, .post-storefront-menu-item--selected { background-color: var(--subcat-hover-bg, transparent); }',
-            '.post-storefront-menu-item-favstar { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background-color: #fbbf24; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); pointer-events: none; z-index: 2; }',
+            '.post-storefront-menu-item-favstar { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background-color: #fbbf24; -webkit-mask-image: var(--ui-icon-favourite-on); mask-image: var(--ui-icon-favourite-on); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; pointer-events: none; z-index: 2; }',
             '.post-storefront-menu-item-meta { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding-right: 10px; box-sizing: border-box; }',
             '.post-storefront-menu-item-title { font-size: 13px; font-weight: bold; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255, 255, 255, 0.5); }',
             '.post-storefront-menu-item-sub { font-size: 11px; color: rgba(255, 255, 255, 0.35); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }',
