@@ -61,6 +61,7 @@ const FilterModule = (function() {
     var closeSortMenu = null;          // Reference to setSortMenuOpen for use in applySort
     var sortGeoIconEl = null;          // Geolocate icon in "Sort by Distance" dropdown option
     var sortGeoIconBtnEl = null;       // Geolocate icon in the sort button (shown when sort is 'nearest')
+    var sortDocClickBound = false;
     var closeBtn = null;
     
     // Amenities
@@ -799,22 +800,7 @@ const FilterModule = (function() {
             }
         });
 
-        // Register the sort geolocate icons now that MapControlRowComponent is ready
-        // and system_images are loaded (same timing as the built-in geolocate icons)
-        if (sortGeoIconEl && MapControlRowComponent.registerGeolocateIcon) {
-            MapControlRowComponent.registerGeolocateIcon(
-                sortGeoIconEl,
-                'filter-sort-geolocate-icon',
-                'filter-sort-geolocate-icon'
-            );
-        }
-        if (sortGeoIconBtnEl && MapControlRowComponent.registerGeolocateIcon) {
-            MapControlRowComponent.registerGeolocateIcon(
-                sortGeoIconBtnEl,
-                'filter-sort-geolocate-icon',
-                'filter-sort-geolocate-icon'
-            );
-        }
+        registerSortGeolocateIcons();
     }
     
     function handleGeocoderResult(result) {
@@ -1003,9 +989,47 @@ const FilterModule = (function() {
     /* --------------------------------------------------------------------------
        SORT MENU
        -------------------------------------------------------------------------- */
-    
-    function initSortMenu() {
-        sortMenuEl = panelEl.querySelector('.filter-sort-menu');
+
+    function registerSortGeolocateIcons() {
+        if (sortGeoIconEl && MapControlRowComponent.registerGeolocateIcon) {
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIconEl,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
+        }
+        if (sortGeoIconBtnEl && MapControlRowComponent.registerGeolocateIcon) {
+            MapControlRowComponent.registerGeolocateIcon(
+                sortGeoIconBtnEl,
+                'filter-sort-geolocate-icon',
+                'filter-sort-geolocate-icon'
+            );
+        }
+    }
+
+    function getSortLabel(sortKey, menuRoot) {
+        var root = menuRoot || sortMenuEl;
+        var opt = root ? root.querySelector('.filter-sort-menu-option[data-sort="' + sortKey + '"]') : null;
+        if (opt) return opt.textContent;
+        if (sortKey === 'az') return 'Sort by Title A-Z';
+        if (sortKey === 'nearest') return 'Sort by Distance';
+        if (sortKey === 'soon') return 'Sort by Soonest';
+        return 'Sort by Recommended';
+    }
+
+    function syncSortMenuUi(menuRoot) {
+        if (!menuRoot) return;
+        var buttonTextEl = menuRoot.querySelector('.filter-sort-menu-button-text');
+        if (buttonTextEl) buttonTextEl.textContent = getSortLabel(currentSort, menuRoot);
+        var geoBtnEl = menuRoot.querySelector('.filter-sort-geolocate-icon--button');
+        if (geoBtnEl) geoBtnEl.style.display = (currentSort === 'nearest') ? 'inline-block' : 'none';
+        menuRoot.querySelectorAll('.filter-sort-menu-option').forEach(function(opt) {
+            opt.classList.toggle('filter-sort-menu-option--selected', opt.getAttribute('data-sort') === currentSort);
+        });
+    }
+
+    function bindSortMenu(menuEl) {
+        sortMenuEl = menuEl;
         if (!sortMenuEl) return;
         
         sortButtonEl = sortMenuEl.querySelector('.filter-sort-menu-button');
@@ -1014,7 +1038,6 @@ const FilterModule = (function() {
         var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
 
-        // Store icon elements for deferred registration
         sortGeoIconEl = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="nearest"] .filter-sort-geolocate-icon');
         sortGeoIconBtnEl = sortMenuEl.querySelector('.filter-sort-geolocate-icon--button');
 
@@ -1023,42 +1046,43 @@ const FilterModule = (function() {
             if (sortButtonEl) sortButtonEl.classList.toggle('menu-button--open', !!isOpen);
             if (sortArrowEl) sortArrowEl.classList.toggle('menu-arrow--open', !!isOpen);
             if (sortOptionsEl) sortOptionsEl.classList.toggle('menu-options--open', !!isOpen);
-            // Keep component-specific classes for display toggle
             if (sortOptionsEl) sortOptionsEl.classList.toggle('filter-sort-menu-options--open', !!isOpen);
         }
-        // Expose to module scope so applySort can close the menu after async geolocation
         closeSortMenu = setSortMenuOpen;
-        
-        // Toggle menu open/close
-        if (sortButtonEl) {
+
+        if (sortButtonEl && !sortButtonEl.dataset.sortBound) {
+            sortButtonEl.dataset.sortBound = 'true';
             sortButtonEl.addEventListener('click', function(e) {
                 e.stopPropagation();
                 setSortMenuOpen(!sortMenuEl.classList.contains('filter-sort-menu--open'));
             });
         }
-        
-        // Handle option selection
-        // Menu closes from applySort (handles both sync and async geolocation paths)
+
         options.forEach(function(option) {
+            if (option.dataset.sortBound) return;
+            option.dataset.sortBound = 'true';
             option.addEventListener('click', function(e) {
                 e.stopPropagation();
                 var sort = option.getAttribute('data-sort');
                 selectSort(sort, option.textContent);
             });
         });
-        
-        // Close when clicking outside
-        document.addEventListener('click', function(e) {
-            if (sortMenuEl && !sortMenuEl.contains(e.target)) {
-                setSortMenuOpen(false);
-            }
-        });
-        
-        // Set initial selected state
-        var firstOption = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]');
-        if (firstOption) {
-            firstOption.classList.add('filter-sort-menu-option--selected');
+
+        if (!sortDocClickBound) {
+            sortDocClickBound = true;
+            document.addEventListener('click', function(e) {
+                if (sortMenuEl && !sortMenuEl.contains(e.target)) {
+                    if (closeSortMenu) closeSortMenu(false);
+                }
+            });
         }
+
+        syncSortMenuUi(sortMenuEl);
+        registerSortGeolocateIcons();
+    }
+    
+    function initSortMenu() {
+        bindSortMenu(panelEl.querySelector('.filter-sort-menu'));
     }
     
     function selectSort(sortKey, label) {
@@ -1120,26 +1144,9 @@ const FilterModule = (function() {
         previousSort = currentSort;
         currentSort = sortKey;
         
-        // Resolve label from DOM if not provided (used when reverting)
-        if (!label && sortMenuEl) {
-            var opt = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + sortKey + '"]');
-            if (opt) label = opt.textContent;
-        }
+        if (!label) label = getSortLabel(sortKey);
         
-        if (sortButtonText && label) {
-            sortButtonText.textContent = label;
-        }
-        
-        // Show/hide the geolocate icon in the sort button
-        if (sortGeoIconBtnEl) {
-            sortGeoIconBtnEl.style.display = (sortKey === 'nearest') ? 'inline-block' : 'none';
-        }
-        
-        // Update selected state
-        var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
-        options.forEach(function(opt) {
-            opt.classList.toggle('filter-sort-menu-option--selected', opt.getAttribute('data-sort') === sortKey);
-        });
+        syncSortMenuUi(sortMenuEl);
         
         // Close the sort menu (handles both immediate and async geolocation paths)
         if (closeSortMenu) closeSortMenu(false);
@@ -2621,6 +2628,7 @@ const FilterModule = (function() {
         setResetCategoriesActive: setResetCategoriesActive,
         setFavouritesOn: setFavouritesOn,
         setSort: setSort,
+        bindSortMenu: bindSortMenu,
         getFilterState: getFilterState,
         getFilterSummaryText: function() { return lastSummaryText; },
         setDateRange: setDateRange,

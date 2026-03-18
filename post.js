@@ -1664,6 +1664,8 @@ const PostModule = (function() {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
     }
     
+    var oldHeaderWrap = postPanelContentEl.querySelector('.post-panel-header-wrap');
+    if (oldHeaderWrap) oldHeaderWrap.parentNode.removeChild(oldHeaderWrap);
     var oldSummary = postPanelContentEl.querySelector('.post-panel-header');
     if (oldSummary) oldSummary.parentNode.removeChild(oldSummary);
     var oldEmptySummary = postPanelContentEl.querySelector('.post-panel-empty-header');
@@ -1708,44 +1710,8 @@ const PostModule = (function() {
       return;
     }
 
-    // Add filter summary if available
-    var summaryText = getFilterSummaryText();
-    if (summaryText) {
-      var summaryEl = document.createElement('div');
-      summaryEl.className = 'msg--summary post-panel-header';
-      // Check if filters are active (read from localStorage)
-      try {
-        var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
-        var hasActiveFilter = !!(
-          (savedFilters.keyword && savedFilters.keyword.trim()) ||
-          (savedFilters.minPrice && savedFilters.minPrice.trim()) ||
-          (savedFilters.maxPrice && savedFilters.maxPrice.trim()) ||
-          savedFilters.dateStart || savedFilters.dateEnd ||
-          savedFilters.expired
-        );
-        // Check categories
-        if (!hasActiveFilter && savedFilters.categories) {
-          var cats = savedFilters.categories;
-          var catKeys = Object.keys(cats);
-          for (var ci = 0; ci < catKeys.length; ci++) {
-            var cat = cats[catKeys[ci]];
-            if (cat && cat.enabled === false) { hasActiveFilter = true; break; }
-            if (cat && cat.subs) {
-              var subKeys = Object.keys(cat.subs);
-              for (var si = 0; si < subKeys.length; si++) {
-                if (cat.subs[subKeys[si]] === false) { hasActiveFilter = true; break; }
-              }
-            }
-            if (hasActiveFilter) break;
-          }
-        }
-        if (hasActiveFilter) {
-          summaryEl.classList.add('post-panel-header--active');
-        }
-      } catch (_e) {}
-      summaryEl.textContent = summaryText;
-      postPanelContentEl.insertBefore(summaryEl, postListEl);
-    }
+    var headerWrap = renderPostPanelHeader('post-panel-header');
+    if (headerWrap) postPanelContentEl.insertBefore(headerWrap, postListEl);
 
     // Storefront grouping: group posts by member + coordinates when enabled
     var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
@@ -1879,6 +1845,86 @@ const PostModule = (function() {
     BackdropComponent.populate(_topS);
     BackdropComponent.populate(_botS);
     finalizeRender();
+  }
+
+  function postPanelHasActiveFilter() {
+    try {
+      var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
+      var hasActiveFilter = !!(
+        (savedFilters.keyword && savedFilters.keyword.trim()) ||
+        (savedFilters.minPrice && savedFilters.minPrice.trim()) ||
+        (savedFilters.maxPrice && savedFilters.maxPrice.trim()) ||
+        savedFilters.dateStart || savedFilters.dateEnd ||
+        savedFilters.expired
+      );
+      if (!hasActiveFilter && savedFilters.categories) {
+        var cats = savedFilters.categories;
+        var catKeys = Object.keys(cats);
+        for (var ci = 0; ci < catKeys.length; ci++) {
+          var cat = cats[catKeys[ci]];
+          if (cat && cat.enabled === false) { hasActiveFilter = true; break; }
+          if (cat && cat.subs) {
+            var subKeys = Object.keys(cat.subs);
+            for (var si = 0; si < subKeys.length; si++) {
+              if (cat.subs[subKeys[si]] === false) { hasActiveFilter = true; break; }
+            }
+          }
+          if (hasActiveFilter) break;
+        }
+      }
+      return hasActiveFilter;
+    } catch (_eHasActive) {
+      return false;
+    }
+  }
+
+  function createPostSortMenu() {
+    var menuEl = document.createElement('div');
+    menuEl.className = 'filter-sort-menu menu-class-1';
+    menuEl.innerHTML = [
+      '<div class="filter-sort-menu-button menu-button">',
+        '<span class="filter-sort-menu-button-text menu-text">Sort by Recommended</span>',
+        '<span class="filter-sort-geolocate-icon filter-sort-geolocate-icon--button" aria-hidden="true"></span>',
+        '<span class="filter-sort-menu-button-arrow menu-arrow"></span>',
+      '</div>',
+      '<div class="filter-sort-menu-options menu-options">',
+        '<div class="filter-sort-menu-option menu-option" data-sort="recommended">Sort by Recommended</div>',
+        '<div class="filter-sort-menu-option menu-option" data-sort="az">Sort by Title A-Z</div>',
+        '<div class="filter-sort-menu-option menu-option" data-sort="nearest">Sort by Distance<span class="filter-sort-geolocate-icon" aria-hidden="true"></span></div>',
+        '<div class="filter-sort-menu-option menu-option" data-sort="soon">Sort by Soonest</div>',
+      '</div>'
+    ].join('');
+    return menuEl;
+  }
+
+  function renderPostPanelHeader(headerClassName) {
+    var summaryText = getFilterSummaryText();
+    if (!summaryText) return null;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'post-panel-header-wrap';
+
+    var summaryEl = document.createElement('div');
+    summaryEl.className = 'msg--summary ' + headerClassName;
+    if (postPanelHasActiveFilter()) {
+      summaryEl.classList.add(headerClassName + '--active');
+    }
+    summaryEl.textContent = summaryText;
+    wrap.appendChild(summaryEl);
+
+    var sortRow = document.createElement('div');
+    sortRow.className = 'post-panel-sort-row';
+    var sortMenuEl = createPostSortMenu();
+    sortRow.appendChild(sortMenuEl);
+    wrap.appendChild(sortRow);
+
+    try {
+      if (window.FilterModule && typeof FilterModule.bindSortMenu === 'function') {
+        FilterModule.bindSortMenu(sortMenuEl);
+      }
+    } catch (_eBindSortMenu) {}
+
+    return wrap;
   }
 
 
@@ -5211,6 +5257,8 @@ const PostModule = (function() {
     if (!postListEl) return;
 
     // Remove any existing panel headers from the content container
+    var _oldHW = postPanelContentEl.querySelector('.post-panel-header-wrap');
+    if (_oldHW) _oldHW.parentNode.removeChild(_oldHW);
     var _oldH = postPanelContentEl.querySelector('.post-panel-header');
     if (_oldH) _oldH.parentNode.removeChild(_oldH);
     var _oldEH = postPanelContentEl.querySelector('.post-panel-empty-header');
@@ -5229,40 +5277,8 @@ const PostModule = (function() {
     var wrap = document.createElement('div');
     wrap.className = 'post-panel-empty';
 
-    var summaryCopy = document.createElement('div');
-    summaryCopy.className = 'msg--summary post-panel-empty-header';
-    // Check if filters are active (read from localStorage)
-    try {
-      var savedFilters = JSON.parse(localStorage.getItem('funmap_filters') || '{}');
-      var hasActiveFilter = !!(
-        (savedFilters.keyword && savedFilters.keyword.trim()) ||
-        (savedFilters.minPrice && savedFilters.minPrice.trim()) ||
-        (savedFilters.maxPrice && savedFilters.maxPrice.trim()) ||
-        savedFilters.dateStart || savedFilters.dateEnd ||
-        savedFilters.expired
-      );
-      // Check categories
-      if (!hasActiveFilter && savedFilters.categories) {
-        var cats = savedFilters.categories;
-        var catKeys = Object.keys(cats);
-        for (var ci = 0; ci < catKeys.length; ci++) {
-          var cat = cats[catKeys[ci]];
-          if (cat && cat.enabled === false) { hasActiveFilter = true; break; }
-          if (cat && cat.subs) {
-            var subKeys = Object.keys(cat.subs);
-            for (var si = 0; si < subKeys.length; si++) {
-              if (cat.subs[subKeys[si]] === false) { hasActiveFilter = true; break; }
-            }
-          }
-          if (hasActiveFilter) break;
-        }
-      }
-      if (hasActiveFilter) {
-        summaryCopy.classList.add('post-panel-empty-header--active');
-      }
-    } catch (_e) {}
-    summaryCopy.textContent = getFilterSummaryText();
-    postPanelContentEl.insertBefore(summaryCopy, postListEl);
+    var headerWrap = renderPostPanelHeader('post-panel-empty-header');
+    if (headerWrap) postPanelContentEl.insertBefore(headerWrap, postListEl);
 
     var img = document.createElement('img');
     img.alt = 'Posts empty state image';
