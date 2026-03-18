@@ -439,8 +439,8 @@ const PostModule = (function() {
       // Any subsequent favourite toggles mark it dirty again until the user presses the toggle.
       favSortDirty = favToTop ? false : true;
       // Re-apply sorting/rendering without filtering out non-favourites.
-      // Keep existing sort key if available; default to 'az'.
-      sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'recommended') : 'recommended');
+      // Keep the active sort inputs, including the stored geolocation for "nearest".
+      sortPosts(currentSortKey || 'recommended', currentSortGeoLocation);
     });
 
     // Initialize favToTop from restored filter state (persisted in filters_json).
@@ -3006,7 +3006,7 @@ const PostModule = (function() {
   function filterFavourites(favouritesOnTop) {
     favToTop = !!favouritesOnTop;
     favSortDirty = favToTop ? false : true;
-    sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
+    sortPosts(currentSortKey || 'recommended', currentSortGeoLocation);
   }
 
   /**
