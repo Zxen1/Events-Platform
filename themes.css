@@ -131,6 +131,18 @@
   background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
 }
 
+:root[data-theme="light"] .filter-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* ─── Member Panel ───────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .member-panel-contents,
@@ -138,9 +150,33 @@
   background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
 }
 
+:root[data-theme="light"] .member-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .member-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 /* ─── Admin Panel ────────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .admin-panel-contents,
 :root[data-theme="light"] .admin-panel-header {
   background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .admin-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .admin-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
