@@ -2288,7 +2288,7 @@
 /* Button variant: hidden unless the current sort is 'nearest' */
 .filter-sort-geolocate-icon--button {
     display: none;
-    margin-left: 6px;
+    margin-left: 10px;
 }
 
 .filter-mapcontrol-geolocate--loading,
