@@ -1903,7 +1903,10 @@ const PostModule = (function() {
     buttonEl.className = 'post-panel-favourites-btn button-class-9';
     buttonEl.setAttribute('aria-pressed', 'false');
     buttonEl.setAttribute('aria-label', 'Favourites first');
-    buttonEl.textContent = 'Favourites first';
+    buttonEl.innerHTML = [
+      '<span class="filter-favourites-icon" aria-hidden="true"></span>',
+      '<span class="post-panel-favourites-btn-text">Favourites first</span>'
+    ].join('');
     return buttonEl;
   }
 

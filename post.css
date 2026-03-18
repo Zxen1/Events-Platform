@@ -521,13 +521,19 @@
   min-width: 0;
   height: 36px;
   margin-bottom: 0;
-  padding: 0 12px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  gap: 10px;
+  text-align: left;
   font-size: 13px;
   white-space: nowrap;
+}
+
+.post-panel-controls-row .post-panel-favourites-btn-text {
+  display: block;
+  min-width: 0;
 }
 
 .post-panel-controls-row .post-panel-favourites-btn[aria-pressed="true"] {
