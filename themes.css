@@ -29,7 +29,6 @@
 :root[data-theme="light"] {
   --website-gray: #555;
   --website-white: #111;
-  color-scheme: light;
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────── */
@@ -123,84 +122,4 @@
 :root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info,
 :root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
   color: rgba(0, 0, 0, 0.45);
-}
-
-/* ─── Inputs (global) ───────────────────────────────────────────────────── */
-
-:root[data-theme="light"] .input-class-1 {
-  background: #fff;
-  border-color: #ccc;
-  color: rgba(0, 0, 0, 0.85);
-  caret-color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .input-class-1:focus {
-  background: #fff;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :root[data-theme="light"] .input-class-1:hover {
-    border-color: #aaa;
-  }
-}
-
-/* ─── Filter Panel ───────────────────────────────────────────────────────── */
-
-:root[data-theme="light"] .filter-panel-content,
-:root[data-theme="light"] .filter-panel-header {
-  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
-}
-
-:root[data-theme="light"] .filter-price-separator {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-:root[data-theme="light"] .filter-panel-header-title {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-/* ─── Member Panel ───────────────────────────────────────────────────────── */
-
-:root[data-theme="light"] .member-panel-contents,
-:root[data-theme="light"] .member-panel-header {
-  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
-}
-
-:root[data-theme="light"] .member-panel-header-title {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .member-panel-actions-icon-btn-icon {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .member-panel-actions-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-/* ─── Admin Panel ────────────────────────────────────────────────────────── */
-
-:root[data-theme="light"] .admin-panel-contents,
-:root[data-theme="light"] .admin-panel-header {
-  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
-}
-
-:root[data-theme="light"] .admin-panel-header-title {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .admin-panel-actions-icon-btn-icon {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .admin-panel-actions-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
 }
