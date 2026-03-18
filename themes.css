@@ -123,3 +123,24 @@
 :root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
   color: rgba(0, 0, 0, 0.45);
 }
+
+/* ─── Filter Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .filter-panel-content,
+:root[data-theme="light"] .filter-panel-header {
+  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
+}
+
+/* ─── Member Panel ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .member-panel-contents,
+:root[data-theme="light"] .member-panel-header {
+  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
+}
+
+/* ─── Admin Panel ────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .admin-panel-contents,
+:root[data-theme="light"] .admin-panel-header {
+  background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
+}
