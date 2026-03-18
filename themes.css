@@ -124,11 +124,47 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+/* ─── Inputs (global) ───────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .input-class-1 {
+  background: #fff;
+  border-color: #ccc;
+  color: rgba(0, 0, 0, 0.85);
+  caret-color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .input-class-1:focus {
+  background: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .input-class-1:hover {
+    border-color: #aaa;
+  }
+}
+
 /* ─── Filter Panel ───────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .filter-panel-content,
 :root[data-theme="light"] .filter-panel-header {
   background: rgba(242, 242, 242, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .filter-mapcontrol-row {
+  background-color: #fff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-row:focus-within {
+  background-color: #fff;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-input {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .filter-price-separator {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 :root[data-theme="light"] .filter-panel-header-title {
