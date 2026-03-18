@@ -40,7 +40,7 @@
 :root[data-theme="light"] .header-bar .header-modeswitch-recent[aria-pressed="true"],
 :root[data-theme="light"] .header-bar .header-modeswitch-recent.button--active,
 :root[data-theme="light"] .header-bar .header-modeswitch-recent.header-modeswitch-button--active {
-  color: #4c1d95;
+  color: #7c3aed;
 }
 
 /* button-class-1 hover (hardcoded in base.css, must override here) */
@@ -116,7 +116,7 @@
 
 /* Recent statusbar */
 :root[data-theme="light"] .recent-statusbar {
-  color: #4c1d95;
+  color: #7c3aed;
 }
 
 /* Postcards and recent cards at rest — dark text (hover keeps solid bg + white text unchanged) */
