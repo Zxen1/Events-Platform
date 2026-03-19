@@ -1013,6 +1013,8 @@ const MemberModule = (function() {
         var resolved = state || getResolvedThemeState();
         var mode = themeActiveKeyToMode(resolved.themeActive);
         var preset = resolved.effectivePreset;
+        var previousLighting = localStorage.getItem('map_lighting');
+        var previousStyle = localStorage.getItem('map_style');
         if (!preset) {
             throw new Error('[Member] Missing effective theme preset for ' + String(resolved.effectivePresetKey) + '.');
         }
@@ -1040,11 +1042,12 @@ const MemberModule = (function() {
         }
 
         try {
-            if (window.MapModule && typeof MapModule.setMapLighting === 'function') {
-                MapModule.setMapLighting(preset.map_lighting);
-            }
-            if (window.MapModule && typeof MapModule.setMapStyle === 'function') {
+            var styleChanged = previousStyle !== String(preset.map_style);
+            var lightingChanged = previousLighting !== String(preset.map_lighting);
+            if (styleChanged && window.MapModule && typeof MapModule.setMapStyle === 'function') {
                 MapModule.setMapStyle(preset.map_style);
+            } else if (lightingChanged && window.MapModule && typeof MapModule.setMapLighting === 'function') {
+                MapModule.setMapLighting(preset.map_lighting);
             }
         } catch (_eApplyThemeState) {}
 
