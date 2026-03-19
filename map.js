@@ -118,6 +118,63 @@ const MapModule = (function() {
     welcome: null,
     adminStarting: null
   };
+
+  function getEffectiveThemePresetKey(themeActive) {
+    var active = themeActive || 'theme_auto';
+    if (active === 'theme_auto') {
+      if (!window.matchMedia) {
+        throw new Error('[Map] window.matchMedia is required for theme_auto.');
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
+    }
+    if (active === 'theme_light' || active === 'theme_dark') {
+      return active;
+    }
+    throw new Error('[Map] Invalid theme_active "' + String(active) + '".');
+  }
+
+  function getThemePresetFromSettings() {
+    if (!adminSettings || adminSettings.theme_presets === undefined) {
+      throw new Error('[Map] settings.theme_presets must be loaded before resolving theme map settings.');
+    }
+    var presets = adminSettings.theme_presets;
+    if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+      throw new Error('[Map] settings.theme_presets must be a JSON object.');
+    }
+    var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+    var preset = presets[presetKey];
+    if (!preset || preset.map_style === undefined || preset.map_lighting === undefined) {
+      throw new Error('[Map] Missing map settings in theme preset "' + String(presetKey) + '".');
+    }
+    return preset;
+  }
+
+  function getResolvedThemeMapSettings() {
+    var member = null;
+    if (window.MemberModule && window.MemberModule.getCurrentUser) {
+      member = window.MemberModule.getCurrentUser();
+    }
+    if (member && member.map_style && member.map_lighting) {
+      return {
+        map_style: member.map_style,
+        map_lighting: member.map_lighting
+      };
+    }
+
+    var storedStyle = localStorage.getItem('map_style');
+    var storedLighting = localStorage.getItem('map_lighting');
+    if (storedStyle && storedLighting) {
+      return {
+        map_style: storedStyle,
+        map_lighting: storedLighting
+      };
+    }
+
+    return {
+      map_style: String(getThemePresetFromSettings().map_style),
+      map_lighting: String(getThemePresetFromSettings().map_lighting)
+    };
+  }
   
   // Spin state
   let spinning = false;
@@ -1010,48 +1067,16 @@ const MapModule = (function() {
     // Start async settings load (will apply later if not yet available)
     loadSettings();
     
-    // Determine initial style
-    // Priority: member setting > localStorage (guest's choice) > admin setting > default
-    var initialStyle = 'standard';
-    var member = null;
-    if (window.MemberModule && window.MemberModule.getCurrentUser) {
-      member = window.MemberModule.getCurrentUser();
-      if (member && member.map_style) {
-        initialStyle = member.map_style;
-      }
-    }
-    if (initialStyle === 'standard') {
-      // Guest: localStorage first (their previous choice), then admin setting (site default)
-      var storedStyle = localStorage.getItem('map_style');
-      if (storedStyle) {
-        initialStyle = storedStyle;
-      } else if (adminSettings.map_style) {
-        initialStyle = adminSettings.map_style;
-      }
-      // else stays 'standard' default
-    }
+    var resolvedThemeMapSettings = getResolvedThemeMapSettings();
+    var initialStyle = resolvedThemeMapSettings.map_style;
     var styleUrl = initialStyle === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
     currentStyleUrl = styleUrl;
     
-    // Determine initial lighting BEFORE map creation
-    // Priority: member setting > localStorage (guest's choice) > admin setting > default
-    // This prevents the "flash" of default lighting before switching to the correct value
-    var initialLighting = 'day';
-    if (member && member.map_lighting) {
-      // Logged-in member: use their saved setting
-      initialLighting = member.map_lighting;
-    } else {
-      // Guest: localStorage first (their previous choice), then admin setting (site default)
-      var storedLighting = localStorage.getItem('map_lighting');
-      if (storedLighting) {
-        initialLighting = storedLighting;
-      } else if (adminSettings.map_lighting) {
-        initialLighting = adminSettings.map_lighting;
-      }
-      // else stays 'day' default
-    }
+    // Determine initial lighting BEFORE map creation.
+    // This prevents the "flash" of incorrect lighting before switching.
+    var initialLighting = resolvedThemeMapSettings.map_lighting;
 
     // CSS starts map at opacity: 0 to prevent flash
     // The reveal (instant or fade) happens in onMapLoad after tiles are ready
@@ -1238,7 +1263,7 @@ const MapModule = (function() {
       if (window.App && typeof App.getState === 'function') {
         adminSettings = App.getState('settings') || {};
         adminSettings.system_images = App.getState('system_images') || {};
-        logDebug('[Map] loadSettings: map_lighting =', adminSettings.map_lighting, 'map_style =', adminSettings.map_style, 'spin_on_load =', adminSettings.spin_on_load);
+        logDebug('[Map] loadSettings: theme_presets loaded =', !!adminSettings.theme_presets, 'spin_on_load =', adminSettings.spin_on_load);
         applySettings(adminSettings);
         
         // If map already exists, apply settings that weren't available at creation time
@@ -1258,40 +1283,11 @@ const MapModule = (function() {
             }
           }
           
-          // Determine lighting and style from priority chain
-          var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
-          
-          // Lighting: member > localStorage > admin > default
-          var lighting = 'day';
-          if (member && member.map_lighting) {
-            lighting = member.map_lighting;
-            logDebug('[Map] loadSettings: Using member lighting:', lighting);
-          } else {
-            var storedLighting = localStorage.getItem('map_lighting');
-            if (storedLighting) {
-              lighting = storedLighting;
-              logDebug('[Map] loadSettings: Using localStorage lighting:', lighting);
-            } else if (adminSettings.map_lighting) {
-              lighting = adminSettings.map_lighting;
-              logDebug('[Map] loadSettings: Using admin lighting:', lighting);
-            }
-          }
-          
-          // Style: member > localStorage > admin > default
-          var style = 'standard';
-          if (member && member.map_style) {
-            style = member.map_style;
-            logDebug('[Map] loadSettings: Using member style:', style);
-          } else {
-            var storedStyle = localStorage.getItem('map_style');
-            if (storedStyle) {
-              style = storedStyle;
-              logDebug('[Map] loadSettings: Using localStorage style:', style);
-            } else if (adminSettings.map_style) {
-              style = adminSettings.map_style;
-              logDebug('[Map] loadSettings: Using admin style:', style);
-            }
-          }
+          var resolvedThemeMapSettings = getResolvedThemeMapSettings();
+          var lighting = resolvedThemeMapSettings.map_lighting;
+          var style = resolvedThemeMapSettings.map_style;
+          logDebug('[Map] loadSettings: Using theme lighting:', lighting);
+          logDebug('[Map] loadSettings: Using theme style:', style);
           
           // Apply style using setMapStyle (handles cluster reload properly)
           // Then apply lighting after style is ready
@@ -3070,13 +3066,7 @@ const MapModule = (function() {
     }
     
     // Store current lighting to re-apply after style loads
-    var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
-    if (window.MemberModule && window.MemberModule.getCurrentUser) {
-      var member = window.MemberModule.getCurrentUser();
-      if (member && member.map_lighting) {
-        currentLighting = member.map_lighting;
-      }
-    }
+    var currentLighting = getResolvedThemeMapSettings().map_lighting;
     
     // Fade out only if we're actually changing styles.
     var mapEl = document.querySelector('.map-container');

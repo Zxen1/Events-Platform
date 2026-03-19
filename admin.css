@@ -3556,6 +3556,74 @@
   display: block;
 }
 
+.admin-themes-accordion {
+  margin-bottom: 12px;
+}
+
+.admin-themes-accordion:last-child {
+  margin-bottom: 0;
+}
+
+.admin-themes-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.admin-themes-accordion-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.admin-themes-accordion-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-themes-accordion-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.admin-themes-accordion-arrow--open::before {
+  transform: rotate(180deg);
+}
+
+.admin-themes-accordion-body {
+  display: none;
+  padding: 10px;
+}
+
+.admin-themes-accordion-body--open {
+  display: block;
+}
+
+.admin-themes-accordion-body .member-style-container {
+  max-width: none;
+  margin: 0;
+}
+
 .admin-moderation-list {
   display: flex;
   flex-direction: column;

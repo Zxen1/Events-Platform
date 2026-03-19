@@ -783,6 +783,8 @@ const AdminModule = (function() {
             initMapTab();
         } else if (tabName === 'checkout') {
             initCheckoutTab();
+        } else if (tabName === 'themes') {
+            initThemesTab();
         } else if (tabName === 'moderation') {
             initModerationTab();
         } else if (tabName === 'sitemap') {
@@ -1746,6 +1748,7 @@ const AdminModule = (function() {
         
         // Reset tabs to original values before clearing registry
         resetSettingsToOriginal();
+        resetThemesToOriginal();
         resetMessagesToOriginal();
         resetCheckoutOptionsToOriginal();
         resetMapTabToOriginal();
@@ -2976,82 +2979,6 @@ const AdminModule = (function() {
     function attachMapTabHandlers() {
         if (!mapTabContainer) return;
         
-        // Map Lighting buttons
-        var lightingButtons = mapTabContainer.querySelectorAll('.admin-lighting-button');
-        if (lightingButtons.length) {
-            // Apply lighting icons from system images
-            var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
-            lightingButtons.forEach(function(btn) {
-                var iconEl = btn.querySelector('.admin-lighting-button-icon');
-                if (!iconEl) return;
-                var key = iconEl.dataset.iconKey;
-                if (key && sys[key] && window.App && typeof App.getImageUrl === 'function') {
-                    var url = App.getImageUrl('systemImages', sys[key]);
-                    iconEl.style.webkitMaskImage = 'url(' + url + ')';
-                    iconEl.style.maskImage = 'url(' + url + ')';
-                    iconEl.style.opacity = '1';
-                }
-            });
-            
-            var initialLighting = mapTabData.map_lighting || 'day';
-            lightingButtons.forEach(function(btn) {
-                var lighting = btn.dataset.lighting;
-                var isActive = lighting === initialLighting;
-                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-                    
-                    console.log('[Admin] Lighting button clicked:', lighting);
-                    
-                    lightingButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.setAttribute('aria-pressed', 'true');
-                    
-                    updateField('map.map_lighting', lighting);
-                    if (window.MapModule && window.MapModule.setMapLighting) {
-                        console.log('[Admin] Calling MapModule.setMapLighting');
-                        window.MapModule.setMapLighting(lighting);
-                    } else {
-                        console.warn('[Admin] MapModule not available or setMapLighting missing');
-                    }
-                });
-            });
-            registerField('map.map_lighting', initialLighting);
-        }
-        
-        // Map Style buttons
-        var styleButtons = mapTabContainer.querySelectorAll('.admin-style-button');
-        if (styleButtons.length) {
-            var initialStyle = mapTabData.map_style || 'standard';
-            styleButtons.forEach(function(btn) {
-                var style = btn.dataset.style;
-                var isActive = style === initialStyle;
-                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-                    
-                    console.log('[Admin] Style button clicked:', style);
-                    
-                    styleButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.setAttribute('aria-pressed', 'true');
-                    
-                    updateField('map.map_style', style);
-                    if (window.MapModule && window.MapModule.setMapStyle) {
-                        console.log('[Admin] Calling MapModule.setMapStyle');
-                        window.MapModule.setMapStyle(style);
-                    } else {
-                        console.warn('[Admin] MapModule not available or setMapStyle missing');
-                    }
-                });
-            });
-            registerField('map.map_style', initialStyle);
-        }
-        
         // Map Card Breakpoint slider
         var mapCardBreakpointSlider = document.getElementById('adminMapCardBreakpoint');
         var mapCardBreakpointDisplay = document.getElementById('adminMapCardBreakpointDisplay');
@@ -3321,29 +3248,6 @@ const AdminModule = (function() {
             });
         }
 
-        // Default Wallpaper Mode buttons (default for new users; members override with their own preference)
-        var wallpaperButtons = mapTabContainer.querySelectorAll('.admin-wallpaper-button');
-        if (wallpaperButtons.length) {
-            var initialWallpaperMode = mapTabData.default_wallpaper_mode || 'basic';
-            wallpaperButtons.forEach(function(btn) {
-                var mode = btn.dataset.wallpaper;
-                var isActive = mode === initialWallpaperMode;
-                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-                
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-                    
-                    wallpaperButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.setAttribute('aria-pressed', 'true');
-                    
-                    updateField('map.default_wallpaper_mode', mode);
-                });
-            });
-            registerField('map.default_wallpaper_mode', initialWallpaperMode);
-        }
-        
         // Wallpaper Dimmer slider (site-wide for everyone)
         var dimmerSlider = document.getElementById('adminLocationWallpaperDimmer');
         var dimmerDisplay = document.getElementById('adminLocationWallpaperDimmerDisplay');
@@ -3585,9 +3489,7 @@ const AdminModule = (function() {
         });
         
         // Reset button groups
-        var buttonGroups = [
-            { selector: '.admin-wallpaper-button', fieldId: 'map.default_wallpaper_mode', dataAttr: 'wallpaper' }
-        ];
+        var buttonGroups = [];
         
         buttonGroups.forEach(function(bg) {
             var buttons = mapTabContainer.querySelectorAll(bg.selector);
@@ -4403,6 +4305,174 @@ const AdminModule = (function() {
        Admin can reactivate, anonymize, or take action on flagged content.
        -------------------------------------------------------------------------- */
     
+    var themesTabContainer = null;
+    var themesTabInitialized = false;
+
+    function requireThemePreset(themeKey, source, contextLabel) {
+        var preset = (source && typeof source === 'object' && !Array.isArray(source)) ? source : null;
+        if (!preset) {
+            throw new Error('[Admin] Missing ' + themeKey + ' in ' + contextLabel + '.');
+        }
+        if (
+            preset.bg_opacity === undefined ||
+            preset.map_lighting === undefined ||
+            preset.map_style === undefined ||
+            preset.animation_preference === undefined
+        ) {
+            throw new Error('[Admin] Incomplete ' + themeKey + ' in ' + contextLabel + '.');
+        }
+        return {
+            bg_opacity: String(preset.bg_opacity),
+            map_lighting: String(preset.map_lighting),
+            map_style: String(preset.map_style),
+            animation_preference: String(preset.animation_preference)
+        };
+    }
+
+    function normalizeThemePresets(raw) {
+        var source = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : null;
+        if (!source) {
+            throw new Error('[Admin] settings.theme_presets must be present before Themes tab initialization.');
+        }
+        return {
+            theme_light: requireThemePreset('theme_light', source.theme_light, 'settings.theme_presets'),
+            theme_dark: requireThemePreset('theme_dark', source.theme_dark, 'settings.theme_presets')
+        };
+    }
+
+    function applyThemePresetToAccordion(acc, preset) {
+        if (!acc || !preset) return;
+        acc.querySelectorAll('.member-bgopacity-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.bgOpacity === String(preset.bg_opacity) ? 'true' : 'false');
+        });
+        acc.querySelectorAll('.member-lighting-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.lighting === String(preset.map_lighting) ? 'true' : 'false');
+        });
+        acc.querySelectorAll('.member-style-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.style === String(preset.map_style) ? 'true' : 'false');
+        });
+        acc.querySelectorAll('.member-wallpaper-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.wallpaper === String(preset.animation_preference) ? 'true' : 'false');
+        });
+    }
+
+    function applyThemePresetsToUi(themePresets) {
+        if (!themesTabContainer) return;
+        var presets = normalizeThemePresets(themePresets);
+        applyThemePresetToAccordion(document.getElementById('admin-themes-light'), presets.theme_light);
+        applyThemePresetToAccordion(document.getElementById('admin-themes-dark'), presets.theme_dark);
+    }
+
+    function captureThemePresetsState() {
+        function captureAccordion(acc) {
+            if (!acc) return {};
+            var bgBtn = acc.querySelector('.member-bgopacity-button[aria-pressed="true"]');
+            var lightingBtn = acc.querySelector('.member-lighting-button[aria-pressed="true"]');
+            var styleBtn = acc.querySelector('.member-style-button[aria-pressed="true"]');
+            var wallpaperBtn = acc.querySelector('.member-wallpaper-button[aria-pressed="true"]');
+            return {
+                bg_opacity: bgBtn ? String(bgBtn.dataset.bgOpacity || '') : '',
+                map_lighting: lightingBtn ? String(lightingBtn.dataset.lighting || '') : '',
+                map_style: styleBtn ? String(styleBtn.dataset.style || '') : '',
+                animation_preference: wallpaperBtn ? String(wallpaperBtn.dataset.wallpaper || '') : ''
+            };
+        }
+
+        return {
+            theme_light: captureAccordion(document.getElementById('admin-themes-light')),
+            theme_dark: captureAccordion(document.getElementById('admin-themes-dark'))
+        };
+    }
+
+    function initThemePresetIcons() {
+        if (!themesTabContainer || !settingsData.system_images || !window.App || typeof App.getImageUrl !== 'function') return;
+        themesTabContainer.querySelectorAll('.member-lighting-button-icon').forEach(function(iconEl) {
+            var key = iconEl.dataset.iconKey;
+            var filename = key ? settingsData.system_images[key] : '';
+            if (!filename) return;
+            var url = App.getImageUrl('systemImages', filename);
+            iconEl.style.webkitMaskImage = 'url(' + url + ')';
+            iconEl.style.maskImage = 'url(' + url + ')';
+            iconEl.style.opacity = '1';
+        });
+    }
+
+    function initThemePresetToggleGroups(acc) {
+        if (!acc) return;
+        [
+            '.member-bgopacity-button',
+            '.member-lighting-button',
+            '.member-style-button',
+            '.member-wallpaper-button'
+        ].forEach(function(selector) {
+            var buttons = acc.querySelectorAll(selector);
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+                    buttons.forEach(function(other) {
+                        other.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+                    notifyFieldChange();
+                });
+            });
+        });
+    }
+
+    function initThemesTab() {
+        if (themesTabInitialized) return;
+
+        themesTabContainer = document.getElementById('admin-tab-themes');
+        if (!themesTabContainer) return;
+
+        function finishThemesInit() {
+            themesTabContainer.querySelectorAll('.admin-themes-accordion').forEach(function(acc) {
+                var header = acc.querySelector('.admin-themes-accordion-header');
+                if (header) {
+                    function toggleAccordion() {
+                        acc.classList.toggle('admin-themes-accordion--open');
+                        syncThemesAccordionUi(acc);
+                    }
+
+                    header.addEventListener('click', toggleAccordion);
+                    header.addEventListener('keydown', function(e) {
+                        if (e.key !== 'Enter' && e.key !== ' ') return;
+                        e.preventDefault();
+                        toggleAccordion();
+                    });
+                }
+                initThemePresetToggleGroups(acc);
+                syncThemesAccordionUi(acc);
+            });
+
+            initThemePresetIcons();
+            applyThemePresetsToUi(settingsData.theme_presets);
+            registerComposite('settings.theme_presets', captureThemePresetsState);
+            themesTabInitialized = true;
+        }
+
+        if (Object.keys(settingsData).length > 0) {
+            finishThemesInit();
+        } else {
+            loadSettingsFromDatabase().then(function() {
+                finishThemesInit();
+            });
+        }
+    }
+
+    function syncThemesAccordionUi(acc) {
+        if (!acc) return;
+        var isOpen = acc.classList.contains('admin-themes-accordion--open');
+        var arrow = acc.querySelector('.admin-themes-accordion-arrow');
+        var header = acc.querySelector('.admin-themes-accordion-header');
+        var body = acc.querySelector('.admin-themes-accordion-body');
+        acc.classList.toggle('accordion-class-1--open', isOpen);
+        if (arrow) arrow.classList.toggle('admin-themes-accordion-arrow--open', isOpen);
+        if (header) header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (body) body.classList.toggle('admin-themes-accordion-body--open', isOpen);
+        if (body) body.hidden = !isOpen;
+    }
+
     var moderationTabContainer = null;
     var moderationTabInitialized = false;
     var moderationData = null;
@@ -5896,6 +5966,13 @@ const AdminModule = (function() {
                         var settingKey = key.replace(/^(settings\.|map\.|checkout\.)/, '');
                         modified[settingKey] = entry.current;
                     }
+                } else if (entry.type === 'composite') {
+                    var currentState = entry.captureState();
+                    var currentJson = JSON.stringify(currentState);
+                    if (currentJson !== entry.original) {
+                        var compositeKey = key.replace(/^(settings\.|map\.|checkout\.)/, '');
+                        modified[compositeKey] = currentState;
+                    }
                 }
             }
             // Collect system_images.* fields separately
@@ -6040,6 +6117,15 @@ const AdminModule = (function() {
                 }
             }
         });
+    }
+
+    function resetThemesToOriginal() {
+        var entry = fieldRegistry['settings.theme_presets'];
+        if (!entry || entry.type !== 'composite') return;
+        try {
+            var originalState = JSON.parse(entry.original);
+            applyThemePresetsToUi(originalState);
+        } catch (_eThemeReset) {}
     }
 
     /* --------------------------------------------------------------------------

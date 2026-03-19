@@ -901,47 +901,255 @@ const MemberModule = (function() {
         // Note: Avatar picker/cropper UI is handled by AvatarPickerComponent + AvatarCropperComponent (components.js)
         // Note: unsaved changes dialogs are controlled from components.
         
-        // Colour Scheme (theme) buttons
-        initThemeButtons();
-
-        // Background Opacity buttons
-        initBgOpacityButtons();
-
-        // Map Lighting buttons
-        initMapLightingButtons();
-        
-        // Map Style buttons
-        initMapStyleButtons();
-        
-        // Wallpaper Animation buttons
-        initWallpaperButtons();
+        refreshThemePreferenceButtonsWhenReady().catch(reportThemeInitializationError);
         
         // Panel toggle is handled by lazy init wrapper outside module
     }
     
+    function themeModeToActiveKey(mode) {
+        if (mode === 'light' || mode === 'theme_light') return 'theme_light';
+        if (mode === 'dark' || mode === 'theme_dark') return 'theme_dark';
+        if (mode === 'auto' || mode === 'theme_auto' || mode === null || mode === undefined || mode === '') return 'theme_auto';
+        throw new Error('[Member] Invalid theme mode "' + String(mode) + '".');
+    }
+
+    function themeActiveKeyToMode(themeActive) {
+        if (themeActive === 'theme_light') return 'light';
+        if (themeActive === 'theme_dark') return 'dark';
+        if (themeActive === 'theme_auto' || themeActive === null || themeActive === undefined || themeActive === '') return 'auto';
+        throw new Error('[Member] Invalid theme_active "' + String(themeActive) + '".');
+    }
+
+    function parseThemePrefs(raw) {
+        if (!raw) return null;
+        var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('[Member] Theme prefs must be a JSON object.');
+        }
+        return parsed;
+    }
+
+    function prefersDarkTheme() {
+        if (!window.matchMedia) {
+            throw new Error('[Member] window.matchMedia is required for theme_auto.');
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    function requireThemePreset(themeKey, source, contextLabel) {
+        var preset = (source && typeof source === 'object' && !Array.isArray(source)) ? source : null;
+        if (!preset) {
+            throw new Error('[Member] Missing ' + themeKey + ' in ' + contextLabel + '.');
+        }
+        if (
+            preset.bg_opacity === undefined ||
+            preset.map_lighting === undefined ||
+            preset.map_style === undefined ||
+            preset.animation_preference === undefined
+        ) {
+            throw new Error('[Member] Incomplete ' + themeKey + ' in ' + contextLabel + '.');
+        }
+        return {
+            bg_opacity: String(preset.bg_opacity),
+            map_lighting: String(preset.map_lighting),
+            map_style: String(preset.map_style),
+            animation_preference: String(preset.animation_preference)
+        };
+    }
+
+    function getAdminThemePresets() {
+        var settings = (window.App && typeof App.getState === 'function') ? (App.getState('settings') || {}) : {};
+        if (!settings || settings.theme_presets === undefined) {
+            throw new Error('[Member] settings.theme_presets must be loaded before theme initialization.');
+        }
+        var presets = parseThemePrefs(settings.theme_presets);
+        return {
+            theme_light: requireThemePreset('theme_light', presets.theme_light, 'admin_settings.theme_presets'),
+            theme_dark: requireThemePreset('theme_dark', presets.theme_dark, 'admin_settings.theme_presets')
+        };
+    }
+
+    function getStoredThemeActive() {
+        if (currentUser && currentUser.theme_active) return String(currentUser.theme_active);
+        return localStorage.getItem('theme_active') || 'theme_auto';
+    }
+
+    function getStoredThemePrefs() {
+        var raw = localStorage.getItem('theme_prefs');
+        if (!raw && currentUser && currentUser.theme_prefs) raw = currentUser.theme_prefs;
+        return raw ? parseThemePrefs(raw) : null;
+    }
+
+    function getNormalizedThemePrefs(rawPrefs) {
+        if (!rawPrefs) {
+            return getAdminThemePresets();
+        }
+        var stored = parseThemePrefs(rawPrefs);
+        return {
+            theme_light: requireThemePreset('theme_light', stored.theme_light, 'theme_prefs'),
+            theme_dark: requireThemePreset('theme_dark', stored.theme_dark, 'theme_prefs')
+        };
+    }
+
+    function getEffectiveThemePresetKey(themeActive) {
+        return themeActive === 'theme_auto'
+            ? (prefersDarkTheme() ? 'theme_dark' : 'theme_light')
+            : themeActive;
+    }
+
+    function getResolvedThemeState(themeActive, themePrefs) {
+        var active = themeActive || getStoredThemeActive();
+        var prefs = getNormalizedThemePrefs(themePrefs || getStoredThemePrefs());
+        var effectivePresetKey = getEffectiveThemePresetKey(active);
+        return {
+            themeActive: active,
+            themePrefs: prefs,
+            effectivePresetKey: effectivePresetKey,
+            effectivePreset: prefs[effectivePresetKey]
+        };
+    }
+
+    function applyResolvedThemeState(state) {
+        var resolved = state || getResolvedThemeState();
+        var mode = themeActiveKeyToMode(resolved.themeActive);
+        var preset = resolved.effectivePreset;
+        if (!preset) {
+            throw new Error('[Member] Missing effective theme preset for ' + String(resolved.effectivePresetKey) + '.');
+        }
+
+        if (mode === 'light' || mode === 'dark') {
+            document.documentElement.setAttribute('data-theme', mode);
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+
+        document.documentElement.style.setProperty('--bg-opacity', preset.bg_opacity);
+        localStorage.setItem('color_theme', mode);
+        localStorage.setItem('bg_opacity', preset.bg_opacity);
+        localStorage.setItem('map_lighting', preset.map_lighting);
+        localStorage.setItem('map_style', preset.map_style);
+        localStorage.setItem('animation_preference', preset.animation_preference);
+
+        if (currentUser) {
+            currentUser.theme_active = resolved.themeActive;
+            currentUser.theme_prefs = JSON.stringify(resolved.themePrefs);
+            currentUser.map_lighting = preset.map_lighting;
+            currentUser.map_style = preset.map_style;
+            currentUser.animation_preference = preset.animation_preference;
+            storeCurrent(currentUser);
+        }
+
+        try {
+            if (window.MapModule && typeof MapModule.setMapLighting === 'function') {
+                MapModule.setMapLighting(preset.map_lighting);
+            }
+            if (window.MapModule && typeof MapModule.setMapStyle === 'function') {
+                MapModule.setMapStyle(preset.map_style);
+            }
+        } catch (_eApplyThemeState) {}
+
+        return resolved;
+    }
+
+    function persistThemeState(themeActive, themePrefs, persistUser) {
+        var resolved = getResolvedThemeState(themeActive, themePrefs);
+        var prefsString = JSON.stringify(resolved.themePrefs);
+
+        localStorage.setItem('theme_active', resolved.themeActive);
+        localStorage.setItem('theme_prefs', prefsString);
+        applyResolvedThemeState(resolved);
+
+        if (!currentUser) return resolved;
+
+        var themeActiveChanged = currentUser.theme_active !== resolved.themeActive;
+        var themePrefsChanged = currentUser.theme_prefs !== prefsString;
+        currentUser.theme_active = resolved.themeActive;
+        currentUser.theme_prefs = prefsString;
+        storeCurrent(currentUser);
+
+        if (persistUser) {
+            if (themeActiveChanged) saveMemberSetting('theme_active', resolved.themeActive);
+            if (themePrefsChanged) saveMemberSetting('theme_prefs', prefsString);
+        }
+        return resolved;
+    }
+
+    function ensureThemeStateInitialized() {
+        var resolved = getResolvedThemeState();
+        localStorage.setItem('theme_active', resolved.themeActive);
+        localStorage.setItem('theme_prefs', JSON.stringify(resolved.themePrefs));
+        applyResolvedThemeState(resolved);
+        return resolved;
+    }
+
+    function ensureThemeStateInitializedWhenReady() {
+        if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+            throw new Error('[Member] App.whenStartupSettingsReady is required before theme initialization.');
+        }
+        return App.whenStartupSettingsReady().then(function() {
+            return ensureThemeStateInitialized();
+        });
+    }
+
+    function refreshThemePreferenceButtonsWhenReady() {
+        if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+            throw new Error('[Member] App.whenStartupSettingsReady is required before theme button initialization.');
+        }
+        return App.whenStartupSettingsReady().then(function() {
+            initThemeButtons();
+            initBgOpacityButtons();
+            initMapLightingButtons();
+            initMapStyleButtons();
+            initWallpaperButtons();
+        });
+    }
+
+    function reportThemeInitializationError(err) {
+        console.error('[Member] Theme initialization failed:', err);
+        var message = (err && err.message) ? err.message : String(err);
+        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+            ToastComponent.showError(message);
+        } else {
+            showStatus(message, { error: true });
+        }
+    }
+
+    function setThemeActiveState(mode) {
+        var state = ensureThemeStateInitialized();
+        return persistThemeState(themeModeToActiveKey(mode), state.themePrefs, !!currentUser);
+    }
+
+    function updateThemePrefsForCurrentTheme(prefKey, value) {
+        var state = ensureThemeStateInitialized();
+        state.themePrefs[state.effectivePresetKey][prefKey] = String(value);
+        return persistThemeState(state.themeActive, state.themePrefs, !!currentUser);
+    }
+
     function initThemeButtons() {
         var themeButtons = panel.querySelectorAll('.member-theme-button');
         if (!themeButtons.length) return;
 
-        var currentTheme = localStorage.getItem('color_theme') || 'auto';
+        var currentTheme = themeActiveKeyToMode(getStoredThemeActive());
 
         themeButtons.forEach(function(btn) {
             var mode = btn.dataset.themeMode;
             btn.setAttribute('aria-pressed', mode === currentTheme ? 'true' : 'false');
 
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
+            if (!btn.dataset.memberThemeBound) {
+                btn.dataset.memberThemeBound = 'true';
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
 
-                themeButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
-                btn.setAttribute('aria-pressed', 'true');
+                    themeButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
+                    btn.setAttribute('aria-pressed', 'true');
 
-                if (mode === 'light' || mode === 'dark') {
-                    document.documentElement.setAttribute('data-theme', mode);
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                }
-                localStorage.setItem('color_theme', mode);
-            });
+                    setThemeActiveState(mode);
+                    initBgOpacityButtons();
+                    initMapLightingButtons();
+                    initMapStyleButtons();
+                    initWallpaperButtons();
+                });
+            }
         });
     }
 
@@ -949,21 +1157,25 @@ const MemberModule = (function() {
         var bgButtons = panel.querySelectorAll('.member-bgopacity-button');
         if (!bgButtons.length) return;
 
-        var currentOpacity = localStorage.getItem('bg_opacity') || '0.6';
+        var currentOpacity = ensureThemeStateInitialized().effectivePreset.bg_opacity;
 
         bgButtons.forEach(function(btn) {
             var value = btn.dataset.bgOpacity;
             btn.setAttribute('aria-pressed', value === currentOpacity ? 'true' : 'false');
 
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
+            if (!btn.dataset.memberThemeBound) {
+                btn.dataset.memberThemeBound = 'true';
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
 
-                bgButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
-                btn.setAttribute('aria-pressed', 'true');
+                    bgButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
+                    btn.setAttribute('aria-pressed', 'true');
 
-                document.documentElement.style.setProperty('--bg-opacity', value);
-                localStorage.setItem('bg_opacity', value);
-            });
+                    document.documentElement.style.setProperty('--bg-opacity', value);
+                    localStorage.setItem('bg_opacity', value);
+                    updateThemePrefsForCurrentTheme('bg_opacity', value);
+                });
+            }
         });
     }
 
@@ -985,46 +1197,26 @@ const MemberModule = (function() {
             }
         });
         
-        // Load from member data (logged in) or localStorage (guest) or admin settings (fresh visitor)
-        var currentLighting = 'day';
-        if (currentUser) {
-            currentLighting = currentUser.map_lighting || 'day';
-        } else {
-            // For guests: check localStorage first, then admin settings, then default
-            var storedLighting = localStorage.getItem('map_lighting');
-            if (storedLighting) {
-                currentLighting = storedLighting;
-            } else if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                currentLighting = settings.map_lighting || 'day';
-            }
-        }
+        var currentLighting = ensureThemeStateInitialized().effectivePreset.map_lighting;
         
         lightingButtons.forEach(function(btn) {
             var lighting = btn.dataset.lighting;
             var isActive = lighting === currentLighting;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
-                
-                lightingButtons.forEach(function(b) {
-                    b.setAttribute('aria-pressed', 'false');
+            if (!btn.dataset.memberThemeBound) {
+                btn.dataset.memberThemeBound = 'true';
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+
+                    lightingButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+
+                    updateThemePrefsForCurrentTheme('map_lighting', lighting);
                 });
-                btn.setAttribute('aria-pressed', 'true');
-                
-                // Update map
-                if (window.MapModule && window.MapModule.setMapLighting) {
-                    window.MapModule.setMapLighting(lighting);
-                }
-                
-                // Save to localStorage (guests) or database (members)
-                if (currentUser) {
-                    saveMemberSetting('map_lighting', lighting);
-                } else {
-                    localStorage.setItem('map_lighting', lighting);
-                }
-            });
+            }
         });
     }
     
@@ -1032,46 +1224,26 @@ const MemberModule = (function() {
         var styleButtons = panel.querySelectorAll('.member-style-button');
         if (!styleButtons.length) return;
         
-        // Load from member data (logged in) or localStorage (guest) or admin settings (fresh visitor)
-        var currentStyle = 'standard';
-        if (currentUser) {
-            currentStyle = currentUser.map_style || 'standard';
-        } else {
-            // For guests: check localStorage first, then admin settings, then default
-            var storedStyle = localStorage.getItem('map_style');
-            if (storedStyle) {
-                currentStyle = storedStyle;
-            } else if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                currentStyle = settings.map_style || 'standard';
-            }
-        }
+        var currentStyle = ensureThemeStateInitialized().effectivePreset.map_style;
         
         styleButtons.forEach(function(btn) {
             var style = btn.dataset.style;
             var isActive = style === currentStyle;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
-                
-                styleButtons.forEach(function(b) {
-                    b.setAttribute('aria-pressed', 'false');
+            if (!btn.dataset.memberThemeBound) {
+                btn.dataset.memberThemeBound = 'true';
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+
+                    styleButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+
+                    updateThemePrefsForCurrentTheme('map_style', style);
                 });
-                btn.setAttribute('aria-pressed', 'true');
-                
-                // Update map
-                if (window.MapModule && window.MapModule.setMapStyle) {
-                    window.MapModule.setMapStyle(style);
-                }
-                
-                // Save to localStorage (guests) or database (members)
-                if (currentUser) {
-                    saveMemberSetting('map_style', style);
-                } else {
-                    localStorage.setItem('map_style', style);
-                }
-            });
+            }
         });
     }
     
@@ -1079,37 +1251,26 @@ const MemberModule = (function() {
         var wallpaperButtons = panel.querySelectorAll('.member-wallpaper-button');
         if (!wallpaperButtons.length) return;
         
-        // Load from member data (logged in) or localStorage (guest) or default
-        var currentWallpaper = 'basic';
-        if (currentUser) {
-            currentWallpaper = currentUser.animation_preference || 'basic';
-        } else {
-            var storedWallpaper = localStorage.getItem('animation_preference');
-            if (storedWallpaper) {
-                currentWallpaper = storedWallpaper;
-            }
-        }
+        var currentWallpaper = ensureThemeStateInitialized().effectivePreset.animation_preference;
         
         wallpaperButtons.forEach(function(btn) {
             var wallpaper = btn.dataset.wallpaper;
             var isActive = wallpaper === currentWallpaper;
             btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             
-            btn.addEventListener('click', function() {
-                if (btn.getAttribute('aria-pressed') === 'true') return;
-                
-                wallpaperButtons.forEach(function(b) {
-                    b.setAttribute('aria-pressed', 'false');
+            if (!btn.dataset.memberThemeBound) {
+                btn.dataset.memberThemeBound = 'true';
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+
+                    wallpaperButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+
+                    updateThemePrefsForCurrentTheme('animation_preference', wallpaper);
                 });
-                btn.setAttribute('aria-pressed', 'true');
-                
-                // Save to localStorage (guests) or database (members)
-                if (currentUser) {
-                    saveMemberSetting('animation_preference', wallpaper);
-                } else {
-                    localStorage.setItem('animation_preference', wallpaper);
-                }
-            });
+            }
         });
     }
     
@@ -1157,6 +1318,22 @@ const MemberModule = (function() {
             if (!user) return;
             if (user.country_code) localStorage.setItem('member_country_code', String(user.country_code));
             if (user.timezone) localStorage.setItem('member_timezone', String(user.timezone));
+            if (user.theme_active) {
+                localStorage.setItem('theme_active', String(user.theme_active));
+                localStorage.setItem('color_theme', themeActiveKeyToMode(String(user.theme_active)));
+            } else {
+                localStorage.removeItem('theme_active');
+                localStorage.removeItem('color_theme');
+            }
+            if (user.theme_prefs && typeof user.theme_prefs === 'string') {
+                localStorage.setItem('theme_prefs', String(user.theme_prefs));
+            } else {
+                localStorage.removeItem('theme_prefs');
+                localStorage.removeItem('bg_opacity');
+                localStorage.removeItem('map_lighting');
+                localStorage.removeItem('map_style');
+                localStorage.removeItem('animation_preference');
+            }
             // Filters: DB-first snapshot mirrored to localStorage so map can load correctly before filter panel opens.
             if (user.filters_json && typeof user.filters_json === 'string') {
                 localStorage.setItem('funmap_filters', String(user.filters_json));
@@ -2558,10 +2735,8 @@ const MemberModule = (function() {
             }
         } catch (_eMemberTabRestore) {}
         
-        // Refresh map settings buttons (in case member logged in/out)
-        initMapLightingButtons();
-        initMapStyleButtons();
-        initWallpaperButtons();
+        // Refresh theme buttons (in case member logged in/out)
+        refreshThemePreferenceButtonsWhenReady().catch(reportThemeInitializationError);
         // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
         ensureAvatarChoicesReady();
         
@@ -6734,42 +6909,42 @@ const MemberModule = (function() {
             currentUser = buildUserObject(payload, username);
             syncLocalProfilePrefsFromUser(currentUser);
             storeCurrent(currentUser);
-            
-            // Issue auth token cookie for API authentication (used by get-posts privacy)
-            fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
-            
-            render();
-
             var shouldSubmit = createAuthPendingSubmit;
             var isAdminFree = createAuthPendingSubmitIsAdminFree;
-            // Disarm immediately so a later auth cannot "surprise-submit".
             createAuthPendingSubmit = false;
             createAuthPendingSubmitIsAdminFree = false;
-            hideCreateAuth();
-            updateSubmitButtonState();
+            ensureThemeStateInitializedWhenReady().then(function() {
+                // Issue auth token cookie for API authentication (used by get-posts privacy)
+                fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
+                
+                render();
 
-            // Toast: login success (message system)
-            try {
-                var displayName = currentUser.name || currentUser.account_email || currentUser.username;
-                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                    if (message && window.ToastComponent) ToastComponent.showSuccess(message);
-                });
-                // Brief follow-up: let user know their preferences were loaded from their account
-                setTimeout(function() {
-                    try {
-                        getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
-                            if (message && window.ToastComponent) ToastComponent.showSuccess(message);
-                        });
-                    } catch (_e) {}
-                }, 1200);
-            } catch (e0) {}
+                hideCreateAuth();
+                updateSubmitButtonState();
 
-            if (shouldSubmit) {
-                // Resume the original submit attempt without losing draft.
-                setTimeout(function() {
-                    handleCreatePostSubmit(isAdminFree);
-                }, 0);
-            }
+                // Toast: login success (message system)
+                try {
+                    var displayName = currentUser.name || currentUser.account_email || currentUser.username;
+                    getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                        if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                    });
+                    // Brief follow-up: let user know their preferences were loaded from their account
+                    setTimeout(function() {
+                        try {
+                            getMessage('msg_member_preferences_restored', {}, false).then(function(message) {
+                                if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                            });
+                        } catch (_e) {}
+                    }, 1200);
+                } catch (e0) {}
+
+                if (shouldSubmit) {
+                    // Resume the original submit attempt without losing draft.
+                    setTimeout(function() {
+                        handleCreatePostSubmit(isAdminFree);
+                    }, 0);
+                }
+            }).catch(reportThemeInitializationError);
         });
     }
 
@@ -6837,29 +7012,31 @@ const MemberModule = (function() {
                 // Logged in after registration
                 payload.role = 'member';
                 currentUser = buildUserObject(payload, email);
+                syncLocalProfilePrefsFromUser(currentUser);
                 storeCurrent(currentUser);
-                render();
-
                 var shouldSubmit = createAuthPendingSubmit;
                 var isAdminFree = createAuthPendingSubmitIsAdminFree;
-                // Disarm immediately so a later auth cannot "surprise-submit".
                 createAuthPendingSubmit = false;
                 createAuthPendingSubmitIsAdminFree = false;
-                hideCreateAuth();
-                updateSubmitButtonState();
+                ensureThemeStateInitializedWhenReady().then(function() {
+                    render();
 
-                // Toast: registration success (message system)
-                try {
-                    getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
-                        if (message && window.ToastComponent) ToastComponent.showSuccess(message);
-                    });
+                    hideCreateAuth();
+                    updateSubmitButtonState();
+
+                    // Toast: registration success (message system)
+                    try {
+                        getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                            if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                        });
                 } catch (e0) {}
 
-                if (shouldSubmit) {
-                    setTimeout(function() {
-                        handleCreatePostSubmit(isAdminFree);
-                    }, 0);
-                }
+                    if (shouldSubmit) {
+                        setTimeout(function() {
+                            handleCreatePostSubmit(isAdminFree);
+                        }, 0);
+                    }
+            }).catch(reportThemeInitializationError);
             });
         });
     }
@@ -6976,16 +7153,16 @@ const MemberModule = (function() {
             syncLocalProfilePrefsFromUser(currentUser);
             
             storeCurrent(currentUser);
-
-            // Flag for post-reload welcome toasts
-            var displayName = currentUser.name || currentUser.account_email || currentUser.username;
-            try { sessionStorage.setItem('justLoggedIn', displayName || ''); } catch (_e) {}
-            
-            // Issue auth token cookie, then reload so the page fetches fresh auth-gated data
-            fetch('/gateway.php?action=issue-token').finally(function() {
-                window.location.reload();
-            });
-            
+            ensureThemeStateInitializedWhenReady().then(function() {
+                // Flag for post-reload welcome toasts
+                var displayName = currentUser.name || currentUser.account_email || currentUser.username;
+                try { sessionStorage.setItem('justLoggedIn', displayName || ''); } catch (_e) {}
+                
+                // Issue auth token cookie, then reload so the page fetches fresh auth-gated data
+                fetch('/gateway.php?action=issue-token').finally(function() {
+                    window.location.reload();
+                });
+            }).catch(reportThemeInitializationError);
         }).catch(function(err) {
             console.error('Login failed', err);
             getMessage('msg_auth_login_failed', {}, false).then(function(message) {
@@ -7245,17 +7422,18 @@ const MemberModule = (function() {
             
             // Build user object
             currentUser = buildUserObject(payload, email);
-            
+            syncLocalProfilePrefsFromUser(currentUser);
             storeCurrent(currentUser);
-            if (typeof _dismissPaymentOverlay === 'function') _dismissPaymentOverlay();
-            render();
-            
-            getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
-            });
-            
+            ensureThemeStateInitializedWhenReady().then(function() {
+                if (typeof _dismissPaymentOverlay === 'function') _dismissPaymentOverlay();
+                render();
+                
+                getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                    if (message) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
+            }).catch(reportThemeInitializationError);
         }).catch(function(err) {
             if (typeof _dismissPaymentOverlay === 'function') _dismissPaymentOverlay();
             console.error('Registration failed', err);
@@ -7314,39 +7492,10 @@ const MemberModule = (function() {
         try { localStorage.clear(); } catch (_eLsClr) {}
 
         render();
-        
-        // Revert to localStorage (guest) or admin settings (site default)
-        var lighting = localStorage.getItem('map_lighting');
-        if (!lighting) {
-            if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                lighting = settings.map_lighting || 'day';
-            } else {
-                lighting = 'day';
-            }
-        }
-        var style = localStorage.getItem('map_style');
-        if (!style) {
-            if (window.App && typeof App.getState === 'function') {
-                var settings = App.getState('settings') || {};
-                style = settings.map_style || 'standard';
-            } else {
-                style = 'standard';
-            }
-        }
-        if (window.MapModule) {
-            if (window.MapModule.setMapLighting) {
-                window.MapModule.setMapLighting(lighting);
-            }
-            if (window.MapModule.setMapStyle) {
-                window.MapModule.setMapStyle(style);
-            }
-        }
-        
-        // Refresh map settings buttons
-        initMapLightingButtons();
-        initMapStyleButtons();
-        initWallpaperButtons();
+
+        ensureThemeStateInitializedWhenReady().then(function() {
+            return refreshThemePreferenceButtonsWhenReady();
+        }).catch(reportThemeInitializationError);
         
         getMessage('msg_auth_logout_success', {}, false).then(function(message) {
             if (message) {
@@ -7424,8 +7573,8 @@ const MemberModule = (function() {
             language: (payload.language !== undefined) ? payload.language : null,
             currency: (payload.currency !== undefined) ? payload.currency : null,
             country_code: (payload.country_code !== undefined) ? payload.country_code : null,
-            map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
-            map_style: (payload.map_style !== undefined) ? payload.map_style : null,
+            theme_active: (payload.theme_active !== undefined) ? payload.theme_active : null,
+            theme_prefs: (payload.theme_prefs !== undefined) ? payload.theme_prefs : null,
             timezone: (payload.timezone !== undefined) ? payload.timezone : null
             ,
             // Filters (DB-first; localStorage is secondary)
@@ -7483,6 +7632,9 @@ const MemberModule = (function() {
                 }
                 parsed.id = idNum;
                 currentUser = parsed;
+                if (parsed.theme_active || parsed.theme_prefs || localStorage.getItem('theme_prefs')) {
+                    ensureThemeStateInitializedWhenReady().catch(reportThemeInitializationError);
+                }
                 
                 // Issue auth token cookie for API authentication (used by get-posts privacy)
                 fetch('/gateway.php?action=issue-token').catch(function(e) { console.error('[MemberModule] Token issue failed:', e); });
@@ -7932,20 +8084,16 @@ const MemberModule = (function() {
                     currentUser = buildUserObject(payload, payload.account_email || '');
                     syncLocalProfilePrefsFromUser(currentUser);
                     storeCurrent(currentUser);
-                    fetch('/gateway.php?action=issue-token').catch(function() {});
-                    render();
-                    if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
-                        window.MapModule.setMapLighting(currentUser.map_lighting);
-                    }
-                    if (currentUser.map_style && window.MapModule && window.MapModule.setMapStyle) {
-                        window.MapModule.setMapStyle(currentUser.map_style);
-                    }
-                    if (profileFormContainer && profileFormContainer.hidden) {
-                        toggleProfileForm();
-                    }
-                    setTimeout(function() {
-                        if (profileEditPasswordInput) profileEditPasswordInput.focus();
-                    }, 50);
+                    ensureThemeStateInitializedWhenReady().then(function() {
+                        fetch('/gateway.php?action=issue-token').catch(function() {});
+                        render();
+                        if (profileFormContainer && profileFormContainer.hidden) {
+                            toggleProfileForm();
+                        }
+                        setTimeout(function() {
+                            if (profileEditPasswordInput) profileEditPasswordInput.focus();
+                        }, 50);
+                    }).catch(reportThemeInitializationError);
                 }).catch(function() {
                     getMessage('msg_auth_reset_failed', {}, false).then(function(message) {
                         try { if (message && window.ToastComponent) ToastComponent.showError(message); } catch (_e) {}
@@ -8139,10 +8287,11 @@ window.MemberModule = MemberModule;
         function trySetupAvatarLoad() {
             if (window.App && typeof App.whenStartupSettingsReady === 'function') {
                 App.whenStartupSettingsReady().then(function() {
+                    ensureThemeStateInitialized();
                     if (!avatarUpdated) {
                         updateHeaderAvatarEarly();
                     }
-                });
+                }).catch(reportThemeInitializationError);
                 return true;
             }
             return false;

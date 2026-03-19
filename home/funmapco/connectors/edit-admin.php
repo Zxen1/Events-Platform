@@ -91,21 +91,21 @@ if (isset($input['country_code'])) {
   $vals[] = trim((string)$input['country_code']);
 }
 
-// Map preferences (optional; columns must exist in DB)
-if (isset($input['map_lighting'])) {
-  $updates[] = 'map_lighting=?';
+// Theme preferences
+if (isset($input['theme_active'])) {
+  $updates[] = 'theme_active=?';
   $types .= 's';
-  $vals[] = (string)$input['map_lighting'];
+  $vals[] = (string)$input['theme_active'];
 }
-if (isset($input['map_style'])) {
-  $updates[] = 'map_style=?';
-  $types .= 's';
-  $vals[] = (string)$input['map_style'];
-}
-if (isset($input['animation_preference'])) {
-  $updates[] = 'animation_preference=?';
-  $types .= 's';
-  $vals[] = (string)$input['animation_preference'];
+if (array_key_exists('theme_prefs', $input)) {
+  $themePrefs = $input['theme_prefs'];
+  if ($themePrefs === null || $themePrefs === '') {
+    $updates[] = 'theme_prefs=NULL';
+  } else {
+    $updates[] = 'theme_prefs=?';
+    $types .= 's';
+    $vals[] = is_string($themePrefs) ? $themePrefs : json_encode($themePrefs, JSON_UNESCAPED_SLASHES);
+  }
 }
 if (isset($input['timezone'])) {
   $updates[] = 'timezone=?';

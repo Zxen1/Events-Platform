@@ -263,14 +263,47 @@ if (empty($ogTitle)) {
   <link rel="stylesheet" href="themes.css?v=20260317a">
   <script>
     (function() {
-      var t = localStorage.getItem('color_theme');
-      if (t === 'light' || t === 'dark') {
-        document.documentElement.setAttribute('data-theme', t);
+      function themeActiveToMode(themeActive) {
+        if (themeActive === 'theme_light') return 'light';
+        if (themeActive === 'theme_dark') return 'dark';
+        if (themeActive === 'theme_auto') return 'auto';
+        throw new Error('[ThemeBoot] Invalid theme_active "' + String(themeActive) + '".');
       }
-      var o = localStorage.getItem('bg_opacity');
-      if (o) {
-        document.documentElement.style.setProperty('--bg-opacity', o);
+
+      var themeActive = localStorage.getItem('theme_active');
+      var themePrefsRaw = localStorage.getItem('theme_prefs');
+      if (!themeActive || !themePrefsRaw) return;
+
+      var themePrefs = JSON.parse(themePrefsRaw);
+      if (!themePrefs || typeof themePrefs !== 'object' || Array.isArray(themePrefs)) {
+        throw new Error('[ThemeBoot] localStorage theme_prefs must be a JSON object.');
       }
+
+      var effectiveKey = themeActive === 'theme_auto'
+        ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light')
+        : themeActive;
+      var preset = themePrefs[effectiveKey];
+      if (
+        !preset ||
+        preset.bg_opacity === undefined ||
+        preset.map_lighting === undefined ||
+        preset.map_style === undefined ||
+        preset.animation_preference === undefined
+      ) {
+        throw new Error('[ThemeBoot] Missing preset data for ' + String(effectiveKey) + '.');
+      }
+
+      var mode = themeActiveToMode(themeActive);
+      if (mode === 'light' || mode === 'dark') {
+        document.documentElement.setAttribute('data-theme', mode);
+      }
+
+      document.documentElement.style.setProperty('--bg-opacity', String(preset.bg_opacity));
+      localStorage.setItem('bg_opacity', String(preset.bg_opacity));
+      localStorage.setItem('map_lighting', String(preset.map_lighting));
+      localStorage.setItem('map_style', String(preset.map_style));
+      localStorage.setItem('animation_preference', String(preset.animation_preference));
+      localStorage.setItem('color_theme', mode);
     })();
   </script>
 </head>
@@ -464,6 +497,7 @@ if (empty($ogTitle)) {
           <button type="button" id="admin-tab-map-btn" class="admin-tab-map button-class-2" data-tab="map" role="tab" aria-selected="false" aria-controls="admin-tab-map">Map</button>
           <button type="button" id="admin-tab-messages-btn" class="admin-tab-messages button-class-2" data-tab="messages" role="tab" aria-selected="false" aria-controls="admin-tab-messages">Messages</button>
           <button type="button" id="admin-tab-checkout-btn" class="admin-tab-checkout button-class-2" data-tab="checkout" role="tab" aria-selected="false" aria-controls="admin-tab-checkout">Checkout</button>
+          <button type="button" id="admin-tab-themes-btn" class="admin-tab-themes button-class-2" data-tab="themes" role="tab" aria-selected="false" aria-controls="admin-tab-themes">Themes</button>
           <button type="button" id="admin-tab-moderation-btn" class="admin-tab-moderation button-class-2" data-tab="moderation" role="tab" aria-selected="false" aria-controls="admin-tab-moderation">Moderation</button>
           <button type="button" id="admin-tab-sitemap-btn" class="admin-tab-sitemap button-class-2" data-tab="sitemap" role="tab" aria-selected="false" aria-controls="admin-tab-sitemap">Sitemap</button>
         </div>
@@ -1092,43 +1126,6 @@ if (empty($ogTitle)) {
             </div>
           </div>
           
-          <!-- Map Lighting & Style -->
-          <div class="admin-map-lighting-container" id="admin-map-lighting-container">
-            <div class="admin-panel-field">
-              <label class="admin-settings-field-label">Map Lighting</label>
-              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
-              <div class="admin-lighting-buttons toggle-class-1">
-                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
-                  <!-- <span class="admin-lighting-button-text">Sunrise</span> -->
-                </button>
-                <button type="button" class="admin-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
-                  <!-- <span class="admin-lighting-button-text">Day</span> -->
-                </button>
-                <button type="button" class="admin-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
-                  <!-- <span class="admin-lighting-button-text">Sunset</span> -->
-                </button>
-                <button type="button" class="admin-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="admin-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
-                  <!-- <span class="admin-lighting-button-text">Night</span> -->
-                </button>
-              </div>
-            </div>
-            <div class="admin-panel-field">
-              <label class="admin-settings-field-label">Map Style</label>
-              <div class="admin-style-buttons toggle-class-1">
-                <button type="button" class="admin-style-button toggle-button" data-style="standard" aria-pressed="true">
-                  <span class="admin-style-button-text">Standard</span>
-                </button>
-                <button type="button" class="admin-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
-                  <span class="admin-style-button-text">Satellite</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
           <!-- Extra Map Options -->
           <div class="admin-extra-map-options-container" id="admin-extra-map-options-container">
             <div class="admin-panel-field">
@@ -1152,24 +1149,6 @@ if (empty($ogTitle)) {
               <div class="admin-spin-control-row row-class-1">
                 <span id="adminMaxMapCardsMobileDisplay" class="admin-slider-value">20</span>
                 <input type="range" id="adminMaxMapCardsMobile" min="5" max="50" step="5" value="20" class="admin-spin-slider" />
-              </div>
-            </div>
-            <!-- Default wallpaper mode for new users (members override with their own preference) -->
-            <div class="admin-panel-field">
-              <label class="admin-settings-field-label">Default Location Wallpaper</label>
-              <div class="admin-wallpaper-buttons toggle-class-1">
-                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
-                  <span class="admin-wallpaper-button-text">Off</span>
-                </button>
-                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
-                  <span class="admin-wallpaper-button-text">Still</span>
-                </button>
-                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
-                  <span class="admin-wallpaper-button-text">Basic</span>
-                </button>
-                <button type="button" class="admin-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
-                  <span class="admin-wallpaper-button-text">Orbit</span>
-                </button>
               </div>
             </div>
             <!-- Wallpaper dimmer is site-wide for everyone -->
@@ -1236,6 +1215,180 @@ if (empty($ogTitle)) {
               <!-- populated by JS -->
             </div>
             <button type="button" class="admin-checkout-coupon-add button-class-2" id="adminCheckoutCouponAdd">+ Add Coupon</button>
+          </div>
+        </section>
+        
+        <!-- Themes Tab -->
+        <section id="admin-tab-themes" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-themes-btn">
+          <div class="admin-themes-accordion accordion-class-1 admin-themes-accordion--open" id="admin-themes-light">
+            <div
+              class="admin-themes-accordion-header accordion-header"
+              id="admin-themes-light-header"
+              role="button"
+              tabindex="0"
+              aria-expanded="true"
+              aria-controls="admin-themes-light-body"
+            >
+              <span class="admin-themes-accordion-title">Light</span>
+              <span class="admin-themes-accordion-arrow admin-themes-accordion-arrow--open"></span>
+            </div>
+            <div
+              class="admin-themes-accordion-body accordion-body admin-themes-accordion-body--open"
+              id="admin-themes-light-body"
+              role="region"
+              aria-labelledby="admin-themes-light-header"
+            >
+              <div class="member-style-container">
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Background Opacity</label>
+                  <div class="member-bgopacity-buttons toggle-class-1">
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">40%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
+                      <span class="member-bgopacity-button-text">60%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">80%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">100%</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Map Lighting</label>
+                  <div class="member-lighting-buttons toggle-class-1">
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Map Style</label>
+                  <div class="member-style-buttons toggle-class-1">
+                    <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
+                      <span class="member-style-button-text">Standard</span>
+                    </button>
+                    <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
+                      <span class="member-style-button-text">Satellite</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Wallpaper Animation</label>
+                  <div class="member-wallpaper-buttons toggle-class-1">
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Off</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Still</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
+                      <span class="member-wallpaper-button-text">Basic</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Orbit</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-themes-accordion accordion-class-1" id="admin-themes-dark">
+            <div
+              class="admin-themes-accordion-header accordion-header"
+              id="admin-themes-dark-header"
+              role="button"
+              tabindex="0"
+              aria-expanded="false"
+              aria-controls="admin-themes-dark-body"
+            >
+              <span class="admin-themes-accordion-title">Dark</span>
+              <span class="admin-themes-accordion-arrow"></span>
+            </div>
+            <div
+              class="admin-themes-accordion-body accordion-body"
+              id="admin-themes-dark-body"
+              role="region"
+              aria-labelledby="admin-themes-dark-header"
+              hidden
+            >
+              <div class="member-style-container">
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Background Opacity</label>
+                  <div class="member-bgopacity-buttons toggle-class-1">
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">40%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
+                      <span class="member-bgopacity-button-text">60%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">80%</span>
+                    </button>
+                    <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
+                      <span class="member-bgopacity-button-text">100%</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Map Lighting</label>
+                  <div class="member-lighting-buttons toggle-class-1">
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                      <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Map Style</label>
+                  <div class="member-style-buttons toggle-class-1">
+                    <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
+                      <span class="member-style-button-text">Standard</span>
+                    </button>
+                    <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
+                      <span class="member-style-button-text">Satellite</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Wallpaper Animation</label>
+                  <div class="member-wallpaper-buttons toggle-class-1">
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Off</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Still</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
+                      <span class="member-wallpaper-button-text">Basic</span>
+                    </button>
+                    <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
+                      <span class="member-wallpaper-button-text">Orbit</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         

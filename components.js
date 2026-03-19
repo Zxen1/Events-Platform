@@ -10015,12 +10015,42 @@ var MiniMap = (function() {
     var currentMarkers = [];
     var onDisconnectCallback = null;
 
+    function getEffectiveThemePresetKey(themeActive) {
+        var active = themeActive || 'theme_auto';
+        if (active === 'theme_auto') {
+            if (!window.matchMedia) {
+                throw new Error('[LocationWallpaper] window.matchMedia is required for theme_auto.');
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
+        }
+        if (active === 'theme_light' || active === 'theme_dark') {
+            return active;
+        }
+        throw new Error('[LocationWallpaper] Invalid theme_active "' + String(active) + '".');
+    }
+
+    function getThemePresetFromSettings() {
+        var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+        if (!settings || settings.theme_presets === undefined) {
+            throw new Error('[LocationWallpaper] settings.theme_presets must be loaded before resolving theme wallpaper settings.');
+        }
+        var presets = settings.theme_presets;
+        if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+            throw new Error('[LocationWallpaper] settings.theme_presets must be a JSON object.');
+        }
+        var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+        var preset = presets[presetKey];
+        if (!preset) {
+            throw new Error('[LocationWallpaper] Missing theme preset "' + String(presetKey) + '".');
+        }
+        return preset;
+    }
+
     /**
-     * Get current map style URL from user settings
-     * Priority: member > localStorage > admin > default
+     * Get current map style URL from theme settings
      */
     function getStyleUrl() {
-        var style = 'standard';
+        var style = null;
         
         // Check member settings
         if (window.MemberModule && window.MemberModule.getCurrentUser) {
@@ -10030,18 +10060,19 @@ var MiniMap = (function() {
             }
         }
         
-        // Fall back to localStorage
-        if (style === 'standard') {
+        if (!style) {
             var stored = localStorage.getItem('map_style');
-            if (stored) style = stored;
+            if (stored) {
+                style = stored;
+            }
         }
         
-        // Fall back to admin settings
-        if (style === 'standard' && window.App && window.App.getState) {
-            var settings = window.App.getState('settings');
-            if (settings && settings.map_style) {
-                style = settings.map_style;
+        if (!style) {
+            var preset = getThemePresetFromSettings();
+            if (preset.map_style === undefined) {
+                throw new Error('[LocationWallpaper] Missing map_style in theme preset.');
             }
+            style = String(preset.map_style);
         }
         
         return style === 'standard-satellite'
@@ -10050,11 +10081,10 @@ var MiniMap = (function() {
     }
 
     /**
-     * Get current lighting preset from user settings
-     * Priority: member > localStorage > admin > default
+     * Get current lighting preset from theme settings
      */
     function getLightPreset() {
-        var lighting = 'day';
+        var lighting = null;
         
         // Check member settings
         if (window.MemberModule && window.MemberModule.getCurrentUser) {
@@ -10064,18 +10094,19 @@ var MiniMap = (function() {
             }
         }
         
-        // Fall back to localStorage
-        if (lighting === 'day') {
+        if (!lighting) {
             var stored = localStorage.getItem('map_lighting');
-            if (stored) lighting = stored;
+            if (stored) {
+                lighting = stored;
+            }
         }
         
-        // Fall back to admin settings
-        if (lighting === 'day' && window.App && window.App.getState) {
-            var settings = window.App.getState('settings');
-            if (settings && settings.map_lighting) {
-                lighting = settings.map_lighting;
+        if (!lighting) {
+            var preset = getThemePresetFromSettings();
+            if (preset.map_lighting === undefined) {
+                throw new Error('[LocationWallpaper] Missing map_lighting in theme preset.');
             }
+            lighting = String(preset.map_lighting);
         }
         
         return lighting;
@@ -10455,34 +10486,28 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getWallpaperMode() {
-        // Priority: 1) Member's database preference, 2) localStorage, 3) Admin default
         var mode = null;
-        try {
-            // 1. Check member preference (logged in user - saved to database)
-            if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
-                var user = MemberModule.getCurrentUser();
-                if (user && user.animation_preference) {
-                    mode = String(user.animation_preference).trim().toLowerCase();
-                }
+        if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+            var user = MemberModule.getCurrentUser();
+            if (user && user.animation_preference) {
+                mode = String(user.animation_preference).trim().toLowerCase();
             }
-            // 2. Guest or member without preference: check localStorage
-            if (!mode) {
-                var stored = localStorage.getItem('animation_preference');
-                if (stored) {
-                    mode = String(stored).trim().toLowerCase();
-                }
+        }
+        if (!mode) {
+            var stored = localStorage.getItem('animation_preference');
+            if (stored) {
+                mode = String(stored).trim().toLowerCase();
             }
-            // 3. New user: use admin default setting
-            if (!mode) {
-                var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
-                if (settings && settings.default_wallpaper_mode) {
-                    mode = String(settings.default_wallpaper_mode).trim().toLowerCase();
-                }
+        }
+        if (!mode) {
+            var preset = getThemePresetFromSettings();
+            if (preset.animation_preference === undefined) {
+                throw new Error('[LocationWallpaper] Missing animation_preference in theme preset.');
             }
-        } catch (e) {}
-        // Validate mode
+            mode = String(preset.animation_preference).trim().toLowerCase();
+        }
         if (mode === 'orbit' || mode === 'still' || mode === 'basic' || mode === 'off') return mode;
-        throw new Error('[LocationWallpaper] No valid wallpaper mode found. Check admin settings.');
+        throw new Error('[LocationWallpaper] No valid wallpaper mode found in theme settings.');
     }
 
     function getLocationTypeFromContainer(containerEl) {

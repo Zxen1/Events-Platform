@@ -67,7 +67,7 @@ try {
             verify_json_fail('Missing credentials');
         }
 
-        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, reminder_emails';
+        $cols = 'id, account_email, username, username_key, avatar_file, password_hash, theme_active, theme_prefs, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at, reminder_emails';
 
         $attempt = function(mysqli $db, string $table, string $user, string $pass, string $colList) {
             $sql = "SELECT {$colList} FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
@@ -107,8 +107,8 @@ try {
                     'language'           => null,
                     'preferred_currency' => isset($row['preferred_currency']) ? (string)$row['preferred_currency'] : null,
                     'country_code'       => isset($row['country']) ? (string)$row['country'] : null,
-                    'map_lighting'       => isset($row['map_lighting']) ? (string)$row['map_lighting'] : null,
-                    'map_style'          => isset($row['map_style']) ? (string)$row['map_style'] : null,
+                    'theme_active'       => isset($row['theme_active']) ? (string)$row['theme_active'] : null,
+                    'theme_prefs'        => isset($row['theme_prefs']) ? (string)$row['theme_prefs'] : null,
                     'timezone'           => null,
                     'favorites'          => isset($row['favorites']) ? (string)$row['favorites'] : null,
                     'recent'             => isset($row['recent']) ? (string)$row['recent'] : null,
@@ -239,7 +239,7 @@ try {
         if ($upd) { $upd->bind_param('s', $token); $upd->execute(); $upd->close(); }
 
         $table = $row['member_role'] === 'admin' ? 'admins' : 'members';
-        $cols  = 'id, account_email, username, username_key, avatar_file, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
+        $cols  = 'id, account_email, username, username_key, avatar_file, theme_active, theme_prefs, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
         $mStmt = $mysqli->prepare("SELECT {$cols} FROM `{$table}` WHERE id = ? LIMIT 1");
         if (!$mStmt) verify_json_fail('server_error');
         $mStmt->bind_param('i', $row['member_id']);
@@ -264,8 +264,8 @@ try {
                 'language'           => null,
                 'preferred_currency' => $mRow['preferred_currency'] ?? null,
                 'country_code'       => $mRow['country'] ?? null,
-                'map_lighting'       => $mRow['map_lighting'] ?? null,
-                'map_style'          => $mRow['map_style'] ?? null,
+                'theme_active'       => $mRow['theme_active'] ?? null,
+                'theme_prefs'        => $mRow['theme_prefs'] ?? null,
                 'timezone'           => null,
                 'favorites'          => $mRow['favorites'] ?? null,
                 'recent'             => $mRow['recent'] ?? null,
