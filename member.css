@@ -520,6 +520,14 @@
   margin-bottom: 6px;
 }
 
+.member-theme-section[hidden] {
+  display: none;
+}
+
+.member-theme-reset {
+  width: 100%;
+}
+
 /* member-preferences-container removed (no language/currency filters) */
 
 /* Lighting/Style/Wallpaper buttons use toggle-class-1 from base.css */

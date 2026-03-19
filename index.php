@@ -1493,7 +1493,7 @@ if (empty($ogTitle)) {
           <!-- Map Settings (always visible) -->
           <div class="member-style-container">
             <div class="member-panel-field">
-              <label class="member-settings-field-label">Colour Scheme</label>
+              <label class="member-settings-field-label">Theme</label>
               <div class="member-theme-buttons toggle-class-1">
                 <button type="button" class="member-theme-button toggle-button" data-theme-mode="auto" aria-pressed="true">
                   <span class="member-theme-button-text">Auto</span>
@@ -1506,71 +1506,138 @@ if (empty($ogTitle)) {
                 </button>
               </div>
             </div>
-            <div class="member-panel-field">
-              <label class="member-settings-field-label">Background Opacity</label>
-              <div class="member-bgopacity-buttons toggle-class-1">
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
-                  <span class="member-bgopacity-button-text">40%</span>
-                </button>
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
-                  <span class="member-bgopacity-button-text">60%</span>
-                </button>
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
-                  <span class="member-bgopacity-button-text">80%</span>
-                </button>
-                <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
-                  <span class="member-bgopacity-button-text">100%</span>
-                </button>
+            <div class="member-theme-section" data-member-theme-section="light" hidden>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Background Opacity</label>
+                <div class="member-bgopacity-buttons toggle-class-1">
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">40%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
+                    <span class="member-bgopacity-button-text">60%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">80%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">100%</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Map Lighting</label>
+                <div class="member-lighting-buttons toggle-class-1">
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Map Style</label>
+                <div class="member-style-buttons toggle-class-1">
+                  <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
+                    <span class="member-style-button-text">Standard</span>
+                  </button>
+                  <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
+                    <span class="member-style-button-text">Satellite</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Wallpaper Animation</label>
+                <div class="member-wallpaper-buttons toggle-class-1">
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Off</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Still</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
+                    <span class="member-wallpaper-button-text">Basic</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Orbit</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <button type="button" class="member-theme-reset button-class-2d" data-theme-reset="light">Reset theme</button>
               </div>
             </div>
-            <div class="member-panel-field">
-              <label class="member-settings-field-label">Map Lighting</label>
-              <!-- SWITCH: To swap between icons and text, comment out one set and uncomment the other. Do not delete either. -->
-              <div class="member-lighting-buttons toggle-class-1">
-                <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
-                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
-                  <!-- <span class="member-lighting-button-text">Sunrise</span> -->
-                </button>
-                <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
-                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
-                  <!-- <span class="member-lighting-button-text">Day</span> -->
-                </button>
-                <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
-                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
-                  <!-- <span class="member-lighting-button-text">Sunset</span> -->
-                </button>
-                <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
-                  <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
-                  <!-- <span class="member-lighting-button-text">Night</span> -->
-                </button>
+            <div class="member-theme-section" data-member-theme-section="dark" hidden>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Background Opacity</label>
+                <div class="member-bgopacity-buttons toggle-class-1">
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">40%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.6" aria-pressed="true">
+                    <span class="member-bgopacity-button-text">60%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.8" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">80%</span>
+                  </button>
+                  <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="1" aria-pressed="false">
+                    <span class="member-bgopacity-button-text">100%</span>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="member-panel-field">
-              <label class="member-settings-field-label">Map Style</label>
-              <div class="member-style-buttons toggle-class-1">
-                <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
-                  <span class="member-style-button-text">Standard</span>
-                </button>
-                <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
-                  <span class="member-style-button-text">Satellite</span>
-                </button>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Map Lighting</label>
+                <div class="member-lighting-buttons toggle-class-1">
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="dawn" aria-pressed="false" title="Sunrise">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dawn" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="day" aria-pressed="true" title="Day">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_day" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="dusk" aria-pressed="false" title="Sunset">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_dusk" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="member-lighting-button toggle-button" data-lighting="night" aria-pressed="false" title="Night">
+                    <span class="member-lighting-button-icon" data-icon-key="icon_lighting_night" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="member-panel-field">
-              <label class="member-settings-field-label">Wallpaper Animation</label>
-              <div class="member-wallpaper-buttons toggle-class-1">
-                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
-                  <span class="member-wallpaper-button-text">Off</span>
-                </button>
-                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
-                  <span class="member-wallpaper-button-text">Still</span>
-                </button>
-                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
-                  <span class="member-wallpaper-button-text">Basic</span>
-                </button>
-                <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
-                  <span class="member-wallpaper-button-text">Orbit</span>
-                </button>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Map Style</label>
+                <div class="member-style-buttons toggle-class-1">
+                  <button type="button" class="member-style-button toggle-button" data-style="standard" aria-pressed="true">
+                    <span class="member-style-button-text">Standard</span>
+                  </button>
+                  <button type="button" class="member-style-button toggle-button" data-style="standard-satellite" aria-pressed="false">
+                    <span class="member-style-button-text">Satellite</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Wallpaper Animation</label>
+                <div class="member-wallpaper-buttons toggle-class-1">
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="off" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Off</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="still" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Still</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="basic" aria-pressed="true">
+                    <span class="member-wallpaper-button-text">Basic</span>
+                  </button>
+                  <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
+                    <span class="member-wallpaper-button-text">Orbit</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <button type="button" class="member-theme-reset button-class-2d" data-theme-reset="dark">Reset theme</button>
               </div>
             </div>
           </div>

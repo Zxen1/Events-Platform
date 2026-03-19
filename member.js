@@ -1101,6 +1101,8 @@ const MemberModule = (function() {
             initMapLightingButtons();
             initMapStyleButtons();
             initWallpaperButtons();
+            initThemeResetButtons();
+            syncMemberThemePreferenceUi();
         });
     }
 
@@ -1119,75 +1121,76 @@ const MemberModule = (function() {
         return persistThemeState(themeModeToActiveKey(mode), state.themePrefs, !!currentUser);
     }
 
-    function updateThemePrefsForCurrentTheme(prefKey, value) {
+    function cloneThemePreset(preset) {
+        return {
+            bg_opacity: String(preset.bg_opacity),
+            map_lighting: String(preset.map_lighting),
+            map_style: String(preset.map_style),
+            animation_preference: String(preset.animation_preference)
+        };
+    }
+
+    function getThemePresetForMode(mode) {
         var state = ensureThemeStateInitialized();
-        state.themePrefs[state.effectivePresetKey][prefKey] = String(value);
+        var themeKey = themeModeToActiveKey(mode);
+        return requireThemePreset(themeKey, state.themePrefs[themeKey], 'theme_prefs');
+    }
+
+    function updateThemePrefsForMode(mode, prefKey, value) {
+        var state = ensureThemeStateInitialized();
+        var themeKey = themeModeToActiveKey(mode);
+        state.themePrefs[themeKey][prefKey] = String(value);
         return persistThemeState(state.themeActive, state.themePrefs, !!currentUser);
     }
 
-    function initThemeButtons() {
-        var themeButtons = panel.querySelectorAll('.member-theme-button');
-        if (!themeButtons.length) return;
+    function resetThemePrefsForMode(mode) {
+        var state = ensureThemeStateInitialized();
+        var themeKey = themeModeToActiveKey(mode);
+        var adminPresets = getAdminThemePresets();
+        state.themePrefs[themeKey] = cloneThemePreset(requireThemePreset(themeKey, adminPresets[themeKey], 'admin_settings.theme_presets'));
+        return persistThemeState(state.themeActive, state.themePrefs, !!currentUser);
+    }
 
-        var currentTheme = themeActiveKeyToMode(getStoredThemeActive());
+    function syncToggleSlider(container) {
+        if (!container || container.hidden) return;
+        var slider = container.querySelector('.toggle-class-1-slider');
+        var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+        if (!slider || !activeBtn) return;
 
-        themeButtons.forEach(function(btn) {
-            var mode = btn.dataset.themeMode;
-            btn.setAttribute('aria-pressed', mode === currentTheme ? 'true' : 'false');
+        var containerRect = container.getBoundingClientRect();
+        if (!containerRect.width) return;
 
-            if (!btn.dataset.memberThemeBound) {
-                btn.dataset.memberThemeBound = 'true';
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
+        var btnRect = activeBtn.getBoundingClientRect();
+        var pad = parseFloat(getComputedStyle(container).paddingLeft) || 0;
+        slider.style.width = btnRect.width + 'px';
+        slider.style.transition = 'none';
+        slider.style.transform = 'translateX(' + (btnRect.left - containerRect.left - pad) + 'px)';
+        slider.style.background = activeBtn.dataset.tierColor || '';
+        slider.offsetHeight;
+        slider.style.transition = '';
+    }
 
-                    themeButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
-                    btn.setAttribute('aria-pressed', 'true');
+    function syncToggleGroup(container, buttonSelector, datasetKey, currentValue) {
+        if (!container) return;
+        var buttons = container.querySelectorAll(buttonSelector);
+        buttons.forEach(function(btn) {
+            btn.setAttribute('aria-pressed', String(btn.dataset[datasetKey]) === String(currentValue) ? 'true' : 'false');
+        });
+        syncToggleSlider(container);
+    }
 
-                    setThemeActiveState(mode);
-                    initBgOpacityButtons();
-                    initMapLightingButtons();
-                    initMapStyleButtons();
-                    initWallpaperButtons();
-                });
-            }
+    function syncThemeSectionVisibility(mode) {
+        if (!panel) return;
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            section.hidden = (mode === 'auto' || section.dataset.memberThemeSection !== mode);
         });
     }
 
-    function initBgOpacityButtons() {
-        var bgButtons = panel.querySelectorAll('.member-bgopacity-button');
-        if (!bgButtons.length) return;
-
-        var currentOpacity = ensureThemeStateInitialized().effectivePreset.bg_opacity;
-
-        bgButtons.forEach(function(btn) {
-            var value = btn.dataset.bgOpacity;
-            btn.setAttribute('aria-pressed', value === currentOpacity ? 'true' : 'false');
-
-            if (!btn.dataset.memberThemeBound) {
-                btn.dataset.memberThemeBound = 'true';
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-
-                    bgButtons.forEach(function(b) { b.setAttribute('aria-pressed', 'false'); });
-                    btn.setAttribute('aria-pressed', 'true');
-
-                    document.documentElement.style.setProperty('--bg-opacity', value);
-                    localStorage.setItem('bg_opacity', value);
-                    updateThemePrefsForCurrentTheme('bg_opacity', value);
-                });
-            }
-        });
-    }
-
-    function initMapLightingButtons() {
-        var lightingButtons = panel.querySelectorAll('.member-lighting-button');
-        if (!lightingButtons.length) return;
-        
-        // Apply lighting icons from system images
+    function applyLightingIcons(scopeEl) {
+        if (!scopeEl) return;
         var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
-        lightingButtons.forEach(function(btn) {
-            var iconEl = btn.querySelector('.member-lighting-button-icon');
-            if (!iconEl) return;
+        scopeEl.querySelectorAll('.member-lighting-button-icon').forEach(function(iconEl) {
             var key = iconEl.dataset.iconKey;
             if (key && sys[key] && window.App && typeof App.getImageUrl === 'function') {
                 var url = App.getImageUrl('systemImages', sys[key]);
@@ -1196,79 +1199,134 @@ const MemberModule = (function() {
                 iconEl.style.opacity = '1';
             }
         });
-        
-        var currentLighting = ensureThemeStateInitialized().effectivePreset.map_lighting;
-        
-        lightingButtons.forEach(function(btn) {
-            var lighting = btn.dataset.lighting;
-            var isActive = lighting === currentLighting;
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            
+    }
+
+    function syncMemberThemePreferenceUi() {
+        if (!panel) return;
+
+        var currentTheme = themeActiveKeyToMode(getStoredThemeActive());
+        var themeButtons = panel.querySelectorAll('.member-theme-button');
+        themeButtons.forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.themeMode === currentTheme ? 'true' : 'false');
+        });
+        syncToggleSlider(panel.querySelector('.member-theme-buttons'));
+        syncThemeSectionVisibility(currentTheme);
+
+        if (currentTheme === 'auto') return;
+
+        var section = panel.querySelector('.member-theme-section[data-member-theme-section="' + currentTheme + '"]');
+        if (!section) return;
+
+        var preset = getThemePresetForMode(currentTheme);
+        applyLightingIcons(section);
+        syncToggleGroup(section.querySelector('.member-bgopacity-buttons'), '.member-bgopacity-button', 'bgOpacity', preset.bg_opacity);
+        syncToggleGroup(section.querySelector('.member-lighting-buttons'), '.member-lighting-button', 'lighting', preset.map_lighting);
+        syncToggleGroup(section.querySelector('.member-style-buttons'), '.member-style-button', 'style', preset.map_style);
+        syncToggleGroup(section.querySelector('.member-wallpaper-buttons'), '.member-wallpaper-button', 'wallpaper', preset.animation_preference);
+    }
+
+    function initThemeButtons() {
+        var themeButtons = panel.querySelectorAll('.member-theme-button');
+        if (!themeButtons.length) return;
+
+        themeButtons.forEach(function(btn) {
+            var mode = btn.dataset.themeMode;
+
             if (!btn.dataset.memberThemeBound) {
                 btn.dataset.memberThemeBound = 'true';
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
-
-                    lightingButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.setAttribute('aria-pressed', 'true');
-
-                    updateThemePrefsForCurrentTheme('map_lighting', lighting);
+                    setThemeActiveState(mode);
+                    syncMemberThemePreferenceUi();
                 });
             }
+        });
+
+        syncMemberThemePreferenceUi();
+    }
+
+    function initBgOpacityButtons() {
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            var mode = section.dataset.memberThemeSection;
+            section.querySelectorAll('.member-bgopacity-button').forEach(function(btn) {
+                var value = btn.dataset.bgOpacity;
+                if (!btn.dataset.memberThemeBound) {
+                    btn.dataset.memberThemeBound = 'true';
+                    btn.addEventListener('click', function() {
+                        if (btn.getAttribute('aria-pressed') === 'true') return;
+                        updateThemePrefsForMode(mode, 'bg_opacity', value);
+                        syncMemberThemePreferenceUi();
+                    });
+                }
+            });
+        });
+    }
+
+    function initMapLightingButtons() {
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            var mode = section.dataset.memberThemeSection;
+            applyLightingIcons(section);
+            section.querySelectorAll('.member-lighting-button').forEach(function(btn) {
+                var lighting = btn.dataset.lighting;
+                if (!btn.dataset.memberThemeBound) {
+                    btn.dataset.memberThemeBound = 'true';
+                    btn.addEventListener('click', function() {
+                        if (btn.getAttribute('aria-pressed') === 'true') return;
+                        updateThemePrefsForMode(mode, 'map_lighting', lighting);
+                        syncMemberThemePreferenceUi();
+                    });
+                }
+            });
         });
     }
     
     function initMapStyleButtons() {
-        var styleButtons = panel.querySelectorAll('.member-style-button');
-        if (!styleButtons.length) return;
-        
-        var currentStyle = ensureThemeStateInitialized().effectivePreset.map_style;
-        
-        styleButtons.forEach(function(btn) {
-            var style = btn.dataset.style;
-            var isActive = style === currentStyle;
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            
-            if (!btn.dataset.memberThemeBound) {
-                btn.dataset.memberThemeBound = 'true';
-                btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-
-                    styleButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            var mode = section.dataset.memberThemeSection;
+            section.querySelectorAll('.member-style-button').forEach(function(btn) {
+                var style = btn.dataset.style;
+                if (!btn.dataset.memberThemeBound) {
+                    btn.dataset.memberThemeBound = 'true';
+                    btn.addEventListener('click', function() {
+                        if (btn.getAttribute('aria-pressed') === 'true') return;
+                        updateThemePrefsForMode(mode, 'map_style', style);
+                        syncMemberThemePreferenceUi();
                     });
-                    btn.setAttribute('aria-pressed', 'true');
-
-                    updateThemePrefsForCurrentTheme('map_style', style);
-                });
-            }
+                }
+            });
         });
     }
     
     function initWallpaperButtons() {
-        var wallpaperButtons = panel.querySelectorAll('.member-wallpaper-button');
-        if (!wallpaperButtons.length) return;
-        
-        var currentWallpaper = ensureThemeStateInitialized().effectivePreset.animation_preference;
-        
-        wallpaperButtons.forEach(function(btn) {
-            var wallpaper = btn.dataset.wallpaper;
-            var isActive = wallpaper === currentWallpaper;
-            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            var mode = section.dataset.memberThemeSection;
+            section.querySelectorAll('.member-wallpaper-button').forEach(function(btn) {
+                var wallpaper = btn.dataset.wallpaper;
+                if (!btn.dataset.memberThemeBound) {
+                    btn.dataset.memberThemeBound = 'true';
+                    btn.addEventListener('click', function() {
+                        if (btn.getAttribute('aria-pressed') === 'true') return;
+                        updateThemePrefsForMode(mode, 'animation_preference', wallpaper);
+                        syncMemberThemePreferenceUi();
+                    });
+                }
+            });
+        });
+    }
+
+    function initThemeResetButtons() {
+        var resetButtons = panel.querySelectorAll('.member-theme-reset');
+        resetButtons.forEach(function(btn) {
+            var mode = btn.dataset.themeReset;
             if (!btn.dataset.memberThemeBound) {
                 btn.dataset.memberThemeBound = 'true';
                 btn.addEventListener('click', function() {
-                    if (btn.getAttribute('aria-pressed') === 'true') return;
-
-                    wallpaperButtons.forEach(function(b) {
-                        b.setAttribute('aria-pressed', 'false');
-                    });
-                    btn.setAttribute('aria-pressed', 'true');
-
-                    updateThemePrefsForCurrentTheme('animation_preference', wallpaper);
+                    resetThemePrefsForMode(mode);
+                    syncMemberThemePreferenceUi();
                 });
             }
         });
