@@ -3038,7 +3038,16 @@ const MapModule = (function() {
     if (!localStorage.getItem('funmap_visited')) {
       localStorage.setItem('funmap_visited', 'true');
     }
-    
+
+    if (window.App && typeof App.whenStartupSettingsReady === 'function') {
+      App.whenStartupSettingsReady().then(function() {
+        initMap();
+      }).catch(function(err) {
+        console.error('[Map] Startup settings failed before map init:', err);
+      });
+      return;
+    }
+
     // Initialize map
     initMap();
   }

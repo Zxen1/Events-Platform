@@ -8161,7 +8161,8 @@ const MemberModule = (function() {
         openTermsModal: openTermsModal,
         getCheckoutOptions: function() { return checkoutOptions; },
         handleDeepLink: handleDeepLink,
-        getAvatarSource: getAvatarSource
+        getAvatarSource: getAvatarSource,
+        ensureThemeStateInitializedWhenReady: ensureThemeStateInitializedWhenReady
     };
 
 
@@ -8285,13 +8286,14 @@ window.MemberModule = MemberModule;
         hideMemberIconIfLoggedIn();
         
         function trySetupAvatarLoad() {
-            if (window.App && typeof App.whenStartupSettingsReady === 'function') {
-                App.whenStartupSettingsReady().then(function() {
-                    ensureThemeStateInitialized();
+            if (window.MemberModule && typeof MemberModule.ensureThemeStateInitializedWhenReady === 'function') {
+                MemberModule.ensureThemeStateInitializedWhenReady().then(function() {
                     if (!avatarUpdated) {
                         updateHeaderAvatarEarly();
                     }
-                }).catch(reportThemeInitializationError);
+                }).catch(function(err) {
+                    console.error('[Member] Early theme initialization failed:', err);
+                });
                 return true;
             }
             return false;
