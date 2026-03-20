@@ -361,6 +361,10 @@ For 500 errors, ask the user to check the Network tab Response body. For JS bugs
 Never read through code hunting for a runtime error when DevTools can surface it in seconds.
 For troubleshooting, always try the Console, Network tab, or tracking in DevTools first before reading code.
 
+### Ignore These Constant Console Warnings
+Never mention these three warnings when the user pastes console summaries: `featureNamespace place-A of featureset place-labels's selector is not associated to the same source, skip this selector`, `Cutoff is currently disabled on terrain`, `[Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred`
+They are always present and not actionable for this project.
+
 ---
 
 ## IF UNSURE

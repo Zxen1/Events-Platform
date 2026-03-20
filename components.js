@@ -9751,12 +9751,61 @@ var SecondaryMap = (function() {
     var isCapturing = false;
     var queue = [];
 
-    // Wallpaper always uses standard style with night lighting for consistent dark aesthetic
-    var STYLE_URL = 'mapbox://styles/mapbox/standard';
-    var LIGHT_PRESET = 'night';
+    function getEffectiveThemePresetKey(themeActive) {
+        var active = themeActive || 'theme_auto';
+        if (active === 'theme_auto') {
+            if (!window.matchMedia) {
+                throw new Error('[SecondaryMap] window.matchMedia is required for theme_auto.');
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
+        }
+        if (active === 'theme_light' || active === 'theme_dark') {
+            return active;
+        }
+        throw new Error('[SecondaryMap] Invalid theme_active "' + String(active) + '".');
+    }
+
+    function getThemePresetFromSettings() {
+        var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+        if (!settings || settings.theme_presets === undefined) {
+            throw new Error('[SecondaryMap] settings.theme_presets must be loaded before resolving wallpaper capture settings.');
+        }
+        var presets = settings.theme_presets;
+        if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+            throw new Error('[SecondaryMap] settings.theme_presets must be a JSON object.');
+        }
+        var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+        var preset = presets[presetKey];
+        if (!preset || preset.map_style === undefined || preset.map_lighting === undefined) {
+            throw new Error('[SecondaryMap] Missing map settings in theme preset "' + String(presetKey) + '".');
+        }
+        return preset;
+    }
+
+    function getSecondaryMapThemeSettings() {
+        var style = localStorage.getItem('map_style');
+        var lighting = localStorage.getItem('map_lighting');
+        if (style && lighting) {
+            return {
+                styleUrl: style === 'standard-satellite'
+                    ? 'mapbox://styles/mapbox/standard-satellite'
+                    : 'mapbox://styles/mapbox/standard',
+                lightPreset: String(lighting)
+            };
+        }
+
+        var preset = getThemePresetFromSettings();
+        return {
+            styleUrl: String(preset.map_style) === 'standard-satellite'
+                ? 'mapbox://styles/mapbox/standard-satellite'
+                : 'mapbox://styles/mapbox/standard',
+            lightPreset: String(preset.map_lighting)
+        };
+    }
 
     function ensureMap(w, h, cb) {
         if (!window.mapboxgl || !mapboxgl.accessToken) { cb(null); return; }
+        var themeSettings = getSecondaryMapThemeSettings();
         
         // Resize if needed
         if (map && mount && (w !== currentWidth || h !== currentHeight)) {
@@ -9780,7 +9829,7 @@ var SecondaryMap = (function() {
         try {
             map = new mapboxgl.Map({
                 container: mount,
-                style: STYLE_URL,
+                style: themeSettings.styleUrl,
                 projection: 'globe',
                 center: [0, 0],
                 zoom: 1,
@@ -9797,7 +9846,7 @@ var SecondaryMap = (function() {
         
         map.once('style.load', function() {
             try {
-                map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
+                map.setConfigProperty('basemap', 'lightPreset', themeSettings.lightPreset);
                 map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
                 map.setConfigProperty('basemap', 'showPlaceLabels', false);
                 map.setConfigProperty('basemap', 'showRoadLabels', false);
@@ -10485,6 +10534,87 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {}
     }
 
+    function getEffectiveThemePresetKey(themeActive) {
+        var active = themeActive || 'theme_auto';
+        if (active === 'theme_auto') {
+            if (!window.matchMedia) {
+                throw new Error('[LocationWallpaper] window.matchMedia is required for theme_auto.');
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
+        }
+        if (active === 'theme_light' || active === 'theme_dark') {
+            return active;
+        }
+        throw new Error('[LocationWallpaper] Invalid theme_active "' + String(active) + '".');
+    }
+
+    function getThemePresetFromSettings() {
+        var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+        if (!settings || settings.theme_presets === undefined) {
+            throw new Error('[LocationWallpaper] settings.theme_presets must be loaded before resolving theme wallpaper settings.');
+        }
+        var presets = settings.theme_presets;
+        if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+            throw new Error('[LocationWallpaper] settings.theme_presets must be a JSON object.');
+        }
+        var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+        var preset = presets[presetKey];
+        if (!preset) {
+            throw new Error('[LocationWallpaper] Missing theme preset "' + String(presetKey) + '".');
+        }
+        return preset;
+    }
+
+    function getStyleUrl() {
+        var style = null;
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+            var member = window.MemberModule.getCurrentUser();
+            if (member && member.map_style) {
+                style = member.map_style;
+            }
+        }
+        if (!style) {
+            var stored = localStorage.getItem('map_style');
+            if (stored) {
+                style = stored;
+            }
+        }
+        if (!style) {
+            var preset = getThemePresetFromSettings();
+            if (preset.map_style === undefined) {
+                throw new Error('[LocationWallpaper] Missing map_style in theme preset.');
+            }
+            style = String(preset.map_style);
+        }
+        return style === 'standard-satellite'
+            ? 'mapbox://styles/mapbox/standard-satellite'
+            : 'mapbox://styles/mapbox/standard';
+    }
+
+    function getLightPreset() {
+        var lighting = null;
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+            var member = window.MemberModule.getCurrentUser();
+            if (member && member.map_lighting) {
+                lighting = member.map_lighting;
+            }
+        }
+        if (!lighting) {
+            var stored = localStorage.getItem('map_lighting');
+            if (stored) {
+                lighting = stored;
+            }
+        }
+        if (!lighting) {
+            var preset = getThemePresetFromSettings();
+            if (preset.map_lighting === undefined) {
+                throw new Error('[LocationWallpaper] Missing map_lighting in theme preset.');
+            }
+            lighting = String(preset.map_lighting);
+        }
+        return lighting;
+    }
+
     function getWallpaperMode() {
         var mode = null;
         if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
@@ -10645,16 +10775,6 @@ const LocationWallpaperComponent = (function() {
         }
     }
 
-    function getStyleUrlForWallpaper() {
-        // Location wallpaper always uses standard style (night lighting applied separately).
-        return 'mapbox://styles/mapbox/standard';
-    }
-
-    function getLightingPresetForWallpaper() {
-        // Location wallpaper always uses night lighting for consistent dark aesthetic.
-        return 'night';
-    }
-
     function applyWallpaperNoTextNoRoads(map) {
         if (!map) return;
         // Hide all labels and roads for clean wallpaper appearance.
@@ -10698,8 +10818,8 @@ const LocationWallpaperComponent = (function() {
         root.appendChild(img);
 
         // Apply wallpaper overlay from the active theme preset
-        var overlayValue = getWallpaperOverlay();
         var effectivePresetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+        var overlayValue = getWallpaperOverlay();
         if (effectivePresetKey === 'theme_dark') {
             root.style.setProperty('--locationwallpaper-dimmer', overlayValue);
             root.style.setProperty('--locationwallpaper-whiten', '0');
@@ -10935,7 +11055,7 @@ const LocationWallpaperComponent = (function() {
             try {
                 st.map = new mapboxgl.Map({
                     container: mapMount,
-                    style: getStyleUrlForWallpaper(),
+                    style: getStyleUrl(),
                     projection: 'globe',
                     center: camera.center,
                     zoom: camera.zoom,
@@ -10958,7 +11078,7 @@ const LocationWallpaperComponent = (function() {
             st.map.once('style.load', function() {
                 try {
                     if (st.map && typeof st.map.setConfigProperty === 'function') {
-                        st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
+                        st.map.setConfigProperty('basemap', 'lightPreset', getLightPreset());
                     }
                 } catch (eLP) {}
                 try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR) {}
