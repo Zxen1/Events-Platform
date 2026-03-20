@@ -1308,24 +1308,23 @@ if (empty($ogTitle)) {
             </div>
           </div>
 
-          <div class="admin-themes-accordion accordion-class-1" id="admin-themes-dark">
+          <div class="admin-themes-accordion accordion-class-1 admin-themes-accordion--open" id="admin-themes-dark">
             <div
               class="admin-themes-accordion-header accordion-header"
               id="admin-themes-dark-header"
               role="button"
               tabindex="0"
-              aria-expanded="false"
+              aria-expanded="true"
               aria-controls="admin-themes-dark-body"
             >
               <span class="admin-themes-accordion-title">Dark</span>
-              <span class="admin-themes-accordion-arrow"></span>
+              <span class="admin-themes-accordion-arrow admin-themes-accordion-arrow--open"></span>
             </div>
             <div
-              class="admin-themes-accordion-body accordion-body"
+              class="admin-themes-accordion-body accordion-body admin-themes-accordion-body--open"
               id="admin-themes-dark-body"
               role="region"
               aria-labelledby="admin-themes-dark-header"
-              hidden
             >
               <div class="member-style-container">
                 <div class="member-panel-field">
