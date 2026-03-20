@@ -9,10 +9,15 @@
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
+// Agent/ sits inside the website root; connectors sit at home/funmapco/connectors/
+// Config discovery mirrors the pattern used by the connectors themselves.
 $configCandidates = [
-    __DIR__ . '/../home/funmapco/connectors/config/config-db.php',
     __DIR__ . '/../home/funmapco/config/config-db.php',
-    dirname(__DIR__) . '/home/funmapco/connectors/config/config-db.php',
+    __DIR__ . '/../home/funmapco/connectors/../config/config-db.php',
+    __DIR__ . '/../home/config/config-db.php',
+    dirname(__DIR__, 2) . '/config/config-db.php',
+    dirname(__DIR__, 2) . '/../config/config-db.php',
+    __DIR__ . '/../config/config-db.php',
 ];
 $mysqli = null;
 foreach ($configCandidates as $path) {
@@ -22,7 +27,9 @@ foreach ($configCandidates as $path) {
     }
 }
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
-    die("Could not connect to database. Check config path.\n");
+    // Debug: show which paths were tried
+    $tried = implode("\n  ", $configCandidates);
+    die("Could not connect to database.\nPaths tried:\n  $tried\n");
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
