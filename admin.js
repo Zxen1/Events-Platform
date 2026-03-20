@@ -3248,38 +3248,6 @@ const AdminModule = (function() {
             });
         }
 
-        // Wallpaper Dimmer slider (site-wide for everyone)
-        var dimmerSlider = document.getElementById('adminLocationWallpaperDimmer');
-        var dimmerDisplay = document.getElementById('adminLocationWallpaperDimmerDisplay');
-        if (dimmerSlider && dimmerDisplay) {
-            var initialDimmer = mapTabData.location_wallpaper_dimmer !== undefined ? parseFloat(mapTabData.location_wallpaper_dimmer) : 30;
-            dimmerSlider.value = initialDimmer;
-            dimmerDisplay.textContent = Math.round(initialDimmer).toString() + '%';
-            
-            registerField('map.location_wallpaper_dimmer', initialDimmer);
-            
-            dimmerSlider.addEventListener('input', function() {
-                dimmerDisplay.textContent = Math.round(parseFloat(dimmerSlider.value)).toString() + '%';
-                updateField('map.location_wallpaper_dimmer', parseFloat(dimmerSlider.value));
-            });
-        }
-
-        // Wallpaper Whiten slider (light theme overlay)
-        var whitenSlider = document.getElementById('adminLocationWallpaperWhiten');
-        var whitenDisplay = document.getElementById('adminLocationWallpaperWhitenDisplay');
-        if (whitenSlider && whitenDisplay) {
-            var initialWhiten = mapTabData.location_wallpaper_whiten !== undefined ? parseFloat(mapTabData.location_wallpaper_whiten) : 40;
-            whitenSlider.value = initialWhiten;
-            whitenDisplay.textContent = Math.round(initialWhiten).toString() + '%';
-
-            registerField('map.location_wallpaper_whiten', initialWhiten);
-
-            whitenSlider.addEventListener('input', function() {
-                whitenDisplay.textContent = Math.round(parseFloat(whitenSlider.value)).toString() + '%';
-                updateField('map.location_wallpaper_whiten', parseFloat(whitenSlider.value));
-            });
-        }
-        
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();
         
@@ -3433,8 +3401,6 @@ const AdminModule = (function() {
             { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
             { id: 'adminMaxMapCardsDesktop', displayId: 'adminMaxMapCardsDesktopDisplay', fieldId: 'map.max_map_cards_desktop', format: 'int' },
             { id: 'adminMaxMapCardsMobile', displayId: 'adminMaxMapCardsMobileDisplay', fieldId: 'map.max_map_cards_mobile', format: 'int' },
-            { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' },
-            { id: 'adminLocationWallpaperWhiten', displayId: 'adminLocationWallpaperWhitenDisplay', fieldId: 'map.location_wallpaper_whiten', format: 'percent' }
         ];
         
         sliders.forEach(function(s) {
@@ -4317,7 +4283,8 @@ const AdminModule = (function() {
             preset.bg_opacity === undefined ||
             preset.map_lighting === undefined ||
             preset.map_style === undefined ||
-            preset.animation_preference === undefined
+            preset.animation_preference === undefined ||
+            preset.wallpaper_overlay === undefined
         ) {
             throw new Error('[Admin] Incomplete ' + themeKey + ' in ' + contextLabel + '.');
         }
@@ -4325,7 +4292,8 @@ const AdminModule = (function() {
             bg_opacity: String(preset.bg_opacity),
             map_lighting: String(preset.map_lighting),
             map_style: String(preset.map_style),
-            animation_preference: String(preset.animation_preference)
+            animation_preference: String(preset.animation_preference),
+            wallpaper_overlay: String(preset.wallpaper_overlay)
         };
     }
 
@@ -4338,6 +4306,25 @@ const AdminModule = (function() {
             theme_light: requireThemePreset('theme_light', source.theme_light, 'settings.theme_presets'),
             theme_dark: requireThemePreset('theme_dark', source.theme_dark, 'settings.theme_presets')
         };
+    }
+
+    function syncThemeToggleSlider(container) {
+        if (!container) return;
+        var slider = container.querySelector('.toggle-class-1-slider');
+        var activeBtn = container.querySelector('.toggle-button[aria-pressed="true"]');
+        if (!slider || !activeBtn) return;
+
+        var containerRect = container.getBoundingClientRect();
+        if (!containerRect.width) return;
+
+        var btnRect = activeBtn.getBoundingClientRect();
+        var pad = parseFloat(getComputedStyle(container).paddingLeft) || 0;
+        slider.style.width = btnRect.width + 'px';
+        slider.style.transition = 'none';
+        slider.style.transform = 'translateX(' + (btnRect.left - containerRect.left - pad) + 'px)';
+        slider.style.background = activeBtn.dataset.tierColor || '';
+        slider.offsetHeight;
+        slider.style.transition = '';
     }
 
     function applyThemePresetToAccordion(acc, preset) {
@@ -4353,6 +4340,18 @@ const AdminModule = (function() {
         });
         acc.querySelectorAll('.member-wallpaper-button').forEach(function(btn) {
             btn.setAttribute('aria-pressed', btn.dataset.wallpaper === String(preset.animation_preference) ? 'true' : 'false');
+        });
+        acc.querySelectorAll('.member-wallpaperoverlay-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.wallpaperOverlay === String(preset.wallpaper_overlay) ? 'true' : 'false');
+        });
+        [
+            '.member-bgopacity-buttons',
+            '.member-lighting-buttons',
+            '.member-style-buttons',
+            '.member-wallpaper-buttons',
+            '.member-wallpaperoverlay-buttons'
+        ].forEach(function(selector) {
+            syncThemeToggleSlider(acc.querySelector(selector));
         });
     }
 
@@ -4370,11 +4369,13 @@ const AdminModule = (function() {
             var lightingBtn = acc.querySelector('.member-lighting-button[aria-pressed="true"]');
             var styleBtn = acc.querySelector('.member-style-button[aria-pressed="true"]');
             var wallpaperBtn = acc.querySelector('.member-wallpaper-button[aria-pressed="true"]');
+            var overlayBtn = acc.querySelector('.member-wallpaperoverlay-button[aria-pressed="true"]');
             return {
                 bg_opacity: bgBtn ? String(bgBtn.dataset.bgOpacity || '') : '',
                 map_lighting: lightingBtn ? String(lightingBtn.dataset.lighting || '') : '',
                 map_style: styleBtn ? String(styleBtn.dataset.style || '') : '',
-                animation_preference: wallpaperBtn ? String(wallpaperBtn.dataset.wallpaper || '') : ''
+                animation_preference: wallpaperBtn ? String(wallpaperBtn.dataset.wallpaper || '') : '',
+                wallpaper_overlay: overlayBtn ? String(overlayBtn.dataset.wallpaperOverlay || '') : ''
             };
         }
 
@@ -4403,7 +4404,8 @@ const AdminModule = (function() {
             '.member-bgopacity-button',
             '.member-lighting-button',
             '.member-style-button',
-            '.member-wallpaper-button'
+            '.member-wallpaper-button',
+            '.member-wallpaperoverlay-button'
         ].forEach(function(selector) {
             var buttons = acc.querySelectorAll(selector);
             buttons.forEach(function(btn) {

@@ -10112,6 +10112,33 @@ var MiniMap = (function() {
         return lighting;
     }
 
+    function getWallpaperOverlay() {
+        var overlay = null;
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+            var member = window.MemberModule.getCurrentUser();
+            if (member && member.wallpaper_overlay) {
+                overlay = String(member.wallpaper_overlay);
+            }
+        }
+
+        if (!overlay) {
+            var stored = localStorage.getItem('wallpaper_overlay');
+            if (stored) {
+                overlay = String(stored);
+            }
+        }
+
+        if (!overlay) {
+            var preset = getThemePresetFromSettings();
+            if (preset.wallpaper_overlay === undefined) {
+                throw new Error('[LocationWallpaper] Missing wallpaper_overlay in theme preset.');
+            }
+            overlay = String(preset.wallpaper_overlay);
+        }
+
+        return overlay;
+    }
+
     function ensureMap(w, h, cb) {
         if (!window.mapboxgl || !mapboxgl.accessToken) { cb(null); return; }
         
@@ -10670,20 +10697,16 @@ const LocationWallpaperComponent = (function() {
         root.appendChild(mapMount);
         root.appendChild(img);
 
-        // Apply dimmer setting from admin
-        var dimmerValue = 30; // Default 30%
-        var whitenValue = 40; // Default 40%
-        try {
-            var settings = App.getState('settings') || {};
-            if (settings.location_wallpaper_dimmer !== undefined) {
-                dimmerValue = parseInt(settings.location_wallpaper_dimmer, 10) || 30;
-            }
-            if (settings.location_wallpaper_whiten !== undefined) {
-                whitenValue = parseInt(settings.location_wallpaper_whiten, 10) || 40;
-            }
-        } catch (e) {}
-        root.style.setProperty('--locationwallpaper-dimmer', (dimmerValue / 100).toString());
-        root.style.setProperty('--locationwallpaper-whiten', (whitenValue / 100).toString());
+        // Apply wallpaper overlay from the active theme preset
+        var overlayValue = getWallpaperOverlay();
+        var effectivePresetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+        if (effectivePresetKey === 'theme_dark') {
+            root.style.setProperty('--locationwallpaper-dimmer', overlayValue);
+            root.style.setProperty('--locationwallpaper-whiten', '0');
+        } else {
+            root.style.setProperty('--locationwallpaper-dimmer', '0');
+            root.style.setProperty('--locationwallpaper-whiten', overlayValue);
+        }
 
         // Insert as first child so z-index rules can lift everything else above it.
         contentEl.insertBefore(root, contentEl.firstChild || null);

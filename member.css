@@ -558,6 +558,10 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
+.member-wallpaperoverlay-buttons {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .member-style-buttons {
   grid-template-columns: repeat(2, 1fr);
 }

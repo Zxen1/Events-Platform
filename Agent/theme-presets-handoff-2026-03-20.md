@@ -605,9 +605,17 @@ As of the latest changes, the intended ownership model is:
   - `map_lighting`
   - `map_style`
   - `animation_preference`
+- `admin_settings.theme_presets` now also owns `wallpaper_overlay` per theme preset
 - `members.theme_active` / `members.theme_prefs` override those defaults per member
 - `admins.theme_active` / `admins.theme_prefs` override those defaults per admin
 - runtime cache in localStorage still mirrors the resolved values for older consumers
+
+The old top-level admin rows:
+
+- `wallpaper_overlay_dark`
+- `wallpaper_overlay_light`
+
+are now obsolete and should be deleted from `admin_settings` once the database is updated.
 
 ### Latest Review Fix
 A later code-review pass found one more concrete blocker in `member.js`:

@@ -288,7 +288,8 @@ if (empty($ogTitle)) {
         preset.bg_opacity === undefined ||
         preset.map_lighting === undefined ||
         preset.map_style === undefined ||
-        preset.animation_preference === undefined
+        preset.animation_preference === undefined ||
+        preset.wallpaper_overlay === undefined
       ) {
         throw new Error('[ThemeBoot] Missing preset data for ' + String(effectiveKey) + '.');
       }
@@ -303,6 +304,7 @@ if (empty($ogTitle)) {
       localStorage.setItem('map_lighting', String(preset.map_lighting));
       localStorage.setItem('map_style', String(preset.map_style));
       localStorage.setItem('animation_preference', String(preset.animation_preference));
+      localStorage.setItem('wallpaper_overlay', String(preset.wallpaper_overlay));
       localStorage.setItem('color_theme', mode);
     })();
   </script>
@@ -1151,22 +1153,6 @@ if (empty($ogTitle)) {
                 <input type="range" id="adminMaxMapCardsMobile" min="5" max="50" step="5" value="20" class="admin-spin-slider" />
               </div>
             </div>
-            <!-- Wallpaper dimmer is site-wide for everyone -->
-            <div class="admin-panel-field admin-panel-field--spaced">
-              <label class="admin-settings-field-label" for="adminLocationWallpaperDimmer">Wallpaper Dimmer (Site-wide)</label>
-              <div class="admin-spin-control-row row-class-1">
-                <span id="adminLocationWallpaperDimmerDisplay" class="admin-slider-value">30%</span>
-                <input type="range" id="adminLocationWallpaperDimmer" min="0" max="100" step="5" value="30" class="admin-spin-slider" />
-              </div>
-            </div>
-            <!-- Wallpaper whiten overlay for light theme -->
-            <div class="admin-panel-field admin-panel-field--spaced">
-              <label class="admin-settings-field-label" for="adminLocationWallpaperWhiten">Wallpaper Whiten (Light Theme)</label>
-              <div class="admin-spin-control-row row-class-1">
-                <span id="adminLocationWallpaperWhitenDisplay" class="admin-slider-value">40%</span>
-                <input type="range" id="adminLocationWallpaperWhiten" min="0" max="100" step="5" value="40" class="admin-spin-slider" />
-              </div>
-            </div>
           </div>
           
           <!-- Map Card Image Pickers -->
@@ -1301,6 +1287,23 @@ if (empty($ogTitle)) {
                     </button>
                   </div>
                 </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Wallpaper Overlay</label>
+                  <div class="member-wallpaperoverlay-buttons toggle-class-1">
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.4" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">40%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.6" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">60%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.8" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">80%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="1" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">100%</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1384,6 +1387,23 @@ if (empty($ogTitle)) {
                     </button>
                     <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                       <span class="member-wallpaper-button-text">Orbit</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Wallpaper Overlay</label>
+                  <div class="member-wallpaperoverlay-buttons toggle-class-1">
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.4" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">40%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.6" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">60%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.8" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">80%</span>
+                    </button>
+                    <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="1" aria-pressed="false">
+                      <span class="member-wallpaperoverlay-button-text">100%</span>
                     </button>
                   </div>
                 </div>
@@ -1570,6 +1590,23 @@ if (empty($ogTitle)) {
                 </div>
               </div>
               <div class="member-panel-field">
+                <label class="member-settings-field-label">Wallpaper Overlay</label>
+                <div class="member-wallpaperoverlay-buttons toggle-class-1">
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.4" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">40%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.6" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">60%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.8" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">80%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="1" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">100%</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
                 <button type="button" class="member-theme-reset button-class-2d" data-theme-reset="light">Reset theme</button>
               </div>
             </div>
@@ -1633,6 +1670,23 @@ if (empty($ogTitle)) {
                   </button>
                   <button type="button" class="member-wallpaper-button toggle-button" data-wallpaper="orbit" aria-pressed="false">
                     <span class="member-wallpaper-button-text">Orbit</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Wallpaper Overlay</label>
+                <div class="member-wallpaperoverlay-buttons toggle-class-1">
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.4" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">40%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.6" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">60%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="0.8" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">80%</span>
+                  </button>
+                  <button type="button" class="member-wallpaperoverlay-button toggle-button" data-wallpaper-overlay="1" aria-pressed="false">
+                    <span class="member-wallpaperoverlay-button-text">100%</span>
                   </button>
                 </div>
               </div>
