@@ -11554,7 +11554,7 @@ const LocationWallpaperComponent = (function() {
                         var blob = new Blob([u8arr], { type: mime });
 
                         var dir = bearingMap[bearings[i]] || 'N';
-                        var filename = 'location__' + lat.toFixed(6) + '_' + lng.toFixed(6) + '__Z18-P75-' + dir + '.webp';
+                        var filename = 'map-' + bearings[i] + '-' + dir + '.webp';
                         var file = new File([blob], filename, { type: 'image/webp' });
 
                         files.push(file);

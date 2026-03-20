@@ -44,6 +44,20 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // --- Filename helpers ---
+    function slugify_venue(string $text): string {
+        $s = strtolower($text);
+        $s = preg_replace('/\s+/', '-', $s);
+        $s = preg_replace('/[^\w\-]+/', '', $s);
+        $s = preg_replace('/\-\-+/', '-', $s);
+        $s = trim($s, '-');
+        return substr($s, 0, 50);
+    }
+
+    function format_map_coord(float $v): string {
+        return rtrim(rtrim(sprintf('%.10f', $v), '0'), '.');
+    }
+
     // --- Storage helper functions (same as add-post.php) ---
     function load_storage_settings(mysqli $mysqli): array
     {
@@ -166,15 +180,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Use client filename if valid, otherwise generate
-        $origName = (string)($_FILES['map_images']['name'][$i] ?? '');
-        if (preg_match('/^[a-z0-9-]+__-?\d+\.\d+_-?\d+\.\d+__Z\d+-P\d+-[NESW]\.webp$/i', $origName)) {
-            $filename = $origName;
-        } else {
-            $bearingMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
-            $dir = $bearingMap[$bearing] ?? 'N';
-            $filename = 'location__' . number_format($lat, 6, '.', '') . '_' . number_format($lng, 6, '.', '') . '__Z18-P75-' . $dir . '.webp';
+        // Build canonical filename from venue name in post_map_cards + exact coordinates
+        $vnStmt = $mysqli->prepare("SELECT venue_name, address_line, city, suburb, state, country_name, location_type FROM post_map_cards WHERE latitude = ? AND longitude = ? LIMIT 1");
+        $rawVenueName = '';
+        $locationType = 'venue';
+        if ($vnStmt) {
+            $vnStmt->bind_param('dd', $lat, $lng);
+            $vnStmt->execute();
+            $vnRow = $vnStmt->get_result()->fetch_assoc();
+            $vnStmt->close();
+            if ($vnRow) {
+                $rawVenueName = $vnRow['venue_name']   ?? '';
+                if ($rawVenueName === '') $rawVenueName = $vnRow['address_line'] ?? '';
+                if ($rawVenueName === '') $rawVenueName = $vnRow['city']         ?? '';
+                if ($rawVenueName === '') $rawVenueName = $vnRow['suburb']       ?? '';
+                if ($rawVenueName === '') $rawVenueName = $vnRow['state']        ?? '';
+                if ($rawVenueName === '') $rawVenueName = $vnRow['country_name'] ?? '';
+                if (isset($vnRow['location_type']) && $vnRow['location_type'] !== '') {
+                    $locationType = $vnRow['location_type'];
+                }
+            }
         }
+        if ($rawVenueName === '') {
+            $skipped++;
+            continue;
+        }
+        $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
+        $dir = $bearingDirMap[$bearing] ?? 'N';
+        $coordKey = format_map_coord($lat) . '_' . format_map_coord($lng);
+        $filename = slugify_venue($rawVenueName) . '__' . $coordKey . '__Z18-P75-' . $dir . '.webp';
 
         $bytes = file_get_contents($tmpFile);
         if ($bytes === false) continue;
@@ -189,7 +223,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (storage_upload_bytes($storageApiKey, $storageZoneName, $fullPath, $bytes, $httpCode, $resp)) {
             $publicUrl = $mapFolder . '/' . $filename;
             $fileSize = (int)($_FILES['map_images']['size'][$i] ?? strlen($bytes));
-            $locationType = 'post';
             $pitch = 75;
             $zoom = 18;
 

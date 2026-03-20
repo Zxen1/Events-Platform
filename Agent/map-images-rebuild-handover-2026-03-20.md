@@ -1,115 +1,134 @@
-# Map Images Rebuild Handover
+# Map Images — Full Plan
 
-## Purpose
-Build a standalone repair tool for `map_images` and Bunny map-image files.
+## The Problem In Plain English
 
-The goal is to:
-- preserve exact coordinates
-- preserve/recover the best human-readable place names
-- discard broken wallpaper derivatives
-- rebuild missing map images cleanly
+The site has two paths that create `map_images` rows:
 
-## Current Live Code Status
-- Live bug fixed: new `map_images` rows now write both `file_name` and `file_url`
-- Fixed in:
-  - `home/funmapco/connectors/add-post.php`
-  - `home/funmapco/connectors/get-map-wallpapers.php`
-- GET/read path no longer deletes DB rows during normal lookup
-- Missing Bunny files are filtered out of GET response so self-repair can still happen
+1. **`wallpaper-generator.html`** — a manual admin tool. This has always worked correctly. It uses a `slugify()` function on a human-supplied venue name to produce canonical filenames like `royal-botanic-gardens-victoria-melbourne-gardens__-37.8302443_144.9801496__Z18-P75-N.webp`. All 11,085 good rows in the DB came from this tool.
 
-## Known Database State
-- Dump used: `funmapco_db (82).sql`
-- Total `map_images` rows: `6456`
-- Rows with missing `file_name`: `428`
-- Broken ID range: `11077` to `11504`
-- This is one continuous block
+2. **`add-post.php`** — the website post creation flow. This was added by agents and has never worked correctly. It produced 428 broken rows across 107 test posts (4 bearings each), with empty `file_name`, empty `location_type`, and URLs using either `map_{lat}_{lng}_{bearing}_{hash}.jpg` or `location__{lat}_{lng}__Z18-P75-{dir}.webp` formats. The Bunny files for these 107 locations do exist — they are correctly captured images, just wrongly named.
 
-## Important Findings
-- Missing `file_name` bug was caused by newer server insert paths writing `file_url` but not `file_name`
-- Existing good rows are not damaged by:
-  - normal viewing
-  - refresh
-  - cache clear
-  - lighting/theme/wallpaper mode changes
-- Therefore the broken rows came from row creation paths, not ordinary reads
-
-## Core Rules For The Repair Tool
-1. Coordinates are the source of truth. Never overwrite `latitude`, `longitude`, `bearing`, `pitch`, or `zoom` unless proven wrong.
-2. Bunny filenames are not the source of truth.
-3. Prefer existing database place names over any external lookup.
-4. Prefer these recovery sources, in this order:
-   - `post_map_cards.venue_name`
-   - `post_map_cards.address_line`
-   - `post_map_cards.city`
-   - `post_map_cards.suburb`
-   - `post_map_cards.state`
-   - `post_map_cards.country_name`
-   - existing good `map_images.file_name`
-   - existing good `map_images.file_url`
-5. Treat generic names as low quality:
-   - `location__...`
-   - `map_...`
-6. Never invent a place name silently.
-7. If no trustworthy name survives, mark for manual review.
-8. Rebuilt rows must always write both `file_name` and `file_url`.
-9. Tool must be resumable and idempotent.
-10. Tool must produce a report of:
-   - kept
-   - rebuilt
-   - skipped
-   - needs manual review
-
-## What The Tool Must Do
-1. Read current `map_images` rows.
-2. Group rows by coordinate set.
-3. Decide whether each set is:
-   - good
-   - recoverable
-   - broken
-4. Recover the best human-readable slug from trusted DB sources.
-5. Detect whether Bunny files exist for each expected bearing.
-6. If files are missing, rebuild them from the exact coordinates.
-7. Upload rebuilt files to Bunny using the canonical filename.
-8. Insert or update `map_images` rows so metadata matches Bunny reality.
+---
 
 ## Canonical Filename Rule
-Use:
 
-`{slug}__{lat}_{lng}__Z18-P75-{N|E|S|W}.webp`
+```
+{slug}__{lat}_{lng}__Z18-P75-{N|E|S|W}.webp
+```
 
-Where:
-- `slug` comes from the best trusted place-name source
-- lat/lng must match the exact stored coordinates used by the system
+- `slug` = `slugify(venue_name)`, falling back to `address_line`, then `city`
+- `lat`/`lng` = the **exact** Google Places coordinates from `post_map_cards` — no rounding, no reformatting
+- The `slugify()` function from `wallpaper-generator.html` is the reference implementation
 
-## What Not To Do
-- Do not restore old files blindly from backups
-- Do not trust stale `map_images` metadata if Bunny file is gone
-- Do not use Google Places again unless absolutely necessary
-- Do not fetch external names first if the DB already contains a trustworthy name
+---
 
-## Free External Fallback
-If a name is truly lost everywhere in the DB, the free fallback is OpenStreetMap/Nominatim.
+## Coordinate Rule (Critical)
 
-Use only as last resort because:
-- naming may differ from Google
-- venue quality is inconsistent
-- rate limits apply
+Coordinates come from the **Google Places API** via the form system. These are paid-for, exact coordinates stored in `post_map_cards.latitude` and `post_map_cards.longitude`. The map image capture, filename, and DB row must all use these exact coordinates. If Mapbox coordinates are used instead, posts at the same venue will be off by metres and will not share map images correctly.
 
-## Recommended Repair Strategy
-1. Keep coordinates.
-2. Recover best names from DB.
-3. Optionally delete bad Bunny map-image files first.
-4. Rebuild only what is missing or broken.
-5. Update `map_images` to match the rebuilt files.
+---
 
-## Separate Tasks
-- This handover is for the rebuild tool only.
-- Healing the existing `428` blank `file_name` rows can be done separately if needed.
-- Renaming already-bad Bunny files is a separate operation from fixing DB metadata.
+## Source Priority For Venue Name (slug)
 
-## Key Files To Inspect
-- `home/funmapco/connectors/get-map-wallpapers.php`
-- `home/funmapco/connectors/add-post.php`
-- `components.js`
-- `Agent/wallpaper-settings.txt`
-- `funmapco_db (82).sql`
+When building the slug, use the first non-empty value from:
+1. `post_map_cards.venue_name`
+2. `post_map_cards.address_line`
+3. `post_map_cards.city`
+4. `post_map_cards.suburb`
+5. `post_map_cards.state`
+6. `post_map_cards.country_name`
+
+If none of the above yield a usable name, the tool must flag that row for manual review. It must never silently generate a coordinate-based fallback name.
+
+---
+
+## Task 1 — Fix Going Forward (add-post.php)
+
+The map image upload block in `add-post.php` must be rewritten so that:
+
+1. The slug is built server-side from `venue_name` (falling through the priority list above), using the same `slugify()` logic as `wallpaper-generator.html`
+2. The canonical filename is built as `slug__lat_lng__Z18-P75-{dir}.webp`
+3. The lat/lng used in the filename come from the submitted `post_map_cards` data — exact, no reformatting
+4. Both `file_name` and `file_url` are always written to the DB row
+5. `location_type` is always written (use `venue_name` → `'venue'`, city → `'city'`)
+6. The fallback that generates `location__...` names is removed entirely. If no name is available, log an error and skip — do not insert a broken row.
+
+The same fix applies to `get-map-wallpapers.php` (the POST self-healing path).
+
+---
+
+## Task 2 — Fix Existing 428 Broken Rows
+
+### What We Have
+- 428 broken `map_images` rows (IDs 11077–11513), covering 107 coordinate sets
+- The Bunny files for these 107 locations **exist** — they are good captured images under wrong names
+- The exact Google Places coordinates are in `post_map_cards` (matched by lat/lng)
+- The venue names are in `post_map_cards.venue_name`
+- The 107 posts are test posts and their post data can be deleted — but the coordinates and venue names must be extracted first
+
+### Repair Strategy (Rename, Not Regenerate)
+
+For each of the 107 broken coordinate sets:
+
+1. Find the matching `post_map_cards` row by lat/lng
+2. Build the correct slug from the venue name priority list
+3. Build the 4 canonical filenames (N, E, S, W)
+4. For each bearing:
+   - Download the existing wrongly-named Bunny file
+   - Upload it to Bunny under the correct canonical filename
+   - Delete the old wrongly-named Bunny file
+   - Update the `map_images` row: set `file_name`, `file_url`, `location_type`
+
+This avoids regenerating images from Mapbox (which costs time, not Google Places API money, but takes hours) and avoids any coordinate drift.
+
+### The Repair Tool
+
+Build as a standalone PHP file in `Agent/`. It must be:
+- **Resumable** — if interrupted, re-running it skips already-fixed rows
+- **Idempotent** — running it twice produces the same result
+- **Reporting** — at the end, output counts of: fixed, skipped (already good), failed, needs-manual-review
+
+The tool reads from the live DB, matches coordinates between `map_images` and `post_map_cards`, builds correct names, renames on Bunny, and updates the DB.
+
+---
+
+## Task 3 — Delete The 107 Test Posts (After Repair)
+
+Once all 428 rows are renamed and updated correctly, the 107 test posts can be deleted. The cascade will clean up `post_map_cards` and related tables. The `map_images` rows will remain (they are not cascaded) and will now have correct names.
+
+---
+
+## What The Previous Handover Got Right
+
+- Coordinates are the source of truth — correct
+- Source priority for venue name — correct
+- Both `file_name` and `file_url` must always be written — correct
+- Never use `location__` or `map_` patterns — correct
+
+## What The Previous Handover Got Wrong
+
+- Suggested rebuilding/recapturing images — unnecessary, the files exist on Bunny
+- Suggested deleting bad Bunny files first — wrong order, rename instead
+- Treated the repair as needing Mapbox recapture — it does not
+- Mentioned OpenStreetMap/Nominatim fallback — not needed, venue names are in `post_map_cards`
+
+---
+
+## Key Files
+
+- `wallpaper-generator.html` — reference implementation for slugify and filename format
+- `home/funmapco/connectors/add-post.php` — Task 1 target (map image upload block, ~lines 1403–1536)
+- `home/funmapco/connectors/get-map-wallpapers.php` — Task 1 target (POST self-healing path, ~lines 45–207)
+- `funmapco_db (82).sql` — database dump, `post_map_cards` starts line 12372
+- `Agent/wallpaper-settings.txt` — Bunny storage settings reference
+
+---
+
+## Database State (Dump: funmapco_db (82).sql)
+
+- Total `map_images` rows: 11,513
+- Good rows: 11,085
+- Broken rows: 428 (IDs 11077–11513)
+- Broken rows cover: 107 coordinate sets × 4 bearings
+- All 107 test posts were created through the website post creation flow after Feb 3 2026
+- All 107 have corresponding `post_map_cards` rows with correct Google Places coordinates and venue names

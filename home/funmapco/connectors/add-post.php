@@ -609,6 +609,19 @@ function generate_slug(string $text): string {
 $slug = generate_slug($postTitle);
 $postKey = $insertId . ($slug !== '' ? '-' . $slug : '');
 
+function slugify_venue(string $text): string {
+  $s = strtolower($text);
+  $s = preg_replace('/\s+/', '-', $s);
+  $s = preg_replace('/[^\w\-]+/', '', $s);
+  $s = preg_replace('/\-\-+/', '-', $s);
+  $s = trim($s, '-');
+  return substr($s, 0, 50);
+}
+
+function format_map_coord(float $v): string {
+  return rtrim(rtrim(sprintf('%.10f', $v), '0'), '.');
+}
+
 // Update post with post_key
 $stmtKey = $mysqli->prepare("UPDATE posts SET post_key = ? WHERE id = ?");
 if ($stmtKey) {
@@ -769,6 +782,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 
 // Insert map cards
 $mapCardIds = [];
+$venueInfoByCoord = [];
 $primaryTitle = '';
 $detectedCurrency = null; // Track first currency used for member's preferred_currency
 foreach ($byLoc as $locNum => $entries) {
@@ -1040,6 +1054,17 @@ foreach ($byLoc as $locNum => $entries) {
   if ($primaryTitle === '') {
     $primaryTitle = (string) $titleParam;
   }
+
+  $coordKey = format_map_coord($latParam) . '_' . format_map_coord($lngParam);
+  $venueInfoByCoord[$coordKey] = [
+    'venue_name'    => $card['venue_name']   ?? null,
+    'address_line'  => $card['address_line'] ?? null,
+    'city'          => $card['city']         ?? null,
+    'suburb'        => $card['suburb']       ?? null,
+    'state'         => $card['state']        ?? null,
+    'country_name'  => $card['country_name'] ?? null,
+    'location_type' => $card['location_type'] ?? 'venue',
+  ];
 
   // Insert links into post_links subtable (repeatable)
   if (is_array($card['links_data']) && count($card['links_data']) > 0) {
@@ -1483,17 +1508,25 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             }
           }
           
-          // Upload the map image - use client filename if valid, follows format: slug__lat_lng__Z18-P75-{N/E/S/W}.webp
-          $mapOrigName = (string)($_FILES['map_images']['name'][$mi] ?? '');
-          // Validate client filename matches expected pattern
-          if (preg_match('/^[a-z0-9-]+__-?\d+\.\d+_-?\d+\.\d+__Z\d+-P\d+-[NESW]\.webp$/i', $mapOrigName)) {
-            $mapFilename = $mapOrigName;
-          } else {
-            // Fallback: generate filename server-side
-            $bearingMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
-            $dir = $bearingMap[$bearing] ?? 'N';
-            $mapFilename = 'location__' . number_format($lat, 6, '.', '') . '_' . number_format($lng, 6, '.', '') . '__Z18-P75-' . $dir . '.webp';
+          // Build canonical filename from venue name + exact Google Places coordinates
+          $mapCoordKey = format_map_coord($lat) . '_' . format_map_coord($lng);
+          $vInfo = $venueInfoByCoord[$mapCoordKey] ?? null;
+          $rawVenueName = '';
+          if ($vInfo) {
+            $rawVenueName = $vInfo['venue_name']   ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['address_line'] ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['city']         ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['suburb']       ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['state']        ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['country_name'] ?? '';
           }
+          if ($rawVenueName === '') {
+            error_log("Map image $mi: no venue name found for coord $mapCoordKey — skipping");
+            continue;
+          }
+          $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
+          $dir = $bearingDirMap[$bearing] ?? 'N';
+          $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z18-P75-' . $dir . '.webp';
           
           $mapBytes = file_get_contents($mapTmp);
           if ($mapBytes === false) {
@@ -1515,7 +1548,7 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             
             // Insert into map_images table
             $mapFileSize = (int)($_FILES['map_images']['size'][$mi] ?? strlen($mapBytes));
-            $locationType = 'post'; // Could be enhanced to detect venue/city/address
+            $locationType = ($vInfo && isset($vInfo['location_type']) && $vInfo['location_type'] !== '') ? $vInfo['location_type'] : 'venue';
             $pitch = 75;
             $zoom = 18;
             
