@@ -152,16 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $checkStmt->close();
 
         if ($foundExisting && $existingUrl) {
-            // Verify file actually exists at the URL
-            $ch = curl_init($existingUrl);
-            curl_setopt($ch, CURLOPT_NOBODY, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if ($httpCode >= 200 && $httpCode < 400) {
+            if (remote_file_exists($existingUrl)) {
                 $skipped++;
                 continue; // File exists, skip
             } else {
@@ -202,9 +193,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pitch = 75;
             $zoom = 18;
 
-            $insStmt = $mysqli->prepare("INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            $insStmt = $mysqli->prepare("INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_name, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
             if ($insStmt) {
-                $insStmt->bind_param('ddsiiiiiis', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $width, $height, $fileSize, $publicUrl);
+                $insStmt->bind_param('ddsiiiiiiss', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $width, $height, $fileSize, $filename, $publicUrl);
                 $insStmt->execute();
                 $insStmt->close();
             }
@@ -228,15 +219,34 @@ if ($lat === null || $lng === null) {
     exit(json_encode(['success' => false, 'error' => 'Missing lat/lng parameters']));
 }
 
+function remote_file_exists(string $url): bool
+{
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ($httpCode >= 200 && $httpCode < 400);
+}
+
 // Query map_images table for wallpapers at this coordinate
-$stmt = $mysqli->prepare("SELECT bearing, file_url FROM map_images WHERE latitude = ? AND longitude = ?");
+$stmt = $mysqli->prepare("SELECT id, bearing, file_url FROM map_images WHERE latitude = ? AND longitude = ?");
 $stmt->bind_param('dd', $lat, $lng);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $wallpapers = [];
 while ($row = $result->fetch_assoc()) {
-    $wallpapers[(int)$row['bearing']] = $row['file_url'];
+    $fileUrl = (string)($row['file_url'] ?? '');
+    if ($fileUrl === '') {
+        continue;
+    }
+    if (!remote_file_exists($fileUrl)) {
+        continue;
+    }
+    $wallpapers[(int)$row['bearing']] = $fileUrl;
 }
 $stmt->close();
 

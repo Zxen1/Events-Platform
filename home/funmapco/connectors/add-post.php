@@ -1519,9 +1519,9 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             $pitch = 75;
             $zoom = 18;
             
-            $insMapStmt = $mysqli->prepare("INSERT IGNORE INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            $insMapStmt = $mysqli->prepare("INSERT IGNORE INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_name, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
             if ($insMapStmt) {
-              $insMapStmt->bind_param('ddsiiiiiis', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $mapWidth, $mapHeight, $mapFileSize, $mapPublicUrl);
+              $insMapStmt->bind_param('ddsiiiiiiss', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $mapWidth, $mapHeight, $mapFileSize, $mapFilename, $mapPublicUrl);
               if (!$insMapStmt->execute()) {
                 error_log("Map image $mi: failed to insert DB record - " . $insMapStmt->error);
               }
