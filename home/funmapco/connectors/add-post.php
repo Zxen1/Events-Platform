@@ -1526,7 +1526,9 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
           }
           $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
           $dir = $bearingDirMap[$bearing] ?? 'N';
-          $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z18-P75-' . $dir . '.webp';
+          $mapLocType = strtolower($vInfo['location_type'] ?? 'venue');
+          $mapZoom = ($mapLocType === 'city') ? 11 : 18;
+          $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z' . $mapZoom . '-P75-' . $dir . '.webp';
           
           $mapBytes = file_get_contents($mapTmp);
           if ($mapBytes === false) {

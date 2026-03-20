@@ -11535,7 +11535,7 @@ const LocationWallpaperComponent = (function() {
         // ============================================================
         // SELF-HEALING UPLOAD - send freshly captured wallpapers to server
         // ============================================================
-        function uploadCapturedWallpapers(lat, lng, bearings, dataUrls) {
+        function uploadCapturedWallpapers(lat, lng, bearings, dataUrls, locationType) {
             // Fire and forget — don't block the UI
             try {
                 var files = [];
@@ -11558,7 +11558,7 @@ const LocationWallpaperComponent = (function() {
                         var file = new File([blob], filename, { type: 'image/webp' });
 
                         files.push(file);
-                        meta.push({ lat: lat, lng: lng, bearing: bearings[i] });
+                        meta.push({ lat: lat, lng: lng, bearing: bearings[i], location_type: locationType || 'venue' });
                     } catch (e) { /* skip this image */ }
                 }
 
@@ -11607,7 +11607,7 @@ const LocationWallpaperComponent = (function() {
                             // Store all to cache
                             WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {
                                 // Self-healing: upload freshly captured images to server
-                                uploadCapturedWallpapers(lat, lng, bearings, capturedUrls);
+                                uploadCapturedWallpapers(lat, lng, bearings, capturedUrls, locationType);
                             });
                             return;
                         }
