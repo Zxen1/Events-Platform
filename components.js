@@ -10112,33 +10112,6 @@ var MiniMap = (function() {
         return lighting;
     }
 
-    function getWallpaperOverlay() {
-        var overlay = null;
-        if (window.MemberModule && window.MemberModule.getCurrentUser) {
-            var member = window.MemberModule.getCurrentUser();
-            if (member && member.wallpaper_overlay) {
-                overlay = String(member.wallpaper_overlay);
-            }
-        }
-
-        if (!overlay) {
-            var stored = localStorage.getItem('wallpaper_overlay');
-            if (stored) {
-                overlay = String(stored);
-            }
-        }
-
-        if (!overlay) {
-            var preset = getThemePresetFromSettings();
-            if (preset.wallpaper_overlay === undefined) {
-                throw new Error('[LocationWallpaper] Missing wallpaper_overlay in theme preset.');
-            }
-            overlay = String(preset.wallpaper_overlay);
-        }
-
-        return overlay;
-    }
-
     function ensureMap(w, h, cb) {
         if (!window.mapboxgl || !mapboxgl.accessToken) { cb(null); return; }
         
@@ -10535,6 +10508,33 @@ const LocationWallpaperComponent = (function() {
         }
         if (mode === 'orbit' || mode === 'still' || mode === 'basic' || mode === 'off') return mode;
         throw new Error('[LocationWallpaper] No valid wallpaper mode found in theme settings.');
+    }
+
+    function getWallpaperOverlay() {
+        var overlay = null;
+        if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+            var user = MemberModule.getCurrentUser();
+            if (user && user.wallpaper_overlay) {
+                overlay = String(user.wallpaper_overlay);
+            }
+        }
+
+        if (!overlay) {
+            var stored = localStorage.getItem('wallpaper_overlay');
+            if (stored) {
+                overlay = String(stored);
+            }
+        }
+
+        if (!overlay) {
+            var preset = getThemePresetFromSettings();
+            if (preset.wallpaper_overlay === undefined) {
+                throw new Error('[LocationWallpaper] Missing wallpaper_overlay in theme preset.');
+            }
+            overlay = String(preset.wallpaper_overlay);
+        }
+
+        return overlay;
     }
 
     function getLocationTypeFromContainer(containerEl) {
