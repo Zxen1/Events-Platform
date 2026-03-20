@@ -96,9 +96,10 @@ foreach ($brokenRows as $row) {
 // ── Build output ──────────────────────────────────────────────────────────────
 
 $bearingDir = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
-$renameLines = [];   // OLD_FILENAME|NEW_FILENAME
-$sqlLines    = [];   // UPDATE statements
-$noName      = [];   // coord keys with no matching post_map_cards
+$renameLines  = [];   // OLD_FILENAME|NEW_FILENAME
+$sqlLines     = [];   // UPDATE statements
+$noName       = [];   // coord keys with no matching post_map_cards
+$prefixCounts = [];   // prefix → count
 
 foreach ($brokenRows as $row) {
     $id      = (int)$row['id'];
@@ -112,6 +113,12 @@ foreach ($brokenRows as $row) {
 
     // Extract old filename from URL
     $oldFilename = basename($fileUrl);
+
+    // Count by prefix
+    if (strpos($oldFilename, 'map_') === 0)        $prefixCounts['map_'] = ($prefixCounts['map_'] ?? 0) + 1;
+    elseif (strpos($oldFilename, 'location__') === 0) $prefixCounts['location__'] = ($prefixCounts['location__'] ?? 0) + 1;
+    elseif (strpos($oldFilename, '.') === 0)        $prefixCounts['.'] = ($prefixCounts['.'] ?? 0) + 1;
+    else                                            $prefixCounts['other: ' . substr($oldFilename, 0, 20)] = ($prefixCounts['other: ' . substr($oldFilename, 0, 20)] ?? 0) + 1;
 
     if ($pmcRow === null) {
         $noName[] = "$coordKey (ID $id, bearing $bearing)";
@@ -149,6 +156,11 @@ echo "Broken rows processed: " . count($brokenRows) . "\n";
 echo "Renames needed:        " . count($renameLines) . "\n";
 echo "SQL updates:           " . count($sqlLines) . "\n";
 echo "No name found:         " . count($noName) . "\n";
+echo "\n";
+echo "=== PREFIX BREAKDOWN (all 428 rows) ===\n";
+foreach ($prefixCounts as $prefix => $count) {
+    echo str_pad("'$prefix'", 20) . " $count\n";
+}
 echo "\n";
 
 if (!empty($noName)) {
