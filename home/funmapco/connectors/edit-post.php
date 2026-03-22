@@ -861,15 +861,22 @@ foreach ($imgMeta as $meta) {
   if (!is_array($meta) || !isset($meta['id']) || (int)$meta['id'] <= 0) continue;
   $mediaId = (int)$meta['id'];
   if (!in_array($mediaId, $existingMediaIds)) continue;
-  $cropJson = json_encode(isset($meta['crop']) ? $meta['crop'] : null);
-  $stmtCropUpd = $mysqli->prepare(
-    "UPDATE post_media SET settings_json = JSON_SET(COALESCE(settings_json, '{}'), '$.crop', CAST(? AS JSON)) WHERE id = ? AND post_id = ? AND deleted_at IS NULL"
-  );
-  if ($stmtCropUpd) {
-    $stmtCropUpd->bind_param('sii', $cropJson, $mediaId, $postId);
-    $stmtCropUpd->execute();
-    $stmtCropUpd->close();
-  }
+  $stmtCropSel = $mysqli->prepare("SELECT settings_json FROM post_media WHERE id = ? AND post_id = ? AND deleted_at IS NULL");
+  if (!$stmtCropSel) continue;
+  $stmtCropSel->bind_param('ii', $mediaId, $postId);
+  $stmtCropSel->execute();
+  $stmtCropSel->bind_result($curSettingsJson);
+  $stmtCropSel->fetch();
+  $stmtCropSel->close();
+  $curSettings = $curSettingsJson ? json_decode((string)$curSettingsJson, true) : [];
+  if (!is_array($curSettings)) $curSettings = [];
+  $curSettings['crop'] = isset($meta['crop']) && is_array($meta['crop']) ? $meta['crop'] : null;
+  $newSettingsJson = json_encode($curSettings, JSON_UNESCAPED_UNICODE);
+  $stmtCropUpd = $mysqli->prepare("UPDATE post_media SET settings_json = ? WHERE id = ? AND post_id = ? AND deleted_at IS NULL");
+  if (!$stmtCropUpd) continue;
+  $stmtCropUpd->bind_param('sii', $newSettingsJson, $mediaId, $postId);
+  $stmtCropUpd->execute();
+  $stmtCropUpd->close();
 }
 
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
