@@ -229,7 +229,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $publicUrl = $mapFolder . '/' . $filename;
             $fileSize = (int)($_FILES['map_images']['size'][$i] ?? strlen($bytes));
             $pitch = 75;
-            $zoom = 18;
 
             $insStmt = $mysqli->prepare("INSERT INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_name, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
             if ($insStmt) {

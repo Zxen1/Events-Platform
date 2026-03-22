@@ -1063,7 +1063,7 @@ foreach ($byLoc as $locNum => $entries) {
     'suburb'        => $card['suburb']       ?? null,
     'state'         => $card['state']        ?? null,
     'country_name'  => $card['country_name'] ?? null,
-    'location_type' => $card['location_type'] ?? 'venue',
+    'location_type' => $card['location_type'] ?? '',
   ];
 
   // Insert links into post_links subtable (repeatable)
@@ -1427,6 +1427,7 @@ if (!empty($mediaIds)) {
 
 // Upload map images (if any) - 4 bearings per location (0, 90, 180, 270)
 $mapImageUploadedPaths = [];
+$mapImageErrors = [];
 if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
   $mapSettings = load_bunny_settings($mysqli);
   $mapFolder = rtrim((string)$mapSettings['folder_map_images'], '/');
@@ -1521,12 +1522,20 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             if ($rawVenueName === '') $rawVenueName = $vInfo['country_name'] ?? '';
           }
           if ($rawVenueName === '') {
-            error_log("Map image $mi: no venue name found for coord $mapCoordKey — skipping");
+            $msg = "Map image $mi: no venue name found for coord $mapCoordKey — skipping";
+            error_log($msg);
+            $mapImageErrors[] = $msg;
             continue;
           }
           $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
           $dir = $bearingDirMap[$bearing] ?? 'N';
-          $mapLocType = strtolower($vInfo['location_type'] ?? 'venue');
+          $mapLocType = strtolower((string)($vInfo['location_type'] ?? ''));
+          if ($mapLocType === '') {
+            $msg = "Map image $mi: location_type missing for coord $mapCoordKey — skipping";
+            error_log($msg);
+            $mapImageErrors[] = $msg;
+            continue;
+          }
           $mapZoom = ($mapLocType === 'city') ? 11 : 18;
           $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z' . $mapZoom . '-P75-' . $dir . '.webp';
           
@@ -1550,9 +1559,9 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             
             // Insert into map_images table
             $mapFileSize = (int)($_FILES['map_images']['size'][$mi] ?? strlen($mapBytes));
-            $locationType = ($vInfo && isset($vInfo['location_type']) && $vInfo['location_type'] !== '') ? $vInfo['location_type'] : 'venue';
+            $locationType = (string)($vInfo['location_type'] ?? '');
             $pitch = 75;
-            $zoom = 18;
+            $zoom = $mapZoom;
             
             $insMapStmt = $mysqli->prepare("INSERT IGNORE INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_name, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
             if ($insMapStmt) {
@@ -1563,7 +1572,9 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
               $insMapStmt->close();
             }
           } else {
-            error_log("Map image $mi: upload to CDN failed (HTTP $mapHttpCode)");
+            $msg = "Map image $mi: upload to CDN failed (HTTP $mapHttpCode) — $mapFilename";
+            error_log($msg);
+            $mapImageErrors[] = $msg;
           }
         }
       }
@@ -1677,6 +1688,10 @@ if ($memberId !== null && $memberId > 0 && (!$skipPayment || $freeCoupon)) {
 }
 
 $msgKey = $mediaIds ? 'msg_post_create_with_images' : 'msg_post_create_success';
-echo json_encode(['success'=>true, 'insert_id'=>$insertId, 'message_key'=>$msgKey]);
+$response = ['success' => true, 'insert_id' => $insertId, 'message_key' => $msgKey];
+if (!empty($mapImageErrors)) {
+  $response['map_image_errors'] = $mapImageErrors;
+}
+echo json_encode($response);
 exit;
 ?>

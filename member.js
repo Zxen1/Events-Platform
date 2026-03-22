@@ -4464,6 +4464,9 @@ const MemberModule = (function() {
                 updateSubmitButtonState();
                 
                 if (result && (result.success === true || result.success === 1 || result.success === '1')) {
+                    if (result.map_image_errors && result.map_image_errors.length) {
+                        result.map_image_errors.forEach(function(err) { console.error('[MapImage]', err); });
+                    }
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                         // Prefer backend message key if provided (message system only).
                         var key = (result && result.message_key) ? String(result.message_key) : 'msg_post_create_success';
@@ -4776,7 +4779,11 @@ const MemberModule = (function() {
             } else if (window.SecondaryMap && typeof SecondaryMap.capture === 'function') {
                 var camera = { center: [loc.lng, loc.lat], zoom: 18, pitch: 75, bearing: bearing };
                 SecondaryMap.capture(camera, 700, 2500, function(dataUrl) {
-                    if (dataUrl) addToResult(dataUrlToFile(dataUrl, loc.lat, loc.lng, bearing, loc.venue_name), loc, bearing);
+                    if (dataUrl) {
+                        addToResult(dataUrlToFile(dataUrl, loc.lat, loc.lng, bearing, loc.venue_name), loc, bearing);
+                    } else {
+                        console.error('[MapCapture] Capture failed: bearing=' + bearing + ' lat=' + loc.lat + ' lng=' + loc.lng + ' type=' + loc.location_type);
+                    }
                     capturedCount++;
                     if (capturedCount === 4) done();
                 });
@@ -5710,11 +5717,11 @@ const MemberModule = (function() {
             }
             fd.set('images_meta', imagesMeta || '[]');
             console.log('[TRACK] images_meta:', imagesMeta);
-            
-            // Attach map images (captured at submission time for final locations)
+
+            // Attach map images (captured during form fill, collected before submission)
             if (mapImageData && mapImageData.files && mapImageData.files.length > 0) {
                 mapImageData.files.forEach(function(file) {
-                    if (file) fd.append('map_images[]', file, file.name || 'map_image');
+                    if (file) fd.append('map_images[]', file, file.name || 'map_image.webp');
                 });
                 fd.set('map_images_meta', JSON.stringify(mapImageData.meta || []));
             }
