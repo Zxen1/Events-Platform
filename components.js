@@ -11605,7 +11605,9 @@ const LocationWallpaperComponent = (function() {
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
                     var allCached = cached.every(function(url) { return !!url; });
                     if (allCached) {
-                        return; // All 4 in local cache
+                        // All 4 in local cache but server is missing them — upload now
+                        uploadCapturedWallpapers(lat, lng, bearings, cached, locationType);
+                        return;
                     }
 
                     // Capture missing images sequentially
