@@ -246,8 +246,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ============================================================================
-// GET = Read wallpapers for coordinates
+// GET = Read wallpapers for coordinates, OR list all locations with missing images
 // ============================================================================
+
+// ?missing=1 — return all post_map_cards locations that don't have all 4 map_images
+if (!empty($_GET['missing'])) {
+    $sql = "
+        SELECT DISTINCT
+            pmc.latitude,
+            pmc.longitude,
+            pmc.location_type,
+            COALESCE(NULLIF(pmc.venue_name,''), NULLIF(pmc.address_line,''), NULLIF(pmc.city,''), NULLIF(pmc.suburb,''), NULLIF(pmc.state,''), NULLIF(pmc.country_name,'')) AS name
+        FROM post_map_cards pmc
+        WHERE (
+            SELECT COUNT(*)
+            FROM map_images mi
+            WHERE mi.latitude = pmc.latitude
+              AND mi.longitude = pmc.longitude
+        ) < 4
+        ORDER BY pmc.id ASC
+    ";
+    $res = $mysqli->query($sql);
+    $locations = [];
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $locations[] = [
+                'lat'           => (float)$row['latitude'],
+                'lng'           => (float)$row['longitude'],
+                'location_type' => (string)$row['location_type'],
+                'name'          => (string)$row['name'],
+            ];
+        }
+        $res->free();
+    }
+    exit(json_encode(['success' => true, 'locations' => $locations]));
+}
 
 // Get lat/lng from query params
 $lat = isset($_GET['lat']) ? (float)$_GET['lat'] : null;
