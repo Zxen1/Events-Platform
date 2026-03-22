@@ -11510,7 +11510,9 @@ const LocationWallpaperComponent = (function() {
             basicImgs[0].classList.add('component-locationwallpaper-basic-image--animating');
             requestAnimationFrame(function() {
                 requestAnimationFrame(function() {
-                    basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                    if (basicImgs[0] && basicContainer) {
+                        basicImgs[0].classList.add('component-locationwallpaper-basic-image--active');
+                    }
                 });
             });
             if (prev !== 0) {

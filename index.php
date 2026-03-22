@@ -1855,7 +1855,7 @@ if (empty($ogTitle)) {
        Load order matters: backbone first, then sections
        ======================================================================== -->
   <script src="fieldsets.js?v=20260322a"></script>
-  <script src="components.js?v=20260322b"></script>
+  <script src="components.js?v=20260322e"></script>
   <script src="index.js?v=20260322a"></script>
   <script src="header.js?v=20260322a"></script>
 <script src="filter.js?v=20260322a"></script>
