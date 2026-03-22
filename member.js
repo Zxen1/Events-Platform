@@ -4188,10 +4188,12 @@ const MemberModule = (function() {
         if (!formFields) return false;
 
         // Component-owned validity: do not submit if ANY fieldset is incomplete (required or optional-but-invalid).
+        // Skip fieldsets inside the auth container — those are checked separately in updateSubmitButtonState.
         var fieldsetEls = formFields.querySelectorAll('.fieldset[data-complete]');
         for (var i = 0; i < fieldsetEls.length; i++) {
             var fs = fieldsetEls[i];
             if (!fs || !fs.dataset) continue;
+            if (fs.closest && fs.closest('.member-auth-container')) continue;
             if (String(fs.dataset.complete || '') !== 'true') {
                 return false;
             }
