@@ -750,6 +750,7 @@ try {
                 $mediaUrlsById[$mediaId] = $url;
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
+                    'source_url' => $mediaRow['file_url'],
                     'original_filename' => $originalFilename,
                     'cropRect' => $cropRect,
                     'cropState' => $cropState
