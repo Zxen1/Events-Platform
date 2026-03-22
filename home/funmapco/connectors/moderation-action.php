@@ -153,17 +153,17 @@ switch ($action) {
     }
     $stmt->close();
     
-    // Get post title
+    // Get post title from post_map_cards
     $postTitle = null;
-    $stmt = $mysqli->prepare('SELECT checkout_title FROM `posts` WHERE id = ? LIMIT 1');
+    $stmt = $mysqli->prepare('SELECT title FROM `post_map_cards` WHERE post_id = ? LIMIT 1');
     if ($stmt) {
       $stmt->bind_param('i', $postId);
       $stmt->execute();
       $res = $stmt->get_result();
-      if ($row = $res->fetch_assoc()) $postTitle = $row['checkout_title'];
+      if ($row = $res->fetch_assoc()) $postTitle = $row['title'];
       $stmt->close();
     }
-    
+
     // Insert flag
     $reason = json_encode(['lat' => $lat, 'lng' => $lng, 'flagged_at' => date('Y-m-d H:i:s')]);
     $stmt = $mysqli->prepare('INSERT INTO `moderation_log` (post_id, post_title, action, reason, created_at) VALUES (?, ?, ?, ?, NOW())');
