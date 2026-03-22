@@ -10668,13 +10668,21 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getLocationTypeFromContainer(containerEl) {
-        if (!containerEl) return 'venue';
+        if (!containerEl) throw new Error('[LocationWallpaper] containerEl is required to determine location type.');
+        // Post display context: type stored as data attribute when post is rendered
+        var dataType = containerEl.dataset ? containerEl.dataset.locationType : '';
+        if (!dataType) {
+            var parent = containerEl.closest ? containerEl.closest('[data-location-type]') : null;
+            if (parent) dataType = parent.dataset.locationType;
+        }
+        if (dataType) return dataType;
+        // Form context: read from fieldset DOM
         try {
             if (containerEl.querySelector('.fieldset[data-fieldset-key="city"]')) return 'city';
             if (containerEl.querySelector('.fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]')) return 'address';
             if (containerEl.querySelector('.fieldset[data-fieldset-key="venue"]')) return 'venue';
         } catch (e) {}
-        return 'venue';
+        throw new Error('[LocationWallpaper] Could not determine location type from container.');
     }
 
     /**

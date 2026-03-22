@@ -3881,6 +3881,10 @@ const PostModule = (function() {
       if (post && post.id) {
         wrap.dataset.postId = String(post.id);
       }
+      // Store location type so self-healing can determine correct zoom level
+      if (locType) {
+        wrap.dataset.locationType = locType;
+      }
       var latEl = document.createElement('input');
       latEl.type = 'hidden';
       latEl.className = 'fieldset-lat';
