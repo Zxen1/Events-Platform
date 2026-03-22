@@ -837,6 +837,13 @@ $fieldsArr = $data['fields'] ?? [];
 $existingMediaIds = [];
 $newMediaIds = [];
 
+// Parse images_meta here (outside upload block) so crop updates apply even when no new files uploaded
+$imgMeta = [];
+if (!empty($_POST['images_meta'])) {
+  $decoded = json_decode((string)$_POST['images_meta'], true);
+  if (is_array($decoded)) $imgMeta = $decoded;
+}
+
 // Extract existing media IDs from the images fieldset if present
 foreach ($fieldsArr as $fld) {
   $fType = preg_replace('/(-locked|-hidden)$/', '', (string)($fld['type'] ?? ''));
@@ -846,6 +853,22 @@ foreach ($fieldsArr as $fld) {
         $existingMediaIds[] = (int)$img['id'];
       }
     }
+  }
+}
+
+// Update crop data for existing media entries (non-destructive: only touches the crop field)
+foreach ($imgMeta as $meta) {
+  if (!is_array($meta) || !isset($meta['id']) || (int)$meta['id'] <= 0) continue;
+  $mediaId = (int)$meta['id'];
+  if (!in_array($mediaId, $existingMediaIds)) continue;
+  $cropJson = json_encode(isset($meta['crop']) ? $meta['crop'] : null);
+  $stmtCropUpd = $mysqli->prepare(
+    "UPDATE post_media SET settings_json = JSON_SET(COALESCE(settings_json, '{}'), '$.crop', CAST(? AS JSON)) WHERE id = ? AND post_id = ? AND deleted_at IS NULL"
+  );
+  if ($stmtCropUpd) {
+    $stmtCropUpd->bind_param('sii', $cropJson, $mediaId, $postId);
+    $stmtCropUpd->execute();
+    $stmtCropUpd->close();
   }
 }
 
@@ -866,12 +889,6 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $utcMinus12 = new DateTimeZone('Etc/GMT+12');
     $now = new DateTime('now', $utcMinus12);
     $monthFolder = $now->format('Y-m');
-
-    $imgMeta = [];
-    if (!empty($_POST['images_meta'])) {
-      $m = json_decode((string)$_POST['images_meta'], true);
-      if (is_array($m)) $imgMeta = $m;
-    }
 
     $count = count($_FILES['images']['name']);
     $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
