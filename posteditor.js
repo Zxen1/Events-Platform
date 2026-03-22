@@ -75,7 +75,7 @@
         var colorClass = '';
         var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
         var visibility = post.visibility || 'active';
-        var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var expiresAt = post.expires_at ? new Date(post.expires_at.replace(' ', 'T') + 'Z') : null;
         var now = new Date();
 
         // Expired always wins — check expiry before hidden
@@ -85,7 +85,7 @@
         if (isDeleted) {
             status = 'DELETED';
             colorClass = 'posteditor-statusbar--black';
-            var deletedAt = new Date(post.deleted_at);
+            var deletedAt = new Date(post.deleted_at.replace(' ', 'T') + 'Z');
             var removalDate = new Date(deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
             countdownSpan.textContent = 'Removal in ' + formatCountdown(removalDate, now);
             dateSpan.textContent = formatStatusDate(deletedAt);
@@ -900,7 +900,7 @@
         // --- Summary data ---
         var summaryNow = new Date();
         var summaryVisibility = post.visibility || 'active';
-        var summaryExpiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var summaryExpiresAt = post.expires_at ? new Date(post.expires_at.replace(' ', 'T') + 'Z') : null;
         var summaryIsDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
         var summaryIsExpiredByDb = summaryVisibility === 'expired';
         var summaryIsExpiredByTime = summaryExpiresAt && summaryExpiresAt.getTime() <= summaryNow.getTime();
@@ -934,7 +934,7 @@
         var expiryText = summaryExpiresAt ? formatStatusDate(summaryExpiresAt) : '—';
 
         // 6. Created
-        var createdText = post.created_at ? formatStatusDate(new Date(post.created_at)) : '—';
+        var createdText = post.created_at ? formatStatusDate(new Date(post.created_at.replace(' ', 'T') + 'Z')) : '—';
 
         // --- Helper: build a labelled 36px row ---
         function buildManageRow(labelText, valueText, extraClass) {
@@ -2092,10 +2092,24 @@
                         }
                         ToastComponent.showSuccess(msg);
                     }
-                    refreshPostCard(postId);
-                    editFormLoaded = false;
-                    editAccordionContent.innerHTML = '';
-                    setAccordionExpanded(false);
+                    delete editingPostsData[postId];
+                    collapseAccordion(false);
+                    refreshPostCard(postId).then(function(updatedPost) {
+                        if (!updatedPost) return;
+                        var k;
+                        for (k in updatedPost) {
+                            if (Object.prototype.hasOwnProperty.call(updatedPost, k)) {
+                                post[k] = updatedPost[k];
+                            }
+                        }
+                        var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
+                        if (oldModalBar) {
+                            oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
+                        }
+                        if (window.App && typeof App.emit === 'function') {
+                            App.emit('post:updated', { post_id: postId });
+                        }
+                    });
                 } else {
                     var errMsg = (res && res.message) ? res.message : 'Revert failed.';
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
@@ -2701,15 +2715,21 @@
                         '<div class="posteditor-placeholder-text">Saved!</div>';
                     var refreshPromise = refreshPostCard(post.id).then(function(updatedPost) {
                         if (!updatedPost) return;
-                        post.visibility = updatedPost.visibility;
-                        post.expires_at = updatedPost.expires_at;
-                        post.deleted_at = updatedPost.deleted_at;
+                        var k;
+                        for (k in updatedPost) {
+                            if (Object.prototype.hasOwnProperty.call(updatedPost, k)) {
+                                post[k] = updatedPost[k];
+                            }
+                        }
                         var modalContainer = formContainer.closest('.posteditor-modal-container');
                         if (modalContainer) {
                             var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
                             if (oldModalBar) {
                                 oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
                             }
+                        }
+                        if (window.App && typeof App.emit === 'function') {
+                            App.emit('post:updated', { post_id: post.id });
                         }
                     });
                     var minSavedAnimation = new Promise(function(resolve) {

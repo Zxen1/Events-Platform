@@ -253,7 +253,7 @@ if (empty($ogTitle)) {
 <link rel="stylesheet" href="filter.css?v=20251228i">
 <link rel="stylesheet" href="map.css?v=20251228i">
   <link rel="stylesheet" href="post.css?v=20260226a">
-  <link rel="stylesheet" href="components.css?v=20251228i">
+  <link rel="stylesheet" href="components.css?v=20260322b">
   <link rel="stylesheet" href="fieldsets.css?v=20251228i">
   <link rel="stylesheet" href="admin.css?v=20251228i">
   <link rel="stylesheet" href="formbuilder.css?v=20251228i">
@@ -1855,7 +1855,7 @@ if (empty($ogTitle)) {
        Load order matters: backbone first, then sections
        ======================================================================== -->
   <script src="fieldsets.js?v=20260322a"></script>
-  <script src="components.js?v=20260322a"></script>
+  <script src="components.js?v=20260322b"></script>
   <script src="index.js?v=20260322a"></script>
   <script src="header.js?v=20260322a"></script>
 <script src="filter.js?v=20260322a"></script>
@@ -1863,7 +1863,7 @@ if (empty($ogTitle)) {
   <script src="post.js?v=20260322a"></script>
   <script src="admin.js?v=20260322a"></script>
   <script src="formbuilder.js?v=20260322a"></script>
-  <script src="posteditor.js?v=20260322a"></script>
+  <script src="posteditor.js?v=20260322b"></script>
   <script src="member.js?v=20260322a"></script>
   <script src="marquee.js?v=20260322a"></script>
 

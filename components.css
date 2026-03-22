@@ -2788,9 +2788,9 @@
 .component-toast {
     background: rgba(0, 0, 0, 0.85);
     color: #fff;
-    padding: 0 18px;
-    height: 36px;
-    line-height: 36px;
+    padding: 9px 18px;
+    min-height: 36px;
+    line-height: 18px;
     border-radius: 5px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     font-size: 14px;
@@ -2800,9 +2800,7 @@
     transform: translateY(-70px);
     transition: transform 0.25s ease, opacity 0.25s ease;
     pointer-events: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .component-toast--show {

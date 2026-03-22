@@ -6140,6 +6140,8 @@ const ToastComponent = (function() {
         toast.classList.remove('component-toast--show');
 
         setTimeout(function() {
+            toast.style.height = toast.offsetHeight + 'px';
+            toast.offsetHeight; // force reflow so captured height is the animation start point
             toast.style.transition = 'height ' + COLLAPSE_MS + 'ms ease, margin-bottom ' + COLLAPSE_MS + 'ms ease';
             toast.style.height = '0';
             toast.style.marginBottom = '0';
