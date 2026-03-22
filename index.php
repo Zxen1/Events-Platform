@@ -1863,7 +1863,7 @@ if (empty($ogTitle)) {
   <script src="post.js?v=20260322a"></script>
   <script src="admin.js?v=20260322a"></script>
   <script src="formbuilder.js?v=20260322a"></script>
-  <script src="posteditor.js?v=20260322b"></script>
+  <script src="posteditor.js?v=20260322d"></script>
   <script src="member.js?v=20260322a"></script>
   <script src="marquee.js?v=20260322a"></script>
 

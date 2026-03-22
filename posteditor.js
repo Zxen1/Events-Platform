@@ -2085,31 +2085,10 @@
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res && res.success) {
-                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        var msg = res.message || 'Post reverted successfully.';
-                        if (res.skipped_columns && res.skipped_columns.length > 0) {
-                            msg += ' (' + res.skipped_columns.length + ' column(s) skipped)';
-                        }
-                        ToastComponent.showSuccess(msg);
-                    }
                     delete editingPostsData[postId];
-                    collapseAccordion(false);
-                    refreshPostCard(postId).then(function(updatedPost) {
-                        if (!updatedPost) return;
-                        var k;
-                        for (k in updatedPost) {
-                            if (Object.prototype.hasOwnProperty.call(updatedPost, k)) {
-                                post[k] = updatedPost[k];
-                            }
-                        }
-                        var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
-                        if (oldModalBar) {
-                            oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
-                        }
-                        if (window.App && typeof App.emit === 'function') {
-                            App.emit('post:updated', { post_id: postId });
-                        }
-                    });
+                    setTimeout(function() {
+                        window.location.href = '/?post-editor-key=' + encodeURIComponent(String(postId));
+                    }, 500);
                 } else {
                     var errMsg = (res && res.message) ? res.message : 'Revert failed.';
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
@@ -2713,41 +2692,9 @@
                     overlay.innerHTML =
                         '<div class="posteditor-placeholder-check">✓</div>' +
                         '<div class="posteditor-placeholder-text">Saved!</div>';
-                    var refreshPromise = refreshPostCard(post.id).then(function(updatedPost) {
-                        if (!updatedPost) return;
-                        var k;
-                        for (k in updatedPost) {
-                            if (Object.prototype.hasOwnProperty.call(updatedPost, k)) {
-                                post[k] = updatedPost[k];
-                            }
-                        }
-                        var modalContainer = formContainer.closest('.posteditor-modal-container');
-                        if (modalContainer) {
-                            var oldModalBar = modalContainer.querySelector('.posteditor-statusbar');
-                            if (oldModalBar) {
-                                oldModalBar.parentNode.replaceChild(buildStatusBar(updatedPost), oldModalBar);
-                            }
-                        }
-                        if (window.App && typeof App.emit === 'function') {
-                            App.emit('post:updated', { post_id: post.id });
-                        }
-                    });
-                    var minSavedAnimation = new Promise(function(resolve) {
-                        setTimeout(resolve, 900);
-                    });
-                    Promise.all([refreshPromise, minSavedAnimation]).then(function() {
-                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                    });
-                    updateFooterButtonState();
-                    updateHeaderSaveDiscardState();
-                    // Success toast (message system)
-                    if (typeof window.getMessage === 'function') {
-                        window.getMessage('msg_member_saved', {}, false).then(function(msg) {
-                            if (msg && window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                                ToastComponent.showSuccess(msg);
-                            }
-                        });
-                    }
+                    setTimeout(function() {
+                        window.location.href = '/?post-editor-key=' + encodeURIComponent(String(post.id));
+                    }, 900);
                 }).catch(function(err) {
                     // Remove overlay — form is still visible so user can retry
                     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
