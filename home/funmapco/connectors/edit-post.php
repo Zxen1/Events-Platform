@@ -808,6 +808,19 @@ if ($manageAction !== '') {
   }
 }
 
+function slugify_venue(string $text): string {
+  $s = strtolower($text);
+  $s = preg_replace('/\s+/', '-', $s);
+  $s = preg_replace('/[^\w\-]+/', '', $s);
+  $s = preg_replace('/\-\-+/', '-', $s);
+  $s = trim($s, '-');
+  return substr($s, 0, 50);
+}
+
+function format_map_coord(float $v): string {
+  return rtrim(rtrim(sprintf('%.10f', $v), '0'), '.');
+}
+
 // Use the existing subcategory_key from database (don't allow changing category during edit)
 $subcategoryKey = $existingSubcategoryKey;
 
@@ -1039,6 +1052,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 
 $primaryTitle = '';
 $detectedCurrency = null; // Track first currency used for member's preferred_currency
+$venueInfoByCoord = [];
 foreach ($byLoc as $locNum => $entries) {
   $card = [
     'title' => '', 'description' => null, 'custom_text' => null, 'custom_textarea' => null,
@@ -1222,7 +1236,18 @@ foreach ($byLoc as $locNum => $entries) {
     if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
     $mapCardId = $stmtCard->insert_id;
     $stmtCard->close();
-    
+
+    $coordKey = format_map_coord($lat) . '_' . format_map_coord($lng);
+    $venueInfoByCoord[$coordKey] = [
+      'venue_name'    => $card['venue_name']   ?? null,
+      'address_line'  => $card['address_line'] ?? null,
+      'city'          => $card['city']         ?? null,
+      'suburb'        => $card['suburb']       ?? null,
+      'state'         => $card['state']        ?? null,
+      'country_name'  => $card['country_name'] ?? null,
+      'location_type' => $card['location_type'] ?? '',
+    ];
+
     if ($primaryTitle === '') $primaryTitle = $card['title'];
 
     // Links
@@ -1541,7 +1566,122 @@ if ($stmtState) {
   }
 }
 
+// Upload map images (if any) - 4 bearings per location
+$mapImageErrors = [];
+if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
+  $mapSettings = load_bunny_settings($mysqli);
+  $mapFolder = rtrim((string)$mapSettings['folder_map_images'], '/');
+  if ($mapFolder === '') {
+    error_log('Map images upload skipped: folder_map_images not configured');
+  } else {
+    $mapIsExternal = preg_match('#^https?://#i', $mapFolder);
+    if ($mapIsExternal) {
+      $mapStorageApiKey = (string)$mapSettings['storage_api_key'];
+      $mapStorageZoneName = (string)$mapSettings['storage_zone_name'];
+      if ($mapStorageApiKey === '' || $mapStorageZoneName === '') {
+        error_log('Map images upload skipped: missing storage credentials');
+      } else {
+        $mapCdnPath = preg_replace('#^https?://[^/]+/#', '', $mapFolder);
+        $mapCdnPath = rtrim((string)$mapCdnPath, '/');
+        $mapMeta = [];
+        if (!empty($_POST['map_images_meta'])) {
+          $mm = json_decode((string)$_POST['map_images_meta'], true);
+          if (is_array($mm)) $mapMeta = $mm;
+        }
+        $mapCount = count($_FILES['map_images']['name']);
+        for ($mi = 0; $mi < $mapCount; $mi++) {
+          $mapTmp = $_FILES['map_images']['tmp_name'][$mi] ?? '';
+          if (!$mapTmp || !is_uploaded_file($mapTmp)) continue;
+          $lat    = isset($mapMeta[$mi]['lat'])     ? (float)$mapMeta[$mi]['lat']     : null;
+          $lng    = isset($mapMeta[$mi]['lng'])     ? (float)$mapMeta[$mi]['lng']     : null;
+          $bearing = isset($mapMeta[$mi]['bearing']) ? (int)$mapMeta[$mi]['bearing']   : null;
+          if ($lat === null || $lng === null || $bearing === null) {
+            $msg = "Map image $mi skipped: missing metadata";
+            error_log($msg); $mapImageErrors[] = $msg; continue;
+          }
+          // Skip if already in DB with a valid file
+          $checkStmt = $mysqli->prepare("SELECT file_url FROM map_images WHERE latitude = ? AND longitude = ? AND bearing = ?");
+          if ($checkStmt) {
+            $checkStmt->bind_param('ddi', $lat, $lng, $bearing);
+            $checkStmt->execute();
+            $checkStmt->bind_result($existingUrl);
+            $foundExisting = $checkStmt->fetch();
+            $checkStmt->close();
+            if ($foundExisting && $existingUrl) {
+              $ch = curl_init($existingUrl);
+              curl_setopt($ch, CURLOPT_NOBODY, true);
+              curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+              curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+              curl_exec($ch);
+              $chCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+              curl_close($ch);
+              if ($chCode >= 200 && $chCode < 400) continue;
+              $delStmt = $mysqli->prepare("DELETE FROM map_images WHERE latitude = ? AND longitude = ? AND bearing = ?");
+              if ($delStmt) { $delStmt->bind_param('ddi', $lat, $lng, $bearing); $delStmt->execute(); $delStmt->close(); }
+            }
+          }
+          $mapCoordKey = format_map_coord($lat) . '_' . format_map_coord($lng);
+          $vInfo = $venueInfoByCoord[$mapCoordKey] ?? null;
+          $rawVenueName = '';
+          if ($vInfo) {
+            $rawVenueName = $vInfo['venue_name']   ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['address_line'] ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['city']         ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['suburb']       ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['state']        ?? '';
+            if ($rawVenueName === '') $rawVenueName = $vInfo['country_name'] ?? '';
+          }
+          if ($rawVenueName === '') {
+            $msg = "Map image $mi: no venue name found for coord $mapCoordKey — skipping";
+            error_log($msg); $mapImageErrors[] = $msg; continue;
+          }
+          $mapLocType = strtolower((string)($vInfo['location_type'] ?? ''));
+          if ($mapLocType === '') {
+            $msg = "Map image $mi: location_type missing for coord $mapCoordKey — skipping";
+            error_log($msg); $mapImageErrors[] = $msg; continue;
+          }
+          $mapZoom = ($mapLocType === 'city') ? 11 : 18;
+          $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
+          $dir = $bearingDirMap[$bearing] ?? 'N';
+          $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z' . $mapZoom . '-P75-' . $dir . '.webp';
+          $mapBytes = file_get_contents($mapTmp);
+          if ($mapBytes === false) {
+            $msg = "Map image $mi: failed to read bytes"; error_log($msg); $mapImageErrors[] = $msg; continue;
+          }
+          $mapImageInfo = @getimagesize($mapTmp);
+          $mapWidth  = ($mapImageInfo && isset($mapImageInfo[0])) ? (int)$mapImageInfo[0] : 700;
+          $mapHeight = ($mapImageInfo && isset($mapImageInfo[1])) ? (int)$mapImageInfo[1] : 2500;
+          $mapFullPath = $mapCdnPath . '/' . $mapFilename;
+          $mapHttpCode = 0; $mapResp = '';
+          if (bunny_upload_bytes($mapStorageApiKey, $mapStorageZoneName, $mapFullPath, $mapBytes, $mapHttpCode, $mapResp)) {
+            $mapPublicUrl = $mapFolder . '/' . $mapFilename;
+            $mapFileSize  = (int)($_FILES['map_images']['size'][$mi] ?? strlen($mapBytes));
+            $locationType = (string)($vInfo['location_type'] ?? '');
+            $pitch = 75;
+            $zoom  = $mapZoom;
+            $insMapStmt = $mysqli->prepare("INSERT IGNORE INTO map_images (latitude, longitude, location_type, bearing, pitch, zoom, width, height, file_size, file_name, file_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            if ($insMapStmt) {
+              $insMapStmt->bind_param('ddsiiiiiiss', $lat, $lng, $locationType, $bearing, $pitch, $zoom, $mapWidth, $mapHeight, $mapFileSize, $mapFilename, $mapPublicUrl);
+              if (!$insMapStmt->execute()) {
+                error_log("Map image $mi: failed to insert DB record - " . $insMapStmt->error);
+              }
+              $insMapStmt->close();
+            }
+          } else {
+            $msg = "Map image $mi: upload to CDN failed (HTTP $mapHttpCode) — $mapFilename";
+            error_log($msg); $mapImageErrors[] = $msg;
+          }
+        }
+      }
+    }
+  }
+}
+
 $mysqli->commit();
-echo json_encode(['success'=>true, 'message_key'=>'msg_post_edit_success']);
+$response = ['success' => true, 'message_key' => 'msg_post_edit_success'];
+if (!empty($mapImageErrors)) {
+  $response['map_image_errors'] = $mapImageErrors;
+}
+echo json_encode($response);
 exit;
 ?>
