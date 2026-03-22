@@ -11558,7 +11558,7 @@ const LocationWallpaperComponent = (function() {
                         var file = new File([blob], filename, { type: 'image/webp' });
 
                         files.push(file);
-                        meta.push({ lat: lat, lng: lng, bearing: bearings[i], location_type: locationType || 'venue' });
+                        meta.push({ lat: lat, lng: lng, bearing: bearings[i], location_type: locationType });
                     } catch (e) { /* skip this image */ }
                 }
 

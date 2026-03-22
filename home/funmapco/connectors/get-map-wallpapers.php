@@ -182,15 +182,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // location_type is sent by the client (which knows it from the post form DOM)
         // This avoids ambiguity when multiple post_map_cards share the same coordinates
-        $clientLocationType = isset($mapMeta[$i]['location_type']) ? (string)$mapMeta[$i]['location_type'] : '';
+        $locationType = isset($mapMeta[$i]['location_type']) ? (string)$mapMeta[$i]['location_type'] : '';
+        if ($locationType === '') {
+            $skipped++;
+            continue;
+        }
 
         // Build canonical filename from venue name in post_map_cards + exact coordinates
-        $vnStmt = $mysqli->prepare("SELECT venue_name, address_line, city, suburb, state, country_name, location_type FROM post_map_cards WHERE latitude = ? AND longitude = ? AND location_type = ? LIMIT 1");
+        $vnStmt = $mysqli->prepare("SELECT venue_name, address_line, city, suburb, state, country_name FROM post_map_cards WHERE latitude = ? AND longitude = ? AND location_type = ? LIMIT 1");
         $rawVenueName = '';
-        $locationType = ($clientLocationType !== '') ? $clientLocationType : 'venue';
         if ($vnStmt) {
-            $searchType = $locationType;
-            $vnStmt->bind_param('dds', $lat, $lng, $searchType);
+            $vnStmt->bind_param('dds', $lat, $lng, $locationType);
             $vnStmt->execute();
             $vnRow = $vnStmt->get_result()->fetch_assoc();
             $vnStmt->close();
