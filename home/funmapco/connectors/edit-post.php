@@ -837,13 +837,6 @@ $fieldsArr = $data['fields'] ?? [];
 $existingMediaIds = [];
 $newMediaIds = [];
 
-// Parse images_meta here (outside upload block) so crop updates apply even when no new files uploaded
-$imgMeta = [];
-if (!empty($_POST['images_meta'])) {
-  $decoded = json_decode((string)$_POST['images_meta'], true);
-  if (is_array($decoded)) $imgMeta = $decoded;
-}
-
 // Extract existing media IDs from the images fieldset if present
 foreach ($fieldsArr as $fld) {
   $fType = preg_replace('/(-locked|-hidden)$/', '', (string)($fld['type'] ?? ''));
@@ -854,29 +847,6 @@ foreach ($fieldsArr as $fld) {
       }
     }
   }
-}
-
-// Update crop data for existing media entries (non-destructive: only touches the crop field)
-foreach ($imgMeta as $meta) {
-  if (!is_array($meta) || !isset($meta['id']) || (int)$meta['id'] <= 0) continue;
-  $mediaId = (int)$meta['id'];
-  if (!in_array($mediaId, $existingMediaIds)) continue;
-  $stmtCropSel = $mysqli->prepare("SELECT settings_json FROM post_media WHERE id = ? AND post_id = ? AND deleted_at IS NULL");
-  if (!$stmtCropSel) continue;
-  $stmtCropSel->bind_param('ii', $mediaId, $postId);
-  $stmtCropSel->execute();
-  $stmtCropSel->bind_result($curSettingsJson);
-  $stmtCropSel->fetch();
-  $stmtCropSel->close();
-  $curSettings = $curSettingsJson ? json_decode((string)$curSettingsJson, true) : [];
-  if (!is_array($curSettings)) $curSettings = [];
-  $curSettings['crop'] = isset($meta['crop']) && is_array($meta['crop']) ? $meta['crop'] : null;
-  $newSettingsJson = json_encode($curSettings, JSON_UNESCAPED_UNICODE);
-  $stmtCropUpd = $mysqli->prepare("UPDATE post_media SET settings_json = ? WHERE id = ? AND post_id = ? AND deleted_at IS NULL");
-  if (!$stmtCropUpd) continue;
-  $stmtCropUpd->bind_param('sii', $newSettingsJson, $mediaId, $postId);
-  $stmtCropUpd->execute();
-  $stmtCropUpd->close();
 }
 
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
@@ -896,6 +866,12 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $utcMinus12 = new DateTimeZone('Etc/GMT+12');
     $now = new DateTime('now', $utcMinus12);
     $monthFolder = $now->format('Y-m');
+
+    $imgMeta = [];
+    if (!empty($_POST['images_meta'])) {
+      $m = json_decode((string)$_POST['images_meta'], true);
+      if (is_array($m)) $imgMeta = $m;
+    }
 
     $count = count($_FILES['images']['name']);
     $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
