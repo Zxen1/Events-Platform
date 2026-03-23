@@ -35,12 +35,11 @@ if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function slugify_venue(string $text): string {
-    $s = strtolower($text);
-    $s = preg_replace('/\s+/', '-', $s);
-    $s = preg_replace('/[^\w\-]+/', '', $s);
-    $s = preg_replace('/\-\-+/', '-', $s);
+    $s = mb_strtolower($text, 'UTF-8');
+    $s = preg_replace('/[^\p{L}\p{N}]+/u', '-', $s);
+    $s = preg_replace('/-+/', '-', $s);
     $s = trim($s, '-');
-    return substr($s, 0, 50);
+    return mb_substr($s, 0, 50, 'UTF-8');
 }
 
 function format_coord(float $v): string {
