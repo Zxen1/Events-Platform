@@ -1543,7 +1543,7 @@
 
         var reachFraction = document.createElement('span');
         reachFraction.className = 'posteditor-manage-reach-fraction';
-        reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid + ' locations (edit post to add more)';
+        reachFraction.textContent = 'Locations owned: ' + pricingLocPaid + ' \u00B7 Locations used: ' + pricingLocUsed;
         if (pricingLocUsed > pricingLocPaid) reachFraction.classList.add('posteditor-manage-reach-fraction--over');
         reachGroup.appendChild(reachFraction);
         pricingContainer.appendChild(reachGroup);
@@ -1661,7 +1661,7 @@
 
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
-            reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid + ' locations (edit post to add more)';
+            reachFraction.textContent = 'Locations owned: ' + pricingLocPaid + ' \u00B7 Locations used: ' + pricingLocUsed;
             if (pricingLocUsed > pricingLocPaid) {
                 reachFraction.classList.add('posteditor-manage-reach-fraction--over');
             } else {
