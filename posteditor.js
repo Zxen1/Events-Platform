@@ -1543,6 +1543,8 @@
 
         var reachFraction = document.createElement('span');
         reachFraction.className = 'posteditor-manage-reach-fraction';
+        reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid + ' locations (edit post to add more)';
+        if (pricingLocUsed > pricingLocPaid) reachFraction.classList.add('posteditor-manage-reach-fraction--over');
         reachGroup.appendChild(reachFraction);
         pricingContainer.appendChild(reachGroup);
 
