@@ -11248,6 +11248,10 @@ const LocationWallpaperComponent = (function() {
             }, 0);
         }
 
+        var locTypeForOffset = '';
+        try { locTypeForOffset = getLocationTypeFromContainer(locationContainerEl); } catch (_e) {}
+        var IMAGE_CENTER_OFFSET = (locTypeForOffset === 'city') ? 0 : 600;
+
         // ============================================================
         // STILL MODE - Single static 700x2500 image, displayed once
         // ============================================================
@@ -11258,7 +11262,7 @@ const LocationWallpaperComponent = (function() {
         function positionStillImage() {
             if (!stillOriginalHeight) stillOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var imageCenter = 600; // 600px below header
+            var imageCenter = IMAGE_CENTER_OFFSET;
             var threshold = imageCenter + (STILL_HEIGHT / 2);
 
             if (containerHeight > STILL_HEIGHT) {
@@ -11370,7 +11374,7 @@ const LocationWallpaperComponent = (function() {
             if (!basicContainer || !basicImgs.length) return;
             if (!basicOriginalHeight) basicOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var imageCenter = 600; // 600px below header
+            var imageCenter = IMAGE_CENTER_OFFSET;
             var threshold = imageCenter + (BASIC_HEIGHT / 2);
 
             var top, bottom, height;
