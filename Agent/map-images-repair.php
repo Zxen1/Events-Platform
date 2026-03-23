@@ -134,7 +134,8 @@ foreach ($brokenRows as $row) {
     $locType    = (isset($pmcRow['location_type']) && $pmcRow['location_type'] !== '') ? $pmcRow['location_type'] : 'venue';
     $slug       = slugify_venue($rawName);
     $dir        = $bearingDir[$bearing] ?? 'N';
-    $newFilename = $slug . '__' . $coordKey . '__Z18-P75-' . $dir . '.webp';
+    $repairZoom = (strtolower($locType) === 'city') ? 16 : 18;
+    $newFilename = $slug . '__' . $coordKey . '__Z' . $repairZoom . '-P75-' . $dir . '.webp';
     $newUrl     = 'https://cdn.funmap.com/map-images/' . $newFilename;
 
     if ($oldFilename !== $newFilename) {

@@ -161,7 +161,7 @@
             }
 
             var loc = locations[idx];
-            var zoom = (loc.location_type === 'city') ? 11 : 18;
+            var zoom = (loc.location_type === 'city') ? 16 : 18;
             setStatus('Processing ' + (idx+1) + ' / ' + locations.length + ': ' + loc.name);
             log('Processing: ' + loc.name + ' (' + loc.location_type + ', Z' + zoom + ') — ' + loc.lat + ', ' + loc.lng, 'info');
 
