@@ -1549,6 +1549,7 @@ const FilterModule = (function() {
         if (!calendarContainer) return;
         expiredStateBeforeOpen = expiredInput ? expiredInput.checked : false;
         calendarContainer.classList.add('filter-calendar-container--open');
+        calendarContainer.setAttribute('aria-hidden', 'false');
         syncExpiredToggleUi();
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'true');
@@ -1561,6 +1562,7 @@ const FilterModule = (function() {
     function closeCalendar() {
         if (!calendarContainer) return;
         calendarContainer.classList.remove('filter-calendar-container--open');
+        calendarContainer.setAttribute('aria-hidden', 'true');
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'false');
         }
