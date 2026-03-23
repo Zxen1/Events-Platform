@@ -949,19 +949,26 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     }
   }
 
-  // Update settings_json for existing media rows
-  if (!empty($imgMeta)) {
-    $stmtUpdateMedia = $mysqli->prepare("UPDATE post_media SET settings_json = ?, updated_at = NOW() WHERE id = ? AND post_id = ?");
-    if ($stmtUpdateMedia) {
-      foreach ($imgMeta as $metaEntry) {
-        if (!isset($metaEntry['id']) || !$metaEntry['id']) continue;
-        $mediaId = (int)$metaEntry['id'];
-        $newSettingsJson = json_encode($metaEntry, JSON_UNESCAPED_UNICODE);
-        $stmtUpdateMedia->bind_param('sii', $newSettingsJson, $mediaId, $postId);
-        $stmtUpdateMedia->execute();
-      }
-      $stmtUpdateMedia->close();
+  }
+}
+
+// Update settings_json for existing media rows (runs regardless of whether new files were uploaded)
+$imgMetaForUpdate = [];
+if (!empty($_POST['images_meta'])) {
+  $m = json_decode((string)$_POST['images_meta'], true);
+  if (is_array($m)) $imgMetaForUpdate = $m;
+}
+if (!empty($imgMetaForUpdate)) {
+  $stmtUpdateMedia = $mysqli->prepare("UPDATE post_media SET settings_json = ?, updated_at = NOW() WHERE id = ? AND post_id = ?");
+  if ($stmtUpdateMedia) {
+    foreach ($imgMetaForUpdate as $metaEntry) {
+      if (!isset($metaEntry['id']) || !$metaEntry['id']) continue;
+      $mediaId = (int)$metaEntry['id'];
+      $newSettingsJson = json_encode($metaEntry, JSON_UNESCAPED_UNICODE);
+      $stmtUpdateMedia->bind_param('sii', $newSettingsJson, $mediaId, $postId);
+      $stmtUpdateMedia->execute();
     }
+    $stmtUpdateMedia->close();
   }
 }
 
