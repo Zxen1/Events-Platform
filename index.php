@@ -1606,7 +1606,7 @@ if (empty($ogTitle)) {
                 </div>
               </div>
               <div class="member-panel-field">
-                <button type="button" class="member-theme-reset button-class-2d" data-theme-reset="light">Reset theme</button>
+                <button type="button" class="member-theme-reset button-class-2f" data-theme-reset="light" disabled>Reset theme</button>
               </div>
             </div>
             <div class="member-theme-section" data-member-theme-section="dark" hidden>
@@ -1690,7 +1690,7 @@ if (empty($ogTitle)) {
                 </div>
               </div>
               <div class="member-panel-field">
-                <button type="button" class="member-theme-reset button-class-2d" data-theme-reset="dark">Reset theme</button>
+                <button type="button" class="member-theme-reset button-class-2f" data-theme-reset="dark" disabled>Reset theme</button>
               </div>
             </div>
           </div>

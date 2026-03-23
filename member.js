@@ -1233,6 +1233,20 @@ const MemberModule = (function() {
         syncToggleGroup(section.querySelector('.member-style-buttons'), '.member-style-button', 'style', preset.map_style);
         syncToggleGroup(section.querySelector('.member-wallpaper-buttons'), '.member-wallpaper-button', 'wallpaper', preset.animation_preference);
         syncToggleGroup(section.querySelector('.member-wallpaperoverlay-buttons'), '.member-wallpaperoverlay-button', 'wallpaperOverlay', preset.wallpaper_overlay);
+
+        var resetBtn = section.querySelector('.member-theme-reset');
+        if (resetBtn) {
+            var themeKey = themeModeToActiveKey(currentTheme);
+            var adminPresets = getAdminThemePresets();
+            var adminPreset = adminPresets[themeKey];
+            var isDefault = adminPreset
+                && String(preset.bg_opacity) === String(adminPreset.bg_opacity)
+                && String(preset.map_lighting) === String(adminPreset.map_lighting)
+                && String(preset.map_style) === String(adminPreset.map_style)
+                && String(preset.animation_preference) === String(adminPreset.animation_preference)
+                && String(preset.wallpaper_overlay) === String(adminPreset.wallpaper_overlay);
+            resetBtn.disabled = isDefault;
+        }
     }
 
     function initThemeButtons() {
