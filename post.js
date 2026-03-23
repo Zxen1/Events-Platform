@@ -3357,6 +3357,7 @@ const PostModule = (function() {
     var venueName = activeLoc.venue_name || '';
     var addressLine = activeLoc.address_line || '';
     var mediaUrls = activeLoc.media_urls || [];
+    var mediaMeta = activeLoc.media_meta || [];
     // Hero image uses 'imagebox' class (530x530)
     var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
@@ -3847,7 +3848,7 @@ const PostModule = (function() {
       '<div class="post-images-container">',
         '<div class="post-hero">',
           '<div class="post-track-hero">',
-            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + ((mediaMeta[0] && mediaMeta[0].raw_url) ? mediaMeta[0].raw_url : (mediaUrls[0] || '')) + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
           '</div>',
         '</div>',
         '<div class="post-thumbs"></div>',
@@ -3864,7 +3865,7 @@ const PostModule = (function() {
           img.src = addImageClass(url, 'minithumb');
           img.alt = '';
           img.dataset.index = String(i);
-          img.dataset.fullUrl = url; // Store original URL for hero switching
+          img.dataset.fullUrl = (mediaMeta[i] && mediaMeta[i].raw_url) ? mediaMeta[i].raw_url : url;
           thumbRow.appendChild(img);
         });
       }
@@ -4419,7 +4420,7 @@ const PostModule = (function() {
       slide.style.left = (idx * 100) + '%';
       slide.alt = '';
       slide.decoding = 'async';
-      slide.src = addImageClass(galleryImages[idx], 'imagebox');
+      slide.src = galleryImages[idx];
       trackEl.appendChild(slide);
       slides[idx] = slide;
       return slide;

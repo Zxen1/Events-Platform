@@ -748,6 +748,7 @@ try {
                 $mediaUrlsById[$mediaId] = $url;
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
+                    'raw_url' => $mediaRow['file_url'],
                     'original_filename' => $originalFilename,
                     'file_type' => $fileType,
                     'file_size' => $fileSize,
