@@ -1843,6 +1843,8 @@
             if (manageAdminSubmitBtn) {
                 manageAdminSubmitBtn.disabled = !ready;
             }
+
+            checkoutContainer.hidden = !hasCharge;
         }
 
         editAccordionContent.addEventListener('locations:change', function() {
@@ -1896,7 +1898,11 @@
         manageCouponRow.appendChild(manageCouponApplyBtn);
         manageCouponSection.appendChild(manageCouponRow);
         manageCouponSection.appendChild(manageCouponMsg);
-        body.appendChild(manageCouponSection);
+
+        var checkoutContainer = document.createElement('div');
+        checkoutContainer.className = 'posteditor-manage-checkout-container';
+        checkoutContainer.hidden = true;
+        checkoutContainer.appendChild(manageCouponSection);
 
         function setManageCouponMessage(text, type) {
             if (!text) {
@@ -2129,7 +2135,7 @@
         checkboxWrapper.appendChild(termsLabelText);
         checkboxWrapper.appendChild(termsLink);
         termsWrapper.appendChild(checkboxWrapper);
-        body.appendChild(termsWrapper);
+        checkoutContainer.appendChild(termsWrapper);
 
         // Check the checkbox when user clicks Agree in the terms modal
         var termsAgreedHandler = function() {
@@ -2449,7 +2455,8 @@
             }
         });
 
-        body.appendChild(manageActionsWrapper);
+        checkoutContainer.appendChild(manageActionsWrapper);
+        body.appendChild(checkoutContainer);
 
         modalContainer.appendChild(body);
         backdrop.appendChild(modalContainer);
