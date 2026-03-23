@@ -38,6 +38,40 @@ where `x1`=left edge, `y1`=top edge, `x2`=right edge, `y2`=bottom edge (all in o
 
 ---
 
+## Database Reference
+
+### Table: `post_media`
+This is the table to check after every save. The `settings_json` column is what matters.
+
+**Query to check recent crops:**
+```sql
+SELECT id, post_id, file_name, settings_json, updated_at FROM post_media ORDER BY updated_at DESC LIMIT 10;
+```
+
+**Query to check a specific media row:**
+```sql
+SELECT * FROM post_media WHERE id = 4451;
+```
+
+**Query to find all uncropped images:**
+```sql
+SELECT * FROM post_media WHERE settings_json LIKE '%"crop":null%' ORDER BY created_at DESC LIMIT 10;
+```
+
+### Table: `admins` (column: `recent_posts`)
+The `thumb_url` values here show what URL is being sent to Bunny CDN. Check that `?crop=` is appended correctly after a save.
+
+**Query:**
+```sql
+SELECT recent_posts FROM admins WHERE id = 1;
+```
+
+### admin_settings rows for crop limits
+- ID 400: `image_min_width` = 800
+- ID 401: `image_min_height` = 800
+
+---
+
 ## Test Image
 - **Post:** 1852 — "Map images test"
 - **Media ID:** 4448
@@ -168,7 +202,12 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 
 ---
 
-## Debug Tracking Logs Added (temporary — remove after fix confirmed)
-- `fieldsets.js` line ~2159: `[CROP 1]` — logs cropState/cropRect when crop tool opens
-- `fieldsets.js` line ~2166: `[CROP 2]` — logs result.cropRect/result.cropState on "Use Crop"
-- `member.js` line 5721: `[TRACK] images_meta:` — already existed, logs full meta payload on form submit
+## Debug Tracking Logs (still active — remove after all fixes confirmed)
+
+Three console logs are active and available for the next agent to use during testing:
+
+- `[CROP 1]` in `fieldsets.js` (~line 2162) — fires when the crop tool opens. Shows `entry.cropState` and `entry.cropRect` for the image being cropped.
+- `[CROP 2]` in `fieldsets.js` (~line 2169) — fires when "Use Crop" is clicked. Shows `result.cropRect` and `result.cropState` returned by the tool.
+- `[TRACK] images_meta:` in `member.js` (line 5721) — fires when the form save button is clicked. Shows the full JSON payload being sent to the server including all crop data.
+
+**NOTE:** The page reloads after saving, wiping the console. To capture [TRACK], either preserve log on navigation in DevTools settings, or read it before the page reloads.
