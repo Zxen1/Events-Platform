@@ -154,6 +154,20 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 
 ---
 
+## STATUS SUMMARY
+
+### Completed
+- **Edit post crop save** — FIXED. `edit-post.php` now has an UPDATE loop outside the `$_FILES` block that runs on every save. Writes complete `settings_json` (id, file_name, file_type, file_size, crop) for existing media rows.
+- **JS meta chain** — FIXED. `get-posts.php`, `posteditor.js`, `fieldsets.js` updated so existing images pass complete metadata (file_name, file_type, file_size) in the `images_meta` payload. Both add and edit now use identical meta format.
+
+### Still Broken
+- **Visual display** — Crop coordinates are saving correctly to the database and the `?crop=x1,y1,x2,y2` URL parameter is being generated, but images still display uncropped visually. Suspected cause: Bunny CDN may expect `x,y,width,height` format rather than `x1,y1,x2,y2`. Needs verification against Bunny documentation. See `get-posts.php` line ~740.
+- **cropState not persisted** — zoom/pan state lost on page reload. Secondary issue, address after display is fixed.
+- **Meta index misalignment** — when adding NEW images to an existing post that already has images, `$imgMeta[$i]` in the INSERT loop indexes incorrectly. Confirmed by media 4444 having wrong settings_json. Needs separate fix.
+- **[CROP 1] format mismatch** — when re-opening the crop tool on an existing image, `entry.cropRect` is in `{x,y,width,height}` format (from get-posts.php) but the tool and updateImagesMeta() expect `{x1,y1,x2,y2}`. This means the initial cropRect shown in [CROP 1] is wrong format. Does not affect saving (since [CROP 2] always overwrites with correct format) but affects re-opening with correct initial position.
+
+---
+
 ## Debug Tracking Logs Added (temporary — remove after fix confirmed)
 - `fieldsets.js` line ~2159: `[CROP 1]` — logs cropState/cropRect when crop tool opens
 - `fieldsets.js` line ~2166: `[CROP 2]` — logs result.cropRect/result.cropState on "Use Crop"
