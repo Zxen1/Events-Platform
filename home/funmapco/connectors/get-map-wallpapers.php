@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bearingDirMap = [0 => 'N', 90 => 'E', 180 => 'S', 270 => 'W'];
         $dir = $bearingDirMap[$bearing] ?? 'N';
         $coordKey = format_map_coord($lat) . '_' . format_map_coord($lng);
-        $zoom = (strtolower($locationType) === 'city') ? 11 : 18;
+        $zoom = (strtolower($locationType) === 'city') ? 16 : 18;
         $filename = slugify_venue($rawVenueName) . '__' . $coordKey . '__Z' . $zoom . '-P75-' . $dir . '.webp';
 
         $bytes = file_get_contents($tmpFile);

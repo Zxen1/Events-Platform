@@ -10775,7 +10775,7 @@ const LocationWallpaperComponent = (function() {
 
     function getDefaultCameraForType(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
-        var zoom = (t === 'city') ? 12 : 18;
+        var zoom = (t === 'city') ? 16 : 18;
         return {
             center: centerLngLat,
             zoom: zoom,
@@ -10789,9 +10789,9 @@ const LocationWallpaperComponent = (function() {
         var t = String(locationType || '').toLowerCase();
         var isCity = (t === 'city');
 
-        // Venue/Address: zoom 18, City: zoom 11
+        // Venue/Address: zoom 18, City: zoom 15
         // 4 pan views from N, E, S, W bearings
-        var zoom = isCity ? 11 : 18;
+        var zoom = isCity ? 16 : 18;
 
         return [
             { center: centerLngLat, zoom: zoom, pitch: 75, bearing: 0 },    // North

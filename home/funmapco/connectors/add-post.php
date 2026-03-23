@@ -1536,7 +1536,7 @@ if (!empty($_FILES['map_images']) && is_array($_FILES['map_images']['name'])) {
             $mapImageErrors[] = $msg;
             continue;
           }
-          $mapZoom = ($mapLocType === 'city') ? 11 : 18;
+          $mapZoom = ($mapLocType === 'city') ? 16 : 18;
           $mapFilename = slugify_venue($rawVenueName) . '__' . $mapCoordKey . '__Z' . $mapZoom . '-P75-' . $dir . '.webp';
           
           $mapBytes = file_get_contents($mapTmp);
