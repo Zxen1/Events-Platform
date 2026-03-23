@@ -948,8 +948,6 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
       $stmtMedia->close();
     }
   }
-
-  }
 }
 
 // Update settings_json for existing media rows (runs regardless of whether new files were uploaded)
