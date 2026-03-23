@@ -1299,18 +1299,9 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
   $monthFolder = $now->format('Y-m');
 
   $meta = [];
-  $metaUploadQueue = [];
   if (!empty($_POST['images_meta'])) {
     $m = json_decode((string)$_POST['images_meta'], true);
-    if (is_array($m)) {
-      $meta = $m;
-      foreach ($meta as $metaItem) {
-        if (!is_array($metaItem)) continue;
-        $metaId = isset($metaItem['id']) ? (int)$metaItem['id'] : 0;
-        if ($metaId > 0) continue;
-        $metaUploadQueue[] = $metaItem;
-      }
-    }
+    if (is_array($m)) $meta = $m;
   }
 
   $count = count($_FILES['images']['name']);
@@ -1405,9 +1396,8 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     
     $fileSize = (int)($_FILES['images']['size'][$i] ?? 0);
     $settingsJson = null;
-    $metaItem = $metaUploadQueue[$i] ?? null;
-    if (is_array($metaItem)) {
-      $settingsJson = json_encode($metaItem, JSON_UNESCAPED_UNICODE);
+    if (isset($meta[$i]) && is_array($meta[$i])) {
+      $settingsJson = json_encode($meta[$i], JSON_UNESCAPED_UNICODE);
     }
     $stmtMedia->bind_param('isissis', $memberId, $memberRole, $insertId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
     if (!$stmtMedia->execute()) {

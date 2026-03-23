@@ -835,15 +835,7 @@ $fieldsArr = $data['fields'] ?? [];
 
 // IMAGE UPLOAD (identically to add-post.php, but using existing $postId)
 $existingMediaIds = [];
-$existingMediaCropById = [];
 $newMediaIds = [];
-$imagesMetaPayload = [];
-$imgMetaUploadQueue = [];
-
-if (!empty($_POST['images_meta'])) {
-  $decodedMeta = json_decode((string)$_POST['images_meta'], true);
-  if (is_array($decodedMeta)) $imagesMetaPayload = $decodedMeta;
-}
 
 // Extract existing media IDs from the images fieldset if present
 foreach ($fieldsArr as $fld) {
@@ -851,49 +843,10 @@ foreach ($fieldsArr as $fld) {
   if ($fType === 'images' && is_array($fld['value'])) {
     foreach ($fld['value'] as $img) {
       if (isset($img['id']) && (int)$img['id'] > 0) {
-        $mediaId = (int)$img['id'];
-        $existingMediaIds[] = $mediaId;
-        if (array_key_exists('crop', $img)) {
-          $crop = $img['crop'];
-          if (is_array($crop) && isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
-            $existingMediaCropById[$mediaId] = [
-              'x1' => (int)$crop['x1'],
-              'y1' => (int)$crop['y1'],
-              'x2' => (int)$crop['x2'],
-              'y2' => (int)$crop['y2']
-            ];
-          } elseif ($crop === null) {
-            $existingMediaCropById[$mediaId] = null;
-          }
-        }
+        $existingMediaIds[] = (int)$img['id'];
       }
     }
   }
-}
-
-// Also trust images_meta directly (authoritative for crop edits from the images component),
-// including save operations where no new files are uploaded.
-foreach ($imagesMetaPayload as $metaItem) {
-  if (!is_array($metaItem)) continue;
-  $metaId = isset($metaItem['id']) ? (int)$metaItem['id'] : 0;
-  if ($metaId > 0) {
-    $existingMediaIds[] = $metaId;
-    if (array_key_exists('crop', $metaItem)) {
-      $crop = $metaItem['crop'];
-      if (is_array($crop) && isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
-        $existingMediaCropById[$metaId] = [
-          'x1' => (int)$crop['x1'],
-          'y1' => (int)$crop['y1'],
-          'x2' => (int)$crop['x2'],
-          'y2' => (int)$crop['y2']
-        ];
-      } elseif ($crop === null) {
-        $existingMediaCropById[$metaId] = null;
-      }
-    }
-    continue;
-  }
-  $imgMetaUploadQueue[] = $metaItem;
 }
 
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
@@ -913,6 +866,12 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $utcMinus12 = new DateTimeZone('Etc/GMT+12');
     $now = new DateTime('now', $utcMinus12);
     $monthFolder = $now->format('Y-m');
+
+    $imgMeta = [];
+    if (!empty($_POST['images_meta'])) {
+      $m = json_decode((string)$_POST['images_meta'], true);
+      if (is_array($m)) $imgMeta = $m;
+    }
 
     $count = count($_FILES['images']['name']);
     $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
@@ -978,9 +937,8 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
         }
         
         $settingsJson = null;
-        $metaItem = $imgMetaUploadQueue[$i] ?? null;
-        if (is_array($metaItem)) {
-          $settingsJson = json_encode($metaItem, JSON_UNESCAPED_UNICODE);
+        if (isset($imgMeta[$i]) && is_array($imgMeta[$i])) {
+          $settingsJson = json_encode($imgMeta[$i], JSON_UNESCAPED_UNICODE);
         }
         $stmtMedia->bind_param('iissis', $memberId, $postId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
         if ($stmtMedia->execute()) {
@@ -990,71 +948,6 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
       $stmtMedia->close();
     }
   }
-}
-
-$existingMediaIds = array_values(array_unique(array_map('intval', $existingMediaIds)));
-
-// Persist crop updates for existing media selected in the images fieldset.
-if (!empty($existingMediaCropById)) {
-  $stmtGetMediaSettings = $mysqli->prepare("SELECT settings_json FROM post_media WHERE id = ? AND post_id = ? AND deleted_at IS NULL LIMIT 1");
-  $stmtUpdateMediaSettings = $mysqli->prepare("UPDATE post_media SET settings_json = ?, updated_at = NOW() WHERE id = ? AND post_id = ? AND deleted_at IS NULL");
-  if (!$stmtGetMediaSettings || !$stmtUpdateMediaSettings) {
-    if ($stmtGetMediaSettings) $stmtGetMediaSettings->close();
-    if ($stmtUpdateMediaSettings) $stmtUpdateMediaSettings->close();
-    fail_key(500, 'msg_post_edit_error');
-  }
-
-  foreach ($existingMediaCropById as $mediaId => $crop) {
-    $mediaId = (int)$mediaId;
-    if ($mediaId <= 0) continue;
-
-    $settingsJsonIn = null;
-    $stmtGetMediaSettings->bind_param('ii', $mediaId, $postId);
-    if (!$stmtGetMediaSettings->execute()) {
-      $stmtGetMediaSettings->close();
-      $stmtUpdateMediaSettings->close();
-      fail_key(500, 'msg_post_edit_error');
-    }
-    $settingsRes = $stmtGetMediaSettings->get_result();
-    if (!$settingsRes || !($settingsRow = $settingsRes->fetch_assoc())) {
-      continue;
-    }
-    $settingsJsonIn = $settingsRow['settings_json'] ?? null;
-
-    $settingsArr = [];
-    if (is_string($settingsJsonIn) && $settingsJsonIn !== '') {
-      $decoded = json_decode($settingsJsonIn, true);
-      if (is_array($decoded)) $settingsArr = $decoded;
-    }
-
-    if (is_array($crop) && isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
-      $settingsArr['crop'] = [
-        'x1' => (int)$crop['x1'],
-        'y1' => (int)$crop['y1'],
-        'x2' => (int)$crop['x2'],
-        'y2' => (int)$crop['y2']
-      ];
-    } else {
-      unset($settingsArr['crop']);
-    }
-
-    $settingsJsonOut = json_encode($settingsArr, JSON_UNESCAPED_UNICODE);
-    if ($settingsJsonOut === false) {
-      $stmtGetMediaSettings->close();
-      $stmtUpdateMediaSettings->close();
-      fail_key(500, 'msg_post_edit_error');
-    }
-
-    $stmtUpdateMediaSettings->bind_param('sii', $settingsJsonOut, $mediaId, $postId);
-    if (!$stmtUpdateMediaSettings->execute()) {
-      $stmtGetMediaSettings->close();
-      $stmtUpdateMediaSettings->close();
-      fail_key(500, 'msg_post_edit_error');
-    }
-  }
-
-  $stmtGetMediaSettings->close();
-  $stmtUpdateMediaSettings->close();
 }
 
 $allMediaIds = array_merge($existingMediaIds, $newMediaIds);
@@ -1265,21 +1158,7 @@ foreach ($byLoc as $locNum => $entries) {
       // Collect existing media IDs from the fieldset value (sent as array of objects)
       foreach ($val as $img) {
         if (isset($img['id']) && (int)$img['id'] > 0) {
-          $mediaId = (int)$img['id'];
-          $existingMediaIds[] = $mediaId;
-          if (array_key_exists('crop', $img)) {
-            $crop = $img['crop'];
-            if (is_array($crop) && isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
-              $existingMediaCropById[$mediaId] = [
-                'x1' => (int)$crop['x1'],
-                'y1' => (int)$crop['y1'],
-                'x2' => (int)$crop['x2'],
-                'y2' => (int)$crop['y2']
-              ];
-            } elseif ($crop === null) {
-              $existingMediaCropById[$mediaId] = null;
-            }
-          }
+          $existingMediaIds[] = (int)$img['id'];
         }
       }
       continue;

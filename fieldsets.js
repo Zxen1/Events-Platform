@@ -2118,14 +2118,11 @@ const FieldsetBuilder = (function(){
                     if (Array.isArray(val)) {
                         val.forEach(function(img) {
                             if (!img || !img.url) return;
-                            var sourceUrl = img.source_url || img.url;
                             imageEntries.push({
                                 _imageEntryId: String(nextImageEntryId++),
                                 id: img.id || null,
                                 file: null,
-                                // Always crop against the original source image URL.
-                                // `img.url` may already contain ?crop=... for display.
-                                fileUrl: sourceUrl,
+                                fileUrl: img.url,
                                 previewUrl: img.url,
                                 cropState: null,
                                 cropRect: img.crop || null

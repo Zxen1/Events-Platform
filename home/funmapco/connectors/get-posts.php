@@ -731,16 +731,10 @@ try {
                     $cropState = $crop; // Store raw crop state
                     if (isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
                         $cropRect = [
-                            // Keep x1..y2 so the editor can reopen crop with the same coordinates.
-                            'x1' => (int)$crop['x1'],
-                            'y1' => (int)$crop['y1'],
-                            'x2' => (int)$crop['x2'],
-                            'y2' => (int)$crop['y2'],
-                            // Also expose x/y/width/height for read-only display consumers.
-                            'x' => (int)$crop['x1'],
-                            'y' => (int)$crop['y1'],
-                            'width' => (int)$crop['x2'] - (int)$crop['x1'],
-                            'height' => (int)$crop['y2'] - (int)$crop['y1']
+                            'x' => $crop['x1'],
+                            'y' => $crop['y1'],
+                            'width' => $crop['x2'] - $crop['x1'],
+                            'height' => $crop['y2'] - $crop['y1']
                         ];
                         $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
                         $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
@@ -750,7 +744,6 @@ try {
                 $mediaUrlsById[$mediaId] = $url;
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
-                    'source_url' => $mediaRow['file_url'],
                     'original_filename' => $originalFilename,
                     'cropRect' => $cropRect,
                     'cropState' => $cropState

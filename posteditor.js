@@ -3216,7 +3216,6 @@
                             var meta = metas[idx];
                             return { 
                                 url: url, 
-                                source_url: (meta && meta.source_url) ? meta.source_url : url,
                                 crop: meta ? meta.cropRect : null, 
                                 id: meta ? meta.media_id : null 
                             };
