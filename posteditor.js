@@ -1612,7 +1612,7 @@
             });
             line.appendChild(lineLbl);
             line.appendChild(lineValWrap);
-            return { el: line, value: lineVal, tooltip: lineTooltip };
+            return { el: line, label: lineLbl, value: lineVal, tooltip: lineTooltip };
         }
 
         document.addEventListener('click', function() {
@@ -1738,6 +1738,7 @@
             }
             var addDaysCost = addDaysBase * surchargeMultiplier;
             addDaysLine.el.style.display = addDays > 0 ? '' : 'none';
+            addDaysLine.label.textContent = 'Add ' + addDays + (addDays === 1 ? ' Day' : ' Days');
             addDaysLine.value.textContent = formatPriceWithSymbol(addDaysCost, currencyCode);
             if (addDays > 0) {
                 var dt = [];
@@ -1774,6 +1775,7 @@
             }
             var locCost = locBase * surchargeMultiplier;
             locationsLine.el.style.display = newLocs > 0 ? '' : 'none';
+            locationsLine.label.textContent = 'Add ' + newLocs + (newLocs === 1 ? ' Location' : ' Locations');
             locationsLine.value.textContent = formatPriceWithSymbol(locCost, currencyCode);
             if (newLocs > 0) {
                 var lt = [];
