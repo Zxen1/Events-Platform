@@ -1066,15 +1066,21 @@ const PostModule = (function() {
 
   /**
    * Append Bunny Optimizer class to image URL for size optimization.
-   * This is a progressive enhancement - if the CDN doesn't support ?class=,
-   * the parameter is simply ignored and CSS handles display sizing.
+   * When the URL already has an explicit ?crop= parameter, the Bunny class crop
+   * settings (center gravity) would override it. In that case, bypass the class
+   * and use explicit width/height instead. Sizes must match Bunny class config.
    * @param {string} url - Image URL (may already have ?crop= parameter)
    * @param {string} className - Bunny class name (thumbnail, minithumb, imagebox)
-   * @returns {string} URL with class parameter appended
+   * @returns {string} URL with class or explicit dimensions appended
    */
   function addImageClass(url, className) {
     if (!url || !className) return url || '';
     var separator = url.indexOf('?') === -1 ? '?' : '&';
+    if (url.indexOf('crop=') !== -1) {
+      var classSizes = { thumbnail: 200, minithumb: 100, imagebox: 530 };
+      var dim = classSizes[className];
+      if (dim) return url + separator + 'width=' + dim + '&height=' + dim;
+    }
     return url + separator + 'class=' + className;
   }
 

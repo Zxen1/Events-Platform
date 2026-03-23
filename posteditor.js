@@ -692,7 +692,7 @@
         var firstCard = mapCards[0] || {};
         var mediaUrls = firstCard.media_urls || [];
         var rawThumbUrl = mediaUrls.length > 0 ? mediaUrls[0] : '';
-        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + 'class=minithumb') : '';
+        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + (rawThumbUrl.indexOf('crop=') !== -1 ? 'width=100&height=100' : 'class=minithumb')) : '';
 
         if (miniThumbUrl) {
             var thumbImg = document.createElement('img');
