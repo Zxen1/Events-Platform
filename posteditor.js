@@ -3217,7 +3217,10 @@
                             return { 
                                 url: url, 
                                 crop: meta ? meta.cropRect : null, 
-                                id: meta ? meta.media_id : null 
+                                id: meta ? meta.media_id : null,
+                                file_name: meta ? (meta.original_filename || '') : '',
+                                file_type: meta ? (meta.file_type || '') : '',
+                                file_size: meta ? (meta.file_size || 0) : 0
                             };
                         });
                         break;

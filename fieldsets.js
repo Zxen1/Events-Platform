@@ -2074,9 +2074,9 @@ const FieldsetBuilder = (function(){
                         var payload = imageEntries.map(function(entry) {
                             return {
                                 id: entry.id || null,
-                                file_name: entry && entry.file ? (entry.file.name || '') : '',
-                                file_type: entry && entry.file ? (entry.file.type || '') : '',
-                                file_size: entry && entry.file ? (entry.file.size || 0) : 0,
+                                file_name: entry && entry.file ? (entry.file.name || '') : (entry.fileName || ''),
+                                file_type: entry && entry.file ? (entry.file.type || '') : (entry.fileType || ''),
+                                file_size: entry && entry.file ? (entry.file.size || 0) : (entry.fileSize || 0),
                                 crop: entry && entry.cropRect ? {
                                     x1: entry.cropRect.x1,
                                     y1: entry.cropRect.y1,
@@ -2124,6 +2124,9 @@ const FieldsetBuilder = (function(){
                                 file: null,
                                 fileUrl: img.url,
                                 previewUrl: img.url,
+                                fileName: img.file_name || '',
+                                fileType: img.file_type || '',
+                                fileSize: img.file_size || 0,
                                 cropState: null,
                                 cropRect: img.crop || null
                             });

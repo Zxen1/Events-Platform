@@ -724,7 +724,9 @@ try {
                 $settings = !empty($mediaRow['settings_json']) ? json_decode($mediaRow['settings_json'], true) : [];
                 $cropRect = null;
                 $cropState = null;
-                $originalFilename = $settings['file_name'] ?? ''; // From metadata
+                $originalFilename = $settings['file_name'] ?? '';
+                $fileType = $settings['file_type'] ?? '';
+                $fileSize = isset($settings['file_size']) ? (int)$settings['file_size'] : 0;
 
                 if (is_array($settings) && !empty($settings['crop'])) {
                     $crop = $settings['crop'];
@@ -745,6 +747,8 @@ try {
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
                     'original_filename' => $originalFilename,
+                    'file_type' => $fileType,
+                    'file_size' => $fileSize,
                     'cropRect' => $cropRect,
                     'cropState' => $cropState
                 ];
