@@ -10049,6 +10049,14 @@ var SecondaryMap = (function() {
         });
     }
 
+    function cancelByCoords(lat, lng) {
+        queue = queue.filter(function(task) {
+            var c = task.camera && task.camera.center;
+            if (!c) return true;
+            return !(c[1] === lat && c[0] === lng);
+        });
+    }
+
     function destroy() {
         queue = [];
         isCapturing = false;
@@ -10063,6 +10071,7 @@ var SecondaryMap = (function() {
     return {
         capture: capture,
         captureWithBounds: captureWithBounds,
+        cancelByCoords: cancelByCoords,
         destroy: destroy
     };
 })();

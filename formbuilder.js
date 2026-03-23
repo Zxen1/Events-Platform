@@ -4822,6 +4822,13 @@
                                 focusCancel: true
                             }).then(function(confirmed) {
                                 if (confirmed) {
+                                    var latEl = container.querySelector('.fieldset-lat');
+                                    var lngEl = container.querySelector('.fieldset-lng');
+                                    var delLat = latEl ? parseFloat(latEl.value) : null;
+                                    var delLng = lngEl ? parseFloat(lngEl.value) : null;
+                                    if (delLat !== null && delLng !== null && isFinite(delLat) && isFinite(delLng) && window.SecondaryMap && typeof SecondaryMap.cancelByCoords === 'function') {
+                                        SecondaryMap.cancelByCoords(delLat, delLng);
+                                    }
                                     container.remove();
                                     onQuantityUpdate(-1);
                                     updateVenueDeleteButtons();
