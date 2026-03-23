@@ -1757,7 +1757,9 @@
                 if (paidExtraLocs > 0) {
                     dt.push('+ ' + addDays + ' Days \u00D7 ' + formatPriceWithSymbol(selectedRates.discount, currencyCode) + ' Discount Rate \u00D7 ' + paidExtraLocs + ' Location' + (paidExtraLocs !== 1 ? 's' : '') + ' = ' + formatPriceWithSymbol(addDays * selectedRates.discount * paidExtraLocs, currencyCode));
                 }
-                dt.push('Subtotal: ' + formatPriceWithSymbol(addDaysBase, currencyCode));
+                if (paidExtraLocs > 0 || daysAfterThreshold > 0 || hasSurcharge) {
+                    dt.push('Subtotal: ' + formatPriceWithSymbol(addDaysBase, currencyCode));
+                }
                 if (hasSurcharge) {
                     dt.push('+ Surcharge (' + surchargeSubName + ' ' + (surchargePercent > 0 ? '+' : '') + surchargePercent + '%): ' + formatPriceWithSymbol(addDaysCost - addDaysBase, currencyCode));
                     dt.push('Total: ' + formatPriceWithSymbol(addDaysCost, currencyCode));
