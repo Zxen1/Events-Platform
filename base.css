@@ -430,10 +430,6 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
-.button-class-2f:active {
-  background: var(--red-600);
-  border-color: transparent;
-}
 .button-class-2f:disabled {
   opacity: 0.5;
   cursor: not-allowed;
