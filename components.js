@@ -11163,7 +11163,7 @@ const LocationWallpaperComponent = (function() {
             if (!mapMount || !st.map) return;
             if (!orbitOriginalHeight) orbitOriginalHeight = contentEl.offsetHeight || 400;
             var containerHeight = contentEl.offsetHeight || 400;
-            var mapCenter = 600; // 600px below header
+            var mapCenter = IMAGE_CENTER_OFFSET;
             var threshold = mapCenter + (ORBIT_HEIGHT / 2);
 
             if (containerHeight > ORBIT_HEIGHT) {
