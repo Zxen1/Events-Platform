@@ -4745,7 +4745,6 @@ const MemberModule = (function() {
                         
                         WallpaperCache.getAll(loc.lat, loc.lng, bearings, function(cachedUrls) {
                             var foundCount = cachedUrls.filter(function(u) { return !!u; }).length;
-                            console.log('[TRACK] Found', foundCount, '/4 in browser cache for', loc.lat, loc.lng);
                             
                             if (foundCount === 4) {
                                 bearings.forEach(function(bearing, idx) {
@@ -4754,7 +4753,6 @@ const MemberModule = (function() {
                                 pending--;
                                 if (pending === 0) resolve(result);
                             } else {
-                                console.log('[TRACK] Capturing missing images for', loc.lat, loc.lng);
                                 collectWithFallbackCapture(loc, bearings, cachedUrls, result, addToResult, function() {
                                     pending--;
                                     if (pending === 0) resolve(result);
@@ -4885,7 +4883,6 @@ const MemberModule = (function() {
             }
         }
         
-        console.log('[TRACK] validateAndCollectFormData complete. imageFiles:', imageFiles.length, 'payload fields:', Object.keys(payload));
         return { payload: payload, imageFiles: imageFiles, imagesMeta: imagesMeta };
     }
     
@@ -5706,19 +5703,15 @@ const MemberModule = (function() {
             }
 
             var fd = new FormData();
-            console.log('[TRACK] Creating FormData. postData:', JSON.stringify(postData).substring(0,500));
             fd.set('payload', JSON.stringify(postData));
 
             // Attach image files (passed from validateAndCollectFormData, collected before form cleared)
             if (imageFiles && imageFiles.length > 0) {
-                console.log('[TRACK] Attaching', imageFiles.length, 'image files');
                 imageFiles.forEach(function(file, idx) {
-                    console.log('[TRACK] Image', idx, ':', file ? file.name : 'null', file ? file.size : 0);
                     if (file) fd.append('images[]', file, file.name || 'image');
                 });
             }
             fd.set('images_meta', imagesMeta || '[]');
-            console.log('[TRACK] images_meta:', imagesMeta);
 
             // Attach map images (captured during form fill, collected before submission)
             if (mapImageData && mapImageData.files && mapImageData.files.length > 0) {

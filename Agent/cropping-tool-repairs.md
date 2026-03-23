@@ -228,12 +228,6 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 
 ---
 
-## Debug Tracking Logs (still active — remove after all fixes confirmed)
+## Debug Tracking Logs — REMOVED (Agent 12)
 
-Three console logs are active and available for the next agent to use during testing:
-
-- `[CROP 1]` in `fieldsets.js` (~line 2162) — fires when the crop tool opens. Shows `entry.cropState` and `entry.cropRect` for the image being cropped.
-- `[CROP 2]` in `fieldsets.js` (~line 2169) — fires when "Use Crop" is clicked. Shows `result.cropRect` and `result.cropState` returned by the tool.
-- `[TRACK] images_meta:` in `member.js` (line 5721) — fires when the form save button is clicked. Shows the full JSON payload being sent to the server including all crop data.
-
-**NOTE:** The page reloads after saving, wiping the console. To capture [TRACK], either preserve log on navigation in DevTools settings, or read it before the page reloads.
+All `[CROP 1]`, `[CROP 2]`, and `[TRACK]` console.log statements have been removed from `post.js`, `fieldsets.js`, and `member.js`. Fixes confirmed working.

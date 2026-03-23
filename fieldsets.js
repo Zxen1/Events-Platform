@@ -439,7 +439,6 @@ const FieldsetBuilder = (function(){
                                 inputElement.value = place.displayName || place.formattedAddress || mainText;
                                 kb.close();
                                 
-                                console.log('[TRACK] Google Places selected. Lat:', lat, 'Lng:', lng);
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
                                 if (countryInput) countryInput.value = cc;
@@ -2037,11 +2036,16 @@ const FieldsetBuilder = (function(){
                         img.className = 'fieldset-images-basket-item-image';
                         
                         if (item.type === 'local') {
-                            // Local entry - use blob URL or preview
                             img.src = item.entry.previewUrl || item.entry.fileUrl || '';
                         } else {
-                            // Server media - use minithumb class
-                            img.src = addImageClassToUrl(item.media.file_url, 'minithumb');
+                            var basketUrl = item.media.file_url || '';
+                            var sj = item.media.settings_json;
+                            if (sj && sj.crop && sj.crop.x1 != null) {
+                                var cW = sj.crop.x2 - sj.crop.x1;
+                                var cH = sj.crop.y2 - sj.crop.y1;
+                                basketUrl += (basketUrl.indexOf('?') === -1 ? '?' : '&') + 'crop=' + cW + ',' + cH + ',' + sj.crop.x1 + ',' + sj.crop.y1;
+                            }
+                            img.src = addImageClassToUrl(basketUrl, 'minithumb');
                         }
                         
                         thumb.appendChild(img);
@@ -2166,14 +2170,12 @@ const FieldsetBuilder = (function(){
                     }
                     
                     currentCropEntry = entry;
-                    console.log('[CROP 1] Tool opening. entry.cropState:', JSON.stringify(entry.cropState), 'entry.cropRect:', JSON.stringify(entry.cropRect));
                     
                     PostCropperComponent.open({
                         url: entry.fileUrl,
                         cropState: entry.cropState || null,
                         callback: function(result) {
                             if (!result || !currentCropEntry) return;
-                            console.log('[CROP 2] Use Crop clicked. result.cropRect:', JSON.stringify(result.cropRect), 'result.cropState:', JSON.stringify(result.cropState));
                             
                             currentCropEntry.cropState = result.cropState;
                             currentCropEntry.cropRect = result.cropRect;
