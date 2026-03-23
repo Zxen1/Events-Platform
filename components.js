@@ -11250,7 +11250,7 @@ const LocationWallpaperComponent = (function() {
 
         var locTypeForOffset = '';
         try { locTypeForOffset = getLocationTypeFromContainer(locationContainerEl); } catch (_e) {}
-        var IMAGE_CENTER_OFFSET = (locTypeForOffset === 'city') ? 0 : 600;
+        var IMAGE_CENTER_OFFSET = (locTypeForOffset === 'city') ? 600 : 600;
 
         // ============================================================
         // STILL MODE - Single static 700x2500 image, displayed once
