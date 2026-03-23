@@ -1914,6 +1914,13 @@ const FieldsetBuilder = (function(){
                 function addImageClassToUrl(url, className) {
                     if (!url || !className) return url;
                     var separator = url.indexOf('?') === -1 ? '?' : '&';
+                    if (url.indexOf('crop=') !== -1) {
+                        var sizeMap = { minithumb: 'image_crop_minithumb', thumbnail: 'image_crop_thumbnail', imagebox: 'image_crop_imagebox' };
+                        var settingKey = sizeMap[className];
+                        var sett = (window.App && App.getState) ? App.getState('settings') : null;
+                        var size = (sett && settingKey && sett[settingKey]) ? sett[settingKey] : null;
+                        if (size) return url + separator + 'width=' + size + '&height=' + size;
+                    }
                     return url + separator + 'class=' + className;
                 }
                 

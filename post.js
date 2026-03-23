@@ -1065,16 +1065,23 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   /**
-   * Append Bunny Optimizer class to image URL for size optimization.
-   * This is a progressive enhancement - if the CDN doesn't support ?class=,
-   * the parameter is simply ignored and CSS handles display sizing.
+   * Append Bunny Optimizer sizing to image URL.
+   * Cropped images (URL contains crop=) get explicit width/height from admin settings
+   * because Bunny's ?class= overrides the crop parameter. Uncropped images use ?class=.
    * @param {string} url - Image URL (may already have ?crop= parameter)
    * @param {string} className - Bunny class name (thumbnail, minithumb, imagebox)
-   * @returns {string} URL with class parameter appended
+   * @returns {string} URL with sizing parameters appended
    */
   function addImageClass(url, className) {
     if (!url || !className) return url || '';
     var separator = url.indexOf('?') === -1 ? '?' : '&';
+    if (url.indexOf('crop=') !== -1) {
+      var sizeMap = { minithumb: 'image_crop_minithumb', thumbnail: 'image_crop_thumbnail', imagebox: 'image_crop_imagebox' };
+      var settingKey = sizeMap[className];
+      var sett = (window.App && App.getState) ? App.getState('settings') : null;
+      var size = (sett && settingKey && sett[settingKey]) ? sett[settingKey] : null;
+      if (size) return url + separator + 'width=' + size + '&height=' + size;
+    }
     return url + separator + 'class=' + className;
   }
 

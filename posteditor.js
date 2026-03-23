@@ -692,7 +692,17 @@
         var firstCard = mapCards[0] || {};
         var mediaUrls = firstCard.media_urls || [];
         var rawThumbUrl = mediaUrls.length > 0 ? mediaUrls[0] : '';
-        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + 'class=minithumb') : '';
+        var miniThumbUrl = '';
+        if (rawThumbUrl) {
+            var _sep = rawThumbUrl.indexOf('?') === -1 ? '?' : '&';
+            if (rawThumbUrl.indexOf('crop=') !== -1) {
+                var _sett = (window.App && App.getState) ? App.getState('settings') : null;
+                var _size = (_sett && _sett.image_crop_minithumb) ? _sett.image_crop_minithumb : null;
+                miniThumbUrl = _size ? rawThumbUrl + _sep + 'width=' + _size + '&height=' + _size : rawThumbUrl;
+            } else {
+                miniThumbUrl = rawThumbUrl + _sep + 'class=minithumb';
+            }
+        }
 
         if (miniThumbUrl) {
             var thumbImg = document.createElement('img');

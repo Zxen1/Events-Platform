@@ -211,12 +211,13 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 
 **Solution:** For cropped images, use explicit `?crop=W,H,X,Y&width=SIZE&height=SIZE` (no class). For uncropped images, use `?class=NAME` as before.
 
-**Implementation needed:**
+**Implementation — COMPLETED (Agent 12):**
 1. Three `admin_settings` rows already exist (dump 92): ID 406 `image_crop_minithumb` (100), ID 407 `image_crop_thumbnail` (200), ID 408 `image_crop_imagebox` (530)
-2. Whitelist them in `get-admin-settings.php` so they reach the frontend in startup settings
-3. Modify `addImageClass()` in `post.js` (~line 1075): when URL contains `crop=`, append `&width=SIZE&height=SIZE` from settings instead of `&class=NAME`
-4. Restore "Crop Gravity: Center" to all three Bunny classes (needed for uncropped images)
-5. The posteditor.js `addImageClassToUrl` helper (~line 695) also needs the same logic
+2. Already whitelisted — `get-admin-settings.php` returns all non-sensitive settings; these are type `integer` and pass through in `data.settings` automatically.
+3. `addImageClass()` in `post.js` (~line 1075) — DONE. When URL contains `crop=`, appends `&width=SIZE&height=SIZE` from settings. Uncropped images still use `&class=NAME`.
+4. **Restore "Crop Gravity: Center" to all three Bunny classes** — needed for uncropped images. This is a Bunny CDN admin panel change (not code).
+5. `addImageClassToUrl()` in `fieldsets.js` (~line 1914) — DONE. Same crop-aware logic.
+6. Inline class= logic in `posteditor.js` (~line 695) — DONE. Same crop-aware logic.
 
 **The five image states:**
 1. Raw (crop tool + image viewer): no crop, no class, no width/height
