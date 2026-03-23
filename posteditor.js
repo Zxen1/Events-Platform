@@ -1623,7 +1623,7 @@
         var subtotalsWrapper = document.createElement('div');
         subtotalsWrapper.className = 'posteditor-manage-pricing-subtotals';
 
-        var upgradeLine = createPricingLine('Tier Upgrade');
+        var upgradeLine = createPricingLine('Pricing Tier Upgrade');
         var addDaysLine = createPricingLine('Add Days');
         var locationsLine = createPricingLine('Locations');
         subtotalsWrapper.appendChild(upgradeLine.el);
