@@ -626,7 +626,7 @@
 }
 
 .posteditor-manage-reach-fraction--over {
-  color: var(--error-color, #f44336);
+  color: var(--warning-color, #f59e0b);
 }
 
 .posteditor-manage-duration-value {

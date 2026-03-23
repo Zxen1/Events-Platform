@@ -1541,28 +1541,9 @@
         }
         reachGroup.appendChild(reachLabel);
 
-        var reachRow = document.createElement('div');
-        reachRow.className = 'posteditor-manage-duration-row';
-
-        var reachInputWrapper = document.createElement('div');
-        reachInputWrapper.className = 'posteditor-manage-duration-inputbox input-class-1 posteditor-manage-duration-inputbox--readonly';
-        var reachPrefix = document.createElement('span');
-        reachPrefix.className = 'posteditor-manage-duration-inputbox-affix';
-        reachPrefix.textContent = '+';
-        var reachValue = document.createElement('span');
-        reachValue.className = 'posteditor-manage-reach-value';
-        reachValue.textContent = '0';
-        var reachSuffix = document.createElement('span');
-        reachSuffix.className = 'posteditor-manage-duration-inputbox-affix';
-        reachSuffix.textContent = 'Locations';
-        reachInputWrapper.appendChild(reachPrefix);
-        reachInputWrapper.appendChild(reachValue);
-        reachInputWrapper.appendChild(reachSuffix);
         var reachFraction = document.createElement('span');
         reachFraction.className = 'posteditor-manage-reach-fraction';
-        reachRow.appendChild(reachInputWrapper);
-        reachRow.appendChild(reachFraction);
-        reachGroup.appendChild(reachRow);
+        reachGroup.appendChild(reachFraction);
         pricingContainer.appendChild(reachGroup);
 
         if (isEvent) {
@@ -1678,8 +1659,7 @@
 
             var paidExtraLocs = Math.max(0, pricingLocPaid - 1);
             var newLocs = Math.max(0, pricingLocUsed - pricingLocPaid);
-            reachValue.textContent = String(newLocs);
-            reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid;
+            reachFraction.textContent = pricingLocUsed + ' out of ' + pricingLocPaid + ' locations (edit post to add more)';
             if (pricingLocUsed > pricingLocPaid) {
                 reachFraction.classList.add('posteditor-manage-reach-fraction--over');
             } else {
