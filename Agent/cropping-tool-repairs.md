@@ -34,6 +34,8 @@ In `get-posts.php` the crop is appended to the image URL as:
 `?crop=x1,y1,x2,y2`
 where `x1`=left edge, `y1`=top edge, `x2`=right edge, `y2`=bottom edge (all in original image pixels).
 
+**OPEN QUESTION:** Bunny may expect `x, y, width, height` rather than `x1, y1, x2, y2`. If so, the format being sent is wrong. `get-posts.php` currently passes the raw coordinates directly. Needs verification against Bunny CDN documentation.
+
 ---
 
 ## Test Image
@@ -94,9 +96,50 @@ The `id` in the meta entry corresponds to `post_media.id`. The `post_id` check i
 
 ---
 
+## New Post Creation Test (dump 90)
+
+### Test 5 — New post, 816×1456 portrait image, max zoom (1.02), dragged to top-right
+- **[CROP 1]:** `cropState: null, cropRect: null` — correct, brand new image
+- **[CROP 2]:** `cropRect: {"x1":16,"y1":0,"x2":816,"y2":800}` — 800×800, top-right
+- `cropState: {"zoom":1.02,"offsetX":-5.3,"offsetY":217.3}`
+- **[TRACK] images_meta:** `[{"id":null,"file_name":"MikeyCrane_0033.jpg","file_type":"image/jpeg","file_size":398473,"crop":{"x1":16,"y1":0,"x2":816,"y2":800}}]`
+- **Post created:** 1856, media ID 4451
+- **DB (dump 90):** `crop: {"x1":16,"y1":0,"x2":816,"y2":800}` — **SAVED CORRECTLY**
+- **thumb_url in recent_posts:** `...00001856-MikeyCrane_0033.jpg?crop=16,0,816,800` — crop parameter present
+
+**Conclusion: `add-post.php` works correctly for new post creation.**
+
+### Crop coordinate verification
+For the 816×1456 image at max zoom (800×800 crop, 16px horizontal slack):
+- `x1:16` — image pushed fully right, left edge of crop is 16px in (all slack consumed on the left)
+- `y1:0` — image pushed fully to the top, no higher position possible
+- `x2:816` — right edge is the full image width
+- `y2:800` — 800px down from top (minimum crop height)
+
+The numbers are geometrically perfect. The crop tool is calculating coordinates correctly.
+
+### Visual display still wrong
+Despite correct data in the database and correct `?crop=` URL being generated, the displayed images do not visually reflect the crop — they still appear centred/default. This is NOT a caching issue (each unique URL is independently cached by Bunny). 
+
+**Suspected cause:** Bunny CDN may interpret `?crop=x1,y1,x2,y2` as `x, y, width, height` rather than left/top/right/bottom edges. If so, `get-posts.php` is sending the wrong format. Needs verification.
+
+---
+
+## Meta Index Misalignment Bug (edit-post.php)
+
+Discovered from dump 90, media ID 4444 (post 1853):
+```json
+{"id":4443,"file_name":"","file_type":"","file_size":0,"crop":null}
+```
+The `id:4443` belongs to an existing image. This got written as `settings_json` for a newly uploaded image (4444). This happens because `updateImagesMeta()` in `fieldsets.js` maps ALL `imageEntries` (existing + new), but `$_FILES['images']` only contains new uploads. On the server, `$imgMeta[$i]` for the i-th new file incorrectly reads the meta for the i-th entry in the full array — which may be an existing image.
+
+**This is a second bug in `edit-post.php` affecting new image uploads on posts that already have images.**
+
+---
+
 ## Secondary Issue (not yet actioned)
 
-**`cropState` is not persisted.** Only `cropRect` is saved to `settings_json`. This means when a user re-opens the crop tool on an existing image, the zoom and pan position cannot be restored from the database. The tool resets to default state. This is a separate problem to be addressed after the primary fix is confirmed working.
+**`cropState` is not persisted.** Only `cropRect` is saved to `settings_json`. This means when a user re-opens the crop tool on an existing image, the zoom and pan position cannot be restored from the database. The tool resets to default state. This is a separate problem to be addressed after the primary fixes are confirmed working.
 
 ---
 
@@ -105,6 +148,13 @@ The `id` in the meta entry corresponds to `post_media.id`. The `post_id` check i
 - `fieldsets.js` — Images fieldset, `openCropperForEntry()` (line 2150), `updateImagesMeta()` (line 2072)
 - `member.js` — `submitPostData()` (line 5667)
 - `posteditor.js` — `submitPostData()` delegate (line 246), edit save (line 3376)
-- `home/funmapco/connectors/edit-post.php` — **fix required here**
-- `home/funmapco/connectors/add-post.php` — may also need review
-- `home/funmapco/connectors/get-posts.php` — reads crop and appends to Bunny URL (line 740)
+- `home/funmapco/connectors/edit-post.php` — **two fixes required** (missing UPDATE + meta index misalignment)
+- `home/funmapco/connectors/add-post.php` — working correctly for new posts
+- `home/funmapco/connectors/get-posts.php` — reads crop and appends to Bunny URL (line 740) — **Bunny format may be wrong**
+
+---
+
+## Debug Tracking Logs Added (temporary — remove after fix confirmed)
+- `fieldsets.js` line ~2159: `[CROP 1]` — logs cropState/cropRect when crop tool opens
+- `fieldsets.js` line ~2166: `[CROP 2]` — logs result.cropRect/result.cropState on "Use Crop"
+- `member.js` line 5721: `[TRACK] images_meta:` — already existed, logs full meta payload on form submit
