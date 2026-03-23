@@ -692,7 +692,7 @@
         var firstCard = mapCards[0] || {};
         var mediaUrls = firstCard.media_urls || [];
         var rawThumbUrl = mediaUrls.length > 0 ? mediaUrls[0] : '';
-        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + (rawThumbUrl.indexOf('crop=') !== -1 ? 'width=100&height=100' : 'class=minithumb')) : '';
+        var miniThumbUrl = rawThumbUrl ? (rawThumbUrl + (rawThumbUrl.indexOf('?') === -1 ? '?' : '&') + 'class=minithumb') : '';
 
         if (miniThumbUrl) {
             var thumbImg = document.createElement('img');
@@ -3215,7 +3215,7 @@
                         val = urls.map(function(url, idx) {
                             var meta = metas[idx];
                             return { 
-                                url: (meta && meta.raw_url) ? meta.raw_url : url, 
+                                url: url, 
                                 crop: meta ? meta.cropRect : null, 
                                 id: meta ? meta.media_id : null,
                                 file_name: meta ? (meta.original_filename || '') : '',

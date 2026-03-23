@@ -738,9 +738,7 @@ try {
                             'width' => $crop['x2'] - $crop['x1'],
                             'height' => $crop['y2'] - $crop['y1']
                         ];
-                        $cropW = intval($crop['x2']) - intval($crop['x1']);
-                        $cropH = intval($crop['y2']) - intval($crop['y1']);
-                        $cropParam = $cropW . ',' . $cropH . ',' . intval($crop['x1']) . ',' . intval($crop['y1']);
+                        $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
                         $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
                     }
                 }
@@ -748,7 +746,6 @@ try {
                 $mediaUrlsById[$mediaId] = $url;
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
-                    'raw_url' => $mediaRow['file_url'],
                     'original_filename' => $originalFilename,
                     'file_type' => $fileType,
                     'file_size' => $fileSize,

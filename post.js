@@ -1066,21 +1066,15 @@ const PostModule = (function() {
 
   /**
    * Append Bunny Optimizer class to image URL for size optimization.
-   * When the URL already has an explicit ?crop= parameter, the Bunny class crop
-   * settings (center gravity) would override it. In that case, bypass the class
-   * and use explicit width/height instead. Sizes must match Bunny class config.
+   * This is a progressive enhancement - if the CDN doesn't support ?class=,
+   * the parameter is simply ignored and CSS handles display sizing.
    * @param {string} url - Image URL (may already have ?crop= parameter)
    * @param {string} className - Bunny class name (thumbnail, minithumb, imagebox)
-   * @returns {string} URL with class or explicit dimensions appended
+   * @returns {string} URL with class parameter appended
    */
   function addImageClass(url, className) {
     if (!url || !className) return url || '';
     var separator = url.indexOf('?') === -1 ? '?' : '&';
-    if (url.indexOf('crop=') !== -1) {
-      var classSizes = { thumbnail: 200, minithumb: 100, imagebox: 530 };
-      var dim = classSizes[className];
-      if (dim) return url + separator + 'width=' + dim + '&height=' + dim;
-    }
     return url + separator + 'class=' + className;
   }
 
@@ -3357,9 +3351,8 @@ const PostModule = (function() {
     var venueName = activeLoc.venue_name || '';
     var addressLine = activeLoc.address_line || '';
     var mediaUrls = activeLoc.media_urls || [];
-    var mediaMeta = activeLoc.media_meta || [];
-    var heroRawUrl = (mediaMeta[0] && mediaMeta[0].raw_url) ? mediaMeta[0].raw_url : (mediaUrls[0] || '');
-    var heroUrl = heroRawUrl;
+    // Hero image uses 'imagebox' class (530x530)
+    var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
     // Get subcategory info
     var displayName = post.subcategory_name || '';
@@ -3848,7 +3841,7 @@ const PostModule = (function() {
       '<div class="post-images-container">',
         '<div class="post-hero">',
           '<div class="post-track-hero">',
-            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + ((mediaMeta[0] && mediaMeta[0].raw_url) ? mediaMeta[0].raw_url : (mediaUrls[0] || '')) + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
           '</div>',
         '</div>',
         '<div class="post-thumbs"></div>',
@@ -3865,7 +3858,7 @@ const PostModule = (function() {
           img.src = addImageClass(url, 'minithumb');
           img.alt = '';
           img.dataset.index = String(i);
-          img.dataset.fullUrl = (mediaMeta[i] && mediaMeta[i].raw_url) ? mediaMeta[i].raw_url : url;
+          img.dataset.fullUrl = url; // Store original URL for hero switching
           thumbRow.appendChild(img);
         });
       }
@@ -4420,7 +4413,7 @@ const PostModule = (function() {
       slide.style.left = (idx * 100) + '%';
       slide.alt = '';
       slide.decoding = 'async';
-      slide.src = galleryImages[idx];
+      slide.src = addImageClass(galleryImages[idx], 'imagebox');
       trackEl.appendChild(slide);
       slides[idx] = slide;
       return slide;
