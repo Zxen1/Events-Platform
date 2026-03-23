@@ -3215,8 +3215,9 @@
                         val = urls.map(function(url, idx) {
                             var meta = metas[idx];
                             return { 
-                                url: url, 
-                                crop: meta ? meta.cropRect : null, 
+                                url: url,
+                                raw_url: meta ? (meta.raw_url || url) : url,
+                                cropRect: meta ? meta.cropRect : null, 
                                 id: meta ? meta.media_id : null,
                                 file_name: meta ? (meta.original_filename || '') : '',
                                 file_type: meta ? (meta.file_type || '') : '',

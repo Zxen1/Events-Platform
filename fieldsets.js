@@ -2122,13 +2122,13 @@ const FieldsetBuilder = (function(){
                                 _imageEntryId: String(nextImageEntryId++),
                                 id: img.id || null,
                                 file: null,
-                                fileUrl: img.url,
+                                fileUrl: img.raw_url || img.url,
                                 previewUrl: img.url,
                                 fileName: img.file_name || '',
                                 fileType: img.file_type || '',
                                 fileSize: img.file_size || 0,
                                 cropState: null,
-                                cropRect: img.crop || null
+                                cropRect: img.cropRect || null
                             });
                         });
                     }

@@ -721,24 +721,25 @@ try {
             $mediaResult = $mediaStmt->get_result();
             while ($mediaRow = $mediaResult->fetch_assoc()) {
                 $url = $mediaRow['file_url'];
+                $rawUrl = $url;
                 $settings = !empty($mediaRow['settings_json']) ? json_decode($mediaRow['settings_json'], true) : [];
                 $cropRect = null;
-                $cropState = null;
                 $originalFilename = $settings['file_name'] ?? '';
                 $fileType = $settings['file_type'] ?? '';
                 $fileSize = isset($settings['file_size']) ? (int)$settings['file_size'] : 0;
 
                 if (is_array($settings) && !empty($settings['crop'])) {
                     $crop = $settings['crop'];
-                    $cropState = $crop; // Store raw crop state
                     if (isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
                         $cropRect = [
-                            'x' => $crop['x1'],
-                            'y' => $crop['y1'],
-                            'width' => $crop['x2'] - $crop['x1'],
-                            'height' => $crop['y2'] - $crop['y1']
+                            'x1' => (int)$crop['x1'],
+                            'y1' => (int)$crop['y1'],
+                            'x2' => (int)$crop['x2'],
+                            'y2' => (int)$crop['y2']
                         ];
-                        $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
+                        $cropW = intval($crop['x2']) - intval($crop['x1']);
+                        $cropH = intval($crop['y2']) - intval($crop['y1']);
+                        $cropParam = $cropW . ',' . $cropH . ',' . intval($crop['x1']) . ',' . intval($crop['y1']);
                         $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
                     }
                 }
@@ -750,7 +751,7 @@ try {
                     'file_type' => $fileType,
                     'file_size' => $fileSize,
                     'cropRect' => $cropRect,
-                    'cropState' => $cropState
+                    'raw_url' => $rawUrl
                 ];
             }
             $mediaStmt->close();

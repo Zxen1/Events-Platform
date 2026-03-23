@@ -3351,6 +3351,7 @@ const PostModule = (function() {
     var venueName = activeLoc.venue_name || '';
     var addressLine = activeLoc.address_line || '';
     var mediaUrls = activeLoc.media_urls || [];
+    var mediaMeta = activeLoc.media_meta || [];
     // Hero image uses 'imagebox' class (530x530)
     var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
@@ -3841,7 +3842,7 @@ const PostModule = (function() {
       '<div class="post-images-container">',
         '<div class="post-hero">',
           '<div class="post-track-hero">',
-            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+            '<img class="post-image-hero post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" data-raw="' + ((mediaMeta[0] && mediaMeta[0].raw_url) || mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
           '</div>',
         '</div>',
         '<div class="post-thumbs"></div>',
@@ -3858,7 +3859,9 @@ const PostModule = (function() {
           img.src = addImageClass(url, 'minithumb');
           img.alt = '';
           img.dataset.index = String(i);
-          img.dataset.fullUrl = url; // Store original URL for hero switching
+          img.dataset.fullUrl = url;
+          var meta = mediaMeta[i];
+          img.dataset.rawUrl = (meta && meta.raw_url) ? meta.raw_url : url;
           thumbRow.appendChild(img);
         });
       }
@@ -4379,16 +4382,20 @@ const PostModule = (function() {
     
     // Gather all full-size image URLs for the gallery
     var galleryImages = [];
+    var galleryRawImages = [];
     thumbnails.forEach(function(thumb) {
       var fullUrl = thumb.dataset.fullUrl || '';
+      var rawUrl = thumb.dataset.rawUrl || fullUrl;
       if (fullUrl) {
         galleryImages.push(fullUrl);
+        galleryRawImages.push(rawUrl);
       }
     });
     
     // If no thumbnails but hero has an image, use that
     if (galleryImages.length === 0 && baseImg && baseImg.dataset.full) {
       galleryImages.push(baseImg.dataset.full);
+      galleryRawImages.push(baseImg.dataset.raw || baseImg.dataset.full);
     }
     
     // Slides array - sparse, populated on-demand when user swipes
@@ -4509,9 +4516,9 @@ const PostModule = (function() {
           return;
         }
         if (window.ImageModalComponent) {
-          var currentSrc = galleryImages[currentGalleryIndex] || galleryImages[0];
-          ImageModalComponent.open(currentSrc, {
-            images: galleryImages,
+          var currentRaw = galleryRawImages[currentGalleryIndex] || galleryRawImages[0];
+          ImageModalComponent.open(currentRaw, {
+            images: galleryRawImages,
             startIndex: currentGalleryIndex
           });
         }
