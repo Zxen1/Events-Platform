@@ -3358,8 +3358,8 @@ const PostModule = (function() {
     var addressLine = activeLoc.address_line || '';
     var mediaUrls = activeLoc.media_urls || [];
     var mediaMeta = activeLoc.media_meta || [];
-    // Hero image uses 'imagebox' class (530x530)
-    var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
+    var heroRawUrl = (mediaMeta[0] && mediaMeta[0].raw_url) ? mediaMeta[0].raw_url : (mediaUrls[0] || '');
+    var heroUrl = heroRawUrl;
 
     // Get subcategory info
     var displayName = post.subcategory_name || '';
