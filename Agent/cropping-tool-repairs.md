@@ -202,6 +202,31 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 
 ---
 
+## CRITICAL: Bunny CDN class + crop URL conflict (Agent 11 finding)
+
+**You CANNOT combine `?crop=` with `?class=` in the same URL.** The class's own crop settings override the URL crop parameter. This was confirmed by:
+1. `?crop=816,816,0,0` alone → correct crop ✅
+2. `?crop=816,816,0,0&class=thumbnail` → class crop overrides, wrong result ❌
+3. Google/Bunny docs confirm: class parameters and URL parameters conflict when both define crop
+
+**Solution:** For cropped images, use explicit `?crop=W,H,X,Y&width=SIZE&height=SIZE` (no class). For uncropped images, use `?class=NAME` as before.
+
+**Implementation needed:**
+1. Add three `admin_settings` rows: `bunny_thumbnail_size` (200), `bunny_minithumb_size` (100), `bunny_imagebox_size` (530)
+2. Whitelist them in `get-admin-settings.php` so they reach the frontend in startup settings
+3. Modify `addImageClass()` in `post.js` (~line 1075): when URL contains `crop=`, append `&width=SIZE&height=SIZE` from settings instead of `&class=NAME`
+4. Restore "Crop Gravity: Center" to all three Bunny classes (needed for uncropped images)
+5. The posteditor.js `addImageClassToUrl` helper (~line 695) also needs the same logic
+
+**The five image states:**
+1. Raw (crop tool + image viewer): no crop, no class, no width/height
+2. Imagebox (530×530 hero): `?crop=W,H,X,Y&width=530&height=530` OR `?class=imagebox`
+3. Thumbnail (200×200 postcard): `?crop=W,H,X,Y&width=200&height=200` OR `?class=thumbnail`
+4. Minithumb (100×100 markers/headers): `?crop=W,H,X,Y&width=100&height=100` OR `?class=minithumb`
+5. Uncropped images use `?class=NAME` (class crop gravity handles square centering)
+
+---
+
 ## Debug Tracking Logs (still active — remove after all fixes confirmed)
 
 Three console logs are active and available for the next agent to use during testing:
