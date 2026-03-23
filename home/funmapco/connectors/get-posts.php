@@ -738,7 +738,9 @@ try {
                             'width' => $crop['x2'] - $crop['x1'],
                             'height' => $crop['y2'] - $crop['y1']
                         ];
-                        $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
+                        $cropW = intval($crop['x2']) - intval($crop['x1']);
+                        $cropH = intval($crop['y2']) - intval($crop['y1']);
+                        $cropParam = $cropW . ',' . $cropH . ',' . intval($crop['x1']) . ',' . intval($crop['y1']);
                         $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
                     }
                 }

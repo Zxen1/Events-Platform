@@ -31,10 +31,10 @@ Two separate objects are returned by the crop tool on "Use Crop":
 
 ### How Bunny CDN uses the crop
 In `get-posts.php` the crop is appended to the image URL as:
-`?crop=x1,y1,x2,y2`
-where `x1`=left edge, `y1`=top edge, `x2`=right edge, `y2`=bottom edge (all in original image pixels).
+`?crop=width,height,x,y`
+where `width`/`height` are the crop dimensions and `x`/`y` are the pixel offset of the top-left corner.
 
-**OPEN QUESTION:** Bunny may expect `x, y, width, height` rather than `x1, y1, x2, y2`. If so, the format being sent is wrong. `get-posts.php` currently passes the raw coordinates directly. Needs verification against Bunny CDN documentation.
+Bunny documentation confirmed: `crop=width,height,x,y` (Format 2 — positioned crop). The stored `{x1,y1,x2,y2}` values are converted: `width = x2-x1`, `height = y2-y1`, `x = x1`, `y = y1`.
 
 ---
 
@@ -195,7 +195,7 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 - **JS meta chain** — FIXED. `get-posts.php`, `posteditor.js`, `fieldsets.js` updated so existing images pass complete metadata (file_name, file_type, file_size) in the `images_meta` payload. Both add and edit now use identical meta format.
 
 ### Still Broken
-- **Visual display** — Crop coordinates are saving correctly to the database and the `?crop=x1,y1,x2,y2` URL parameter is being generated, but images still display uncropped visually. Suspected cause: Bunny CDN may expect `x,y,width,height` format rather than `x1,y1,x2,y2`. Needs verification against Bunny documentation. See `get-posts.php` line ~740.
+- **Visual display** — FIXED. Bunny CDN expects `crop=width,height,x,y`. We were sending `x1,y1,x2,y2`. `get-posts.php` line ~741 now computes `$cropW` and `$cropH` from the stored coordinates and sends the correct format.
 - **cropState not persisted** — zoom/pan state lost on page reload. Secondary issue, address after display is fixed.
 - **Meta index misalignment** — when adding NEW images to an existing post that already has images, `$imgMeta[$i]` in the INSERT loop indexes incorrectly. Confirmed by media 4444 having wrong settings_json. Needs separate fix.
 - **[CROP 1] format mismatch** — when re-opening the crop tool on an existing image, `entry.cropRect` is in `{x,y,width,height}` format (from get-posts.php) but the tool and updateImagesMeta() expect `{x1,y1,x2,y2}`. This means the initial cropRect shown in [CROP 1] is wrong format. Does not affect saving (since [CROP 2] always overwrites with correct format) but affects re-opening with correct initial position.
