@@ -2156,12 +2156,14 @@ const FieldsetBuilder = (function(){
                     }
                     
                     currentCropEntry = entry;
+                    console.log('[CROP 1] Tool opening. entry.cropState:', JSON.stringify(entry.cropState), 'entry.cropRect:', JSON.stringify(entry.cropRect));
                     
                     PostCropperComponent.open({
                         url: entry.fileUrl,
                         cropState: entry.cropState || null,
                         callback: function(result) {
                             if (!result || !currentCropEntry) return;
+                            console.log('[CROP 2] Use Crop clicked. result.cropRect:', JSON.stringify(result.cropRect), 'result.cropState:', JSON.stringify(result.cropState));
                             
                             currentCropEntry.cropState = result.cropState;
                             currentCropEntry.cropRect = result.cropRect;
