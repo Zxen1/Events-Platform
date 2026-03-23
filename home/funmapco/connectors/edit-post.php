@@ -837,6 +837,13 @@ $fieldsArr = $data['fields'] ?? [];
 $existingMediaIds = [];
 $existingMediaCropById = [];
 $newMediaIds = [];
+$imagesMetaPayload = [];
+$imgMetaUploadQueue = [];
+
+if (!empty($_POST['images_meta'])) {
+  $decodedMeta = json_decode((string)$_POST['images_meta'], true);
+  if (is_array($decodedMeta)) $imagesMetaPayload = $decodedMeta;
+}
 
 // Extract existing media IDs from the images fieldset if present
 foreach ($fieldsArr as $fld) {
@@ -864,6 +871,31 @@ foreach ($fieldsArr as $fld) {
   }
 }
 
+// Also trust images_meta directly (authoritative for crop edits from the images component),
+// including save operations where no new files are uploaded.
+foreach ($imagesMetaPayload as $metaItem) {
+  if (!is_array($metaItem)) continue;
+  $metaId = isset($metaItem['id']) ? (int)$metaItem['id'] : 0;
+  if ($metaId > 0) {
+    $existingMediaIds[] = $metaId;
+    if (array_key_exists('crop', $metaItem)) {
+      $crop = $metaItem['crop'];
+      if (is_array($crop) && isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
+        $existingMediaCropById[$metaId] = [
+          'x1' => (int)$crop['x1'],
+          'y1' => (int)$crop['y1'],
+          'x2' => (int)$crop['x2'],
+          'y2' => (int)$crop['y2']
+        ];
+      } elseif ($crop === null) {
+        $existingMediaCropById[$metaId] = null;
+      }
+    }
+    continue;
+  }
+  $imgMetaUploadQueue[] = $metaItem;
+}
+
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
   $settings = load_bunny_settings($mysqli);
   $folder = rtrim((string)$settings['folder_post_images'], '/');
@@ -881,21 +913,6 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $utcMinus12 = new DateTimeZone('Etc/GMT+12');
     $now = new DateTime('now', $utcMinus12);
     $monthFolder = $now->format('Y-m');
-
-    $imgMeta = [];
-    $imgMetaUploadQueue = [];
-    if (!empty($_POST['images_meta'])) {
-      $m = json_decode((string)$_POST['images_meta'], true);
-      if (is_array($m)) {
-        $imgMeta = $m;
-        foreach ($imgMeta as $metaItem) {
-          if (!is_array($metaItem)) continue;
-          $metaId = isset($metaItem['id']) ? (int)$metaItem['id'] : 0;
-          if ($metaId > 0) continue; // Existing media entry (not an upload in this request)
-          $imgMetaUploadQueue[] = $metaItem;
-        }
-      }
-    }
 
     $count = count($_FILES['images']['name']);
     $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
