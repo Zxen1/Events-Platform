@@ -212,7 +212,7 @@ The `id:4443` belongs to an existing image. This got written as `settings_json` 
 **Solution:** For cropped images, use explicit `?crop=W,H,X,Y&width=SIZE&height=SIZE` (no class). For uncropped images, use `?class=NAME` as before.
 
 **Implementation needed:**
-1. Add three `admin_settings` rows: `bunny_thumbnail_size` (200), `bunny_minithumb_size` (100), `bunny_imagebox_size` (530)
+1. Three `admin_settings` rows already exist (dump 92): ID 406 `image_crop_minithumb` (100), ID 407 `image_crop_thumbnail` (200), ID 408 `image_crop_imagebox` (530)
 2. Whitelist them in `get-admin-settings.php` so they reach the frontend in startup settings
 3. Modify `addImageClass()` in `post.js` (~line 1075): when URL contains `crop=`, append `&width=SIZE&height=SIZE` from settings instead of `&class=NAME`
 4. Restore "Crop Gravity: Center" to all three Bunny classes (needed for uncropped images)
