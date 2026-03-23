@@ -1927,7 +1927,7 @@ const FieldsetBuilder = (function(){
                     if (!mediaItem || imageEntries.length >= maxImages) return;
                     if (isMediaInSlots(mediaItem.id)) return; // Already in slot
                     
-                    imageEntries.push({
+                    var newEntry = {
                         _imageEntryId: String(nextImageEntryId++),
                         id: mediaItem.id,
                         file: null,
@@ -1935,10 +1935,12 @@ const FieldsetBuilder = (function(){
                         previewUrl: mediaItem.file_url,
                         cropState: null,
                         cropRect: mediaItem.settings_json && mediaItem.settings_json.crop ? mediaItem.settings_json.crop : null
-                    });
+                    };
+                    imageEntries.push(newEntry);
                     updateImagesMeta();
                     renderImages();
                     renderBasket();
+                    if (newEntry.cropRect) renderEntryPreviewFromCrop(newEntry);
                 }
                 
                 function addLocalEntryToSlot(localEntry) {
@@ -2174,6 +2176,7 @@ const FieldsetBuilder = (function(){
                     PostCropperComponent.open({
                         url: entry.fileUrl,
                         cropState: entry.cropState || null,
+                        cropRect: entry.cropRect || null,
                         callback: function(result) {
                             if (!result || !currentCropEntry) return;
                             

@@ -8971,12 +8971,27 @@ const PostCropperComponent = (function() {
         };
     }
     
-    // Open with image URL and optional initial crop state
-    // options: { url, cropState?, callback }
+    function cropStateFromRect(rect, iw, ih) {
+        var cw = 530, ch = 530;
+        var cropW = rect.x2 - rect.x1;
+        if (cropW <= 0) return null;
+        var cover = Math.max(cw / iw, ch / ih);
+        var scale = cw / cropW;
+        var zoom = scale / cover;
+        var baseX = (cw - iw * scale) / 2;
+        var baseY = (ch - ih * scale) / 2;
+        var offsetX = -(rect.x1 * scale) - baseX;
+        var offsetY = -(rect.y1 * scale) - baseY;
+        return { zoom: zoom, offsetX: offsetX, offsetY: offsetY };
+    }
+
+    // Open with image URL and optional initial crop state/rect
+    // options: { url, cropState?, cropRect?, callback }
     function open(options) {
         options = options || {};
         var url = options.url || '';
         var initialCropState = options.cropState || null;
+        var initialCropRect = options.cropRect || null;
         currentCallback = options.callback || null;
         currentImageUrl = url;
         
@@ -8991,11 +9006,19 @@ const PostCropperComponent = (function() {
         
         cropImg = new Image();
         cropImg.onload = function() {
-            // Set crop state from initial or reset
+            var iw = cropImg.naturalWidth || cropImg.width;
+            var ih = cropImg.naturalHeight || cropImg.height;
+
+            // Restore from cropState, derive from cropRect, or reset
             if (initialCropState) {
                 cropState.zoom = initialCropState.zoom || 1;
                 cropState.offsetX = initialCropState.offsetX || 0;
                 cropState.offsetY = initialCropState.offsetY || 0;
+            } else if (initialCropRect && initialCropRect.x1 != null && iw && ih) {
+                var derived = cropStateFromRect(initialCropRect, iw, ih);
+                cropState.zoom = derived ? derived.zoom : 1;
+                cropState.offsetX = derived ? derived.offsetX : 0;
+                cropState.offsetY = derived ? derived.offsetY : 0;
             } else {
                 cropState.zoom = 1;
                 cropState.offsetX = 0;
@@ -9003,8 +9026,6 @@ const PostCropperComponent = (function() {
             }
             cropState.minZoom = 1;
 
-            var iw = cropImg.naturalWidth || cropImg.width;
-            var ih = cropImg.naturalHeight || cropImg.height;
             var _as4 = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
             var minPx = (_as4 && _as4.image_min_width) ? parseInt(_as4.image_min_width, 10) : null;
             var maxZoom = minPx ? Math.max(1, Math.min(iw, ih) / minPx) : null;
