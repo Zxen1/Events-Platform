@@ -10894,6 +10894,44 @@ const LocationWallpaperComponent = (function() {
             basicCapturedLng: null
         };
 
+        function getWallpaperTraceContext() {
+            var panel = 'unknown';
+            try {
+                if (locationContainerEl.closest('#member-tab-posteditor, .posteditor-item')) {
+                    panel = 'posteditor';
+                } else if (locationContainerEl.closest('#member-tab-recent, .recent-list, .recent-item')) {
+                    panel = 'recent';
+                } else if (locationContainerEl.closest('#member-tab-post, .post-list, .post-slot, .post')) {
+                    panel = 'post';
+                }
+            } catch (e) {}
+
+            var latLng = null;
+            try { latLng = readLatLng(locationContainerEl); } catch (e2) { latLng = null; }
+
+            return {
+                panel: panel,
+                postId: locationContainerEl.dataset ? (locationContainerEl.dataset.postId || null) : null,
+                locationType: getLocationTypeFromContainer(locationContainerEl),
+                lat: latLng ? latLng.lat : null,
+                lng: latLng ? latLng.lng : null
+            };
+        }
+
+        function logWallpaperTrace(eventName, extra) {
+            var payload = getWallpaperTraceContext();
+            if (extra && typeof extra === 'object') {
+                for (var key in extra) {
+                    if (Object.prototype.hasOwnProperty.call(extra, key)) {
+                        payload[key] = extra[key];
+                    }
+                }
+            }
+            try {
+                console.error('[WallpaperTrace] ' + eventName, payload);
+            } catch (e) {}
+        }
+
         function clearAllTimers() {
             if (st.pendingRevealTimer) {
                 clearTimeout(st.pendingRevealTimer);
@@ -11467,6 +11505,14 @@ const LocationWallpaperComponent = (function() {
             function fallbackToCache() {
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
                     var cacheHits = cached.filter(function(url) { return url; }).length;
+                    logWallpaperTrace('basic.cache-check', {
+                        cacheHits: cacheHits,
+                        bearings: bearings.slice(),
+                        captureWidth: BASIC_WIDTH,
+                        captureHeight: BASIC_HEIGHT,
+                        captureQuality: 0.85,
+                        cameras: cameras.slice()
+                    });
                     if (cacheHits === 4) {
                         display(cached);
                     } else {
@@ -11483,7 +11529,22 @@ const LocationWallpaperComponent = (function() {
                                 }
                                 return;
                             }
+                            logWallpaperTrace('basic.capture.request', {
+                                index: idx,
+                                bearing: bearings[idx],
+                                camera: cameras[idx],
+                                captureWidth: BASIC_WIDTH,
+                                captureHeight: BASIC_HEIGHT,
+                                captureQuality: 0.85
+                            });
                             SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                                logWallpaperTrace('basic.capture.result', {
+                                    index: idx,
+                                    bearing: bearings[idx],
+                                    hasUrl: !!url,
+                                    urlLength: url ? url.length : 0,
+                                    mime: url ? String(url).slice(5, String(url).indexOf(';')) : null
+                                });
                                 capturedUrls[idx] = url;
                                 captureNext(idx + 1);
                             });
@@ -11586,6 +11647,7 @@ const LocationWallpaperComponent = (function() {
             try {
                 var files = [];
                 var meta = [];
+                var fileDetails = [];
                 var bearingMap = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
 
                 for (var i = 0; i < bearings.length; i++) {
@@ -11605,10 +11667,26 @@ const LocationWallpaperComponent = (function() {
 
                         files.push(file);
                         meta.push({ lat: lat, lng: lng, bearing: bearings[i], location_type: locationType });
+                        fileDetails.push({
+                            bearing: bearings[i],
+                            fileName: filename,
+                            mime: mime,
+                            bytes: blob.size,
+                            urlLength: dataUrls[i].length
+                        });
                     } catch (e) { /* skip this image */ }
                 }
 
                 if (files.length === 0) return;
+
+                logWallpaperTrace('self-heal.upload.request', {
+                    bearings: bearings.slice(),
+                    captureWidth: BASIC_WIDTH,
+                    captureHeight: BASIC_HEIGHT,
+                    captureQuality: 0.85,
+                    files: fileDetails,
+                    meta: meta
+                });
 
                 var fd = new FormData();
                 for (var f = 0; f < files.length; f++) {
@@ -11619,7 +11697,27 @@ const LocationWallpaperComponent = (function() {
                 fetch('/gateway.php?action=get-map-wallpapers', {
                     method: 'POST',
                     body: fd
-                }).catch(function() {});
+                })
+                    .then(function(resp) {
+                        return resp.json()
+                            .then(function(data) {
+                                logWallpaperTrace('self-heal.upload.response', {
+                                    httpOk: resp.ok,
+                                    response: data
+                                });
+                            })
+                            .catch(function(parseErr) {
+                                logWallpaperTrace('self-heal.upload.response-parse-error', {
+                                    httpOk: resp.ok,
+                                    message: parseErr && parseErr.message ? parseErr.message : String(parseErr)
+                                });
+                            });
+                    })
+                    .catch(function(err) {
+                        logWallpaperTrace('self-heal.upload.error', {
+                            message: err && err.message ? err.message : String(err)
+                        });
+                    });
             } catch (e) { /* silent — self-healing is best-effort */ }
         }
 
@@ -11633,17 +11731,36 @@ const LocationWallpaperComponent = (function() {
             var cameras = getBasicModeCameras(locationType, [lng, lat]);
             var bearings = [0, 90, 180, 270];
 
+            logWallpaperTrace('self-heal.check', {
+                bearings: bearings.slice(),
+                captureWidth: BASIC_WIDTH,
+                captureHeight: BASIC_HEIGHT,
+                captureQuality: 0.85,
+                prefetchedLibraryProvided: prefetchedLib !== undefined,
+                cameras: cameras.slice()
+            });
+
             function handleLib(lib) {
                 if (lib && Object.keys(lib).length === 4) {
                     // All 4 already exist on server - nothing to do
+                    logWallpaperTrace('self-heal.skip-library-complete', {
+                        libraryBearings: Object.keys(lib)
+                    });
                     return;
                 }
 
                 // Check local cache, capture any missing
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
                     var allCached = cached.every(function(url) { return !!url; });
+                    logWallpaperTrace('self-heal.cache-check', {
+                        cacheHits: cached.filter(function(url) { return !!url; }).length,
+                        allCached: allCached
+                    });
                     if (allCached) {
                         // All 4 in local cache but server is missing them — upload now
+                        logWallpaperTrace('self-heal.upload-from-cache', {
+                            bearings: bearings.slice()
+                        });
                         uploadCapturedWallpapers(lat, lng, bearings, cached, locationType);
                         return;
                     }
@@ -11664,7 +11781,22 @@ const LocationWallpaperComponent = (function() {
                             captureNext(idx + 1);
                             return;
                         }
+                        logWallpaperTrace('self-heal.capture.request', {
+                            index: idx,
+                            bearing: bearings[idx],
+                            camera: cameras[idx],
+                            captureWidth: BASIC_WIDTH,
+                            captureHeight: BASIC_HEIGHT,
+                            captureQuality: 0.85
+                        });
                         SecondaryMap.capture(cameras[idx], BASIC_WIDTH, BASIC_HEIGHT, function(url) {
+                            logWallpaperTrace('self-heal.capture.result', {
+                                index: idx,
+                                bearing: bearings[idx],
+                                hasUrl: !!url,
+                                urlLength: url ? url.length : 0,
+                                mime: url ? String(url).slice(5, String(url).indexOf(';')) : null
+                            });
                             capturedUrls[idx] = url || '';
                             captureNext(idx + 1);
                         });
@@ -11706,6 +11838,9 @@ const LocationWallpaperComponent = (function() {
             if (changed) {
                 st.savedCamera = null;
                 st.latestCaptureUrl = '';
+                logWallpaperTrace('refresh.location-changed', {
+                    mode: mode
+                });
             }
 
             // Now handle display based on mode
