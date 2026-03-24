@@ -12090,20 +12090,39 @@ const PostLocationComponent = (function() {
     /**
      * Render a single location option HTML
      */
-    function renderLocationOption(loc, index, isSelected, escapeHtml, isFiltered) {
+    function buildLocationSecondary(loc) {
         var venueName = loc.venue_name || '';
         var addressLine = loc.address_line || '';
         var city = loc.city || '';
+        var state = loc.state || '';
+        var countryName = loc.country_name || '';
+        var locationType = loc.location_type || '';
+
+        if (locationType === 'city') {
+            var citySecond = state || countryName || '';
+            return (city && citySecond) ? city + ', ' + citySecond : (city || citySecond || '');
+        } else if (locationType === 'venue') {
+            return addressLine + (addressLine && city ? ', ' : '') + city;
+        } else {
+            var addrSecond = state || countryName || '';
+            var suburb = addressLine || city || '';
+            return (suburb && addrSecond) ? suburb + ', ' + addrSecond : (suburb || addrSecond || '');
+        }
+    }
+
+    function renderLocationOption(loc, index, isSelected, escapeHtml, isFiltered) {
+        var venueName = loc.venue_name || '';
 
         var cls = 'post-location-option';
         if (isSelected) cls += ' post-location-highlighted';
         if (isFiltered) cls += ' post-location-option--filtered';
 
+        var secondary = buildLocationSecondary(loc);
+
         var html = [];
         html.push('<div class="' + cls + '" data-index="' + index + '">');
         html.push('<div class="post-location-option-main">' + escapeHtml(venueName) + '</div>');
-        if (addressLine || city) {
-            var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
+        if (secondary) {
             html.push('<div class="post-location-option-secondary">' + escapeHtml(secondary) + '</div>');
         }
         html.push('</div>');
@@ -12124,8 +12143,7 @@ const PostLocationComponent = (function() {
 
         var loc0 = locationList[0] || {};
         var venueName = loc0.venue_name || '';
-        var addressLine = loc0.address_line || '';
-        var city = loc0.city || '';
+        var secondary = buildLocationSecondary(loc0);
 
         var html = [];
 
@@ -12133,8 +12151,7 @@ const PostLocationComponent = (function() {
         html.push('<button class="post-location-button" type="button" aria-haspopup="true" aria-expanded="false">');
         html.push('<div class="post-location-text">');
         html.push('<div class="post-location-text-main">' + escapeHtml(venueName) + '</div>');
-        if (addressLine || city) {
-            var secondary = addressLine + (addressLine && city ? ', ' : '') + city;
+        if (secondary) {
             html.push('<div class="post-location-text-secondary">' + escapeHtml(secondary) + '</div>');
         }
         html.push('</div>');
