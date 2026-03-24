@@ -4642,12 +4642,16 @@
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
 
-        // Sync ticket URL from location 1 to other locations (unless manually edited)
+        // Sync ticket URL and item URL from location 1 to other locations (unless manually edited)
         container.addEventListener('input', function(e) {
             var input = e.target;
             if (!input || !input.closest) return;
             var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
-            if (!ticketFs) return;
+            var itemFs = input.closest('.fieldset[data-fieldset-key="item-url"]');
+            var urlFs = ticketFs || itemFs;
+            if (!urlFs) return;
+            var urlKey = ticketFs ? 'ticket-url' : 'item-url';
+            var manualFlag = ticketFs ? 'ticketUrlManual' : 'itemUrlManual';
             var locContainer = input.closest('.member-location-container[data-location-number]');
             if (!locContainer) return;
             var locNum = parseInt(locContainer.dataset.locationNumber, 10);
@@ -4656,32 +4660,36 @@
                 var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
                 allLocs.forEach(function(loc) {
                     if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
-                    var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
-                    if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
+                    var fs = loc.querySelector('.fieldset[data-fieldset-key="' + urlKey + '"]');
+                    if (fs && !fs.dataset[manualFlag] && typeof fs._setValue === 'function') {
                         fs._setValue(input.value);
                     }
                 });
             } else if (locNum > 1 && e.isTrusted) {
                 // User manually edited a non-primary location — mark it independent
-                ticketFs.dataset.ticketUrlManual = 'true';
+                urlFs.dataset[manualFlag] = 'true';
             }
         });
 
-        // Re-sync ticket URL on focusout so that the https:// added by autoUrlProtocol is included.
+        // Re-sync ticket URL and item URL on focusout so that the https:// added by autoUrlProtocol is included.
         // focusout bubbles, so by the time it reaches container the direct blur handler has already run.
         container.addEventListener('focusout', function(e) {
             var input = e.target;
             if (!input || !input.closest) return;
             var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
-            if (!ticketFs) return;
+            var itemFs = input.closest('.fieldset[data-fieldset-key="item-url"]');
+            var urlFs = ticketFs || itemFs;
+            if (!urlFs) return;
+            var urlKey = ticketFs ? 'ticket-url' : 'item-url';
+            var manualFlag = ticketFs ? 'ticketUrlManual' : 'itemUrlManual';
             var locContainer = input.closest('.member-location-container[data-location-number]');
             if (!locContainer) return;
             if (parseInt(locContainer.dataset.locationNumber, 10) !== 1) return;
             var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
             allLocs.forEach(function(loc) {
                 if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
-                var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
-                if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
+                var fs = loc.querySelector('.fieldset[data-fieldset-key="' + urlKey + '"]');
+                if (fs && !fs.dataset[manualFlag] && typeof fs._setValue === 'function') {
                     fs._setValue(input.value);
                 }
             });
@@ -4924,6 +4932,16 @@
                     var loc1TicketVal = loc1TicketFs.querySelector('input:not([type="hidden"])');
                     if (loc1TicketVal && loc1TicketVal.value && typeof newTicketFs._setValue === 'function') {
                         newTicketFs._setValue(loc1TicketVal.value);
+                    }
+                }
+
+                // Copy item URL from location 1 into new location
+                var loc1ItemFs = venue1Container.querySelector('.fieldset[data-fieldset-key="item-url"]');
+                var newItemFs = locationContainer.querySelector('.fieldset[data-fieldset-key="item-url"]');
+                if (loc1ItemFs && newItemFs) {
+                    var loc1ItemVal = loc1ItemFs.querySelector('input:not([type="hidden"])');
+                    if (loc1ItemVal && loc1ItemVal.value && typeof newItemFs._setValue === 'function') {
+                        newItemFs._setValue(loc1ItemVal.value);
                     }
                 }
                 
