@@ -10891,8 +10891,14 @@ const LocationWallpaperComponent = (function() {
             mode: 'off',
             isActive: false,
             basicCapturedLat: null,  // Lat/lng of last basic mode capture
-            basicCapturedLng: null
+            basicCapturedLng: null,
+            selfHealPending: false,
+            selfHealPendingKey: ''
         };
+
+        function getWallpaperLocationKey(lat, lng) {
+            return String(lat) + '|' + String(lng);
+        }
 
         function getWallpaperTraceContext() {
             var panel = 'unknown';
@@ -11516,6 +11522,12 @@ const LocationWallpaperComponent = (function() {
                     if (cacheHits === 4) {
                         display(cached);
                     } else {
+                        if (st.selfHealPending && st.selfHealPendingKey === getWallpaperLocationKey(lat, lng)) {
+                            logWallpaperTrace('basic.waiting-for-self-heal', {
+                                cacheHits: cacheHits
+                            });
+                            return;
+                        }
                         var postId = locationContainerEl.dataset ? locationContainerEl.dataset.postId : null;
                         if (postId) {
                             flagMissingMapImages(postId, lat, lng);
@@ -11743,11 +11755,16 @@ const LocationWallpaperComponent = (function() {
             function handleLib(lib) {
                 if (lib && Object.keys(lib).length === 4) {
                     // All 4 already exist on server - nothing to do
+                    st.selfHealPending = false;
+                    st.selfHealPendingKey = '';
                     logWallpaperTrace('self-heal.skip-library-complete', {
                         libraryBearings: Object.keys(lib)
                     });
                     return;
                 }
+
+                st.selfHealPending = true;
+                st.selfHealPendingKey = getWallpaperLocationKey(lat, lng);
 
                 // Check local cache, capture any missing
                 WallpaperCache.getAll(lat, lng, bearings, function(cached) {
@@ -11757,6 +11774,8 @@ const LocationWallpaperComponent = (function() {
                         allCached: allCached
                     });
                     if (allCached) {
+                        st.selfHealPending = false;
+                        st.selfHealPendingKey = '';
                         // All 4 in local cache but server is missing them — upload now
                         logWallpaperTrace('self-heal.upload-from-cache', {
                             bearings: bearings.slice()
@@ -11771,8 +11790,13 @@ const LocationWallpaperComponent = (function() {
                         if (idx >= 4) {
                             // Store all to cache
                             WallpaperCache.putAll(lat, lng, bearings, capturedUrls, function() {
+                                st.selfHealPending = false;
+                                st.selfHealPendingKey = '';
                                 // Self-healing: upload freshly captured images to server
                                 uploadCapturedWallpapers(lat, lng, bearings, capturedUrls, locationType);
+                                if (st.mode === 'basic' && st.isActive && st.lastLat === lat && st.lastLng === lng) {
+                                    startBasicMode(lat, lng);
+                                }
                             });
                             return;
                         }
