@@ -9905,19 +9905,23 @@ var SecondaryMap = (function() {
                 });
             } catch (e) {}
             
-            // Wait for render then capture
-            m.once('idle', function() {
-                setTimeout(function() {
-                    var url = '';
-                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
-                    if (!url || url.indexOf('data:image') !== 0) {
-                        try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
-                    }
-                    isCapturing = false;
-                    task.cb(url && url.indexOf('data:image') === 0 ? url : null);
-                    processQueue();
-                }, 300);
-            });
+            // Defer idle listener so the map has time to go non-idle after jumpTo
+            // before we start waiting. Without this, idle fires immediately (the map
+            // was already idle) and the screenshot is taken before tiles load.
+            setTimeout(function() {
+                m.once('idle', function() {
+                    setTimeout(function() {
+                        var url = '';
+                        try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                        if (!url || url.indexOf('data:image') !== 0) {
+                            try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                        }
+                        isCapturing = false;
+                        task.cb(url && url.indexOf('data:image') === 0 ? url : null);
+                        processQueue();
+                    }, 300);
+                });
+            }, 150);
         });
     }
 

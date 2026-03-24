@@ -99,35 +99,31 @@
         async function captureImage(lat, lng, bearing, filename) {
             return new Promise((resolve) => {
                 map.jumpTo({ center: [lng, lat], zoom: ZOOM, pitch: PITCH, bearing: bearing });
-                
-                const timeout = setTimeout(() => {
-                    log(`TIMEOUT: Map didn't become idle for ${filename}`, true);
-                    resolve(false);
-                }, 20000);
 
-                map.once('idle', () => {
-                    clearTimeout(timeout);
-                    setTimeout(() => { // Small delay to ensure render is flushed
-                        map.getCanvas().toBlob(async (blob) => {
-                            if (!blob) {
-                                log(`ERROR: Could not generate blob for ${filename}`, true);
-                                resolve(false);
-                                return;
-                            }
-                            try {
-                                const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
-                                const writable = await fileHandle.createWritable();
-                                await writable.write(blob);
-                                await writable.close();
-                                log(`SAVED: ${filename}`);
-                                resolve(true);
-                            } catch (e) {
-                                log(`FILE ERROR: ${e.message} while saving ${filename}`, true);
-                                resolve(false);
-                            }
-                        }, 'image/webp', 0.85);
-                    }, 500);
-                });
+                setTimeout(() => {
+                    map.once('idle', () => {
+                        setTimeout(() => {
+                            map.getCanvas().toBlob(async (blob) => {
+                                if (!blob) {
+                                    log(`ERROR: Could not generate blob for ${filename}`, true);
+                                    resolve(false);
+                                    return;
+                                }
+                                try {
+                                    const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+                                    const writable = await fileHandle.createWritable();
+                                    await writable.write(blob);
+                                    await writable.close();
+                                    log(`SAVED: ${filename}`);
+                                    resolve(true);
+                                } catch (e) {
+                                    log(`FILE ERROR: ${e.message} while saving ${filename}`, true);
+                                    resolve(false);
+                                }
+                            }, 'image/webp', 0.85);
+                        }, 300);
+                    });
+                }, 150);
             });
         }
 
