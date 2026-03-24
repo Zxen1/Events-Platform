@@ -5530,7 +5530,7 @@ const MemberModule = (function() {
                     var item_variants = [];
                     var _ivImageEntries = [];
                     try {
-                        var _ivForm = el.closest('form') || el.closest('.member-post-form');
+                        var _ivForm = el.closest('form') || el.closest('.member-post-form') || document.body;
                         if (_ivForm) {
                             var _ivImagesFs = _ivForm.querySelector('.fieldset[data-fieldset-key="images"]');
                             if (_ivImagesFs && typeof _ivImagesFs._getImageEntries === 'function') {

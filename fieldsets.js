@@ -3548,8 +3548,7 @@ const FieldsetBuilder = (function(){
 
                 function ipGetImagesFieldset() {
                     try {
-                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form');
-                        if (!form) return null;
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
                         return form.querySelector('.fieldset[data-fieldset-key="images"]');
                     } catch (e) { return null; }
                 }
@@ -3631,12 +3630,10 @@ const FieldsetBuilder = (function(){
                 }
 
                 try {
-                    var ipForm = fieldset.closest('form') || fieldset.closest('.member-post-form');
-                    if (ipForm) {
-                        ipForm.addEventListener('fieldset-images-changed', function() {
-                            ipRefreshAllVariantThumbnails();
-                        });
-                    }
+                    var ipForm = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                    ipForm.addEventListener('fieldset-images-changed', function() {
+                        ipRefreshAllVariantThumbnails();
+                    });
                 } catch (ipEvErr) {}
 
                 function createItemVariantRow() {
