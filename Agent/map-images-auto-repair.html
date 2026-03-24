@@ -202,19 +202,17 @@
 
             // Defer idle listener so the map processes the camera change and
             // begins requesting new tiles before we start waiting for idle.
-            requestAnimationFrame(function() {
-                requestAnimationFrame(function() {
-                    map.once('idle', function() {
-                        setTimeout(function() {
-                            var canvas = map.getCanvas();
-                            var dataUrl = canvas.toDataURL('image/webp', 0.92);
-                            results.push(dataUrl);
-                            log('    Bearing ' + bearing + ' (' + BEARING_DIR[bearing] + ') captured');
-                            captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
-                        }, 300);
-                    });
+            setTimeout(function() {
+                map.once('idle', function() {
+                    setTimeout(function() {
+                        var canvas = map.getCanvas();
+                        var dataUrl = canvas.toDataURL('image/webp', 0.92);
+                        results.push(dataUrl);
+                        log('    Bearing ' + bearing + ' (' + BEARING_DIR[bearing] + ') captured');
+                        captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
+                    }, 300);
                 });
-            });
+            }, 50);
         }
 
         function uploadImages(loc, dataUrls, zoom, done) {
