@@ -790,7 +790,7 @@
 
         // Save + Close buttons (visible when expanded)
         var editTopSaveBtn = document.createElement('button');
-        editTopSaveBtn.className = 'posteditor-manage-edit-save button-class-2c';
+        editTopSaveBtn.className = 'posteditor-manage-edit-save button-class-2e';
         editTopSaveBtn.textContent = 'Save';
         editTopSaveBtn.disabled = true;
         editTopSaveBtn.style.display = 'none';
@@ -2715,7 +2715,7 @@
             // Save button (green) - left - starts disabled
             var saveBtn = document.createElement('button');
             saveBtn.type = 'button';
-            saveBtn.className = 'posteditor-edit-button-save button-class-2c';
+            saveBtn.className = 'posteditor-edit-button-save button-class-2e';
             saveBtn.textContent = 'Save';
             saveBtn.disabled = true;
             saveBtn.addEventListener('click', function() {
