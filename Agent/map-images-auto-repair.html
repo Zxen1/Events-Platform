@@ -200,30 +200,21 @@
 
             map.jumpTo(camera);
 
-            var waited = 0;
-            var maxWait = 8000;
-            var interval = 100;
-
-            var check = setInterval(function() {
-                waited += interval;
-                if (map.areTilesLoaded() && !map.isMoving()) {
-                    clearInterval(check);
-                    setTimeout(function() {
-                        var canvas = map.getCanvas();
-                        var dataUrl = canvas.toDataURL('image/webp', 0.92);
-                        results.push(dataUrl);
-                        log('    Bearing ' + bearing + ' (' + BEARING_DIR[bearing] + ') captured');
-                        captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
-                    }, 200);
-                } else if (waited >= maxWait) {
-                    clearInterval(check);
-                    log('    Bearing ' + bearing + ' timed out — capturing anyway', 'error');
-                    var canvas = map.getCanvas();
-                    var dataUrl = canvas.toDataURL('image/webp', 0.92);
-                    results.push(dataUrl);
-                    captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
-                }
-            }, interval);
+            // Defer idle listener so the map processes the camera change and
+            // begins requesting new tiles before we start waiting for idle.
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    map.once('idle', function() {
+                        setTimeout(function() {
+                            var canvas = map.getCanvas();
+                            var dataUrl = canvas.toDataURL('image/webp', 0.92);
+                            results.push(dataUrl);
+                            log('    Bearing ' + bearing + ' (' + BEARING_DIR[bearing] + ') captured');
+                            captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
+                        }, 300);
+                    });
+                });
+            });
         }
 
         function uploadImages(loc, dataUrls, zoom, done) {

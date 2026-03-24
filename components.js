@@ -9905,18 +9905,23 @@ var SecondaryMap = (function() {
                 });
             } catch (e) {}
             
-            // Wait for render then capture
-            m.once('idle', function() {
-                setTimeout(function() {
-                    var url = '';
-                    try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
-                    if (!url || url.indexOf('data:image') !== 0) {
-                        try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
-                    }
-                    isCapturing = false;
-                    task.cb(url && url.indexOf('data:image') === 0 ? url : null);
-                    processQueue();
-                }, 300);
+            // Defer idle listener so the map processes the camera change and
+            // begins requesting new tiles before we start waiting for idle.
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    m.once('idle', function() {
+                        setTimeout(function() {
+                            var url = '';
+                            try { url = m.getCanvas().toDataURL('image/webp', 0.85); } catch (e) { url = ''; }
+                            if (!url || url.indexOf('data:image') !== 0) {
+                                try { url = m.getCanvas().toDataURL('image/jpeg', 0.85); } catch (e) { url = ''; }
+                            }
+                            isCapturing = false;
+                            task.cb(url && url.indexOf('data:image') === 0 ? url : null);
+                            processQueue();
+                        }, 300);
+                    });
+                });
             });
         });
     }
