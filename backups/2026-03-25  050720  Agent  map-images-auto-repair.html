@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map Images Auto-Repair</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #1a1a1a; color: #eee; }
+        .container { max-width: 800px; margin: 0 auto; }
+        #status-box { background: #222; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        #log { height: 400px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 4px; margin-bottom: 20px; }
+        .progress-bar { height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+        #progress-fill { height: 100%; background: #0078d4; width: 0%; transition: width 0.3s; }
+        button { background: #0078d4; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; margin-right: 10px; }
+        button:disabled { background: #444; cursor: not-allowed; }
+        .error { color: #f66; }
+        .success { color: #6f6; }
+        .info { color: #6af; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Map Images Auto-Repair</h1>
+        <p style="color:#aaa;">Finds all locations with missing map images and generates them automatically.</p>
+
+        <div id="status-box">
+            <div>Status: <span id="status-text">Ready</span></div>
+            <div class="progress-bar"><div id="progress-fill"></div></div>
+            <div style="margin-top:5px;font-size:12px;color:#888;" id="progress-text">—</div>
+        </div>
+
+        <button id="btnStart">1. Load Missing Locations</button>
+        <button id="btnRun" disabled>2. Start Auto-Repair</button>
+        <button id="btnStop" disabled style="background:#c0392b;">Stop</button>
+
+        <div id="log"></div>
+    </div>
+
+    <div id="map" style="width:700px;height:2500px;position:absolute;left:-9999px;top:0;"></div>
+
+    <script>
+        const ACCESS_TOKEN = 'pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ';
+        const PITCH        = 75;
+        const WIDTH        = 700;
+        const HEIGHT       = 2500;
+        const BEARINGS     = [0, 90, 180, 270];
+        const BEARING_DIR  = { 0: 'N', 90: 'E', 180: 'S', 270: 'W' };
+        const MAP_STYLE    = 'mapbox://styles/mapbox/standard';
+        const LIGHT_PRESET = 'night';
+
+        var map       = null;
+        var locations = [];
+        var running   = false;
+        var stopped   = false;
+
+        function log(msg, cls) {
+            var el = document.getElementById('log');
+            var line = document.createElement('div');
+            if (cls) line.className = cls;
+            line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+            el.appendChild(line);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function setStatus(msg) {
+            document.getElementById('status-text').textContent = msg;
+        }
+
+        function setProgress(done, total) {
+            var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = done + ' / ' + total + ' locations (' + pct + '%)';
+        }
+
+        document.getElementById('btnStart').addEventListener('click', function() {
+            this.disabled = true;
+            setStatus('Fetching missing locations...');
+            log('Querying server for locations with missing map images...', 'info');
+
+            fetch('/gateway.php?action=get-map-wallpapers&missing=1')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success) throw new Error(data.error || 'Unknown error');
+                    locations = data.locations;
+                    if (locations.length === 0) {
+                        log('No missing locations found. All map images are complete.', 'success');
+                        setStatus('Complete — nothing to repair');
+                        return;
+                    }
+                    log('Found ' + locations.length + ' location(s) with missing images.', 'info');
+                    locations.forEach(function(loc, i) {
+                        log('  ' + (i+1) + '. ' + loc.name + ' (' + loc.location_type + ') — ' + loc.lat + ', ' + loc.lng);
+                    });
+                    setProgress(0, locations.length);
+                    setStatus('Ready to repair ' + locations.length + ' location(s)');
+                    document.getElementById('btnRun').disabled = false;
+                })
+                .catch(function(err) {
+                    log('Error fetching locations: ' + err.message, 'error');
+                    setStatus('Error');
+                    document.getElementById('btnStart').disabled = false;
+                });
+        });
+
+        document.getElementById('btnRun').addEventListener('click', function() {
+            if (map) {
+                startRepair();
+                return;
+            }
+            this.disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            setStatus('Initialising map engine...');
+            log('Initialising Mapbox...', 'info');
+
+            mapboxgl.accessToken = ACCESS_TOKEN;
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: MAP_STYLE,
+                center: [0, 0],
+                zoom: 1,
+                interactive: false,
+                preserveDrawingBuffer: true
+            });
+
+            map.on('load', function() {
+                map.setConfigProperty('basemap', 'lightPreset', LIGHT_PRESET);
+                map.setConfigProperty('basemap', 'showPlaceLabels', false);
+                map.setConfigProperty('basemap', 'showRoadLabels', false);
+                map.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                map.setConfigProperty('basemap', 'showTransitLabels', false);
+                map.setConfigProperty('basemap', 'showRoads', false);
+                map.setConfigProperty('basemap', 'showTraffic', false);
+                log('Map engine ready.', 'success');
+                startRepair();
+            });
+
+            map.on('error', function(e) {
+                log('Map error: ' + e.message, 'error');
+            });
+        });
+
+        document.getElementById('btnStop').addEventListener('click', function() {
+            stopped = true;
+            running = false;
+            setStatus('Stopped');
+            log('Stopped by user.', 'error');
+            this.disabled = true;
+        });
+
+        function startRepair() {
+            running = true;
+            stopped = false;
+            document.getElementById('btnRun').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            processNext(0);
+        }
+
+        function processNext(idx) {
+            if (stopped || idx >= locations.length) {
+                running = false;
+                document.getElementById('btnStop').disabled = true;
+                if (!stopped) {
+                    setStatus('Complete');
+                    log('Auto-repair complete. All locations processed.', 'success');
+                }
+                return;
+            }
+
+            var loc = locations[idx];
+            var zoom = (loc.location_type === 'city') ? 16 : 18;
+            setStatus('Processing ' + (idx+1) + ' / ' + locations.length + ': ' + loc.name);
+            log('Processing: ' + loc.name + ' (' + loc.location_type + ', Z' + zoom + ') — ' + loc.lat + ', ' + loc.lng, 'info');
+
+            captureAllBearings(loc, zoom, 0, [], function(dataUrls) {
+                uploadImages(loc, dataUrls, zoom, function(ok) {
+                    setProgress(idx + 1, locations.length);
+                    if (ok) {
+                        log('  ✓ Uploaded successfully', 'success');
+                    } else {
+                        log('  ✗ Upload failed — continuing', 'error');
+                    }
+                    setTimeout(function() { processNext(idx + 1); }, 300);
+                });
+            });
+        }
+
+        function captureAllBearings(loc, zoom, bearingIdx, results, done) {
+            if (bearingIdx >= BEARINGS.length) {
+                done(results);
+                return;
+            }
+
+            var bearing = BEARINGS[bearingIdx];
+            var camera = {
+                center: [loc.lng, loc.lat],
+                zoom: zoom,
+                pitch: PITCH,
+                bearing: bearing
+            };
+
+            map.jumpTo(camera);
+
+            // Defer idle listener so the map processes the camera change and
+            // begins requesting new tiles before we start waiting for idle.
+            setTimeout(function() {
+                map.once('idle', function() {
+                    setTimeout(function() {
+                        var canvas = map.getCanvas();
+                        var dataUrl = canvas.toDataURL('image/webp', 0.92);
+                        results.push(dataUrl);
+                        log('    Bearing ' + bearing + ' (' + BEARING_DIR[bearing] + ') captured');
+                        captureAllBearings(loc, zoom, bearingIdx + 1, results, done);
+                    }, 300);
+                });
+            }, 50);
+        }
+
+        function uploadImages(loc, dataUrls, zoom, done) {
+            try {
+                var fd = new FormData();
+                var meta = [];
+
+                for (var i = 0; i < BEARINGS.length; i++) {
+                    if (!dataUrls[i]) continue;
+                    var parts  = dataUrls[i].split(',');
+                    var mime   = parts[0].match(/:(.*?);/)[1];
+                    var bstr   = atob(parts[1]);
+                    var n      = bstr.length;
+                    var u8arr  = new Uint8Array(n);
+                    while (n--) u8arr[n] = bstr.charCodeAt(n);
+                    var blob   = new Blob([u8arr], { type: mime });
+                    var dir    = BEARING_DIR[BEARINGS[i]];
+                    var file   = new File([blob], 'map-' + BEARINGS[i] + '-' + dir + '.webp', { type: 'image/webp' });
+                    fd.append('map_images[]', file, file.name);
+                    meta.push({ lat: loc.lat, lng: loc.lng, bearing: BEARINGS[i], location_type: loc.location_type });
+                }
+
+                fd.append('map_images_meta', JSON.stringify(meta));
+
+                fetch('/gateway.php?action=get-map-wallpapers', {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { done(data.success === true); })
+                .catch(function() { done(false); });
+
+            } catch (e) {
+                log('    Upload error: ' + e.message, 'error');
+                done(false);
+            }
+        }
+    </script>
+</body>
+</html>
