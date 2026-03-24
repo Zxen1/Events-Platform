@@ -3515,7 +3515,10 @@ const FieldsetBuilder = (function(){
                                     if (inp) inp.value = v;
                                 } else if (v && typeof v === 'object') {
                                     if (inp) inp.value = v.name || '';
-                                    if (v.image_index != null) block._savedImageIndex = v.image_index;
+                                    if (v.image_index != null) {
+                                        block._savedImageIndex = v.image_index;
+                                        block._selectedImageEntryId = null;
+                                    }
                                 }
                                 itemVariantsContainer.appendChild(block);
                             });
