@@ -5528,10 +5528,30 @@ const MemberModule = (function() {
                     }
                     
                     var item_variants = [];
-                    el.querySelectorAll('.fieldset-itempricing-row-itemvariant').forEach(function(row) {
-                        var variantInput = row.querySelector('input.fieldset-itempricing-input-itemvariantname');
+                    var _ivImageEntries = [];
+                    try {
+                        var _ivForm = el.closest('form') || el.closest('.member-post-form');
+                        if (_ivForm) {
+                            var _ivImagesFs = _ivForm.querySelector('.fieldset[data-fieldset-key="images"]');
+                            if (_ivImagesFs && typeof _ivImagesFs._getImageEntries === 'function') {
+                                _ivImageEntries = _ivImagesFs._getImageEntries();
+                            }
+                        }
+                    } catch (ivErr) {}
+                    el.querySelectorAll('.fieldset-itempricing-block-itemvariant').forEach(function(block) {
+                        var variantInput = block.querySelector('input.fieldset-itempricing-input-itemvariantname');
                         var variantName = variantInput ? String(variantInput.value || '').trim() : '';
-                        item_variants.push(variantName);
+                        var imageIndex = 0;
+                        var selectedEntryId = block._selectedImageEntryId || null;
+                        if (selectedEntryId) {
+                            for (var j = 0; j < _ivImageEntries.length; j++) {
+                                if (_ivImageEntries[j]._imageEntryId === selectedEntryId) {
+                                    imageIndex = j;
+                                    break;
+                                }
+                            }
+                        }
+                        item_variants.push({ name: variantName, image_index: imageIndex });
                     });
 
                     // Extract promo fields

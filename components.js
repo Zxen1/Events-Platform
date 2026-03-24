@@ -13903,7 +13903,8 @@ const PostItemComponent = (function() {
         if (variants.length) {
             html.push('<div class="post-item-variants">');
             for (var i = 0; i < variants.length; i++) {
-                html.push('<span class="post-item-variant">' + escapeHtml(variants[i]) + '</span>');
+                var variantText = typeof variants[i] === 'string' ? variants[i] : (variants[i] && variants[i].name ? variants[i].name : '');
+                html.push('<span class="post-item-variant">' + escapeHtml(variantText) + '</span>');
             }
             html.push('</div>');
         }

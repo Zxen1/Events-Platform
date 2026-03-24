@@ -1885,6 +1885,15 @@ const FieldsetBuilder = (function(){
                 var nextImageEntryId = 1;
                 var maxImages = 10;
                 
+                fieldset._getImageEntries = function() {
+                    return imageEntries.map(function(e) {
+                        return {
+                            _imageEntryId: e._imageEntryId,
+                            previewUrl: e.previewUrl || e.fileUrl || ''
+                        };
+                    });
+                };
+                
                 // Basket: shows all post_media images as mini-thumbs (50x50)
                 // Items in imageEntries get blue border + full opacity
                 // Items not in imageEntries get lower opacity, click to add
@@ -2451,6 +2460,10 @@ const FieldsetBuilder = (function(){
                         });
                         imagesContainer.appendChild(uploadBox);
                     }
+
+                    try {
+                        fieldset.dispatchEvent(new CustomEvent('fieldset-images-changed', { bubbles: true }));
+                    } catch (evErr) {}
 
                     // Release the height lock on the next frame once DOM is populated.
                     try {
@@ -3495,16 +3508,22 @@ const FieldsetBuilder = (function(){
                         itemVariantsContainer.innerHTML = '';
                         if (Array.isArray(val.item_variants)) {
                             val.item_variants.forEach(function(v) {
-                                var row = createItemVariantRow();
-                                var inp = row.querySelector('.fieldset-itempricing-input-itemvariantname');
-                                if (inp) inp.value = v;
-                                itemVariantsContainer.appendChild(row);
+                                var block = createItemVariantRow();
+                                var inp = block.querySelector('.fieldset-itempricing-input-itemvariantname');
+                                if (typeof v === 'string') {
+                                    if (inp) inp.value = v;
+                                } else if (v && typeof v === 'object') {
+                                    if (inp) inp.value = v.name || '';
+                                    if (v.image_index != null) block._savedImageIndex = v.image_index;
+                                }
+                                itemVariantsContainer.appendChild(block);
                             });
                         }
                         if (itemVariantsContainer.children.length === 0) {
                             itemVariantsContainer.appendChild(createItemVariantRow());
                         }
                         updateItemVariantButtons();
+                        ipRefreshAllVariantThumbnails();
                     }
                     
                     if (itemNameInput) itemNameInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -3524,21 +3543,117 @@ const FieldsetBuilder = (function(){
                 itemVariantsContainer.className = 'fieldset-itempricing-container-itemvariants';
                 // Spacing is handled by last child rule in invisible container
                 fieldset.appendChild(itemVariantsContainer);
-                
+
+                var _ipCurrentImageEntries = [];
+
+                function ipGetImagesFieldset() {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form');
+                        if (!form) return null;
+                        return form.querySelector('.fieldset[data-fieldset-key="images"]');
+                    } catch (e) { return null; }
+                }
+
+                function ipFetchImageEntries() {
+                    var imgFs = ipGetImagesFieldset();
+                    if (imgFs && typeof imgFs._getImageEntries === 'function') {
+                        _ipCurrentImageEntries = imgFs._getImageEntries();
+                    } else {
+                        _ipCurrentImageEntries = [];
+                    }
+                    return _ipCurrentImageEntries;
+                }
+
+                function ipRenderVariantThumbnails(block) {
+                    var strip = block.querySelector('.fieldset-itempricing-row-variantimage');
+                    if (!strip) return;
+                    strip.innerHTML = '';
+
+                    var entries = _ipCurrentImageEntries;
+
+                    if (!entries || entries.length === 0) {
+                        var empty = document.createElement('div');
+                        empty.className = 'fieldset-itempricing-variantimage-item fieldset-itempricing-variantimage-item--empty';
+                        strip.appendChild(empty);
+                        return;
+                    }
+
+                    // Resolve saved index to entry reference (edit mode)
+                    if (!block._selectedImageEntryId) {
+                        var idx = (block._savedImageIndex != null) ? block._savedImageIndex : 0;
+                        if (entries[idx]) {
+                            block._selectedImageEntryId = entries[idx]._imageEntryId;
+                        } else {
+                            block._selectedImageEntryId = entries[0]._imageEntryId;
+                        }
+                    }
+
+                    // If selected entry was removed, fall back to first image
+                    var selFound = false;
+                    for (var s = 0; s < entries.length; s++) {
+                        if (entries[s]._imageEntryId === block._selectedImageEntryId) {
+                            selFound = true;
+                            break;
+                        }
+                    }
+                    if (!selFound) {
+                        block._selectedImageEntryId = entries[0]._imageEntryId;
+                    }
+
+                    entries.forEach(function(entry) {
+                        var thumb = document.createElement('div');
+                        thumb.className = 'fieldset-itempricing-variantimage-item';
+                        if (entry._imageEntryId === block._selectedImageEntryId) {
+                            thumb.classList.add('fieldset-itempricing-variantimage-item--selected');
+                        }
+
+                        var img = document.createElement('img');
+                        img.className = 'fieldset-itempricing-variantimage-item-image';
+                        img.src = entry.previewUrl || '';
+                        thumb.appendChild(img);
+
+                        thumb.style.cursor = 'pointer';
+                        thumb.addEventListener('click', function() {
+                            block._selectedImageEntryId = entry._imageEntryId;
+                            ipRenderVariantThumbnails(block);
+                        });
+
+                        strip.appendChild(thumb);
+                    });
+                }
+
+                function ipRefreshAllVariantThumbnails() {
+                    ipFetchImageEntries();
+                    var blocks = itemVariantsContainer.querySelectorAll('.fieldset-itempricing-block-itemvariant');
+                    blocks.forEach(function(block) {
+                        ipRenderVariantThumbnails(block);
+                    });
+                }
+
+                try {
+                    var ipForm = fieldset.closest('form') || fieldset.closest('.member-post-form');
+                    if (ipForm) {
+                        ipForm.addEventListener('fieldset-images-changed', function() {
+                            ipRefreshAllVariantThumbnails();
+                        });
+                    }
+                } catch (ipEvErr) {}
+
                 function createItemVariantRow() {
-                    // Single row element (no separate block wrapper)
+                    var variantBlock = document.createElement('div');
+                    variantBlock.className = 'fieldset-itempricing-block-itemvariant';
+                    variantBlock.style.marginBottom = '10px';
+
                     var variantRow = document.createElement('div');
                     variantRow.className = 'fieldset-row fieldset-itempricing-row-itemvariant';
-                    variantRow.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
-                    
-                    // Variant name input
+                    variantRow.style.marginBottom = '10px';
+
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input fieldset-itempricing-input-itemvariantname input-class-1';
                     applyPlaceholder(variantInput, getSubfieldPlaceholder('item-variant'));
                     variantRow.appendChild(variantInput);
-                    
-                    // + button
+
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-itempricing-button-itemvariantadd';
@@ -3551,16 +3666,15 @@ const FieldsetBuilder = (function(){
                         addBtn.appendChild(ipPlusImg);
                     }
                     addBtn.addEventListener('click', function() {
-                        var newRow = createItemVariantRow();
-                        itemVariantsContainer.appendChild(newRow);
+                        var newBlock = createItemVariantRow();
+                        itemVariantsContainer.appendChild(newBlock);
                         updateItemVariantButtons();
-                        
-                        var input = newRow.querySelector('.fieldset-itempricing-input-itemvariantname');
+                        ipRefreshAllVariantThumbnails();
+                        var input = newBlock.querySelector('.fieldset-itempricing-input-itemvariantname');
                         if (input) input.focus();
                     });
                     variantRow.appendChild(addBtn);
-                    
-                    // - button
+
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'fieldset-itempricing-button-itemvariantremove';
@@ -3573,24 +3687,31 @@ const FieldsetBuilder = (function(){
                         removeBtn.appendChild(ipMinusImg);
                     }
                     removeBtn.addEventListener('click', function() {
-                        variantRow.remove();
+                        variantBlock.remove();
                         updateItemVariantButtons();
                     });
                     variantRow.appendChild(removeBtn);
                     applyFieldsetRowItemClasses(variantRow);
-                    
-                    return variantRow;
-                }
-                
-                function updateItemVariantButtons() {
-                    var rows = itemVariantsContainer.querySelectorAll('.fieldset-itempricing-row-itemvariant');
-                    var atMax = rows.length >= 10;
-                    rows.forEach(function(row, idx) {
-                        // 10-12-6 rule: last child of invisible container gets margin-bottom 0
-                        row.style.marginBottom = (idx === rows.length - 1) ? '0' : '10px';
 
-                        var addBtn = row.querySelector('.fieldset-itempricing-button-itemvariantadd');
-                        var removeBtn = row.querySelector('.fieldset-itempricing-button-itemvariantremove');
+                    variantBlock.appendChild(variantRow);
+
+                    var thumbStrip = document.createElement('div');
+                    thumbStrip.className = 'fieldset-itempricing-row-variantimage';
+                    variantBlock.appendChild(thumbStrip);
+
+                    ipRenderVariantThumbnails(variantBlock);
+
+                    return variantBlock;
+                }
+
+                function updateItemVariantButtons() {
+                    var blocks = itemVariantsContainer.querySelectorAll('.fieldset-itempricing-block-itemvariant');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block, idx) {
+                        block.style.marginBottom = (idx === blocks.length - 1) ? '0' : '10px';
+
+                        var addBtn = block.querySelector('.fieldset-itempricing-button-itemvariantadd');
+                        var removeBtn = block.querySelector('.fieldset-itempricing-button-itemvariantremove');
                         if (atMax) {
                             addBtn.style.opacity = '0.3';
                             addBtn.style.cursor = 'not-allowed';
@@ -3600,7 +3721,7 @@ const FieldsetBuilder = (function(){
                             addBtn.style.cursor = 'pointer';
                             addBtn.disabled = false;
                         }
-                        if (rows.length === 1) {
+                        if (blocks.length === 1) {
                             removeBtn.style.opacity = '0.3';
                             removeBtn.style.cursor = 'not-allowed';
                             removeBtn.disabled = true;
@@ -3611,8 +3732,8 @@ const FieldsetBuilder = (function(){
                         }
                     });
                 }
-                
-                // Create first variant row
+
+                ipFetchImageEntries();
                 itemVariantsContainer.appendChild(createItemVariantRow());
                 updateItemVariantButtons();
                 break;
