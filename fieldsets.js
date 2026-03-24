@@ -3616,6 +3616,7 @@ const FieldsetBuilder = (function(){
                         thumb.addEventListener('click', function() {
                             block._selectedImageEntryId = entry._imageEntryId;
                             ipRenderVariantThumbnails(block);
+                            try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                         });
 
                         strip.appendChild(thumb);
