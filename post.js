@@ -3826,10 +3826,6 @@ const PostModule = (function() {
         couponCode ? '<div class="post-info-row post-info-row-coupon">' +
           '🏷️ ' + escapeHtml(couponCode) +
         '</div>' : '',
-        // Age rating
-        ageRating ? '<div class="post-info-row post-info-row-age">' +
-          '🔞 ' + escapeHtml(ageRating) +
-        '</div>' : '',
         // Custom fields
         customText ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customText) + '</div>' : '',
         customTextarea ? '<div class="post-info-row post-info-row-custom">' + escapeHtml(customTextarea) + '</div>' : '',
