@@ -4349,13 +4349,14 @@ body.image-modal-open > *:not(.image-modal) {
   font-weight: 600;
 }
 
-/* Promo pricing: original crossed out + promo highlighted */
 .post-item-price-original {
-  text-decoration: line-through;
-  opacity: 0.6;
+  min-width: 80px;
+  text-align: right;
 }
 
 .post-item-price-promo {
+  min-width: 80px;
+  text-align: right;
   color: var(--green-600);
   font-weight: 600;
 }
