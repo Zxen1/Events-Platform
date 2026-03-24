@@ -13904,7 +13904,8 @@ const PostItemComponent = (function() {
             html.push('<div class="post-item-variants">');
             for (var i = 0; i < variants.length; i++) {
                 var variantText = typeof variants[i] === 'string' ? variants[i] : (variants[i] && variants[i].name ? variants[i].name : '');
-                html.push('<span class="post-item-variant">' + escapeHtml(variantText) + '</span>');
+                var variantImageIndex = (typeof variants[i] === 'object' && variants[i] && variants[i].image_index != null) ? variants[i].image_index : 0;
+                html.push('<span class="post-item-variant" data-image-index="' + variantImageIndex + '">' + escapeHtml(variantText) + '</span>');
             }
             html.push('</div>');
         }

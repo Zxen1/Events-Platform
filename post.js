@@ -4501,6 +4501,18 @@ const PostModule = (function() {
       });
     });
     
+    // Variant chip clicks switch to linked image
+    wrap.querySelectorAll('.post-item-variant[data-image-index]').forEach(function(chip) {
+      chip.style.cursor = 'pointer';
+      chip.addEventListener('click', function() {
+        var idx = parseInt(chip.dataset.imageIndex, 10);
+        if (Number.isFinite(idx) && idx >= 0 && idx < galleryImages.length) {
+          ensureSlide(idx);
+          show(idx);
+        }
+      });
+    });
+    
     // Enable horizontal mousewheel scrolling on thumbnail row
     var thumbRow = wrap.querySelector('.post-thumbs');
     if (thumbRow) {

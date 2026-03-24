@@ -4286,6 +4286,11 @@ body.image-modal-open > *:not(.image-modal) {
   background: var(--pi-chip-bg);
   border: 1px solid var(--pi-chip-border);
   color: var(--pi-chip-text);
+  cursor: pointer;
+}
+
+.post-item-variant:hover {
+  border-color: #3b82f6;
 }
 
 /* Promo section (badge + message) - mirrors session promo styling */
