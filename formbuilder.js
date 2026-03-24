@@ -4642,55 +4642,46 @@
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
 
-        // Sync URL fieldsets (ticket-url, item-url) from location 1 to other locations (unless manually edited)
-        var syncableUrlKeys = ['ticket-url', 'item-url'];
+        // Sync ticket URL from location 1 to other locations (unless manually edited)
         container.addEventListener('input', function(e) {
             var input = e.target;
             if (!input || !input.closest) return;
-            var urlFs = null;
-            var matchedKey = null;
-            for (var k = 0; k < syncableUrlKeys.length; k++) {
-                urlFs = input.closest('.fieldset[data-fieldset-key="' + syncableUrlKeys[k] + '"]');
-                if (urlFs) { matchedKey = syncableUrlKeys[k]; break; }
-            }
-            if (!urlFs) return;
+            var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
+            if (!ticketFs) return;
             var locContainer = input.closest('.member-location-container[data-location-number]');
             if (!locContainer) return;
             var locNum = parseInt(locContainer.dataset.locationNumber, 10);
-            var manualFlag = matchedKey.replace(/-/g, '') + 'Manual';
             if (locNum === 1 && e.isTrusted) {
+                // User edited location 1 — sync to all non-manually-edited locations
                 var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
                 allLocs.forEach(function(loc) {
                     if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
-                    var fs = loc.querySelector('.fieldset[data-fieldset-key="' + matchedKey + '"]');
-                    if (fs && !fs.dataset[manualFlag] && typeof fs._setValue === 'function') {
+                    var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                    if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
                         fs._setValue(input.value);
                     }
                 });
             } else if (locNum > 1 && e.isTrusted) {
-                urlFs.dataset[manualFlag] = 'true';
+                // User manually edited a non-primary location — mark it independent
+                ticketFs.dataset.ticketUrlManual = 'true';
             }
         });
 
+        // Re-sync ticket URL on focusout so that the https:// added by autoUrlProtocol is included.
+        // focusout bubbles, so by the time it reaches container the direct blur handler has already run.
         container.addEventListener('focusout', function(e) {
             var input = e.target;
             if (!input || !input.closest) return;
-            var urlFs = null;
-            var matchedKey = null;
-            for (var k = 0; k < syncableUrlKeys.length; k++) {
-                urlFs = input.closest('.fieldset[data-fieldset-key="' + syncableUrlKeys[k] + '"]');
-                if (urlFs) { matchedKey = syncableUrlKeys[k]; break; }
-            }
-            if (!urlFs) return;
+            var ticketFs = input.closest('.fieldset[data-fieldset-key="ticket-url"]');
+            if (!ticketFs) return;
             var locContainer = input.closest('.member-location-container[data-location-number]');
             if (!locContainer) return;
             if (parseInt(locContainer.dataset.locationNumber, 10) !== 1) return;
-            var manualFlag = matchedKey.replace(/-/g, '') + 'Manual';
             var allLocs = container.querySelectorAll('.member-location-container[data-location-number]');
             allLocs.forEach(function(loc) {
                 if (parseInt(loc.dataset.locationNumber, 10) === 1) return;
-                var fs = loc.querySelector('.fieldset[data-fieldset-key="' + matchedKey + '"]');
-                if (fs && !fs.dataset[manualFlag] && typeof fs._setValue === 'function') {
+                var fs = loc.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                if (fs && !fs.dataset.ticketUrlManual && typeof fs._setValue === 'function') {
                     fs._setValue(input.value);
                 }
             });
@@ -4926,17 +4917,15 @@
                 }
                 insertAfter = locationContainer;
 
-                // Copy URL fieldsets from location 1 into new location
-                ['ticket-url', 'item-url'].forEach(function(urlKey) {
-                    var loc1Fs = venue1Container.querySelector('.fieldset[data-fieldset-key="' + urlKey + '"]');
-                    var newFs = locationContainer.querySelector('.fieldset[data-fieldset-key="' + urlKey + '"]');
-                    if (loc1Fs && newFs) {
-                        var loc1Val = loc1Fs.querySelector('input:not([type="hidden"])');
-                        if (loc1Val && loc1Val.value && typeof newFs._setValue === 'function') {
-                            newFs._setValue(loc1Val.value);
-                        }
+                // Copy ticket URL from location 1 into new location
+                var loc1TicketFs = venue1Container.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                var newTicketFs = locationContainer.querySelector('.fieldset[data-fieldset-key="ticket-url"]');
+                if (loc1TicketFs && newTicketFs) {
+                    var loc1TicketVal = loc1TicketFs.querySelector('input:not([type="hidden"])');
+                    if (loc1TicketVal && loc1TicketVal.value && typeof newTicketFs._setValue === 'function') {
+                        newTicketFs._setValue(loc1TicketVal.value);
                     }
-                });
+                }
                 
                 // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
             })(i);

@@ -3131,10 +3131,6 @@
                     case 'ticket-url':
                         val = mapCard.ticket_url;
                         break;
-                    case 'item_url':
-                    case 'item-url':
-                        val = mapCard.item_url;
-                        break;
                     case 'custom-text': val = stripLabelPrefix(mapCard.custom_text); break;
                     case 'custom-textarea': val = stripLabelPrefix(mapCard.custom_textarea); break;
                     case 'custom-dropdown': val = stripLabelPrefix(mapCard.custom_dropdown); break;

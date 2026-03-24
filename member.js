@@ -4634,7 +4634,6 @@ const MemberModule = (function() {
             { key: 'public-email', value: mapCard.public_email },
             { key: 'public-phone', value: mapCard.public_phone },
             { key: 'ticket_url', value: mapCard.ticket_url },
-            { key: 'item_url', value: mapCard.item_url },
             { key: 'custom-text', value: mapCard.custom_text },
             { key: 'custom-textarea', value: mapCard.custom_textarea }
         ];

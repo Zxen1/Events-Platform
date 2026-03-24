@@ -1828,18 +1828,6 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(urlInput);
                 fieldset.appendChild(urlValidation.charCount);
                 break;
-
-            case 'item-url':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength, instruction));
-                var itemUrlInput = document.createElement('input');
-                itemUrlInput.type = 'text';
-                itemUrlInput.className = 'fieldset-input input-class-1';
-                applyPlaceholder(itemUrlInput, placeholder);
-                autoUrlProtocol(itemUrlInput);
-                var itemUrlValidation = addInputValidation(itemUrlInput, minLength, maxLength, isValidUrl);
-                fieldset.appendChild(itemUrlInput);
-                fieldset.appendChild(itemUrlValidation.charCount);
-                break;
                 
             case 'images':
                 // IMAGE STORAGE FLOW:
@@ -7277,8 +7265,7 @@ const FieldsetBuilder = (function(){
                     }
                     return hasAny;
                 }
-                case 'ticket-url':
-                case 'item-url': {
+                case 'ticket-url': {
                     var u = fieldset.querySelector('input.fieldset-input');
                     if (!u) return false;
                     if (!strLenOk(u.value, minLength, maxLength)) return false;
