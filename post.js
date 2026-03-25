@@ -3158,9 +3158,9 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-    // Storefront wallpaper: activate now that the element is in the DOM.
+    // Wallpaper: activate now that the element is in the DOM.
     // Must happen after insertion so the component can measure dimensions.
-    if (detail.__wallpaperLocked && detail.classList.contains('component-locationwallpaper-container')) {
+    if (detail.classList.contains('component-locationwallpaper-container')) {
       detail.setAttribute('data-active', 'true');
       (function(el) {
         requestAnimationFrame(function() {
