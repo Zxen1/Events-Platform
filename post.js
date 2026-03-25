@@ -3080,9 +3080,8 @@ const PostModule = (function() {
     var isMobileViewport = window.innerWidth <= 530;
     var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
-    // Capture card rect and container right edge NOW — before closeOpenPost alters layout
+    // [Card exit animation — step 1/2] Capture before closeOpenPost shifts layout
     var _preCloseExitRect = null;
-    var _preCloseExitTransform = null;
     var _preCloseContainerRight = null;
     if (container) {
       var _preCloseCR = container.getBoundingClientRect();
@@ -3092,10 +3091,7 @@ const PostModule = (function() {
       var _preCloseSlot = originEl.closest('.post-slot');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
-        if (_preCloseCard) {
-          _preCloseExitRect = _preCloseCard.getBoundingClientRect();
-          _preCloseExitTransform = window.getComputedStyle(_preCloseCard).transform;
-        }
+        if (_preCloseCard) _preCloseExitRect = _preCloseCard.getBoundingClientRect();
       }
     }
 
@@ -3147,34 +3143,24 @@ const PostModule = (function() {
         }
       }
       if (cardToHide) {
-        // Slide card upward into a fixed clip before hiding.
-        // Use the rect captured before closeOpenPost shifted the layout.
+        // [Card exit animation — step 2/2] Slide card up into fixed clip, then hide
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         var _exitClone = cardToHide.cloneNode(true);
         var _exitClip = document.createElement('div');
         _exitClip.className = 'post-card-exit-clip';
-        // Clamp right edge to the scroll container's content width (excludes scrollbar).
-        // Use pre-closeOpenPost value so no post-layout-shift contamination.
         var _exitMaxRight = _preCloseContainerRight !== null
           ? _preCloseContainerRight
           : (_exitRect.left + _exitRect.width);
-        var _exitClipWidth = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left);
+        _exitClone.style.margin = '0';
         _exitClip.style.top = _exitRect.top + 'px';
         _exitClip.style.left = _exitRect.left + 'px';
-        _exitClip.style.width = _exitClipWidth + 'px';
+        _exitClip.style.width = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left) + 'px';
         _exitClip.style.height = _exitRect.height + 'px';
-        // Mover slides up; clone inside keeps its scale constant throughout
-        var _exitMover = document.createElement('div');
-        _exitClone.style.margin = '0';
-        if (_preCloseExitTransform && _preCloseExitTransform !== 'none') {
-          _exitClone.style.transform = _preCloseExitTransform;
-        }
-        _exitMover.appendChild(_exitClone);
-        _exitClip.appendChild(_exitMover);
+        _exitClip.appendChild(_exitClone);
         document.body.appendChild(_exitClip);
-        _exitMover.getBoundingClientRect(); // force reflow so transition fires immediately
-        _exitMover.style.transition = 'transform 0.3s linear';
-        _exitMover.style.transform = 'translateY(-' + _exitRect.height + 'px)';
+        _exitClone.getBoundingClientRect(); // force reflow so transition fires immediately
+        _exitClone.style.transition = 'transform 0.3s linear';
+        _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
         setTimeout(function() { if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip); }, 320);
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
