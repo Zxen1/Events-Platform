@@ -3200,7 +3200,7 @@ const PostModule = (function() {
           detail.style.transform = '';
           detail.style.transition = '';
           slot.style.overflow = '';
-        }, 320);
+        }, 2020);
       } else {
         slot.appendChild(detail);
       }
