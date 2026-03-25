@@ -1664,6 +1664,18 @@
   margin-top: var(--gap);
 }
 
+/* Compact mode: overlay thumbs over bottom of main image */
+.post:not(.post--expanded) .post-images-container {
+  position: relative;
+}
+
+.post:not(.post--expanded) .post-thumbs {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
 .post-hero {
   width: 100%;
   max-width: 100%;
