@@ -4210,6 +4210,18 @@ const PostModule = (function() {
             new MutationObserver(function() {
               wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
             }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
+
+            if (postHeader) {
+              postHeader.addEventListener('click', function(e) {
+                if (e.target.closest('button, a')) return;
+                var seeLess = contentEl.querySelector('.post-description-seeless');
+                if (seeLess) {
+                  seeLess.click();
+                } else {
+                  tempDetail.classList.remove('post--expanded');
+                }
+              });
+            }
           });
         }
       });
