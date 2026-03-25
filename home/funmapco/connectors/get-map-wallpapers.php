@@ -312,9 +312,6 @@ while ($row = $result->fetch_assoc()) {
     if ($fileUrl === '') {
         continue;
     }
-    if (!remote_file_exists($fileUrl)) {
-        continue;
-    }
     $wallpapers[(int)$row['bearing']] = $fileUrl;
 }
 $stmt->close();
