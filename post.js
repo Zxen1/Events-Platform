@@ -3082,6 +3082,7 @@ const PostModule = (function() {
 
     // Capture card rect and container right edge NOW — before closeOpenPost alters layout
     var _preCloseExitRect = null;
+    var _preCloseExitTransform = null;
     var _preCloseContainerRight = null;
     if (container) {
       var _preCloseCR = container.getBoundingClientRect();
@@ -3092,10 +3093,8 @@ const PostModule = (function() {
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
-          // Suppress hover transform so we measure the natural (non-scaled) rect
-          _preCloseCard.style.transform = 'none';
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
-          _preCloseCard.style.transform = '';
+          _preCloseExitTransform = window.getComputedStyle(_preCloseCard).transform;
         }
       }
     }
@@ -3165,7 +3164,9 @@ const PostModule = (function() {
         _exitClip.style.width = _exitClipWidth + 'px';
         _exitClip.style.height = _exitRect.height + 'px';
         _exitClone.style.margin = '0';
-        _exitClone.style.transform = 'translateY(0)';
+        _exitClone.style.transform = (_preCloseExitTransform && _preCloseExitTransform !== 'none')
+          ? _preCloseExitTransform
+          : 'translateY(0)';
         _exitClip.appendChild(_exitClone);
         document.body.appendChild(_exitClip);
         _exitClone.getBoundingClientRect(); // force reflow so transition fires immediately
