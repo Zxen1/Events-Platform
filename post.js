@@ -3091,7 +3091,12 @@ const PostModule = (function() {
       var _preCloseSlot = originEl.closest('.post-slot');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
-        if (_preCloseCard) _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+        if (_preCloseCard) {
+          // Suppress hover transform so we measure the natural (non-scaled) rect
+          _preCloseCard.style.transform = 'none';
+          _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+          _preCloseCard.style.transform = '';
+        }
       }
     }
 
