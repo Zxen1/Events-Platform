@@ -3159,6 +3159,12 @@ const PostModule = (function() {
         if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
           _exitClone.style.backgroundColor = _preCloseCardBg;
         }
+        // Freeze all transitions on clone so hover-state styles don't animate away
+        _exitClone.style.transition = 'none';
+        var _cloneEls = _exitClone.querySelectorAll('*');
+        for (var _ci = 0; _ci < _cloneEls.length; _ci++) {
+          _cloneEls[_ci].style.transition = 'none';
+        }
         var _exitFavIcon = _exitClone.querySelector('.recent-card-icon-fav, .post-card-icon-fav');
         if (_exitFavIcon) _exitFavIcon.style.opacity = '1';
         _exitClip.style.top = _exitRect.top + 'px';
