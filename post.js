@@ -3080,6 +3080,16 @@ const PostModule = (function() {
     var isMobileViewport = window.innerWidth <= 530;
     var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
+    // Capture the clicked card's rect NOW — before closeOpenPost alters layout
+    var _preCloseExitRect = null;
+    if (originEl) {
+      var _preCloseSlot = originEl.closest('.post-slot');
+      if (_preCloseSlot) {
+        var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
+        if (_preCloseCard) _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+      }
+    }
+
     // Close any existing open post in this container
     closeOpenPost(container);
 
@@ -3128,14 +3138,21 @@ const PostModule = (function() {
         }
       }
       if (cardToHide) {
-        // Slide card upward into a fixed clip before hiding
-        var _exitRect = cardToHide.getBoundingClientRect();
+        // Slide card upward into a fixed clip before hiding.
+        // Use the rect captured before closeOpenPost shifted the layout.
+        var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         var _exitClone = cardToHide.cloneNode(true);
         var _exitClip = document.createElement('div');
         _exitClip.className = 'post-card-exit-clip';
+        // Clamp right edge to the scroll container's content width (excludes scrollbar)
+        var _exitContainerRect = container ? container.getBoundingClientRect() : null;
+        var _exitMaxRight = (_exitContainerRect && container.clientWidth)
+          ? (_exitContainerRect.left + container.clientWidth)
+          : (_exitRect.left + _exitRect.width);
+        var _exitClipWidth = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left);
         _exitClip.style.top = _exitRect.top + 'px';
         _exitClip.style.left = _exitRect.left + 'px';
-        _exitClip.style.width = _exitRect.width + 'px';
+        _exitClip.style.width = _exitClipWidth + 'px';
         _exitClip.style.height = _exitRect.height + 'px';
         _exitClone.style.margin = '0';
         _exitClone.style.transform = 'translateY(0)';
