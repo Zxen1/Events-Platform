@@ -3128,7 +3128,6 @@ const PostModule = (function() {
         }
       }
       if (cardToHide) {
-        cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
@@ -3140,6 +3139,21 @@ const PostModule = (function() {
         } else {
           slot.appendChild(detail);
         }
+        // POST OPEN ANIMATION: card slides up and disappears, clipped to its own bounds.
+        var cardH = Math.round(cardToHide.offsetHeight);
+        cardToHide.style.position = 'relative';
+        cardToHide.style.zIndex = 'var(--layer-sticky)';
+        cardToHide.style.overflow = 'hidden';
+        cardToHide.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.1, 1)';
+        cardToHide.style.transform = 'translateY(-' + cardH + 'px)';
+        setTimeout(function() {
+          cardToHide.style.display = 'none';
+          cardToHide.style.position = '';
+          cardToHide.style.zIndex = '';
+          cardToHide.style.overflow = '';
+          cardToHide.style.transition = '';
+          cardToHide.style.transform = '';
+        }, 350);
       } else {
         slot.appendChild(detail);
       }
