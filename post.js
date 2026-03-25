@@ -3189,6 +3189,18 @@ const PostModule = (function() {
         } else {
           slot.appendChild(detail);
         }
+        // [Post enter animation] Blind — slides down from above into view
+        slot.style.overflow = 'hidden';
+        detail.style.transition = 'none';
+        detail.style.transform = 'translateY(-100%)';
+        detail.getBoundingClientRect();
+        detail.style.transition = 'transform 0.3s linear';
+        detail.style.transform = 'translateY(0)';
+        setTimeout(function() {
+          detail.style.transform = '';
+          detail.style.transition = '';
+          slot.style.overflow = '';
+        }, 320);
       } else {
         slot.appendChild(detail);
       }
