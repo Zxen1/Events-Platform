@@ -3194,7 +3194,7 @@ const PostModule = (function() {
         detail.style.transition = 'none';
         detail.style.transform = 'translateY(-100%)';
         detail.getBoundingClientRect();
-        detail.style.transition = 'transform 0.3s linear';
+        detail.style.transition = 'transform 2s linear';
         detail.style.transform = 'translateY(0)';
         setTimeout(function() {
           detail.style.transform = '';
