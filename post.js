@@ -3163,15 +3163,18 @@ const PostModule = (function() {
         _exitClip.style.left = _exitRect.left + 'px';
         _exitClip.style.width = _exitClipWidth + 'px';
         _exitClip.style.height = _exitRect.height + 'px';
+        // Mover slides up; clone inside keeps its scale constant throughout
+        var _exitMover = document.createElement('div');
         _exitClone.style.margin = '0';
-        _exitClone.style.transform = (_preCloseExitTransform && _preCloseExitTransform !== 'none')
-          ? _preCloseExitTransform
-          : 'translateY(0)';
-        _exitClip.appendChild(_exitClone);
+        if (_preCloseExitTransform && _preCloseExitTransform !== 'none') {
+          _exitClone.style.transform = _preCloseExitTransform;
+        }
+        _exitMover.appendChild(_exitClone);
+        _exitClip.appendChild(_exitMover);
         document.body.appendChild(_exitClip);
-        _exitClone.getBoundingClientRect(); // force reflow so transition fires immediately
-        _exitClone.style.transition = 'transform 0.3s linear';
-        _exitClone.style.transform = 'translateY(-100%)';
+        _exitMover.getBoundingClientRect(); // force reflow so transition fires immediately
+        _exitMover.style.transition = 'transform 0.3s linear';
+        _exitMover.style.transform = 'translateY(-' + _exitRect.height + 'px)';
         setTimeout(function() { if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip); }, 320);
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
