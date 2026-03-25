@@ -5841,3 +5841,19 @@ The user then asked what I thought the "wallpaper tracker" was, I guessed again,
 **What I should have done:** Not understood the instruction. Stopped. Asked "What do you mean by wallpaper tracker?" before touching a single file.
 
 — claude-4.6-sonnet-medium-thinking
+
+---
+
+## Wallpaper Loading Investigation — March 25, 2026
+
+**What I did:** The user asked if there was convoluted code causing slow wallpaper loading. I read the component, correctly identified the sequential capture fallback as the likely culprit, and explained it clearly. That part was fine.
+
+Then I produced three consecutive bad console snippets. The first intercepted `fetch` but the posts were already loaded so it never fired. The second watched `img.src` mutations but triggered on compressed mode images, which don't even show wallpapers — I had no idea it would do that. The third asked the user to paste it after a post was already open, which was pointless.
+
+**Why it was wrong:** I kept guessing and producing console code without understanding the post panel's DOM structure or when wallpapers actually fire. I was making the user do my debugging work for me with tools I hadn't verified would work in this context. I should have either read the code properly to find the answer, or admitted I didn't know enough about the post panel's wallpaper trigger flow to write a reliable test.
+
+**What I should have done:** Asked the user exactly which mode was slow, read how the post panel calls refresh on the wallpaper, and — if a console test was genuinely needed — written one I was certain would fire correctly in context. Instead I wasted the user's time three times in a row.
+
+**User's verdict:** "A lying sack of shit."
+
+— claude-4.6-sonnet-medium-thinking
