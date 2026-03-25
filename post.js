@@ -3082,6 +3082,7 @@ const PostModule = (function() {
 
     // [Card exit animation — step 1/2] Capture before closeOpenPost shifts layout
     var _preCloseExitRect = null;
+    var _preCloseCardBg = null;
     var _preCloseContainerRight = null;
     if (container) {
       var _preCloseCR = container.getBoundingClientRect();
@@ -3091,7 +3092,10 @@ const PostModule = (function() {
       var _preCloseSlot = originEl.closest('.post-slot') || originEl.closest('.recent-card-wrapper');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
-        if (_preCloseCard) _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+        if (_preCloseCard) {
+          _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+          _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
+        }
       }
     }
 
@@ -3145,7 +3149,6 @@ const PostModule = (function() {
       if (cardToHide) {
         // [Card exit animation — step 2/2] Slide card up into fixed clip, then hide
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _exitBg = window.getComputedStyle(cardToHide).backgroundColor;
         var _exitClone = cardToHide.cloneNode(true);
         var _exitClip = document.createElement('div');
         _exitClip.className = 'post-card-exit-clip';
@@ -3153,9 +3156,11 @@ const PostModule = (function() {
           ? _preCloseContainerRight
           : (_exitRect.left + _exitRect.width);
         _exitClone.style.margin = '0';
-        if (_exitBg && _exitBg !== 'rgba(0, 0, 0, 0)' && _exitBg !== 'transparent') {
-          _exitClone.style.backgroundColor = _exitBg;
+        if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
+          _exitClone.style.backgroundColor = _preCloseCardBg;
         }
+        var _exitFavIcon = _exitClone.querySelector('.recent-card-icon-fav, .post-card-icon-fav');
+        if (_exitFavIcon) _exitFavIcon.style.opacity = '1';
         _exitClip.style.top = _exitRect.top + 'px';
         _exitClip.style.left = _exitRect.left + 'px';
         _exitClip.style.width = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left) + 'px';
