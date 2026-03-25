@@ -3127,6 +3127,7 @@ const PostModule = (function() {
           detail.style.marginTop = '-' + slotBarH + 'px';
         }
       }
+      var cardH = cardToHide ? Math.round(cardToHide.offsetHeight) : 0;
       if (cardToHide) {
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
@@ -3157,6 +3158,47 @@ const PostModule = (function() {
       var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
       container.insertBefore(slot, insertBeforeNode);
     }
+
+    // Animate post open: post slides down from card position, siblings slide down into place.
+    // Transforms are visual only — layout is unchanged so TopSlack/BottomSlack are unaffected.
+    (function() {
+      var EASING = 'cubic-bezier(0.25, 0.1, 0.1, 1)';
+      var DURATION = 300;
+      var startY = (typeof cardH !== 'undefined' && cardH > 0) ? cardH : 60;
+      var postH = detail.offsetHeight;
+
+      var siblings = [];
+      var node = slot.nextSibling;
+      while (node) {
+        if (node.nodeType === 1 && !node.classList.contains('bottomSlack') && !node.classList.contains('topSlack')) {
+          siblings.push(node);
+        }
+        node = node.nextSibling;
+      }
+
+      detail.style.transform = 'translateY(-' + startY + 'px)';
+      detail.style.opacity = '0';
+      siblings.forEach(function(s) { s.style.transform = 'translateY(-' + postH + 'px)'; });
+
+      void detail.offsetHeight;
+
+      var trans = 'transform ' + (DURATION / 1000) + 's ' + EASING + ', opacity ' + (DURATION / 1000) + 's ' + EASING;
+      detail.style.transition = trans;
+      siblings.forEach(function(s) { s.style.transition = 'transform ' + (DURATION / 1000) + 's ' + EASING; });
+
+      requestAnimationFrame(function() {
+        detail.style.transform = '';
+        detail.style.opacity = '';
+        siblings.forEach(function(s) { s.style.transform = ''; });
+      });
+
+      setTimeout(function() {
+        detail.style.transition = '';
+        detail.style.transform = '';
+        detail.style.opacity = '';
+        siblings.forEach(function(s) { s.style.transition = ''; s.style.transform = ''; });
+      }, DURATION + 50);
+    })();
 
     // Wallpaper: activate now that the element is in the DOM.
     // Must happen after insertion so the component can measure dimensions.
