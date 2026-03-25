@@ -381,7 +381,7 @@
   position: fixed;
   overflow: hidden;
   pointer-events: none;
-  z-index: var(--layer-panel);
+  z-index: var(--layer-menu);
 }
 
 /* Hover zoom commented out — post/recent panels
