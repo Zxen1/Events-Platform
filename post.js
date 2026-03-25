@@ -3149,7 +3149,9 @@ const PostModule = (function() {
       if (cardToHide) {
         // [Card exit animation — step 2/2] Slide card up into fixed clip, then hide
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
+        if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
         var _exitClone = cardToHide.cloneNode(true);
+        cardToHide.classList.remove('recent-card--active');
         var _exitClip = document.createElement('div');
         _exitClip.className = 'post-card-exit-clip';
         var _exitMaxRight = _preCloseContainerRight !== null
@@ -3165,8 +3167,6 @@ const PostModule = (function() {
         for (var _ci = 0; _ci < _cloneEls.length; _ci++) {
           _cloneEls[_ci].style.transition = 'none';
         }
-        var _exitFavIcon = _exitClone.querySelector('.recent-card-icon-fav, .post-card-icon-fav');
-        if (_exitFavIcon) _exitFavIcon.style.opacity = '1';
         _exitClip.style.top = _exitRect.top + 'px';
         _exitClip.style.left = _exitRect.left + 'px';
         _exitClip.style.width = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left) + 'px';

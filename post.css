@@ -394,7 +394,8 @@
 .post-card.post-card--map-highlight {
   background-color: var(--subcat-hover-bg);
 }
-.recent-card:hover {
+.recent-card:hover,
+.recent-card.recent-card--active {
   background-color: var(--subcat-hover-bg, rgba(255, 255, 255, 0.08));
 }
 
@@ -672,7 +673,8 @@
 }
 .post-card:hover .post-card-text-title,
 .post-card.post-card--map-highlight .post-card-text-title,
-.recent-card:hover .recent-card-text-title {
+.recent-card:hover .recent-card-text-title,
+.recent-card.recent-card--active .recent-card-text-title {
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -691,7 +693,8 @@
 }
 .post-card:hover .post-card-container-info,
 .post-card.post-card--map-highlight .post-card-container-info,
-.recent-card:hover .recent-card-container-info {
+.recent-card:hover .recent-card-container-info,
+.recent-card.recent-card--active .recent-card-container-info {
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -873,7 +876,8 @@
 }
 .post-card:hover .post-card-image-badge,
 .post-card.post-card--map-highlight .post-card-image-badge,
-.recent-card:hover .recent-card-image-badge {
+.recent-card:hover .recent-card-image-badge,
+.recent-card.recent-card--active .recent-card-image-badge {
   opacity: 1;
 }
 .post-card-row-cat .post-card-icon-sub,
@@ -883,7 +887,8 @@
 }
 .post-card:hover .post-card-row-cat .post-card-icon-sub,
 .post-card.post-card--map-highlight .post-card-row-cat .post-card-icon-sub,
-.recent-card:hover .recent-card-row-cat .recent-card-icon-sub {
+.recent-card:hover .recent-card-row-cat .recent-card-icon-sub,
+.recent-card.recent-card--active .recent-card-row-cat .recent-card-icon-sub {
   opacity: 1;
 }
 
@@ -967,13 +972,14 @@
   opacity: 0;
 }
 
-.recent-card:not(:hover) .recent-card-button-fav[aria-pressed="false"] .recent-card-icon-fav {
+.recent-card:not(:hover):not(.recent-card--active) .recent-card-button-fav[aria-pressed="false"] .recent-card-icon-fav {
   opacity: 0;
 }
 
 .post-card:hover .post-card-icon-fav,
 .post-card.post-card--map-highlight .post-card-icon-fav,
-.recent-card:hover .recent-card-icon-fav {
+.recent-card:hover .recent-card-icon-fav,
+.recent-card.recent-card--active .recent-card-icon-fav {
   background-color: var(--button-text);
 }
 
