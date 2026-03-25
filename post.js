@@ -3080,8 +3080,13 @@ const PostModule = (function() {
     var isMobileViewport = window.innerWidth <= 530;
     var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
-    // Capture the clicked card's rect NOW — before closeOpenPost alters layout
+    // Capture card rect and container right edge NOW — before closeOpenPost alters layout
     var _preCloseExitRect = null;
+    var _preCloseContainerRight = null;
+    if (container) {
+      var _preCloseCR = container.getBoundingClientRect();
+      _preCloseContainerRight = _preCloseCR.left + container.clientWidth;
+    }
     if (originEl) {
       var _preCloseSlot = originEl.closest('.post-slot');
       if (_preCloseSlot) {
@@ -3144,10 +3149,10 @@ const PostModule = (function() {
         var _exitClone = cardToHide.cloneNode(true);
         var _exitClip = document.createElement('div');
         _exitClip.className = 'post-card-exit-clip';
-        // Clamp right edge to the scroll container's content width (excludes scrollbar)
-        var _exitContainerRect = container ? container.getBoundingClientRect() : null;
-        var _exitMaxRight = (_exitContainerRect && container.clientWidth)
-          ? (_exitContainerRect.left + container.clientWidth)
+        // Clamp right edge to the scroll container's content width (excludes scrollbar).
+        // Use pre-closeOpenPost value so no post-layout-shift contamination.
+        var _exitMaxRight = _preCloseContainerRight !== null
+          ? _preCloseContainerRight
           : (_exitRect.left + _exitRect.width);
         var _exitClipWidth = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left);
         _exitClip.style.top = _exitRect.top + 'px';
