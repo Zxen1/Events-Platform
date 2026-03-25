@@ -3159,14 +3159,26 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-    // Animate post open: post slides down from card position, siblings slide down into place.
-    // Transforms are visual only — layout is unchanged so TopSlack/BottomSlack are unaffected.
+    // POST OPEN ANIMATION
+    // Card becomes absolute overlay and rises up like a curtain.
+    // Post is already at full height in the DOM beneath it.
+    // Siblings snap back to pre-insert position and slide down in unison.
+    // All transforms are visual only — layout is frozen, TopSlack/BottomSlack unaffected.
     (function() {
+      if (!cardToHide || !(typeof cardH !== 'undefined' && cardH > 0)) return;
       var EASING = 'cubic-bezier(0.25, 0.1, 0.1, 1)';
-      var DURATION = 300;
-      var startY = (typeof cardH !== 'undefined' && cardH > 0) ? cardH : 60;
+      var DURATION_MS = 300;
+      var DURATION_S = '0.3s';
       var postH = detail.offsetHeight;
 
+      // Find the direct child of slot that wraps the card
+      var cardWrapper = cardToHide;
+      while (cardWrapper && cardWrapper.parentElement !== slot) {
+        cardWrapper = cardWrapper.parentElement;
+      }
+      if (!cardWrapper) return;
+
+      // Siblings below slot (exclude slack elements)
       var siblings = [];
       var node = slot.nextSibling;
       while (node) {
@@ -3176,28 +3188,34 @@ const PostModule = (function() {
         node = node.nextSibling;
       }
 
-      detail.style.transform = 'translateY(-' + startY + 'px)';
-      detail.style.opacity = '0';
+      // Re-show card as absolute overlay — out of flow, no layout impact
+      cardToHide.style.display = '';
+      slot.classList.add('post-slot--animating');
+      cardWrapper.classList.add('post-card-anchor--rising');
+
+      // Snap siblings back to where they were before the slot grew
       siblings.forEach(function(s) { s.style.transform = 'translateY(-' + postH + 'px)'; });
 
-      void detail.offsetHeight;
+      // Commit initial state
+      void slot.offsetHeight;
 
-      var trans = 'transform ' + (DURATION / 1000) + 's ' + EASING + ', opacity ' + (DURATION / 1000) + 's ' + EASING;
-      detail.style.transition = trans;
-      siblings.forEach(function(s) { s.style.transition = 'transform ' + (DURATION / 1000) + 's ' + EASING; });
-
+      // Animate: card rises, siblings slide down to final position
       requestAnimationFrame(function() {
-        detail.style.transform = '';
-        detail.style.opacity = '';
+        cardWrapper.style.transition = 'transform ' + DURATION_S + ' ' + EASING;
+        siblings.forEach(function(s) { s.style.transition = 'transform ' + DURATION_S + ' ' + EASING; });
+        cardWrapper.style.transform = 'translateY(-' + cardH + 'px)';
         siblings.forEach(function(s) { s.style.transform = ''; });
       });
 
+      // Cleanup
       setTimeout(function() {
-        detail.style.transition = '';
-        detail.style.transform = '';
-        detail.style.opacity = '';
+        cardToHide.style.display = 'none';
+        cardWrapper.classList.remove('post-card-anchor--rising');
+        cardWrapper.style.transition = '';
+        cardWrapper.style.transform = '';
+        slot.classList.remove('post-slot--animating');
         siblings.forEach(function(s) { s.style.transition = ''; s.style.transform = ''; });
-      }, DURATION + 50);
+      }, DURATION_MS + 50);
     })();
 
     // Wallpaper: activate now that the element is in the DOM.
