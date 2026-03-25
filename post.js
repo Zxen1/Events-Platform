@@ -3128,6 +3128,26 @@ const PostModule = (function() {
         }
       }
       if (cardToHide) {
+        // Slide card upward into a fixed clip before hiding
+        var _exitRect = cardToHide.getBoundingClientRect();
+        var _exitClone = cardToHide.cloneNode(true);
+        var _exitClip = document.createElement('div');
+        _exitClip.className = 'post-card-exit-clip';
+        _exitClip.style.top = _exitRect.top + 'px';
+        _exitClip.style.left = _exitRect.left + 'px';
+        _exitClip.style.width = _exitRect.width + 'px';
+        _exitClip.style.height = _exitRect.height + 'px';
+        _exitClone.style.margin = '0';
+        _exitClone.style.transform = 'translateY(0)';
+        _exitClip.appendChild(_exitClone);
+        document.body.appendChild(_exitClip);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            _exitClone.style.transition = 'transform 0.3s linear';
+            _exitClone.style.transform = 'translateY(-100%)';
+          });
+        });
+        setTimeout(function() { if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip); }, 320);
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;

@@ -375,6 +375,14 @@
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
+/* Exit animation clip — fixed overlay that masks the card as it slides up */
+.post-card-exit-clip {
+  position: fixed;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: var(--layer-card);
+}
+
 .post-card:hover,
 .post-card.post-card--map-highlight,
 .recent-card:hover {
