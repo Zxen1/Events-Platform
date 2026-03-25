@@ -3141,12 +3141,9 @@ const PostModule = (function() {
         _exitClone.style.transform = 'translateY(0)';
         _exitClip.appendChild(_exitClone);
         document.body.appendChild(_exitClip);
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            _exitClone.style.transition = 'transform 0.3s linear';
-            _exitClone.style.transform = 'translateY(-100%)';
-          });
-        });
+        _exitClone.getBoundingClientRect(); // force reflow so transition fires immediately
+        _exitClone.style.transition = 'transform 0.3s linear';
+        _exitClone.style.transform = 'translateY(-100%)';
         setTimeout(function() { if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip); }, 320);
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
