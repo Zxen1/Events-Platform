@@ -376,11 +376,12 @@
 }
 
 /* Exit animation clip — fixed overlay that masks the card as it slides up */
+/* Must be above --layer-header (40) so the card slides behind nothing */
 .post-card-exit-clip {
   position: fixed;
   overflow: hidden;
   pointer-events: none;
-  z-index: var(--layer-card);
+  z-index: var(--layer-panel);
 }
 
 /* Hover zoom commented out — post/recent panels
