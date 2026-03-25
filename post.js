@@ -3127,7 +3127,6 @@ const PostModule = (function() {
           detail.style.marginTop = '-' + slotBarH + 'px';
         }
       }
-      var cardH = cardToHide ? Math.round(cardToHide.offsetHeight) : 0;
       if (cardToHide) {
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
@@ -3159,64 +3158,6 @@ const PostModule = (function() {
       container.insertBefore(slot, insertBeforeNode);
     }
 
-    // POST OPEN ANIMATION
-    // Card becomes absolute overlay and rises up like a curtain.
-    // Post is already at full height in the DOM beneath it.
-    // Siblings snap back to pre-insert position and slide down in unison.
-    // All transforms are visual only — layout is frozen, TopSlack/BottomSlack unaffected.
-    (function() {
-      if (!cardToHide || !(typeof cardH !== 'undefined' && cardH > 0)) return;
-      var EASING = 'cubic-bezier(0.25, 0.1, 0.1, 1)';
-      var DURATION_MS = 300;
-      var DURATION_S = '0.3s';
-      var postH = detail.offsetHeight;
-
-      // Find the direct child of slot that wraps the card
-      var cardWrapper = cardToHide;
-      while (cardWrapper && cardWrapper.parentElement !== slot) {
-        cardWrapper = cardWrapper.parentElement;
-      }
-      if (!cardWrapper) return;
-
-      // Siblings below slot (exclude slack elements)
-      var siblings = [];
-      var node = slot.nextSibling;
-      while (node) {
-        if (node.nodeType === 1 && !node.classList.contains('bottomSlack') && !node.classList.contains('topSlack')) {
-          siblings.push(node);
-        }
-        node = node.nextSibling;
-      }
-
-      // Re-show card as absolute overlay — out of flow, no layout impact
-      cardToHide.style.display = '';
-      slot.classList.add('post-slot--animating');
-      cardWrapper.classList.add('post-card-anchor--rising');
-
-      // Snap siblings back to where they were before the slot grew
-      siblings.forEach(function(s) { s.style.transform = 'translateY(-' + postH + 'px)'; });
-
-      // Commit initial state
-      void slot.offsetHeight;
-
-      // Animate: card rises, siblings slide down to final position
-      requestAnimationFrame(function() {
-        cardWrapper.style.transition = 'transform ' + DURATION_S + ' ' + EASING;
-        siblings.forEach(function(s) { s.style.transition = 'transform ' + DURATION_S + ' ' + EASING; });
-        cardWrapper.style.transform = 'translateY(-' + cardH + 'px)';
-        siblings.forEach(function(s) { s.style.transform = ''; });
-      });
-
-      // Cleanup
-      setTimeout(function() {
-        cardToHide.style.display = 'none';
-        cardWrapper.classList.remove('post-card-anchor--rising');
-        cardWrapper.style.transition = '';
-        cardWrapper.style.transform = '';
-        slot.classList.remove('post-slot--animating');
-        siblings.forEach(function(s) { s.style.transition = ''; s.style.transform = ''; });
-      }, DURATION_MS + 50);
-    })();
 
     // Wallpaper: activate now that the element is in the DOM.
     // Must happen after insertion so the component can measure dimensions.

@@ -2411,19 +2411,4 @@
   display: flex;
 }
 
-/* -------------------------------------------------------
-   POST OPEN ANIMATION
-   ------------------------------------------------------- */
-.post-slot--animating {
-  position: relative;
-}
-.post-card-anchor--rising {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: var(--layer-sticky);
-  pointer-events: none;
-}
-
 
