@@ -10937,9 +10937,7 @@ const LocationWallpaperComponent = (function() {
                     }
                 }
             }
-            try {
-                console.error('[WallpaperTrace] ' + eventName, payload);
-            } catch (e) {}
+            // trace logging removed
         }
 
         function clearAllTimers() {
