@@ -82,6 +82,17 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 
 ---
 
+## STATUS BAR INVESTIGATION (in progress — do not code yet)
+
+- Two current status bar types: (1) last-opened timestamp (recent panel only), (2) countdown timer (admin-controlled, event posts only)
+- Countdown timer has four admin-controlled modes: soonest sort order only for postcards / soonest sort order only for posts / all sort orders for postcards / all sort orders for posts
+- Countdown timer never shows on recent panel postcards — but DOES show on posts inside the recent panel
+- Multiple status bars must be supported above a single postcard or post (e.g. timestamp + countdown stacked)
+- Each status bar must be named/identifiable so the system can handle any number of them
+- Status bars must be moved outside the slot so they are never clipped by the animation system
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms

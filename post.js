@@ -5406,6 +5406,8 @@ const PostModule = (function() {
         dates_text: datesText || '',
         price_summary: priceSummary || '',
         has_promo: hasPromo,
+        first_session_date: (mapCard && mapCard.first_session_date) || '',
+        expires_at: post.expires_at || '',
         timestamp: now
       });
       seen[dedupeKey] = true;
@@ -5922,6 +5924,23 @@ const PostModule = (function() {
       }
       
       wrapper.appendChild(statusBar);
+    }
+
+    // Countdown status bar (shown when admin enables countdown on postcards and entry has event dates)
+    if (entry.first_session_date && entry.expires_at) {
+      var _recentSett = App.getState('settings') || {};
+      if (_recentSett.countdown_postcards) {
+        var _recentBarResult = buildCountdownStatusBar(
+          { expires_at: entry.expires_at },
+          { first_session_date: entry.first_session_date }
+        );
+        if (_recentBarResult) {
+          if (_recentSett.countdown_postcards_mode === 'soonest_only') {
+            _recentBarResult.bar.classList.add('post-statusbar--modesoonest');
+          }
+          wrapper.appendChild(_recentBarResult.bar);
+        }
+      }
     }
 
     var anchor = document.createElement('div');
