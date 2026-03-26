@@ -5003,7 +5003,13 @@ const PostModule = (function() {
 
       // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
-      var _cardH = hiddenCard ? hiddenCard.offsetHeight : 0;
+      // Measure card height while briefly visible (display:none returns 0)
+      var _cardH = 0;
+      if (hiddenCard) {
+        hiddenCard.style.display = '';
+        _cardH = hiddenCard.offsetHeight;
+        hiddenCard.style.display = 'none';
+      }
       var _slotRect = slot.getBoundingClientRect();
       var _closeContainerRight = null;
       var _closeContainer = slot.closest('.post-panel-content, .recent-panel-content, .posteditor-list');
@@ -5023,7 +5029,7 @@ const PostModule = (function() {
         for (var _cci = 0; _cci < _cloneCloseCels.length; _cci++) { _cloneCloseCels[_cci].style.transition = 'none'; }
         _cardEnterClone.style.transform = 'translateY(-100%)';
         _cardEnterClip = document.createElement('div');
-        _cardEnterClip.style.cssText = 'position:fixed;overflow:hidden;pointer-events:none;z-index:' + (getComputedStyle(document.documentElement).getPropertyValue('--layer-menu') || '85');
+        _cardEnterClip.className = 'post-card-exit-clip';
         _cardEnterClip.style.top = _slotRect.top + 'px';
         _cardEnterClip.style.left = _slotRect.left + 'px';
         var _clipW = _closeContainerRight !== null
