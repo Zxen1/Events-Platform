@@ -3173,10 +3173,14 @@ const PostModule = (function() {
         _exitClip.style.height = _exitRect.height + 'px';
         _exitClip.appendChild(_exitClone);
         document.body.appendChild(_exitClip);
+        if (slot) slot.__exitClip = _exitClip;
         _exitClone.getBoundingClientRect(); // force reflow so transition fires immediately
         _exitClone.style.transition = 'transform 1s linear';
         _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
-        setTimeout(function() { if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip); }, 1020);
+        setTimeout(function() {
+          if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip);
+          if (slot && slot.__exitClip === _exitClip) slot.__exitClip = null;
+        }, 1020);
         cardToHide.style.display = 'none';
         // Walk up to find the direct child of slot that contains the card
         var insertAfterEl = cardToHide;
@@ -3189,18 +3193,27 @@ const PostModule = (function() {
         } else {
           slot.appendChild(detail);
         }
-        // [Post enter animation] Blind — slides down from above into view
+        // [Post enter animation] Blind — post slides down, slot grows, pushing content below
+        var _openTargetH = detail.offsetHeight;
         slot.style.overflow = 'hidden';
+        slot.style.height = '0px';
         detail.style.transition = 'none';
         detail.style.transform = 'translateY(-100%)';
-        detail.getBoundingClientRect();
-        detail.style.transition = 'transform 2s linear';
+        slot.__animDetail = detail;
+        slot.getBoundingClientRect();
+        slot.style.transition = 'height 1s linear';
+        slot.style.height = _openTargetH + 'px';
+        detail.style.transition = 'transform 1s linear';
         detail.style.transform = 'translateY(0)';
-        setTimeout(function() {
+        slot.__animTimer = setTimeout(function() {
           detail.style.transform = '';
           detail.style.transition = '';
+          slot.style.height = '';
+          slot.style.transition = '';
           slot.style.overflow = '';
-        }, 2020);
+          slot.__animDetail = null;
+          slot.__animTimer = null;
+        }, 1020);
       } else {
         slot.appendChild(detail);
       }
@@ -3305,6 +3318,23 @@ const PostModule = (function() {
   }
 
   /**
+   * Cancel any in-progress open/close animation on a slot.
+   * Clears timers, removes floating clones, strips inline animation styles.
+   */
+  function _cancelSlotAnimation(slot) {
+    if (!slot) return;
+    if (slot.__animTimer) { clearTimeout(slot.__animTimer); slot.__animTimer = null; }
+    if (slot.__exitClip && slot.__exitClip.parentNode) slot.__exitClip.parentNode.removeChild(slot.__exitClip);
+    slot.__exitClip = null;
+    if (slot.__enterClip && slot.__enterClip.parentNode) slot.__enterClip.parentNode.removeChild(slot.__enterClip);
+    slot.__enterClip = null;
+    slot.style.height = '';
+    slot.style.transition = '';
+    slot.style.overflow = '';
+    if (slot.__animDetail) { slot.__animDetail.style.transform = ''; slot.__animDetail.style.transition = ''; slot.__animDetail = null; }
+    if (slot.__animCard) { slot.__animCard.style.transform = ''; slot.__animCard.style.transition = ''; slot.__animCard = null; }
+  }
+
    * Close any open post in a container.
    * Removes the detail view from the slot and restores hidden children (card, status bar, etc.).
    * @param {HTMLElement} container - Container element
@@ -3319,6 +3349,8 @@ const PostModule = (function() {
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
+      // Cancel any in-progress animation before making DOM changes
+      _cancelSlotAnimation(slot);
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
         openPostEl.__hiddenSlotStatusBar.style.visibility = '';
@@ -4958,16 +4990,85 @@ const PostModule = (function() {
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
+      // Cancel any in-progress animation before starting close
+      _cancelSlotAnimation(slot);
+
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
         openPostEl.__hiddenSlotStatusBar.style.visibility = '';
       }
-      openPostEl.remove();
-      // Restore the hidden card
+
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
-      if (hiddenCard) hiddenCard.style.display = '';
-      // If slot is now empty (was a temp slot), remove it
-      if (!slot.children.length) slot.remove();
+
+      // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
+      var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
+      var _cardH = hiddenCard ? hiddenCard.offsetHeight : 0;
+      var _slotRect = slot.getBoundingClientRect();
+      var _closeContainerRight = null;
+      var _closeContainer = slot.closest('.post-panel-content, .recent-panel-content, .posteditor-list');
+      if (_closeContainer) {
+        var _ccr = _closeContainer.getBoundingClientRect();
+        _closeContainerRight = _ccr.left + _closeContainer.clientWidth;
+      }
+
+      // Build card enter clone (slides down from above into the slot's top position)
+      var _cardEnterClip = null;
+      var _cardEnterClone = null;
+      if (hiddenCard && _cardH > 0) {
+        _cardEnterClone = hiddenCard.cloneNode(true);
+        _cardEnterClone.style.margin = '0';
+        _cardEnterClone.style.transition = 'none';
+        var _cloneCloseCels = _cardEnterClone.querySelectorAll('*');
+        for (var _cci = 0; _cci < _cloneCloseCels.length; _cci++) { _cloneCloseCels[_cci].style.transition = 'none'; }
+        _cardEnterClone.style.transform = 'translateY(-100%)';
+        _cardEnterClip = document.createElement('div');
+        _cardEnterClip.style.cssText = 'position:fixed;overflow:hidden;pointer-events:none;z-index:' + (getComputedStyle(document.documentElement).getPropertyValue('--layer-menu') || '85');
+        _cardEnterClip.style.top = _slotRect.top + 'px';
+        _cardEnterClip.style.left = _slotRect.left + 'px';
+        var _clipW = _closeContainerRight !== null
+          ? Math.min(_slotRect.width, _closeContainerRight - _slotRect.left)
+          : _slotRect.width;
+        _cardEnterClip.style.width = _clipW + 'px';
+        _cardEnterClip.style.height = _cardH + 'px';
+        _cardEnterClip.appendChild(_cardEnterClone);
+        document.body.appendChild(_cardEnterClip);
+        slot.__enterClip = _cardEnterClip;
+      }
+
+      // Lock slot height, clip, set initial post state
+      slot.style.height = _closeStartH + 'px';
+      slot.style.overflow = 'hidden';
+      openPostEl.style.transition = 'none';
+      openPostEl.style.transform = 'translateY(0)';
+      slot.__animCard = hiddenCard || null;
+
+      slot.getBoundingClientRect(); // force reflow
+
+      // Animate: post slides up, card clone slides down, slot shrinks to card height
+      openPostEl.style.transition = 'transform 1s linear';
+      openPostEl.style.transform = 'translateY(-100%)';
+      if (_cardEnterClone) {
+        _cardEnterClone.style.transition = 'transform 1s linear';
+        _cardEnterClone.style.transform = 'translateY(0)';
+      }
+      slot.style.transition = 'height 1s linear';
+      slot.style.height = _cardH + 'px';
+
+      slot.__animTimer = setTimeout(function() {
+        // Remove card enter clone
+        if (_cardEnterClip && _cardEnterClip.parentNode) _cardEnterClip.parentNode.removeChild(_cardEnterClip);
+        slot.__enterClip = null;
+        // Remove post, restore real card
+        openPostEl.remove();
+        if (hiddenCard) hiddenCard.style.display = '';
+        // Clear slot animation styles
+        slot.style.height = '';
+        slot.style.transition = '';
+        slot.style.overflow = '';
+        slot.__animCard = null;
+        slot.__animTimer = null;
+        if (!slot.children.length) slot.remove();
+      }, 1020);
     } else {
       try { openPostEl.remove(); } catch (_eRemove) {}
     }
