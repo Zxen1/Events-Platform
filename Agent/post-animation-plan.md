@@ -91,6 +91,25 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 - Each status bar must be named/identifiable so the system can handle any number of them
 - Status bars must be moved outside the slot so they are never clipped by the animation system
 
+## STATUS BAR RESTRUCTURE PLAN (do not code until instructed)
+
+### Agreed names (locked)
+
+| # | Panel  | Element                  | Current Name           | New Name                    |
+|---|--------|--------------------------|------------------------|-----------------------------|
+| 1 | Post   | Outer container          | (doesn't exist)        | `post-outer-container`      |
+| 2 | Post   | Status bars container    | (doesn't exist)        | `post-status-container`     |
+| 3 | Post   | Main container (slot)    | `post-slot`            | `post-main-container`       |
+| 4 | Recent | Outer container          | (doesn't exist)        | `recent-outer-container`    |
+| 5 | Recent | Status bars container    | (doesn't exist)        | `recent-status-container`   |
+| 6 | Recent | Main container (slot)    | `recent-card-wrapper`  | `recent-main-container`     |
+
+### Order of work
+- Step 1: Rename #3 (`post-slot` → `post-main-container`) and #6 (`recent-card-wrapper` → `recent-main-container`) first — confirm stable
+- Step 2: Introduce #1 and #4 (outer containers) wrapping the renamed main containers
+- Step 3: Introduce #2 and #5 (status containers) inside the outer containers, above the main containers
+- Step 4: Move all status bars out of the main container into their status container
+
 ---
 
 ## Key Rules
