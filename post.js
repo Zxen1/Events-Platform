@@ -1765,7 +1765,8 @@ const PostModule = (function() {
       }
       if (preservedOpenSlot && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
         preservedOpenSlot.style.display = '';
-        postListEl.appendChild(preservedOpenSlot);
+        var _preservedOuter = (preservedOpenSlot.parentElement && preservedOpenSlot.parentElement.classList.contains('post-outer-container')) ? preservedOpenSlot.parentElement : preservedOpenSlot;
+        postListEl.appendChild(_preservedOuter);
 
         // Sync passes_filter from fresh server data onto the open post's stored map_cards
         try {
@@ -1836,7 +1837,10 @@ const PostModule = (function() {
       }
 
       slot.appendChild(anchor);
-      postListEl.appendChild(slot);
+      var postOuter = document.createElement('div');
+      postOuter.className = 'post-outer-container';
+      postOuter.appendChild(slot);
+      postListEl.appendChild(postOuter);
 
     });
     
@@ -2671,12 +2675,12 @@ const PostModule = (function() {
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
 
-    // Sort .post-main-container wrappers (each contains a .post-card with sort metadata).
+    // Sort .post-outer-container wrappers (each wraps a .post-main-container with sort metadata).
     var slots = [];
     try {
-      slots = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-main-container'));
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-outer-container'));
     } catch (_eScope) {
-      slots = Array.prototype.slice.call(postListEl.querySelectorAll('.post-main-container'));
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll('.post-outer-container'));
       slots = slots.filter(function(s) { return s.parentElement === postListEl; });
     }
     if (!slots.length) return;
@@ -2692,16 +2696,18 @@ const PostModule = (function() {
     }
 
     slots.sort(function(slotA, slotB) {
-      var aEl = slotA.querySelector('.post-card');
-      var bEl = slotB.querySelector('.post-card');
+      var innerA = slotA.querySelector('.post-main-container') || slotA;
+      var innerB = slotB.querySelector('.post-main-container') || slotB;
+      var aEl = innerA.querySelector('.post-card');
+      var bEl = innerB.querySelector('.post-card');
       if (!aEl || !bEl) return 0;
 
       // Live-site behavior: "Favourites on top" only applies when not dirty.
       // Storefronts: check if ANY post in the group is favourited (via data-sf-ids on the slot).
       if (favToTop && !favSortDirty) {
         var favA = false, favB = false;
-        var sfIdsA = slotA.dataset.sfIds;
-        var sfIdsB = slotB.dataset.sfIds;
+        var sfIdsA = innerA.dataset.sfIds;
+        var sfIdsB = innerB.dataset.sfIds;
         if (sfIdsA) {
           favA = sfIdsA.split(',').some(function(id) { return isFavorite(id); });
         } else {
@@ -5999,7 +6005,10 @@ const PostModule = (function() {
       });
     }
 
-    return wrapper;
+    var recentOuter = document.createElement('div');
+    recentOuter.className = 'recent-outer-container';
+    recentOuter.appendChild(wrapper);
+    return recentOuter;
   }
 
   /**
