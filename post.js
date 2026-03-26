@@ -5935,6 +5935,7 @@ const PostModule = (function() {
           { first_session_date: entry.first_session_date }
         );
         if (_recentBarResult) {
+          _recentBarResult.bar.classList.add('post-statusbar--slot-card');
           if (_recentSett.countdown_postcards_mode === 'soonest_only') {
             _recentBarResult.bar.classList.add('post-statusbar--modesoonest');
           }
