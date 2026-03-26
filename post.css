@@ -378,7 +378,7 @@
 /* Exit animation clip — fixed overlay that masks the card as it slides up */
 /* Must be above --layer-header (40) so the card slides behind nothing */
 .post-card-exit-clip {
-  position: fixed;
+  position: absolute;
   overflow: hidden;
   pointer-events: none;
   z-index: var(--layer-menu);
