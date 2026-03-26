@@ -3154,17 +3154,8 @@ const PostModule = (function() {
       var openHeaderBar = null;
       try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
       if (cardStatusBar && openHeaderBar) {
-        // Keep slot layout height stable for TopSlack anchoring.
-        // Hiding via visibility avoids the ~20px jump caused by display:none reflow.
-        cardStatusBar.style.visibility = 'hidden';
-        detail.__hiddenSlotStatusBar = cardStatusBar;
-        // Make the open post bar occupy the exact same slot location as the postcard bar.
-        // Lift the entire detail by the hidden bar height so they visually swap 1:1.
-        var slotBarH = 0;
-        try { slotBarH = Math.round(cardStatusBar.getBoundingClientRect().height || 0); } catch (_eBarH) { slotBarH = 0; }
-        if (slotBarH > 0) {
-          detail.style.marginTop = '-' + slotBarH + 'px';
-        }
+        // The bar above the postcard stays in place. Hide the duplicate inside the post.
+        openHeaderBar.style.display = 'none';
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
@@ -3408,10 +3399,6 @@ const PostModule = (function() {
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
       _cancelSlotAnimation(slot);
-      // Restore slot-level countdown bars to pre-open state.
-      if (openPostEl.__hiddenSlotStatusBar) {
-        openPostEl.__hiddenSlotStatusBar.style.visibility = '';
-      }
       // Remove the detail view from the slot
       openPostEl.remove();
       // Restore the hidden card
@@ -5054,11 +5041,6 @@ const PostModule = (function() {
       _cancelSlotAnimation(slot);
       slot.__cardEnterClone = _savedCardEnterClone;
       slot.__openedFromExternal = _savedOpenedFromExternal;
-
-      // Restore slot-level countdown bars to pre-open state.
-      if (openPostEl.__hiddenSlotStatusBar) {
-        openPostEl.__hiddenSlotStatusBar.style.visibility = '';
-      }
 
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
 
