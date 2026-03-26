@@ -3185,12 +3185,20 @@ const PostModule = (function() {
           // ───────────────────────────────────────────────────────────────────────
         }
 
-        // Hide card and insert detail (always, animated or not)
+        // Hide card (always, animated or not)
         cardToHide.style.display = 'none';
         var insertAfterEl = cardToHide;
         while (insertAfterEl && insertAfterEl.parentElement !== slot) {
           insertAfterEl = insertAfterEl.parentElement;
         }
+
+        if (_POST_ANIMATE) {
+          // Lock slot at 0 BEFORE inserting detail — prevents collapse-then-expand jump
+          slot.style.overflow = 'hidden';
+          slot.style.height = '0px';
+        }
+
+        // Insert detail
         if (insertAfterEl) {
           slot.insertBefore(detail, insertAfterEl.nextSibling);
         } else {
@@ -3200,8 +3208,6 @@ const PostModule = (function() {
         if (_POST_ANIMATE) {
           // ── OPEN ANIMATION 2/2: Post slides DOWN, slot grows, content below pushed down ──
           var _openTargetH = detail.offsetHeight;
-          slot.style.overflow = 'hidden';
-          slot.style.height = '0px';
           detail.style.transition = 'none';
           detail.style.transform = 'translateY(-100%)';
           slot.__animDetail = detail;
@@ -5022,10 +5028,12 @@ const PostModule = (function() {
         var _cardH = 0;
         var _enterCardBg = null;
         if (hiddenCard) {
+          if (hiddenCard.classList.contains('recent-card')) hiddenCard.classList.add('recent-card--active');
           hiddenCard.style.display = '';
           _cardH = hiddenCard.offsetHeight;
           _enterCardBg = window.getComputedStyle(hiddenCard).backgroundColor;
           hiddenCard.style.display = 'none';
+          hiddenCard.classList.remove('recent-card--active');
         }
         var _slotRect = slot.getBoundingClientRect();
         var _closeContainerRight = null;
@@ -5074,7 +5082,7 @@ const PostModule = (function() {
           _cardEnterClone.style.transform = 'translateY(0)';
         }
         slot.style.transition = 'height 1s linear';
-        slot.style.height = _cardH + 'px';
+        slot.style.height = '0px';
         slot.__animTimer = setTimeout(function() {
           if (_cardEnterClip && _cardEnterClip.parentNode) _cardEnterClip.parentNode.removeChild(_cardEnterClip);
           slot.__enterClip = null;
