@@ -3236,7 +3236,8 @@ const PostModule = (function() {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
-          var _openSib = slot.nextElementSibling;
+          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+          var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           slot.style.overflow = 'hidden';
           detail.style.transition = 'none';
@@ -5122,7 +5123,8 @@ const PostModule = (function() {
         // All siblings below move as one unit with the post — same transform, same timing.
         // When post is removed at end, layout is already in its final state — no snap.
         var _closeSiblings = [];
-        var _closeSib = slot.nextElementSibling;
+        var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+        var _closeSib = _closeSibStart.nextElementSibling;
         while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
         slot.style.overflow = 'hidden';
         openPostEl.style.transition = 'none';
