@@ -3097,11 +3097,6 @@ const PostModule = (function() {
     // Master switch: _POST_ANIMATE — set false to disable all open/close animation.
     var _preCloseExitRect = null;
     var _preCloseCardBg = null;
-    var _preCloseContainerRight = null;
-    if (container) {
-      var _preCloseCR = container.getBoundingClientRect();
-      _preCloseContainerRight = _preCloseCR.left + container.clientWidth;
-    }
     if (originEl) {
       var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container');
       if (_preCloseSlot) {
@@ -3183,34 +3178,20 @@ const PostModule = (function() {
           if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
           var _exitClone = cardToHide.cloneNode(true);
           cardToHide.classList.remove('recent-card--active');
-          var _exitClip = document.createElement('div');
-          _exitClip.className = 'post-card-exit-clip';
-          var _exitMaxRight = _preCloseContainerRight !== null
-            ? _preCloseContainerRight
-            : (_exitRect.left + _exitRect.width);
-          _exitClone.style.margin = '0';
+          _exitClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;transition:none;';
           if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
             _exitClone.style.backgroundColor = _preCloseCardBg;
           }
-          _exitClone.style.transition = 'none';
           var _cloneEls = _exitClone.querySelectorAll('*');
           for (var _ci = 0; _ci < _cloneEls.length; _ci++) { _cloneEls[_ci].style.transition = 'none'; }
-          var _exitParent = slot.closest('.post-panel-content, .recent-panel-content') || document.body;
-          var _exitPR = (_exitParent !== document.body) ? _exitParent.getBoundingClientRect() : {top: 0, left: 0};
-          var _exitST = (_exitParent !== document.body) ? _exitParent.scrollTop : 0;
-          _exitClip.style.top = (_exitRect.top - _exitPR.top + _exitST) + 'px';
-          _exitClip.style.left = (_exitRect.left - _exitPR.left) + 'px';
-          _exitClip.style.width = Math.min(_exitRect.width, _exitMaxRight - _exitRect.left) + 'px';
-          _exitClip.style.height = _exitRect.height + 'px';
-          _exitClip.appendChild(_exitClone);
-          _exitParent.appendChild(_exitClip);
-          slot.__exitClip = _exitClip;
+          slot.appendChild(_exitClone);
+          slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
           _exitClone.style.transition = 'transform 1s linear';
           _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
           setTimeout(function() {
-            if (_exitClip.parentNode) _exitClip.parentNode.removeChild(_exitClip);
-            if (slot && slot.__exitClip === _exitClip) slot.__exitClip = null;
+            if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
+            if (slot && slot.__exitClone === _exitClone) slot.__exitClone = null;
           }, 1020);
         }
         // ── END OPEN ANIMATION: CARD EXIT ───────────────────────────────────────
@@ -3380,10 +3361,10 @@ const PostModule = (function() {
   function _cancelSlotAnimation(slot) {
     if (!slot) return;
     if (slot.__animTimer) { clearTimeout(slot.__animTimer); slot.__animTimer = null; }
-    if (slot.__exitClip && slot.__exitClip.parentNode) slot.__exitClip.parentNode.removeChild(slot.__exitClip);
-    slot.__exitClip = null;
-    if (slot.__enterClip && slot.__enterClip.parentNode) slot.__enterClip.parentNode.removeChild(slot.__enterClip);
-    slot.__enterClip = null;
+    if (slot.__exitClone && slot.__exitClone.parentNode) slot.__exitClone.parentNode.removeChild(slot.__exitClone);
+    slot.__exitClone = null;
+    if (slot.__animEnterClone && slot.__animEnterClone.parentNode) slot.__animEnterClone.parentNode.removeChild(slot.__animEnterClone);
+    slot.__animEnterClone = null;
     slot.style.height = '';
     slot.style.transition = '';
     slot.style.overflow = '';
@@ -5076,14 +5057,6 @@ const PostModule = (function() {
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
       if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
-      var _slotRect = slot.getBoundingClientRect();
-      var _closeContainerRight = null;
-      var _closeContainer = slot.closest('.post-panel-content, .recent-panel-content, .posteditor-list');
-      if (_closeContainer) {
-        var _ccr = _closeContainer.getBoundingClientRect();
-        _closeContainerRight = _ccr.left + _closeContainer.clientWidth;
-      }
-
       var _closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal);
       if (!_closeAnimate) {
         openPostEl.remove();
@@ -5094,27 +5067,16 @@ const PostModule = (function() {
         // ── CLOSE ANIMATION: CARD ENTER ──────────────────────────────────────────
         // Stored hovered-state clone (captured at open time) slides down from the
         // invisibility shield into the card's resting position.
-        var _cardEnterClip = null;
+        // Clone lives inside slot — scrolls naturally with the panel. No coordinates needed.
         var _cardEnterClone = null;
         if (hiddenCard && _cardH > 0) {
           _cardEnterClone = slot.__cardEnterClone || null;
           slot.__cardEnterClone = null;
-          if (_cardEnterClone) _cardEnterClone.style.transform = 'translateY(-100%)';
-          _cardEnterClip = document.createElement('div');
-          var _enterParent = _closeContainer || document.body;
-          var _enterPR = (_enterParent !== document.body) ? _enterParent.getBoundingClientRect() : {top: 0, left: 0};
-          var _enterST = (_enterParent !== document.body) ? _enterParent.scrollTop : 0;
-          _cardEnterClip.style.cssText = 'position:absolute;overflow:hidden;pointer-events:none;z-index:' + (getComputedStyle(document.documentElement).getPropertyValue('--layer-menu') || '85');
-          _cardEnterClip.style.top = (_slotRect.top - _enterPR.top + _enterST) + 'px';
-          _cardEnterClip.style.left = (_slotRect.left - _enterPR.left) + 'px';
-          var _clipW = _closeContainerRight !== null
-            ? Math.min(_slotRect.width, _closeContainerRight - _slotRect.left)
-            : _slotRect.width;
-          _cardEnterClip.style.width = _clipW + 'px';
-          _cardEnterClip.style.height = _cardH + 'px';
-          if (_cardEnterClone) _cardEnterClip.appendChild(_cardEnterClone);
-          _enterParent.appendChild(_cardEnterClip);
-          slot.__enterClip = _cardEnterClip;
+          if (_cardEnterClone) {
+            _cardEnterClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;transition:none;transform:translateY(-' + _cardH + 'px);';
+            slot.appendChild(_cardEnterClone);
+            slot.__animEnterClone = _cardEnterClone;
+          }
         }
         // ── END CLOSE ANIMATION: CARD ENTER ─────────────────────────────────────
 
@@ -5151,8 +5113,8 @@ const PostModule = (function() {
         }
 
         slot.__animTimer = setTimeout(function() {
-          if (_cardEnterClip && _cardEnterClip.parentNode) _cardEnterClip.parentNode.removeChild(_cardEnterClip);
-          slot.__enterClip = null;
+          if (_cardEnterClone && _cardEnterClone.parentNode) _cardEnterClone.parentNode.removeChild(_cardEnterClone);
+          slot.__animEnterClone = null;
           openPostEl.remove();
           if (hiddenCard) {
             // Suppress transitions for one frame so CSS :hover snaps instantly — no flash on reveal

@@ -280,6 +280,7 @@
 
 /* Recent card wrapper - holds timestamp + card */
 .recent-main-container {
+  position: relative;
   margin-bottom: 0;
 }
 
@@ -377,11 +378,8 @@
 
 /* Exit animation clip — fixed overlay that masks the card as it slides up */
 /* Must be above --layer-header (40) so the card slides behind nothing */
-.post-card-exit-clip {
-  position: absolute;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: var(--layer-menu);
+.post-main-container {
+  position: relative;
 }
 
 /* Hover zoom commented out — post/recent panels
