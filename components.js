@@ -10911,7 +10911,7 @@ const LocationWallpaperComponent = (function() {
                     panel = 'posteditor';
                 } else if (locationContainerEl.closest('#member-tab-recent, .recent-list, .recent-item')) {
                     panel = 'recent';
-                } else if (locationContainerEl.closest('#member-tab-post, .post-list, .post-slot, .post')) {
+                } else if (locationContainerEl.closest('#member-tab-post, .post-list, .post-main-container, .post')) {
                     panel = 'post';
                 }
             } catch (e) {}

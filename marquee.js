@@ -592,7 +592,7 @@ const MarqueeModule = (function() {
     document.querySelectorAll('.post-card[data-id="' + postId + '"], .recent-card[data-id="' + postId + '"]').forEach(function(c) {
       c.classList.toggle(cls, on);
     });
-    document.querySelectorAll('.post-slot[data-sf-ids]').forEach(function(slot) {
+    document.querySelectorAll('.post-main-container[data-sf-ids]').forEach(function(slot) {
       var ids = slot.dataset.sfIds || '';
       if ((',' + ids + ',').indexOf(',' + postId + ',') === -1) return;
       var card = slot.querySelector('.post-card');

@@ -1666,7 +1666,7 @@ const PostModule = (function() {
     // Preserve an open post's slot across re-renders (map moves trigger filter refreshes).
     // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
     var preservedOpenPostEl = postListEl.querySelector('.post');
-    var preservedOpenSlot = preservedOpenPostEl ? preservedOpenPostEl.closest('.post-slot') : null;
+    var preservedOpenSlot = preservedOpenPostEl ? preservedOpenPostEl.closest('.post-main-container') : null;
     var preservedOpenPostId = preservedOpenSlot && preservedOpenSlot.dataset ? String(preservedOpenSlot.dataset.id || '') : '';
     if (preservedOpenSlot && preservedOpenSlot.parentElement === postListEl) {
       try { postListEl.removeChild(preservedOpenSlot); } catch (_eDetach) {}
@@ -1744,7 +1744,7 @@ const PostModule = (function() {
       _sfGroups[key].forEach(function(p) { _sfGroupsByPostId[String(p.id)] = _sfGroups[key]; });
     });
 
-    // Render each post card inside a .post-slot wrapper (stable container for TopSlack anchoring)
+    // Render each post card inside a .post-main-container wrapper (stable container for TopSlack anchoring)
     posts.forEach(function(post) {
       // If this post is currently open, reinsert the preserved slot instead of recreating.
       // Storefront slots must be discarded if the group composition changed (filter results differ).
@@ -1812,7 +1812,7 @@ const PostModule = (function() {
       anchor.setAttribute('data-slack-anchor', '');
       anchor.appendChild(card);
       var slot = document.createElement('div');
-      slot.className = 'post-slot';
+      slot.className = 'post-main-container';
       slot.dataset.id = String(post.id);
       if (_sfKey) {
         slot.dataset.sfIds = _sfGroups[_sfKey].map(function(p) { return String(p.id); }).join(',');
@@ -2671,12 +2671,12 @@ const PostModule = (function() {
     // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
     if (!postListEl) return;
 
-    // Sort .post-slot wrappers (each contains a .post-card with sort metadata).
+    // Sort .post-main-container wrappers (each contains a .post-card with sort metadata).
     var slots = [];
     try {
-      slots = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-slot'));
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-main-container'));
     } catch (_eScope) {
-      slots = Array.prototype.slice.call(postListEl.querySelectorAll('.post-slot'));
+      slots = Array.prototype.slice.call(postListEl.querySelectorAll('.post-main-container'));
       slots = slots.filter(function(s) { return s.parentElement === postListEl; });
     }
     if (!slots.length) return;
@@ -3095,7 +3095,7 @@ const PostModule = (function() {
       _preCloseContainerRight = _preCloseCR.left + container.clientWidth;
     }
     if (originEl) {
-      var _preCloseSlot = originEl.closest('.post-slot') || originEl.closest('.recent-main-container');
+      var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
@@ -3124,16 +3124,16 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-slot | Recent panel: .recent-main-container | Post Editor: .posteditor-item
+    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-item
     var slot = null;
     if (originEl) {
-      slot = originEl.closest('.post-slot') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-item');
+      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-item');
     }
     if (!slot) {
       // Fallback: find slot by post ID in the container
       var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
       if (cardInContainer) {
-        slot = cardInContainer.closest('.post-slot') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-item');
+        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-item');
       }
     }
 
@@ -3271,7 +3271,7 @@ const PostModule = (function() {
     } else {
       // No slot found (e.g. opened from map, card not in the list): create a temp slot.
       slot = document.createElement('div');
-      slot.className = 'post-slot';
+      slot.className = 'post-main-container';
       slot.dataset.id = String(post.id);
       if (options.storefrontPosts && options.storefrontPosts.length > 1) {
         slot.dataset.sfIds = options.storefrontPosts.map(function(p) { return String(p.id); }).join(',');
@@ -3406,8 +3406,8 @@ const PostModule = (function() {
 
     var postId = openPostEl.dataset.id;
 
-    // Find the slot wrapper (post-slot, recent-main-container, or posteditor-item)
-    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
+    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-item)
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
@@ -4219,7 +4219,7 @@ const PostModule = (function() {
         }
       }
 
-      var slot = wrap.closest('.post-slot');
+      var slot = wrap.closest('.post-main-container');
       if (slot) {
         var cardWrap = slot.querySelector('.post-card-row-storefront-wrap[data-post-id="' + pid + '"]');
         if (cardWrap) {
@@ -4262,7 +4262,7 @@ const PostModule = (function() {
         hdrWraps.forEach(function(item) { hdrRow.insertBefore(item, hdrOverflow); });
       }
 
-      var slot = wrap.closest('.post-slot');
+      var slot = wrap.closest('.post-main-container');
       if (slot) {
         var pcRow = slot.querySelector('.post-card-row-storefront');
         if (pcRow) {
@@ -4283,7 +4283,7 @@ const PostModule = (function() {
         sfInd.setAttribute('aria-pressed', anyFav ? 'true' : 'false');
       }
 
-      var slot = wrap.closest('.post-slot');
+      var slot = wrap.closest('.post-main-container');
       if (slot) {
         var pcIds = slot.querySelectorAll('.post-card-row-storefront-wrap[data-post-id]');
         if (pcIds.length) {
@@ -5048,7 +5048,7 @@ const PostModule = (function() {
     } catch (_eWp) {}
 
     // Find the slot wrapper
-    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
       // Preserve the stored card clone across animation cancel — it was captured at open time

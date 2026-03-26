@@ -2408,13 +2408,13 @@
   transition: background-color 0.15s ease;
 }
 
-.post-slot:hover .post-statusbar--comingsoon {
+.post-main-container:hover .post-statusbar--comingsoon {
   background: #2563eb;
 }
-.post-slot:hover .post-statusbar--nowshowing {
+.post-main-container:hover .post-statusbar--nowshowing {
   background: #16a34a;
 }
-.post-slot:hover .post-statusbar--finished {
+.post-main-container:hover .post-statusbar--finished {
   background: #111827;
 }
 
