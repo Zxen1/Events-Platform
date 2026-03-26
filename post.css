@@ -2405,13 +2405,16 @@
   transition: background-color 0.15s ease;
 }
 
-.post-outer-container:hover .post-statusbar--comingsoon {
+.post-outer-container:hover .post-statusbar--comingsoon,
+.post-outer-container:has(.post) .post-statusbar--comingsoon {
   background: #2563eb;
 }
-.post-outer-container:hover .post-statusbar--nowshowing {
+.post-outer-container:hover .post-statusbar--nowshowing,
+.post-outer-container:has(.post) .post-statusbar--nowshowing {
   background: #16a34a;
 }
-.post-outer-container:hover .post-statusbar--finished {
+.post-outer-container:hover .post-statusbar--finished,
+.post-outer-container:has(.post) .post-statusbar--finished {
   background: #111827;
 }
 
