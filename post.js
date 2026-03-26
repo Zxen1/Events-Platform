@@ -5016,14 +5016,16 @@ const PostModule = (function() {
       if (_POST_ANIMATE) {
         // ── CLOSE ANIMATION: Post slides UP, card slides DOWN via fixed clone, slot shrinks ──
         var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
-        // Measure card height off-screen (avoid layout reflow in panel)
+        // Measure card height off-screen at real slot width (avoid layout reflow in panel)
         var _cardH = 0;
+        var _enterCardBg = null;
         if (hiddenCard) {
           var _measCard = hiddenCard.cloneNode(true);
-          _measCard.style.cssText = 'position:fixed;visibility:hidden;top:-9999px;left:-9999px;display:block;margin:0;';
+          _measCard.style.cssText = 'position:fixed;visibility:hidden;top:-9999px;left:-9999px;display:block;margin:0;width:' + slot.clientWidth + 'px;';
           document.body.appendChild(_measCard);
           _cardH = _measCard.offsetHeight;
           document.body.removeChild(_measCard);
+          _enterCardBg = window.getComputedStyle(hiddenCard).backgroundColor;
         }
         var _slotRect = slot.getBoundingClientRect();
         var _closeContainerRight = null;
@@ -5040,6 +5042,9 @@ const PostModule = (function() {
           _cardEnterClone.style.display = '';
           _cardEnterClone.style.margin = '0';
           _cardEnterClone.style.transition = 'none';
+          if (_enterCardBg && _enterCardBg !== 'rgba(0, 0, 0, 0)' && _enterCardBg !== 'transparent') {
+            _cardEnterClone.style.backgroundColor = _enterCardBg;
+          }
           var _cloneCloseCels = _cardEnterClone.querySelectorAll('*');
           for (var _cci = 0; _cci < _cloneCloseCels.length; _cci++) { _cloneCloseCels[_cci].style.transition = 'none'; }
           _cardEnterClone.style.transform = 'translateY(-100%)';
