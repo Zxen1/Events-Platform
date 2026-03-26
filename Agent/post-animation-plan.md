@@ -76,6 +76,12 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 
 ---
 
+## PENDING — NOT YET FIXED
+
+1. Recent panel: status bar sits above each postcard. The open animation starts above the status bar and overlaps it. The status bar must sit outside the animation zone. Deferred by user — address in a future session.
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms

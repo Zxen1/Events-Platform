@@ -5042,8 +5042,13 @@ const PostModule = (function() {
     var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
+      // Preserve the stored card clone across animation cancel — it was captured at open time
+      var _savedCardEnterClone = slot.__cardEnterClone || null;
+      var _savedOpenedFromExternal = slot.__openedFromExternal || false;
       // Cancel any in-progress animation before starting close
       _cancelSlotAnimation(slot);
+      slot.__cardEnterClone = _savedCardEnterClone;
+      slot.__openedFromExternal = _savedOpenedFromExternal;
 
       // Restore slot-level countdown bars to pre-open state.
       if (openPostEl.__hiddenSlotStatusBar) {
@@ -5131,7 +5136,11 @@ const PostModule = (function() {
         if (_cardEnterClip && _cardEnterClip.parentNode) _cardEnterClip.parentNode.removeChild(_cardEnterClip);
         slot.__enterClip = null;
         openPostEl.remove();
-        if (hiddenCard) hiddenCard.style.display = '';
+        if (hiddenCard) {
+          hiddenCard.style.transition = 'none';
+          hiddenCard.style.display = '';
+          requestAnimationFrame(function() { hiddenCard.style.transition = ''; });
+        }
         // Clear sibling transforms — layout has shifted to match, no visible snap
         for (var _csi3 = 0; _csi3 < _closeSiblings.length; _csi3++) {
           _closeSiblings[_csi3].style.transform = '';
