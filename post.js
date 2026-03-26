@@ -3095,7 +3095,7 @@ const PostModule = (function() {
       _preCloseContainerRight = _preCloseCR.left + container.clientWidth;
     }
     if (originEl) {
-      var _preCloseSlot = originEl.closest('.post-slot') || originEl.closest('.recent-card-wrapper');
+      var _preCloseSlot = originEl.closest('.post-slot') || originEl.closest('.recent-main-container');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
@@ -3124,16 +3124,16 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-slot | Recent panel: .recent-card-wrapper | Post Editor: .posteditor-item
+    // Post panel: .post-slot | Recent panel: .recent-main-container | Post Editor: .posteditor-item
     var slot = null;
     if (originEl) {
-      slot = originEl.closest('.post-slot') || originEl.closest('.recent-card-wrapper') || originEl.closest('.posteditor-item');
+      slot = originEl.closest('.post-slot') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-item');
     }
     if (!slot) {
       // Fallback: find slot by post ID in the container
       var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
       if (cardInContainer) {
-        slot = cardInContainer.closest('.post-slot') || cardInContainer.closest('.recent-card-wrapper') || cardInContainer.closest('.posteditor-item');
+        slot = cardInContainer.closest('.post-slot') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-item');
       }
     }
 
@@ -3406,8 +3406,8 @@ const PostModule = (function() {
 
     var postId = openPostEl.dataset.id;
 
-    // Find the slot wrapper (post-slot, recent-card-wrapper, or posteditor-item)
-    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
+    // Find the slot wrapper (post-slot, recent-main-container, or posteditor-item)
+    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
@@ -5048,7 +5048,7 @@ const PostModule = (function() {
     } catch (_eWp) {}
 
     // Find the slot wrapper
-    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-card-wrapper') || openPostEl.closest('.posteditor-item');
+    var slot = openPostEl.closest('.post-slot') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
 
     if (slot) {
       // Preserve the stored card clone across animation cancel — it was captured at open time
@@ -5812,7 +5812,7 @@ const PostModule = (function() {
    * (tracked by post_map_card_id), not the post as a whole. This means:
    * - A multi-location post produces separate recent cards per visited location
    * - The location line always shows the specific location name, never "X Locations"
-   * Structure: .recent-card-wrapper > .recent-statusbar + .recent-card
+   * Structure: .recent-main-container > .recent-statusbar + .recent-card
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
    * @returns {HTMLElement|null} Recent card wrapper element
    */
@@ -5821,7 +5821,7 @@ const PostModule = (function() {
 
     // Create wrapper to hold timestamp + card
     var wrapper = document.createElement('div');
-    wrapper.className = 'recent-card-wrapper';
+    wrapper.className = 'recent-main-container';
 
     var el = document.createElement('article');
     el.className = 'recent-card';

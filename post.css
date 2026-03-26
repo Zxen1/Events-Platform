@@ -279,7 +279,7 @@
    ============================================================================ */
 
 /* Recent card wrapper - holds timestamp + card */
-.recent-card-wrapper {
+.recent-main-container {
   margin-bottom: 0;
 }
 
@@ -313,10 +313,10 @@
   background: rgba(107, 114, 128, 0.5);
 }
 
-.recent-card-wrapper:hover .recent-statusbar {
+.recent-main-container:hover .recent-statusbar {
   background: transparent;
 }
-.recent-card-wrapper:hover .recent-statusbar--unavailable {
+.recent-main-container:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
