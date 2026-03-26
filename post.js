@@ -3097,6 +3097,7 @@ const PostModule = (function() {
         if (_preCloseCard) {
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
           _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
+          if (_preCloseSlot) _preCloseSlot.__cardBg = _preCloseCardBg;
         }
       }
     }
@@ -3152,7 +3153,8 @@ const PostModule = (function() {
         // [Card exit animation — step 2/2] Slide card up into fixed clip, then hide
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         // Animate only when opened from within the post panel or recent panel
-        var _shouldAnimate = _POST_ANIMATE && !!slot.closest('.post-panel-content, .recent-panel-content');
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source;
+        slot.__openedFromExternal = !!(options.fromMap || options.source);
         if (_shouldAnimate) {
         if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
         var _exitClone = cardToHide.cloneNode(true);
@@ -5038,8 +5040,8 @@ const PostModule = (function() {
       // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
       var _cardH = 0;
-      var _closeCardBg = null;
-      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; _closeCardBg = window.getComputedStyle(hiddenCard).backgroundColor; hiddenCard.style.display = 'none'; }
+      var _closeCardBg = slot.__cardBg || null;
+      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
       var _slotRect = slot.getBoundingClientRect();
       var _closeContainerRight = null;
       var _closeContainer = slot.closest('.post-panel-content, .recent-panel-content, .posteditor-list');
@@ -5049,7 +5051,7 @@ const PostModule = (function() {
       }
 
       // Animate only when the post is inside the post panel or recent panel
-      var _closeAnimate = _POST_ANIMATE && !!slot.closest('.post-panel-content, .recent-panel-content');
+      var _closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal);
       if (!_closeAnimate) {
         openPostEl.remove();
         if (hiddenCard) hiddenCard.style.display = '';
