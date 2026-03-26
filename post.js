@@ -3080,7 +3080,7 @@ const PostModule = (function() {
     var isMobileViewport = window.innerWidth <= 530;
     var shouldScrollToOpenHeaderTop = (!isMobileViewport && !fromRecent && !originEl && (container === postListEl) && (!!options.fromMap || options.source === 'marquee'));
 
-    // [Card exit animation — step 1/2] Capture before closeOpenPost shifts layout
+    // ── OPEN ANIMATION PRE-CAPTURE: Snapshot card rect before closeOpenPost shifts layout ──
     var _preCloseExitRect = null;
     var _preCloseCardBg = null;
     var _preCloseContainerRight = null;
@@ -3147,7 +3147,7 @@ const PostModule = (function() {
         }
       }
       if (cardToHide) {
-        // [Card exit animation — step 2/2] Slide card up into fixed clip, then hide
+        // ── OPEN ANIMATION 1/2: Card slides UP out of view via fixed clip ──────────
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
         var _exitClone = cardToHide.cloneNode(true);
@@ -3193,7 +3193,7 @@ const PostModule = (function() {
         } else {
           slot.appendChild(detail);
         }
-        // [Post enter animation] Blind — post slides down, slot grows, pushing content below
+        // ── OPEN ANIMATION 2/2: Post slides DOWN, slot grows, content below pushed down ──
         var _openTargetH = detail.offsetHeight;
         slot.style.overflow = 'hidden';
         slot.style.height = '0px';
@@ -5001,7 +5001,7 @@ const PostModule = (function() {
 
       var hiddenCard = slot.querySelector('.post-card, .recent-card');
 
-      // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
+      // ── CLOSE ANIMATION: Post slides UP, card slides DOWN via fixed clone, slot shrinks ──
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
       // Measure card height off-screen (avoid layout reflow in panel)
       var _cardH = 0;
