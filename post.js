@@ -5055,10 +5055,11 @@ const PostModule = (function() {
       // Then recalculate _closeStartH to the now-visible height only.
       // If visible height <= card height, skip animation entirely.
       var _panelEl = slot.closest('.post-panel-content, .recent-panel-content');
-      var _slotOuter = (slot.parentElement && slot.parentElement.classList.contains('post-outer-container')) ? slot.parentElement : slot;
+      var _slotOuter = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
       if (_panelEl && _slotOuter.getBoundingClientRect().top < _panelEl.getBoundingClientRect().top) {
-        _panelEl.scrollTop = _slotOuter.offsetTop;
         _closeStartH = Math.max(0, openPostEl.getBoundingClientRect().bottom - _panelEl.getBoundingClientRect().top);
+        _panelEl.scrollTop += _slotOuter.getBoundingClientRect().top - _panelEl.getBoundingClientRect().top;
+        slot.style.height = _closeStartH + 'px';
       }
       var _closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal) && (_closeStartH > _cardH);
       if (!_closeAnimate) {
@@ -5149,6 +5150,7 @@ const PostModule = (function() {
           }
           slot.style.overflow = '';
           slot.style.position = '';
+          slot.style.height = '';
           slot.__animCard = null;
           slot.__animSiblings = null;
           slot.__animTimer = null;
