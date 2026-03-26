@@ -5077,7 +5077,14 @@ const PostModule = (function() {
           slot.__cardEnterClone = null;
           if (_cardEnterClone) {
             slot.style.position = 'relative';
-            _cardEnterClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;transition:none;transform:translateY(-' + _cardH + 'px);';
+            _cardEnterClone.style.position = 'absolute';
+            _cardEnterClone.style.top = '0';
+            _cardEnterClone.style.left = '0';
+            _cardEnterClone.style.width = '100%';
+            _cardEnterClone.style.margin = '0';
+            _cardEnterClone.style.pointerEvents = 'none';
+            _cardEnterClone.style.transition = 'none';
+            _cardEnterClone.style.transform = 'translateY(-' + _cardH + 'px)';
             slot.appendChild(_cardEnterClone);
             slot.__animEnterClone = _cardEnterClone;
           }
