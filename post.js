@@ -3098,6 +3098,19 @@ const PostModule = (function() {
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
           _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
           if (_preCloseSlot) _preCloseSlot.__cardBg = _preCloseCardBg;
+          // Store a clone now while the card is fully visible — reused for the close enter animation
+          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.add('recent-card--active');
+          var _storedClone = _preCloseCard.cloneNode(true);
+          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.remove('recent-card--active');
+          _storedClone.style.display = '';
+          _storedClone.style.margin = '0';
+          _storedClone.style.transition = 'none';
+          var _scEls = _storedClone.querySelectorAll('*');
+          for (var _sci = 0; _sci < _scEls.length; _sci++) { _scEls[_sci].style.transition = 'none'; }
+          if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
+            _storedClone.style.backgroundColor = _preCloseCardBg;
+          }
+          if (_preCloseSlot) _preCloseSlot.__cardEnterClone = _storedClone;
         }
       }
     }
@@ -3369,6 +3382,8 @@ const PostModule = (function() {
       }
       slot.__animSiblings = null;
     }
+    slot.__cardEnterClone = null;
+    slot.__cardBg = null;
   }
 
   /**
@@ -5062,18 +5077,9 @@ const PostModule = (function() {
       var _cardEnterClip = null;
       var _cardEnterClone = null;
       if (hiddenCard && _cardH > 0) {
-        if (hiddenCard.classList.contains('recent-card')) hiddenCard.classList.add('recent-card--active');
-        _cardEnterClone = hiddenCard.cloneNode(true);
-        if (hiddenCard.classList.contains('recent-card')) hiddenCard.classList.remove('recent-card--active');
-        _cardEnterClone.style.display = ''; // card is display:none — remove it from the clone
-        if (_closeCardBg && _closeCardBg !== 'rgba(0, 0, 0, 0)' && _closeCardBg !== 'transparent') {
-          _cardEnterClone.style.backgroundColor = _closeCardBg;
-        }
-        _cardEnterClone.style.margin = '0';
-        _cardEnterClone.style.transition = 'none';
-        var _cloneCloseCels = _cardEnterClone.querySelectorAll('*');
-        for (var _cci = 0; _cci < _cloneCloseCels.length; _cci++) { _cloneCloseCels[_cci].style.transition = 'none'; }
-        _cardEnterClone.style.transform = 'translateY(-100%)';
+        _cardEnterClone = slot.__cardEnterClone || null;
+        slot.__cardEnterClone = null;
+        if (_cardEnterClone) _cardEnterClone.style.transform = 'translateY(-100%)';
         _cardEnterClip = document.createElement('div');
         var _enterParent = _closeContainer || document.body;
         var _enterPR = (_enterParent !== document.body) ? _enterParent.getBoundingClientRect() : {top: 0, left: 0};
@@ -5086,7 +5092,7 @@ const PostModule = (function() {
           : _slotRect.width;
         _cardEnterClip.style.width = _clipW + 'px';
         _cardEnterClip.style.height = _cardH + 'px';
-        _cardEnterClip.appendChild(_cardEnterClone);
+        if (_cardEnterClone) _cardEnterClip.appendChild(_cardEnterClone);
         _enterParent.appendChild(_cardEnterClip);
         slot.__enterClip = _cardEnterClip;
       }
