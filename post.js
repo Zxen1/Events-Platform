@@ -5064,6 +5064,25 @@ const PostModule = (function() {
         if (hiddenCard && _cardH > 0) {
           _cardEnterClone = slot.__cardEnterClone || null;
           slot.__cardEnterClone = null;
+          if (!_cardEnterClone) {
+            hiddenCard.style.display = '';
+            var _isRecent = hiddenCard.classList.contains('recent-card');
+            if (_isRecent) hiddenCard.classList.add('recent-card--active');
+            else hiddenCard.classList.add('post-card--map-highlight');
+            var _clBg = _closeCardBg || window.getComputedStyle(hiddenCard).backgroundColor;
+            _cardEnterClone = hiddenCard.cloneNode(true);
+            if (_isRecent) hiddenCard.classList.remove('recent-card--active');
+            else hiddenCard.classList.remove('post-card--map-highlight');
+            hiddenCard.style.display = 'none';
+            _cardEnterClone.style.display = '';
+            _cardEnterClone.style.margin = '0';
+            _cardEnterClone.style.transition = 'none';
+            var _clEls = _cardEnterClone.querySelectorAll('*');
+            for (var _cli = 0; _cli < _clEls.length; _cli++) { _clEls[_cli].style.transition = 'none'; }
+            if (_clBg && _clBg !== 'rgba(0, 0, 0, 0)' && _clBg !== 'transparent') {
+              _cardEnterClone.style.backgroundColor = _clBg;
+            }
+          }
           if (_cardEnterClone) {
             slot.style.position = 'relative';
             _cardEnterClone.style.position = 'absolute';
