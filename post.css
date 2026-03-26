@@ -370,6 +370,10 @@
   opacity: 1;
 }
 
+.post-card[data-storefront="1"].post-card--noanim::after {
+  transition: none;
+}
+
 /* Post cards have margin-bottom; recent cards get it from wrapper */
 .post-card {
   margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */

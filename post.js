@@ -3168,7 +3168,7 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source;
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds;
         slot.__openedFromExternal = !!(options.fromMap || options.source);
 
         // ── OPEN ANIMATION: CARD EXIT ───────────────────────────────────────────
@@ -3178,7 +3178,13 @@ const PostModule = (function() {
           if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
           var _exitClone = cardToHide.cloneNode(true);
           cardToHide.classList.remove('recent-card--active');
-          _exitClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;transition:none;';
+          _exitClone.style.position = 'absolute';
+          _exitClone.style.top = '0';
+          _exitClone.style.left = '0';
+          _exitClone.style.width = '100%';
+          _exitClone.style.margin = '0';
+          _exitClone.style.pointerEvents = 'none';
+          _exitClone.style.transition = 'none';
           if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
             _exitClone.style.backgroundColor = _preCloseCardBg;
           }
@@ -3246,6 +3252,7 @@ const PostModule = (function() {
               _openSiblings[_osi3].style.transition = '';
             }
             slot.style.overflow = '';
+            slot.style.position = '';
             slot.__animDetail = null;
             slot.__animSiblings = null;
             slot.__animTimer = null;
@@ -5128,12 +5135,17 @@ const PostModule = (function() {
           slot.__animEnterClone = null;
           openPostEl.remove();
           if (hiddenCard) {
-            // Suppress transitions for one frame so CSS :hover snaps instantly — no flash on reveal
+            // Suppress transitions for one frame so CSS :hover snaps instantly — no flash on reveal.
+            // Storefront cards also get post-card--noanim to suppress their ::after pseudo-element transition,
+            // which is not reachable via inline style.
+            var _isSfCard = !!(hiddenCard.dataset && hiddenCard.dataset.storefront === '1');
+            if (_isSfCard) hiddenCard.classList.add('post-card--noanim');
             hiddenCard.style.transition = 'none';
             var _hcChildren = hiddenCard.querySelectorAll('*');
             for (var _hci = 0; _hci < _hcChildren.length; _hci++) { _hcChildren[_hci].style.transition = 'none'; }
             hiddenCard.style.display = '';
             requestAnimationFrame(function() {
+              if (_isSfCard) hiddenCard.classList.remove('post-card--noanim');
               hiddenCard.style.transition = '';
               for (var _hci2 = 0; _hci2 < _hcChildren.length; _hci2++) { _hcChildren[_hci2].style.transition = ''; }
             });
