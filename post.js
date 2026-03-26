@@ -3335,6 +3335,7 @@ const PostModule = (function() {
     if (slot.__animCard) { slot.__animCard.style.transform = ''; slot.__animCard.style.transition = ''; slot.__animCard = null; }
   }
 
+  /**
    * Close any open post in a container.
    * Removes the detail view from the slot and restores hidden children (card, status bar, etc.).
    * @param {HTMLElement} container - Container element
