@@ -5003,12 +5003,14 @@ const PostModule = (function() {
 
       // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
-      // Measure card height while briefly visible (display:none returns 0)
+      // Measure card height off-screen (avoid layout reflow in panel)
       var _cardH = 0;
       if (hiddenCard) {
-        hiddenCard.style.display = '';
-        _cardH = hiddenCard.offsetHeight;
-        hiddenCard.style.display = 'none';
+        var _measCard = hiddenCard.cloneNode(true);
+        _measCard.style.cssText = 'position:fixed;visibility:hidden;top:-9999px;left:-9999px;display:block;margin:0;';
+        document.body.appendChild(_measCard);
+        _cardH = _measCard.offsetHeight;
+        document.body.removeChild(_measCard);
       }
       var _slotRect = slot.getBoundingClientRect();
       var _closeContainerRight = null;
@@ -5023,6 +5025,7 @@ const PostModule = (function() {
       var _cardEnterClone = null;
       if (hiddenCard && _cardH > 0) {
         _cardEnterClone = hiddenCard.cloneNode(true);
+        _cardEnterClone.style.display = '';
         _cardEnterClone.style.margin = '0';
         _cardEnterClone.style.transition = 'none';
         var _cloneCloseCels = _cardEnterClone.querySelectorAll('*');
