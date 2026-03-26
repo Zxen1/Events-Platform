@@ -3317,6 +3317,11 @@ const PostModule = (function() {
     }
   }
 
+  // ── POST ANIMATION MASTER SWITCH ─────────────────────────────────────────────
+  // Set to false to instantly open/close posts with no animation whatsoever.
+  var _POST_ANIMATE = true;
+  // ─────────────────────────────────────────────────────────────────────────────
+
   /**
    * Cancel any in-progress open/close animation on a slot.
    * Clears timers, removes floating clones, strips inline animation styles.
