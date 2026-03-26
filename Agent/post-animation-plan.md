@@ -82,6 +82,12 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 
 ---
 
+## STATUS BAR KNOWN BUGS (fix when status container work is complete)
+
+- The status bar above the postcard never receives the hovered appearance — it sits outside the card's hover zone so CSS hover selectors never reach it. It always looks unhovered. This needs to be fixed so the bar responds to hover correctly when the mouse is over the postcard.
+
+---
+
 ## STATUS BAR INVESTIGATION (in progress — do not code yet)
 
 - Two current status bar types: (1) last-opened timestamp (recent panel only), (2) countdown timer (admin-controlled, event posts only)

@@ -1819,6 +1819,9 @@ const PostModule = (function() {
         slot.dataset.sfIds = _sfGroups[_sfKey].map(function(p) { return String(p.id); }).join(',');
       }
 
+      slot.appendChild(anchor);
+      var postOuter = document.createElement('div');
+      postOuter.className = 'post-outer-container';
       // Countdown status bar (event posts only, not storefronts)
       if (!_sfKey) {
         var _cardSett = App.getState('settings') || {};
@@ -1831,14 +1834,13 @@ const PostModule = (function() {
               _cardBarResult.bar.classList.add('post-statusbar--modesoonest');
             }
             card.classList.add('post-card--countdown' + _cardBarResult.state);
-            slot.appendChild(_cardBarResult.bar);
+            var postStatusCont = document.createElement('div');
+            postStatusCont.className = 'post-status-container';
+            postStatusCont.appendChild(_cardBarResult.bar);
+            postOuter.appendChild(postStatusCont);
           }
         }
       }
-
-      slot.appendChild(anchor);
-      var postOuter = document.createElement('div');
-      postOuter.className = 'post-outer-container';
       postOuter.appendChild(slot);
       postListEl.appendChild(postOuter);
 
@@ -3152,12 +3154,8 @@ const PostModule = (function() {
       // If open-post countdown is enabled, hide the slot countdown bar to avoid duplicates.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       var cardStatusBar = null;
-      try {
-        cardStatusBar = slot.querySelector(':scope > .post-statusbar--slot-card');
-      } catch (_eCardBarScope) {
-        var fallbackCardBar = slot.querySelector('.post-statusbar--slot-card');
-        if (fallbackCardBar && fallbackCardBar.parentElement === slot) cardStatusBar = fallbackCardBar;
-      }
+      var _slotOuter = (slot.parentElement && slot.parentElement.classList.contains('post-outer-container') || slot.parentElement && slot.parentElement.classList.contains('recent-outer-container')) ? slot.parentElement : slot;
+      cardStatusBar = _slotOuter.querySelector('.post-statusbar--slot-card');
       var openHeaderBar = null;
       try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
       if (cardStatusBar && openHeaderBar) {
@@ -5905,34 +5903,32 @@ const PostModule = (function() {
       '</div>'
     ].join('');
 
-    // Add status bar above card (timestamp + optional status)
+    var recentStatusCont = document.createElement('div');
+    recentStatusCont.className = 'recent-status-container';
+
+    // Timestamp / unavailable status bar
     if (lastOpenedText || entry.unavailable) {
       var statusBar = document.createElement('div');
       statusBar.className = 'recent-statusbar';
       if (entry.unavailable) {
         statusBar.classList.add('recent-statusbar--unavailable');
       }
-      
-      // Timestamp (left side)
       if (lastOpenedText) {
         var timestampSpan = document.createElement('span');
         timestampSpan.className = 'recent-statusbar-timestamp';
         timestampSpan.textContent = lastOpenedText;
         statusBar.appendChild(timestampSpan);
       }
-      
-      // Status text (right side) - shown when unavailable
       if (entry.unavailable) {
         var statusSpan = document.createElement('span');
         statusSpan.className = 'recent-statusbar-status';
         statusSpan.textContent = 'unavailable';
         statusBar.appendChild(statusSpan);
       }
-      
-      wrapper.appendChild(statusBar);
+      recentStatusCont.appendChild(statusBar);
     }
 
-    // Countdown status bar (shown when admin enables countdown on postcards and entry has event dates)
+    // Countdown status bar
     if (entry.first_session_date && entry.expires_at) {
       var _recentSett = App.getState('settings') || {};
       if (_recentSett.countdown_postcards) {
@@ -5945,10 +5941,11 @@ const PostModule = (function() {
           if (_recentSett.countdown_postcards_mode === 'soonest_only') {
             _recentBarResult.bar.classList.add('post-statusbar--modesoonest');
           }
-          wrapper.appendChild(_recentBarResult.bar);
+          recentStatusCont.appendChild(_recentBarResult.bar);
         }
       }
     }
+
 
     var anchor = document.createElement('div');
     anchor.setAttribute('data-slack-anchor', '');
@@ -6007,6 +6004,7 @@ const PostModule = (function() {
 
     var recentOuter = document.createElement('div');
     recentOuter.className = 'recent-outer-container';
+    if (recentStatusCont.children.length) recentOuter.appendChild(recentStatusCont);
     recentOuter.appendChild(wrapper);
     return recentOuter;
   }
