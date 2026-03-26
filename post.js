@@ -5062,7 +5062,9 @@ const PostModule = (function() {
       var _cardEnterClip = null;
       var _cardEnterClone = null;
       if (hiddenCard && _cardH > 0) {
+        if (hiddenCard.classList.contains('recent-card')) hiddenCard.classList.add('recent-card--active');
         _cardEnterClone = hiddenCard.cloneNode(true);
+        if (hiddenCard.classList.contains('recent-card')) hiddenCard.classList.remove('recent-card--active');
         _cardEnterClone.style.display = ''; // card is display:none — remove it from the clone
         if (_closeCardBg && _closeCardBg !== 'rgba(0, 0, 0, 0)' && _closeCardBg !== 'transparent') {
           _cardEnterClone.style.backgroundColor = _closeCardBg;
@@ -6237,7 +6239,7 @@ const PostModule = (function() {
         console.error('[Post] Deep link post not found:', key);
         return;
       }
-      openPost(post, { fromRecent: true, originEl: null });
+      openPost(post, { fromRecent: true, originEl: null, source: 'deeplink' });
 
       // Clean the address bar after we’ve used the deep link so the URL doesn’t stay “stuck”.
       // (One-page app UX: keep it looking like the homepage.)
