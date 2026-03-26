@@ -3184,6 +3184,8 @@ const PostModule = (function() {
           }
           var _cloneEls = _exitClone.querySelectorAll('*');
           for (var _ci = 0; _ci < _cloneEls.length; _ci++) { _cloneEls[_ci].style.transition = 'none'; }
+          slot.style.position = 'relative';
+          slot.style.overflow = 'hidden';
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
@@ -3368,6 +3370,7 @@ const PostModule = (function() {
     slot.style.height = '';
     slot.style.transition = '';
     slot.style.overflow = '';
+    slot.style.position = '';
     if (slot.__animDetail) { slot.__animDetail.style.transform = ''; slot.__animDetail.style.transition = ''; slot.__animDetail = null; }
     if (slot.__animCard) { slot.__animCard.style.transform = ''; slot.__animCard.style.transition = ''; slot.__animCard = null; }
     if (slot.__animSiblings) {
@@ -5073,6 +5076,7 @@ const PostModule = (function() {
           _cardEnterClone = slot.__cardEnterClone || null;
           slot.__cardEnterClone = null;
           if (_cardEnterClone) {
+            slot.style.position = 'relative';
             _cardEnterClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;margin:0;pointer-events:none;transition:none;transform:translateY(-' + _cardH + 'px);';
             slot.appendChild(_cardEnterClone);
             slot.__animEnterClone = _cardEnterClone;
@@ -5132,6 +5136,7 @@ const PostModule = (function() {
             _closeSiblings[_csi3].style.transition = '';
           }
           slot.style.overflow = '';
+          slot.style.position = '';
           slot.__animCard = null;
           slot.__animSiblings = null;
           slot.__animTimer = null;
