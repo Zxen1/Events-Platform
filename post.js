@@ -5038,7 +5038,8 @@ const PostModule = (function() {
       // [Close animation] Post slides up, card slides down via fixed clone, slot shrinks
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
       var _cardH = 0;
-      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
+      var _closeCardBg = null;
+      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; _closeCardBg = window.getComputedStyle(hiddenCard).backgroundColor; hiddenCard.style.display = 'none'; }
       var _slotRect = slot.getBoundingClientRect();
       var _closeContainerRight = null;
       var _closeContainer = slot.closest('.post-panel-content, .recent-panel-content, .posteditor-list');
@@ -5061,6 +5062,9 @@ const PostModule = (function() {
       if (hiddenCard && _cardH > 0) {
         _cardEnterClone = hiddenCard.cloneNode(true);
         _cardEnterClone.style.display = ''; // card is display:none — remove it from the clone
+        if (_closeCardBg && _closeCardBg !== 'rgba(0, 0, 0, 0)' && _closeCardBg !== 'transparent') {
+          _cardEnterClone.style.backgroundColor = _closeCardBg;
+        }
         _cardEnterClone.style.margin = '0';
         _cardEnterClone.style.transition = 'none';
         var _cloneCloseCels = _cardEnterClone.querySelectorAll('*');
