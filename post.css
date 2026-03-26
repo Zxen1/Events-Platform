@@ -313,10 +313,10 @@
   background: rgba(107, 114, 128, 0.5);
 }
 
-.recent-main-container:hover .recent-statusbar {
+.recent-outer-container:hover .recent-statusbar {
   background: transparent;
 }
-.recent-main-container:hover .recent-statusbar--unavailable {
+.recent-outer-container:hover .recent-statusbar--unavailable {
   background: var(--gray-500, #6b7280);
 }
 
@@ -2405,13 +2405,13 @@
   transition: background-color 0.15s ease;
 }
 
-.post-main-container:hover .post-statusbar--comingsoon {
+.post-outer-container:hover .post-statusbar--comingsoon {
   background: #2563eb;
 }
-.post-main-container:hover .post-statusbar--nowshowing {
+.post-outer-container:hover .post-statusbar--nowshowing {
   background: #16a34a;
 }
-.post-main-container:hover .post-statusbar--finished {
+.post-outer-container:hover .post-statusbar--finished {
   background: #111827;
 }
 
