@@ -5049,7 +5049,18 @@ const PostModule = (function() {
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
       if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
-      var _closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal);
+      // If the post header is sticky (user scrolled past post-outer-container top):
+      // Instantly snap panel scrollTop so post-outer-container top is flush with the panel top.
+      // This collapses the hidden portion above in frame zero — posts above teleport into position.
+      // Then recalculate _closeStartH to the now-visible height only.
+      // If visible height <= card height, skip animation entirely.
+      var _panelEl = slot.closest('.post-panel-content, .recent-panel-content');
+      var _slotOuter = (slot.parentElement && slot.parentElement.classList.contains('post-outer-container')) ? slot.parentElement : slot;
+      if (_panelEl && _slotOuter.getBoundingClientRect().top < _panelEl.getBoundingClientRect().top) {
+        _panelEl.scrollTop = _slotOuter.offsetTop;
+        _closeStartH = Math.max(0, openPostEl.getBoundingClientRect().bottom - _panelEl.getBoundingClientRect().top);
+      }
+      var _closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal) && (_closeStartH > _cardH);
       if (!_closeAnimate) {
         openPostEl.remove();
         if (hiddenCard) hiddenCard.style.display = '';
