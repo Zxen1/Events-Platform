@@ -47,6 +47,8 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   var panelsContainerEl = null;
+  var _POST_ANIMATE = true; // Master switch — set false to disable all open/close animation instantly
+
   var postPanelEl = null;
   var postPanelContentEl = null;
   var postListEl = null;
