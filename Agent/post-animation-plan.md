@@ -41,29 +41,30 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 - 120px of the post sit behind the postcard (hidden by the postcard, not the clip).
 - The entire post is invisible at the start -- 880px by the clip, 120px by the postcard.
 
-### The clip
+### The invisibility shield (clip)
 
-- The clip is a stationary, invisible container anchored inside the panel.
-- It lives in the panel's world -- if the panel scrolls or moves, the clip moves with it.
+- The invisibility shield (clip) is a stationary, invisible container anchored inside the panel.
+- It lives in the panel's world -- if the panel scrolls or moves, the shield moves with it.
 - Its bottom edge sits at the TOP of the postcard.
 - It extends from there upward to the top of the panel (or viewport).
-- The clip NEVER moves. Ever.
+- The invisibility shield NEVER moves. Ever.
 
 ### The animation
 
-- The postcard slides upward and disappears inside the clip.
-- The post slides downward through the clip and becomes visible below the clip's bottom edge.
+- The postcard slides upward and disappears inside the invisibility shield (clip).
+- The post slides downward through the shield and becomes visible below the shield's bottom edge.
 - Both move simultaneously. Both finish at exactly the same moment.
 - The bottom pixel of the post and the bottom pixel of the postcard are on the same point at the START and at the END.
-- Content below never moves independently -- it is part of the same group as the post.
+- Content below is locked to the post bottom at all times — post and all siblings below share the same translateY, same timing. They are one unit.
 - There is no slot height animation. No race condition. No dual-thread sync problem.
-- One element moves (the post). One clip is stationary. That is all.
+- The post and siblings use a single CSS transform translateY. The shield (slot overflow) is stationary. That is all.
 
 ### Closing (reverse)
 
 - Exact reverse of opening.
-- The post slides upward back into the clip.
-- The postcard clone slides downward from the clip into its resting position.
+- The post slides upward back into the invisibility shield (clip).
+- The postcard clone slides downward from the shield into its resting position, background fully intact.
+- All siblings below travel upward with the post as one unit.
 - Same geometry, same certainty, same bottom-pixel anchor point.
 
 ### Why this works
@@ -78,7 +79,7 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms
-- The clip lives inside the panel, anchored to the panel's coordinate system
+- The invisibility shield (clip) lives inside the panel, anchored to the panel's coordinate system
 - Status bar in recent panel is outside the animation zone
 - Map card / marker / external link opens = no animation, instant as before
 - All animation is interruptible via _cancelSlotAnimation(slot)

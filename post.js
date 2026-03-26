@@ -3193,25 +3193,40 @@ const PostModule = (function() {
         } else {
           slot.appendChild(detail);
         }
-        // [Post enter animation] Blind — post slides down, slot grows, pushing content below
-        var _openTargetH = detail.offsetHeight;
+        // [Post enter animation] Invisibility shield (clip): slot overflow hides post above card top.
+        // Post + all siblings below slide down as one unit — same transform, same timing, no desync.
+        var _openPostH = detail.offsetHeight;
+        var _openCardH = Math.round(_exitRect.height);
+        var _openOffset = _openPostH - _openCardH;
+        var _openSiblings = [];
+        var _openSib = slot.nextElementSibling;
+        while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
         slot.style.overflow = 'hidden';
-        slot.style.height = '0px';
         detail.style.transition = 'none';
-        detail.style.transform = 'translateY(-100%)';
+        detail.style.transform = 'translateY(-' + _openOffset + 'px)';
+        for (var _osi = 0; _osi < _openSiblings.length; _osi++) {
+          _openSiblings[_osi].style.transition = 'none';
+          _openSiblings[_osi].style.transform = 'translateY(-' + _openOffset + 'px)';
+        }
         slot.__animDetail = detail;
+        slot.__animSiblings = _openSiblings;
         slot.getBoundingClientRect();
-        slot.style.transition = 'height 1s linear';
-        slot.style.height = _openTargetH + 'px';
         detail.style.transition = 'transform 1s linear';
         detail.style.transform = 'translateY(0)';
+        for (var _osi2 = 0; _osi2 < _openSiblings.length; _osi2++) {
+          _openSiblings[_osi2].style.transition = 'transform 1s linear';
+          _openSiblings[_osi2].style.transform = 'translateY(0)';
+        }
         slot.__animTimer = setTimeout(function() {
           detail.style.transform = '';
           detail.style.transition = '';
-          slot.style.height = '';
-          slot.style.transition = '';
+          for (var _osi3 = 0; _osi3 < _openSiblings.length; _osi3++) {
+            _openSiblings[_osi3].style.transform = '';
+            _openSiblings[_osi3].style.transition = '';
+          }
           slot.style.overflow = '';
           slot.__animDetail = null;
+          slot.__animSiblings = null;
           slot.__animTimer = null;
         }, 1020);
       } else {
@@ -3333,6 +3348,13 @@ const PostModule = (function() {
     slot.style.overflow = '';
     if (slot.__animDetail) { slot.__animDetail.style.transform = ''; slot.__animDetail.style.transition = ''; slot.__animDetail = null; }
     if (slot.__animCard) { slot.__animCard.style.transform = ''; slot.__animCard.style.transition = ''; slot.__animCard = null; }
+    if (slot.__animSiblings) {
+      for (var _csi = 0; _csi < slot.__animSiblings.length; _csi++) {
+        slot.__animSiblings[_csi].style.transform = '';
+        slot.__animSiblings[_csi].style.transition = '';
+      }
+      slot.__animSiblings = null;
+    }
   }
 
   /**
@@ -5036,37 +5058,49 @@ const PostModule = (function() {
         slot.__enterClip = _cardEnterClip;
       }
 
-      // Lock slot height, clip, set initial post state
-      slot.style.height = _closeStartH + 'px';
+      // [Close animation] Invisibility shield (clip): slot overflow hides post above card top.
+      // Post + all siblings below slide up as one unit — same transform, same timing, no desync.
+      // When post is removed, layout matches the translateY offset exactly — siblings snap cleanly.
+      var _closeSiblings = [];
+      var _closeSib = slot.nextElementSibling;
+      while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
       slot.style.overflow = 'hidden';
       openPostEl.style.transition = 'none';
       openPostEl.style.transform = 'translateY(0)';
+      for (var _csi = 0; _csi < _closeSiblings.length; _csi++) {
+        _closeSiblings[_csi].style.transition = 'none';
+        _closeSiblings[_csi].style.transform = 'translateY(0)';
+      }
       slot.__animCard = hiddenCard || null;
+      slot.__animSiblings = _closeSiblings;
 
       slot.getBoundingClientRect(); // force reflow
 
-      // Animate: post slides up, card clone slides down, slot shrinks to card height
+      var _closeOffset = _closeStartH - _cardH;
       openPostEl.style.transition = 'transform 1s linear';
-      openPostEl.style.transform = 'translateY(-100%)';
+      openPostEl.style.transform = 'translateY(-' + _closeOffset + 'px)';
+      for (var _csi2 = 0; _csi2 < _closeSiblings.length; _csi2++) {
+        _closeSiblings[_csi2].style.transition = 'transform 1s linear';
+        _closeSiblings[_csi2].style.transform = 'translateY(-' + _closeOffset + 'px)';
+      }
       if (_cardEnterClone) {
         _cardEnterClone.style.transition = 'transform 1s linear';
         _cardEnterClone.style.transform = 'translateY(0)';
       }
-      slot.style.transition = 'height 1s linear';
-      slot.style.height = _cardH + 'px';
 
       slot.__animTimer = setTimeout(function() {
-        // Remove card enter clone
         if (_cardEnterClip && _cardEnterClip.parentNode) _cardEnterClip.parentNode.removeChild(_cardEnterClip);
         slot.__enterClip = null;
-        // Remove post, restore real card
         openPostEl.remove();
         if (hiddenCard) hiddenCard.style.display = '';
-        // Clear slot animation styles
-        slot.style.height = '';
-        slot.style.transition = '';
+        // Clear sibling transforms — layout has shifted to match, no visible snap
+        for (var _csi3 = 0; _csi3 < _closeSiblings.length; _csi3++) {
+          _closeSiblings[_csi3].style.transform = '';
+          _closeSiblings[_csi3].style.transition = '';
+        }
         slot.style.overflow = '';
         slot.__animCard = null;
+        slot.__animSiblings = null;
         slot.__animTimer = null;
         if (!slot.children.length) slot.remove();
       }, 1020);
