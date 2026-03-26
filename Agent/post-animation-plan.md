@@ -118,6 +118,39 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 
 ---
 
+## PENDING — STICKY HEADER CLOSE (not yet coded)
+
+### The problem
+When a user has scrolled partway into a long post, the post header becomes sticky (pinned to panel top).
+If they close the post from the sticky header, the close animation uses the full post height as `_closeOffset`,
+sending all siblings flying 2000px+ off screen. Looks terrible.
+
+### Agreed solution
+Two parts, both must happen at frame zero when close is triggered:
+
+**Part A — Instant gap collapse above:**
+- Detect sticky: `_slotOuter.getBoundingClientRect().top < _panelEl.getBoundingClientRect().top`
+- Capture `_closeStartH` = visible height BEFORE snap: `openPostEl.getBoundingClientRect().bottom - _panelEl.getBoundingClientRect().top`
+- Snap: `_panelEl.scrollTop += _slotOuter.getBoundingClientRect().top - _panelEl.getBoundingClientRect().top`
+- Clip slot: `slot.style.height = _closeStartH + 'px'` (clear in cleanup)
+- The hidden portion above collapses instantly. Posts above land at the top of the panel. User never sees it happen.
+
+**Part B — Animate only visible portion:**
+- `_closeOffset = _closeStartH - _cardH` (reduced distance, same 1-second duration)
+- If `_closeStartH <= _cardH`: skip animation entirely (`_closeAnimate = false`)
+- `_closeAnimate = _POST_ANIMATE && !(slot.__openedFromExternal) && (_closeStartH > _cardH)`
+
+**Important:**
+- DO NOT change animation duration — 1 second regardless of visible height
+- DO NOT impede scrolling in any way
+- Both `post-outer-container` and `recent-outer-container` must be supported (same pattern as sibling traversal)
+- `slot.style.height = ''` must be cleared in close animation `setTimeout` cleanup AND in `_cancelSlotAnimation`
+
+### Why it was deferred
+Context ran out before the fix could be verified working. The code was written and then reverted to avoid leaving broken state in the commit queue.
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms
