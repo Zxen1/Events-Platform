@@ -7192,11 +7192,7 @@ const BottomSlack = (function() {
                 try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
             },
             trim: function() {
-                try {
-                    clickHoldUntil = Date.now() + clickHoldMs;
-                    applySlackPx(expandedSlackPx);
-                    trimSlack();
-                } catch (e0) {}
+                try { trimSlack(); } catch (e0) {}
             }
         };
         

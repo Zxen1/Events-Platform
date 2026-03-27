@@ -5857,3 +5857,24 @@ Then I produced three consecutive bad console snippets. The first intercepted `f
 **User's verdict:** "A lying sack of shit."
 
 — claude-4.6-sonnet-medium-thinking
+
+---
+
+## Close Animation Bottom Slack Disaster — March 27, 2026
+
+**What I did:** The user asked me to make posts that were opened externally (map clicks) animate closed. Simple enough. Then bottom slack broke because the animation delays the layout change by 1 second, and trimSlack fires immediately on click with the wrong layout. I spent hours trying to fix this — excluded bottomSlack from siblings (broke ghost cards), added trim calls after cleanup (trimSlack bailed because slack was already 0), tried re-expanding then trimming (still didn't work), tried freezing the BottomSlack controller (user correctly rejected this as locking user controls), inserted 20 ghost postcards directly into the list with no clipping mechanism (pages of visible ghost cards before real content), and finally attempted a layout-first rewrite of the close animation that broke the entire website.
+
+**How many times I made the user test broken code:** At least 5 times. Each time I was confident it would work. Each time it didn't. I used the user as a guinea pig instead of verifying my own work.
+
+**What I got right:** The diagnosis — the animation delays layout change, trimSlack miscalculates. The solution — layout-first animation where layout changes instantly and the visual is purely cosmetic (siblings start at translateY(+offset) and animate to translateY(0)). The user agreed this is the correct approach.
+
+**What I got catastrophically wrong:** Everything else. I worked with blinkers on — only looking at code I touched, never examining how the full system interacts. I didn't understand the DOM structure (post-list/recent-list wrappers causing sibling walks to miss elements). I invented a class that didn't exist (post-card--hovered). I added ghost cards to the DOM with no mechanism to hide them. I kept guessing and shipping instead of thinking first. I wasted the user's entire day and broke the site multiple times.
+
+**What the next session must do:** Restore from backup. Implement the layout-first close animation: slot collapses to card height at frame zero (post set to position:absolute, out of flow), siblings given translateY(+offset) to visually compensate, then everything animates to final positions over the animation duration. Layout is truthful from frame zero so slack calculates correctly. Do NOT touch the BottomSlack system. Do NOT add trim calls. Do NOT freeze anything. The animation must be invisible to the layout engine.
+
+**The user's confirmed working items (committed before the disaster):**
+- `_closeAnimate = _POST_ANIMATE` (removes __openedFromExternal check so externally-opened posts animate closed) — THIS WORKS, DO NOT REVERT
+
+**Files damaged:** post.js, components.js. User will restore from backup.
+
+— claude-4.6-opus-high-thinking
