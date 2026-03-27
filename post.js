@@ -3252,16 +3252,14 @@ const PostModule = (function() {
             slot.__animDetail = null;
             slot.__animSiblings = null;
             slot.__animTimer = null;
-            requestAnimationFrame(function() {
-              try {
-                var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
-                if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
-                  var _bsCtrl = BottomSlack.get(_scrollParent);
-                  if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
-                }
-              } catch (_eBs) {}
-            });
-          }, 1020);
+            try {
+              var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+              if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
+                var _bsCtrl = BottomSlack.get(_scrollParent);
+                if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
+              }
+            } catch (_eBs) {}
+          }, 1000);
         }
         // ── END OPEN ANIMATION: POST ENTER ─────────────────────────────────────
 
@@ -5180,16 +5178,14 @@ const PostModule = (function() {
           slot.__animSiblings = null;
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
-          requestAnimationFrame(function() {
-            try {
-              var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
-              if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
-                var _bsCtrl = BottomSlack.get(_scrollParent);
-                if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
-              }
-            } catch (_eBs) {}
-          });
-        }, 1020);
+          try {
+            var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+            if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
+              var _bsCtrl = BottomSlack.get(_scrollParent);
+              if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
+            }
+          } catch (_eBs) {}
+        }, 1000);
         // ── END CLOSE ANIMATION: POST EXIT ──────────────────────────────────────
 
       } // end if (_closeAnimate)
