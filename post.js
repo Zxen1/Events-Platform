@@ -5188,13 +5188,6 @@ const PostModule = (function() {
           slot.__animSiblings = null;
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
-          try {
-            var _scrollParent = slot.closest('.post-list') || slot.closest('.recent-panel-content');
-            if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
-              var _bsCtrl = BottomSlack.get(_scrollParent);
-              if (_bsCtrl && typeof _bsCtrl.release === 'function') _bsCtrl.release();
-            }
-          } catch (_eBs) {}
         }, 1020);
         // ── END CLOSE ANIMATION: POST EXIT ──────────────────────────────────────
 
