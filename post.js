@@ -5029,6 +5029,7 @@ const PostModule = (function() {
       function _animateCollapse() {
         var _bodyEl   = wrap.querySelector('.post-body');
         var _imgEl    = wrap.querySelector('.post-images-container');
+        var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
         var _infoEl   = wrap.querySelector('.post-info-container');
         var _memberEl = wrap.querySelector('.post-description-member');
 
@@ -5044,20 +5045,26 @@ const PostModule = (function() {
         var _bodyExpandedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
         var _imgExpandedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
 
-        // Silent measurement pass — remove class, measure, restore. No frame renders during sync code.
+        // Silent measurement pass: temporarily collapse AND call showCollapsed() so the description
+        // is truncated during measurement. Without this, _bodyCollapsedH includes the full description
+        // text, making _delta far too small and causing the animation to only cover a fraction of the
+        // real distance before the class removal snaps the rest.
+        var _savedDescHtml = descEl.innerHTML;
         wrap.classList.remove('post--expanded');
+        showCollapsed();
         if (_bodyEl) _bodyEl.getBoundingClientRect();
         var _bodyCollapsedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
         var _imgCollapsedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        // Restore expanded state for the animation
+        descEl.innerHTML = _savedDescHtml;
         wrap.classList.add('post--expanded');
         if (_bodyEl) _bodyEl.getBoundingClientRect();
 
-        var _delta     = _bodyExpandedH - _bodyCollapsedH;
-        var _imgOffset = (_imgExpandedRect && _imgCollapsedRect) ? (_imgExpandedRect.top - _imgCollapsedRect.top) : _delta;
+        var _imgOffset = (_imgExpandedRect && _imgCollapsedRect) ? (_imgExpandedRect.top - _imgCollapsedRect.top) : (_bodyExpandedH - _bodyCollapsedH);
 
         descEl.setAttribute('aria-expanded', 'false');
 
-        if (_delta > 0) {
+        if (_imgOffset > 0) {
           // Collect siblings below this post
           var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
           var _expSiblings = [];
@@ -5072,46 +5079,55 @@ const PostModule = (function() {
             }
           }
 
-          // Fade out expanded content — image slides past while this fades
+          // Fade out expanded content — exact reverse of expand fade-in
+          if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 0.5s linear'; _thumbsEl.style.opacity = '0'; }
           if (_infoEl)   { _infoEl.style.transition   = 'opacity 0.5s linear'; _infoEl.style.opacity   = '0'; }
           if (_memberEl) { _memberEl.style.transition  = 'opacity 0.5s linear'; _memberEl.style.opacity = '0'; }
           descEl.style.transition = 'opacity 0.2s linear';
           descEl.style.opacity    = '0';
 
-          // Clip body so the empty space below the rising image doesn't show
+          // Clip body so empty space below the rising image doesn't show
           if (_bodyEl) _bodyEl.style.overflow = 'hidden';
 
           // Force reflow to commit starting state before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
 
-          // Animate image and siblings UP to their collapsed positions — post--expanded stays active so
-          // the layout holds steady; we remove it in the timeout once everything is already in position
+          // Animate image and siblings UP — exact reverse of expand. post--expanded stays active so the
+          // layout holds steady; class is removed in the timeout once everything is visually in position.
           if (_imgEl) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
             _expSiblings[_ei].style.transition = 'transform 1s linear';
-            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _imgOffset + 'px)';
           }
 
           setTimeout(function() {
-            // Remove class — image and siblings are already visually at collapsed positions, so this snaps cleanly
             wrap.classList.remove('post--expanded');
 
-            if (_imgEl)   { _imgEl.style.transform   = ''; _imgEl.style.transition   = ''; }
-            if (_bodyEl)  { _bodyEl.style.overflow    = ''; }
-            if (_infoEl)  { _infoEl.style.opacity    = ''; _infoEl.style.transition  = ''; }
-            if (_memberEl){ _memberEl.style.opacity  = ''; _memberEl.style.transition = ''; }
+            if (_imgEl)    { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_bodyEl)   { _bodyEl.style.overflow    = ''; }
+            if (_thumbsEl) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.opacity = '0'; }
+            if (_infoEl)   { _infoEl.style.opacity     = ''; _infoEl.style.transition    = ''; }
+            if (_memberEl) { _memberEl.style.opacity   = ''; _memberEl.style.transition  = ''; }
             for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
               _expSiblings[_ei2].style.transform  = '';
               _expSiblings[_ei2].style.transition = '';
             }
 
+            // Swap in truncated description (already called showCollapsed() in measurement; call again
+            // now that the DOM is in its final collapsed state)
             showCollapsed();
+
+            // Fade in description and thumbs together
             descEl.style.opacity    = '0';
             descEl.style.transition = 'none';
             descEl.getBoundingClientRect();
             descEl.style.transition = 'opacity 0.5s linear';
             descEl.style.opacity    = '1';
-            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 520);
+            if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 0.5s linear'; _thumbsEl.style.opacity = '1'; }
+            setTimeout(function() {
+              descEl.style.opacity = ''; descEl.style.transition = '';
+              if (_thumbsEl) { _thumbsEl.style.opacity = ''; _thumbsEl.style.transition = ''; }
+            }, 520);
           }, 1020);
         } else {
           wrap.classList.remove('post--expanded');
@@ -5123,9 +5139,10 @@ const PostModule = (function() {
       }
 
       function _animateExpand() {
-        var _bodyEl  = wrap.querySelector('.post-body');
-        var _imgEl   = wrap.querySelector('.post-images-container');
-        var _infoEl  = wrap.querySelector('.post-info-container');
+        var _bodyEl   = wrap.querySelector('.post-body');
+        var _imgEl    = wrap.querySelector('.post-images-container');
+        var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
+        var _infoEl   = wrap.querySelector('.post-info-container');
         var _memberEl = wrap.querySelector('.post-description-member');
 
         // Capture pre-swap image position and body height
@@ -5172,24 +5189,29 @@ const PostModule = (function() {
           }
 
           // Set starting state — no transitions yet
-          // Image: FLIP to its collapsed position
+          // Image container: FLIP to its collapsed position
           if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'none'; _imgEl.style.transform = 'translateY(' + _imgOffset + 'px)'; }
-          // New content starts invisible — will fade in behind the sliding image
+          // Thumbs change from position:absolute (overlaid) to position:static (below hero) on expand.
+          // The FLIP on the container can't compensate for this internal layout change, so fade thumbs in
+          // as new content rather than trying to hold them at their old overlaid position.
+          if (_thumbsEl) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.opacity = '0'; }
+          // Remaining new content starts invisible — fades in behind the sliding image
           if (_infoEl)   { _infoEl.style.transition   = 'none'; _infoEl.style.opacity   = '0'; }
           if (_memberEl) { _memberEl.style.transition  = 'none'; _memberEl.style.opacity = '0'; }
           // descEl is already opacity:0 from the fade-out above; keep it there until we fade in
           descEl.style.transition = 'none';
-          // Siblings
+          // Siblings held at their collapsed positions (same offset as image container movement)
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
             _expSiblings[_ei].style.transition = 'none';
-            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _imgOffset + 'px)';
           }
 
           // Force reflow to commit all starting states before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
 
-          // Animate everything to final positions
+          // Animate everything to final positions over 1s
           if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(0)'; }
+          if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 1s linear'; _thumbsEl.style.opacity = '1'; }
           if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '1'; }
           if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '1'; }
           descEl.style.transition = 'opacity 1s linear';
@@ -5200,9 +5222,10 @@ const PostModule = (function() {
           }
 
           setTimeout(function() {
-            if (_imgEl)   { _imgEl.style.transform   = ''; _imgEl.style.transition   = ''; }
-            if (_infoEl)  { _infoEl.style.opacity    = ''; _infoEl.style.transition  = ''; }
-            if (_memberEl){ _memberEl.style.opacity  = ''; _memberEl.style.transition = ''; }
+            if (_imgEl)    { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_thumbsEl) { _thumbsEl.style.opacity   = ''; _thumbsEl.style.transition = ''; }
+            if (_infoEl)   { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
+            if (_memberEl) { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
             descEl.style.opacity    = '';
             descEl.style.transition = '';
             for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
