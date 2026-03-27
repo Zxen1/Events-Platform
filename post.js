@@ -5071,7 +5071,7 @@ const PostModule = (function() {
         // Expand and hold BottomSlack for the full animation duration so the floor
         // doesn't collapse mid-animation and throw content off the screen.
         try {
-          var _bsHoldEl = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+          var _bsHoldEl = slot.closest('.post-list') || slot.closest('.recent-panel-content');
           if (_bsHoldEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
             var _bsHoldCtrl = BottomSlack.get(_bsHoldEl);
             if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(1020);
@@ -5189,7 +5189,7 @@ const PostModule = (function() {
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
           try {
-            var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+            var _scrollParent = slot.closest('.post-list') || slot.closest('.recent-panel-content');
             if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
               var _bsCtrl = BottomSlack.get(_scrollParent);
               if (_bsCtrl && typeof _bsCtrl.release === 'function') _bsCtrl.release();
