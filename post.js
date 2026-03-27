@@ -3375,6 +3375,8 @@ const PostModule = (function() {
     slot.style.overflow = '';
     slot.style.position = '';
     if (slot.__animDetail) { slot.__animDetail.style.transform = ''; slot.__animDetail.style.transition = ''; slot.__animDetail = null; }
+    var _cancelPost = slot.querySelector('.post');
+    if (_cancelPost) { _cancelPost.style.position = ''; _cancelPost.style.top = ''; _cancelPost.style.left = ''; _cancelPost.style.width = ''; _cancelPost.style.zIndex = ''; _cancelPost.style.transform = ''; _cancelPost.style.transition = ''; }
     if (slot.__animCard) { slot.__animCard.style.transform = ''; slot.__animCard.style.transition = ''; slot.__animCard = null; }
     if (slot.__animSiblings) {
       for (var _csi = 0; _csi < slot.__animSiblings.length; _csi++) {
@@ -5104,10 +5106,12 @@ const PostModule = (function() {
         }
         // ── END CLOSE ANIMATION: CARD ENTER ─────────────────────────────────────
 
-        // ── CLOSE ANIMATION: POST EXIT ───────────────────────────────────────────
-        // Post slides up into the invisibility shield.
-        // All siblings below move as one unit with the post — same transform, same timing.
-        // When post is removed at end, layout is already in its final state — no snap.
+        // ── CLOSE ANIMATION: POST EXIT (layout-first) ──────────────────────────
+        // Layout changes instantly (like non-animated close). The animation is
+        // purely visual — siblings start offset and animate to their final positions.
+        var _closeOffset = _closeStartH - _cardH;
+
+        // Collect siblings (two-pass: within list + after list)
         var _closeSiblings = [];
         var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
         var _closeSib = _closeSibStart.nextElementSibling;
@@ -5117,38 +5121,50 @@ const PostModule = (function() {
           var _listSib = _closeSibList.nextElementSibling;
           while (_listSib) { _closeSiblings.push(_listSib); _listSib = _listSib.nextElementSibling; }
         }
+
+        // Step 1: Make layout final instantly.
+        // Post becomes absolute (out of flow), slot collapses to card height.
         slot.style.overflow = 'hidden';
-        openPostEl.style.transition = 'none';
-        openPostEl.style.transform = 'translateY(0)';
+        slot.style.position = 'relative';
+        slot.style.height = _cardH + 'px';
+        openPostEl.style.position = 'absolute';
+        openPostEl.style.top = '0';
+        openPostEl.style.left = '0';
+        openPostEl.style.width = '100%';
+        openPostEl.style.zIndex = '1';
+
+        // Step 2: Visually compensate siblings — they jumped up in layout,
+        // so push them back down with translateY. No transition yet.
         for (var _csi = 0; _csi < _closeSiblings.length; _csi++) {
           _closeSiblings[_csi].style.transition = 'none';
-          _closeSiblings[_csi].style.transform = 'translateY(0)';
+          _closeSiblings[_csi].style.transform = 'translateY(' + _closeOffset + 'px)';
         }
+        openPostEl.style.transition = 'none';
+        openPostEl.style.transform = 'translateY(0)';
+
         slot.__animCard = hiddenCard || null;
         slot.__animSiblings = _closeSiblings;
 
         slot.getBoundingClientRect(); // force reflow
 
-        var _closeOffset = _closeStartH - _cardH;
+        // Step 3: Animate. Post slides up, siblings slide to final positions.
         openPostEl.style.transition = 'transform 1s linear';
         openPostEl.style.transform = 'translateY(-' + _closeOffset + 'px)';
         for (var _csi2 = 0; _csi2 < _closeSiblings.length; _csi2++) {
           _closeSiblings[_csi2].style.transition = 'transform 1s linear';
-          _closeSiblings[_csi2].style.transform = 'translateY(-' + _closeOffset + 'px)';
+          _closeSiblings[_csi2].style.transform = 'translateY(0)';
         }
         if (_cardEnterClone) {
           _cardEnterClone.style.transition = 'transform 1s linear';
           _cardEnterClone.style.transform = 'translateY(0)';
         }
 
+        // Step 4: Cleanup after animation completes.
         slot.__animTimer = setTimeout(function() {
           if (_cardEnterClone && _cardEnterClone.parentNode) _cardEnterClone.parentNode.removeChild(_cardEnterClone);
           slot.__animEnterClone = null;
           openPostEl.remove();
           if (hiddenCard) {
-            // Suppress transitions for one frame so CSS :hover snaps instantly — no flash on reveal.
-            // Storefront cards also get post-card--noanim to suppress their ::after pseudo-element transition,
-            // which is not reachable via inline style.
             var _isSfCard = !!(hiddenCard.dataset && hiddenCard.dataset.storefront === '1');
             if (_isSfCard) hiddenCard.classList.add('post-card--noanim');
             hiddenCard.style.transition = 'none';
@@ -5167,6 +5183,7 @@ const PostModule = (function() {
           }
           slot.style.overflow = '';
           slot.style.position = '';
+          slot.style.height = '';
           slot.__animCard = null;
           slot.__animSiblings = null;
           slot.__animTimer = null;
