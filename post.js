@@ -1720,7 +1720,6 @@ const PostModule = (function() {
 
     var headerWrap = renderPostPanelHeader('post-panel-header');
     if (headerWrap) postListEl.appendChild(headerWrap);
-    postListEl.appendChild(BackdropComponent.createFragment(20));
 
     // Storefront grouping: group posts by member + coordinates when enabled
     var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
@@ -1856,7 +1855,6 @@ const PostModule = (function() {
       renderMapMarkers(posts);
     }
 
-    postListEl.appendChild(BackdropComponent.createFragment(20));
     if (_botS) postListEl.appendChild(_botS);
     BackdropComponent.populate(_topS);
     BackdropComponent.populate(_botS);
@@ -5769,8 +5767,6 @@ const PostModule = (function() {
     var listEl = document.createElement('div');
     listEl.className = 'recent-list';
 
-    listEl.appendChild(BackdropComponent.createFragment(20));
-
     // Render each recent entry
     history.forEach(function(entry) {
       var card = renderRecentCard(entry);
@@ -5781,8 +5777,6 @@ const PostModule = (function() {
         hydrateRecentCardIfNeeded(card, entry);
       }
     });
-
-    listEl.appendChild(BackdropComponent.createFragment(20));
 
     recentPanelContentEl.appendChild(listEl);
 
