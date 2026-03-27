@@ -5030,17 +5030,41 @@ const PostModule = (function() {
       });
 
       function _animateExpand() {
-        var _bodyEl = wrap.querySelector('.post-body');
-        var _collapsedH = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _bodyEl  = wrap.querySelector('.post-body');
+        var _imgEl   = wrap.querySelector('.post-images-container');
+        var _infoEl  = wrap.querySelector('.post-info-container');
+        var _memberEl = wrap.querySelector('.post-description-member');
 
+        // Capture pre-swap image position and body height
+        var _imgFirstRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _bodyFirstH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+
+        // Fade out the current description before swapping content
+        descEl.style.transition = 'opacity 0.2s linear';
+        descEl.style.opacity    = '0';
+
+        // DOM swap
         wrap.classList.add('post--expanded');
         descEl.setAttribute('aria-expanded', 'true');
         showExpanded();
 
-        var _expandedH = _bodyEl ? _bodyEl.offsetHeight : 0;
-        var _delta = _expandedH - _collapsedH;
+        if (!_POST_ANIMATE) {
+          descEl.style.transition = '';
+          descEl.style.opacity    = '';
+          syncLocationWallpaper(true);
+          setTooltipDirs(wrap);
+          return;
+        }
 
-        if (_delta > 0 && _POST_ANIMATE) {
+        // Force layout so post-swap measurements are accurate
+        if (_bodyEl) _bodyEl.getBoundingClientRect();
+        var _bodyLastH  = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _delta      = _bodyLastH - _bodyFirstH;
+        var _imgLastRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _imgOffset  = (_imgFirstRect && _imgLastRect) ? (_imgFirstRect.top - _imgLastRect.top) : 0;
+
+        if (_delta > 0) {
+          // Collect siblings below this post
           var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
@@ -5053,27 +5077,51 @@ const PostModule = (function() {
               while (_expListSib) { _expSiblings.push(_expListSib); _expListSib = _expListSib.nextElementSibling; }
             }
           }
-          _bodyEl.style.transition = 'none';
-          _bodyEl.style.clipPath = 'inset(0 0 ' + _delta + 'px 0)';
+
+          // Set starting state — no transitions yet
+          // Image: FLIP to its collapsed position
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'none'; _imgEl.style.transform = 'translateY(' + _imgOffset + 'px)'; }
+          // New content starts invisible — will fade in behind the sliding image
+          if (_infoEl)   { _infoEl.style.transition   = 'none'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'none'; _memberEl.style.opacity = '0'; }
+          // descEl is already opacity:0 from the fade-out above; keep it there until we fade in
+          descEl.style.transition = 'none';
+          // Siblings
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
             _expSiblings[_ei].style.transition = 'none';
-            _expSiblings[_ei].style.transform = 'translateY(-' + _delta + 'px)';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
-          _bodyEl.getBoundingClientRect(); // force reflow
-          _bodyEl.style.transition = 'clip-path 1s linear';
-          _bodyEl.style.clipPath = 'inset(0 0 0px 0)';
+
+          // Force reflow to commit all starting states before transitions fire
+          if (_imgEl) _imgEl.getBoundingClientRect();
+
+          // Animate everything to final positions
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(0)'; }
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '1'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '1'; }
+          descEl.style.transition = 'opacity 1s linear';
+          descEl.style.opacity    = '1';
           for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
             _expSiblings[_ei2].style.transition = 'transform 1s linear';
-            _expSiblings[_ei2].style.transform = 'translateY(0)';
+            _expSiblings[_ei2].style.transform  = 'translateY(0)';
           }
+
           setTimeout(function() {
-            _bodyEl.style.transition = '';
-            _bodyEl.style.clipPath = '';
+            if (_imgEl)   { _imgEl.style.transform   = ''; _imgEl.style.transition   = ''; }
+            if (_infoEl)  { _infoEl.style.opacity    = ''; _infoEl.style.transition  = ''; }
+            if (_memberEl){ _memberEl.style.opacity  = ''; _memberEl.style.transition = ''; }
+            descEl.style.opacity    = '';
+            descEl.style.transition = '';
             for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
-              _expSiblings[_ei3].style.transform = '';
+              _expSiblings[_ei3].style.transform  = '';
               _expSiblings[_ei3].style.transition = '';
             }
           }, 1020);
+        } else {
+          // No height change — just restore description opacity
+          descEl.style.transition = 'opacity 0.3s linear';
+          descEl.style.opacity    = '1';
+          setTimeout(function() { descEl.style.transition = ''; }, 320);
         }
 
         syncLocationWallpaper(true);
