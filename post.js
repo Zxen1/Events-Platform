@@ -1720,6 +1720,7 @@ const PostModule = (function() {
 
     var headerWrap = renderPostPanelHeader('post-panel-header');
     if (headerWrap) postListEl.appendChild(headerWrap);
+    postListEl.appendChild(BackdropComponent.createFragment(20));
 
     // Storefront grouping: group posts by member + coordinates when enabled
     var _sfEnabled = !!(window.App && App.getState && App.getState('settings') && App.getState('settings').storefront_enabled);
@@ -1855,6 +1856,7 @@ const PostModule = (function() {
       renderMapMarkers(posts);
     }
 
+    postListEl.appendChild(BackdropComponent.createFragment(20));
     if (_botS) postListEl.appendChild(_botS);
     BackdropComponent.populate(_topS);
     BackdropComponent.populate(_botS);
@@ -3219,6 +3221,11 @@ const PostModule = (function() {
           var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
           var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
+          var _openSibList = _openSibStart.parentElement;
+          if (_openSibList && (_openSibList.classList.contains('post-list') || _openSibList.classList.contains('recent-list'))) {
+            var _listSib = _openSibList.nextElementSibling;
+            while (_listSib) { _openSiblings.push(_listSib); _listSib = _listSib.nextElementSibling; }
+          }
           slot.style.overflow = 'hidden';
           detail.style.transition = 'none';
           detail.style.transform = 'translateY(-' + _openOffset + 'px)';
@@ -5114,6 +5121,11 @@ const PostModule = (function() {
         var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
         var _closeSib = _closeSibStart.nextElementSibling;
         while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
+        var _closeSibList = _closeSibStart.parentElement;
+        if (_closeSibList && (_closeSibList.classList.contains('post-list') || _closeSibList.classList.contains('recent-list'))) {
+          var _listSib = _closeSibList.nextElementSibling;
+          while (_listSib) { _closeSiblings.push(_listSib); _listSib = _listSib.nextElementSibling; }
+        }
         slot.style.overflow = 'hidden';
         openPostEl.style.transition = 'none';
         openPostEl.style.transform = 'translateY(0)';
@@ -5757,6 +5769,8 @@ const PostModule = (function() {
     var listEl = document.createElement('div');
     listEl.className = 'recent-list';
 
+    listEl.appendChild(BackdropComponent.createFragment(20));
+
     // Render each recent entry
     history.forEach(function(entry) {
       var card = renderRecentCard(entry);
@@ -5767,6 +5781,8 @@ const PostModule = (function() {
         hydrateRecentCardIfNeeded(card, entry);
       }
     });
+
+    listEl.appendChild(BackdropComponent.createFragment(20));
 
     recentPanelContentEl.appendChild(listEl);
 

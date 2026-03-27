@@ -14288,8 +14288,17 @@ var BackdropComponent = (function() {
         slackEl.appendChild(frag);
     }
 
+    function createFragment(count) {
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < count; i++) {
+            frag.appendChild(buildGhostCard());
+        }
+        return frag;
+    }
+
     return {
-        populate: populate
+        populate: populate,
+        createFragment: createFragment
     };
 })();
 
