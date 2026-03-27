@@ -7193,6 +7193,16 @@ const BottomSlack = (function() {
             },
             trim: function() {
                 try { trimSlack(); } catch (e0) {}
+            },
+            hold: function(ms) {
+                try {
+                    var holdDur = (typeof ms === 'number' && ms > 0) ? ms : clickHoldMs;
+                    clickHoldUntil = Date.now() + holdDur;
+                    applySlackPx(expandedSlackPx);
+                } catch (e0) {}
+            },
+            release: function() {
+                try { requestCollapseOffscreen(); } catch (e0) {}
             }
         };
         

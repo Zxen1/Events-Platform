@@ -5068,6 +5068,16 @@ const PostModule = (function() {
         if (!slot.children.length) slot.remove();
       } else {
 
+        // Expand and hold BottomSlack for the full animation duration so the floor
+        // doesn't collapse mid-animation and throw content off the screen.
+        try {
+          var _bsHoldEl = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+          if (_bsHoldEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
+            var _bsHoldCtrl = BottomSlack.get(_bsHoldEl);
+            if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(1020);
+          }
+        } catch (_eBsHold) {}
+
         // ── CLOSE ANIMATION: CARD ENTER ──────────────────────────────────────────
         // Stored hovered-state clone (captured at open time) slides down from the
         // invisibility shield into the card's resting position.
@@ -5182,7 +5192,7 @@ const PostModule = (function() {
             var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
             if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
               var _bsCtrl = BottomSlack.get(_scrollParent);
-              if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
+              if (_bsCtrl && typeof _bsCtrl.release === 'function') _bsCtrl.release();
             }
           } catch (_eBs) {}
         }, 1020);
