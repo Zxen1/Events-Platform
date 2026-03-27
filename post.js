@@ -5029,32 +5029,72 @@ const PostModule = (function() {
         applyTruncation();
       });
 
+      function _animateExpand() {
+        var _bodyEl = wrap.querySelector('.post-body');
+        var _collapsedH = _bodyEl ? _bodyEl.offsetHeight : 0;
+
+        wrap.classList.add('post--expanded');
+        descEl.setAttribute('aria-expanded', 'true');
+        showExpanded();
+
+        var _expandedH = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _delta = _expandedH - _collapsedH;
+
+        if (_delta > 0 && _POST_ANIMATE) {
+          var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
+          var _expSiblings = [];
+          if (_expSlot) {
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expSib = _expSibStart.nextElementSibling;
+            while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
+            var _expSibList = _expSibStart.parentElement;
+            if (_expSibList && (_expSibList.classList.contains('post-list') || _expSibList.classList.contains('recent-list'))) {
+              var _expListSib = _expSibList.nextElementSibling;
+              while (_expListSib) { _expSiblings.push(_expListSib); _expListSib = _expListSib.nextElementSibling; }
+            }
+          }
+          _bodyEl.style.transition = 'none';
+          _bodyEl.style.clipPath = 'inset(0 0 ' + _delta + 'px 0)';
+          for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
+            _expSiblings[_ei].style.transition = 'none';
+            _expSiblings[_ei].style.transform = 'translateY(-' + _delta + 'px)';
+          }
+          _bodyEl.getBoundingClientRect(); // force reflow
+          _bodyEl.style.transition = 'clip-path 1s linear';
+          _bodyEl.style.clipPath = 'inset(0 0 0px 0)';
+          for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
+            _expSiblings[_ei2].style.transition = 'transform 1s linear';
+            _expSiblings[_ei2].style.transform = 'translateY(0)';
+          }
+          setTimeout(function() {
+            _bodyEl.style.transition = '';
+            _bodyEl.style.clipPath = '';
+            for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
+              _expSiblings[_ei3].style.transform = '';
+              _expSiblings[_ei3].style.transition = '';
+            }
+          }, 1020);
+        }
+
+        syncLocationWallpaper(true);
+        setTooltipDirs(wrap);
+      }
+
       descEl.addEventListener('click', function(e) {
-        var isExpanded = wrap.classList.contains('post--expanded');
-        if (isExpanded) {
-          // Already expanded - just refresh wallpaper in case it was frozen by click-away
+        if (wrap.classList.contains('post--expanded')) {
           syncLocationWallpaper(true);
           return;
         }
         e.preventDefault();
-        wrap.classList.add('post--expanded');
-        descEl.setAttribute('aria-expanded', 'true');
-        showExpanded();
-        syncLocationWallpaper(true);
-        setTooltipDirs(wrap);
+        _animateExpand();
       });
-      
+
       // Also handle keyboard for accessibility (only expand, not collapse)
       descEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
-          var isExpanded = wrap.classList.contains('post--expanded');
-          if (isExpanded) return;
+          if (wrap.classList.contains('post--expanded')) return;
           e.preventDefault();
-          wrap.classList.add('post--expanded');
-          descEl.setAttribute('aria-expanded', 'true');
-          showExpanded();
-          syncLocationWallpaper(true);
-          setTooltipDirs(wrap);
+          _animateExpand();
         }
       });
     }
