@@ -3141,7 +3141,8 @@ const PostModule = (function() {
     }
 
     // Build the detail view with a fresh card (original stays hidden in the slot).
-    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts, options.sfOpenPostId);
+    var _sfOnFirstLoadRef = { fn: null };
+    var detail = buildPostDetail(post, null, fromRecent, mapCardIndex, options.storefrontPosts, options.sfOpenPostId, _sfOnFirstLoadRef);
 
     if (slot) {
       // Expand in place: hide only the card, insert detail at the card's position.
@@ -3160,12 +3161,15 @@ const PostModule = (function() {
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds && !slot.classList.contains('posteditor-item');
+        // Storefront open animation: card exit plays immediately; post enter is deferred until
+        // the initial post fetch completes (content height is unknown until then).
+        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !!slot.dataset.sfIds;
         slot.__openedFromExternal = !!(options.fromMap || options.source);
 
         // ── OPEN ANIMATION: CARD EXIT ───────────────────────────────────────────
         // Card clone slides up into the invisibility shield (clip) and disappears.
         // Real card is hidden underneath without visual disruption.
-        if (_shouldAnimate) {
+        if (_shouldAnimate || _sfShouldAnimate) {
           if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
           var _exitClone = cardToHide.cloneNode(true);
           cardToHide.classList.remove('recent-card--active');
@@ -3212,6 +3216,65 @@ const PostModule = (function() {
         // Bottom pixel of post starts and ends at the same point as the postcard bottom.
         var _openCardH = Math.round(_exitRect.height);
         slot.__cardH = _openCardH; // stored for close animation — card is display:none by then
+
+        // Storefront wait state: lock slot to card height and hide detail until the initial
+        // post fetch completes. _sfOnFirstLoad is called by setupPostDetailEvents once done.
+        var _sfOnFirstLoad = null;
+        if (_sfShouldAnimate) {
+          slot.style.overflow = 'hidden';
+          slot.style.height = _openCardH + 'px';
+          detail.style.visibility = 'hidden';
+          _sfOnFirstLoad = function() {
+            if (!detail.parentNode) return; // storefront closed before fetch completed
+            slot.style.height = '';
+            detail.style.visibility = '';
+            var _sfPostH = detail.offsetHeight;
+            var _sfOffset = _sfPostH - _openCardH;
+            if (_sfOffset <= 0) { slot.style.overflow = ''; return; }
+            var _sfSiblings = [];
+            var _sfSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+            var _sfSib = _sfSibStart.nextElementSibling;
+            while (_sfSib) { _sfSiblings.push(_sfSib); _sfSib = _sfSib.nextElementSibling; }
+            var _sfSibList = _sfSibStart.parentElement;
+            if (_sfSibList && (_sfSibList.classList.contains('post-list') || _sfSibList.classList.contains('recent-list'))) {
+              var _sfListSib = _sfSibList.nextElementSibling;
+              while (_sfListSib) { _sfSiblings.push(_sfListSib); _sfListSib = _sfListSib.nextElementSibling; }
+            }
+            slot.style.overflow = 'hidden';
+            detail.style.transition = 'none';
+            detail.style.transform = 'translateY(-' + _sfOffset + 'px)';
+            for (var _sfi = 0; _sfi < _sfSiblings.length; _sfi++) {
+              _sfSiblings[_sfi].style.transition = 'none';
+              _sfSiblings[_sfi].style.transform = 'translateY(-' + _sfOffset + 'px)';
+            }
+            slot.__animDetail = detail;
+            slot.__animSiblings = _sfSiblings;
+            slot.getBoundingClientRect(); // force reflow
+            detail.style.transition = 'transform 1s linear';
+            detail.style.transform = 'translateY(0)';
+            for (var _sfi2 = 0; _sfi2 < _sfSiblings.length; _sfi2++) {
+              _sfSiblings[_sfi2].style.transition = 'transform 1s linear';
+              _sfSiblings[_sfi2].style.transform = 'translateY(0)';
+            }
+            slot.__animTimer = setTimeout(function() {
+              detail.style.transform = '';
+              detail.style.transition = '';
+              for (var _sfi3 = 0; _sfi3 < _sfSiblings.length; _sfi3++) {
+                _sfSiblings[_sfi3].style.transform = '';
+                _sfSiblings[_sfi3].style.transition = '';
+              }
+              slot.style.overflow = '';
+              slot.style.position = '';
+              slot.__animDetail = null;
+              slot.__animSiblings = null;
+              slot.__animTimer = null;
+            }, 1020);
+          };
+          // Assign to ref so setupPostDetailEvents can invoke it after the fetch completes.
+          // This assignment is always synchronous before any .then() callback can fire.
+          _sfOnFirstLoadRef.fn = _sfOnFirstLoad;
+        }
+
         if (_shouldAnimate) {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
@@ -3445,7 +3508,7 @@ const PostModule = (function() {
     });
   }
 
-  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts, sfOpenPostId) {
+  function buildPostDetail(post, existingCard, fromRecent, activeMapCardIndex, storefrontPosts, sfOpenPostId, sfOnFirstLoadRef) {
     // Get all map cards (locations)
     var locationListAll = post.map_cards || [];
     var idx = (typeof activeMapCardIndex === 'number' && isFinite(activeMapCardIndex)) ? activeMapCardIndex : 0;
@@ -4107,7 +4170,7 @@ const PostModule = (function() {
     }
 
     // Event handlers
-    setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId);
+    setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId, sfOnFirstLoadRef);
 
     return wrap;
   }
@@ -4168,7 +4231,8 @@ const PostModule = (function() {
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
-  function setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId) {
+  function setupPostDetailEvents(wrap, post, isLocationFiltered, sfMenuPosts, sfOpenPostId, sfOnFirstLoadRef) {
+    var _sfFirstLoadFired = false;
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
@@ -4356,6 +4420,10 @@ const PostModule = (function() {
               }
             }
             if (postBody) contentEl.appendChild(postBody);
+            if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
+              _sfFirstLoadFired = true;
+              sfOnFirstLoadRef.fn();
+            }
             new MutationObserver(function() {
               wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
             }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
