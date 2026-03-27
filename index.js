@@ -834,6 +834,9 @@ const App = (function() {
     // Apply per-tab config first
     applySlackConfig();
     
+    // REGISTRY: every scroll container that needs TopSlack/BottomSlack MUST be listed here.
+    // BottomSlack.get(el) returns null for any element not in this list — hold(), forceOff(),
+    // and all slack behaviour will silently do nothing. Add new scroll containers here first.
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content'];
     var isMobile = false;
     try {

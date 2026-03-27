@@ -7161,10 +7161,15 @@ const BottomSlack = (function() {
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
 
+        // trimSlack: fires after every click (see listener below) to recalculate slack based on
+        // current scroll position. CRITICAL: it calls applySlackPx directly, bypassing all other
+        // guards — it will silently collapse slack that holdClickSlack or hold() just expanded.
+        // The clickHoldUntil guard is ESSENTIAL: without it, any hold() call made during a click
+        // handler (e.g. closePost animation start) is immediately undone by this RAF.
         function trimSlack() {
             try {
                 if (currentSlackPx <= 0) return;
-                if (Date.now() < clickHoldUntil) return;
+                if (Date.now() < clickHoldUntil) return; // respect hold() window — do not remove
                 var totalH = scrollEl.scrollHeight || 0;
                 var viewEnd = (scrollEl.scrollTop || 0) + (scrollEl.clientHeight || 0);
                 var realEnd = totalH - (currentSlackPx || 0);
@@ -7173,6 +7178,9 @@ const BottomSlack = (function() {
             } catch (e) {}
         }
 
+        // Fires on every click — including close buttons, postcards, tabs. trimSlack recalculates
+        // in the next frame. Any code that expands slack on click MUST use hold() with sufficient
+        // duration, or trimSlack will immediately collapse it.
         scrollEl.addEventListener('click', function() {
             requestAnimationFrame(function() {
                 trimSlack();
@@ -7195,6 +7203,10 @@ const BottomSlack = (function() {
             trim: function() {
                 try { trimSlack(); } catch (e0) {}
             },
+            // hold(ms): expands slack immediately and blocks trimSlack + collapse logic for ms
+            // milliseconds. Use when a click handler needs slack to stay expanded (e.g. close
+            // animation). Duration must cover the full operation — trimSlack fires in a RAF after
+            // every click and will collapse slack the moment the hold window expires.
             hold: function(ms) {
                 try {
                     var holdDur = (typeof ms === 'number' && ms > 0) ? ms : clickHoldMs;
