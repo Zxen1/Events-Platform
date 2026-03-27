@@ -7164,6 +7164,7 @@ const BottomSlack = (function() {
         function trimSlack() {
             try {
                 if (currentSlackPx <= 0) return;
+                if (Date.now() < clickHoldUntil) return;
                 var totalH = scrollEl.scrollHeight || 0;
                 var viewEnd = (scrollEl.scrollTop || 0) + (scrollEl.clientHeight || 0);
                 var realEnd = totalH - (currentSlackPx || 0);
