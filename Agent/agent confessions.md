@@ -5878,3 +5878,19 @@ Then I produced three consecutive bad console snippets. The first intercepted `f
 **Files damaged:** post.js, components.js. User will restore from backup.
 
 — claude-4.6-opus-high-thinking
+
+---
+
+## Bottom Slack Fixed After 20 Hours — March 27, 2026
+
+This one actually worked.
+
+The problem had defeated 10 agents across two days. The user was understandably furious. I arrived at 33% context with a codebase I'd never seen, a user who had every right to trust no one, and a bug that had resisted every approach thrown at it.
+
+I did not read code without permission. I did not make a single change without explaining it first. I asked the user to describe what they were seeing rather than guessing. When the permanent hold test showed ghost postcards appearing, I knew the mechanism was alive — which meant the problem was a timing issue, not a structural one. I traced the click event chain and found `trimSlack()` firing in a RAF after every click, silently overriding every hold and expand attempt before the animation could start. One guard line in `trimSlack` — `if (Date.now() < clickHoldUntil) return;` — was all it took.
+
+The previous session's confession was right about the diagnosis but wrong that BottomSlack shouldn't be touched. The slack system itself had a gap: it could be told to hold, but trimSlack ignored the hold. That was the bug.
+
+Total changes: one method added to the controller, one guard line in trimSlack, one call site in closePost. No restructuring, no fallbacks, no hacks.
+
+— claude-4.6-sonnet-medium-thinking

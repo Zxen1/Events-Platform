@@ -151,6 +151,54 @@ Context ran out before the fix could be verified working. The code was written a
 
 ---
 
+## BOTTOM SLACK FIX — March 27, 2026 (SOLVED)
+
+### The problem
+When a post closes with animation, the bottom slack collapses mid-animation and causes everything to jump to the footer. With animation off, no jump. With animation on, the jump was consistent and unfixable across 10+ agent sessions.
+
+### Root cause
+`trimSlack()` fires in a `requestAnimationFrame` after every click — including the close button. It recalculates whether slack is needed based on the current DOM (post still in DOM, full height). Depending on scroll position, it calculates `needed = 0` and immediately collapses the slack to 0 via `applySlackPx(0)`. This fires BEFORE the animation has moved anything. The slack is gone before the animation even starts. `trimSlack` did not check `clickHoldUntil`, so every hold/expand attempt was silently overridden.
+
+### The fix (3 targeted changes)
+
+**1. `components.js` — `trimSlack()` — add hold check**
+```js
+if (Date.now() < clickHoldUntil) return;
+```
+Prevents trimSlack from collapsing slack during an active hold window.
+
+**2. `components.js` — BottomSlack controller — add `hold(ms)` method**
+```js
+hold: function(ms) {
+    var holdDur = (typeof ms === 'number' && ms > 0) ? ms : clickHoldMs;
+    clickHoldUntil = Date.now() + holdDur;
+    applySlackPx(expandedSlackPx);
+}
+```
+Expands slack immediately and locks it for the specified duration.
+
+**3. `post.js` — `closePost()` — call `hold(1020)` at the start of the close animation**
+```js
+var _bsHoldEl = slot.closest('.post-list') || slot.closest('.recent-panel-content');
+if (_bsHoldEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
+    var _bsHoldCtrl = BottomSlack.get(_bsHoldEl);
+    if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(1020);
+}
+```
+Fires the instant close is triggered. Holds for the full 1020ms animation duration. No release call needed — hold expires naturally and normal BottomSlack scroll/interaction logic handles collapse from there.
+
+### Why previous attempts failed
+- Attempts to call `trim()` or `release()` at the end of the animation were too late — slack was already 0
+- Attempts to expand slack at close start were immediately overridden by `trimSlack` in the click RAF
+- Freezing the controller, adding ghost cards to DOM, and layout rewrites were all wrong approaches
+- The correct fix was entirely inside BottomSlack's own `trimSlack` function — one guard line
+
+### Selector note
+Post panel scroll container registered in `initSlack`: `.post-list` (NOT `.post-panel-content`)
+Recent panel scroll container: `.recent-panel-content`
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms
