@@ -7190,6 +7190,9 @@ const BottomSlack = (function() {
                 locked = false;
                 applySlackPx(collapsedSlackPx);
                 try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
+            },
+            trim: function() {
+                try { trimSlack(); } catch (e0) {}
             }
         };
         
@@ -7206,7 +7209,8 @@ const BottomSlack = (function() {
     }
     
     return {
-        attach: attach
+        attach: attach,
+        get: function(scrollEl) { try { return attached.get(scrollEl) || null; } catch (e) { return null; } }
     };
 })();
 

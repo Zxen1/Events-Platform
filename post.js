@@ -3218,7 +3218,7 @@ const PostModule = (function() {
           var _openSiblings = [];
           var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
           var _openSib = _openSibStart.nextElementSibling;
-          while (_openSib) { if (!_openSib.classList.contains('bottomSlack') && !_openSib.classList.contains('topSlack')) _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
+          while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           slot.style.overflow = 'hidden';
           detail.style.transition = 'none';
           detail.style.transform = 'translateY(-' + _openOffset + 'px)';
@@ -3247,6 +3247,13 @@ const PostModule = (function() {
             slot.__animDetail = null;
             slot.__animSiblings = null;
             slot.__animTimer = null;
+            try {
+              var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+              if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
+                var _bsCtrl = BottomSlack.get(_scrollParent);
+                if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
+              }
+            } catch (_eBs) {}
           }, 1020);
         }
         // ── END OPEN ANIMATION: POST ENTER ─────────────────────────────────────
@@ -5106,7 +5113,7 @@ const PostModule = (function() {
         var _closeSiblings = [];
         var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
         var _closeSib = _closeSibStart.nextElementSibling;
-        while (_closeSib) { if (!_closeSib.classList.contains('bottomSlack') && !_closeSib.classList.contains('topSlack')) _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
+        while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
         slot.style.overflow = 'hidden';
         openPostEl.style.transition = 'none';
         openPostEl.style.transform = 'translateY(0)';
@@ -5161,6 +5168,13 @@ const PostModule = (function() {
           slot.__animSiblings = null;
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
+          try {
+            var _scrollParent = slot.closest('.post-panel-content') || slot.closest('.recent-panel-content');
+            if (_scrollParent && window.BottomSlack && typeof BottomSlack.get === 'function') {
+              var _bsCtrl = BottomSlack.get(_scrollParent);
+              if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
+            }
+          } catch (_eBs) {}
         }, 1020);
         // ── END CLOSE ANIMATION: POST EXIT ──────────────────────────────────────
 
