@@ -860,7 +860,8 @@ const App = (function() {
         }
 
         // Desktop: Attach both slack systems - they check data attributes internally
-        BottomSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        var _bsCtrlTest = BottomSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        if (_bsCtrlTest && typeof _bsCtrlTest.hold === 'function') _bsCtrlTest.hold(999999999);
         TopSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
