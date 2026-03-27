@@ -4974,10 +4974,7 @@ const PostModule = (function() {
           seeLessEl.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            wrap.classList.remove('post--expanded');
-            descEl.setAttribute('aria-expanded', 'false');
-            showCollapsed();
-            syncLocationWallpaper(false);
+            _animateCollapse();
           });
         }
       }
@@ -5028,6 +5025,108 @@ const PostModule = (function() {
       requestAnimationFrame(function() {
         applyTruncation();
       });
+
+      function _animateCollapse() {
+        var _bodyEl   = wrap.querySelector('.post-body');
+        var _imgEl    = wrap.querySelector('.post-images-container');
+        var _infoEl   = wrap.querySelector('.post-info-container');
+        var _memberEl = wrap.querySelector('.post-description-member');
+
+        if (!_POST_ANIMATE) {
+          wrap.classList.remove('post--expanded');
+          descEl.setAttribute('aria-expanded', 'false');
+          showCollapsed();
+          syncLocationWallpaper(false);
+          return;
+        }
+
+        // Capture expanded positions before collapsing
+        var _imgExpandedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _bodyExpandedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+
+        // Pin infoEl and memberEl to display:block so removing post--expanded doesn't hide them mid-fade
+        if (_infoEl)   _infoEl.style.display   = 'block';
+        if (_memberEl) _memberEl.style.display  = 'block';
+
+        // Fade out expanded content
+        if (_infoEl)   { _infoEl.style.transition   = 'opacity 0.5s linear'; _infoEl.style.opacity   = '0'; }
+        if (_memberEl) { _memberEl.style.transition  = 'opacity 0.5s linear'; _memberEl.style.opacity = '0'; }
+        descEl.style.transition = 'opacity 0.2s linear';
+        descEl.style.opacity    = '0';
+
+        // DOM collapse
+        wrap.classList.remove('post--expanded');
+        descEl.setAttribute('aria-expanded', 'false');
+
+        // Force layout then measure collapsed positions
+        if (_bodyEl) _bodyEl.getBoundingClientRect();
+        var _bodyCollapsedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _delta            = _bodyExpandedH - _bodyCollapsedH;
+        var _imgCollapsedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _imgOffset = (_imgExpandedRect && _imgCollapsedRect) ? (_imgExpandedRect.top - _imgCollapsedRect.top) : 0;
+
+        if (_delta > 0) {
+          // Collect siblings below this post
+          var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
+          var _expSiblings = [];
+          if (_expSlot) {
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expSib = _expSibStart.nextElementSibling;
+            while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
+            var _expSibList = _expSibStart.parentElement;
+            if (_expSibList && (_expSibList.classList.contains('post-list') || _expSibList.classList.contains('recent-list'))) {
+              var _expListSib = _expSibList.nextElementSibling;
+              while (_expListSib) { _expSiblings.push(_expListSib); _expListSib = _expListSib.nextElementSibling; }
+            }
+          }
+
+          // FLIP invert — hold image and siblings at their expanded visual positions
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'none'; _imgEl.style.transform = 'translateY(' + _imgOffset + 'px)'; }
+          for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
+            _expSiblings[_ei].style.transition = 'none';
+            _expSiblings[_ei].style.transform  = 'translateY(' + _delta + 'px)';
+          }
+
+          // Force reflow to commit invert state before transitions fire
+          if (_imgEl) _imgEl.getBoundingClientRect();
+
+          // Animate image and siblings up to collapsed positions
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(0)'; }
+          for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
+            _expSiblings[_ei2].style.transition = 'transform 1s linear';
+            _expSiblings[_ei2].style.transform  = 'translateY(0)';
+          }
+
+          setTimeout(function() {
+            if (_imgEl)   { _imgEl.style.transform   = ''; _imgEl.style.transition   = ''; }
+            if (_infoEl)  { _infoEl.style.display    = ''; _infoEl.style.opacity    = ''; _infoEl.style.transition  = ''; }
+            if (_memberEl){ _memberEl.style.display  = ''; _memberEl.style.opacity  = ''; _memberEl.style.transition = ''; }
+            for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
+              _expSiblings[_ei3].style.transform  = '';
+              _expSiblings[_ei3].style.transition = '';
+            }
+            showCollapsed();
+            descEl.style.opacity    = '0';
+            descEl.style.transition = 'none';
+            descEl.getBoundingClientRect();
+            descEl.style.transition = 'opacity 0.5s linear';
+            descEl.style.opacity    = '1';
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 520);
+          }, 1020);
+        } else {
+          if (_infoEl)  { _infoEl.style.display  = ''; _infoEl.style.opacity  = ''; _infoEl.style.transition  = ''; }
+          if (_memberEl){ _memberEl.style.display = ''; _memberEl.style.opacity = ''; _memberEl.style.transition = ''; }
+          showCollapsed();
+          descEl.style.opacity    = '0';
+          descEl.style.transition = 'none';
+          descEl.getBoundingClientRect();
+          descEl.style.transition = 'opacity 0.5s linear';
+          descEl.style.opacity    = '1';
+          setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 520);
+        }
+
+        syncLocationWallpaper(false);
+      }
 
       function _animateExpand() {
         var _bodyEl  = wrap.querySelector('.post-body');
