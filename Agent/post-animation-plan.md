@@ -320,3 +320,4 @@ Pattern copied from Recent panel: checks `countdown_postcards` admin setting, ca
 - All animation is interruptible via _cancelSlotAnimation(slot)
 - `_POST_ANIMATE = false` disables everything instantly
 - `_POST_ANIM_DUR` controls speed — change one value, all five paths scale together
+- Animation testing must always include multiple posts above and below the active post so we verify panel movement, upward/downward click cases, and sibling locking inside their correct containers
