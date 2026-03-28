@@ -4494,37 +4494,9 @@ const PostModule = (function() {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
           addToRecentHistory(selectedPost, 0);
-          var sfSlot = contentEl.querySelector('.post-storefront-main-container');
-          var outerSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
-
-          // ── STOREFRONT SWITCH ANIMATION: CAPTURE OLD STATE ───────────────────────
-          var _sfSwitchAnimate = _POST_ANIMATE && !!sfSlot && !!outerSlot && sfSlot.children.length > 0;
-          var _sfOldH = 0;
-          var _sfExitClone = null;
-          if (_sfSwitchAnimate) {
-            if (sfSlot.__sfSwitchTimer) { clearTimeout(sfSlot.__sfSwitchTimer); sfSlot.__sfSwitchTimer = null; }
-            if (sfSlot.__sfExitClone && sfSlot.__sfExitClone.parentNode) sfSlot.__sfExitClone.parentNode.removeChild(sfSlot.__sfExitClone);
-            sfSlot.__sfExitClone = null;
-            if (sfSlot.__switchSiblings) {
-              for (var _csi0 = 0; _csi0 < sfSlot.__switchSiblings.length; _csi0++) { sfSlot.__switchSiblings[_csi0].style.transform = ''; sfSlot.__switchSiblings[_csi0].style.transition = ''; }
-              sfSlot.__switchSiblings = null;
-            }
-            _sfOldH = sfSlot.offsetHeight;
-            _sfExitClone = document.createElement('div');
-            _sfExitClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;pointer-events:none;transition:none;';
-            while (sfSlot.firstChild) _sfExitClone.appendChild(sfSlot.firstChild);
-            sfSlot.style.position = 'relative';
-            sfSlot.style.overflow = 'hidden';
-            sfSlot.style.height = _sfOldH + 'px';
-            sfSlot.appendChild(_sfExitClone);
-            sfSlot.__sfExitClone = _sfExitClone;
-          } else {
-            if (sfSlot) sfSlot.innerHTML = ''; else contentEl.innerHTML = '';
-          }
-          // ── END STOREFRONT SWITCH ANIMATION: CAPTURE OLD STATE ──────────────────
-
+          contentEl.innerHTML = '';
           loadPostById(selectedPost.id).then(function(fullPost) {
-            if (!fullPost) { if (sfSlot) sfSlot.innerHTML = ''; else contentEl.innerHTML = ''; return; }
+            if (!fullPost) { contentEl.innerHTML = ''; return; }
             if (fullPost.subcategory_color) {
               var _sfHex = fullPost.subcategory_color.replace('#', '');
               var _sfR = parseInt(_sfHex.substring(0, 2), 16);
@@ -4545,10 +4517,10 @@ const PostModule = (function() {
             tempDetail.classList.remove('component-locationwallpaper-container');
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
-            var targetEl = sfSlot || contentEl;
+            contentEl.innerHTML = '';
             wrap.classList.remove('post--expanded');
             if (postHeader) {
-              targetEl.appendChild(postHeader);
+              contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
                 // buildPostDetail calls setupPostDetailEvents internally, which already attached a handler
@@ -4579,75 +4551,7 @@ const PostModule = (function() {
                 });
               }
             }
-            if (postBody) targetEl.appendChild(postBody);
-
-            // ── STOREFRONT SWITCH ANIMATION: RUN ─────────────────────────────────────
-            if (_sfSwitchAnimate && sfSlot && _sfExitClone) {
-              var _sfNewEls = [];
-              if (postHeader) _sfNewEls.push(postHeader);
-              if (postBody) _sfNewEls.push(postBody);
-              var _sfNewH = 0;
-              for (var _sni = 0; _sni < _sfNewEls.length; _sni++) { _sfNewH += _sfNewEls[_sni].offsetHeight; }
-              // Collect siblings of the outer slot — same pattern as close animation
-              var _switchSiblings = [];
-              var _switchSibStart = (outerSlot.parentElement && (outerSlot.parentElement.classList.contains('post-outer-container') || outerSlot.parentElement.classList.contains('recent-outer-container'))) ? outerSlot.parentElement : outerSlot;
-              var _switchSib = _switchSibStart.nextElementSibling;
-              while (_switchSib) { _switchSiblings.push(_switchSib); _switchSib = _switchSib.nextElementSibling; }
-              var _switchSibList = _switchSibStart.parentElement;
-              if (_switchSibList && (_switchSibList.classList.contains('post-list') || _switchSibList.classList.contains('recent-list'))) {
-                var _switchListSib = _switchSibList.nextElementSibling;
-                while (_switchListSib) { _switchSiblings.push(_switchListSib); _switchListSib = _switchListSib.nextElementSibling; }
-              }
-              sfSlot.__switchSiblings = _switchSiblings;
-              var _switchSibOffset = _sfOldH - _sfNewH;
-              if (_sfNewH > 0) {
-                // Set starting positions — no transition
-                _sfExitClone.style.transition = 'none';
-                _sfExitClone.style.transform = 'translateY(0)';
-                for (var _sni2 = 0; _sni2 < _sfNewEls.length; _sni2++) {
-                  _sfNewEls[_sni2].style.transition = 'none';
-                  _sfNewEls[_sni2].style.transform = 'translateY(-' + _sfNewH + 'px)';
-                }
-                for (var _wsib = 0; _wsib < _switchSiblings.length; _wsib++) {
-                  _switchSiblings[_wsib].style.transition = 'none';
-                  _switchSiblings[_wsib].style.transform = 'translateY(0)';
-                }
-                sfSlot.getBoundingClientRect(); // force reflow
-                // Animate
-                _sfExitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-                _sfExitClone.style.transform = 'translateY(-' + _sfOldH + 'px)';
-                for (var _sni3 = 0; _sni3 < _sfNewEls.length; _sni3++) {
-                  _sfNewEls[_sni3].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-                  _sfNewEls[_sni3].style.transform = 'translateY(0)';
-                }
-                if (_switchSibOffset !== 0) {
-                  for (var _wsib2 = 0; _wsib2 < _switchSiblings.length; _wsib2++) {
-                    _switchSiblings[_wsib2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-                    _switchSiblings[_wsib2].style.transform = 'translateY(-' + _switchSibOffset + 'px)';
-                  }
-                }
-                sfSlot.__sfSwitchTimer = setTimeout(function() {
-                  if (_sfExitClone.parentNode) _sfExitClone.parentNode.removeChild(_sfExitClone);
-                  sfSlot.__sfExitClone = null;
-                  sfSlot.__sfSwitchTimer = null;
-                  sfSlot.__switchSiblings = null;
-                  for (var _sni4 = 0; _sni4 < _sfNewEls.length; _sni4++) { _sfNewEls[_sni4].style.transform = ''; _sfNewEls[_sni4].style.transition = ''; }
-                  for (var _wsib3 = 0; _wsib3 < _switchSiblings.length; _wsib3++) { _switchSiblings[_wsib3].style.transform = ''; _switchSiblings[_wsib3].style.transition = ''; }
-                  sfSlot.style.overflow = '';
-                  sfSlot.style.position = '';
-                  sfSlot.style.height = '';
-                }, Math.round(_POST_ANIM_DUR * 1000) + 20);
-              } else {
-                if (_sfExitClone.parentNode) _sfExitClone.parentNode.removeChild(_sfExitClone);
-                sfSlot.__sfExitClone = null;
-                sfSlot.__switchSiblings = null;
-                sfSlot.style.overflow = '';
-                sfSlot.style.position = '';
-                sfSlot.style.height = '';
-              }
-            }
-            // ── END STOREFRONT SWITCH ANIMATION ──────────────────────────────────────
-
+            if (postBody) contentEl.appendChild(postBody);
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
               sfOnFirstLoadRef.fn();
@@ -4659,7 +4563,7 @@ const PostModule = (function() {
             if (postHeader) {
               postHeader.addEventListener('click', function(e) {
                 if (e.target.closest('button, a')) return;
-                var seeLess = targetEl.querySelector('.post-description-seeless');
+                var seeLess = contentEl.querySelector('.post-description-seeless');
                 if (seeLess) {
                   seeLess.click();
                 } else {
