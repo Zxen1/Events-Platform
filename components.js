@@ -14793,6 +14793,7 @@ const StorefrontMenuComponent = (function() {
                 if (!item) return;
                 var idx = parseInt(item.dataset.index, 10);
                 if (isNaN(idx) || idx < 0 || idx >= posts.length) return;
+                if (item.classList.contains('post-storefront-menu-item--selected')) return;
 
                 // Highlight selected
                 menu.querySelectorAll('.post-storefront-menu-item').forEach(function(el) {
