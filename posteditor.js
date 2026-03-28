@@ -625,8 +625,8 @@
                     if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
                 });
             }
-        } else if (window.PostModule && typeof PostModule.openPostById === 'function') {
-            PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
+        } else if (window.PostModule && typeof PostModule.openPost === 'function') {
+            PostModule.openPost(post, { source: 'posteditor', originEl: postCard });
         }
     }
 
@@ -3558,6 +3558,7 @@
             if (!postCard) return;
             var k = String(e.key || e.code || '');
             if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+            e.preventDefault();
             handlePostCardActivate(postCard);
         });
         
