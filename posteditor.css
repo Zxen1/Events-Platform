@@ -266,10 +266,8 @@
   background-color: transparent;
 }
 
-/* Hover: apply subcategory background color; suppress box-shadow (handled at outer container level) */
-.posteditor-outer-container .post-card:hover,
-.posteditor-outer-container .post-card.post-card--map-highlight {
-  background-color: var(--subcat-hover-bg);
+/* Hover state - disabled on individual card, handled by .posteditor-outer-container:hover */
+.posteditor-outer-container .post-card:hover {
   box-shadow: none;
 }
 
@@ -283,13 +281,13 @@
    BUTTON ROW
    ============================================================================ */
 
-.posteditor-actions-container {
+.posteditor-buttons {
   display: flex;
   gap: 10px;
   padding: 0 10px 10px; /* 10-12-6 Rule: 10px padding inside container */
 }
 
-.posteditor-actions-container[hidden] {
+.posteditor-buttons[hidden] {
   display: none;
 }
 

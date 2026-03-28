@@ -3099,25 +3099,17 @@ const PostModule = (function() {
     var _preCloseExitRect = null;
     var _preCloseCardBg = null;
     if (originEl) {
-      var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-main-container');
+      var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
-          // Force hover state before capture so --subcat-hover-bg is active in computed style
-          var _preCloseIsRecent = _preCloseCard.classList.contains('recent-card');
-          if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
-          else _preCloseCard.classList.add('post-card--map-highlight');
           _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
-          if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
-          else _preCloseCard.classList.remove('post-card--map-highlight');
           _preCloseSlot.__cardBg = _preCloseCardBg;
           // Clone while card is fully visible and hovered — reused as-is for close enter animation
-          if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
-          else _preCloseCard.classList.add('post-card--map-highlight');
+          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.add('recent-card--active');
           var _storedClone = _preCloseCard.cloneNode(true);
-          if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
-          else _preCloseCard.classList.remove('post-card--map-highlight');
+          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.remove('recent-card--active');
           _storedClone.style.display = '';
           _storedClone.style.margin = '0';
           _storedClone.style.transition = 'none';
@@ -6757,8 +6749,7 @@ const PostModule = (function() {
     parsePriceSummary: parsePriceSummary,
     mapCardHasPromo: mapCardHasPromo,
     loadPostById: loadPostById,
-    handleDeepLink: maybeOpenDeepLinkedPost,
-    buildCountdownStatusBar: buildCountdownStatusBar
+    handleDeepLink: maybeOpenDeepLinkedPost
   };
 
 })();

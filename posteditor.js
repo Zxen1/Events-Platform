@@ -595,24 +595,6 @@
         var statusCont = document.createElement('div');
         statusCont.className = 'posteditor-status-container';
         statusCont.appendChild(statusBar);
-
-        // Countdown status bar (event posts only)
-        if (post.expires_at && Array.isArray(post.map_cards) && post.map_cards.length) {
-            var _edSett = App.getState('settings') || {};
-            if (_edSett.countdown_postcards) {
-                var _edMapCard = post.map_cards[0];
-                var _edBarResult = PostModule.buildCountdownStatusBar(post, _edMapCard);
-                if (_edBarResult) {
-                    _edBarResult.bar.classList.add('post-statusbar--slot-card');
-                    if (_edSett.countdown_postcards_mode === 'soonest_only') {
-                        _edBarResult.bar.classList.add('post-statusbar--modesoonest');
-                    }
-                    cardEl.classList.add('post-card--countdown' + _edBarResult.state);
-                    statusCont.appendChild(_edBarResult.bar);
-                }
-            }
-        }
-
         postContainer.appendChild(statusCont);
 
         var anchor = document.createElement('div');
@@ -626,7 +608,7 @@
 
         // Create button row underneath the header (Manage button)
         var buttonRow = document.createElement('div');
-        buttonRow.className = 'posteditor-actions-container';
+        buttonRow.className = 'posteditor-buttons';
 
         // Manage Button (opens combined Edit + Manage modal)
         // Hidden for departing members (account pending deletion)
