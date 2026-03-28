@@ -14775,7 +14775,7 @@ const StorefrontMenuComponent = (function() {
         });
         html.push('</div>');
         html.push('</div>');
-        html.push('<div class="post-storefront-content"><div class="post-storefront-main-container"></div></div>');
+        html.push('<div class="post-storefront-content"></div>');
         return html.join('');
     }
 
@@ -14793,9 +14793,6 @@ const StorefrontMenuComponent = (function() {
                 if (!item) return;
                 var idx = parseInt(item.dataset.index, 10);
                 if (isNaN(idx) || idx < 0 || idx >= posts.length) return;
-
-                // If this item is already selected, do nothing
-                if (item.classList.contains('post-storefront-menu-item--selected')) return;
 
                 // Highlight selected
                 menu.querySelectorAll('.post-storefront-menu-item').forEach(function(el) {
