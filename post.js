@@ -3196,6 +3196,39 @@ const PostModule = (function() {
       if (cardToHide) {
         var _isPostEditorSlot = slot.classList.contains('posteditor-main-container');
         if (_isPostEditorSlot) {
+          var _posteditorExitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
+          var _posteditorShouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink';
+          slot.__openedFromExternal = !!(options.fromMap || (options.source && options.source !== 'posteditor'));
+
+          if (_posteditorShouldAnimate) {
+            cardToHide.classList.add('post-card--map-highlight');
+            var _posteditorExitClone = cardToHide.cloneNode(true);
+            cardToHide.classList.remove('post-card--map-highlight');
+            _posteditorExitClone.style.position = 'absolute';
+            _posteditorExitClone.style.top = '0';
+            _posteditorExitClone.style.left = '0';
+            _posteditorExitClone.style.width = '100%';
+            _posteditorExitClone.style.margin = '0';
+            _posteditorExitClone.style.pointerEvents = 'none';
+            _posteditorExitClone.style.transition = 'none';
+            if (_preCloseCardBg && _preCloseCardBg !== 'rgba(0, 0, 0, 0)' && _preCloseCardBg !== 'transparent') {
+              _posteditorExitClone.style.backgroundColor = _preCloseCardBg;
+            }
+            var _posteditorCloneEls = _posteditorExitClone.querySelectorAll('*');
+            for (var _peci = 0; _peci < _posteditorCloneEls.length; _peci++) { _posteditorCloneEls[_peci].style.transition = 'none'; }
+            slot.style.position = 'relative';
+            slot.style.overflow = 'hidden';
+            slot.appendChild(_posteditorExitClone);
+            slot.__exitClone = _posteditorExitClone;
+            _posteditorExitClone.getBoundingClientRect();
+            _posteditorExitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            _posteditorExitClone.style.transform = 'translateY(-' + _posteditorExitRect.height + 'px)';
+            setTimeout(function() {
+              if (_posteditorExitClone.parentNode) _posteditorExitClone.parentNode.removeChild(_posteditorExitClone);
+              if (slot && slot.__exitClone === _posteditorExitClone) slot.__exitClone = null;
+            }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+          }
+
           cardToHide.style.display = 'none';
           var _posteditorInsertAfterEl = cardToHide;
           while (_posteditorInsertAfterEl && _posteditorInsertAfterEl.parentElement !== slot) {
@@ -3205,6 +3238,49 @@ const PostModule = (function() {
             slot.insertBefore(detail, _posteditorInsertAfterEl.nextSibling);
           } else {
             slot.appendChild(detail);
+          }
+
+          var _posteditorCardH = Math.round(_posteditorExitRect.height);
+          slot.__cardH = _posteditorCardH;
+
+          if (_posteditorShouldAnimate) {
+            var _posteditorPostH = detail.offsetHeight;
+            var _posteditorOffset = _posteditorPostH - _posteditorCardH;
+            var _posteditorSiblings = [];
+            var _posteditorSibStart = (slot.parentElement && slot.parentElement.classList.contains('posteditor-outer-container')) ? slot.parentElement : slot;
+            var _posteditorActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
+            if (_posteditorActionsEl) _posteditorSiblings.push(_posteditorActionsEl);
+            var _posteditorSib = _posteditorSibStart.nextElementSibling;
+            while (_posteditorSib) { _posteditorSiblings.push(_posteditorSib); _posteditorSib = _posteditorSib.nextElementSibling; }
+            slot.style.overflow = 'hidden';
+            detail.style.transition = 'none';
+            detail.style.transform = 'translateY(-' + _posteditorOffset + 'px)';
+            for (var _peoi = 0; _peoi < _posteditorSiblings.length; _peoi++) {
+              _posteditorSiblings[_peoi].style.transition = 'none';
+              _posteditorSiblings[_peoi].style.transform = 'translateY(-' + _posteditorOffset + 'px)';
+            }
+            slot.__animDetail = detail;
+            slot.__animSiblings = _posteditorSiblings;
+            slot.getBoundingClientRect();
+            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            detail.style.transform = 'translateY(0)';
+            for (var _peoi2 = 0; _peoi2 < _posteditorSiblings.length; _peoi2++) {
+              _posteditorSiblings[_peoi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+              _posteditorSiblings[_peoi2].style.transform = 'translateY(0)';
+            }
+            slot.__animTimer = setTimeout(function() {
+              detail.style.transform = '';
+              detail.style.transition = '';
+              for (var _peoi3 = 0; _peoi3 < _posteditorSiblings.length; _peoi3++) {
+                _posteditorSiblings[_peoi3].style.transform = '';
+                _posteditorSiblings[_peoi3].style.transition = '';
+              }
+              slot.style.overflow = '';
+              slot.style.position = '';
+              slot.__animDetail = null;
+              slot.__animSiblings = null;
+              slot.__animTimer = null;
+            }, Math.round(_POST_ANIM_DUR * 1000) + 20);
           }
         } else {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
