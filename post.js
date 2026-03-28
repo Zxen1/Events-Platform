@@ -3169,11 +3169,11 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds;
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
-        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !!slot.dataset.sfIds;
-        slot.__openedFromExternal = !!(options.fromMap || options.source);
+        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !!slot.dataset.sfIds;
+        slot.__openedFromExternal = !!(options.fromMap || (options.source && options.source !== 'posteditor'));
 
         // ── OPEN ANIMATION: CARD EXIT ───────────────────────────────────────────
         // Card clone slides up into the invisibility shield (clip) and disappears.
