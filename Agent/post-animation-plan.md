@@ -1,7 +1,16 @@
 # Post Animation Plan
 
-## Master Switch
-_POST_ANIMATE = true in post.js -- set false to disable all animation instantly.
+## Master Controls (post.js, line 50)
+```js
+var _POST_ANIMATE  = true; // set false to disable all animation instantly
+var _POST_ANIM_DUR = 1.0;  // duration in seconds — all sub-timings scale proportionally
+```
+Sub-timings are percentages of `_POST_ANIM_DUR`:
+- Description fade-out/in: 20% (`* 0.2`)
+- No-delta edge case fade: 30% (`* 0.3`)
+- Cleanup timeouts: `Math.round(_POST_ANIM_DUR * 1000) + 20` ms
+
+Covers all five operations: postcard open, post close, storefront open, See More, See Less.
 
 ---
 
@@ -199,6 +208,47 @@ Recent panel scroll container: `.recent-panel-content`
 
 ---
 
+## SEE MORE / SEE LESS ANIMATION — March 27, 2026 (SOLVED)
+
+### What was built
+Clicking "See more" or "See less" on a post description animates the expand/collapse over `_POST_ANIM_DUR` seconds.
+
+### See More (expand)
+1. Two-line description fades out (20% of duration)
+2. DOM swaps to expanded state (`post--expanded` added, `showExpanded()`)
+3. Image container FLIP'd to collapsed visual position (`translateY(_imgOffset)`)
+4. Thumbnail row FLIP'd to its collapsed overlay position within the container (`translateY(-_thumbsOffset)`)
+   — `_thumbsOffset = _delta + _imgOffset` (the internal distance thumbs travel within the container)
+5. Info container, member info set to `opacity:0`
+6. Siblings held at collapsed positions (`translateY(-_delta)`)
+7. All animate to natural positions over `_POST_ANIM_DUR` — image, thumbs, siblings locked in sync
+8. Info, member, full description fade in over full duration
+9. Cleanup removes inline styles at duration + 20ms
+
+### See Less (collapse — exact reverse)
+1. Description fades out (full duration — content visible throughout)
+2. Info, member fade out (full duration)
+3. Silent measurement pass: temporarily removes `post--expanded` AND calls `showCollapsed()` to get the correct collapsed height with truncated description. Without this, the measured delta is too small (full description is still in DOM) causing a partial animation then a snap.
+4. Restores expanded state (`post--expanded` re-added, description HTML restored)
+5. `overflow:hidden` applied to body (clips empty space below rising image)
+6. Image container animates UP by `_imgOffset`
+7. Thumbnail row animates UP by `_thumbsOffset = _delta - _imgOffset` within container
+   — Total screen travel for thumbs = `_imgOffset + _thumbsOffset = _delta` = same as siblings ✓
+8. Siblings animate UP by `_delta` — all locked in sync
+9. At cleanup: `post--expanded` removed (seamless — everything already visually in position)
+10. `showCollapsed()` puts truncated description, which fades in (20% of duration)
+
+### Key geometry
+- `_imgOffset` = how far the image container moved (expanded vs collapsed position, measured via `getBoundingClientRect`)
+- `_delta` = how much the body grew/shrank (via `offsetHeight`)
+- `_thumbsOffset` = `|_delta - _imgOffset|` = internal thumb travel within container = `thumbsH + gap`
+- Container + thumbs together travel exactly `_delta` on screen = identical to sibling travel
+
+### Post editor
+Expand/collapse animation is disabled for `.posteditor-item` slots (instant swap only).
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms
@@ -206,4 +256,5 @@ Recent panel scroll container: `.recent-panel-content`
 - Status bar in recent panel is outside the animation zone
 - Map card / marker / external link opens = no animation, instant as before
 - All animation is interruptible via _cancelSlotAnimation(slot)
-- _POST_ANIMATE = false disables everything instantly
+- `_POST_ANIMATE = false` disables everything instantly
+- `_POST_ANIM_DUR` controls speed — change one value, all five operations scale together

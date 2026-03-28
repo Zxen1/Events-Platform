@@ -5028,14 +5028,16 @@ const PostModule = (function() {
       });
 
       function _animateCollapse() {
-        var _bodyEl   = wrap.querySelector('.post-body');
-        var _imgEl    = wrap.querySelector('.post-images-container');
+        // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
+        var _realWrap = descEl.closest('.post') || wrap;
+        var _bodyEl   = _realWrap.querySelector('.post-body');
+        var _imgEl    = _realWrap.querySelector('.post-images-container');
         var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
-        var _infoEl   = wrap.querySelector('.post-info-container');
-        var _memberEl = wrap.querySelector('.post-description-member');
+        var _infoEl   = _realWrap.querySelector('.post-info-container');
+        var _memberEl = _realWrap.querySelector('.post-description-member');
 
         if (!_POST_ANIMATE) {
-          wrap.classList.remove('post--expanded');
+          _realWrap.classList.remove('post--expanded');
           descEl.setAttribute('aria-expanded', 'false');
           showCollapsed();
           syncLocationWallpaper(false);
@@ -5051,14 +5053,14 @@ const PostModule = (function() {
         // text, making _delta far too small and causing the animation to only cover a fraction of the
         // real distance before the class removal snaps the rest.
         var _savedDescHtml = descEl.innerHTML;
-        wrap.classList.remove('post--expanded');
+        _realWrap.classList.remove('post--expanded');
         showCollapsed();
         if (_bodyEl) _bodyEl.getBoundingClientRect();
         var _bodyCollapsedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
         var _imgCollapsedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
         // Restore expanded state for the animation
         descEl.innerHTML = _savedDescHtml;
-        wrap.classList.add('post--expanded');
+        _realWrap.classList.add('post--expanded');
         if (_bodyEl) _bodyEl.getBoundingClientRect();
 
         var _imgOffset = (_imgExpandedRect && _imgCollapsedRect) ? (_imgExpandedRect.top - _imgCollapsedRect.top) : (_bodyExpandedH - _bodyCollapsedH);
@@ -5071,7 +5073,7 @@ const PostModule = (function() {
 
         if (_imgOffset > 0) {
           // Collect siblings below this post
-          var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
             var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
@@ -5107,7 +5109,7 @@ const PostModule = (function() {
           }
 
           setTimeout(function() {
-            wrap.classList.remove('post--expanded');
+            _realWrap.classList.remove('post--expanded');
 
             if (_imgEl)            { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
             if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
@@ -5128,20 +5130,22 @@ const PostModule = (function() {
             setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
-          wrap.classList.remove('post--expanded');
+          _realWrap.classList.remove('post--expanded');
           showCollapsed();
         }
 
         syncLocationWallpaper(false);
-        setTooltipDirs(wrap);
+        setTooltipDirs(_realWrap);
       }
 
       function _animateExpand() {
-        var _bodyEl   = wrap.querySelector('.post-body');
-        var _imgEl    = wrap.querySelector('.post-images-container');
+        // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
+        var _realWrap = descEl.closest('.post') || wrap;
+        var _bodyEl   = _realWrap.querySelector('.post-body');
+        var _imgEl    = _realWrap.querySelector('.post-images-container');
         var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
-        var _infoEl   = wrap.querySelector('.post-info-container');
-        var _memberEl = wrap.querySelector('.post-description-member');
+        var _infoEl   = _realWrap.querySelector('.post-info-container');
+        var _memberEl = _realWrap.querySelector('.post-description-member');
 
         // Capture pre-swap image position and body height
         var _imgFirstRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
@@ -5152,7 +5156,7 @@ const PostModule = (function() {
         descEl.style.opacity    = '0';
 
         // DOM swap
-        wrap.classList.add('post--expanded');
+        _realWrap.classList.add('post--expanded');
         descEl.setAttribute('aria-expanded', 'true');
         showExpanded();
 
@@ -5160,7 +5164,7 @@ const PostModule = (function() {
           descEl.style.transition = '';
           descEl.style.opacity    = '';
           syncLocationWallpaper(true);
-          setTooltipDirs(wrap);
+          setTooltipDirs(_realWrap);
           return;
         }
 
@@ -5173,7 +5177,7 @@ const PostModule = (function() {
 
         if (_delta > 0) {
           // Collect siblings below this post
-          var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
             var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
@@ -5243,11 +5247,11 @@ const PostModule = (function() {
         }
 
         syncLocationWallpaper(true);
-        setTooltipDirs(wrap);
+        setTooltipDirs(_realWrap);
       }
 
       descEl.addEventListener('click', function(e) {
-        if (wrap.classList.contains('post--expanded')) {
+        if ((descEl.closest('.post') || wrap).classList.contains('post--expanded')) {
           syncLocationWallpaper(true);
           return;
         }
@@ -5258,7 +5262,7 @@ const PostModule = (function() {
       // Also handle keyboard for accessibility (only expand, not collapse)
       descEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
-          if (wrap.classList.contains('post--expanded')) return;
+          if ((descEl.closest('.post') || wrap).classList.contains('post--expanded')) return;
           e.preventDefault();
           _animateExpand();
         }
