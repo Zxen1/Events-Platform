@@ -4494,7 +4494,28 @@ const PostModule = (function() {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
           addToRecentHistory(selectedPost, 0);
-          contentEl.innerHTML = '';
+
+          // ── STOREFRONT SWITCH ANIMATION: EXIT (old content slides up) ────────────
+          var _sfSwitchAnimate = _POST_ANIMATE && contentEl.children.length > 0;
+          var _sfOldH = 0;
+          var _sfOldClone = null;
+          if (_sfSwitchAnimate) {
+            if (contentEl.__sfSwitchTimer) { clearTimeout(contentEl.__sfSwitchTimer); contentEl.__sfSwitchTimer = null; }
+            if (contentEl.__sfOldClone && contentEl.__sfOldClone.parentNode) contentEl.__sfOldClone.parentNode.removeChild(contentEl.__sfOldClone);
+            contentEl.__sfOldClone = null;
+            _sfOldH = contentEl.offsetHeight;
+            _sfOldClone = document.createElement('div');
+            _sfOldClone.style.cssText = 'position:absolute;top:0;left:0;width:100%;pointer-events:none;transition:none;';
+            while (contentEl.firstChild) _sfOldClone.appendChild(contentEl.firstChild);
+            contentEl.style.position = 'relative';
+            contentEl.style.overflow = 'hidden';
+            contentEl.appendChild(_sfOldClone);
+            contentEl.__sfOldClone = _sfOldClone;
+          } else {
+            contentEl.innerHTML = '';
+          }
+          // ── END STOREFRONT SWITCH ANIMATION: EXIT ───────────────────────────────
+
           loadPostById(selectedPost.id).then(function(fullPost) {
             if (!fullPost) { contentEl.innerHTML = ''; return; }
             if (fullPost.subcategory_color) {
@@ -4517,7 +4538,7 @@ const PostModule = (function() {
             tempDetail.classList.remove('component-locationwallpaper-container');
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
-            contentEl.innerHTML = '';
+            if (!_sfSwitchAnimate) contentEl.innerHTML = '';
             wrap.classList.remove('post--expanded');
             if (postHeader) {
               contentEl.appendChild(postHeader);
@@ -4552,6 +4573,48 @@ const PostModule = (function() {
               }
             }
             if (postBody) contentEl.appendChild(postBody);
+
+            // ── STOREFRONT SWITCH ANIMATION: ENTER (new content slides down) ────────
+            if (_sfSwitchAnimate && _sfOldClone) {
+              var _sfNewEls = [];
+              if (postHeader) _sfNewEls.push(postHeader);
+              if (postBody) _sfNewEls.push(postBody);
+              var _sfNewH = 0;
+              for (var _sni = 0; _sni < _sfNewEls.length; _sni++) { _sfNewH += _sfNewEls[_sni].offsetHeight; }
+              if (_sfNewH > 0) {
+                _sfOldClone.style.transition = 'none';
+                _sfOldClone.style.transform = 'translateY(0)';
+                for (var _sni2 = 0; _sni2 < _sfNewEls.length; _sni2++) {
+                  _sfNewEls[_sni2].style.transition = 'none';
+                  _sfNewEls[_sni2].style.transform = 'translateY(-' + _sfNewH + 'px)';
+                }
+                contentEl.getBoundingClientRect(); // force reflow
+                _sfOldClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+                _sfOldClone.style.transform = 'translateY(-' + _sfOldH + 'px)';
+                for (var _sni3 = 0; _sni3 < _sfNewEls.length; _sni3++) {
+                  _sfNewEls[_sni3].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+                  _sfNewEls[_sni3].style.transform = 'translateY(0)';
+                }
+                contentEl.__sfSwitchTimer = setTimeout(function() {
+                  if (_sfOldClone.parentNode) _sfOldClone.parentNode.removeChild(_sfOldClone);
+                  contentEl.__sfOldClone = null;
+                  contentEl.__sfSwitchTimer = null;
+                  for (var _sni4 = 0; _sni4 < _sfNewEls.length; _sni4++) {
+                    _sfNewEls[_sni4].style.transform = '';
+                    _sfNewEls[_sni4].style.transition = '';
+                  }
+                  contentEl.style.overflow = '';
+                  contentEl.style.position = '';
+                }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+              } else {
+                if (_sfOldClone.parentNode) _sfOldClone.parentNode.removeChild(_sfOldClone);
+                contentEl.__sfOldClone = null;
+                contentEl.style.overflow = '';
+                contentEl.style.position = '';
+              }
+            }
+            // ── END STOREFRONT SWITCH ANIMATION: ENTER ──────────────────────────────
+
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
               sfOnFirstLoadRef.fn();

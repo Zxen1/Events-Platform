@@ -14794,6 +14794,9 @@ const StorefrontMenuComponent = (function() {
                 var idx = parseInt(item.dataset.index, 10);
                 if (isNaN(idx) || idx < 0 || idx >= posts.length) return;
 
+                // If this item is already selected, do nothing
+                if (item.classList.contains('post-storefront-menu-item--selected')) return;
+
                 // Highlight selected
                 menu.querySelectorAll('.post-storefront-menu-item').forEach(function(el) {
                     el.classList.remove('post-storefront-menu-item--selected');
