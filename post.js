@@ -3161,7 +3161,7 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds && !slot.classList.contains('posteditor-item');
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
         var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !!slot.dataset.sfIds;
@@ -5339,7 +5339,7 @@ const PostModule = (function() {
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
       if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
-      var _closeAnimate = _POST_ANIMATE && !(slot && slot.classList.contains('posteditor-item'));
+      var _closeAnimate = _POST_ANIMATE;
       if (!_closeAnimate) {
         openPostEl.remove();
         if (hiddenCard) hiddenCard.style.display = '';
