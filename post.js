@@ -3195,6 +3195,7 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
+        var _isPostEditorSlot = slot.classList.contains('posteditor-main-container');
         var _shouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
@@ -3226,9 +3227,6 @@ const PostModule = (function() {
           for (var _ci = 0; _ci < _cloneEls.length; _ci++) { _cloneEls[_ci].style.transition = 'none'; }
           slot.style.position = 'relative';
           slot.style.overflow = 'hidden';
-          // Temporarily allow the exit clone to travel above the outer container boundary.
-          var _exitOuterCont = slot.parentElement && slot.parentElement.classList.contains('posteditor-outer-container') ? slot.parentElement : null;
-          if (_exitOuterCont) _exitOuterCont.style.overflow = 'visible';
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
@@ -3237,7 +3235,6 @@ const PostModule = (function() {
           setTimeout(function() {
             if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
             if (slot && slot.__exitClone === _exitClone) slot.__exitClone = null;
-            if (_exitOuterCont) _exitOuterCont.style.overflow = '';
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: CARD EXIT ───────────────────────────────────────
@@ -3263,7 +3260,7 @@ const PostModule = (function() {
         // Storefront wait state: lock slot to card height and hide detail until the initial
         // post fetch completes. _sfOnFirstLoad is called by setupPostDetailEvents once done.
         var _sfOnFirstLoad = null;
-        if (_sfShouldAnimate) {
+        if (_sfShouldAnimate && !_isPostEditorSlot) {
           slot.style.overflow = 'hidden';
           slot.style.height = _openCardH + 'px';
           detail.style.visibility = 'hidden';
@@ -3318,14 +3315,11 @@ const PostModule = (function() {
           _sfOnFirstLoadRef.fn = _sfOnFirstLoad;
         }
 
-        if (_shouldAnimate) {
+        if (_shouldAnimate && !_isPostEditorSlot) {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
-          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
-          // Include actions container (sibling of slot within outer container) so it moves with the animation.
-          var _openActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
-          if (_openActionsEl) _openSiblings.push(_openActionsEl);
+          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
           var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           var _openSibList = _openSibStart.parentElement;
