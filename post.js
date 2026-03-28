@@ -4512,7 +4512,22 @@ const PostModule = (function() {
             contentEl.appendChild(contentTarget);
           }
           if (!contentTarget) return;
-          if (String(contentTarget.dataset.activePostId || '') === selectedPostId) return;
+          var _activePostId = String(contentTarget.dataset.activePostId || '');
+          if (String(contentEl.dataset.sfSwapBusy || '') === '1') {
+            if (_activePostId) {
+              var _activeItem = wrap.querySelector('.post-storefront-menu-item[data-post-id="' + _activePostId + '"]');
+              if (_activeItem) {
+                var _menuEl = _activeItem.parentElement;
+                if (_menuEl) {
+                  var _menuItems = _menuEl.querySelectorAll('.post-storefront-menu-item');
+                  for (var _mii = 0; _mii < _menuItems.length; _mii++) _menuItems[_mii].classList.remove('post-storefront-menu-item--selected');
+                }
+                _activeItem.classList.add('post-storefront-menu-item--selected');
+              }
+            }
+            return;
+          }
+          if (_activePostId === selectedPostId) return;
 
           var swapTarget = contentEl.querySelector('.post-storefront-swap-container');
           if (!swapTarget) {
@@ -4520,6 +4535,7 @@ const PostModule = (function() {
             swapTarget.className = 'post-storefront-swap-container';
             contentEl.appendChild(swapTarget);
           }
+          contentEl.dataset.sfSwapBusy = '1';
 
           if (contentEl.__sfSwapTimer) {
             clearTimeout(contentEl.__sfSwapTimer);
@@ -4552,6 +4568,7 @@ const PostModule = (function() {
               contentTarget.dataset.activePostId = '';
               swapTarget.innerHTML = '';
               swapTarget.style.height = '0px';
+              contentEl.dataset.sfSwapBusy = '';
               return;
             }
             if (fullPost.subcategory_color) {
@@ -4632,10 +4649,12 @@ const PostModule = (function() {
               while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
               contentTarget.dataset.activePostId = String(fullPost.id);
               swapTarget.style.height = '0px';
+              swapTarget.innerHTML = '';
               if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
                 _sfFirstLoadFired = true;
                 sfOnFirstLoadRef.fn();
               }
+              contentEl.dataset.sfSwapBusy = '';
               return;
             }
 
@@ -4644,6 +4663,8 @@ const PostModule = (function() {
               while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
               contentTarget.dataset.activePostId = String(fullPost.id);
               swapTarget.style.height = '0px';
+              swapTarget.innerHTML = '';
+              contentEl.dataset.sfSwapBusy = '';
               return;
             }
 
@@ -4671,10 +4692,20 @@ const PostModule = (function() {
             swapTarget.style.height = _sfInH + 'px';
             swapTarget.style.overflow = 'hidden';
 
-            contentTarget.style.transition = 'none';
-            contentTarget.style.transform = 'translateY(0)';
-            swapTarget.style.transition = 'none';
-            swapTarget.style.transform = 'translateY(-' + _sfInH + 'px)';
+            var _sfOutTrack = document.createElement('div');
+            _sfOutTrack.className = 'post-storefront-anim-track';
+            while (contentTarget.firstChild) _sfOutTrack.appendChild(contentTarget.firstChild);
+            contentTarget.appendChild(_sfOutTrack);
+
+            var _sfInTrack = document.createElement('div');
+            _sfInTrack.className = 'post-storefront-anim-track';
+            while (swapTarget.firstChild) _sfInTrack.appendChild(swapTarget.firstChild);
+            swapTarget.appendChild(_sfInTrack);
+
+            _sfOutTrack.style.transition = 'none';
+            _sfOutTrack.style.transform = 'translateY(0)';
+            _sfInTrack.style.transition = 'none';
+            _sfInTrack.style.transform = 'translateY(-' + _sfInH + 'px)';
             for (var _sfs0 = 0; _sfs0 < _sfSiblings.length; _sfs0++) {
               _sfSiblings[_sfs0].style.transition = 'none';
               _sfSiblings[_sfs0].style.transform = 'translateY(0)';
@@ -4682,10 +4713,10 @@ const PostModule = (function() {
 
             contentEl.getBoundingClientRect();
 
-            contentTarget.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-            contentTarget.style.transform = 'translateY(-' + _sfOutH + 'px)';
-            swapTarget.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-            swapTarget.style.transform = 'translateY(0)';
+            _sfOutTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            _sfOutTrack.style.transform = 'translateY(-' + _sfOutH + 'px)';
+            _sfInTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            _sfInTrack.style.transform = 'translateY(0)';
             for (var _sfs1 = 0; _sfs1 < _sfSiblings.length; _sfs1++) {
               _sfSiblings[_sfs1].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               _sfSiblings[_sfs1].style.transform = 'translateY(' + _sfSiblingDelta + 'px)';
@@ -4693,7 +4724,7 @@ const PostModule = (function() {
 
             contentEl.__sfSwapTimer = setTimeout(function() {
               contentTarget.innerHTML = '';
-              while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
+              while (_sfInTrack.firstChild) contentTarget.appendChild(_sfInTrack.firstChild);
               contentTarget.dataset.activePostId = String(fullPost.id);
               contentTarget.style.transition = '';
               contentTarget.style.transform = '';
@@ -4703,13 +4734,28 @@ const PostModule = (function() {
               swapTarget.style.transform = '';
               swapTarget.style.height = '0px';
               swapTarget.style.overflow = 'hidden';
+              swapTarget.innerHTML = '';
               for (var _sfs2 = 0; _sfs2 < _sfSiblings.length; _sfs2++) {
                 _sfSiblings[_sfs2].style.transform = '';
                 _sfSiblings[_sfs2].style.transition = '';
               }
               contentEl.__sfSwapSiblings = null;
               contentEl.__sfSwapTimer = null;
+              contentEl.dataset.sfSwapBusy = '';
             }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+          }).catch(function() {
+            contentTarget.style.transition = '';
+            contentTarget.style.transform = '';
+            contentTarget.style.height = '';
+            contentTarget.style.overflow = '';
+            swapTarget.style.transition = '';
+            swapTarget.style.transform = '';
+            swapTarget.style.height = '0px';
+            swapTarget.style.overflow = 'hidden';
+            swapTarget.innerHTML = '';
+            contentEl.__sfSwapSiblings = null;
+            contentEl.__sfSwapTimer = null;
+            contentEl.dataset.sfSwapBusy = '';
           });
         }
       });
