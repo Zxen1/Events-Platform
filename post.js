@@ -3194,8 +3194,20 @@ const PostModule = (function() {
         openHeaderBar.style.display = 'none';
       }
       if (cardToHide) {
-        var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         var _isPostEditorSlot = slot.classList.contains('posteditor-main-container');
+        if (_isPostEditorSlot) {
+          cardToHide.style.display = 'none';
+          var _posteditorInsertAfterEl = cardToHide;
+          while (_posteditorInsertAfterEl && _posteditorInsertAfterEl.parentElement !== slot) {
+            _posteditorInsertAfterEl = _posteditorInsertAfterEl.parentElement;
+          }
+          if (_posteditorInsertAfterEl) {
+            slot.insertBefore(detail, _posteditorInsertAfterEl.nextSibling);
+          } else {
+            slot.appendChild(detail);
+          }
+        } else {
+        var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
         var _shouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
@@ -3260,7 +3272,7 @@ const PostModule = (function() {
         // Storefront wait state: lock slot to card height and hide detail until the initial
         // post fetch completes. _sfOnFirstLoad is called by setupPostDetailEvents once done.
         var _sfOnFirstLoad = null;
-        if (_sfShouldAnimate && !_isPostEditorSlot) {
+        if (_sfShouldAnimate) {
           slot.style.overflow = 'hidden';
           slot.style.height = _openCardH + 'px';
           detail.style.visibility = 'hidden';
@@ -3315,7 +3327,7 @@ const PostModule = (function() {
           _sfOnFirstLoadRef.fn = _sfOnFirstLoad;
         }
 
-        if (_shouldAnimate && !_isPostEditorSlot) {
+        if (_shouldAnimate) {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
@@ -3365,6 +3377,7 @@ const PostModule = (function() {
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: POST ENTER ─────────────────────────────────────
+        }
 
       } else {
         slot.appendChild(detail);
