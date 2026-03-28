@@ -1301,7 +1301,8 @@ const PostModule = (function() {
    * @param {Object} post - Post data from API
    * @returns {HTMLElement} Post card element
    */
-  function renderPostCard(post) {
+  function renderPostCard(post, options) {
+    options = options || {};
     var el = document.createElement('article');
     el.className = 'post-card';
     el.dataset.id = String(post.id);
@@ -1424,28 +1425,30 @@ const PostModule = (function() {
       wireCardThumbImage(el.querySelector('.post-card-image'), rawThumbUrl);
     }
 
-    // Click handler for opening/closing post (toggle)
-    el.addEventListener('click', function(e) {
-      // Don't toggle if clicking favorite button
-      if (e.target.closest('.post-card-button-fav')) return;
-      
-      // If this card is already inside a .post section, click means "close"
-      if (el.closest('.post')) {
-        closePost(post.id);
-      } else {
-        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
-      }
-    });
+    if (!options.skipDefaultOpenHandlers) {
+      // Click handler for opening/closing post (toggle)
+      el.addEventListener('click', function(e) {
+        // Don't toggle if clicking favorite button
+        if (e.target.closest('.post-card-button-fav')) return;
+        
+        // If this card is already inside a .post section, click means "close"
+        if (el.closest('.post')) {
+          closePost(post.id);
+        } else {
+          openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+        }
+      });
 
-    // Keyboard: Enter/Space opens card (matches button behavior)
-    el.addEventListener('keydown', function(e) {
-      if (!e) return;
-      var k = String(e.key || e.code || '');
-      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
-      if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
-      e.preventDefault();
-      openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
-    });
+      // Keyboard: Enter/Space opens card (matches button behavior)
+      el.addEventListener('keydown', function(e) {
+        if (!e) return;
+        var k = String(e.key || e.code || '');
+        if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+        if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
+        e.preventDefault();
+        openPost(post, { originEl: el, postMapCardId: (el.dataset && el.dataset.postMapCardId) ? String(el.dataset.postMapCardId) : '' });
+      });
+    }
 
     // Favorite toggle handler
     var favBtn = el.querySelector('.post-card-button-fav');

@@ -555,7 +555,7 @@
             if (postContainer) {
                 var oldCard = postContainer.querySelector('.post-card');
                 if (oldCard) {
-                    oldCard.parentNode.replaceChild(PostModule.renderPostCard(post), oldCard);
+                    oldCard.parentNode.replaceChild(PostModule.renderPostCard(post, { skipDefaultOpenHandlers: true }), oldCard);
                 }
 
                 var oldBar = postContainer.querySelector('.posteditor-statusbar');
@@ -636,7 +636,7 @@
         postContainer.className = 'posteditor-outer-container';
         postContainer.dataset.postId = post.id;
         
-        var cardEl = PostModule.renderPostCard(post);
+        var cardEl = PostModule.renderPostCard(post, { skipDefaultOpenHandlers: true });
 
         // Status bar above the post card
         var statusBar = buildStatusBar(post);
@@ -3545,16 +3545,12 @@
             }, 50);
         }, true); // Use capture phase
         
-        // Intercept reused PostModule cards before their own handlers fire, so Post Editor
-        // always opens through its single dedicated path instead of double-triggering.
         container.addEventListener('click', function(e) {
             if (e.target.closest('.posteditor-button-manage') || e.target.closest('.post-card-button-fav')) return;
             var postCard = e.target.closest('.post-card');
             if (!postCard) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
             handlePostCardActivate(postCard);
-        }, true);
+        });
         container.addEventListener('keydown', function(e) {
             if (!e) return;
             if (e.target && e.target.closest && (e.target.closest('.posteditor-button-manage') || e.target.closest('.post-card-button-fav'))) return;
@@ -3562,10 +3558,8 @@
             if (!postCard) return;
             var k = String(e.key || e.code || '');
             if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
             handlePostCardActivate(postCard);
-        }, true);
+        });
         
         // Load posts
         loadPosts();
