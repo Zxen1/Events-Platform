@@ -5122,9 +5122,9 @@ const PostModule = (function() {
             descEl.style.opacity    = '0';
             descEl.style.transition = 'none';
             descEl.getBoundingClientRect();
-            descEl.style.transition = 'opacity 0.5s linear';
+            descEl.style.transition = 'opacity 0.2s linear';
             descEl.style.opacity    = '1';
-            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 520);
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 220);
           }, 1020);
         } else {
           wrap.classList.remove('post--expanded');
