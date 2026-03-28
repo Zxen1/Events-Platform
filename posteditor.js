@@ -608,7 +608,7 @@
 
         // Create button row underneath the header (Manage button)
         var buttonRow = document.createElement('div');
-        buttonRow.className = 'posteditor-buttons';
+        buttonRow.className = 'posteditor-actions-container';
 
         // Manage Button (opens combined Edit + Manage modal)
         // Hidden for departing members (account pending deletion)

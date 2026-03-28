@@ -281,13 +281,13 @@
    BUTTON ROW
    ============================================================================ */
 
-.posteditor-buttons {
+.posteditor-actions-container {
   display: flex;
   gap: 10px;
   padding: 0 10px 10px; /* 10-12-6 Rule: 10px padding inside container */
 }
 
-.posteditor-buttons[hidden] {
+.posteditor-actions-container[hidden] {
   display: none;
 }
 
