@@ -1562,9 +1562,6 @@ const FilterModule = (function() {
     function closeCalendar() {
         if (!calendarContainer) return;
         calendarContainer.classList.remove('filter-calendar-container--open');
-        // Blur any focused descendant before hiding — prevents aria-hidden on focused element warning.
-        var _focused = calendarContainer.querySelector(':focus');
-        if (_focused) _focused.blur();
         calendarContainer.setAttribute('aria-hidden', 'true');
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'false');

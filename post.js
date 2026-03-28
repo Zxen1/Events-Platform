@@ -47,25 +47,8 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   var panelsContainerEl = null;
-  // ── ANIMATION MASTER CONTROLS ────────────────────────────────────────────────
-  // _POST_ANIMATE  : false = all five animation paths disabled instantly (open, close, storefront open, See More, See Less)
-  // _POST_ANIM_DUR : duration in seconds — every sub-timing scales proportionally from this one value
-  //
-  // Animation entry points (search these labels to find each animation):
-  //   OPEN ANIMATION: PRE-CAPTURE      ~line 3096  openPost()       card bg + clone captured before close
-  //   OPEN ANIMATION: CARD EXIT        ~line 3183  openPost()       card clone slides up into clip
-  //   OPEN ANIMATION: POST ENTER       ~line 3222  openPost()       post slides down from clip
-  //   STOREFRONT OPEN ANIMATION        ~line 3232  openPost()       deferred until first fetch completes
-  //   CLOSE ANIMATION: CARD ENTER      ~line 3368  closePost()      clone slides down from clip
-  //   CLOSE ANIMATION: POST EXIT       ~line 5425  closePost()      post slides up into clip
-  //   SEE MORE ANIMATION               ~line 5161  _animateExpand() post expands to full height
-  //   SEE LESS ANIMATION               ~line 5047  _animateCollapse() post collapses back to card
-  //
-  // Panels covered: Post panel, Recent panel, Post Editor (all four animations)
-  // Excluded from animation: fromMap opens, marquee opens, deeplink opens
-  // ─────────────────────────────────────────────────────────────────────────────
-  var _POST_ANIMATE  = true;
-  var _POST_ANIM_DUR = 1.0;
+  var _POST_ANIMATE  = true; // Master switch — set false to disable all open/close animation instantly
+  var _POST_ANIM_DUR = 1.0;  // Duration in seconds — all sub-timings scale proportionally
 
   var postPanelEl = null;
   var postPanelContentEl = null;
@@ -3121,23 +3104,20 @@ const PostModule = (function() {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
-          // Force hover state before capture so --subcat-hover-bg is active in computed style.
-          // Skip for storefront slots — their wallpaper handles the visual; forcing the highlight
-          // class captures the subcategory color and bakes it over the wallpaper image.
+          // Force hover state before capture so --subcat-hover-bg is active in computed style
           var _preCloseIsRecent = _preCloseCard.classList.contains('recent-card');
-          var _preCloseIsSf = !!_preCloseSlot.dataset.sfIds;
           if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
-          else if (!_preCloseIsSf) _preCloseCard.classList.add('post-card--map-highlight');
+          else _preCloseCard.classList.add('post-card--map-highlight');
           _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
           if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
-          else if (!_preCloseIsSf) _preCloseCard.classList.remove('post-card--map-highlight');
+          else _preCloseCard.classList.remove('post-card--map-highlight');
           _preCloseSlot.__cardBg = _preCloseCardBg;
           // Clone while card is fully visible and hovered — reused as-is for close enter animation
           if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
-          else if (!_preCloseIsSf) _preCloseCard.classList.add('post-card--map-highlight');
+          else _preCloseCard.classList.add('post-card--map-highlight');
           var _storedClone = _preCloseCard.cloneNode(true);
           if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
-          else if (!_preCloseIsSf) _preCloseCard.classList.remove('post-card--map-highlight');
+          else _preCloseCard.classList.remove('post-card--map-highlight');
           _storedClone.style.display = '';
           _storedClone.style.margin = '0';
           _storedClone.style.transition = 'none';
@@ -3189,11 +3169,11 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !slot.dataset.sfIds;
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
-        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !!slot.dataset.sfIds;
-        slot.__openedFromExternal = !!(options.fromMap || (options.source && options.source !== 'posteditor'));
+        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !!slot.dataset.sfIds;
+        slot.__openedFromExternal = !!(options.fromMap || options.source);
 
         // ── OPEN ANIMATION: CARD EXIT ───────────────────────────────────────────
         // Card clone slides up into the invisibility shield (clip) and disappears.
@@ -3216,9 +3196,6 @@ const PostModule = (function() {
           for (var _ci = 0; _ci < _cloneEls.length; _ci++) { _cloneEls[_ci].style.transition = 'none'; }
           slot.style.position = 'relative';
           slot.style.overflow = 'hidden';
-          // Temporarily allow the exit clone to travel above the outer container boundary.
-          var _exitOuterCont = slot.parentElement && slot.parentElement.classList.contains('posteditor-outer-container') ? slot.parentElement : null;
-          if (_exitOuterCont) _exitOuterCont.style.overflow = 'visible';
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
@@ -3227,7 +3204,6 @@ const PostModule = (function() {
           setTimeout(function() {
             if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
             if (slot && slot.__exitClone === _exitClone) slot.__exitClone = null;
-            if (_exitOuterCont) _exitOuterCont.style.overflow = '';
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: CARD EXIT ───────────────────────────────────────
@@ -3265,7 +3241,7 @@ const PostModule = (function() {
             var _sfOffset = _sfPostH - _openCardH;
             if (_sfOffset <= 0) { slot.style.overflow = ''; return; }
             var _sfSiblings = [];
-            var _sfSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+            var _sfSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
             var _sfSib = _sfSibStart.nextElementSibling;
             while (_sfSib) { _sfSiblings.push(_sfSib); _sfSib = _sfSib.nextElementSibling; }
             var _sfSibList = _sfSibStart.parentElement;
@@ -3313,9 +3289,6 @@ const PostModule = (function() {
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
           var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
-          // Include actions container (sibling of slot within outer container) so it moves with the animation.
-          var _openActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
-          if (_openActionsEl) _openSiblings.push(_openActionsEl);
           var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           var _openSibList = _openSibStart.parentElement;
@@ -5108,12 +5081,10 @@ const PostModule = (function() {
 
         if (_imgOffset > 0) {
           // Collect siblings below this post
-          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container') || _realWrap.closest('.posteditor-main-container');
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
             var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
-            var _expActionsEl = _expSlot.nextElementSibling && _expSlot.nextElementSibling.classList.contains('posteditor-actions-container') ? _expSlot.nextElementSibling : null;
-            if (_expActionsEl) _expSiblings.push(_expActionsEl);
             var _expSib = _expSibStart.nextElementSibling;
             while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
             var _expSibList = _expSibStart.parentElement;
@@ -5214,12 +5185,10 @@ const PostModule = (function() {
 
         if (_delta > 0) {
           // Collect siblings below this post
-          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container') || _realWrap.closest('.posteditor-main-container');
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
             var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
-            var _expActionsEl2 = _expSlot.nextElementSibling && _expSlot.nextElementSibling.classList.contains('posteditor-actions-container') ? _expSlot.nextElementSibling : null;
-            if (_expActionsEl2) _expSiblings.push(_expActionsEl2);
             var _expSib = _expSibStart.nextElementSibling;
             while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
             var _expSibList = _expSibStart.parentElement;
@@ -5378,7 +5347,7 @@ const PostModule = (function() {
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
       var _cardOffsetTop = 0;
-      if (hiddenCard) { hiddenCard.style.display = ''; var _cardMarginBottom = parseInt(window.getComputedStyle(hiddenCard).marginBottom) || 0; _cardH = hiddenCard.offsetHeight + _cardMarginBottom; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
+      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
       var _closeAnimate = _POST_ANIMATE;
       if (!_closeAnimate) {
         openPostEl.remove();
@@ -5445,8 +5414,6 @@ const PostModule = (function() {
         // When post is removed at end, layout is already in its final state — no snap.
         var _closeSiblings = [];
         var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
-        var _closeActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
-        if (_closeActionsEl) _closeSiblings.push(_closeActionsEl);
         var _closeSib = _closeSibStart.nextElementSibling;
         while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
         var _closeSibList = _closeSibStart.parentElement;
