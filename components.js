@@ -14775,7 +14775,7 @@ const StorefrontMenuComponent = (function() {
         });
         html.push('</div>');
         html.push('</div>');
-        html.push('<div class="post-storefront-content"></div>');
+        html.push('<div class="post-storefront-content"><div class="post-storefront-main-container"></div></div>');
         return html.join('');
     }
 
