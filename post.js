@@ -4668,9 +4668,6 @@ const PostModule = (function() {
               return;
             }
 
-            var _sfOutH = contentTarget.offsetHeight;
-            var _sfInH = swapTarget.offsetHeight;
-            var _sfSiblingDelta = _sfInH - _sfOutH;
             var _sfSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container') || wrap.closest('.posteditor-main-container');
             var _sfSiblings = [];
             if (_sfSlot) {
@@ -4687,10 +4684,6 @@ const PostModule = (function() {
             }
 
             contentEl.__sfSwapSiblings = _sfSiblings;
-            contentTarget.style.height = _sfOutH + 'px';
-            contentTarget.style.overflow = 'hidden';
-            swapTarget.style.height = _sfInH + 'px';
-            swapTarget.style.overflow = 'hidden';
 
             var _sfOutTrack = document.createElement('div');
             _sfOutTrack.className = 'post-storefront-anim-track';
@@ -4701,6 +4694,16 @@ const PostModule = (function() {
             _sfInTrack.className = 'post-storefront-anim-track';
             while (swapTarget.firstChild) _sfInTrack.appendChild(swapTarget.firstChild);
             swapTarget.appendChild(_sfInTrack);
+
+            var _sfOutH = _sfOutTrack.offsetHeight || _sfOutTrack.scrollHeight || 0;
+            var _sfInH = _sfInTrack.offsetHeight || _sfInTrack.scrollHeight || 0;
+            if (_sfOutH <= 0) _sfOutH = contentTarget.scrollHeight || contentTarget.offsetHeight || 0;
+            if (_sfInH <= 0) _sfInH = swapTarget.scrollHeight || 0;
+            var _sfSiblingDelta = _sfInH - _sfOutH;
+            contentTarget.style.height = _sfOutH + 'px';
+            contentTarget.style.overflow = 'hidden';
+            swapTarget.style.height = _sfInH + 'px';
+            swapTarget.style.overflow = 'hidden';
 
             _sfOutTrack.style.transition = 'none';
             _sfOutTrack.style.transform = 'translateY(0)';
