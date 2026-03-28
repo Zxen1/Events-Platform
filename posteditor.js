@@ -3550,10 +3550,6 @@
                         if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
                     });
                 }
-            } else {
-                if (window.PostModule && typeof PostModule.openPost === 'function') {
-                    PostModule.openPost(post, { source: 'posteditor', originEl: postCard });
-                }
             }
         });
         
