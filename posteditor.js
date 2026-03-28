@@ -588,10 +588,6 @@
         postContainer.className = 'posteditor-outer-container';
         postContainer.dataset.postId = post.id;
         
-        // Create edit header (sticky container for postcard + Save/Close buttons when editing)
-        var editHeader = document.createElement('div');
-        editHeader.className = 'posteditor-edit-header';
-        
         var cardEl = PostModule.renderPostCard(post);
 
         // Status bar above the post card
@@ -604,8 +600,11 @@
         var anchor = document.createElement('div');
         anchor.setAttribute('data-slack-anchor', '');
         anchor.appendChild(cardEl);
-        editHeader.appendChild(anchor);
-        postContainer.appendChild(editHeader);
+        var mainCont = document.createElement('div');
+        mainCont.className = 'posteditor-main-container';
+        mainCont.dataset.id = String(post.id);
+        mainCont.appendChild(anchor);
+        postContainer.appendChild(mainCont);
 
         // Create button row underneath the header (Manage button)
         var buttonRow = document.createElement('div');

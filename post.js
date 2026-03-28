@@ -3084,7 +3084,7 @@ const PostModule = (function() {
     var container = fromRecent ? recentPanelContentEl : postListEl;
     // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
     if (originEl && (!container || !container.contains(originEl))) {
-      var posteditorItem = originEl.closest('.posteditor-outer-container');
+      var posteditorItem = originEl.closest('.posteditor-main-container');
       if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
@@ -3128,16 +3128,16 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-outer-container
+    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-main-container
     var slot = null;
     if (originEl) {
-      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-outer-container');
+      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-main-container');
     }
     if (!slot) {
       // Fallback: find slot by post ID in the container
       var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
       if (cardInContainer) {
-        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-outer-container');
+        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-main-container');
       }
     }
 
@@ -3151,7 +3151,7 @@ const PostModule = (function() {
       // If open-post countdown is enabled, hide the slot countdown bar to avoid duplicates.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       var cardStatusBar = null;
-      var _slotOuter = (slot.parentElement && slot.parentElement.classList.contains('post-outer-container') || slot.parentElement && slot.parentElement.classList.contains('recent-outer-container')) ? slot.parentElement : slot;
+      var _slotOuter = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
       cardStatusBar = _slotOuter.querySelector('.post-statusbar--slot-card');
       var openHeaderBar = null;
       try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
@@ -3233,7 +3233,7 @@ const PostModule = (function() {
             var _sfOffset = _sfPostH - _openCardH;
             if (_sfOffset <= 0) { slot.style.overflow = ''; return; }
             var _sfSiblings = [];
-            var _sfSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+            var _sfSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
             var _sfSib = _sfSibStart.nextElementSibling;
             while (_sfSib) { _sfSiblings.push(_sfSib); _sfSib = _sfSib.nextElementSibling; }
             var _sfSibList = _sfSibStart.parentElement;
@@ -3280,7 +3280,7 @@ const PostModule = (function() {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
-          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
           var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           var _openSibList = _openSibStart.parentElement;
@@ -3469,8 +3469,8 @@ const PostModule = (function() {
 
     var postId = openPostEl.dataset.id;
 
-    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-outer-container)
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-outer-container');
+    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-main-container)
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-main-container');
 
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
@@ -5076,7 +5076,7 @@ const PostModule = (function() {
           var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
-            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
             var _expSib = _expSibStart.nextElementSibling;
             while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
             var _expSibList = _expSibStart.parentElement;
@@ -5180,7 +5180,7 @@ const PostModule = (function() {
           var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container');
           var _expSiblings = [];
           if (_expSlot) {
-            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
             var _expSib = _expSibStart.nextElementSibling;
             while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
             var _expSibList = _expSibStart.parentElement;
@@ -5321,8 +5321,8 @@ const PostModule = (function() {
     } catch (_eWp) {}
 
     // Find the slot wrapper
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-outer-container');
-
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-main-container');
+    
     if (slot) {
       // Preserve the stored card clone across animation cancel — it was captured at open time
       var _savedCardEnterClone = slot.__cardEnterClone || null;
@@ -5405,7 +5405,7 @@ const PostModule = (function() {
         // All siblings below move as one unit with the post — same transform, same timing.
         // When post is removed at end, layout is already in its final state — no snap.
         var _closeSiblings = [];
-        var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+        var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
         var _closeSib = _closeSibStart.nextElementSibling;
         while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
         var _closeSibList = _closeSibStart.parentElement;
