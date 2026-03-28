@@ -3551,8 +3551,8 @@
                     });
                 }
             } else {
-                if (window.PostModule && typeof PostModule.openPost === 'function') {
-                    PostModule.openPost(post, { source: 'posteditor', originEl: postCard });
+                if (window.PostModule && typeof PostModule.openPostById === 'function') {
+                    PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
                 }
             }
         });
