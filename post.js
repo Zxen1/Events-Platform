@@ -47,7 +47,8 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   var panelsContainerEl = null;
-  var _POST_ANIMATE = true; // Master switch — set false to disable all open/close animation instantly
+  var _POST_ANIMATE  = true; // Master switch — set false to disable all open/close animation instantly
+  var _POST_ANIM_DUR = 1.0;  // Duration in seconds — all sub-timings scale proportionally
 
   var postPanelEl = null;
   var postPanelContentEl = null;
@@ -3190,12 +3191,12 @@ const PostModule = (function() {
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
-          _exitClone.style.transition = 'transform 1s linear';
+          _exitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
           setTimeout(function() {
             if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
             if (slot && slot.__exitClone === _exitClone) slot.__exitClone = null;
-          }, 1020);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: CARD EXIT ───────────────────────────────────────
 
@@ -3250,10 +3251,10 @@ const PostModule = (function() {
             slot.__animDetail = detail;
             slot.__animSiblings = _sfSiblings;
             slot.getBoundingClientRect(); // force reflow
-            detail.style.transition = 'transform 1s linear';
+            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             detail.style.transform = 'translateY(0)';
             for (var _sfi2 = 0; _sfi2 < _sfSiblings.length; _sfi2++) {
-              _sfSiblings[_sfi2].style.transition = 'transform 1s linear';
+              _sfSiblings[_sfi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               _sfSiblings[_sfi2].style.transform = 'translateY(0)';
             }
             slot.__animTimer = setTimeout(function() {
@@ -3268,7 +3269,7 @@ const PostModule = (function() {
               slot.__animDetail = null;
               slot.__animSiblings = null;
               slot.__animTimer = null;
-            }, 1020);
+            }, Math.round(_POST_ANIM_DUR * 1000) + 20);
           };
           // Assign to ref so setupPostDetailEvents can invoke it after the fetch completes.
           // This assignment is always synchronous before any .then() callback can fire.
@@ -3297,10 +3298,10 @@ const PostModule = (function() {
           slot.__animDetail = detail;
           slot.__animSiblings = _openSiblings;
           slot.getBoundingClientRect(); // force reflow
-          detail.style.transition = 'transform 1s linear';
+          detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           detail.style.transform = 'translateY(0)';
           for (var _osi2 = 0; _osi2 < _openSiblings.length; _osi2++) {
-            _openSiblings[_osi2].style.transition = 'transform 1s linear';
+            _openSiblings[_osi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _openSiblings[_osi2].style.transform = 'translateY(0)';
           }
           slot.__animTimer = setTimeout(function() {
@@ -3322,7 +3323,7 @@ const PostModule = (function() {
                 if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
               }
             } catch (_eBs) {}
-          }, 1020);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: POST ENTER ─────────────────────────────────────
 
@@ -5084,9 +5085,9 @@ const PostModule = (function() {
           }
 
           // Fade out expanded content over full 1s — content stays visible throughout the animation
-          if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '0'; }
-          if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '0'; }
-          descEl.style.transition = 'opacity 1s linear';
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '0'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
           descEl.style.opacity    = '0';
 
           // Clip body so empty space below the rising image doesn't show
@@ -5095,13 +5096,13 @@ const PostModule = (function() {
           // Force reflow to commit starting state before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
 
-          // Animate image container, thumbs, and siblings UP — all locked to same 1s duration.
+          // Animate image container, thumbs, and siblings UP — all locked to same duration.
           // Container travels _imgOffset, thumbs travel an additional _thumbsOffset within the container,
           // so thumbs total screen travel = _imgOffset + _thumbsOffset = _delta = same as siblings.
-          if (_imgEl) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
-          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform 1s linear'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
+          if (_imgEl) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
-            _expSiblings[_ei].style.transition = 'transform 1s linear';
+            _expSiblings[_ei].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
 
@@ -5122,10 +5123,10 @@ const PostModule = (function() {
             descEl.style.opacity    = '0';
             descEl.style.transition = 'none';
             descEl.getBoundingClientRect();
-            descEl.style.transition = 'opacity 0.2s linear';
+            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
             descEl.style.opacity    = '1';
-            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 220);
-          }, 1020);
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
           wrap.classList.remove('post--expanded');
           showCollapsed();
@@ -5147,7 +5148,7 @@ const PostModule = (function() {
         var _bodyFirstH   = _bodyEl ? _bodyEl.offsetHeight : 0;
 
         // Fade out the current description before swapping content
-        descEl.style.transition = 'opacity 0.2s linear';
+        descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
         descEl.style.opacity    = '0';
 
         // DOM swap
@@ -5211,14 +5212,14 @@ const PostModule = (function() {
           if (_imgEl) _imgEl.getBoundingClientRect();
 
           // Animate everything to final positions over 1s — all locked to same duration
-          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(0)'; }
-          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform 1s linear'; _thumbsEl.style.transform = 'translateY(0)'; }
-          if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '1'; }
-          if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '1'; }
-          descEl.style.transition = 'opacity 1s linear';
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(0)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(0)'; }
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '1'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '1'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
           descEl.style.opacity    = '1';
           for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
-            _expSiblings[_ei2].style.transition = 'transform 1s linear';
+            _expSiblings[_ei2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _expSiblings[_ei2].style.transform  = 'translateY(0)';
           }
 
@@ -5233,12 +5234,12 @@ const PostModule = (function() {
               _expSiblings[_ei3].style.transform  = '';
               _expSiblings[_ei3].style.transition = '';
             }
-          }, 1020);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
           // No height change — just restore description opacity
-          descEl.style.transition = 'opacity 0.3s linear';
+          descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.3) + 's linear';
           descEl.style.opacity    = '1';
-          setTimeout(function() { descEl.style.transition = ''; }, 320);
+          setTimeout(function() { descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 300) + 20);
         }
 
         syncLocationWallpaper(true);
@@ -5347,7 +5348,7 @@ const PostModule = (function() {
           var _bsHoldEl = slot.closest('.post-list') || slot.closest('.recent-panel-content');
           if (_bsHoldEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
             var _bsHoldCtrl = BottomSlack.get(_bsHoldEl);
-            if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(1020);
+            if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(Math.round(_POST_ANIM_DUR * 1000) + 20);
           }
         } catch (_eBsHold) {}
 
@@ -5420,14 +5421,14 @@ const PostModule = (function() {
         slot.getBoundingClientRect(); // force reflow
 
         var _closeOffset = _closeStartH - _cardH;
-        openPostEl.style.transition = 'transform 1s linear';
+        openPostEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
         openPostEl.style.transform = 'translateY(-' + _closeOffset + 'px)';
         for (var _csi2 = 0; _csi2 < _closeSiblings.length; _csi2++) {
-          _closeSiblings[_csi2].style.transition = 'transform 1s linear';
+          _closeSiblings[_csi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _closeSiblings[_csi2].style.transform = 'translateY(-' + _closeOffset + 'px)';
         }
         if (_cardEnterClone) {
-          _cardEnterClone.style.transition = 'transform 1s linear';
+          _cardEnterClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _cardEnterClone.style.transform = 'translateY(0)';
         }
 
@@ -5461,7 +5462,7 @@ const PostModule = (function() {
           slot.__animSiblings = null;
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
-        }, 1020);
+        }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         // ── END CLOSE ANIMATION: POST EXIT ──────────────────────────────────────
 
       } // end if (_closeAnimate)
