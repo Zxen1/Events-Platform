@@ -788,31 +788,11 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.post-storefront-content {
-  position: relative;
-}
-
-.post-storefront-main-container {
-  position: relative;
-}
-
-.post-storefront-swap-container {
-  position: relative;
-  overflow: hidden;
-  height: 0;
-}
-
-.post-storefront-anim-track {
-  position: relative;
-}
-
-.post-storefront-content > .post-header,
-.post-storefront-content > .post-storefront-main-container > .post-header {
+.post-storefront-content > .post-header {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   cursor: default;
 }
-.post--expanded .post-storefront-content > .post-header,
-.post--expanded .post-storefront-content > .post-storefront-main-container > .post-header {
+.post--expanded .post-storefront-content > .post-header {
   cursor: pointer;
 }
 

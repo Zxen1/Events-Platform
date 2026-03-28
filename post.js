@@ -4297,17 +4297,6 @@ const PostModule = (function() {
       var sfMenuDiv = document.createElement('div');
       sfMenuDiv.innerHTML = StorefrontMenuComponent.render(sfMenuPosts);
       while (sfMenuDiv.firstChild) contentWrap.appendChild(sfMenuDiv.firstChild);
-      var sfContent = contentWrap.querySelector('.post-storefront-content');
-      if (sfContent && !sfContent.querySelector('.post-storefront-main-container')) {
-        var sfMain = document.createElement('div');
-        sfMain.className = 'post-storefront-main-container';
-        sfContent.appendChild(sfMain);
-      }
-      if (sfContent && !sfContent.querySelector('.post-storefront-swap-container')) {
-        var sfSwap = document.createElement('div');
-        sfSwap.className = 'post-storefront-swap-container';
-        sfContent.appendChild(sfSwap);
-      }
     } else {
       contentWrap.appendChild(postBody);
     }
@@ -4504,71 +4493,10 @@ const PostModule = (function() {
       StorefrontMenuComponent.init(wrap, sfMenuPosts, {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
-          var selectedPostId = String(selectedPost.id);
-          var contentTarget = contentEl ? contentEl.querySelector('.post-storefront-main-container') : null;
-          if (!contentTarget && contentEl) {
-            contentTarget = document.createElement('div');
-            contentTarget.className = 'post-storefront-main-container';
-            contentEl.appendChild(contentTarget);
-          }
-          if (!contentTarget) return;
-          var _activePostId = String(contentTarget.dataset.activePostId || '');
-          var _selectedMenuPostId = String(contentEl.dataset.sfSelectedPostId || '');
-          if (String(contentEl.dataset.sfSwapBusy || '') === '1') {
-            var _lockedPostId = _selectedMenuPostId || _activePostId;
-            if (_lockedPostId) {
-              var _activeItem = wrap.querySelector('.post-storefront-menu-item[data-post-id="' + _lockedPostId + '"]');
-              if (_activeItem) {
-                var _menuEl = _activeItem.parentElement;
-                if (_menuEl) {
-                  var _menuItems = _menuEl.querySelectorAll('.post-storefront-menu-item');
-                  for (var _mii = 0; _mii < _menuItems.length; _mii++) _menuItems[_mii].classList.remove('post-storefront-menu-item--selected');
-                }
-                _activeItem.classList.add('post-storefront-menu-item--selected');
-              }
-            }
-            return;
-          }
-          if (_selectedMenuPostId === selectedPostId) return;
-          if (_activePostId === selectedPostId) return;
-
-          var swapTarget = contentEl.querySelector('.post-storefront-swap-container');
-          if (!swapTarget) {
-            swapTarget = document.createElement('div');
-            swapTarget.className = 'post-storefront-swap-container';
-            contentEl.appendChild(swapTarget);
-          }
-          contentEl.dataset.sfSwapBusy = '1';
-
-          if (contentEl.__sfSwapTimer) {
-            clearTimeout(contentEl.__sfSwapTimer);
-            contentEl.__sfSwapTimer = null;
-          }
-          contentTarget.style.transition = '';
-          contentTarget.style.transform = '';
-          contentTarget.style.height = '';
-          contentTarget.style.overflow = '';
-          swapTarget.style.transition = '';
-          swapTarget.style.transform = '';
-          swapTarget.style.height = '0px';
-          swapTarget.style.overflow = 'hidden';
-          swapTarget.innerHTML = '';
-
           addToRecentHistory(selectedPost, 0);
-          contentEl.dataset.sfSelectedPostId = selectedPostId;
-          var _sfReqToken = Date.now() + ':' + selectedPostId;
-          contentEl.dataset.sfReqToken = _sfReqToken;
+          contentEl.innerHTML = '';
           loadPostById(selectedPost.id).then(function(fullPost) {
-            if (contentEl.dataset.sfReqToken !== _sfReqToken) return;
-            if (!fullPost) {
-              contentTarget.innerHTML = '';
-              contentTarget.dataset.activePostId = '';
-              swapTarget.innerHTML = '';
-              swapTarget.style.height = '0px';
-              contentEl.dataset.sfSelectedPostId = _activePostId || '';
-              contentEl.dataset.sfSwapBusy = '';
-              return;
-            }
+            if (!fullPost) { contentEl.innerHTML = ''; return; }
             if (fullPost.subcategory_color) {
               var _sfHex = fullPost.subcategory_color.replace('#', '');
               var _sfR = parseInt(_sfHex.substring(0, 2), 16);
@@ -4585,15 +4513,19 @@ const PostModule = (function() {
                 if (String(fullPost.map_cards[mi].id) === String(pick.mapCard.id)) { mcIdx = mi; break; }
               }
             }
-
             var tempDetail = buildPostDetail(fullPost, null, false, mcIdx);
             tempDetail.classList.remove('component-locationwallpaper-container');
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
+            contentEl.innerHTML = '';
             wrap.classList.remove('post--expanded');
             if (postHeader) {
+              contentEl.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
+                // buildPostDetail calls setupPostDetailEvents internally, which already attached a handler
+                // to this button using the wrong wrap (tempDetail). Strip it via clone before attaching
+                // the correct storefront-aware handler that uses the outer wrap.
                 var sfFavBtnClean = sfFavBtn.cloneNode(true);
                 sfFavBtn.parentNode.replaceChild(sfFavBtnClean, sfFavBtn);
                 sfFavBtnClean.addEventListener('click', function(e) {
@@ -4619,12 +4551,11 @@ const PostModule = (function() {
                 });
               }
             }
-
-            if (swapTarget) swapTarget.innerHTML = '';
-            if (postHeader) swapTarget.appendChild(postHeader);
-            if (postBody) swapTarget.appendChild(postBody);
-            swapTarget.dataset.activePostId = String(fullPost.id);
-
+            if (postBody) contentEl.appendChild(postBody);
+            if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
+              _sfFirstLoadFired = true;
+              sfOnFirstLoadRef.fn();
+            }
             new MutationObserver(function() {
               wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
             }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
@@ -4640,81 +4571,6 @@ const PostModule = (function() {
                 }
               });
             }
-
-            // First storefront render: keep baseline behavior (single post in main container).
-            if (!contentTarget.children.length) {
-              contentTarget.innerHTML = '';
-              while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
-              contentTarget.dataset.activePostId = String(fullPost.id);
-              swapTarget.style.height = '0px';
-              swapTarget.style.transition = '';
-              swapTarget.style.overflow = 'hidden';
-              swapTarget.innerHTML = '';
-              if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
-                _sfFirstLoadFired = true;
-                sfOnFirstLoadRef.fn();
-              }
-              contentEl.dataset.sfSwapBusy = '';
-              return;
-            }
-
-            var _sfInTrack = document.createElement('div');
-            _sfInTrack.className = 'post-storefront-anim-track';
-            while (swapTarget.firstChild) _sfInTrack.appendChild(swapTarget.firstChild);
-            swapTarget.appendChild(_sfInTrack);
-
-            var _sfInH = _sfInTrack.offsetHeight || _sfInTrack.scrollHeight || 0;
-            if (_sfInH <= 0) _sfInH = swapTarget.scrollHeight || 0;
-
-            if (!_POST_ANIMATE || _sfInH <= 0) {
-              swapTarget.style.height = '';
-              swapTarget.style.transition = '';
-              swapTarget.style.overflow = '';
-              _sfInTrack.style.transition = '';
-              _sfInTrack.style.transform = '';
-              contentEl.dataset.sfSwapBusy = '';
-              return;
-            }
-
-            // Step one only:
-            // - Outgoing stays in main container untouched
-            // - Incoming opens in swap container
-            // - Swap container growth pushes all below content down in normal layout flow
-            swapTarget.style.transition = 'none';
-            swapTarget.style.height = '0px';
-            swapTarget.style.overflow = 'hidden';
-            _sfInTrack.style.transition = 'none';
-            _sfInTrack.style.transform = 'translateY(-' + _sfInH + 'px)';
-
-            contentEl.getBoundingClientRect(); // force reflow
-
-            swapTarget.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
-            swapTarget.style.height = _sfInH + 'px';
-            _sfInTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-            _sfInTrack.style.transform = 'translateY(0)';
-
-            contentEl.__sfSwapTimer = setTimeout(function() {
-              swapTarget.style.transition = '';
-              swapTarget.style.height = '';
-              swapTarget.style.overflow = '';
-              _sfInTrack.style.transition = '';
-              _sfInTrack.style.transform = '';
-              contentEl.__sfSwapTimer = null;
-              contentEl.dataset.sfSwapBusy = '';
-            }, Math.round(_POST_ANIM_DUR * 1000) + 20);
-          }).catch(function() {
-            contentTarget.style.transition = '';
-            contentTarget.style.transform = '';
-            contentTarget.style.height = '';
-            contentTarget.style.overflow = '';
-            swapTarget.style.transition = '';
-            swapTarget.style.transform = '';
-            swapTarget.style.height = '0px';
-            swapTarget.style.overflow = 'hidden';
-            swapTarget.innerHTML = '';
-            contentEl.dataset.sfSelectedPostId = _activePostId || '';
-            contentEl.__sfSwapTimer = null;
-            contentEl.dataset.sfSwapBusy = '';
           });
         }
       });
