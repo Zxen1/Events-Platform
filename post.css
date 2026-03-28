@@ -788,11 +788,31 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.post-storefront-content > .post-header {
+.post-storefront-content {
+  position: relative;
+}
+
+.post-storefront-main-container {
+  position: relative;
+}
+
+.post-storefront-swap-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  height: 0;
+  pointer-events: none;
+}
+
+.post-storefront-content > .post-header,
+.post-storefront-content > .post-storefront-main-container > .post-header {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   cursor: default;
 }
-.post--expanded .post-storefront-content > .post-header {
+.post--expanded .post-storefront-content > .post-header,
+.post--expanded .post-storefront-content > .post-storefront-main-container > .post-header {
   cursor: pointer;
 }
 
