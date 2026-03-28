@@ -5089,7 +5089,9 @@ const PostModule = (function() {
           // Fade out expanded content over full 1s — content stays visible throughout the animation
           if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '0'; }
           if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '0'; }
-          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
+          // Description fades out over the first half, then swaps to collapsed text and fades back in
+          // over the second half — fully visible by the time the animation completes.
+          descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.5) + 's linear';
           descEl.style.opacity    = '0';
 
           // Clip body so empty space below the rising image doesn't show
@@ -5108,6 +5110,17 @@ const PostModule = (function() {
             _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
 
+          // Halfway through: swap to collapsed text and fade it back in so it arrives at full opacity
+          // exactly when the main animation ends — no late appearance after the collapse completes.
+          setTimeout(function() {
+            showCollapsed();
+            descEl.style.opacity    = '0';
+            descEl.style.transition = 'none';
+            descEl.getBoundingClientRect();
+            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.5) + 's linear';
+            descEl.style.opacity    = '1';
+          }, Math.round(_POST_ANIM_DUR * 500) + 20);
+
           setTimeout(function() {
             _realWrap.classList.remove('post--expanded');
 
@@ -5120,14 +5133,8 @@ const PostModule = (function() {
               _expSiblings[_ei2].style.transform  = '';
               _expSiblings[_ei2].style.transition = '';
             }
-
-            showCollapsed();
-            descEl.style.opacity    = '0';
-            descEl.style.transition = 'none';
-            descEl.getBoundingClientRect();
-            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
-            descEl.style.opacity    = '1';
-            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
+            descEl.style.opacity    = '';
+            descEl.style.transition = '';
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
           _realWrap.classList.remove('post--expanded');
