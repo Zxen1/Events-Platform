@@ -311,6 +311,60 @@ Pattern copied from Recent panel: checks `countdown_postcards` admin setting, ca
 
 ---
 
+## STOREFRONT SWAP ANIMATION — Instructions
+
+### What it does
+When a user clicks a different menu item in the storefront menu, the current post detail swaps to the new post detail with a simultaneous expand/collapse animation.
+
+### Parent container
+`.post-storefront-content` — already exists, rendered by `StorefrontMenuComponent.render()` in `components.js` (line 14778).
+
+### Sub-containers (ephemeral, tagged by post ID)
+Each post detail lives in its own sub-container inside `.post-storefront-content`, tagged with the post ID via `data-post-id`. These are temporary — created when needed, destroyed when the swap completes.
+
+```html
+<div class="post-storefront-content">
+  <div data-post-id="00042"><!-- incoming post header + body --></div>
+  <div data-post-id="00017"><!-- outgoing post header + body --></div>
+</div>
+```
+
+### Animation mechanics
+Two height animations on two sibling divs in normal document flow. That's it.
+
+1. **Incoming container (top):** Inserted above the outgoing container. Expands from zero height using the **OPEN ANIMATION: POST ENTER** pattern (post.js lines 3344–3458). The user sees the new post immediately.
+2. **Outgoing container (bottom):** Collapses to zero height using the **CLOSE ANIMATION: POST EXIT** pattern (post.js lines 5538–5608). Removed from the DOM after the animation completes.
+
+Both animations run simultaneously at `_POST_ANIM_DUR` with `linear` timing.
+
+### Why two containers
+The incoming and outgoing posts are block-level siblings in normal document flow. They can never cross paths, pass over each other, or overlap — the browser's layout engine makes this physically impossible. No absolute positioning, no z-index, no transforms that take elements out of flow.
+
+### What to copy
+- **Open pattern:** `overflow: hidden` on the incoming container, content starts at `translateY(-offset)`, transitions to `translateY(0)`. Siblings (the outgoing container) are pushed down naturally by flow.
+- **Close pattern:** `overflow: hidden` on the outgoing container, content starts at `translateY(0)`, transitions to `translateY(-offset)`. Container removed in the cleanup `setTimeout`.
+- Both use `_POST_ANIM_DUR`, `linear` timing, and the standard `setTimeout` cleanup at `Math.round(_POST_ANIM_DUR * 1000) + 20` ms.
+
+### Cleanup
+- Outgoing container is removed from the DOM after the close animation completes.
+- All inline styles are stripped from the incoming container after the open animation completes.
+- Nothing persists. The surviving container is just the post detail sitting inside `.post-storefront-content` as before.
+
+### Siblings MUST follow the outgoing container (CRITICAL)
+Everything below the outgoing container — including any DOM siblings below `.post-storefront-content` itself — MUST be collected and translated in lockstep with the outgoing container as it collapses. This is exactly how the CLOSE ANIMATION: POST EXIT works (post.js lines 5542–5571): it collects every sibling after the slot, applies the same `translateY` with the same timing, and cleans them all up in the same `setTimeout`.
+
+**Copy this sibling-locking pattern exactly.** Do not assume normal document flow handles it. Do not skip it. Do not simplify it. All 12 previous agents failed here — siblings were left stationary or creeping at a different speed. The close post animation already works perfectly across all 16 cases in the animation matrix. Use the same method: same `translateY`, same `transition`, same timing, same cleanup. No new approach.
+
+### Zero flicker (NON-NEGOTIABLE)
+The entire animation system exists to eliminate flicker. When the cleanup `setTimeout` fires — removing the outgoing container, stripping inline styles — the DOM must already be in its exact final layout position. The last frame of the animation and the natural flow after cleanup must be pixel-identical. If there is any snap, jump, or flicker of any size, the math is wrong. There is no acceptable amount of flicker. Not one pixel. Not for one frame. The 16 existing animations in the matrix already achieve this — the storefront swap must match them exactly.
+
+### Rules
+- **No absolute positioning.** Both containers stay in normal document flow at all times.
+- **No z-index.** There is nothing to layer.
+- **No crossing.** The containers are siblings — they cannot occupy the same space.
+
+---
+
 ## Key Rules
 
 - Animation duration must be identical for postcard and post transforms
