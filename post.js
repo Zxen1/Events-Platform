@@ -6749,7 +6749,8 @@ const PostModule = (function() {
     parsePriceSummary: parsePriceSummary,
     mapCardHasPromo: mapCardHasPromo,
     loadPostById: loadPostById,
-    handleDeepLink: maybeOpenDeepLinkedPost
+    handleDeepLink: maybeOpenDeepLinkedPost,
+    buildCountdownStatusBar: buildCountdownStatusBar
   };
 
 })();
