@@ -3469,7 +3469,7 @@ const PostModule = (function() {
 
     var postId = openPostEl.dataset.id;
 
-    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-item)
+    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-outer-container)
     var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-outer-container');
 
     if (slot) {
