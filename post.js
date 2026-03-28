@@ -4494,9 +4494,58 @@ const PostModule = (function() {
         onPostSelected: function(menuPost, idx, contentEl) {
           var selectedPost = menuPost._post;
           addToRecentHistory(selectedPost, 0);
-          contentEl.innerHTML = '';
+
+          // ── Cancel any in-progress swap animation ──
+          if (contentEl.__sfSwapTimer) {
+            clearTimeout(contentEl.__sfSwapTimer);
+            contentEl.__sfSwapTimer = null;
+          }
+          if (contentEl.__sfSwapSiblings) {
+            for (var _ci = 0; _ci < contentEl.__sfSwapSiblings.length; _ci++) {
+              contentEl.__sfSwapSiblings[_ci].style.transition = '';
+              contentEl.__sfSwapSiblings[_ci].style.transform = '';
+            }
+            contentEl.__sfSwapSiblings = null;
+          }
+          var _keptSub = null;
+          var _child = contentEl.firstElementChild;
+          while (_child) {
+            var _next = _child.nextElementSibling;
+            if (_child.dataset.sfSwapId) {
+              _child.style.overflow = '';
+              var _cTrack = _child.firstChild;
+              if (_cTrack) { _cTrack.style.transition = ''; _cTrack.style.transform = ''; }
+              if (!_keptSub && _cTrack && _cTrack.children.length > 0) {
+                _keptSub = _child;
+              } else {
+                _child.remove();
+              }
+            }
+            _child = _next;
+          }
+
+          var outgoingSub = _keptSub;
+          var outgoingTrack = outgoingSub ? outgoingSub.firstChild : null;
+
+          // Create incoming sub-container tagged with post ID
+          var incomingSub = document.createElement('div');
+          incomingSub.dataset.sfSwapId = String(selectedPost.id);
+          var incomingTrack = document.createElement('div');
+          incomingSub.appendChild(incomingTrack);
+
+          if (outgoingSub) {
+            contentEl.insertBefore(incomingSub, outgoingSub);
+          } else {
+            contentEl.appendChild(incomingSub);
+          }
+
+          var _swapGen = (contentEl.__sfSwapGen = (contentEl.__sfSwapGen || 0) + 1);
+
           loadPostById(selectedPost.id).then(function(fullPost) {
-            if (!fullPost) { contentEl.innerHTML = ''; return; }
+            if (contentEl.__sfSwapGen !== _swapGen) return;
+            if (!fullPost) { incomingSub.remove(); return; }
+            if (!incomingSub.parentNode) return;
+
             if (fullPost.subcategory_color) {
               var _sfHex = fullPost.subcategory_color.replace('#', '');
               var _sfR = parseInt(_sfHex.substring(0, 2), 16);
@@ -4517,10 +4566,11 @@ const PostModule = (function() {
             tempDetail.classList.remove('component-locationwallpaper-container');
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
-            contentEl.innerHTML = '';
+
             wrap.classList.remove('post--expanded');
+
             if (postHeader) {
-              contentEl.appendChild(postHeader);
+              incomingTrack.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
                 // buildPostDetail calls setupPostDetailEvents internally, which already attached a handler
@@ -4551,11 +4601,83 @@ const PostModule = (function() {
                 });
               }
             }
-            if (postBody) contentEl.appendChild(postBody);
+            if (postBody) incomingTrack.appendChild(postBody);
+
+            // First load: storefront open animation handles the slot — no swap needed
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
+              if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
               sfOnFirstLoadRef.fn();
+            } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
+              // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
+              // Two sibling containers in normal document flow. Incoming on top expands,
+              // outgoing below collapses. Same translateY pattern as open/close animations.
+              var _inH = incomingSub.offsetHeight;
+              var _outH = outgoingSub.offsetHeight;
+
+              incomingSub.style.overflow = 'hidden';
+              outgoingSub.style.overflow = 'hidden';
+
+              // Incoming: content starts fully translated above container (hidden by overflow)
+              incomingTrack.style.transition = 'none';
+              incomingTrack.style.transform = 'translateY(-' + _inH + 'px)';
+
+              // Outgoing: content starts visible
+              outgoingTrack.style.transition = 'none';
+              outgoingTrack.style.transform = 'translateY(0)';
+
+              // Collect siblings below the slot — identical to close animation pattern
+              var _swapSlot = wrap.closest('.post-main-container') || wrap.closest('.post-slot') || wrap.closest('.recent-main-container');
+              var _swapSiblings = [];
+              if (_swapSlot) {
+                var _swapOuter = (_swapSlot.parentElement && (_swapSlot.parentElement.classList.contains('post-outer-container') || _swapSlot.parentElement.classList.contains('recent-outer-container'))) ? _swapSlot.parentElement : _swapSlot;
+                var _swapSib = _swapOuter.nextElementSibling;
+                while (_swapSib) { _swapSiblings.push(_swapSib); _swapSib = _swapSib.nextElementSibling; }
+                var _swapSibList = _swapOuter.parentElement;
+                if (_swapSibList && (_swapSibList.classList.contains('post-list') || _swapSibList.classList.contains('recent-list'))) {
+                  var _listSib = _swapSibList.nextElementSibling;
+                  while (_listSib) { _swapSiblings.push(_listSib); _listSib = _listSib.nextElementSibling; }
+                }
+              }
+              contentEl.__sfSwapSiblings = _swapSiblings;
+
+              // Siblings compensate for incoming container's DOM height
+              for (var _si = 0; _si < _swapSiblings.length; _si++) {
+                _swapSiblings[_si].style.transition = 'none';
+                _swapSiblings[_si].style.transform = 'translateY(-' + _inH + 'px)';
+              }
+
+              contentEl.getBoundingClientRect(); // force reflow
+
+              // Animate to end states — all three use same duration and linear timing
+              incomingTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+              incomingTrack.style.transform = 'translateY(0)';
+
+              outgoingTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+              outgoingTrack.style.transform = 'translateY(-' + _outH + 'px)';
+
+              for (var _si2 = 0; _si2 < _swapSiblings.length; _si2++) {
+                _swapSiblings[_si2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+                _swapSiblings[_si2].style.transform = 'translateY(-' + _outH + 'px)';
+              }
+
+              contentEl.__sfSwapTimer = setTimeout(function() {
+                outgoingSub.remove();
+                incomingSub.style.overflow = '';
+                incomingTrack.style.transition = '';
+                incomingTrack.style.transform = '';
+                for (var _si3 = 0; _si3 < _swapSiblings.length; _si3++) {
+                  _swapSiblings[_si3].style.transition = '';
+                  _swapSiblings[_si3].style.transform = '';
+                }
+                contentEl.__sfSwapTimer = null;
+                contentEl.__sfSwapSiblings = null;
+              }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+              // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
+            } else if (outgoingSub && outgoingSub.parentNode) {
+              outgoingSub.remove();
             }
+
             new MutationObserver(function() {
               wrap.classList.toggle('post--expanded', tempDetail.classList.contains('post--expanded'));
             }).observe(tempDetail, { attributes: true, attributeFilter: ['class'] });
