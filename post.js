@@ -65,7 +65,7 @@ const PostModule = (function() {
   // Excluded from animation: fromMap opens, marquee opens, deeplink opens
   // ─────────────────────────────────────────────────────────────────────────────
   var _POST_ANIMATE  = true;
-  var _POST_ANIM_DUR = 1.0;
+  var _POST_ANIM_DUR = 2.0;
 
   var postPanelEl = null;
   var postPanelContentEl = null;
