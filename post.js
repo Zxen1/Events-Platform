@@ -3084,7 +3084,7 @@ const PostModule = (function() {
     var container = fromRecent ? recentPanelContentEl : postListEl;
     // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
     if (originEl && (!container || !container.contains(originEl))) {
-      var posteditorItem = originEl.closest('.posteditor-item');
+      var posteditorItem = originEl.closest('.posteditor-outer-container');
       if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
@@ -3128,16 +3128,16 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-item
+    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-outer-container
     var slot = null;
     if (originEl) {
-      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-item');
+      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-outer-container');
     }
     if (!slot) {
       // Fallback: find slot by post ID in the container
       var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
       if (cardInContainer) {
-        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-item');
+        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-outer-container');
       }
     }
 
@@ -3470,7 +3470,7 @@ const PostModule = (function() {
     var postId = openPostEl.dataset.id;
 
     // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-item)
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-outer-container');
 
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
@@ -5321,7 +5321,7 @@ const PostModule = (function() {
     } catch (_eWp) {}
 
     // Find the slot wrapper
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-outer-container');
 
     if (slot) {
       // Preserve the stored card clone across animation cancel — it was captured at open time

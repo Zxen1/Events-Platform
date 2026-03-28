@@ -10934,7 +10934,7 @@ const LocationWallpaperComponent = (function() {
         function getWallpaperTraceContext() {
             var panel = 'unknown';
             try {
-                if (locationContainerEl.closest('#member-tab-posteditor, .posteditor-item')) {
+                if (locationContainerEl.closest('#member-tab-posteditor, .posteditor-outer-container')) {
                     panel = 'posteditor';
                 } else if (locationContainerEl.closest('#member-tab-recent, .recent-list, .recent-item')) {
                     panel = 'recent';

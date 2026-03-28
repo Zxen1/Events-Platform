@@ -489,7 +489,7 @@
         if (!container || currentPosts.length === 0) return;
         
         // Find the post container that was just favorited
-        var postContainer = container.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+        var postContainer = container.querySelector('.posteditor-outer-container[data-post-id="' + postId + '"]');
         var favBtn = postContainer ? postContainer.querySelector('.post-card-button-fav') : null;
         
         // Brief highlight on star
@@ -506,7 +506,7 @@
         
         // Reorder DOM elements
         sortedPosts.forEach(function(post) {
-            var el = container.querySelector('.posteditor-item[data-post-id="' + post.id + '"]');
+            var el = container.querySelector('.posteditor-outer-container[data-post-id="' + post.id + '"]');
             if (el) {
                 container.appendChild(el);
             }
@@ -529,7 +529,7 @@
         var placeholder = document.getElementById('posteditor-uploading');
 
         sortedPosts.forEach(function(post) {
-            var el = container.querySelector('.posteditor-item[data-post-id="' + post.id + '"]');
+            var el = container.querySelector('.posteditor-outer-container[data-post-id="' + post.id + '"]');
             if (el) container.appendChild(el);
         });
 
@@ -539,7 +539,7 @@
     }
 
     function refreshPostCard(postId) {
-        var postContainer = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+        var postContainer = document.querySelector('.posteditor-outer-container[data-post-id="' + postId + '"]');
         var user = getCurrentUser();
         var memberId = user ? parseInt(user.id, 10) : 0;
         if (!memberId) return Promise.resolve(null);
@@ -585,7 +585,7 @@
     function renderPostCard(post) {
         // Reuse PostModule's rendering logic with buttons underneath
         var postContainer = document.createElement('div');
-        postContainer.className = 'posteditor-item';
+        postContainer.className = 'posteditor-outer-container';
         postContainer.dataset.postId = post.id;
         
         // Create edit header (sticky container for postcard + Save/Close buttons when editing)
@@ -1044,7 +1044,7 @@
                         oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                     }
                     // Rebuild Post Editor card status bar
-                    var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                    var postItem = document.querySelector('.posteditor-outer-container[data-post-id="' + postId + '"]');
                     if (postItem) {
                         var oldBar = postItem.querySelector('.posteditor-statusbar');
                         if (oldBar) {
@@ -1107,7 +1107,7 @@
                                             var newModalBar = buildStatusBar(post);
                                             oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                                         }
-                                        var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                        var postItem = document.querySelector('.posteditor-outer-container[data-post-id="' + postId + '"]');
                                         if (postItem) {
                                             var oldBar = postItem.querySelector('.posteditor-statusbar');
                                             if (oldBar) {
@@ -1189,7 +1189,7 @@
                                             var newModalBar = buildStatusBar(post);
                                             oldModalBar.parentNode.replaceChild(newModalBar, oldModalBar);
                                         }
-                                        var postItem = document.querySelector('.posteditor-item[data-post-id="' + postId + '"]');
+                                        var postItem = document.querySelector('.posteditor-outer-container[data-post-id="' + postId + '"]');
                                         if (postItem) {
                                             var oldBar = postItem.querySelector('.posteditor-statusbar');
                                             if (oldBar) {
@@ -3465,7 +3465,7 @@
             var favBtn = e.target.closest('.post-card-button-fav');
             if (!favBtn) return;
             
-            var postItem = favBtn.closest('.posteditor-item');
+            var postItem = favBtn.closest('.posteditor-outer-container');
             if (!postItem) return;
             
             var postId = postItem.dataset.postId;
@@ -3485,7 +3485,7 @@
             var postCard = e.target.closest('.post-card');
             if (!postCard) return;
             
-            var postItem = postCard.closest('.posteditor-item');
+            var postItem = postCard.closest('.posteditor-outer-container');
             if (!postItem) return;
             
             var postId = postItem.dataset.postId;
