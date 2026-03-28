@@ -10,7 +10,7 @@ Sub-timings are percentages of `_POST_ANIM_DUR`:
 - No-delta edge case fade: 30% (`* 0.3`)
 - Cleanup timeouts: `Math.round(_POST_ANIM_DUR * 1000) + 20` ms
 
-Covers all five operations: postcard open, post close, storefront open, See More, See Less.
+Covers five animation paths: post open, post close, storefront open (deferred variant), See More, See Less.
 
 ---
 
@@ -245,7 +245,48 @@ Clicking "See more" or "See less" on a post description animates the expand/coll
 - Container + thumbs together travel exactly `_delta` on screen = identical to sibling travel
 
 ### Post editor
-Expand/collapse animation is disabled for `.posteditor-item` slots (instant swap only).
+Expand/collapse animation is fully enabled for `.posteditor-main-container` slots (same as post panel and recent panel).
+
+---
+
+---
+
+## POST EDITOR ANIMATION — March 2026 (SOLVED)
+
+### What was built
+All four animations (open, close, See More, See Less) now run inside the Post Editor panel, matching the Post and Recent panels exactly.
+
+### Problems found and fixed
+
+**1. Open animation blocked by `options.source`**
+The post editor calls `openPostById` with `source: 'posteditor'`. The `_shouldAnimate` guard used `!options.source` — a blanket block that caught all sources including `'posteditor'`. Fixed by explicitly naming blocking sources: `options.source !== 'marquee' && options.source !== 'deeplink'`.
+
+**2. Exit clone clipped by outer container overflow**
+`.posteditor-outer-container` has `overflow:hidden` in CSS (for border-radius). As the exit clone slid upward through the status container area, it was clipped early. Fixed by temporarily setting `overflow:visible` on the outer container for the exit clone's duration, then restoring it on cleanup.
+
+**3. Actions container ignored by all four animations**
+`.posteditor-actions-container` is a sibling of `.posteditor-main-container` (the slot) inside `.posteditor-outer-container`. It was not included in any sibling translation list, so it sat frozen or teleported during every animation. Fixed by adding it as the first entry in the siblings list for all four animation paths (open, close, See More, See Less).
+
+**4. See More / See Less: slot lookup missing post editor**
+`_animateCollapse` and `_animateExpand` looked for the slot via `.post-main-container || .recent-main-container` — missing `.posteditor-main-container`. Fixed in both functions.
+
+### DOM structure (Post Editor)
+```
+.posteditor-outer-container  ← overflow:hidden (border-radius); temp visible during exit clone
+├── .posteditor-status-container
+│   ├── .posteditor-statusbar        ← always present
+│   └── .post-statusbar--slot-card   ← countdown bar (event posts, if admin setting on)
+├── .posteditor-main-container       ← slot; position:relative; overflow:hidden
+│   └── div[data-slack-anchor]
+│       └── .post-card
+└── .posteditor-actions-container    ← included in all four animation sibling lists
+```
+
+### Countdown status bar in Post Editor
+Pattern copied from Recent panel: checks `countdown_postcards` admin setting, calls `PostModule.buildCountdownStatusBar()` (now exposed), adds `post-statusbar--slot-card` for deduplication, adds `post-statusbar--modesoonest` if `soonest_only` mode. Uses `post.map_cards[0]` as the representative map card (no map bounds context in editor). `buildCountdownStatusBar` added to `PostModule` return object.
+
+### Subcategory background colour
+`.post-card:hover` inside `.posteditor-outer-container` now shows `var(--subcat-hover-bg)`. Previously suppressed by `background-color: transparent` on the base card rule — fixed by adding an explicit hover rule. Pre-close background capture (`_preCloseSlot` lookup) updated to include `.posteditor-main-container`, and hover state is now forced before `getComputedStyle` (adding/removing `post-card--map-highlight`) so `--subcat-hover-bg` is active at capture time.
 
 ---
 
@@ -257,4 +298,4 @@ Expand/collapse animation is disabled for `.posteditor-item` slots (instant swap
 - Map card / marker / external link opens = no animation, instant as before
 - All animation is interruptible via _cancelSlotAnimation(slot)
 - `_POST_ANIMATE = false` disables everything instantly
-- `_POST_ANIM_DUR` controls speed — change one value, all five operations scale together
+- `_POST_ANIM_DUR` controls speed — change one value, all five paths scale together
