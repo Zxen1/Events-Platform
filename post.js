@@ -5064,6 +5064,10 @@ const PostModule = (function() {
 
         descEl.setAttribute('aria-expanded', 'false');
 
+        var _delta = _bodyExpandedH - _bodyCollapsedH;
+        // Thumbs travel the same internal distance as in expand (D_body - D_img)
+        var _thumbsOffset = (_thumbsEl && _thumbsEl.offsetHeight > 0) ? (_delta - _imgOffset) : 0;
+
         if (_imgOffset > 0) {
           // Collect siblings below this post
           var _expSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container');
@@ -5079,11 +5083,10 @@ const PostModule = (function() {
             }
           }
 
-          // Fade out expanded content — exact reverse of expand fade-in
-          if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 0.5s linear'; _thumbsEl.style.opacity = '0'; }
-          if (_infoEl)   { _infoEl.style.transition   = 'opacity 0.5s linear'; _infoEl.style.opacity   = '0'; }
-          if (_memberEl) { _memberEl.style.transition  = 'opacity 0.5s linear'; _memberEl.style.opacity = '0'; }
-          descEl.style.transition = 'opacity 0.2s linear';
+          // Fade out expanded content over full 1s — content stays visible throughout the animation
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '0'; }
+          descEl.style.transition = 'opacity 1s linear';
           descEl.style.opacity    = '0';
 
           // Clip body so empty space below the rising image doesn't show
@@ -5092,42 +5095,36 @@ const PostModule = (function() {
           // Force reflow to commit starting state before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
 
-          // Animate image and siblings UP — exact reverse of expand. post--expanded stays active so the
-          // layout holds steady; class is removed in the timeout once everything is visually in position.
+          // Animate image container, thumbs, and siblings UP — all locked to same 1s duration.
+          // Container travels _imgOffset, thumbs travel an additional _thumbsOffset within the container,
+          // so thumbs total screen travel = _imgOffset + _thumbsOffset = _delta = same as siblings.
           if (_imgEl) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform 1s linear'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
             _expSiblings[_ei].style.transition = 'transform 1s linear';
-            _expSiblings[_ei].style.transform  = 'translateY(-' + _imgOffset + 'px)';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
 
           setTimeout(function() {
             wrap.classList.remove('post--expanded');
 
-            if (_imgEl)    { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
-            if (_bodyEl)   { _bodyEl.style.overflow    = ''; }
-            if (_thumbsEl) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.opacity = '0'; }
-            if (_infoEl)   { _infoEl.style.opacity     = ''; _infoEl.style.transition    = ''; }
-            if (_memberEl) { _memberEl.style.opacity   = ''; _memberEl.style.transition  = ''; }
+            if (_imgEl)            { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
+            if (_bodyEl)           { _bodyEl.style.overflow    = ''; }
+            if (_infoEl)           { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
+            if (_memberEl)         { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
             for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
               _expSiblings[_ei2].style.transform  = '';
               _expSiblings[_ei2].style.transition = '';
             }
 
-            // Swap in truncated description (already called showCollapsed() in measurement; call again
-            // now that the DOM is in its final collapsed state)
             showCollapsed();
-
-            // Fade in description and thumbs together
             descEl.style.opacity    = '0';
             descEl.style.transition = 'none';
             descEl.getBoundingClientRect();
             descEl.style.transition = 'opacity 0.5s linear';
             descEl.style.opacity    = '1';
-            if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 0.5s linear'; _thumbsEl.style.opacity = '1'; }
-            setTimeout(function() {
-              descEl.style.opacity = ''; descEl.style.transition = '';
-              if (_thumbsEl) { _thumbsEl.style.opacity = ''; _thumbsEl.style.transition = ''; }
-            }, 520);
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, 520);
           }, 1020);
         } else {
           wrap.classList.remove('post--expanded');
@@ -5188,30 +5185,34 @@ const PostModule = (function() {
             }
           }
 
+          // _thumbsOffset: the distance thumbs must travel WITHIN the container to reach their
+          // expanded position. The container moves _imgOffset (negative = up) and the body grows
+          // _delta total, so thumbs must cover the remaining _delta + _imgOffset on their own.
+          // Together, container + thumbs travel exactly _delta on screen — same as siblings.
+          var _thumbsOffset = (_thumbsEl && _thumbsEl.offsetHeight > 0) ? (_delta + _imgOffset) : 0;
+
           // Set starting state — no transitions yet
           // Image container: FLIP to its collapsed position
           if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'none'; _imgEl.style.transform = 'translateY(' + _imgOffset + 'px)'; }
-          // Thumbs change from position:absolute (overlaid) to position:static (below hero) on expand.
-          // The FLIP on the container can't compensate for this internal layout change, so fade thumbs in
-          // as new content rather than trying to hold them at their old overlaid position.
-          if (_thumbsEl) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.opacity = '0'; }
-          // Remaining new content starts invisible — fades in behind the sliding image
+          // Thumbs: FLIP to their collapsed overlay position (on top of the container FLIP above)
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
+          // New content starts invisible — fades in behind the sliding image
           if (_infoEl)   { _infoEl.style.transition   = 'none'; _infoEl.style.opacity   = '0'; }
           if (_memberEl) { _memberEl.style.transition  = 'none'; _memberEl.style.opacity = '0'; }
           // descEl is already opacity:0 from the fade-out above; keep it there until we fade in
           descEl.style.transition = 'none';
-          // Siblings held at their collapsed positions (same offset as image container movement)
+          // Siblings held at their collapsed positions (full body delta — same total screen travel as thumbs)
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
             _expSiblings[_ei].style.transition = 'none';
-            _expSiblings[_ei].style.transform  = 'translateY(-' + _imgOffset + 'px)';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
 
           // Force reflow to commit all starting states before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
 
-          // Animate everything to final positions over 1s
+          // Animate everything to final positions over 1s — all locked to same duration
           if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform 1s linear'; _imgEl.style.transform = 'translateY(0)'; }
-          if (_thumbsEl) { _thumbsEl.style.transition = 'opacity 1s linear'; _thumbsEl.style.opacity = '1'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform 1s linear'; _thumbsEl.style.transform = 'translateY(0)'; }
           if (_infoEl)   { _infoEl.style.transition   = 'opacity 1s linear'; _infoEl.style.opacity   = '1'; }
           if (_memberEl) { _memberEl.style.transition  = 'opacity 1s linear'; _memberEl.style.opacity = '1'; }
           descEl.style.transition = 'opacity 1s linear';
@@ -5222,10 +5223,10 @@ const PostModule = (function() {
           }
 
           setTimeout(function() {
-            if (_imgEl)    { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
-            if (_thumbsEl) { _thumbsEl.style.opacity   = ''; _thumbsEl.style.transition = ''; }
-            if (_infoEl)   { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
-            if (_memberEl) { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
+            if (_imgEl)         { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
+            if (_infoEl)        { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
+            if (_memberEl)      { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
             descEl.style.opacity    = '';
             descEl.style.transition = '';
             for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
