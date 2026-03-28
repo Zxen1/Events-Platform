@@ -1428,8 +1428,6 @@ const PostModule = (function() {
     el.addEventListener('click', function(e) {
       // Don't toggle if clicking favorite button
       if (e.target.closest('.post-card-button-fav')) return;
-      // Post editor has its own delegated click handler — don't double-open
-      if (el.closest('.posteditor-outer-container')) return;
       
       // If this card is already inside a .post section, click means "close"
       if (el.closest('.post')) {
