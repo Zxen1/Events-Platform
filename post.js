@@ -5378,7 +5378,7 @@ const PostModule = (function() {
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
       var _cardOffsetTop = 0;
-      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
+      if (hiddenCard) { hiddenCard.style.display = ''; var _cardMarginBottom = parseInt(window.getComputedStyle(hiddenCard).marginBottom) || 0; _cardH = hiddenCard.offsetHeight + _cardMarginBottom; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
       var _closeAnimate = _POST_ANIMATE;
       if (!_closeAnimate) {
         openPostEl.remove();
