@@ -19,6 +19,21 @@ Animation runs at 2 seconds for testing (increased from 1s to better diagnose re
 
 ---
 
+## LOCKED 16-CASE MATRIX
+
+The post animation system is defined by 4 animation states across 4 locations, for a total of 16 cases.
+
+| State \ Location | Recent Panel | Post Panel | Store Front | Post Editor |
+|---|---|---|---|---|
+| Open Post | Case 1 | Case 2 | Case 3 | Case 4 |
+| Closed Post | Case 5 | Case 6 | Case 7 | Case 8 |
+| See More | Case 9 | Case 10 | Case 11 | Case 12 |
+| See Less | Case 13 | Case 14 | Case 15 | Case 16 |
+
+This matrix is the only correct way to describe the full animation surface area.
+
+---
+
 ## OPENING
 
 1. DONE - Postcard retracts upward via fixed clip

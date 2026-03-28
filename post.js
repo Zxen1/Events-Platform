@@ -3205,11 +3205,15 @@ const PostModule = (function() {
         // Card clone slides up into the invisibility shield (clip) and disappears.
         // Real card is hidden underneath without visual disruption.
         if (_shouldAnimate || _sfShouldAnimate) {
-          if (cardToHide.classList.contains('recent-card')) cardToHide.classList.add('recent-card--active');
+          var _cloneAsRecent = cardToHide.classList.contains('recent-card');
+          var _cloneAsSf = !!slot.dataset.sfIds;
+          if (_cloneAsRecent) cardToHide.classList.add('recent-card--active');
+          else if (!_cloneAsSf) cardToHide.classList.add('post-card--map-highlight');
           var _exitClone = cardToHide.cloneNode(true);
-          cardToHide.classList.remove('recent-card--active');
+          if (_cloneAsRecent) cardToHide.classList.remove('recent-card--active');
+          else if (!_cloneAsSf) cardToHide.classList.remove('post-card--map-highlight');
           _exitClone.style.position = 'absolute';
-          _exitClone.style.top = Math.round(_exitRect.top - slot.getBoundingClientRect().top) + 'px';
+          _exitClone.style.top = '0';
           _exitClone.style.left = '0';
           _exitClone.style.width = '100%';
           _exitClone.style.margin = '0';
