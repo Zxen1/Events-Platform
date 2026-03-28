@@ -179,6 +179,10 @@
   margin-bottom: 0;
 }
 
+.posteditor-status-container {
+  overflow: hidden;
+}
+
 /* Hover border color matches status bar color — uses box-shadow to match post/recent panel technique */
 .posteditor-outer-container:has(.posteditor-statusbar--green):hover {
   box-shadow: inset 0 0 0 1px var(--green-900);

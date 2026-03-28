@@ -596,7 +596,10 @@
 
         // Status bar above the post card
         var statusBar = buildStatusBar(post);
-        postContainer.appendChild(statusBar);
+        var statusCont = document.createElement('div');
+        statusCont.className = 'posteditor-status-container';
+        statusCont.appendChild(statusBar);
+        postContainer.appendChild(statusCont);
 
         var anchor = document.createElement('div');
         anchor.setAttribute('data-slack-anchor', '');
