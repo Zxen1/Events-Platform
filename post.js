@@ -5094,8 +5094,10 @@ const PostModule = (function() {
           descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.5) + 's linear';
           descEl.style.opacity    = '0';
 
-          // Clip body so empty space below the rising image doesn't show
-          if (_bodyEl) _bodyEl.style.overflow = 'hidden';
+          // Fix body height and clip it. The fixed height prevents mid-animation content swaps
+          // (showCollapsed at halfway) from shrinking the body's natural height — which would shift
+          // sibling positions via document flow even though their translateY transforms don't adjust.
+          if (_bodyEl) { _bodyEl.style.height = _bodyExpandedH + 'px'; _bodyEl.style.overflow = 'hidden'; }
 
           // Force reflow to commit starting state before transitions fire
           if (_imgEl) _imgEl.getBoundingClientRect();
@@ -5126,7 +5128,7 @@ const PostModule = (function() {
 
             if (_imgEl)            { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
             if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
-            if (_bodyEl)           { _bodyEl.style.overflow    = ''; }
+            if (_bodyEl)           { _bodyEl.style.overflow = ''; _bodyEl.style.height = ''; }
             if (_infoEl)           { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
             if (_memberEl)         { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
             for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
