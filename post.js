@@ -5089,16 +5089,8 @@ const PostModule = (function() {
           // Fade out expanded content over full 1s — content stays visible throughout the animation
           if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '0'; }
           if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '0'; }
-
-          // Swap description to collapsed text immediately and cross-fade it in over the full duration.
-          // Height is frozen first so the content change doesn't affect document flow / sibling positions.
-          descEl.style.height     = descEl.offsetHeight + 'px';
-          showCollapsed();
-          descEl.style.opacity    = '0';
-          descEl.style.transition = 'none';
-          descEl.getBoundingClientRect();
           descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
-          descEl.style.opacity    = '1';
+          descEl.style.opacity    = '0';
 
           // Clip body so empty space below the rising image doesn't show
           if (_bodyEl) _bodyEl.style.overflow = 'hidden';
@@ -5128,9 +5120,14 @@ const PostModule = (function() {
               _expSiblings[_ei2].style.transform  = '';
               _expSiblings[_ei2].style.transition = '';
             }
-            descEl.style.height     = '';
-            descEl.style.opacity    = '';
-            descEl.style.transition = '';
+
+            showCollapsed();
+            descEl.style.opacity    = '0';
+            descEl.style.transition = 'none';
+            descEl.getBoundingClientRect();
+            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
+            descEl.style.opacity    = '1';
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
           _realWrap.classList.remove('post--expanded');
