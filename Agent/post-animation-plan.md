@@ -3,7 +3,7 @@
 ## Master Controls (post.js, line 50)
 ```js
 var _POST_ANIMATE  = true; // set false to disable all animation instantly
-var _POST_ANIM_DUR = 1.0;  // duration in seconds — all sub-timings scale proportionally
+var _POST_ANIM_DUR = 2.0;  // duration in seconds — all sub-timings scale proportionally (final target: 0.3s)
 ```
 Sub-timings are percentages of `_POST_ANIM_DUR`:
 - Description fade-out/in: 20% (`* 0.2`)
@@ -15,7 +15,7 @@ Covers five animation paths: post open, post close, storefront open (deferred va
 ---
 
 ## Current State (restore point)
-Animation runs at 1 second for testing. Final speed: 0.3s.
+Animation runs at 2 seconds for testing (increased from 1s to better diagnose remaining issues). Final speed: 0.3s.
 
 ---
 
@@ -88,6 +88,12 @@ Animation runs at 1 second for testing. Final speed: 0.3s.
 ## PENDING — NOT YET FIXED
 
 1. Recent panel: status bar sits above each postcard. The open animation starts above the status bar and overlaps it. The status bar must sit outside the animation zone. Deferred by user — address in a future session.
+
+2. Post editor: post-open animation is broken. Exact failure mode to be diagnosed before fixing.
+
+3. Wallpaper disappears after any animation completes (post panel, recent panel, post editor — all cases). Root cause unknown — to be diagnosed.
+
+4. Storefront menus: relationship to the animation system unclear — to be investigated.
 
 ---
 
@@ -251,10 +257,10 @@ Expand/collapse animation is fully enabled for `.posteditor-main-container` slot
 
 ---
 
-## POST EDITOR ANIMATION — March 2026 (SOLVED)
+## POST EDITOR ANIMATION — March 2026 (PARTIALLY BROKEN)
 
 ### What was built
-All four animations (open, close, See More, See Less) now run inside the Post Editor panel, matching the Post and Recent panels exactly.
+Close, See More, and See Less animations run inside the Post Editor panel, matching the Post and Recent panels. The **open animation is still broken** — to be diagnosed and fixed.
 
 ### Problems found and fixed
 
