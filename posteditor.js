@@ -582,6 +582,54 @@
         });
     }
 
+    function handlePostCardActivate(postCard) {
+        if (!postCard) return;
+
+        var postItem = postCard.closest('.posteditor-outer-container');
+        if (!postItem) return;
+
+        var postId = postItem.dataset.postId;
+        if (!postId) return;
+
+        var post = null;
+        for (var i = 0; i < currentPosts.length; i++) {
+            if (String(currentPosts[i].id) === String(postId)) {
+                post = currentPosts[i];
+                break;
+            }
+        }
+        if (!post) return;
+
+        var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
+        var visibility = post.visibility || 'active';
+        var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
+        var now = new Date();
+        var isExpiredByDb = visibility === 'expired';
+        var isExpiredByTime = expiresAt && expiresAt.getTime() <= now.getTime();
+
+        if (isDeleted) {
+            if (typeof window.getMessage === 'function') {
+                window.getMessage('msg_posteditor_toast_deleted', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                });
+            }
+        } else if (isExpiredByDb || isExpiredByTime) {
+            if (typeof window.getMessage === 'function') {
+                window.getMessage('msg_posteditor_toast_expired', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                });
+            }
+        } else if (visibility === 'hidden') {
+            if (typeof window.getMessage === 'function') {
+                window.getMessage('msg_posteditor_toast_hidden', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
+                });
+            }
+        } else if (window.PostModule && typeof PostModule.openPostById === 'function') {
+            PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
+        }
+    }
+
     function renderPostCard(post) {
         // Reuse PostModule's rendering logic with buttons underneath
         var postContainer = document.createElement('div');
@@ -3497,65 +3545,27 @@
             }, 50);
         }, true); // Use capture phase
         
-        // Listen for postcard clicks — fly to location (active) or show toast (hidden/expired/deleted)
+        // Intercept reused PostModule cards before their own handlers fire, so Post Editor
+        // always opens through its single dedicated path instead of double-triggering.
         container.addEventListener('click', function(e) {
-            // Skip clicks on buttons (manage, fav, etc.)
             if (e.target.closest('.posteditor-button-manage') || e.target.closest('.post-card-button-fav')) return;
-            
             var postCard = e.target.closest('.post-card');
             if (!postCard) return;
-            
-            var postItem = postCard.closest('.posteditor-outer-container');
-            if (!postItem) return;
-            
-            var postId = postItem.dataset.postId;
-            if (!postId) return;
-            
-            // Find post in current data
-            var post = null;
-            for (var i = 0; i < currentPosts.length; i++) {
-                if (String(currentPosts[i].id) === String(postId)) {
-                    post = currentPosts[i];
-                    break;
-                }
-            }
-            if (!post) return;
-            
-            // Determine post state
-            var isDeleted = post.deleted_at && post.deleted_at !== '' && post.deleted_at !== null;
-            var visibility = post.visibility || 'active';
-            var expiresAt = post.expires_at ? new Date(post.expires_at) : null;
-            var now = new Date();
-            var isExpiredByDb = visibility === 'expired';
-            var isExpiredByTime = expiresAt && expiresAt.getTime() <= now.getTime();
-            
-            if (isDeleted) {
-                // Toast: deleted
-                if (typeof window.getMessage === 'function') {
-                    window.getMessage('msg_posteditor_toast_deleted', {}, false).then(function(msg) {
-                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
-                    });
-                }
-            } else if (isExpiredByDb || isExpiredByTime) {
-                // Toast: expired
-                if (typeof window.getMessage === 'function') {
-                    window.getMessage('msg_posteditor_toast_expired', {}, false).then(function(msg) {
-                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
-                    });
-                }
-            } else if (visibility === 'hidden') {
-                // Toast: hidden
-                if (typeof window.getMessage === 'function') {
-                    window.getMessage('msg_posteditor_toast_hidden', {}, false).then(function(msg) {
-                        if (msg && window.ToastComponent) ToastComponent.showWarning(msg);
-                    });
-                }
-            } else {
-                if (window.PostModule && typeof PostModule.openPostById === 'function') {
-                    PostModule.openPostById(post.id, { source: 'posteditor', originEl: postCard });
-                }
-            }
-        });
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            handlePostCardActivate(postCard);
+        }, true);
+        container.addEventListener('keydown', function(e) {
+            if (!e) return;
+            if (e.target && e.target.closest && (e.target.closest('.posteditor-button-manage') || e.target.closest('.post-card-button-fav'))) return;
+            var postCard = e.target && e.target.closest ? e.target.closest('.post-card') : null;
+            if (!postCard) return;
+            var k = String(e.key || e.code || '');
+            if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            handlePostCardActivate(postCard);
+        }, true);
         
         // Load posts
         loadPosts();
