@@ -4513,9 +4513,11 @@ const PostModule = (function() {
           }
           if (!contentTarget) return;
           var _activePostId = String(contentTarget.dataset.activePostId || '');
+          var _selectedMenuPostId = String(contentEl.dataset.sfSelectedPostId || '');
           if (String(contentEl.dataset.sfSwapBusy || '') === '1') {
-            if (_activePostId) {
-              var _activeItem = wrap.querySelector('.post-storefront-menu-item[data-post-id="' + _activePostId + '"]');
+            var _lockedPostId = _selectedMenuPostId || _activePostId;
+            if (_lockedPostId) {
+              var _activeItem = wrap.querySelector('.post-storefront-menu-item[data-post-id="' + _lockedPostId + '"]');
               if (_activeItem) {
                 var _menuEl = _activeItem.parentElement;
                 if (_menuEl) {
@@ -4527,6 +4529,7 @@ const PostModule = (function() {
             }
             return;
           }
+          if (_selectedMenuPostId === selectedPostId) return;
           if (_activePostId === selectedPostId) return;
 
           var swapTarget = contentEl.querySelector('.post-storefront-swap-container');
@@ -4541,13 +4544,6 @@ const PostModule = (function() {
             clearTimeout(contentEl.__sfSwapTimer);
             contentEl.__sfSwapTimer = null;
           }
-          if (contentEl.__sfSwapSiblings && contentEl.__sfSwapSiblings.length) {
-            for (var _sfrsi = 0; _sfrsi < contentEl.__sfSwapSiblings.length; _sfrsi++) {
-              contentEl.__sfSwapSiblings[_sfrsi].style.transform = '';
-              contentEl.__sfSwapSiblings[_sfrsi].style.transition = '';
-            }
-          }
-          contentEl.__sfSwapSiblings = null;
           contentTarget.style.transition = '';
           contentTarget.style.transform = '';
           contentTarget.style.height = '';
@@ -4559,6 +4555,7 @@ const PostModule = (function() {
           swapTarget.innerHTML = '';
 
           addToRecentHistory(selectedPost, 0);
+          contentEl.dataset.sfSelectedPostId = selectedPostId;
           var _sfReqToken = Date.now() + ':' + selectedPostId;
           contentEl.dataset.sfReqToken = _sfReqToken;
           loadPostById(selectedPost.id).then(function(fullPost) {
@@ -4568,6 +4565,7 @@ const PostModule = (function() {
               contentTarget.dataset.activePostId = '';
               swapTarget.innerHTML = '';
               swapTarget.style.height = '0px';
+              contentEl.dataset.sfSelectedPostId = _activePostId || '';
               contentEl.dataset.sfSwapBusy = '';
               return;
             }
@@ -4643,12 +4641,14 @@ const PostModule = (function() {
               });
             }
 
-            // First storefront render stays on the existing first-load animation path.
+            // First storefront render: keep baseline behavior (single post in main container).
             if (!contentTarget.children.length) {
               contentTarget.innerHTML = '';
               while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
               contentTarget.dataset.activePostId = String(fullPost.id);
               swapTarget.style.height = '0px';
+              swapTarget.style.transition = '';
+              swapTarget.style.overflow = 'hidden';
               swapTarget.innerHTML = '';
               if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
                 _sfFirstLoadFired = true;
@@ -4658,91 +4658,47 @@ const PostModule = (function() {
               return;
             }
 
-            if (!_POST_ANIMATE) {
-              contentTarget.innerHTML = '';
-              while (swapTarget.firstChild) contentTarget.appendChild(swapTarget.firstChild);
-              contentTarget.dataset.activePostId = String(fullPost.id);
-              swapTarget.style.height = '0px';
-              swapTarget.innerHTML = '';
-              contentEl.dataset.sfSwapBusy = '';
-              return;
-            }
-
-            var _sfSlot = wrap.closest('.post-main-container') || wrap.closest('.recent-main-container') || wrap.closest('.posteditor-main-container');
-            var _sfSiblings = [];
-            if (_sfSlot) {
-              var _sfSibStart = (_sfSlot.parentElement && (_sfSlot.parentElement.classList.contains('post-outer-container') || _sfSlot.parentElement.classList.contains('recent-outer-container') || _sfSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _sfSlot.parentElement : _sfSlot;
-              var _sfActionsEl = _sfSlot.nextElementSibling && _sfSlot.nextElementSibling.classList.contains('posteditor-actions-container') ? _sfSlot.nextElementSibling : null;
-              if (_sfActionsEl) _sfSiblings.push(_sfActionsEl);
-              var _sfSib = _sfSibStart.nextElementSibling;
-              while (_sfSib) { _sfSiblings.push(_sfSib); _sfSib = _sfSib.nextElementSibling; }
-              var _sfSibList = _sfSibStart.parentElement;
-              if (_sfSibList && (_sfSibList.classList.contains('post-list') || _sfSibList.classList.contains('recent-list'))) {
-                var _sfListSib = _sfSibList.nextElementSibling;
-                while (_sfListSib) { _sfSiblings.push(_sfListSib); _sfListSib = _sfListSib.nextElementSibling; }
-              }
-            }
-
-            contentEl.__sfSwapSiblings = _sfSiblings;
-
-            var _sfOutTrack = document.createElement('div');
-            _sfOutTrack.className = 'post-storefront-anim-track';
-            while (contentTarget.firstChild) _sfOutTrack.appendChild(contentTarget.firstChild);
-            contentTarget.appendChild(_sfOutTrack);
-
             var _sfInTrack = document.createElement('div');
             _sfInTrack.className = 'post-storefront-anim-track';
             while (swapTarget.firstChild) _sfInTrack.appendChild(swapTarget.firstChild);
             swapTarget.appendChild(_sfInTrack);
 
-            var _sfOutH = _sfOutTrack.offsetHeight || _sfOutTrack.scrollHeight || 0;
             var _sfInH = _sfInTrack.offsetHeight || _sfInTrack.scrollHeight || 0;
-            if (_sfOutH <= 0) _sfOutH = contentTarget.scrollHeight || contentTarget.offsetHeight || 0;
             if (_sfInH <= 0) _sfInH = swapTarget.scrollHeight || 0;
-            var _sfSiblingDelta = _sfInH - _sfOutH;
-            contentTarget.style.height = _sfOutH + 'px';
-            contentTarget.style.overflow = 'hidden';
-            swapTarget.style.height = _sfInH + 'px';
-            swapTarget.style.overflow = 'hidden';
 
-            _sfOutTrack.style.transition = 'none';
-            _sfOutTrack.style.transform = 'translateY(0)';
+            if (!_POST_ANIMATE || _sfInH <= 0) {
+              swapTarget.style.height = '';
+              swapTarget.style.transition = '';
+              swapTarget.style.overflow = '';
+              _sfInTrack.style.transition = '';
+              _sfInTrack.style.transform = '';
+              contentEl.dataset.sfSwapBusy = '';
+              return;
+            }
+
+            // Step one only:
+            // - Outgoing stays in main container untouched
+            // - Incoming opens in swap container
+            // - Swap container growth pushes all below content down in normal layout flow
+            swapTarget.style.transition = 'none';
+            swapTarget.style.height = '0px';
+            swapTarget.style.overflow = 'hidden';
             _sfInTrack.style.transition = 'none';
             _sfInTrack.style.transform = 'translateY(-' + _sfInH + 'px)';
-            for (var _sfs0 = 0; _sfs0 < _sfSiblings.length; _sfs0++) {
-              _sfSiblings[_sfs0].style.transition = 'none';
-              _sfSiblings[_sfs0].style.transform = 'translateY(0)';
-            }
 
-            contentEl.getBoundingClientRect();
+            contentEl.getBoundingClientRect(); // force reflow
 
-            _sfOutTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-            _sfOutTrack.style.transform = 'translateY(-' + _sfOutH + 'px)';
+            swapTarget.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
+            swapTarget.style.height = _sfInH + 'px';
             _sfInTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _sfInTrack.style.transform = 'translateY(0)';
-            for (var _sfs1 = 0; _sfs1 < _sfSiblings.length; _sfs1++) {
-              _sfSiblings[_sfs1].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-              _sfSiblings[_sfs1].style.transform = 'translateY(' + _sfSiblingDelta + 'px)';
-            }
 
             contentEl.__sfSwapTimer = setTimeout(function() {
-              contentTarget.innerHTML = '';
-              while (_sfInTrack.firstChild) contentTarget.appendChild(_sfInTrack.firstChild);
-              contentTarget.dataset.activePostId = String(fullPost.id);
-              contentTarget.style.transition = '';
-              contentTarget.style.transform = '';
-              contentTarget.style.height = '';
-              contentTarget.style.overflow = '';
               swapTarget.style.transition = '';
-              swapTarget.style.transform = '';
-              swapTarget.style.height = '0px';
-              swapTarget.style.overflow = 'hidden';
-              swapTarget.innerHTML = '';
-              for (var _sfs2 = 0; _sfs2 < _sfSiblings.length; _sfs2++) {
-                _sfSiblings[_sfs2].style.transform = '';
-                _sfSiblings[_sfs2].style.transition = '';
-              }
-              contentEl.__sfSwapSiblings = null;
+              swapTarget.style.height = '';
+              swapTarget.style.overflow = '';
+              _sfInTrack.style.transition = '';
+              _sfInTrack.style.transform = '';
               contentEl.__sfSwapTimer = null;
               contentEl.dataset.sfSwapBusy = '';
             }, Math.round(_POST_ANIM_DUR * 1000) + 20);
@@ -4756,7 +4712,7 @@ const PostModule = (function() {
             swapTarget.style.height = '0px';
             swapTarget.style.overflow = 'hidden';
             swapTarget.innerHTML = '';
-            contentEl.__sfSwapSiblings = null;
+            contentEl.dataset.sfSelectedPostId = _activePostId || '';
             contentEl.__sfSwapTimer = null;
             contentEl.dataset.sfSwapBusy = '';
           });

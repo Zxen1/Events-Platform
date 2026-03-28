@@ -797,13 +797,9 @@
 }
 
 .post-storefront-swap-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   overflow: hidden;
   height: 0;
-  pointer-events: none;
 }
 
 .post-storefront-anim-track {
