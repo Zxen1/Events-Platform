@@ -47,7 +47,25 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   var panelsContainerEl = null;
-  var _POST_ANIMATE = true; // Master switch — set false to disable all open/close animation instantly
+  // ── ANIMATION MASTER CONTROLS ────────────────────────────────────────────────
+  // _POST_ANIMATE  : false = all five animation paths disabled instantly (open, close, storefront open, See More, See Less)
+  // _POST_ANIM_DUR : duration in seconds — every sub-timing scales proportionally from this one value
+  //
+  // Animation entry points (search these labels to find each animation):
+  //   OPEN ANIMATION: PRE-CAPTURE      ~line 3096  openPost()       card bg + clone captured before close
+  //   OPEN ANIMATION: CARD EXIT        ~line 3183  openPost()       card clone slides up into clip
+  //   OPEN ANIMATION: POST ENTER       ~line 3222  openPost()       post slides down from clip
+  //   STOREFRONT OPEN ANIMATION        ~line 3232  openPost()       deferred until first fetch completes
+  //   CLOSE ANIMATION: CARD ENTER      ~line 3368  closePost()      clone slides down from clip
+  //   CLOSE ANIMATION: POST EXIT       ~line 5425  closePost()      post slides up into clip
+  //   SEE MORE ANIMATION               ~line 5161  _animateExpand() post expands to full height
+  //   SEE LESS ANIMATION               ~line 5047  _animateCollapse() post collapses back to card
+  //
+  // Panels covered: Post panel, Recent panel, Post Editor (all four animations)
+  // Excluded from animation: fromMap opens, marquee opens, deeplink opens
+  // ─────────────────────────────────────────────────────────────────────────────
+  var _POST_ANIMATE  = true;
+  var _POST_ANIM_DUR = 2.0;
 
   var postPanelEl = null;
   var postPanelContentEl = null;
@@ -3081,10 +3099,16 @@ const PostModule = (function() {
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
-    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
+    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor.
+    // Must be the full list container (parent of .posteditor-outer-container) so closeOpenPost()
+    // can find any currently-open post — not just the one inside the clicked card's outer container.
     if (originEl && (!container || !container.contains(originEl))) {
-      var posteditorItem = originEl.closest('.posteditor-item');
-      if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
+      var posteditorItem = originEl.closest('.posteditor-main-container');
+      if (posteditorItem && posteditorItem.parentElement && posteditorItem.parentElement.parentElement) {
+        container = posteditorItem.parentElement.parentElement;
+      } else if (posteditorItem && posteditorItem.parentElement) {
+        container = posteditorItem.parentElement;
+      }
     }
     if (!container) return;
     var isMobileViewport = window.innerWidth <= 530;
@@ -3098,17 +3122,28 @@ const PostModule = (function() {
     var _preCloseExitRect = null;
     var _preCloseCardBg = null;
     if (originEl) {
-      var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container');
+      var _preCloseSlot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-main-container');
       if (_preCloseSlot) {
         var _preCloseCard = _preCloseSlot.querySelector('.post-card, .recent-card');
         if (_preCloseCard) {
           _preCloseExitRect = _preCloseCard.getBoundingClientRect();
+          // Force hover state before capture so --subcat-hover-bg is active in computed style.
+          // Skip for storefront slots — their wallpaper handles the visual; forcing the highlight
+          // class captures the subcategory color and bakes it over the wallpaper image.
+          var _preCloseIsRecent = _preCloseCard.classList.contains('recent-card');
+          var _preCloseIsSf = !!_preCloseSlot.dataset.sfIds;
+          if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
+          else if (!_preCloseIsSf) _preCloseCard.classList.add('post-card--map-highlight');
           _preCloseCardBg = window.getComputedStyle(_preCloseCard).backgroundColor;
+          if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
+          else if (!_preCloseIsSf) _preCloseCard.classList.remove('post-card--map-highlight');
           _preCloseSlot.__cardBg = _preCloseCardBg;
           // Clone while card is fully visible and hovered — reused as-is for close enter animation
-          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.add('recent-card--active');
+          if (_preCloseIsRecent) _preCloseCard.classList.add('recent-card--active');
+          else if (!_preCloseIsSf) _preCloseCard.classList.add('post-card--map-highlight');
           var _storedClone = _preCloseCard.cloneNode(true);
-          if (_preCloseCard.classList.contains('recent-card')) _preCloseCard.classList.remove('recent-card--active');
+          if (_preCloseIsRecent) _preCloseCard.classList.remove('recent-card--active');
+          else if (!_preCloseIsSf) _preCloseCard.classList.remove('post-card--map-highlight');
           _storedClone.style.display = '';
           _storedClone.style.margin = '0';
           _storedClone.style.transition = 'none';
@@ -3127,16 +3162,16 @@ const PostModule = (function() {
     closeOpenPost(container);
 
     // Find the slot wrapper that holds the clicked card.
-    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-item
+    // Post panel: .post-main-container | Recent panel: .recent-main-container | Post Editor: .posteditor-main-container
     var slot = null;
     if (originEl) {
-      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-item');
+      slot = originEl.closest('.post-main-container') || originEl.closest('.recent-main-container') || originEl.closest('.posteditor-main-container');
     }
     if (!slot) {
       // Fallback: find slot by post ID in the container
       var cardInContainer = container.querySelector('[data-id="' + post.id + '"]');
       if (cardInContainer) {
-        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-item');
+        slot = cardInContainer.closest('.post-main-container') || cardInContainer.closest('.recent-main-container') || cardInContainer.closest('.posteditor-main-container');
       }
     }
 
@@ -3150,7 +3185,7 @@ const PostModule = (function() {
       // If open-post countdown is enabled, hide the slot countdown bar to avoid duplicates.
       var cardToHide = slot.querySelector('.post-card, .recent-card');
       var cardStatusBar = null;
-      var _slotOuter = (slot.parentElement && slot.parentElement.classList.contains('post-outer-container') || slot.parentElement && slot.parentElement.classList.contains('recent-outer-container')) ? slot.parentElement : slot;
+      var _slotOuter = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
       cardStatusBar = _slotOuter.querySelector('.post-statusbar--slot-card');
       var openHeaderBar = null;
       try { openHeaderBar = detail.querySelector('.post-header .post-statusbar'); } catch (_eOpenHeaderBar) { openHeaderBar = null; }
@@ -3160,11 +3195,11 @@ const PostModule = (function() {
       }
       if (cardToHide) {
         var _exitRect = _preCloseExitRect || cardToHide.getBoundingClientRect();
-        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !slot.dataset.sfIds && !slot.classList.contains('posteditor-item');
+        var _shouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !slot.dataset.sfIds;
         // Storefront open animation: card exit plays immediately; post enter is deferred until
         // the initial post fetch completes (content height is unknown until then).
-        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && !options.source && !!slot.dataset.sfIds;
-        slot.__openedFromExternal = !!(options.fromMap || options.source);
+        var _sfShouldAnimate = _POST_ANIMATE && !options.fromMap && options.source !== 'marquee' && options.source !== 'deeplink' && !!slot.dataset.sfIds;
+        slot.__openedFromExternal = !!(options.fromMap || (options.source && options.source !== 'posteditor'));
 
         // ── OPEN ANIMATION: CARD EXIT ───────────────────────────────────────────
         // Card clone slides up into the invisibility shield (clip) and disappears.
@@ -3174,7 +3209,7 @@ const PostModule = (function() {
           var _exitClone = cardToHide.cloneNode(true);
           cardToHide.classList.remove('recent-card--active');
           _exitClone.style.position = 'absolute';
-          _exitClone.style.top = '0';
+          _exitClone.style.top = Math.round(_exitRect.top - slot.getBoundingClientRect().top) + 'px';
           _exitClone.style.left = '0';
           _exitClone.style.width = '100%';
           _exitClone.style.margin = '0';
@@ -3187,15 +3222,19 @@ const PostModule = (function() {
           for (var _ci = 0; _ci < _cloneEls.length; _ci++) { _cloneEls[_ci].style.transition = 'none'; }
           slot.style.position = 'relative';
           slot.style.overflow = 'hidden';
+          // Temporarily allow the exit clone to travel above the outer container boundary.
+          var _exitOuterCont = slot.parentElement && slot.parentElement.classList.contains('posteditor-outer-container') ? slot.parentElement : null;
+          if (_exitOuterCont) _exitOuterCont.style.overflow = 'visible';
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
-          _exitClone.style.transition = 'transform 1s linear';
+          _exitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
           setTimeout(function() {
             if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
             if (slot && slot.__exitClone === _exitClone) slot.__exitClone = null;
-          }, 1020);
+            if (_exitOuterCont) _exitOuterCont.style.overflow = '';
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: CARD EXIT ───────────────────────────────────────
 
@@ -3250,10 +3289,10 @@ const PostModule = (function() {
             slot.__animDetail = detail;
             slot.__animSiblings = _sfSiblings;
             slot.getBoundingClientRect(); // force reflow
-            detail.style.transition = 'transform 1s linear';
+            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             detail.style.transform = 'translateY(0)';
             for (var _sfi2 = 0; _sfi2 < _sfSiblings.length; _sfi2++) {
-              _sfSiblings[_sfi2].style.transition = 'transform 1s linear';
+              _sfSiblings[_sfi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               _sfSiblings[_sfi2].style.transform = 'translateY(0)';
             }
             slot.__animTimer = setTimeout(function() {
@@ -3268,7 +3307,7 @@ const PostModule = (function() {
               slot.__animDetail = null;
               slot.__animSiblings = null;
               slot.__animTimer = null;
-            }, 1020);
+            }, Math.round(_POST_ANIM_DUR * 1000) + 20);
           };
           // Assign to ref so setupPostDetailEvents can invoke it after the fetch completes.
           // This assignment is always synchronous before any .then() callback can fire.
@@ -3279,7 +3318,10 @@ const PostModule = (function() {
           var _openPostH = detail.offsetHeight;
           var _openOffset = _openPostH - _openCardH;
           var _openSiblings = [];
-          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+          var _openSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
+          // Include actions container (sibling of slot within outer container) so it moves with the animation.
+          var _openActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
+          if (_openActionsEl) _openSiblings.push(_openActionsEl);
           var _openSib = _openSibStart.nextElementSibling;
           while (_openSib) { _openSiblings.push(_openSib); _openSib = _openSib.nextElementSibling; }
           var _openSibList = _openSibStart.parentElement;
@@ -3297,10 +3339,10 @@ const PostModule = (function() {
           slot.__animDetail = detail;
           slot.__animSiblings = _openSiblings;
           slot.getBoundingClientRect(); // force reflow
-          detail.style.transition = 'transform 1s linear';
+          detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           detail.style.transform = 'translateY(0)';
           for (var _osi2 = 0; _osi2 < _openSiblings.length; _osi2++) {
-            _openSiblings[_osi2].style.transition = 'transform 1s linear';
+            _openSiblings[_osi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _openSiblings[_osi2].style.transform = 'translateY(0)';
           }
           slot.__animTimer = setTimeout(function() {
@@ -3322,7 +3364,7 @@ const PostModule = (function() {
                 if (_bsCtrl && typeof _bsCtrl.trim === 'function') _bsCtrl.trim();
               }
             } catch (_eBs) {}
-          }, 1020);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         }
         // ── END OPEN ANIMATION: POST ENTER ─────────────────────────────────────
 
@@ -3468,8 +3510,8 @@ const PostModule = (function() {
 
     var postId = openPostEl.dataset.id;
 
-    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-item)
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
+    // Find the slot wrapper (post-main-container, recent-main-container, or posteditor-main-container)
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-main-container');
 
     if (slot) {
       // Cancel any in-progress animation before making DOM changes
@@ -4974,10 +5016,7 @@ const PostModule = (function() {
           seeLessEl.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            wrap.classList.remove('post--expanded');
-            descEl.setAttribute('aria-expanded', 'false');
-            showCollapsed();
-            syncLocationWallpaper(false);
+            _animateCollapse();
           });
         }
       }
@@ -5029,32 +5068,248 @@ const PostModule = (function() {
         applyTruncation();
       });
 
+      function _animateCollapse() {
+        // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
+        var _realWrap = descEl.closest('.post') || wrap;
+        var _bodyEl   = _realWrap.querySelector('.post-body');
+        var _imgEl    = _realWrap.querySelector('.post-images-container');
+        var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
+        var _infoEl   = _realWrap.querySelector('.post-info-container');
+        var _memberEl = _realWrap.querySelector('.post-description-member');
+
+        if (!_POST_ANIMATE) {
+          _realWrap.classList.remove('post--expanded');
+          descEl.setAttribute('aria-expanded', 'false');
+          showCollapsed();
+          syncLocationWallpaper(false);
+          return;
+        }
+
+        // Capture expanded positions
+        var _bodyExpandedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _imgExpandedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+
+        // Silent measurement pass: temporarily collapse AND call showCollapsed() so the description
+        // is truncated during measurement. Without this, _bodyCollapsedH includes the full description
+        // text, making _delta far too small and causing the animation to only cover a fraction of the
+        // real distance before the class removal snaps the rest.
+        var _savedDescHtml = descEl.innerHTML;
+        _realWrap.classList.remove('post--expanded');
+        showCollapsed();
+        if (_bodyEl) _bodyEl.getBoundingClientRect();
+        var _bodyCollapsedH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _imgCollapsedRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        // Restore expanded state for the animation
+        descEl.innerHTML = _savedDescHtml;
+        _realWrap.classList.add('post--expanded');
+        if (_bodyEl) _bodyEl.getBoundingClientRect();
+
+        var _imgOffset = (_imgExpandedRect && _imgCollapsedRect) ? (_imgExpandedRect.top - _imgCollapsedRect.top) : (_bodyExpandedH - _bodyCollapsedH);
+
+        descEl.setAttribute('aria-expanded', 'false');
+
+        var _delta = _bodyExpandedH - _bodyCollapsedH;
+        // Thumbs travel the same internal distance as in expand (D_body - D_img)
+        var _thumbsOffset = (_thumbsEl && _thumbsEl.offsetHeight > 0) ? (_delta - _imgOffset) : 0;
+
+        if (_imgOffset > 0) {
+          // Collect siblings below this post
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container') || _realWrap.closest('.posteditor-main-container');
+          var _expSiblings = [];
+          if (_expSlot) {
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expActionsEl = _expSlot.nextElementSibling && _expSlot.nextElementSibling.classList.contains('posteditor-actions-container') ? _expSlot.nextElementSibling : null;
+            if (_expActionsEl) _expSiblings.push(_expActionsEl);
+            var _expSib = _expSibStart.nextElementSibling;
+            while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
+            var _expSibList = _expSibStart.parentElement;
+            if (_expSibList && (_expSibList.classList.contains('post-list') || _expSibList.classList.contains('recent-list'))) {
+              var _expListSib = _expSibList.nextElementSibling;
+              while (_expListSib) { _expSiblings.push(_expListSib); _expListSib = _expListSib.nextElementSibling; }
+            }
+          }
+
+          // Fade out expanded content over full 1s — content stays visible throughout the animation
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '0'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
+          descEl.style.opacity    = '0';
+
+          // Clip body so empty space below the rising image doesn't show
+          if (_bodyEl) _bodyEl.style.overflow = 'hidden';
+
+          // Force reflow to commit starting state before transitions fire
+          if (_imgEl) _imgEl.getBoundingClientRect();
+
+          // Animate image container, thumbs, and siblings UP — all locked to same duration.
+          // Container travels _imgOffset, thumbs travel an additional _thumbsOffset within the container,
+          // so thumbs total screen travel = _imgOffset + _thumbsOffset = _delta = same as siblings.
+          if (_imgEl) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
+          for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
+            _expSiblings[_ei].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
+          }
+
+          setTimeout(function() {
+            _realWrap.classList.remove('post--expanded');
+
+            if (_imgEl)            { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
+            if (_bodyEl)           { _bodyEl.style.overflow    = ''; }
+            if (_infoEl)           { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
+            if (_memberEl)         { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
+            for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
+              _expSiblings[_ei2].style.transform  = '';
+              _expSiblings[_ei2].style.transition = '';
+            }
+
+            showCollapsed();
+            descEl.style.opacity    = '0';
+            descEl.style.transition = 'none';
+            descEl.getBoundingClientRect();
+            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
+            descEl.style.opacity    = '1';
+            setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+        } else {
+          _realWrap.classList.remove('post--expanded');
+          showCollapsed();
+        }
+
+        syncLocationWallpaper(false);
+        setTooltipDirs(_realWrap);
+      }
+
+      function _animateExpand() {
+        // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
+        var _realWrap = descEl.closest('.post') || wrap;
+        var _bodyEl   = _realWrap.querySelector('.post-body');
+        var _imgEl    = _realWrap.querySelector('.post-images-container');
+        var _thumbsEl = _imgEl ? _imgEl.querySelector('.post-thumbs') : null;
+        var _infoEl   = _realWrap.querySelector('.post-info-container');
+        var _memberEl = _realWrap.querySelector('.post-description-member');
+
+        // Capture pre-swap image position and body height
+        var _imgFirstRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _bodyFirstH   = _bodyEl ? _bodyEl.offsetHeight : 0;
+
+        // Fade out the current description before swapping content
+        descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
+        descEl.style.opacity    = '0';
+
+        // DOM swap
+        _realWrap.classList.add('post--expanded');
+        descEl.setAttribute('aria-expanded', 'true');
+        showExpanded();
+
+        if (!_POST_ANIMATE) {
+          descEl.style.transition = '';
+          descEl.style.opacity    = '';
+          syncLocationWallpaper(true);
+          setTooltipDirs(_realWrap);
+          return;
+        }
+
+        // Force layout so post-swap measurements are accurate
+        if (_bodyEl) _bodyEl.getBoundingClientRect();
+        var _bodyLastH  = _bodyEl ? _bodyEl.offsetHeight : 0;
+        var _delta      = _bodyLastH - _bodyFirstH;
+        var _imgLastRect = _imgEl ? _imgEl.getBoundingClientRect() : null;
+        var _imgOffset  = (_imgFirstRect && _imgLastRect) ? (_imgFirstRect.top - _imgLastRect.top) : 0;
+
+        if (_delta > 0) {
+          // Collect siblings below this post
+          var _expSlot = _realWrap.closest('.post-main-container') || _realWrap.closest('.recent-main-container') || _realWrap.closest('.posteditor-main-container');
+          var _expSiblings = [];
+          if (_expSlot) {
+            var _expSibStart = (_expSlot.parentElement && (_expSlot.parentElement.classList.contains('post-outer-container') || _expSlot.parentElement.classList.contains('recent-outer-container') || _expSlot.parentElement.classList.contains('posteditor-outer-container'))) ? _expSlot.parentElement : _expSlot;
+            var _expActionsEl2 = _expSlot.nextElementSibling && _expSlot.nextElementSibling.classList.contains('posteditor-actions-container') ? _expSlot.nextElementSibling : null;
+            if (_expActionsEl2) _expSiblings.push(_expActionsEl2);
+            var _expSib = _expSibStart.nextElementSibling;
+            while (_expSib) { _expSiblings.push(_expSib); _expSib = _expSib.nextElementSibling; }
+            var _expSibList = _expSibStart.parentElement;
+            if (_expSibList && (_expSibList.classList.contains('post-list') || _expSibList.classList.contains('recent-list'))) {
+              var _expListSib = _expSibList.nextElementSibling;
+              while (_expListSib) { _expSiblings.push(_expListSib); _expListSib = _expListSib.nextElementSibling; }
+            }
+          }
+
+          // _thumbsOffset: the distance thumbs must travel WITHIN the container to reach their
+          // expanded position. The container moves _imgOffset (negative = up) and the body grows
+          // _delta total, so thumbs must cover the remaining _delta + _imgOffset on their own.
+          // Together, container + thumbs travel exactly _delta on screen — same as siblings.
+          var _thumbsOffset = (_thumbsEl && _thumbsEl.offsetHeight > 0) ? (_delta + _imgOffset) : 0;
+
+          // Set starting state — no transitions yet
+          // Image container: FLIP to its collapsed position
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'none'; _imgEl.style.transform = 'translateY(' + _imgOffset + 'px)'; }
+          // Thumbs: FLIP to their collapsed overlay position (on top of the container FLIP above)
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'none'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
+          // New content starts invisible — fades in behind the sliding image
+          if (_infoEl)   { _infoEl.style.transition   = 'none'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'none'; _memberEl.style.opacity = '0'; }
+          // descEl is already opacity:0 from the fade-out above; keep it there until we fade in
+          descEl.style.transition = 'none';
+          // Siblings held at their collapsed positions (full body delta — same total screen travel as thumbs)
+          for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
+            _expSiblings[_ei].style.transition = 'none';
+            _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
+          }
+
+          // Force reflow to commit all starting states before transitions fire
+          if (_imgEl) _imgEl.getBoundingClientRect();
+
+          // Animate everything to final positions over 1s — all locked to same duration
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(0)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(0)'; }
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '1'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '1'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
+          descEl.style.opacity    = '1';
+          for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
+            _expSiblings[_ei2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+            _expSiblings[_ei2].style.transform  = 'translateY(0)';
+          }
+
+          setTimeout(function() {
+            if (_imgEl)         { _imgEl.style.transform    = ''; _imgEl.style.transition    = ''; }
+            if (_thumbsOffset > 0) { _thumbsEl.style.transform = ''; _thumbsEl.style.transition = ''; }
+            if (_infoEl)        { _infoEl.style.opacity     = ''; _infoEl.style.transition   = ''; }
+            if (_memberEl)      { _memberEl.style.opacity   = ''; _memberEl.style.transition = ''; }
+            descEl.style.opacity    = '';
+            descEl.style.transition = '';
+            for (var _ei3 = 0; _ei3 < _expSiblings.length; _ei3++) {
+              _expSiblings[_ei3].style.transform  = '';
+              _expSiblings[_ei3].style.transition = '';
+            }
+          }, Math.round(_POST_ANIM_DUR * 1000) + 20);
+        } else {
+          // No height change — just restore description opacity
+          descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.3) + 's linear';
+          descEl.style.opacity    = '1';
+          setTimeout(function() { descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 300) + 20);
+        }
+
+        syncLocationWallpaper(true);
+        setTooltipDirs(_realWrap);
+      }
+
       descEl.addEventListener('click', function(e) {
-        var isExpanded = wrap.classList.contains('post--expanded');
-        if (isExpanded) {
-          // Already expanded - just refresh wallpaper in case it was frozen by click-away
+        if ((descEl.closest('.post') || wrap).classList.contains('post--expanded')) {
           syncLocationWallpaper(true);
           return;
         }
         e.preventDefault();
-        wrap.classList.add('post--expanded');
-        descEl.setAttribute('aria-expanded', 'true');
-        showExpanded();
-        syncLocationWallpaper(true);
-        setTooltipDirs(wrap);
+        _animateExpand();
       });
-      
+
       // Also handle keyboard for accessibility (only expand, not collapse)
       descEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
-          var isExpanded = wrap.classList.contains('post--expanded');
-          if (isExpanded) return;
+          if ((descEl.closest('.post') || wrap).classList.contains('post--expanded')) return;
           e.preventDefault();
-          wrap.classList.add('post--expanded');
-          descEl.setAttribute('aria-expanded', 'true');
-          showExpanded();
-          syncLocationWallpaper(true);
-          setTooltipDirs(wrap);
+          _animateExpand();
         }
       });
     }
@@ -5111,8 +5366,8 @@ const PostModule = (function() {
     } catch (_eWp) {}
 
     // Find the slot wrapper
-    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-item');
-
+    var slot = openPostEl.closest('.post-main-container') || openPostEl.closest('.recent-main-container') || openPostEl.closest('.posteditor-main-container');
+    
     if (slot) {
       // Preserve the stored card clone across animation cancel — it was captured at open time
       var _savedCardEnterClone = slot.__cardEnterClone || null;
@@ -5128,8 +5383,9 @@ const PostModule = (function() {
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
-      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
-      var _closeAnimate = _POST_ANIMATE && !(slot && slot.classList.contains('posteditor-item'));
+      var _cardOffsetTop = 0;
+      if (hiddenCard) { hiddenCard.style.display = ''; var _cardMarginBottom = parseInt(window.getComputedStyle(hiddenCard).marginBottom) || 0; _cardH = hiddenCard.offsetHeight + _cardMarginBottom; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
+      var _closeAnimate = _POST_ANIMATE;
       if (!_closeAnimate) {
         openPostEl.remove();
         if (hiddenCard) hiddenCard.style.display = '';
@@ -5142,7 +5398,7 @@ const PostModule = (function() {
           var _bsHoldEl = slot.closest('.post-list') || slot.closest('.recent-panel-content');
           if (_bsHoldEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
             var _bsHoldCtrl = BottomSlack.get(_bsHoldEl);
-            if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(1020);
+            if (_bsHoldCtrl && typeof _bsHoldCtrl.hold === 'function') _bsHoldCtrl.hold(Math.round(_POST_ANIM_DUR * 1000) + 20);
           }
         } catch (_eBsHold) {}
 
@@ -5176,7 +5432,7 @@ const PostModule = (function() {
           if (_cardEnterClone) {
             slot.style.position = 'relative';
             _cardEnterClone.style.position = 'absolute';
-            _cardEnterClone.style.top = '0';
+            _cardEnterClone.style.top = _cardOffsetTop + 'px';
             _cardEnterClone.style.left = '0';
             _cardEnterClone.style.width = '100%';
             _cardEnterClone.style.margin = '0';
@@ -5194,7 +5450,9 @@ const PostModule = (function() {
         // All siblings below move as one unit with the post — same transform, same timing.
         // When post is removed at end, layout is already in its final state — no snap.
         var _closeSiblings = [];
-        var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container'))) ? slot.parentElement : slot;
+        var _closeSibStart = (slot.parentElement && (slot.parentElement.classList.contains('post-outer-container') || slot.parentElement.classList.contains('recent-outer-container') || slot.parentElement.classList.contains('posteditor-outer-container'))) ? slot.parentElement : slot;
+        var _closeActionsEl = slot.nextElementSibling && slot.nextElementSibling.classList.contains('posteditor-actions-container') ? slot.nextElementSibling : null;
+        if (_closeActionsEl) _closeSiblings.push(_closeActionsEl);
         var _closeSib = _closeSibStart.nextElementSibling;
         while (_closeSib) { _closeSiblings.push(_closeSib); _closeSib = _closeSib.nextElementSibling; }
         var _closeSibList = _closeSibStart.parentElement;
@@ -5215,14 +5473,14 @@ const PostModule = (function() {
         slot.getBoundingClientRect(); // force reflow
 
         var _closeOffset = _closeStartH - _cardH;
-        openPostEl.style.transition = 'transform 1s linear';
+        openPostEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
         openPostEl.style.transform = 'translateY(-' + _closeOffset + 'px)';
         for (var _csi2 = 0; _csi2 < _closeSiblings.length; _csi2++) {
-          _closeSiblings[_csi2].style.transition = 'transform 1s linear';
+          _closeSiblings[_csi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _closeSiblings[_csi2].style.transform = 'translateY(-' + _closeOffset + 'px)';
         }
         if (_cardEnterClone) {
-          _cardEnterClone.style.transition = 'transform 1s linear';
+          _cardEnterClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _cardEnterClone.style.transform = 'translateY(0)';
         }
 
@@ -5256,7 +5514,7 @@ const PostModule = (function() {
           slot.__animSiblings = null;
           slot.__animTimer = null;
           if (!slot.children.length) slot.remove();
-        }, 1020);
+        }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         // ── END CLOSE ANIMATION: POST EXIT ──────────────────────────────────────
 
       } // end if (_closeAnimate)
@@ -6538,7 +6796,8 @@ const PostModule = (function() {
     parsePriceSummary: parsePriceSummary,
     mapCardHasPromo: mapCardHasPromo,
     loadPostById: loadPostById,
-    handleDeepLink: maybeOpenDeepLinkedPost
+    handleDeepLink: maybeOpenDeepLinkedPost,
+    buildCountdownStatusBar: buildCountdownStatusBar
   };
 
 })();
