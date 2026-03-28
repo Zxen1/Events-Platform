@@ -3175,7 +3175,7 @@ const PostModule = (function() {
           var _exitClone = cardToHide.cloneNode(true);
           cardToHide.classList.remove('recent-card--active');
           _exitClone.style.position = 'absolute';
-          _exitClone.style.top = '0';
+          _exitClone.style.top = Math.round(_exitRect.top - slot.getBoundingClientRect().top) + 'px';
           _exitClone.style.left = '0';
           _exitClone.style.width = '100%';
           _exitClone.style.margin = '0';
@@ -5338,7 +5338,8 @@ const PostModule = (function() {
       var _closeStartH = slot.offsetHeight; // = post height (card is display:none)
       var _cardH = 0;
       var _closeCardBg = slot.__cardBg || null;
-      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; hiddenCard.style.display = 'none'; }
+      var _cardOffsetTop = 0;
+      if (hiddenCard) { hiddenCard.style.display = ''; _cardH = hiddenCard.offsetHeight; _cardOffsetTop = Math.round(hiddenCard.getBoundingClientRect().top - slot.getBoundingClientRect().top); hiddenCard.style.display = 'none'; }
       var _closeAnimate = _POST_ANIMATE;
       if (!_closeAnimate) {
         openPostEl.remove();
@@ -5386,7 +5387,7 @@ const PostModule = (function() {
           if (_cardEnterClone) {
             slot.style.position = 'relative';
             _cardEnterClone.style.position = 'absolute';
-            _cardEnterClone.style.top = '0';
+            _cardEnterClone.style.top = _cardOffsetTop + 'px';
             _cardEnterClone.style.left = '0';
             _cardEnterClone.style.width = '100%';
             _cardEnterClone.style.margin = '0';
