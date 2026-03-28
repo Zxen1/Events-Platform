@@ -266,8 +266,10 @@
   background-color: transparent;
 }
 
-/* Hover state - disabled on individual card, handled by .posteditor-outer-container:hover */
-.posteditor-outer-container .post-card:hover {
+/* Hover: apply subcategory background color; suppress box-shadow (handled at outer container level) */
+.posteditor-outer-container .post-card:hover,
+.posteditor-outer-container .post-card.post-card--map-highlight {
+  background-color: var(--subcat-hover-bg);
   box-shadow: none;
 }
 
