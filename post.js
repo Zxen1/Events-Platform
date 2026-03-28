@@ -3099,10 +3099,16 @@ const PostModule = (function() {
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
-    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
+    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor.
+    // Must be the full list container (parent of .posteditor-outer-container) so closeOpenPost()
+    // can find any currently-open post — not just the one inside the clicked card's outer container.
     if (originEl && (!container || !container.contains(originEl))) {
       var posteditorItem = originEl.closest('.posteditor-main-container');
-      if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
+      if (posteditorItem && posteditorItem.parentElement && posteditorItem.parentElement.parentElement) {
+        container = posteditorItem.parentElement.parentElement;
+      } else if (posteditorItem && posteditorItem.parentElement) {
+        container = posteditorItem.parentElement;
+      }
     }
     if (!container) return;
     var isMobileViewport = window.innerWidth <= 530;
