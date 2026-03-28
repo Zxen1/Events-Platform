@@ -65,7 +65,7 @@ const PostModule = (function() {
   // Excluded from animation: fromMap opens, marquee opens, deeplink opens
   // ─────────────────────────────────────────────────────────────────────────────
   var _POST_ANIMATE  = true;
-  var _POST_ANIM_DUR = 2.0;
+  var _POST_ANIM_DUR = 1.0;
 
   var postPanelEl = null;
   var postPanelContentEl = null;
@@ -3099,16 +3099,10 @@ const PostModule = (function() {
 
     // Determine container
     var container = fromRecent ? recentPanelContentEl : postListEl;
-    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor.
-    // Must be the full list container (parent of .posteditor-outer-container) so closeOpenPost()
-    // can find any currently-open post — not just the one inside the clicked card's outer container.
+    // When originEl is outside the standard panels (e.g. Post Editor tab), use its list ancestor
     if (originEl && (!container || !container.contains(originEl))) {
       var posteditorItem = originEl.closest('.posteditor-main-container');
-      if (posteditorItem && posteditorItem.parentElement && posteditorItem.parentElement.parentElement) {
-        container = posteditorItem.parentElement.parentElement;
-      } else if (posteditorItem && posteditorItem.parentElement) {
-        container = posteditorItem.parentElement;
-      }
+      if (posteditorItem && posteditorItem.parentElement) container = posteditorItem.parentElement;
     }
     if (!container) return;
     var isMobileViewport = window.innerWidth <= 530;
