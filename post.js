@@ -4513,7 +4513,6 @@ const PostModule = (function() {
             var _next = _child.nextElementSibling;
             if (_child.dataset.sfSwapId) {
               _child.style.overflow = '';
-              _child.style.height = '';
               _child.style.transition = '';
               _child.style.transform = '';
               var _cTrack = _child.firstChild;
