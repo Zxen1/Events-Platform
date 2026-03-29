@@ -4565,8 +4565,6 @@ const PostModule = (function() {
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
 
-            wrap.classList.remove('post--expanded');
-
             if (postHeader) {
               incomingTrack.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
@@ -4677,6 +4675,7 @@ const PostModule = (function() {
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
+                wrap.classList.remove('post--expanded');
                 incomingSub.style.overflow = '';
                 incomingTrack.style.transition = '';
                 incomingTrack.style.transform = '';
