@@ -1197,11 +1197,6 @@
   display: none;
 }
 
-/* Storefront wallpaper stays visible regardless of expand state */
-.post[data-storefront-wallpaper] .component-locationwallpaper {
-  display: block;
-}
-
 /* Post wallpaper should be square (no rounding) */
 .post .component-locationwallpaper {
   border-radius: 0;
@@ -1209,15 +1204,6 @@
 
 /* Post backdrop is neutral; separation comes from the header/top and post/bottom dividers. */
 .post .component-locationwallpaper-content {
-  background: transparent;
-}
-
-/* Storefront keeps the same neutral backdrop. */
-.post[data-storefront-wallpaper] .component-locationwallpaper-content {
-  background: transparent;
-}
-
-.post[data-storefront-wallpaper] .post-storefront-content {
   background: transparent;
 }
 
@@ -1229,10 +1215,6 @@
   background: transparent;
   pointer-events: none;
   z-index: 11;
-}
-
-.post[data-storefront-wallpaper] .component-locationwallpaper::before {
-  background: transparent;
 }
 
 .post::after {

@@ -4222,10 +4222,7 @@ const PostModule = (function() {
     // Hidden lat/lng inputs for LocationWallpaperComponent to read
     if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
-      if (storefrontPosts && storefrontPosts.length > 1) {
-        wrap.__wallpaperLocked = true;
-        wrap.dataset.storefrontWallpaper = '1';
-      }
+      
       // Store post ID for missing wallpaper flagging
       if (post && post.id) {
         wrap.dataset.postId = String(post.id);
@@ -5262,8 +5259,7 @@ const PostModule = (function() {
       }
 
       function syncLocationWallpaper(isExpandedNow) {
-        // Storefront wallpaper is locked — sub-post expand/collapse must not touch it.
-        if (wrap.__wallpaperLocked) return;
+        
         // Only for .post wrappers that were wired with lat/lng (component-locationwallpaper-container class added in buildPostDetail).
         if (!wrap || !(wrap instanceof Element)) return;
         if (!wrap.classList || !wrap.classList.contains('component-locationwallpaper-container')) return;
