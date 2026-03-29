@@ -2011,7 +2011,7 @@ const MapModule = (function() {
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
-      minzoom: 7,
+      minzoom: 0,
       maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
@@ -2226,7 +2226,7 @@ const MapModule = (function() {
     if (!map) return;
 
     var zoomValue = Number.isFinite(zoom) ? zoom : 0;
-    var showRegular = zoomValue >= 7 && zoomValue < getClusterZoomMax();
+    var showRegular = zoomValue < getClusterZoomMax();
 
     if (showRegular !== clusterLayerVisible) {
       clusterLayerVisible = showRegular;
