@@ -2020,7 +2020,7 @@ const MapModule = (function() {
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
       minzoom: CLUSTER_MIN_ZOOM,
-      maxzoom: getClusterZoomMax(),
+      maxzoom: CLUSTER_SUPER_MAX_ZOOM + 0.0001,
       layout: {
         'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
         'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.58, 7, 0.95],
@@ -2040,7 +2040,7 @@ const MapModule = (function() {
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
-      minzoom: CLUSTER_MIN_ZOOM,
+      minzoom: CLUSTER_SUPER_MAX_ZOOM + 0.0001,
       maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
