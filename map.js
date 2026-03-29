@@ -1838,6 +1838,7 @@ const MapModule = (function() {
   const CLUSTER_LAYER_ID = 'post-clusters';
   const CLUSTER_ICON_PREFIX = 'cluster-';
   const CLUSTER_MAX_COUNT = 999;
+  const CLUSTER_MIN_ZOOM = 0;
   
   // Cluster state
   let clusterIconsLoaded = false;
@@ -2006,12 +2007,12 @@ const MapModule = (function() {
     var emptyData = { type: 'FeatureCollection', features: [] };
     map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
     
-    // Create regular cluster layer — each count has its own pre-rendered balloon image
+    // Create cluster layer — each count has its own pre-rendered balloon image
     map.addLayer({
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
-      minzoom: 0,
+      minzoom: CLUSTER_MIN_ZOOM,
       maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
@@ -2224,19 +2225,18 @@ const MapModule = (function() {
    */
   function updateClusterVisibility(zoom) {
     if (!map) return;
-
-    var zoomValue = Number.isFinite(zoom) ? zoom : 0;
-    var showRegular = zoomValue < getClusterZoomMax();
-
-    if (showRegular !== clusterLayerVisible) {
-      clusterLayerVisible = showRegular;
+    
+    var shouldShow = zoom < getClusterZoomMax();
+    if (shouldShow !== clusterLayerVisible) {
+      clusterLayerVisible = shouldShow;
+      
       if (map.getLayer(CLUSTER_LAYER_ID)) {
-        map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', showRegular ? 'visible' : 'none');
+        map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
       }
     }
-
-    // Update cluster data when visible.
-    if (showRegular) {
+    
+    // Update cluster data when visible
+    if (shouldShow) {
       updateClusterData(zoom);
     }
   }
