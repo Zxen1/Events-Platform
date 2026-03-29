@@ -4500,19 +4500,14 @@ const PostModule = (function() {
             clearTimeout(contentEl.__sfSwapTimer);
             contentEl.__sfSwapTimer = null;
           }
-          if (contentEl.__sfSwapSiblings) {
-            for (var _ci = 0; _ci < contentEl.__sfSwapSiblings.length; _ci++) {
-              contentEl.__sfSwapSiblings[_ci].style.transition = '';
-              contentEl.__sfSwapSiblings[_ci].style.transform = '';
-            }
-            contentEl.__sfSwapSiblings = null;
-          }
           var _keptSub = null;
           var _child = contentEl.firstElementChild;
           while (_child) {
             var _next = _child.nextElementSibling;
             if (_child.dataset.sfSwapId) {
               _child.style.overflow = '';
+              _child.style.height = '';
+              _child.style.transition = '';
               var _cTrack = _child.firstChild;
               if (_cTrack) { _cTrack.style.transition = ''; _cTrack.style.transform = ''; }
               if (!_keptSub && _cTrack && _cTrack.children.length > 0) {
@@ -4527,7 +4522,6 @@ const PostModule = (function() {
           var outgoingSub = _keptSub;
           var outgoingTrack = outgoingSub ? outgoingSub.firstChild : null;
 
-          // Create incoming sub-container tagged with post ID
           var incomingSub = document.createElement('div');
           incomingSub.dataset.sfSwapId = String(selectedPost.id);
           var incomingTrack = document.createElement('div');
@@ -4573,9 +4567,6 @@ const PostModule = (function() {
               incomingTrack.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
               if (sfFavBtn) {
-                // buildPostDetail calls setupPostDetailEvents internally, which already attached a handler
-                // to this button using the wrong wrap (tempDetail). Strip it via clone before attaching
-                // the correct storefront-aware handler that uses the outer wrap.
                 var sfFavBtnClean = sfFavBtn.cloneNode(true);
                 sfFavBtn.parentNode.replaceChild(sfFavBtnClean, sfFavBtn);
                 sfFavBtnClean.addEventListener('click', function(e) {
@@ -4603,75 +4594,43 @@ const PostModule = (function() {
             }
             if (postBody) incomingTrack.appendChild(postBody);
 
-            // First load: storefront open animation handles the slot — no swap needed
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
               if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
-              // Two sibling containers in normal document flow. Incoming on top expands,
-              // outgoing below collapses. Same translateY pattern as open/close animations.
+              // Real height transitions on both containers. Siblings follow naturally
+              // because the layout changes are real, not visual tricks.
               var _inH = incomingSub.offsetHeight;
               var _outH = outgoingSub.offsetHeight;
 
+              // Incoming: starts at height 0, grows to full height
               incomingSub.style.overflow = 'hidden';
+              incomingSub.style.height = '0';
+
+              // Outgoing: starts at full height, shrinks to 0
               outgoingSub.style.overflow = 'hidden';
-
-              // Incoming: content starts fully translated above container (hidden by overflow)
-              incomingTrack.style.transition = 'none';
-              incomingTrack.style.transform = 'translateY(-' + _inH + 'px)';
-
-              // Outgoing: content starts visible
+              outgoingSub.style.height = _outH + 'px';
               outgoingTrack.style.transition = 'none';
               outgoingTrack.style.transform = 'translateY(0)';
 
-              // Collect siblings below the slot — identical to close animation pattern
-              var _swapSlot = wrap.closest('.post-main-container') || wrap.closest('.post-slot') || wrap.closest('.recent-main-container');
-              var _swapSiblings = [];
-              if (_swapSlot) {
-                var _swapOuter = (_swapSlot.parentElement && (_swapSlot.parentElement.classList.contains('post-outer-container') || _swapSlot.parentElement.classList.contains('recent-outer-container'))) ? _swapSlot.parentElement : _swapSlot;
-                var _swapSib = _swapOuter.nextElementSibling;
-                while (_swapSib) { _swapSiblings.push(_swapSib); _swapSib = _swapSib.nextElementSibling; }
-                var _swapSibList = _swapOuter.parentElement;
-                if (_swapSibList && (_swapSibList.classList.contains('post-list') || _swapSibList.classList.contains('recent-list'))) {
-                  var _listSib = _swapSibList.nextElementSibling;
-                  while (_listSib) { _swapSiblings.push(_listSib); _listSib = _listSib.nextElementSibling; }
-                }
-              }
-              contentEl.__sfSwapSiblings = _swapSiblings;
+              contentEl.getBoundingClientRect();
 
-              // Siblings compensate for incoming container's DOM height
-              for (var _si = 0; _si < _swapSiblings.length; _si++) {
-                _swapSiblings[_si].style.transition = 'none';
-                _swapSiblings[_si].style.transform = 'translateY(-' + _inH + 'px)';
-              }
+              incomingSub.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
+              incomingSub.style.height = _inH + 'px';
 
-              contentEl.getBoundingClientRect(); // force reflow
-
-              // Animate to end states — all three use same duration and linear timing
-              incomingTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-              incomingTrack.style.transform = 'translateY(0)';
-
+              outgoingSub.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
+              outgoingSub.style.height = '0';
               outgoingTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               outgoingTrack.style.transform = 'translateY(-' + _outH + 'px)';
-
-              for (var _si2 = 0; _si2 < _swapSiblings.length; _si2++) {
-                _swapSiblings[_si2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
-                _swapSiblings[_si2].style.transform = 'translateY(-' + _outH + 'px)';
-              }
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
                 incomingSub.style.overflow = '';
-                incomingTrack.style.transition = '';
-                incomingTrack.style.transform = '';
-                for (var _si3 = 0; _si3 < _swapSiblings.length; _si3++) {
-                  _swapSiblings[_si3].style.transition = '';
-                  _swapSiblings[_si3].style.transform = '';
-                }
+                incomingSub.style.height = '';
+                incomingSub.style.transition = '';
                 contentEl.__sfSwapTimer = null;
-                contentEl.__sfSwapSiblings = null;
               }, Math.round(_POST_ANIM_DUR * 1000) + 20);
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
             } else if (outgoingSub && outgoingSub.parentNode) {
