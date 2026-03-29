@@ -3977,6 +3977,8 @@ const PostModule = (function() {
     // Store the ordered location list used by the UI so event handlers use the same index mapping.
     wrap.__postLocationList = locationList;
 
+    var isStorefrontMode = !!(storefrontPosts && storefrontPosts.length > 1);
+
     // Location wallpaper integration (reuses LocationWallpaperComponent pattern):
     // - Only activates when post is expanded (handled in setupPostDetailEvents)
     // - Uses lat/lng from first map card (already provided by API)
@@ -4219,8 +4221,9 @@ const PostModule = (function() {
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
-    // Hidden lat/lng inputs for LocationWallpaperComponent to read
-    if (lat !== null && lng !== null) {
+    // Hidden lat/lng inputs for LocationWallpaperComponent to read.
+    // Storefront shell should not own wallpaper; storefront sub-post containers do.
+    if (!isStorefrontMode && lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
       
       // Store post ID for missing wallpaper flagging
@@ -4525,6 +4528,14 @@ const PostModule = (function() {
 
           var outgoingSub = _keptSub;
           var outgoingTrack = outgoingSub ? outgoingSub.firstChild : null;
+          function _destroyStorefrontWallpaper(subEl) {
+            if (!subEl) return;
+            try {
+              if (subEl.__locationWallpaperCtrl && typeof subEl.__locationWallpaperCtrl.destroy === 'function') {
+                subEl.__locationWallpaperCtrl.destroy();
+              }
+            } catch (_eSfWallpaperDestroy) {}
+          }
 
           var incomingSub = document.createElement('div');
           incomingSub.dataset.sfSwapId = String(selectedPost.id);
@@ -4543,6 +4554,11 @@ const PostModule = (function() {
             if (contentEl.__sfSwapGen !== _swapGen) return;
             if (!fullPost) { incomingSub.remove(); return; }
             if (!incomingSub.parentNode) return;
+
+            // Storefront wallpaper must live inside the active sub-post container,
+            // not on the outer storefront shell.
+            incomingSub.classList.add('component-locationwallpaper-container');
+            incomingTrack.classList.add('component-locationwallpaper-content');
 
             if (fullPost.subcategory_color) {
               var _sfHex = fullPost.subcategory_color.replace('#', '');
@@ -4598,9 +4614,43 @@ const PostModule = (function() {
             }
             if (postBody) incomingTrack.appendChild(postBody);
 
+            try {
+              var _sfLoc = (fullPost.map_cards && fullPost.map_cards[mcIdx]) || (fullPost.map_cards && fullPost.map_cards[0]) || null;
+              var _sfLat = _sfLoc && _sfLoc.latitude !== undefined && _sfLoc.latitude !== null ? Number(_sfLoc.latitude) : null;
+              var _sfLng = _sfLoc && _sfLoc.longitude !== undefined && _sfLoc.longitude !== null ? Number(_sfLoc.longitude) : null;
+              if (Number.isFinite(_sfLat) && Number.isFinite(_sfLng)) {
+                var _sfLatEl = document.createElement('input');
+                _sfLatEl.type = 'hidden';
+                _sfLatEl.className = 'fieldset-lat';
+                _sfLatEl.value = String(_sfLat);
+                var _sfLngEl = document.createElement('input');
+                _sfLngEl.type = 'hidden';
+                _sfLngEl.className = 'fieldset-lng';
+                _sfLngEl.value = String(_sfLng);
+                incomingSub.appendChild(_sfLatEl);
+                incomingSub.appendChild(_sfLngEl);
+              } else {
+                incomingSub.classList.remove('component-locationwallpaper-container');
+              }
+              if (fullPost && fullPost.id) incomingSub.dataset.postId = String(fullPost.id);
+              if (_sfLoc && _sfLoc.location_type) incomingSub.dataset.locationType = _sfLoc.location_type;
+
+              if (incomingSub.classList.contains('component-locationwallpaper-container') &&
+                  window.LocationWallpaperComponent &&
+                  typeof LocationWallpaperComponent.install === 'function' &&
+                  typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                incomingSub.setAttribute('data-active', 'true');
+                LocationWallpaperComponent.install(incomingSub);
+                LocationWallpaperComponent.handleActiveContainerChange(incomingSub, incomingSub);
+              }
+            } catch (_eSfWallpaperSetup) {}
+
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
-              if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
+              if (outgoingSub && outgoingSub.parentNode) {
+                _destroyStorefrontWallpaper(outgoingSub);
+                outgoingSub.remove();
+              }
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
@@ -4676,6 +4726,7 @@ const PostModule = (function() {
               }
 
               contentEl.__sfSwapTimer = setTimeout(function() {
+                _destroyStorefrontWallpaper(outgoingSub);
                 outgoingSub.remove();
                 incomingSub.style.overflow = '';
                 incomingTrack.style.transition = '';
@@ -4689,6 +4740,7 @@ const PostModule = (function() {
               }, Math.round(_POST_ANIM_DUR * 1000) + 20);
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
             } else if (outgoingSub && outgoingSub.parentNode) {
+              _destroyStorefrontWallpaper(outgoingSub);
               outgoingSub.remove();
             }
 
