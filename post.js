@@ -179,7 +179,6 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function init() {
-    applyPostInteractionSettings();
     panelsContainerEl = document.querySelector('.post-mode-panels');
     if (!panelsContainerEl) {
       throw new Error('[Post] .post-mode-panels container not found.');
@@ -196,6 +195,14 @@ const PostModule = (function() {
     // Capture initial mode (HeaderModule already ran, but PostModule may have missed the event).
     currentMode = inferCurrentModeFromHeader() || 'map';
     applyMode(currentMode);
+
+    // Theme presets load asynchronously during startup.
+    // Apply post interaction settings only after startup settings are ready.
+    if (window.App && typeof App.whenStartupSettingsReady === 'function') {
+      App.whenStartupSettingsReady().then(function() {
+        applyPostInteractionSettings();
+      });
+    }
 
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
