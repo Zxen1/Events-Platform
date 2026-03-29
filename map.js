@@ -371,6 +371,7 @@ const MapModule = (function() {
   // Markers
   let mapCardMarkers = new Map();    // postId -> { marker, element, state }
   let clusterLayerVisible = true;
+  let superClusterLayerVisible = true;
   let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
   // Track which specific marker (locationKey) was last made active for a given postId
@@ -1836,9 +1837,11 @@ const MapModule = (function() {
   // Cluster constants
   const CLUSTER_SOURCE_ID = 'post-cluster-source';
   const CLUSTER_LAYER_ID = 'post-clusters';
+  const CLUSTER_SUPER_LAYER_ID = 'post-super-clusters';
   const CLUSTER_ICON_PREFIX = 'cluster-';
   const CLUSTER_MAX_COUNT = 999;
   const CLUSTER_MIN_ZOOM = 0;
+  const CLUSTER_SUPER_MAX_ZOOM = 7;
   
   // Cluster state
   let clusterIconsLoaded = false;
@@ -1993,6 +1996,10 @@ const MapModule = (function() {
       return;
     }
     
+    if (map.getLayer(CLUSTER_SUPER_LAYER_ID)) {
+      map.removeLayer(CLUSTER_SUPER_LAYER_ID);
+    }
+
     // Remove existing layer if present
     if (map.getLayer(CLUSTER_LAYER_ID)) {
       map.removeLayer(CLUSTER_LAYER_ID);
@@ -2007,7 +2014,28 @@ const MapModule = (function() {
     var emptyData = { type: 'FeatureCollection', features: [] };
     map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
     
-    // Create cluster layer — each count has its own pre-rendered balloon image
+    // Create super clusters for world-scale zoom (0–7).
+    map.addLayer({
+      id: CLUSTER_SUPER_LAYER_ID,
+      type: 'symbol',
+      source: CLUSTER_SOURCE_ID,
+      minzoom: CLUSTER_MIN_ZOOM,
+      maxzoom: getClusterZoomMax(),
+      layout: {
+        'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.58, 7, 0.95],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-anchor': 'bottom',
+        'symbol-z-order': 'viewport-y',
+        'symbol-sort-key': 900
+      },
+      paint: {
+        'icon-opacity': 0.95
+      }
+    });
+
+    // Create regular cluster layer — each count has its own pre-rendered balloon image
     map.addLayer({
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
@@ -2029,7 +2057,16 @@ const MapModule = (function() {
     });
     
     // Bind click handler
+    map.on('click', CLUSTER_SUPER_LAYER_ID, handleClusterClick);
     map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
+    map.on('mouseenter', CLUSTER_SUPER_LAYER_ID, function() {
+      // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
+      if (map.getZoom() >= getClusterZoomMax()) return;
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', CLUSTER_SUPER_LAYER_ID, function() {
+      map.getCanvas().style.cursor = 'grab';
+    });
     map.on('mouseenter', CLUSTER_LAYER_ID, function() {
       // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
       if (map.getZoom() >= getClusterZoomMax()) return;
@@ -2225,18 +2262,28 @@ const MapModule = (function() {
    */
   function updateClusterVisibility(zoom) {
     if (!map) return;
-    
-    var shouldShow = zoom < getClusterZoomMax();
-    if (shouldShow !== clusterLayerVisible) {
-      clusterLayerVisible = shouldShow;
-      
-      if (map.getLayer(CLUSTER_LAYER_ID)) {
-        map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
+
+    var zoomValue = Number.isFinite(zoom) ? zoom : 0;
+    var belowThreshold = zoomValue < getClusterZoomMax();
+    var showSuper = belowThreshold && zoomValue <= CLUSTER_SUPER_MAX_ZOOM;
+    var showRegular = belowThreshold && zoomValue > CLUSTER_SUPER_MAX_ZOOM;
+
+    if (showSuper !== superClusterLayerVisible) {
+      superClusterLayerVisible = showSuper;
+      if (map.getLayer(CLUSTER_SUPER_LAYER_ID)) {
+        map.setLayoutProperty(CLUSTER_SUPER_LAYER_ID, 'visibility', showSuper ? 'visible' : 'none');
       }
     }
-    
-    // Update cluster data when visible
-    if (shouldShow) {
+
+    if (showRegular !== clusterLayerVisible) {
+      clusterLayerVisible = showRegular;
+      if (map.getLayer(CLUSTER_LAYER_ID)) {
+        map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', showRegular ? 'visible' : 'none');
+      }
+    }
+
+    // Update cluster data when any cluster layer is visible.
+    if (showSuper || showRegular) {
       updateClusterData(zoom);
     }
   }
