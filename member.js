@@ -946,7 +946,8 @@ const MemberModule = (function() {
             preset.map_lighting === undefined ||
             preset.map_style === undefined ||
             preset.animation_preference === undefined ||
-            preset.wallpaper_overlay === undefined
+            preset.wallpaper_overlay === undefined ||
+            preset.post_interaction === undefined
         ) {
             throw new Error('[Member] Incomplete ' + themeKey + ' in ' + contextLabel + '.');
         }
@@ -955,7 +956,8 @@ const MemberModule = (function() {
             map_lighting: String(preset.map_lighting),
             map_style: String(preset.map_style),
             animation_preference: String(preset.animation_preference),
-            wallpaper_overlay: String(preset.wallpaper_overlay)
+            wallpaper_overlay: String(preset.wallpaper_overlay),
+            post_interaction: String(preset.post_interaction)
         };
     }
 
@@ -1034,6 +1036,7 @@ const MemberModule = (function() {
         localStorage.setItem('map_style', preset.map_style);
         localStorage.setItem('animation_preference', preset.animation_preference);
         localStorage.setItem('wallpaper_overlay', preset.wallpaper_overlay);
+        localStorage.setItem('post_interaction', preset.post_interaction);
 
         if (currentUser) {
             currentUser.theme_active = resolved.themeActive;
@@ -1042,6 +1045,7 @@ const MemberModule = (function() {
             currentUser.map_style = preset.map_style;
             currentUser.animation_preference = preset.animation_preference;
             currentUser.wallpaper_overlay = preset.wallpaper_overlay;
+            currentUser.post_interaction = preset.post_interaction;
             storeCurrent(currentUser);
         }
 
@@ -1107,6 +1111,7 @@ const MemberModule = (function() {
             initBgOpacityButtons();
             initMapLightingButtons();
             initMapStyleButtons();
+            initPostInteractionButtons();
             initWallpaperButtons();
             initWallpaperOverlayButtons();
             initThemeResetButtons();
@@ -1229,6 +1234,7 @@ const MemberModule = (function() {
         var preset = getThemePresetForMode(currentTheme);
         applyLightingIcons(section);
         syncToggleGroup(section.querySelector('.member-bgopacity-buttons'), '.member-bgopacity-button', 'bgOpacity', preset.bg_opacity);
+        syncToggleGroup(section.querySelector('.member-postinteraction-buttons'), '.member-postinteraction-button', 'postInteraction', preset.post_interaction);
         syncToggleGroup(section.querySelector('.member-lighting-buttons'), '.member-lighting-button', 'lighting', preset.map_lighting);
         syncToggleGroup(section.querySelector('.member-style-buttons'), '.member-style-button', 'style', preset.map_style);
         syncToggleGroup(section.querySelector('.member-wallpaper-buttons'), '.member-wallpaper-button', 'wallpaper', preset.animation_preference);
@@ -1244,7 +1250,8 @@ const MemberModule = (function() {
                 && String(preset.map_lighting) === String(adminPreset.map_lighting)
                 && String(preset.map_style) === String(adminPreset.map_style)
                 && String(preset.animation_preference) === String(adminPreset.animation_preference)
-                && String(preset.wallpaper_overlay) === String(adminPreset.wallpaper_overlay);
+                && String(preset.wallpaper_overlay) === String(adminPreset.wallpaper_overlay)
+                && String(preset.post_interaction) === String(adminPreset.post_interaction);
             resetBtn.disabled = isDefault;
         }
     }
@@ -1317,6 +1324,24 @@ const MemberModule = (function() {
                     btn.addEventListener('click', function() {
                         if (btn.getAttribute('aria-pressed') === 'true') return;
                         updateThemePrefsForMode(mode, 'map_style', style);
+                        syncMemberThemePreferenceUi();
+                    });
+                }
+            });
+        });
+    }
+
+    function initPostInteractionButtons() {
+        var sections = panel.querySelectorAll('.member-theme-section');
+        sections.forEach(function(section) {
+            var mode = section.dataset.memberThemeSection;
+            section.querySelectorAll('.member-postinteraction-button').forEach(function(btn) {
+                var postInteraction = btn.dataset.postInteraction;
+                if (!btn.dataset.memberThemeBound) {
+                    btn.dataset.memberThemeBound = 'true';
+                    btn.addEventListener('click', function() {
+                        if (btn.getAttribute('aria-pressed') === 'true') return;
+                        updateThemePrefsForMode(mode, 'post_interaction', postInteraction);
                         syncMemberThemePreferenceUi();
                     });
                 }
@@ -1434,6 +1459,7 @@ const MemberModule = (function() {
                 localStorage.removeItem('map_style');
                 localStorage.removeItem('animation_preference');
                 localStorage.removeItem('wallpaper_overlay');
+                localStorage.removeItem('post_interaction');
             }
             // Filters: DB-first snapshot mirrored to localStorage so map can load correctly before filter panel opens.
             if (user.filters_json && typeof user.filters_json === 'string') {

@@ -286,6 +286,7 @@ if (empty($ogTitle)) {
       if (
         !preset ||
         preset.bg_opacity === undefined ||
+        preset.post_interaction === undefined ||
         preset.map_lighting === undefined ||
         preset.map_style === undefined ||
         preset.animation_preference === undefined ||
@@ -301,6 +302,7 @@ if (empty($ogTitle)) {
 
       document.documentElement.style.setProperty('--bg-opacity', String(preset.bg_opacity));
       localStorage.setItem('bg_opacity', String(preset.bg_opacity));
+      localStorage.setItem('post_interaction', String(preset.post_interaction));
       localStorage.setItem('map_lighting', String(preset.map_lighting));
       localStorage.setItem('map_style', String(preset.map_style));
       localStorage.setItem('animation_preference', String(preset.animation_preference));
@@ -1226,6 +1228,23 @@ if (empty($ogTitle)) {
             >
               <div class="member-style-container">
                 <div class="member-panel-field">
+                  <label class="member-settings-field-label">Post Interaction</label>
+                  <div class="member-postinteraction-buttons toggle-class-1">
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="instant" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Instant</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="fast" aria-pressed="true">
+                      <span class="member-postinteraction-button-text">Fast</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="smooth" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Smooth</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="slow" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Slow</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="member-panel-field">
                   <label class="member-settings-field-label">Background Opacity</label>
                   <div class="member-bgopacity-buttons toggle-class-1">
                     <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
@@ -1327,6 +1346,23 @@ if (empty($ogTitle)) {
               aria-labelledby="admin-themes-dark-header"
             >
               <div class="member-style-container">
+                <div class="member-panel-field">
+                  <label class="member-settings-field-label">Post Interaction</label>
+                  <div class="member-postinteraction-buttons toggle-class-1">
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="instant" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Instant</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="fast" aria-pressed="true">
+                      <span class="member-postinteraction-button-text">Fast</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="smooth" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Smooth</span>
+                    </button>
+                    <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="slow" aria-pressed="false">
+                      <span class="member-postinteraction-button-text">Slow</span>
+                    </button>
+                  </div>
+                </div>
                 <div class="member-panel-field">
                   <label class="member-settings-field-label">Background Opacity</label>
                   <div class="member-bgopacity-buttons toggle-class-1">
@@ -1527,6 +1563,23 @@ if (empty($ogTitle)) {
             </div>
             <div class="member-theme-section" data-member-theme-section="light" hidden>
               <div class="member-panel-field">
+                <label class="member-settings-field-label">Post Interaction</label>
+                <div class="member-postinteraction-buttons toggle-class-1">
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="instant" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Instant</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="fast" aria-pressed="true">
+                    <span class="member-postinteraction-button-text">Fast</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="smooth" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Smooth</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="slow" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Slow</span>
+                  </button>
+                </div>
+              </div>
+              <div class="member-panel-field">
                 <label class="member-settings-field-label">Background Opacity</label>
                 <div class="member-bgopacity-buttons toggle-class-1">
                   <button type="button" class="member-bgopacity-button toggle-button" data-bg-opacity="0.4" aria-pressed="false">
@@ -1610,6 +1663,23 @@ if (empty($ogTitle)) {
               </div>
             </div>
             <div class="member-theme-section" data-member-theme-section="dark" hidden>
+              <div class="member-panel-field">
+                <label class="member-settings-field-label">Post Interaction</label>
+                <div class="member-postinteraction-buttons toggle-class-1">
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="instant" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Instant</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="fast" aria-pressed="true">
+                    <span class="member-postinteraction-button-text">Fast</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="smooth" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Smooth</span>
+                  </button>
+                  <button type="button" class="member-postinteraction-button toggle-button" data-post-interaction="slow" aria-pressed="false">
+                    <span class="member-postinteraction-button-text">Slow</span>
+                  </button>
+                </div>
+              </div>
               <div class="member-panel-field">
                 <label class="member-settings-field-label">Background Opacity</label>
                 <div class="member-bgopacity-buttons toggle-class-1">

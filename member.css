@@ -532,7 +532,8 @@
 
 /* Lighting/Style/Wallpaper buttons use toggle-class-1 from base.css */
 .member-lighting-buttons,
-.member-wallpaper-buttons {
+.member-wallpaper-buttons,
+.member-postinteraction-buttons {
   grid-template-columns: repeat(4, 1fr);
 }
 

@@ -67,6 +67,81 @@ const PostModule = (function() {
   var _POST_ANIMATE  = true;
   var _POST_ANIM_DUR = 0.3;
 
+  function getEffectiveThemePresetKey(themeActive) {
+    var active = themeActive || 'theme_auto';
+    if (active === 'theme_auto') {
+      if (!window.matchMedia) {
+        throw new Error('[Post] window.matchMedia is required for theme_auto.');
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
+    }
+    if (active === 'theme_light' || active === 'theme_dark') {
+      return active;
+    }
+    throw new Error('[Post] Invalid theme_active "' + String(active) + '".');
+  }
+
+  function getThemePresetFromSettings() {
+    var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
+    if (!settings || settings.theme_presets === undefined) {
+      throw new Error('[Post] settings.theme_presets must be loaded before resolving post interaction settings.');
+    }
+    var presets = settings.theme_presets;
+    if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
+      throw new Error('[Post] settings.theme_presets must be a JSON object.');
+    }
+    var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
+    var preset = presets[presetKey];
+    if (!preset) {
+      throw new Error('[Post] Missing theme preset "' + String(presetKey) + '".');
+    }
+    return preset;
+  }
+
+  function getPostInteractionMode() {
+    var mode = null;
+    if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+      var user = MemberModule.getCurrentUser();
+      if (user && user.post_interaction) {
+        mode = String(user.post_interaction).trim().toLowerCase();
+      }
+    }
+    if (!mode) {
+      var stored = localStorage.getItem('post_interaction');
+      if (stored) {
+        mode = String(stored).trim().toLowerCase();
+      }
+    }
+    if (!mode) {
+      var preset = getThemePresetFromSettings();
+      if (preset.post_interaction === undefined) {
+        throw new Error('[Post] Missing post_interaction in theme preset.');
+      }
+      mode = String(preset.post_interaction).trim().toLowerCase();
+    }
+    if (mode === 'instant' || mode === 'fast' || mode === 'smooth' || mode === 'slow') return mode;
+    throw new Error('[Post] No valid post interaction mode found in theme settings.');
+  }
+
+  function applyPostInteractionSettings() {
+    var mode = getPostInteractionMode();
+    if (mode === 'instant') {
+      _POST_ANIMATE = false;
+      _POST_ANIM_DUR = 0.3;
+      return;
+    }
+    _POST_ANIMATE = true;
+    if (mode === 'fast') {
+      _POST_ANIM_DUR = 0.3;
+      return;
+    }
+    if (mode === 'smooth') {
+      _POST_ANIM_DUR = 0.6;
+      return;
+    }
+    _POST_ANIM_DUR = 0.9;
+  }
+
   var postPanelEl = null;
   var postPanelContentEl = null;
   var postListEl = null;
@@ -104,6 +179,7 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function init() {
+    applyPostInteractionSettings();
     panelsContainerEl = document.querySelector('.post-mode-panels');
     if (!panelsContainerEl) {
       throw new Error('[Post] .post-mode-panels container not found.');
@@ -3070,6 +3146,7 @@ const PostModule = (function() {
    * @param {Object} options - { fromRecent: boolean, originEl: HTMLElement, postMapCardId: string }
    */
   function openPost(post, options) {
+    applyPostInteractionSettings();
     options = options || {};
     var fromRecent = options.fromRecent || false;
     var originEl = options.originEl || null;
@@ -5346,6 +5423,7 @@ const PostModule = (function() {
       });
 
       function _animateCollapse() {
+        applyPostInteractionSettings();
         // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
         var _realWrap = descEl.closest('.post') || wrap;
         var _bodyEl   = _realWrap.querySelector('.post-body');
@@ -5459,6 +5537,7 @@ const PostModule = (function() {
       }
 
       function _animateExpand() {
+        applyPostInteractionSettings();
         // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
         var _realWrap = descEl.closest('.post') || wrap;
         var _bodyEl   = _realWrap.querySelector('.post-body');
@@ -5628,6 +5707,7 @@ const PostModule = (function() {
    * @param {string|number} postId - Post ID
    */
   function closePost(postId) {
+    applyPostInteractionSettings();
     var openPostEl = document.querySelector('.post[data-id="' + postId + '"]');
     if (!openPostEl) return;
 

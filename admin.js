@@ -4284,7 +4284,8 @@ const AdminModule = (function() {
             preset.map_lighting === undefined ||
             preset.map_style === undefined ||
             preset.animation_preference === undefined ||
-            preset.wallpaper_overlay === undefined
+            preset.wallpaper_overlay === undefined ||
+            preset.post_interaction === undefined
         ) {
             throw new Error('[Admin] Incomplete ' + themeKey + ' in ' + contextLabel + '.');
         }
@@ -4293,7 +4294,8 @@ const AdminModule = (function() {
             map_lighting: String(preset.map_lighting),
             map_style: String(preset.map_style),
             animation_preference: String(preset.animation_preference),
-            wallpaper_overlay: String(preset.wallpaper_overlay)
+            wallpaper_overlay: String(preset.wallpaper_overlay),
+            post_interaction: String(preset.post_interaction)
         };
     }
 
@@ -4332,6 +4334,9 @@ const AdminModule = (function() {
         acc.querySelectorAll('.member-bgopacity-button').forEach(function(btn) {
             btn.setAttribute('aria-pressed', btn.dataset.bgOpacity === String(preset.bg_opacity) ? 'true' : 'false');
         });
+        acc.querySelectorAll('.member-postinteraction-button').forEach(function(btn) {
+            btn.setAttribute('aria-pressed', btn.dataset.postInteraction === String(preset.post_interaction) ? 'true' : 'false');
+        });
         acc.querySelectorAll('.member-lighting-button').forEach(function(btn) {
             btn.setAttribute('aria-pressed', btn.dataset.lighting === String(preset.map_lighting) ? 'true' : 'false');
         });
@@ -4346,6 +4351,7 @@ const AdminModule = (function() {
         });
         [
             '.member-bgopacity-buttons',
+            '.member-postinteraction-buttons',
             '.member-lighting-buttons',
             '.member-style-buttons',
             '.member-wallpaper-buttons',
@@ -4366,12 +4372,14 @@ const AdminModule = (function() {
         function captureAccordion(acc) {
             if (!acc) return {};
             var bgBtn = acc.querySelector('.member-bgopacity-button[aria-pressed="true"]');
+            var postInteractionBtn = acc.querySelector('.member-postinteraction-button[aria-pressed="true"]');
             var lightingBtn = acc.querySelector('.member-lighting-button[aria-pressed="true"]');
             var styleBtn = acc.querySelector('.member-style-button[aria-pressed="true"]');
             var wallpaperBtn = acc.querySelector('.member-wallpaper-button[aria-pressed="true"]');
             var overlayBtn = acc.querySelector('.member-wallpaperoverlay-button[aria-pressed="true"]');
             return {
                 bg_opacity: bgBtn ? String(bgBtn.dataset.bgOpacity || '') : '',
+                post_interaction: postInteractionBtn ? String(postInteractionBtn.dataset.postInteraction || '') : '',
                 map_lighting: lightingBtn ? String(lightingBtn.dataset.lighting || '') : '',
                 map_style: styleBtn ? String(styleBtn.dataset.style || '') : '',
                 animation_preference: wallpaperBtn ? String(wallpaperBtn.dataset.wallpaper || '') : '',
@@ -4402,6 +4410,7 @@ const AdminModule = (function() {
         if (!acc) return;
         [
             '.member-bgopacity-button',
+            '.member-postinteraction-button',
             '.member-lighting-button',
             '.member-style-button',
             '.member-wallpaper-button',
