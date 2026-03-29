@@ -4561,6 +4561,8 @@ const PostModule = (function() {
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
 
+            wrap.classList.remove('post--expanded');
+
             if (postHeader) {
               incomingTrack.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
@@ -4595,17 +4597,20 @@ const PostModule = (function() {
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
               if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
-              wrap.classList.remove('post--expanded');
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
-              incomingSub.style.overflow = 'hidden';
-              outgoingSub.style.overflow = 'hidden';
-
+              // Real height transitions on both containers. Siblings follow naturally
+              // because the layout changes are real, not visual tricks.
               var _inH = incomingSub.offsetHeight;
               var _outH = outgoingSub.offsetHeight;
 
+              // Incoming: starts at height 0, grows to full height
+              incomingSub.style.overflow = 'hidden';
               incomingSub.style.height = '0';
+
+              // Outgoing: starts at full height, shrinks to 0
+              outgoingSub.style.overflow = 'hidden';
               outgoingSub.style.height = _outH + 'px';
               outgoingTrack.style.transition = 'none';
               outgoingTrack.style.transform = 'translateY(0)';
@@ -4622,7 +4627,7 @@ const PostModule = (function() {
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
-                wrap.classList.remove('post--expanded');
+                incomingSub.style.overflow = '';
                 incomingSub.style.height = '';
                 incomingSub.style.transition = '';
                 contentEl.__sfSwapTimer = null;
@@ -4630,9 +4635,6 @@ const PostModule = (function() {
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
             } else if (outgoingSub && outgoingSub.parentNode) {
               outgoingSub.remove();
-              wrap.classList.remove('post--expanded');
-            } else {
-              wrap.classList.remove('post--expanded');
             }
 
             new MutationObserver(function() {
