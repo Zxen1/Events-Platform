@@ -108,7 +108,7 @@ This matrix is the only correct way to describe the full animation surface area.
 
 3. Wallpaper disappears after any animation completes (post panel, recent panel, post editor — all cases). Root cause unknown — to be diagnosed.
 
-4. Storefront menus: relationship to the animation system unclear — to be investigated.
+4. Storefront menus: swap animation rewritten to pure transforms — March 29, 2026 (FIXED).
 
 ---
 
@@ -362,6 +362,21 @@ The entire animation system exists to eliminate flicker. When the cleanup `setTi
 - **No absolute positioning.** Both containers stay in normal document flow at all times.
 - **No z-index.** There is nothing to layer.
 - **No crossing.** The containers are siblings — they cannot occupy the same space.
+
+### Implementation (March 29, 2026 — FIXED)
+
+Previous implementation used CSS `height` transitions on both containers plus `translateY` on the outgoing track. This caused two problems: (1) `height` transitions run on the main thread (layout reflow every frame) while `transform` transitions run on the GPU compositor thread — they desync, causing a rickety appearance; (2) no sibling locking, so elements below the storefront jumped unpredictably.
+
+**Fix:** Pure `translateY` transforms on all animated elements. No height animation. Both sub-containers stay at natural heights. The geometry:
+- `incomingTrack`: `translateY(-inH)` → `translateY(0)` (slides down into view)
+- `outgoingSub`: `translateY(-inH)` → `translateY(0)` (shifts from overlapping incoming's empty space to natural DOM position)
+- `outgoingTrack`: `translateY(0)` → `translateY(-outH)` (slides up out of view)
+- Siblings: `translateY(-inH)` → `translateY(-outH)` (compensate for height delta)
+- At cleanup: `outgoingSub.remove()` shifts siblings up by `outH`, cancelling their `translateY(-outH)` removal — zero flicker.
+
+The incoming and outgoing meet at a moving boundary at every frame. Verified: at time `t`, incoming bottom = `inH * t`, outgoing top = `inH * t`. Sibling top = `outH - (outH - inH) * t`. All edges align continuously.
+
+Cancellation also updated: clears slot animation (deferred open may still be running), clears sibling transforms, clears sub container transforms. BottomSlack held for the animation duration.
 
 ---
 

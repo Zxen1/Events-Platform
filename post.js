@@ -4496,9 +4496,18 @@ const PostModule = (function() {
           addToRecentHistory(selectedPost, 0);
 
           // ── Cancel any in-progress swap animation ──
+          var _cancelSlot = contentEl.closest('.post-main-container') || contentEl.closest('.recent-main-container');
+          if (_cancelSlot) _cancelSlotAnimation(_cancelSlot);
           if (contentEl.__sfSwapTimer) {
             clearTimeout(contentEl.__sfSwapTimer);
             contentEl.__sfSwapTimer = null;
+          }
+          if (contentEl.__sfSwapSiblings) {
+            for (var _cssi = 0; _cssi < contentEl.__sfSwapSiblings.length; _cssi++) {
+              contentEl.__sfSwapSiblings[_cssi].style.transform = '';
+              contentEl.__sfSwapSiblings[_cssi].style.transition = '';
+            }
+            contentEl.__sfSwapSiblings = null;
           }
           var _keptSub = null;
           var _child = contentEl.firstElementChild;
@@ -4508,6 +4517,7 @@ const PostModule = (function() {
               _child.style.overflow = '';
               _child.style.height = '';
               _child.style.transition = '';
+              _child.style.transform = '';
               var _cTrack = _child.firstChild;
               if (_cTrack) { _cTrack.style.transition = ''; _cTrack.style.transform = ''; }
               if (!_keptSub && _cTrack && _cTrack.children.length > 0) {
@@ -4600,36 +4610,76 @@ const PostModule = (function() {
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
-              // Real height transitions on both containers. Siblings follow naturally
-              // because the layout changes are real, not visual tricks.
+              // Pure GPU-accelerated transform animation. Both sub-containers stay
+              // at their natural heights — no CSS height transitions (which cause
+              // main-thread reflows and desync with compositor transforms).
+              // Incoming content slides down into view via translateY on its track.
+              // Outgoing content slides up out of view via translateY on its track.
+              // Outgoing sub shifts from overlapping incoming's space to its natural
+              // DOM position. Siblings compensate for the height delta via translateY.
               var _inH = incomingSub.offsetHeight;
               var _outH = outgoingSub.offsetHeight;
 
-              // Incoming: starts at height 0, grows to full height
-              incomingSub.style.overflow = 'hidden';
-              incomingSub.style.height = '0';
+              var _swapSlot = contentEl.closest('.post-main-container') || contentEl.closest('.recent-main-container');
+              if (_swapSlot) _cancelSlotAnimation(_swapSlot);
 
-              // Outgoing: starts at full height, shrinks to 0
+              var _swapSiblings = [];
+              if (_swapSlot) {
+                var _swapSibStart = (_swapSlot.parentElement && (_swapSlot.parentElement.classList.contains('post-outer-container') || _swapSlot.parentElement.classList.contains('recent-outer-container'))) ? _swapSlot.parentElement : _swapSlot;
+                var _swapSib = _swapSibStart.nextElementSibling;
+                while (_swapSib) { _swapSiblings.push(_swapSib); _swapSib = _swapSib.nextElementSibling; }
+                var _swapSibList = _swapSibStart.parentElement;
+                if (_swapSibList && (_swapSibList.classList.contains('post-list') || _swapSibList.classList.contains('recent-list'))) {
+                  var _swapListSib = _swapSibList.nextElementSibling;
+                  while (_swapListSib) { _swapSiblings.push(_swapListSib); _swapListSib = _swapListSib.nextElementSibling; }
+                }
+              }
+
+              var _swapScrollEl = _swapSlot ? (_swapSlot.closest('.post-list') || _swapSlot.closest('.recent-panel-content')) : null;
+              if (_swapScrollEl && window.BottomSlack && typeof BottomSlack.get === 'function') {
+                var _swapBsCtrl = BottomSlack.get(_swapScrollEl);
+                if (_swapBsCtrl && typeof _swapBsCtrl.hold === 'function') _swapBsCtrl.hold(Math.round(_POST_ANIM_DUR * 1000) + 40);
+              }
+
+              incomingSub.style.overflow = 'hidden';
               outgoingSub.style.overflow = 'hidden';
-              outgoingSub.style.height = _outH + 'px';
+
+              incomingTrack.style.transition = 'none';
+              incomingTrack.style.transform = 'translateY(-' + _inH + 'px)';
+              outgoingSub.style.transition = 'none';
+              outgoingSub.style.transform = 'translateY(-' + _inH + 'px)';
               outgoingTrack.style.transition = 'none';
               outgoingTrack.style.transform = 'translateY(0)';
+              for (var _swi = 0; _swi < _swapSiblings.length; _swi++) {
+                _swapSiblings[_swi].style.transition = 'none';
+                _swapSiblings[_swi].style.transform = 'translateY(-' + _inH + 'px)';
+              }
+              contentEl.__sfSwapSiblings = _swapSiblings;
 
               contentEl.getBoundingClientRect();
 
-              incomingSub.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
-              incomingSub.style.height = _inH + 'px';
-
-              outgoingSub.style.transition = 'height ' + _POST_ANIM_DUR + 's linear';
-              outgoingSub.style.height = '0';
-              outgoingTrack.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
+              var _swapTrans = 'transform ' + _POST_ANIM_DUR + 's linear';
+              incomingTrack.style.transition = _swapTrans;
+              incomingTrack.style.transform = 'translateY(0)';
+              outgoingSub.style.transition = _swapTrans;
+              outgoingSub.style.transform = 'translateY(0)';
+              outgoingTrack.style.transition = _swapTrans;
               outgoingTrack.style.transform = 'translateY(-' + _outH + 'px)';
+              for (var _swi2 = 0; _swi2 < _swapSiblings.length; _swi2++) {
+                _swapSiblings[_swi2].style.transition = _swapTrans;
+                _swapSiblings[_swi2].style.transform = 'translateY(-' + _outH + 'px)';
+              }
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
                 incomingSub.style.overflow = '';
-                incomingSub.style.height = '';
-                incomingSub.style.transition = '';
+                incomingTrack.style.transition = '';
+                incomingTrack.style.transform = '';
+                for (var _swi3 = 0; _swi3 < _swapSiblings.length; _swi3++) {
+                  _swapSiblings[_swi3].style.transform = '';
+                  _swapSiblings[_swi3].style.transition = '';
+                }
+                contentEl.__sfSwapSiblings = null;
                 contentEl.__sfSwapTimer = null;
               }, Math.round(_POST_ANIM_DUR * 1000) + 20);
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
