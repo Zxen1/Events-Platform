@@ -4496,8 +4496,6 @@ const PostModule = (function() {
           addToRecentHistory(selectedPost, 0);
 
           // ── Cancel any in-progress swap animation ──
-          var _cancelSlot = contentEl.closest('.post-main-container') || contentEl.closest('.recent-main-container');
-          if (_cancelSlot) _cancelSlotAnimation(_cancelSlot);
           if (contentEl.__sfSwapTimer) {
             clearTimeout(contentEl.__sfSwapTimer);
             contentEl.__sfSwapTimer = null;
@@ -4610,19 +4608,16 @@ const PostModule = (function() {
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
-              // Pure GPU-accelerated transform animation. Both sub-containers stay
-              // at their natural heights — no CSS height transitions (which cause
-              // main-thread reflows and desync with compositor transforms).
-              // Incoming content slides down into view via translateY on its track.
-              // Outgoing content slides up out of view via translateY on its track.
-              // Outgoing sub shifts from overlapping incoming's space to its natural
-              // DOM position. Siblings compensate for the height delta via translateY.
+              // Incoming: open pattern (content slides down, overflow hidden on sub).
+              // Outgoing: close pattern (content slides up, overflow hidden on sub).
+              // Siblings follow the outgoing — same transform, same timing.
               var _inH = incomingSub.offsetHeight;
               var _outH = outgoingSub.offsetHeight;
 
               var _swapSlot = contentEl.closest('.post-main-container') || contentEl.closest('.recent-main-container');
               if (_swapSlot) _cancelSlotAnimation(_swapSlot);
 
+              // Collect siblings (same pattern as close animation)
               var _swapSiblings = [];
               if (_swapSlot) {
                 var _swapSibStart = (_swapSlot.parentElement && (_swapSlot.parentElement.classList.contains('post-outer-container') || _swapSlot.parentElement.classList.contains('recent-outer-container'))) ? _swapSlot.parentElement : _swapSlot;
@@ -4641,15 +4636,20 @@ const PostModule = (function() {
                 if (_swapBsCtrl && typeof _swapBsCtrl.hold === 'function') _swapBsCtrl.hold(Math.round(_POST_ANIM_DUR * 1000) + 40);
               }
 
+              // ── INCOMING: open pattern — content hidden above clip, slides down ──
               incomingSub.style.overflow = 'hidden';
-              outgoingSub.style.overflow = 'hidden';
-
               incomingTrack.style.transition = 'none';
               incomingTrack.style.transform = 'translateY(-' + _inH + 'px)';
+
+              // ── OUTGOING: close pattern — content visible, will slide up ──
+              // translateY(-inH) compensates for incoming sub pushing it down in flow
+              outgoingSub.style.overflow = 'hidden';
               outgoingSub.style.transition = 'none';
               outgoingSub.style.transform = 'translateY(-' + _inH + 'px)';
               outgoingTrack.style.transition = 'none';
               outgoingTrack.style.transform = 'translateY(0)';
+
+              // Siblings: translateY(-inH) compensates for incoming sub's DOM height
               for (var _swi = 0; _swi < _swapSiblings.length; _swi++) {
                 _swapSiblings[_swi].style.transition = 'none';
                 _swapSiblings[_swi].style.transform = 'translateY(-' + _inH + 'px)';
@@ -4659,12 +4659,21 @@ const PostModule = (function() {
               contentEl.getBoundingClientRect();
 
               var _swapTrans = 'transform ' + _POST_ANIM_DUR + 's linear';
+
+              // Incoming: content slides down into view
               incomingTrack.style.transition = _swapTrans;
               incomingTrack.style.transform = 'translateY(0)';
+
+              // Outgoing sub returns to natural DOM position as incoming grows
               outgoingSub.style.transition = _swapTrans;
               outgoingSub.style.transform = 'translateY(0)';
+
+              // Outgoing content slides up (close pattern)
               outgoingTrack.style.transition = _swapTrans;
               outgoingTrack.style.transform = 'translateY(-' + _outH + 'px)';
+
+              // Siblings end at translateY(-outH) — when outgoing is removed at
+              // cleanup, they shift up by outH naturally, cancelling the translateY
               for (var _swi2 = 0; _swi2 < _swapSiblings.length; _swi2++) {
                 _swapSiblings[_swi2].style.transition = _swapTrans;
                 _swapSiblings[_swi2].style.transform = 'translateY(-' + _outH + 'px)';
