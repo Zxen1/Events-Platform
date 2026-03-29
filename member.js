@@ -1140,7 +1140,8 @@ const MemberModule = (function() {
             map_lighting: String(preset.map_lighting),
             map_style: String(preset.map_style),
             animation_preference: String(preset.animation_preference),
-            wallpaper_overlay: String(preset.wallpaper_overlay)
+            wallpaper_overlay: String(preset.wallpaper_overlay),
+            post_interaction: String(preset.post_interaction)
         };
     }
 
