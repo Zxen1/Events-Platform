@@ -4561,8 +4561,6 @@ const PostModule = (function() {
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
 
-            wrap.classList.remove('post--expanded');
-
             if (postHeader) {
               incomingTrack.appendChild(postHeader);
               var sfFavBtn = postHeader.querySelector('.post-header-button-fav');
@@ -4597,6 +4595,7 @@ const PostModule = (function() {
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
               if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
+              wrap.classList.remove('post--expanded');
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
@@ -4623,6 +4622,7 @@ const PostModule = (function() {
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
+                wrap.classList.remove('post--expanded');
                 incomingSub.style.height = '';
                 incomingSub.style.transition = '';
                 contentEl.__sfSwapTimer = null;
@@ -4630,6 +4630,9 @@ const PostModule = (function() {
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
             } else if (outgoingSub && outgoingSub.parentNode) {
               outgoingSub.remove();
+              wrap.classList.remove('post--expanded');
+            } else {
+              wrap.classList.remove('post--expanded');
             }
 
             new MutationObserver(function() {
