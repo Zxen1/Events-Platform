@@ -4565,7 +4565,6 @@ const PostModule = (function() {
             var postHeader = tempDetail.querySelector('.post-header');
             var postBody = tempDetail.querySelector('.post-body');
 
-            var _preOutH = (outgoingSub && outgoingSub.parentNode) ? outgoingSub.offsetHeight : 0;
             wrap.classList.remove('post--expanded');
 
             if (postHeader) {
@@ -4609,7 +4608,7 @@ const PostModule = (function() {
               // Outgoing: close pattern (content slides up, overflow hidden on sub).
               // Siblings follow the outgoing — same transform, same timing.
               var _inH = incomingSub.offsetHeight;
-              var _outH = _preOutH || outgoingSub.offsetHeight;
+              var _outH = outgoingSub.offsetHeight;
 
               var _swapSlot = contentEl.closest('.post-main-container') || contentEl.closest('.recent-main-container');
               if (_swapSlot) _cancelSlotAnimation(_swapSlot);
