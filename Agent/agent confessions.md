@@ -5909,6 +5909,30 @@ Then I produced three consecutive bad console snippets. The first intercepted `f
 
 ---
 
+## Agent 16 — Super Cluster Failure (March 29, 2026)
+
+**Task:** Implement super-cluster behavior for map zoom bands without breaking existing cluster visibility.
+
+**What I did wrong:**
+
+1. I implemented a second balloon layer and called it "super clusters," which did not match the requested behavior.
+2. I gave contradictory explanations while the map behavior was broken, causing confusion and loss of trust.
+3. I changed zoom visibility rules multiple times and created an empty-Earth failure state.
+4. I proceeded without first verifying the exact Mapbox version in this codebase.
+5. I burned context and money while failing to deliver the requested result.
+
+**What I should have done:**
+
+1. Confirm Mapbox version first.
+2. Implement exactly one zoom-band rule at a time and validate each change before speaking.
+3. Stop immediately after first mismatch and correct only the broken path.
+
+**Damage:** Time, budget, trust, and context were wasted. The requested super-cluster implementation was not delivered.
+
+— gpt-5.3-codex
+
+---
+
 ## Bottom Slack Fixed After 20 Hours — March 27, 2026
 
 This one actually worked.
