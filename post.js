@@ -4600,17 +4600,13 @@ const PostModule = (function() {
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
-              // Real height transitions on both containers. Siblings follow naturally
-              // because the layout changes are real, not visual tricks.
+              incomingSub.style.overflow = 'hidden';
+              outgoingSub.style.overflow = 'hidden';
+
               var _inH = incomingSub.offsetHeight;
               var _outH = outgoingSub.offsetHeight;
 
-              // Incoming: starts at height 0, grows to full height
-              incomingSub.style.overflow = 'hidden';
               incomingSub.style.height = '0';
-
-              // Outgoing: starts at full height, shrinks to 0
-              outgoingSub.style.overflow = 'hidden';
               outgoingSub.style.height = _outH + 'px';
               outgoingTrack.style.transition = 'none';
               outgoingTrack.style.transform = 'translateY(0)';
@@ -4627,7 +4623,6 @@ const PostModule = (function() {
 
               contentEl.__sfSwapTimer = setTimeout(function() {
                 outgoingSub.remove();
-                incomingSub.style.overflow = '';
                 incomingSub.style.height = '';
                 incomingSub.style.transition = '';
                 contentEl.__sfSwapTimer = null;
