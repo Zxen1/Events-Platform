@@ -570,6 +570,7 @@
   cursor: pointer;
   box-sizing: border-box;
   outline: none;
+  font-size: 16px;
 }
 
 .button-class-10:active {
