@@ -324,7 +324,7 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: var(--website-white);
   font-weight: 600;
@@ -422,7 +422,7 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: var(--website-white);
   font-weight: 600;
@@ -639,8 +639,9 @@
   }
 
   .button-class-2f:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: var(--blue-600);
     border-color: transparent;
+    color: var(--website-white);
   }
 
   .button-class-3:hover {
