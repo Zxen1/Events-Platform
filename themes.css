@@ -62,10 +62,10 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* button-class-2f reset button states */
+/* button-class-2f reset button states — TEMPORARILY DISABLED
 :root[data-theme="light"] .button-class-2f:not(:disabled) {
   color: #ffffff;
-}
+} */
 
 :root[data-theme="light"] .button-class-2[aria-selected="true"],
 :root[data-theme="light"] .button-class-2.button--selected {
