@@ -1839,6 +1839,8 @@ const MapModule = (function() {
   const CLUSTER_ICON_PREFIX = 'cluster-';
   const CLUSTER_MAX_COUNT = 999;
   const CLUSTER_MIN_ZOOM = 0;
+  const BUBBLE_LAYER_ID = 'post-bubbles';
+  const BUBBLE_ZOOM_MAX = 7;
   
   // Cluster state
   let clusterIconsLoaded = false;
@@ -1993,7 +1995,10 @@ const MapModule = (function() {
       return;
     }
     
-    // Remove existing layer if present
+    // Remove existing layers if present
+    if (map.getLayer(BUBBLE_LAYER_ID)) {
+      map.removeLayer(BUBBLE_LAYER_ID);
+    }
     if (map.getLayer(CLUSTER_LAYER_ID)) {
       map.removeLayer(CLUSTER_LAYER_ID);
     }
@@ -2006,13 +2011,36 @@ const MapModule = (function() {
     // Create empty source
     var emptyData = { type: 'FeatureCollection', features: [] };
     map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
-    
+
+    // Proportional bubble layer — zoom 0 to 7, before balloon clusters appear
+    map.addLayer({
+      id: BUBBLE_LAYER_ID,
+      type: 'circle',
+      source: CLUSTER_SOURCE_ID,
+      minzoom: CLUSTER_MIN_ZOOM,
+      maxzoom: BUBBLE_ZOOM_MAX,
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+          0, ['interpolate', ['linear'], ['get', 'count'], 1, 3, 1000, 8, 50000, 14],
+          6, ['interpolate', ['linear'], ['get', 'count'], 1, 6, 1000, 18, 50000, 30]
+        ],
+        'circle-color': ['interpolate', ['linear'], ['get', 'count'],
+          1,    '#4f8ef7',
+          500,  '#f7a24f',
+          5000, '#f74f4f'
+        ],
+        'circle-opacity': 0.7,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': 'rgba(255,255,255,0.5)'
+      }
+    });
+
     // Create cluster layer — each count has its own pre-rendered balloon image
     map.addLayer({
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
-      minzoom: CLUSTER_MIN_ZOOM,
+      minzoom: BUBBLE_ZOOM_MAX,
       maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': ['concat', CLUSTER_ICON_PREFIX, ['to-string', ['min', ['get', 'count'], CLUSTER_MAX_COUNT]]],
