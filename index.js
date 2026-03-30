@@ -689,9 +689,7 @@ const App = (function() {
             if (welcomeBody) {
               var isMobileWelcome = false;
               try { isMobileWelcome = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530); } catch(_e) {}
-              if (isMobileWelcome) {
-                MobileSlack.attach(welcomeBody);
-              } else {
+              if (!isMobileWelcome) {
                 BottomSlack.attach(welcomeBody, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
                 TopSlack.attach(welcomeBody, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
               }
@@ -848,7 +846,7 @@ const App = (function() {
     // REGISTRY: every scroll container that needs TopSlack/BottomSlack MUST be listed here.
     // BottomSlack.get(el) returns null for any element not in this list — hold(), forceOff(),
     // and all slack behaviour will silently do nothing. Add new scroll containers here first.
-    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content', '.welcome-modal-body'];
+    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content'];
     var isMobile = false;
     try {
       isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
