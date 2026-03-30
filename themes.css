@@ -77,6 +77,46 @@
   }
 }
 
+/* toggle-class-1 segmented switches */
+:root[data-theme="light"] .toggle-class-1 {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="light"] .toggle-class-1-slider {
+  background: var(--blue-600);
+  box-shadow: none;
+}
+
+:root[data-theme="light"] .toggle-class-1 .toggle-button {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="light"] .toggle-class-1 .toggle-button[aria-pressed="true"] {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .toggle-class-1 .toggle-button:disabled {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .toggle-class-1 .toggle-button:hover {
+    background: rgba(0, 0, 0, 0.45);
+    color: #ffffff;
+  }
+
+  :root[data-theme="light"] .toggle-class-1 .toggle-button[aria-pressed="true"]:hover {
+    background: transparent;
+    color: #ffffff;
+  }
+
+  :root[data-theme="light"] .toggle-class-1 .toggle-button:disabled:hover {
+    background: transparent;
+    color: rgba(0, 0, 0, 0.3);
+  }
+}
+
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
