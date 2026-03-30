@@ -6318,41 +6318,70 @@ const WelcomeModalComponent = (function() {
         // Prevent background scrolling
         document.body.style.overflow = 'hidden';
 
-        // Load user guide once, only if the modal actually appears
+        // Build Help button on first open
         if (!userGuideLoaded && userGuideElement) {
+            buildHelpButton();
+        }
+    }
+
+    function buildHelpButton() {
+        if (!userGuideElement) return;
+        userGuideElement.innerHTML = '';
+
+        var helpBtn = document.createElement('button');
+        helpBtn.className = 'welcome-user-guide-help-btn button-class-10';
+        helpBtn.textContent = 'Help';
+        helpBtn.addEventListener('click', function() {
             userGuideLoaded = true;
+            userGuideElement.innerHTML = '';
+            buildGuideShell();
             fetch('/gateway.php?action=get-admin-settings&lite=1&include_user_guide=true')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success && data.user_guide && data.user_guide.length) {
-                        renderUserGuide(data.user_guide);
+                        renderUserGuideChapters(userGuideElement.querySelector('.welcome-user-guide-chapters'), data.user_guide);
                     }
                 })
                 .catch(function(err) {
                     console.error('[WelcomeModal] Failed to load user guide:', err);
                 });
-        }
+        });
+
+        userGuideElement.appendChild(helpBtn);
     }
 
-    function renderUserGuide(items) {
-        if (!userGuideElement) return;
-        userGuideElement.innerHTML = '';
+    function buildGuideShell() {
+        var guide = document.createElement('div');
+        guide.className = 'welcome-user-guide-guide';
 
-        var header = document.createElement('div');
-        header.className = 'welcome-user-guide-header';
-        header.textContent = 'User Guide';
-        userGuideElement.appendChild(header);
+        var guideHeader = document.createElement('div');
+        guideHeader.className = 'welcome-user-guide-guide-header';
+
+        var guideTitle = document.createElement('span');
+        guideTitle.className = 'welcome-user-guide-guide-title';
+        guideTitle.textContent = 'User Guide';
+
+        var closeBtn = document.createElement('div');
+        closeBtn.className = 'welcome-user-guide-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', function() {
+            buildHelpButton();
+        });
+
+        guideHeader.appendChild(guideTitle);
+        guideHeader.appendChild(closeBtn);
+        guide.appendChild(guideHeader);
 
         var chaptersContainer = document.createElement('div');
         chaptersContainer.className = 'welcome-user-guide-chapters';
-        userGuideElement.appendChild(chaptersContainer);
+        guide.appendChild(chaptersContainer);
 
-        renderUserGuideChapters(chaptersContainer, items);
+        userGuideElement.appendChild(guide);
     }
 
     function renderUserGuideChapters(chaptersContainer, items) {
+        if (!chaptersContainer) return;
 
-        // Group by chapter
         var chapters = [];
         var chapterMap = {};
         items.forEach(function(item) {
@@ -6393,7 +6422,6 @@ const WelcomeModalComponent = (function() {
                 var itemTitle = document.createElement('div');
                 itemTitle.className = 'welcome-user-guide-item-title';
                 itemTitle.textContent = item.title;
-
                 itemEl.appendChild(itemTitle);
 
                 if (item.description) {

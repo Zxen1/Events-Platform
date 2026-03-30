@@ -559,6 +559,26 @@
   border-color: transparent;
 }
 
+/* Button Class 10: Ghost button — transparent background, grey border. For use on dark backgrounds. */
+.button-class-10 {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid #333;
+  color: #fff;
+  cursor: pointer;
+  box-sizing: border-box;
+  outline: none;
+  font-size: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.button-class-10:active {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
 /* ============================================================================
    INPUT CLASSES
    
@@ -652,6 +672,11 @@
   .button-class-8:hover {
     background: var(--blue-950);
     border-color: transparent;
+  }
+
+  .button-class-10:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: #555;
   }
 
   .input-class-1:hover {
@@ -1508,15 +1533,44 @@ body {
 
 .welcome-user-guide {
   margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.welcome-user-guide-header {
-  font-size: 13px;
+.welcome-user-guide-guide {
+  width: 100%;
+}
+
+.welcome-user-guide-guide--hidden {
+  display: none;
+}
+
+.welcome-user-guide-guide-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.welcome-user-guide-guide-title {
+  font-size: 16px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: #fff;
+  line-height: 1;
+}
+
+.welcome-user-guide-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   color: rgba(255,255,255,0.5);
-  margin-bottom: 0;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 .welcome-user-guide-chapter {
@@ -1524,11 +1578,11 @@ body {
 }
 
 .welcome-user-guide-chapter-header {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1;
-  color: rgba(255,255,255,0.9);
-  min-height: 36px;
+  color: #fff;
+  height: 36px;
   cursor: pointer;
   border-top: 1px solid rgba(255,255,255,0.15);
   border-bottom: 1px solid rgba(255,255,255,0.15);
@@ -1580,7 +1634,7 @@ body {
 
 .welcome-user-guide-item {
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .welcome-user-guide-item:last-child {
@@ -1588,15 +1642,15 @@ body {
 }
 
 .welcome-user-guide-item-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: rgba(255,255,255,0.85);
+  color: #fff;
   margin-bottom: 6px;
 }
 
 .welcome-user-guide-item-description {
-  font-size: 14px;
-  color: rgba(255,255,255,0.65);
+  font-size: 16px;
+  color: #fff;
   line-height: 1.5;
 }
 
