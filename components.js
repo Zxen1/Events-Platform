@@ -6318,7 +6318,7 @@ const WelcomeModalComponent = (function() {
         // Prevent background scrolling
         document.body.style.overflow = 'hidden';
 
-        // Lazy-load user guide on first open
+        // Load user guide once, only if the modal actually appears
         if (!userGuideLoaded && userGuideElement) {
             userGuideLoaded = true;
             fetch('/gateway.php?action=get-admin-settings&lite=1&include_user_guide=true')
@@ -6342,6 +6342,15 @@ const WelcomeModalComponent = (function() {
         header.className = 'welcome-user-guide-header';
         header.textContent = 'User Guide';
         userGuideElement.appendChild(header);
+
+        var chaptersContainer = document.createElement('div');
+        chaptersContainer.className = 'welcome-user-guide-chapters';
+        userGuideElement.appendChild(chaptersContainer);
+
+        renderUserGuideChapters(chaptersContainer, items);
+    }
+
+    function renderUserGuideChapters(chaptersContainer, items) {
 
         // Group by chapter
         var chapters = [];
@@ -6397,7 +6406,7 @@ const WelcomeModalComponent = (function() {
 
             chapter.appendChild(chapterHeader);
             chapter.appendChild(chapterBody);
-            userGuideElement.appendChild(chapter);
+            chaptersContainer.appendChild(chapter);
         });
     }
     
