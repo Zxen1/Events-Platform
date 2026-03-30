@@ -2987,33 +2987,33 @@
    SITEMAP TAB — MANUAL (INSTRUCTIONS)
    ============================================================================ */
 
-.admin-sitemap-manual-container {
+.admin-guides-manual-container {
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
   box-sizing: border-box;
 }
 
-.admin-sitemap-manual-accordion {
+.admin-guides-manual-accordion {
   width: 100%;
   margin: 0 0 12px 0;
   overflow: visible;
 }
 
 
-.admin-sitemap-manual-accordion-header {
+.admin-guides-manual-accordion-header {
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 10px;
 }
 
-.admin-sitemap-manual-accordion-header-text {
+.admin-guides-manual-accordion-header-text {
   flex: 1;
   font-weight: bold;
 }
 
-.admin-sitemap-manual-accordion-header-arrow {
+.admin-guides-manual-accordion-header-arrow {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3021,7 +3021,7 @@
   justify-content: center;
 }
 
-.admin-sitemap-manual-accordion-header-arrow::before {
+.admin-guides-manual-accordion-header-arrow::before {
   content: '';
   display: block;
   width: 14px;
@@ -3039,11 +3039,11 @@
   transform-origin: center;
 }
 
-.admin-sitemap-manual-accordion-header-arrow--open::before {
+.admin-guides-manual-accordion-header-arrow--open::before {
   transform: rotate(180deg);
 }
 
-.admin-sitemap-manual-accordion-header-drag {
+.admin-guides-manual-accordion-header-drag {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3054,7 +3054,7 @@
   -webkit-user-select: none;
 }
 
-.admin-sitemap-manual-accordion-header-drag-icon {
+.admin-guides-manual-accordion-header-drag-icon {
   width: 16px;
   height: 16px;
   background-color: #888;
@@ -3068,15 +3068,15 @@
   mask-position: center;
 }
 
-.admin-sitemap-manual-accordion-header-drag:hover .admin-sitemap-manual-accordion-header-drag-icon {
+.admin-guides-manual-accordion-header-drag:hover .admin-guides-manual-accordion-header-drag-icon {
   background-color: #fff;
 }
 
-.admin-sitemap-manual-accordion.dragging {
+.admin-guides-manual-accordion.dragging {
   opacity: 0.5;
 }
 
-.admin-sitemap-manual-accordion-header-editarea {
+.admin-guides-manual-accordion-header-editarea {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3086,7 +3086,7 @@
   color: #888;
 }
 
-.admin-sitemap-manual-accordion-header-edit {
+.admin-guides-manual-accordion-header-edit {
   width: 16px;
   height: 16px;
   background-color: currentColor;
@@ -3100,27 +3100,27 @@
   mask-position: center;
 }
 
-.admin-sitemap-manual-accordion-header-editarea:hover,
-.admin-sitemap-manual-accordion-header-editarea--editing {
+.admin-guides-manual-accordion-header-editarea:hover,
+.admin-guides-manual-accordion-header-editarea--editing {
   color: var(--blue-500);
 }
 
-.admin-sitemap-manual-accordion-editpanel {
+.admin-guides-manual-accordion-editpanel {
   display: none;
   padding: 10px;
   background: var(--blue-950);
 }
 
-.admin-sitemap-manual-accordion-editpanel--editing {
+.admin-guides-manual-accordion-editpanel--editing {
   display: block;
 }
 
-.admin-sitemap-manual-accordion-editpanel-row {
+.admin-guides-manual-accordion-editpanel-row {
   display: flex;
   margin: 0 0 10px 0;
 }
 
-.admin-sitemap-manual-accordion-editpanel-input {
+.admin-guides-manual-accordion-editpanel-input {
   flex: 1;
   height: 36px;
   padding: 0 10px;
@@ -3128,7 +3128,7 @@
   font-size: 13px;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more {
+.admin-guides-manual-accordion-editpanel-more {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3142,7 +3142,7 @@
   position: relative;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-icon {
+.admin-guides-manual-accordion-editpanel-more-icon {
   width: 16px;
   height: 16px;
   background-color: #fff;
@@ -3156,11 +3156,11 @@
   mask-position: center;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more:hover {
+.admin-guides-manual-accordion-editpanel-more:hover {
   border-color: var(--blue-500);
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-menu {
+.admin-guides-manual-accordion-editpanel-more-menu {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
@@ -3173,11 +3173,11 @@
   display: none;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-menu--open {
+.admin-guides-manual-accordion-editpanel-more-menu--open {
   display: block;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-item {
+.admin-guides-manual-accordion-editpanel-more-item {
   height: 36px;
   display: flex;
   align-items: center;
@@ -3187,27 +3187,27 @@
   font-size: 13px;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-item:hover {
+.admin-guides-manual-accordion-editpanel-more-item:hover {
   background: #222;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-delete {
+.admin-guides-manual-accordion-editpanel-more-delete {
   color: #f87171;
 }
 
-.admin-sitemap-manual-accordion-editpanel-more-delete:hover {
+.admin-guides-manual-accordion-editpanel-more-delete:hover {
   background: #7f1d1d;
 }
 
-.admin-sitemap-manual-accordion-body {
+.admin-guides-manual-accordion-body {
   padding: 10px 10px 0 10px;
 }
 
-.admin-sitemap-manual-accordion-body--hidden {
+.admin-guides-manual-accordion-body--hidden {
   display: none;
 }
 
-.admin-sitemap-manual-add-chapter {
+.admin-guides-manual-add-chapter {
   width: 100%;
   height: 36px;
   display: flex;
@@ -3222,12 +3222,12 @@
   margin-top: 10px;
 }
 
-.admin-sitemap-manual-add-chapter:hover {
+.admin-guides-manual-add-chapter:hover {
   border-color: var(--blue-500);
   color: #fff;
 }
 
-.admin-sitemap-manual-add-item {
+.admin-guides-manual-add-item {
   width: 100%;
   height: 36px;
   display: flex;
@@ -3243,22 +3243,22 @@
   margin-bottom: 10px;
 }
 
-.admin-sitemap-manual-add-item:hover {
+.admin-guides-manual-add-item:hover {
   border-color: var(--blue-500);
   color: #fff;
 }
 
-.admin-sitemap-manual-item {
+.admin-guides-manual-item {
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.admin-sitemap-manual-item:last-of-type {
+.admin-guides-manual-item:last-of-type {
   border-bottom: none;
 }
 
-.admin-sitemap-manual-item-title-display {
+.admin-guides-manual-item-title-display {
   font-size: 13px;
   font-weight: 600;
   color: var(--blue-500);
@@ -3269,11 +3269,11 @@
   line-height: 1.2;
 }
 
-.admin-sitemap-manual-item-title-display:hover {
+.admin-guides-manual-item-title-display:hover {
   color: #fff;
 }
 
-.admin-sitemap-manual-item-title-input {
+.admin-guides-manual-item-title-input {
   width: 100%;
   height: 36px;
   padding: 0 10px;
@@ -3282,23 +3282,23 @@
   box-sizing: border-box;
 }
 
-.admin-sitemap-manual-item-header {
+.admin-guides-manual-item-header {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
 }
 
-.admin-sitemap-manual-item-header .admin-sitemap-manual-item-title-display {
+.admin-guides-manual-item-header .admin-guides-manual-item-title-display {
   flex: 1;
   margin: 0;
 }
 
-.admin-sitemap-manual-item-header .admin-sitemap-manual-item-title-input {
+.admin-guides-manual-item-header .admin-guides-manual-item-title-input {
   flex: 1;
   margin-bottom: 0;
 }
 
-.admin-sitemap-manual-item-drag {
+.admin-guides-manual-item-drag {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3310,7 +3310,7 @@
   -webkit-user-select: none;
 }
 
-.admin-sitemap-manual-item-drag-icon {
+.admin-guides-manual-item-drag-icon {
   width: 16px;
   height: 16px;
   background-color: #888;
@@ -3322,11 +3322,11 @@
   mask-repeat: no-repeat;
 }
 
-.admin-sitemap-manual-item-drag:hover .admin-sitemap-manual-item-drag-icon {
+.admin-guides-manual-item-drag:hover .admin-guides-manual-item-drag-icon {
   background-color: #fff;
 }
 
-.admin-sitemap-manual-item-delete {
+.admin-guides-manual-item-delete {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3345,11 +3345,11 @@
   mask-position: center;
 }
 
-.admin-sitemap-manual-item-delete:hover {
+.admin-guides-manual-item-delete:hover {
   background-color: var(--red-500);
 }
 
-.admin-sitemap-manual-item.dragging {
+.admin-guides-manual-item.dragging {
   opacity: 0.5;
 }
 

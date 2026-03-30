@@ -112,9 +112,9 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, system_images, and instructions from settings
+    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, system_images, and admin_guide from settings
     $messages = null;
-    $instructions = null;
+    $admin_guide = null;
     $fieldsetTooltips = null;
     $fieldTooltips = null;
     $checkoutOptions = null;
@@ -125,14 +125,14 @@ try {
         $messages = $data['messages'];
         unset($settings['messages']);
     }
-    if (isset($data['instructions']) && is_array($data['instructions'])) {
-        $instructions = $data['instructions'];
-        unset($settings['instructions']);
+    if (isset($data['admin_guide']) && is_array($data['admin_guide'])) {
+        $admin_guide = $data['admin_guide'];
+        unset($settings['admin_guide']);
     }
     $deletedInstructionIds = null;
-    if (isset($data['deleted_instruction_ids']) && is_array($data['deleted_instruction_ids'])) {
-        $deletedInstructionIds = $data['deleted_instruction_ids'];
-        unset($settings['deleted_instruction_ids']);
+    if (isset($data['deleted_admin_guide_ids']) && is_array($data['deleted_admin_guide_ids'])) {
+        $deletedInstructionIds = $data['deleted_admin_guide_ids'];
+        unset($settings['deleted_admin_guide_ids']);
     }
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
@@ -595,31 +595,31 @@ try {
         }
     }
 
-    // Save instructions if provided
-    $instructionsUpdated = 0;
+    // Save admin_guide if provided
+    $admin_guideUpdated = 0;
     $newItemIds = [];
     $tableExists = null;
-    if (($instructions !== null && !empty($instructions)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds))) {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_instructions'");
+    if (($admin_guide !== null && !empty($admin_guide)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds))) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
         $tableExists = $stmt->rowCount() > 0;
     }
     if ($tableExists && $deletedInstructionIds !== null && !empty($deletedInstructionIds)) {
-        $deleteStmt = $pdo->prepare('DELETE FROM `admin_instructions` WHERE `id` = :id');
+        $deleteStmt = $pdo->prepare('DELETE FROM `admin_guide` WHERE `id` = :id');
         foreach ($deletedInstructionIds as $delId) {
             $deleteStmt->execute([':id' => (int)$delId]);
         }
     }
-    if ($tableExists && $instructions !== null && !empty($instructions)) {
+    if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
         $updateStmt = $pdo->prepare('
-            UPDATE `admin_instructions`
+            UPDATE `admin_guide`
             SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
             WHERE `id` = :id
         ');
         $insertStmt = $pdo->prepare('
-            INSERT INTO `admin_instructions` (`chapter`, `title`, `description`, `sort_order`)
+            INSERT INTO `admin_guide` (`chapter`, `title`, `description`, `sort_order`)
             VALUES (:chapter, :title, :description, :sort_order)
         ');
-        foreach ($instructions as $item) {
+        foreach ($admin_guide as $item) {
             if (!empty($item['is_new'])) {
                 $insertStmt->execute([
                     ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
@@ -628,7 +628,7 @@ try {
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
                 $newItemIds[] = (int)$pdo->lastInsertId();
-                $instructionsUpdated++;
+                $admin_guideUpdated++;
             } elseif (isset($item['id'])) {
                 $updateStmt->execute([
                     ':id'         => (int)$item['id'],
@@ -637,7 +637,7 @@ try {
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
-                if ($updateStmt->rowCount() > 0) $instructionsUpdated++;
+                if ($updateStmt->rowCount() > 0) $admin_guideUpdated++;
             }
         }
     }
@@ -678,8 +678,8 @@ try {
         $response['coupon_id'] = $couponId;
     }
 
-    if ($instructionsUpdated > 0) {
-        $response['instructions_updated'] = $instructionsUpdated;
+    if ($admin_guideUpdated > 0) {
+        $response['admin_guide_updated'] = $admin_guideUpdated;
     }
     if (!empty($newItemIds)) {
         $response['new_item_ids'] = $newItemIds;

@@ -787,32 +787,32 @@ const AdminModule = (function() {
             initThemesTab();
         } else if (tabName === 'moderation') {
             initModerationTab();
-        } else if (tabName === 'sitemap') {
-            initSitemapTab();
+        } else if (tabName === 'guides') {
+            initGuidesTab();
         }
     }
 
     /* --------------------------------------------------------------------------
-       SITEMAP TAB
+       GUIDES TAB
        -------------------------------------------------------------------------- */
     
-    var sitemapTabInitialized = false;
+    var guidesTabInitialized = false;
 
-    function initSitemapTab() {
-        if (sitemapTabInitialized) return;
-        sitemapTabInitialized = true;
+    function initGuidesTab() {
+        if (guidesTabInitialized) return;
+        guidesTabInitialized = true;
 
         // Load and render instructions accordions first, then load iframe
-        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        var manualContainer = document.getElementById('admin-guides-manual-container');
 
-        fetch('/gateway.php?action=get-admin-settings&lite=1&include_instructions=true')
+        fetch('/gateway.php?action=get-admin-settings&lite=1&include_admin_guide=true')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (manualContainer && data.success && data.instructions && data.instructions.length) {
-                    renderInstructionsAccordions(manualContainer, data.instructions);
+                if (manualContainer && data.success && data.admin_guide && data.admin_guide.length) {
+                    renderAdminGuideAccordions(manualContainer, data.admin_guide);
                 }
                 // Load iframe after chapters are rendered
-                var iframe = document.getElementById('admin-sitemap-iframe');
+                var iframe = document.getElementById('admin-guides-iframe');
                 if (iframe) {
                     var src = iframe.getAttribute('data-src');
                     if (src) iframe.setAttribute('src', src);
@@ -821,7 +821,7 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Failed to load instructions:', err);
                 // Load iframe even if instructions fail
-                var iframe = document.getElementById('admin-sitemap-iframe');
+                var iframe = document.getElementById('admin-guides-iframe');
                 if (iframe) {
                     var src = iframe.getAttribute('data-src');
                     if (src) iframe.setAttribute('src', src);
@@ -829,21 +829,21 @@ const AdminModule = (function() {
             });
     }
 
-    var instructionsLoaded = false;
+    var adminGuideLoaded = false;
 
-    function captureInstructionsState() {
+    function captureAdminGuideState() {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
-        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        var manualContainer = document.getElementById('admin-guides-manual-container');
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
-            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
             state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
             state.itemOrder[chapterKey] = [];
-            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
-                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
+                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
                 var textInput = itemEl.querySelector('.admin-message-text-input');
                 state.itemOrder[chapterKey].push(id);
                 state.items[id] = {
@@ -856,26 +856,26 @@ const AdminModule = (function() {
     }
 
     function resetInstructionsToOriginal() {
-        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        var manualContainer = document.getElementById('admin-guides-manual-container');
         if (!manualContainer) return;
-        var entry = fieldRegistry['instructions'];
+        var entry = fieldRegistry['admin_guide'];
         if (!entry || entry.type !== 'composite') return;
         var originalState = JSON.parse(entry.original);
 
         // Restore chapter accordion order
-        var addChapterBtn = manualContainer.querySelector('.admin-sitemap-manual-add-chapter');
+        var addChapterBtn = manualContainer.querySelector('.admin-guides-manual-add-chapter');
         if (originalState.chapterOrder) {
             originalState.chapterOrder.forEach(function(chapterKey) {
-                var accordion = manualContainer.querySelector('.admin-sitemap-manual-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
+                var accordion = manualContainer.querySelector('.admin-guides-manual-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
                 if (accordion) manualContainer.insertBefore(accordion, addChapterBtn);
             });
         }
 
         // Restore chapter names and item order within each chapter
-        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
+        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
-            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
-            var headerText = accordion.querySelector('.admin-sitemap-manual-accordion-header-text');
+            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
+            var headerText = accordion.querySelector('.admin-guides-manual-accordion-header-text');
 
             // Restore chapter name
             if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
@@ -884,22 +884,22 @@ const AdminModule = (function() {
             }
 
             // Restore item order
-            var addItemBtn = accordion.querySelector('.admin-sitemap-manual-add-item');
+            var addItemBtn = accordion.querySelector('.admin-guides-manual-add-item');
             var originalItemOrder = originalState.itemOrder ? originalState.itemOrder[chapterKey] : null;
             if (originalItemOrder) {
                 originalItemOrder.forEach(function(itemId) {
-                    var itemEl = accordion.querySelector('.admin-sitemap-manual-item[data-item-id="' + itemId + '"]');
-                    if (itemEl) accordion.querySelector('.admin-sitemap-manual-accordion-body').insertBefore(itemEl, addItemBtn);
+                    var itemEl = accordion.querySelector('.admin-guides-manual-item[data-item-id="' + itemId + '"]');
+                    if (itemEl) accordion.querySelector('.admin-guides-manual-accordion-body').insertBefore(itemEl, addItemBtn);
                 });
             }
 
             // Restore item values
-            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
+            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
                 if (!originalState.items || !originalState.items[id]) return;
                 var orig = originalState.items[id];
-                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
-                var titleDisplay = itemEl.querySelector('.admin-sitemap-manual-item-title-display');
+                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
+                var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
                 var textInput = itemEl.querySelector('.admin-message-text-input');
                 var textDisplay = itemEl.querySelector('.admin-message-text-display');
                 if (titleInput) { titleInput.value = orig.title; }
@@ -913,15 +913,15 @@ const AdminModule = (function() {
         delete manualContainer.dataset.deletedIds;
     }
 
-    function getModifiedInstructions() {
+    function getModifiedAdminGuide() {
         var modified = [];
         var deletedIds = [];
-        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        var manualContainer = document.getElementById('admin-guides-manual-container');
         if (!manualContainer) return { items: modified, deleted_ids: deletedIds };
 
         var globalOrder = 0;
-        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion').forEach(function(accordion) {
-            var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
+            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
             if (!nameInput) return;
             var chapterName = nameInput.value.trim() || 'New Chapter';
             if (accordion.dataset.isNew === '1') {
@@ -934,8 +934,8 @@ const AdminModule = (function() {
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
             // Collect existing items with sort_order
-            accordion.querySelectorAll('.admin-sitemap-manual-item').forEach(function(itemEl) {
-                var titleInput = itemEl.querySelector('.admin-sitemap-manual-item-title-input');
+            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
+                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
                 var textInput = itemEl.querySelector('.admin-message-text-input');
                 var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
                 var title = titleInput ? titleInput.value : '';
@@ -960,32 +960,32 @@ const AdminModule = (function() {
     }
 
     function closeAllInstructionsEditPanels() {
-        var manualContainer = document.getElementById('admin-sitemap-manual-container');
+        var manualContainer = document.getElementById('admin-guides-manual-container');
         if (!manualContainer) return;
-        manualContainer.querySelectorAll('.admin-sitemap-manual-accordion--editing').forEach(function(el) {
-            el.classList.remove('admin-sitemap-manual-accordion--editing');
+        manualContainer.querySelectorAll('.admin-guides-manual-accordion--editing').forEach(function(el) {
+            el.classList.remove('admin-guides-manual-accordion--editing');
             syncInstructionsAccordionUi(el);
         });
     }
 
     function syncInstructionsAccordionUi(accordion) {
         if (!accordion) return;
-        var isOpen = accordion.classList.contains('admin-sitemap-manual-accordion--open');
-        var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
-        var arrow = accordion.querySelector('.admin-sitemap-manual-accordion-header-arrow');
-        var editArea = accordion.querySelector('.admin-sitemap-manual-accordion-header-editarea');
-        var editPanel = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel');
-        var body = accordion.querySelector('.admin-sitemap-manual-accordion-body');
+        var isOpen = accordion.classList.contains('admin-guides-manual-accordion--open');
+        var isEditing = accordion.classList.contains('admin-guides-manual-accordion--editing');
+        var arrow = accordion.querySelector('.admin-guides-manual-accordion-header-arrow');
+        var editArea = accordion.querySelector('.admin-guides-manual-accordion-header-editarea');
+        var editPanel = accordion.querySelector('.admin-guides-manual-accordion-editpanel');
+        var body = accordion.querySelector('.admin-guides-manual-accordion-body');
         accordion.classList.toggle('accordion-class-1--open', isOpen || isEditing);
-        if (arrow) arrow.classList.toggle('admin-sitemap-manual-accordion-header-arrow--open', !!isOpen);
-        if (editArea) editArea.classList.toggle('admin-sitemap-manual-accordion-header-editarea--editing', !!isEditing);
-        if (editPanel) editPanel.classList.toggle('admin-sitemap-manual-accordion-editpanel--editing', !!isEditing);
-        if (body) body.classList.toggle('admin-sitemap-manual-accordion-body--hidden', !isOpen);
+        if (arrow) arrow.classList.toggle('admin-guides-manual-accordion-header-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('admin-guides-manual-accordion-header-editarea--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('admin-guides-manual-accordion-editpanel--editing', !!isEditing);
+        if (body) body.classList.toggle('admin-guides-manual-accordion-body--hidden', !isOpen);
     }
 
     function buildInstructionsAccordion(chapterData, container) {
         var accordion = document.createElement('div');
-        accordion.className = 'admin-sitemap-manual-accordion accordion-class-1';
+        accordion.className = 'admin-guides-manual-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
         accordion.setAttribute('data-slack-anchor', '');
         if (chapterData.placeholderRowId) {
@@ -993,25 +993,25 @@ const AdminModule = (function() {
         }
 
         var header = document.createElement('div');
-        header.className = 'admin-sitemap-manual-accordion-header accordion-header';
+        header.className = 'admin-guides-manual-accordion-header accordion-header';
 
         var headerText = document.createElement('span');
-        headerText.className = 'admin-sitemap-manual-accordion-header-text';
+        headerText.className = 'admin-guides-manual-accordion-header-text';
         headerText.textContent = chapterData.chapter;
 
         var headerArrow = document.createElement('span');
-        headerArrow.className = 'admin-sitemap-manual-accordion-header-arrow';
+        headerArrow.className = 'admin-guides-manual-accordion-header-arrow';
 
         var headerDrag = document.createElement('div');
-        headerDrag.className = 'admin-sitemap-manual-accordion-header-drag';
+        headerDrag.className = 'admin-guides-manual-accordion-header-drag';
         var headerDragIcon = document.createElement('div');
-        headerDragIcon.className = 'admin-sitemap-manual-accordion-header-drag-icon';
+        headerDragIcon.className = 'admin-guides-manual-accordion-header-drag-icon';
         headerDrag.appendChild(headerDragIcon);
 
         var headerEditArea = document.createElement('div');
-        headerEditArea.className = 'admin-sitemap-manual-accordion-header-editarea';
+        headerEditArea.className = 'admin-guides-manual-accordion-header-editarea';
         var headerEdit = document.createElement('div');
-        headerEdit.className = 'admin-sitemap-manual-accordion-header-edit';
+        headerEdit.className = 'admin-guides-manual-accordion-header-edit';
         headerEditArea.appendChild(headerEdit);
 
         header.appendChild(headerText);
@@ -1020,35 +1020,35 @@ const AdminModule = (function() {
         header.appendChild(headerEditArea);
 
         var editPanel = document.createElement('div');
-        editPanel.className = 'admin-sitemap-manual-accordion-editpanel';
+        editPanel.className = 'admin-guides-manual-accordion-editpanel';
 
         var nameRow = document.createElement('div');
-        nameRow.className = 'admin-sitemap-manual-accordion-editpanel-row';
+        nameRow.className = 'admin-guides-manual-accordion-editpanel-row';
 
         var nameInput = document.createElement('input');
         nameInput.type = 'text';
-        nameInput.className = 'admin-sitemap-manual-accordion-editpanel-input input-class-1';
+        nameInput.className = 'admin-guides-manual-accordion-editpanel-input input-class-1';
         nameInput.value = chapterData.chapter;
         nameInput.dataset.chapterKey = chapterData.chapter;
         nameInput.addEventListener('input', function() {
             headerText.textContent = nameInput.value || chapterData.chapter;
-            if (instructionsLoaded) notifyFieldChange();
+            if (adminGuideLoaded) notifyFieldChange();
         });
 
         nameRow.appendChild(nameInput);
 
         var moreBtn = document.createElement('div');
-        moreBtn.className = 'admin-sitemap-manual-accordion-editpanel-more';
-        moreBtn.innerHTML = '<div class="admin-sitemap-manual-accordion-editpanel-more-icon"></div><div class="admin-sitemap-manual-accordion-editpanel-more-menu"><div class="admin-sitemap-manual-accordion-editpanel-more-item admin-sitemap-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
-        var moreMenuEl = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-menu');
+        moreBtn.className = 'admin-guides-manual-accordion-editpanel-more';
+        moreBtn.innerHTML = '<div class="admin-guides-manual-accordion-editpanel-more-icon"></div><div class="admin-guides-manual-accordion-editpanel-more-menu"><div class="admin-guides-manual-accordion-editpanel-more-item admin-guides-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
+        var moreMenuEl = moreBtn.querySelector('.admin-guides-manual-accordion-editpanel-more-menu');
 
         moreBtn.addEventListener('click', function(e) {
-            moreMenuEl.classList.toggle('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+            moreMenuEl.classList.toggle('admin-guides-manual-accordion-editpanel-more-menu--open');
         });
 
-        var deleteBtn = moreBtn.querySelector('.admin-sitemap-manual-accordion-editpanel-more-delete');
+        var deleteBtn = moreBtn.querySelector('.admin-guides-manual-accordion-editpanel-more-delete');
         deleteBtn.addEventListener('click', function(e) {
-            moreMenuEl.classList.remove('admin-sitemap-manual-accordion-editpanel-more-menu--open');
+            moreMenuEl.classList.remove('admin-guides-manual-accordion-editpanel-more-menu--open');
             var chapterName = headerText.textContent.trim() || 'this chapter';
             if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
                 ConfirmDialogComponent.show({
@@ -1060,14 +1060,14 @@ const AdminModule = (function() {
                 }).then(function(confirmed) {
                     if (confirmed) {
                         accordion.parentNode.removeChild(accordion);
-                        if (instructionsLoaded) notifyFieldChange();
+                        if (adminGuideLoaded) notifyFieldChange();
                     }
                 });
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
                 accordion.parentNode.removeChild(accordion);
-                if (instructionsLoaded) notifyFieldChange();
+                if (adminGuideLoaded) notifyFieldChange();
             }
         });
 
@@ -1075,10 +1075,10 @@ const AdminModule = (function() {
         editPanel.appendChild(nameRow);
 
         var body = document.createElement('div');
-        body.className = 'admin-sitemap-manual-accordion-body accordion-body admin-sitemap-manual-accordion-body--hidden';
+        body.className = 'admin-guides-manual-accordion-body accordion-body admin-guides-manual-accordion-body--hidden';
 
         var addItemBtn = document.createElement('div');
-        addItemBtn.className = 'admin-sitemap-manual-add-item';
+        addItemBtn.className = 'admin-guides-manual-add-item';
         addItemBtn.textContent = '+ Add Item';
         addItemBtn.setAttribute('data-slack-anchor', '');
         addItemBtn.addEventListener('click', function(e) {
@@ -1089,7 +1089,7 @@ const AdminModule = (function() {
         if (chapterData.items && chapterData.items.length) {
             chapterData.items.forEach(function(item) {
                 if (!item.title && !item.description) return;
-                var itemEl = createInstructionItem(item.title, item.description, body);
+                var itemEl = createAdminGuideItem(item.title, item.description, body);
                 itemEl.dataset.itemId = item.id;
                 body.appendChild(itemEl);
             });
@@ -1113,9 +1113,9 @@ const AdminModule = (function() {
             accordion.draggable = false;
         });
         accordion.addEventListener('dragstart', function(e) {
-            if (e.target.closest('.admin-sitemap-manual-item')) return;
+            if (e.target.closest('.admin-guides-manual-item')) return;
             if (!accordion.draggable) { e.preventDefault(); return; }
-            var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+            var siblings = Array.from(container.querySelectorAll('.admin-guides-manual-accordion'));
             chapterDragStartIndex = siblings.indexOf(accordion);
             e.dataTransfer.effectAllowed = 'move';
             accordion.classList.add('dragging');
@@ -1123,15 +1123,15 @@ const AdminModule = (function() {
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
             accordion.draggable = false;
-            var siblings = Array.from(container.querySelectorAll('.admin-sitemap-manual-accordion'));
+            var siblings = Array.from(container.querySelectorAll('.admin-guides-manual-accordion'));
             if (siblings.indexOf(accordion) !== chapterDragStartIndex) {
-                if (instructionsLoaded) notifyFieldChange();
+                if (adminGuideLoaded) notifyFieldChange();
             }
             chapterDragStartIndex = -1;
         });
         accordion.addEventListener('dragover', function(e) {
             e.preventDefault();
-            var dragging = container.querySelector('.admin-sitemap-manual-accordion.dragging');
+            var dragging = container.querySelector('.admin-guides-manual-accordion.dragging');
             if (dragging && dragging !== accordion) {
                 var rect = accordion.getBoundingClientRect();
                 var midY = rect.top + rect.height / 2;
@@ -1144,26 +1144,26 @@ const AdminModule = (function() {
         });
 
         headerEditArea.addEventListener('click', function(e) {
-            var isEditing = accordion.classList.contains('admin-sitemap-manual-accordion--editing');
+            var isEditing = accordion.classList.contains('admin-guides-manual-accordion--editing');
             closeAllInstructionsEditPanels();
-            if (!isEditing) accordion.classList.add('admin-sitemap-manual-accordion--editing');
+            if (!isEditing) accordion.classList.add('admin-guides-manual-accordion--editing');
             syncInstructionsAccordionUi(accordion);
         });
 
         header.addEventListener('click', function(e) {
-            if (e.target.closest('.admin-sitemap-manual-accordion-header-editarea')) return;
-            if (e.target.closest('.admin-sitemap-manual-accordion-header-drag')) return;
-            if (!accordion.classList.contains('admin-sitemap-manual-accordion--editing')) {
+            if (e.target.closest('.admin-guides-manual-accordion-header-editarea')) return;
+            if (e.target.closest('.admin-guides-manual-accordion-header-drag')) return;
+            if (!accordion.classList.contains('admin-guides-manual-accordion--editing')) {
                 closeAllInstructionsEditPanels();
             }
-            accordion.classList.toggle('admin-sitemap-manual-accordion--open');
+            accordion.classList.toggle('admin-guides-manual-accordion--open');
             syncInstructionsAccordionUi(accordion);
         });
 
         return accordion;
     }
 
-    function renderInstructionsAccordions(container, instructions) {
+    function renderAdminGuideAccordions(container, instructions) {
         container.innerHTML = '';
 
         // Group rows by chapter
@@ -1189,7 +1189,7 @@ const AdminModule = (function() {
 
         // Add Chapter button
         var addChapterBtn = document.createElement('div');
-        addChapterBtn.className = 'admin-sitemap-manual-add-chapter';
+        addChapterBtn.className = 'admin-guides-manual-add-chapter';
         addChapterBtn.textContent = '+ Add Chapter';
         addChapterBtn.addEventListener('click', function(e) {
             addChapter(container, addChapterBtn);
@@ -1198,61 +1198,61 @@ const AdminModule = (function() {
 
         // Close edit panels on outside click
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.admin-sitemap-manual-accordion-editpanel') &&
-                !e.target.closest('.admin-sitemap-manual-accordion-header-editarea') &&
-                !e.target.closest('.admin-sitemap-manual-accordion-header')) {
+            if (!e.target.closest('.admin-guides-manual-accordion-editpanel') &&
+                !e.target.closest('.admin-guides-manual-accordion-header-editarea') &&
+                !e.target.closest('.admin-guides-manual-accordion-header')) {
                 closeAllInstructionsEditPanels();
             }
         });
 
-        registerComposite('instructions', captureInstructionsState);
-        instructionsLoaded = true;
+        registerComposite('admin_guide', captureAdminGuideState);
+        adminGuideLoaded = true;
     }
 
     function addItem(body, addItemBtn) {
-        var itemEl = createInstructionItem('', '', body);
+        var itemEl = createAdminGuideItem('', '', body);
         itemEl.dataset.isNew = '1';
         body.insertBefore(itemEl, addItemBtn);
         // Open title for editing immediately
-        var titleDisplay = itemEl.querySelector('.admin-sitemap-manual-item-title-display');
+        var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
         if (titleDisplay) titleDisplay.click();
-        if (instructionsLoaded) notifyFieldChange();
+        if (adminGuideLoaded) notifyFieldChange();
     }
 
     function trackDeletedItem(item) {
         var id = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
         if (!id) return;
-        var container = document.getElementById('admin-sitemap-manual-container');
+        var container = document.getElementById('admin-guides-manual-container');
         if (!container) return;
         var prev = container.dataset.deletedIds ? container.dataset.deletedIds + ',' : '';
         container.dataset.deletedIds = prev + id;
     }
 
-    function createInstructionItem(title, description, body) {
+    function createAdminGuideItem(title, description, body) {
         var item = document.createElement('div');
-        item.className = 'admin-sitemap-manual-item';
+        item.className = 'admin-guides-manual-item';
         item.setAttribute('data-slack-anchor', '');
 
         // Item header row: drag handle + title display/input + delete button
         var itemHeader = document.createElement('div');
-        itemHeader.className = 'admin-sitemap-manual-item-header';
+        itemHeader.className = 'admin-guides-manual-item-header';
 
         // Drag handle
         var dragHandle = document.createElement('div');
-        dragHandle.className = 'admin-sitemap-manual-item-drag';
+        dragHandle.className = 'admin-guides-manual-item-drag';
         var dragIcon = document.createElement('div');
-        dragIcon.className = 'admin-sitemap-manual-item-drag-icon';
+        dragIcon.className = 'admin-guides-manual-item-drag-icon';
         dragHandle.appendChild(dragIcon);
 
         // Title display (click to edit)
         var titleDisplay = document.createElement('div');
-        titleDisplay.className = 'admin-sitemap-manual-item-title-display';
+        titleDisplay.className = 'admin-guides-manual-item-title-display';
         titleDisplay.textContent = title || 'Click to add title';
 
         // Title input (hidden by default)
         var titleInput = document.createElement('input');
         titleInput.type = 'text';
-        titleInput.className = 'admin-sitemap-manual-item-title-input input-class-1';
+        titleInput.className = 'admin-guides-manual-item-title-input input-class-1';
         titleInput.value = title || '';
         titleInput.placeholder = 'Title';
         titleInput.style.display = 'none';
@@ -1265,7 +1265,7 @@ const AdminModule = (function() {
         });
         titleInput.addEventListener('input', function() {
             titleDisplay.textContent = titleInput.value || 'Click to add title';
-            if (instructionsLoaded) notifyFieldChange();
+            if (adminGuideLoaded) notifyFieldChange();
         });
         titleInput.addEventListener('blur', function() {
             titleDisplay.style.display = '';
@@ -1274,7 +1274,7 @@ const AdminModule = (function() {
 
         // Delete button
         var deleteBtn = document.createElement('div');
-        deleteBtn.className = 'admin-sitemap-manual-item-delete';
+        deleteBtn.className = 'admin-guides-manual-item-delete';
         deleteBtn.setAttribute('title', 'Delete item');
         deleteBtn.addEventListener('click', function() {
             var itemTitle = titleInput.value.trim() || 'this item';
@@ -1289,7 +1289,7 @@ const AdminModule = (function() {
                     if (confirmed) {
                         trackDeletedItem(item);
                         item.parentNode.removeChild(item);
-                        if (instructionsLoaded) notifyFieldChange();
+                        if (adminGuideLoaded) notifyFieldChange();
                     }
                 });
                 return;
@@ -1297,7 +1297,7 @@ const AdminModule = (function() {
             if (confirm('Delete "' + itemTitle + '"?')) {
                 trackDeletedItem(item);
                 item.parentNode.removeChild(item);
-                if (instructionsLoaded) notifyFieldChange();
+                if (adminGuideLoaded) notifyFieldChange();
             }
         });
 
@@ -1326,7 +1326,7 @@ const AdminModule = (function() {
         });
         textInput.addEventListener('input', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
-            if (instructionsLoaded) notifyFieldChange();
+            if (adminGuideLoaded) notifyFieldChange();
         });
         textInput.addEventListener('blur', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
@@ -1353,7 +1353,7 @@ const AdminModule = (function() {
             });
             item.addEventListener('dragstart', function(e) {
                 if (!item.draggable) { e.preventDefault(); return; }
-                var siblings = Array.from(body.querySelectorAll('.admin-sitemap-manual-item'));
+                var siblings = Array.from(body.querySelectorAll('.admin-guides-manual-item'));
                 itemDragStartIndex = siblings.indexOf(item);
                 e.dataTransfer.effectAllowed = 'move';
                 item.classList.add('dragging');
@@ -1361,15 +1361,15 @@ const AdminModule = (function() {
             item.addEventListener('dragend', function() {
                 item.classList.remove('dragging');
                 item.draggable = false;
-                var siblings = Array.from(body.querySelectorAll('.admin-sitemap-manual-item'));
+                var siblings = Array.from(body.querySelectorAll('.admin-guides-manual-item'));
                 if (siblings.indexOf(item) !== itemDragStartIndex) {
-                    if (instructionsLoaded) notifyFieldChange();
+                    if (adminGuideLoaded) notifyFieldChange();
                 }
                 itemDragStartIndex = -1;
             });
             item.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                var dragging = body.querySelector('.admin-sitemap-manual-item.dragging');
+                var dragging = body.querySelector('.admin-guides-manual-item.dragging');
                 if (dragging && dragging !== item) {
                     var rect = item.getBoundingClientRect();
                     var midY = rect.top + rect.height / 2;
@@ -1390,11 +1390,11 @@ const AdminModule = (function() {
         var accordion = buildInstructionsAccordion(newChapter, container);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
-        accordion.classList.add('admin-sitemap-manual-accordion--editing');
+        accordion.classList.add('admin-guides-manual-accordion--editing');
         syncInstructionsAccordionUi(accordion);
-        var nameInput = accordion.querySelector('.admin-sitemap-manual-accordion-editpanel-input');
+        var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
         if (nameInput) { nameInput.select(); nameInput.focus(); }
-        if (instructionsLoaded) notifyFieldChange();
+        if (adminGuideLoaded) notifyFieldChange();
     }
 
     /* --------------------------------------------------------------------------
@@ -1511,24 +1511,24 @@ const AdminModule = (function() {
         }
         
         // Save modified instructions (uses save-admin-settings endpoint)
-        var instructionsPayload = getModifiedInstructions();
+        var instructionsPayload = getModifiedAdminGuide();
         if (instructionsPayload.items.length > 0 || instructionsPayload.deleted_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ instructions: instructionsPayload.items, deleted_instruction_ids: instructionsPayload.deleted_ids })
+                    body: JSON.stringify({ admin_guide: instructionsPayload.items, deleted_admin_guide_ids: instructionsPayload.deleted_ids })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save instructions');
                     }
-                    var manualContainer = document.getElementById('admin-sitemap-manual-container');
+                    var manualContainer = document.getElementById('admin-guides-manual-container');
                     if (manualContainer) {
                         // Clear is_new on newly saved items and assign their real IDs
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = manualContainer.querySelectorAll('.admin-sitemap-manual-item[data-is-new="1"]');
+                            var newItems = manualContainer.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
                                 if (newItems[i]) {
                                     newItems[i].dataset.isNew = '';
@@ -1539,7 +1539,7 @@ const AdminModule = (function() {
                         // Clear deleted IDs tracker
                         delete manualContainer.dataset.deletedIds;
                     }
-                    updateCompositeBaseline('instructions');
+                    updateCompositeBaseline('admin_guide');
                 })
             );
         }

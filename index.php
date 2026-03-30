@@ -503,7 +503,7 @@ if (empty($ogTitle)) {
           <button type="button" id="admin-tab-checkout-btn" class="admin-tab-checkout button-class-2" data-tab="checkout" role="tab" aria-selected="false" aria-controls="admin-tab-checkout">Checkout</button>
           <button type="button" id="admin-tab-themes-btn" class="admin-tab-themes button-class-2" data-tab="themes" role="tab" aria-selected="false" aria-controls="admin-tab-themes">Themes</button>
           <button type="button" id="admin-tab-moderation-btn" class="admin-tab-moderation button-class-2" data-tab="moderation" role="tab" aria-selected="false" aria-controls="admin-tab-moderation">Moderation</button>
-          <button type="button" id="admin-tab-sitemap-btn" class="admin-tab-sitemap button-class-2" data-tab="sitemap" role="tab" aria-selected="false" aria-controls="admin-tab-sitemap">Sitemap</button>
+          <button type="button" id="admin-tab-guides-btn" class="admin-tab-guides button-class-2" data-tab="guides" role="tab" aria-selected="false" aria-controls="admin-tab-guides">Guides</button>
         </div>
       </div>
       
@@ -1497,10 +1497,10 @@ if (empty($ogTitle)) {
           
         </section>
 
-        <!-- Sitemap Tab -->
-        <section id="admin-tab-sitemap" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-sitemap-btn">
-          <div id="admin-sitemap-manual-container" class="admin-sitemap-manual-container"></div>
-          <iframe id="admin-sitemap-iframe" title="Sitemap" data-src="sitemap.html" loading="lazy" style="width: 100%; height: 980px; border: 0; display: block; background: transparent;"></iframe>
+        <!-- Guides Tab -->
+        <section id="admin-tab-guides" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-guides-btn">
+          <div id="admin-guides-manual-container" class="admin-guides-manual-container"></div>
+          <iframe id="admin-guides-iframe" title="Guides" data-src="sitemap.html" loading="lazy" style="width: 100%; height: 980px; border: 0; display: block; background: transparent;"></iframe>
         </section>
 
         <div class="bottomSlack" aria-hidden="true"></div>
