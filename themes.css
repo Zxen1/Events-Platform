@@ -150,6 +150,26 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* ─── Button Class 2 (tab buttons) ──────────────────────────────────────── */
+
+:root[data-theme="light"] .button-class-2 {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="light"] .button-class-2[aria-selected="true"],
+:root[data-theme="light"] .button-class-2.button--selected {
+  color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .button-class-2:hover {
+    background: rgba(0, 0, 0, 0.14);
+    border-color: transparent;
+    color: #ffffff;
+  }
+}
+
 /* ─── Member Panel ───────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .member-panel-contents,
