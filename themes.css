@@ -43,9 +43,38 @@
   color: #7c3aed;
 }
 
-/* button-class-1 hover (hardcoded in base.css, must override here) */
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+
+/* button-class-1 hover is hardcoded in base.css, so light theme overrides it here */
 :root[data-theme="light"] .button-class-1:hover {
   background: rgba(0, 0, 0, 0.08);
+}
+
+/* button-class-2 tab states */
+:root[data-theme="light"] .button-class-2 {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: transparent;
+}
+
+:root[data-theme="light"] .button-class-2[aria-selected="true"],
+:root[data-theme="light"] .button-class-2.button--selected {
+  background: var(--blue-600);
+  color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .button-class-2:hover {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+  }
+
+  :root[data-theme="light"] .button-class-2[aria-selected="true"]:hover,
+  :root[data-theme="light"] .button-class-2.button--selected:hover {
+    background: var(--blue-600);
+    border-color: transparent;
+    color: #ffffff;
+  }
 }
 
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
@@ -148,27 +177,6 @@
 
 :root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
   background: rgba(0, 0, 0, 0.08);
-}
-
-/* ─── Button Class 2 (tab buttons) ──────────────────────────────────────── */
-
-:root[data-theme="light"] .button-class-2 {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: transparent;
-}
-
-:root[data-theme="light"] .button-class-2[aria-selected="true"],
-:root[data-theme="light"] .button-class-2.button--selected {
-  background: var(--blue-600);
-  color: #ffffff;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :root[data-theme="light"] .button-class-2:hover {
-    background: rgba(0, 0, 0, 0.35);
-    border-color: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-  }
 }
 
 /* ─── Member Panel ───────────────────────────────────────────────────────── */
