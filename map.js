@@ -1840,6 +1840,7 @@ const MapModule = (function() {
   const CLUSTER_MAX_COUNT = 999;
   const CLUSTER_MIN_ZOOM = 0;
   const BUBBLE_LAYER_ID = 'post-bubbles';
+  const BUBBLE_LABEL_LAYER_ID = 'post-bubble-labels';
   const BUBBLE_ZOOM_MAX = 7;
   
   // Cluster state
@@ -1996,6 +1997,9 @@ const MapModule = (function() {
     }
     
     // Remove existing layers if present
+    if (map.getLayer(BUBBLE_LABEL_LAYER_ID)) {
+      map.removeLayer(BUBBLE_LABEL_LAYER_ID);
+    }
     if (map.getLayer(BUBBLE_LAYER_ID)) {
       map.removeLayer(BUBBLE_LAYER_ID);
     }
@@ -2021,17 +2025,40 @@ const MapModule = (function() {
       maxzoom: BUBBLE_ZOOM_MAX,
       paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'],
-          0, ['interpolate', ['linear'], ['get', 'count'], 1, 3, 1000, 8, 50000, 14],
-          6, ['interpolate', ['linear'], ['get', 'count'], 1, 6, 1000, 18, 50000, 30]
+          0, ['interpolate', ['linear'], ['get', 'count'], 1, 12, 20, 20, 100, 32, 500, 45],
+          6, ['interpolate', ['linear'], ['get', 'count'], 1, 18, 20, 30, 100, 48, 500, 65]
         ],
         'circle-color': ['interpolate', ['linear'], ['get', 'count'],
-          1,    '#4f8ef7',
-          500,  '#f7a24f',
-          5000, '#f74f4f'
+          1,   '#4f8ef7',
+          50,  '#f7a24f',
+          200, '#f74f4f'
         ],
-        'circle-opacity': 0.7,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': 'rgba(255,255,255,0.5)'
+        'circle-opacity': 0.75,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': 'rgba(255,255,255,0.6)'
+      }
+    });
+
+    // Count labels inside bubbles
+    map.addLayer({
+      id: BUBBLE_LABEL_LAYER_ID,
+      type: 'symbol',
+      source: CLUSTER_SOURCE_ID,
+      minzoom: CLUSTER_MIN_ZOOM,
+      maxzoom: BUBBLE_ZOOM_MAX,
+      layout: {
+        'text-field': ['case',
+          ['>=', ['get', 'count'], 1000],
+          ['concat', ['to-string', ['floor', ['/', ['get', 'count'], 1000]]], 'k'],
+          ['to-string', ['get', 'count']]
+        ],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 0, 11, 6, 14],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+      },
+      paint: {
+        'text-color': '#ffffff'
       }
     });
 
@@ -2056,7 +2083,15 @@ const MapModule = (function() {
       }
     });
     
-    // Bind click handler
+    // Bind click handlers for bubble layer
+    map.on('click', BUBBLE_LAYER_ID, handleClusterClick);
+    map.on('click', BUBBLE_LABEL_LAYER_ID, handleClusterClick);
+    map.on('mouseenter', BUBBLE_LAYER_ID, function() { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', BUBBLE_LAYER_ID, function() { map.getCanvas().style.cursor = 'grab'; });
+    map.on('mouseenter', BUBBLE_LABEL_LAYER_ID, function() { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', BUBBLE_LABEL_LAYER_ID, function() { map.getCanvas().style.cursor = 'grab'; });
+
+    // Bind click handler for balloon cluster layer
     map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
     map.on('mouseenter', CLUSTER_LAYER_ID, function() {
       // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
