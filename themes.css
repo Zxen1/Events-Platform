@@ -64,6 +64,7 @@
 
 /* button-class-2f reset button states */
 :root[data-theme="light"] .button-class-2f:not(:disabled) {
+  background: rgba(0, 0, 0, 0.45);
   color: #ffffff;
 }
 
