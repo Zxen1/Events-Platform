@@ -1472,6 +1472,7 @@ body {
   transition: opacity 0.3s ease;
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-bottom: 20px;
   touch-action: pan-y;
@@ -1506,7 +1507,6 @@ body {
 
 .welcome-user-guide {
   margin-top: 20px;
-  width: 100%;
 }
 
 .welcome-user-guide-header {
