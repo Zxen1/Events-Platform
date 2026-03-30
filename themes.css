@@ -59,6 +59,7 @@
 :root[data-theme="light"] .button-class-2 {
   background: rgba(0, 0, 0, 0.1);
   border-color: transparent;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 :root[data-theme="light"] .button-class-2[aria-selected="true"],
