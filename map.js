@@ -2029,14 +2029,14 @@ const MapModule = (function() {
           6, ['interpolate', ['linear'], ['get', 'count'], 1, 18, 20, 30, 100, 48, 500, 65]
         ],
         'circle-color': ['interpolate', ['linear'], ['get', 'count'],
-          0,   '#00cfff',
-          25,  '#00e676',
-          100, '#ffea00',
-          300, '#ff6d00'
+          0,   '#00e5ff',
+          25,  '#2979ff',
+          100, '#651fff',
+          300, '#aa00ff'
         ],
         'circle-opacity': 0.9,
         'circle-stroke-width': 2.5,
-        'circle-stroke-color': 'rgba(255,255,255,0.85)'
+        'circle-stroke-color': '#ffffff'
       }
     });
 
