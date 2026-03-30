@@ -1499,7 +1499,10 @@ if (empty($ogTitle)) {
 
         <!-- Guides Tab -->
         <section id="admin-tab-guides" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-guides-btn">
+          <div class="admin-guides-section-header">Admin Guide</div>
           <div id="admin-guides-manual-container" class="admin-guides-manual-container"></div>
+          <div class="admin-guides-section-header">User Guide</div>
+          <div id="user-guides-manual-container" class="admin-guides-manual-container"></div>
           <iframe id="admin-guides-iframe" title="Guides" data-src="sitemap.html" loading="lazy" style="width: 100%; height: 980px; border: 0; display: block; background: transparent;"></iframe>
         </section>
 

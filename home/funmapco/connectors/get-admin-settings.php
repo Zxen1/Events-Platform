@@ -208,6 +208,30 @@ try {
         }
     }
 
+    // Optionally include user guide if requested
+    $includeUserGuide = isset($_GET['include_user_guide']) && $_GET['include_user_guide'] === 'true';
+    if ($includeUserGuide) {
+        try {
+            $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
+            if ($stmt->rowCount() > 0) {
+                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description`, `sort_order` FROM `user_guide` ORDER BY `sort_order` ASC, `id` ASC');
+                $rows = $stmt->fetchAll();
+                $userGuideItems = [];
+                foreach ($rows as $row) {
+                    $userGuideItems[] = [
+                        'id'          => (int)$row['id'],
+                        'chapter'     => $row['chapter'],
+                        'title'       => $row['title'],
+                        'description' => $row['description'],
+                    ];
+                }
+                $response['user_guide'] = $userGuideItems;
+            }
+        } catch (Throwable $userGuideError) {
+            // If user guide fails, don't break the whole response
+        }
+    }
+
     // Lite mode: return only settings + system_images (skip baskets + dropdown_options for faster startup)
     $lite = isset($_GET['lite']) && ($_GET['lite'] === '1' || $_GET['lite'] === 'true' || $_GET['lite'] === 'yes');
     if ($lite) {

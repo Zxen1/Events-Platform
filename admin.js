@@ -802,38 +802,67 @@ const AdminModule = (function() {
         if (guidesTabInitialized) return;
         guidesTabInitialized = true;
 
-        // Load and render admin guide accordions first, then load iframe
-        var manualContainer = document.getElementById('admin-guides-manual-container');
+        var adminContainer = document.getElementById('admin-guides-manual-container');
+        var userContainer = document.getElementById('user-guides-manual-container');
 
-        fetch('/gateway.php?action=get-admin-settings&lite=1&include_admin_guide=true')
+        function loadIframe() {
+            var iframe = document.getElementById('admin-guides-iframe');
+            if (iframe) {
+                var src = iframe.getAttribute('data-src');
+                if (src) iframe.setAttribute('src', src);
+            }
+        }
+
+        var adminFetch = fetch('/gateway.php?action=get-admin-settings&lite=1&include_admin_guide=true')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (manualContainer && data.success && data.admin_guide && data.admin_guide.length) {
-                    renderAdminGuideAccordions(manualContainer, data.admin_guide);
-                }
-                // Load iframe after chapters are rendered
-                var iframe = document.getElementById('admin-guides-iframe');
-                if (iframe) {
-                    var src = iframe.getAttribute('data-src');
-                    if (src) iframe.setAttribute('src', src);
+                if (adminContainer && data.success && data.admin_guide && data.admin_guide.length) {
+                    renderAdminGuideAccordions(adminContainer, data.admin_guide);
+                } else if (adminContainer) {
+                    renderAdminGuideAccordions(adminContainer, []);
                 }
             })
             .catch(function(err) {
                 console.error('[Admin] Failed to load admin guide:', err);
-                // Load iframe even if admin guide fails
-                var iframe = document.getElementById('admin-guides-iframe');
-                if (iframe) {
-                    var src = iframe.getAttribute('data-src');
-                    if (src) iframe.setAttribute('src', src);
-                }
             });
+
+        var userFetch = fetch('/gateway.php?action=get-admin-settings&lite=1&include_user_guide=true')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (userContainer && data.success && data.user_guide && data.user_guide.length) {
+                    renderUserGuideAccordions(userContainer, data.user_guide);
+                } else if (userContainer) {
+                    renderUserGuideAccordions(userContainer, []);
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load user guide:', err);
+            });
+
+        Promise.all([adminFetch, userFetch]).then(loadIframe).catch(loadIframe);
     }
 
     var adminGuideLoaded = false;
+    var userGuideLoaded = false;
 
-    function captureAdminGuideState() {
+    var adminGuideCtx = {
+        containerId: 'admin-guides-manual-container',
+        compositeKey: 'admin_guide',
+        isLoaded: function() { return adminGuideLoaded; },
+        setLoaded: function() { adminGuideLoaded = true; },
+        getContainer: function() { return document.getElementById('admin-guides-manual-container'); }
+    };
+    var userGuideCtx = {
+        containerId: 'user-guides-manual-container',
+        compositeKey: 'user_guide',
+        isLoaded: function() { return userGuideLoaded; },
+        setLoaded: function() { userGuideLoaded = true; },
+        getContainer: function() { return document.getElementById('user-guides-manual-container'); }
+    };
+
+    function captureGuideState(containerId) {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
-        var manualContainer = document.getElementById('admin-guides-manual-container');
+        var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
         manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
@@ -855,14 +884,16 @@ const AdminModule = (function() {
         return state;
     }
 
-    function resetInstructionsToOriginal() {
-        var manualContainer = document.getElementById('admin-guides-manual-container');
+    function captureAdminGuideState() { return captureGuideState('admin-guides-manual-container'); }
+    function captureUserGuideState() { return captureGuideState('user-guides-manual-container'); }
+
+    function resetGuideToOriginal(containerId, registryKey) {
+        var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return;
-        var entry = fieldRegistry['admin_guide'];
+        var entry = fieldRegistry[registryKey];
         if (!entry || entry.type !== 'composite') return;
         var originalState = JSON.parse(entry.original);
 
-        // Restore chapter accordion order
         var addChapterBtn = manualContainer.querySelector('.admin-guides-manual-add-chapter');
         if (originalState.chapterOrder) {
             originalState.chapterOrder.forEach(function(chapterKey) {
@@ -871,19 +902,14 @@ const AdminModule = (function() {
             });
         }
 
-        // Restore chapter names and item order within each chapter
         manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
             var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
             var headerText = accordion.querySelector('.admin-guides-manual-accordion-header-text');
-
-            // Restore chapter name
             if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
                 nameInput.value = originalState.chapterNames[chapterKey];
                 if (headerText) headerText.textContent = originalState.chapterNames[chapterKey];
             }
-
-            // Restore item order
             var addItemBtn = accordion.querySelector('.admin-guides-manual-add-item');
             var originalItemOrder = originalState.itemOrder ? originalState.itemOrder[chapterKey] : null;
             if (originalItemOrder) {
@@ -892,8 +918,6 @@ const AdminModule = (function() {
                     if (itemEl) accordion.querySelector('.admin-guides-manual-accordion-body').insertBefore(itemEl, addItemBtn);
                 });
             }
-
-            // Restore item values
             accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
                 if (!originalState.items || !originalState.items[id]) return;
@@ -909,14 +933,16 @@ const AdminModule = (function() {
             });
         });
 
-        // Clear any pending deleted IDs
         delete manualContainer.dataset.deletedIds;
     }
 
-    function getModifiedAdminGuide() {
+    function resetInstructionsToOriginal() { resetGuideToOriginal('admin-guides-manual-container', 'admin_guide'); }
+    function resetUserGuideToOriginal() { resetGuideToOriginal('user-guides-manual-container', 'user_guide'); }
+
+    function getModifiedGuide(containerId) {
         var modified = [];
         var deletedIds = [];
-        var manualContainer = document.getElementById('admin-guides-manual-container');
+        var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return { items: modified, deleted_ids: deletedIds };
 
         var globalOrder = 0;
@@ -928,12 +954,10 @@ const AdminModule = (function() {
                 modified.push({ chapter: chapterName, is_new: true });
                 return;
             }
-            // Include placeholder row (empty title/description chapter-header row) with its sort_order slot
             if (accordion.dataset.chapterRowId) {
                 globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
-            // Collect existing items with sort_order
             accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
                 var textInput = itemEl.querySelector('.admin-message-text-input');
@@ -959,10 +983,12 @@ const AdminModule = (function() {
         return { items: modified, deleted_ids: deletedIds };
     }
 
-    function closeAllInstructionsEditPanels() {
-        var manualContainer = document.getElementById('admin-guides-manual-container');
-        if (!manualContainer) return;
-        manualContainer.querySelectorAll('.admin-guides-manual-accordion--editing').forEach(function(el) {
+    function getModifiedAdminGuide() { return getModifiedGuide('admin-guides-manual-container'); }
+    function getModifiedUserGuide() { return getModifiedGuide('user-guides-manual-container'); }
+
+    function closeAllInstructionsEditPanels(containerEl) {
+        if (!containerEl) return;
+        containerEl.querySelectorAll('.admin-guides-manual-accordion--editing').forEach(function(el) {
             el.classList.remove('admin-guides-manual-accordion--editing');
             syncInstructionsAccordionUi(el);
         });
@@ -983,7 +1009,7 @@ const AdminModule = (function() {
         if (body) body.classList.toggle('admin-guides-manual-accordion-body--hidden', !isOpen);
     }
 
-    function buildInstructionsAccordion(chapterData, container) {
+    function buildInstructionsAccordion(chapterData, container, ctx) {
         var accordion = document.createElement('div');
         accordion.className = 'admin-guides-manual-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
@@ -1032,7 +1058,7 @@ const AdminModule = (function() {
         nameInput.dataset.chapterKey = chapterData.chapter;
         nameInput.addEventListener('input', function() {
             headerText.textContent = nameInput.value || chapterData.chapter;
-            if (adminGuideLoaded) notifyFieldChange();
+            if (ctx.isLoaded()) notifyFieldChange();
         });
 
         nameRow.appendChild(nameInput);
@@ -1060,14 +1086,14 @@ const AdminModule = (function() {
                 }).then(function(confirmed) {
                     if (confirmed) {
                         accordion.parentNode.removeChild(accordion);
-                        if (adminGuideLoaded) notifyFieldChange();
+                        if (ctx.isLoaded()) notifyFieldChange();
                     }
                 });
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
                 accordion.parentNode.removeChild(accordion);
-                if (adminGuideLoaded) notifyFieldChange();
+                if (ctx.isLoaded()) notifyFieldChange();
             }
         });
 
@@ -1082,14 +1108,14 @@ const AdminModule = (function() {
         addItemBtn.textContent = '+ Add Item';
         addItemBtn.setAttribute('data-slack-anchor', '');
         addItemBtn.addEventListener('click', function(e) {
-            addItem(body, addItemBtn);
+            addItem(body, addItemBtn, ctx);
         });
 
         // Render existing items
         if (chapterData.items && chapterData.items.length) {
             chapterData.items.forEach(function(item) {
                 if (!item.title && !item.description) return;
-                var itemEl = createAdminGuideItem(item.title, item.description, body);
+                var itemEl = createGuideItem(item.title, item.description, body, ctx);
                 itemEl.dataset.itemId = item.id;
                 body.appendChild(itemEl);
             });
@@ -1125,7 +1151,7 @@ const AdminModule = (function() {
             accordion.draggable = false;
             var siblings = Array.from(container.querySelectorAll('.admin-guides-manual-accordion'));
             if (siblings.indexOf(accordion) !== chapterDragStartIndex) {
-                if (adminGuideLoaded) notifyFieldChange();
+                if (ctx.isLoaded()) notifyFieldChange();
             }
             chapterDragStartIndex = -1;
         });
@@ -1145,7 +1171,7 @@ const AdminModule = (function() {
 
         headerEditArea.addEventListener('click', function(e) {
             var isEditing = accordion.classList.contains('admin-guides-manual-accordion--editing');
-            closeAllInstructionsEditPanels();
+            closeAllInstructionsEditPanels(container);
             if (!isEditing) accordion.classList.add('admin-guides-manual-accordion--editing');
             syncInstructionsAccordionUi(accordion);
         });
@@ -1154,7 +1180,7 @@ const AdminModule = (function() {
             if (e.target.closest('.admin-guides-manual-accordion-header-editarea')) return;
             if (e.target.closest('.admin-guides-manual-accordion-header-drag')) return;
             if (!accordion.classList.contains('admin-guides-manual-accordion--editing')) {
-                closeAllInstructionsEditPanels();
+                closeAllInstructionsEditPanels(container);
             }
             accordion.classList.toggle('admin-guides-manual-accordion--open');
             syncInstructionsAccordionUi(accordion);
@@ -1163,10 +1189,9 @@ const AdminModule = (function() {
         return accordion;
     }
 
-    function renderAdminGuideAccordions(container, items) {
+    function renderGuideAccordions(container, items, ctx, captureStateFn) {
         container.innerHTML = '';
 
-        // Group rows by chapter
         var chapters = [];
         var chapterMap = {};
         items.forEach(function(item) {
@@ -1182,53 +1207,56 @@ const AdminModule = (function() {
         });
 
         chapters.forEach(function(chapterData) {
-            var accordion = buildInstructionsAccordion(chapterData, container);
+            var accordion = buildInstructionsAccordion(chapterData, container, ctx);
             container.appendChild(accordion);
             syncInstructionsAccordionUi(accordion);
         });
 
-        // Add Chapter button
         var addChapterBtn = document.createElement('div');
         addChapterBtn.className = 'admin-guides-manual-add-chapter';
         addChapterBtn.textContent = '+ Add Chapter';
         addChapterBtn.addEventListener('click', function(e) {
-            addChapter(container, addChapterBtn);
+            addChapter(container, addChapterBtn, ctx);
         });
         container.appendChild(addChapterBtn);
 
-        // Close edit panels on outside click
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.admin-guides-manual-accordion-editpanel') &&
                 !e.target.closest('.admin-guides-manual-accordion-header-editarea') &&
                 !e.target.closest('.admin-guides-manual-accordion-header')) {
-                closeAllInstructionsEditPanels();
+                closeAllInstructionsEditPanels(container);
             }
         });
 
-        registerComposite('admin_guide', captureAdminGuideState);
-        adminGuideLoaded = true;
+        registerComposite(ctx.compositeKey, captureStateFn);
+        ctx.setLoaded();
     }
 
-    function addItem(body, addItemBtn) {
-        var itemEl = createAdminGuideItem('', '', body);
+    function renderAdminGuideAccordions(container, items) {
+        renderGuideAccordions(container, items, adminGuideCtx, captureAdminGuideState);
+    }
+
+    function renderUserGuideAccordions(container, items) {
+        renderGuideAccordions(container, items, userGuideCtx, captureUserGuideState);
+    }
+
+    function addItem(body, addItemBtn, ctx) {
+        var itemEl = createGuideItem('', '', body, ctx);
         itemEl.dataset.isNew = '1';
         body.insertBefore(itemEl, addItemBtn);
-        // Open title for editing immediately
         var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
         if (titleDisplay) titleDisplay.click();
-        if (adminGuideLoaded) notifyFieldChange();
+        if (ctx.isLoaded()) notifyFieldChange();
     }
 
-    function trackDeletedItem(item) {
+    function trackDeletedItem(item, containerEl) {
         var id = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
-        if (!id) return;
-        var container = document.getElementById('admin-guides-manual-container');
-        if (!container) return;
-        var prev = container.dataset.deletedIds ? container.dataset.deletedIds + ',' : '';
-        container.dataset.deletedIds = prev + id;
+        if (!id || !containerEl) return;
+        var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
+        containerEl.dataset.deletedIds = prev + id;
     }
 
-    function createAdminGuideItem(title, description, body) {
+    function createGuideItem(title, description, body, ctx) {
         var item = document.createElement('div');
         item.className = 'admin-guides-manual-item';
         item.setAttribute('data-slack-anchor', '');
@@ -1265,7 +1293,7 @@ const AdminModule = (function() {
         });
         titleInput.addEventListener('input', function() {
             titleDisplay.textContent = titleInput.value || 'Click to add title';
-            if (adminGuideLoaded) notifyFieldChange();
+            if (ctx.isLoaded()) notifyFieldChange();
         });
         titleInput.addEventListener('blur', function() {
             titleDisplay.style.display = '';
@@ -1287,17 +1315,17 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
-                        trackDeletedItem(item);
+                        trackDeletedItem(item, ctx.getContainer());
                         item.parentNode.removeChild(item);
-                        if (adminGuideLoaded) notifyFieldChange();
+                        if (ctx.isLoaded()) notifyFieldChange();
                     }
                 });
                 return;
             }
             if (confirm('Delete "' + itemTitle + '"?')) {
-                trackDeletedItem(item);
+                trackDeletedItem(item, ctx.getContainer());
                 item.parentNode.removeChild(item);
-                if (adminGuideLoaded) notifyFieldChange();
+                if (ctx.isLoaded()) notifyFieldChange();
             }
         });
 
@@ -1326,7 +1354,7 @@ const AdminModule = (function() {
         });
         textInput.addEventListener('input', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
-            if (adminGuideLoaded) notifyFieldChange();
+            if (ctx.isLoaded()) notifyFieldChange();
         });
         textInput.addEventListener('blur', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
@@ -1363,7 +1391,7 @@ const AdminModule = (function() {
                 item.draggable = false;
                 var siblings = Array.from(body.querySelectorAll('.admin-guides-manual-item'));
                 if (siblings.indexOf(item) !== itemDragStartIndex) {
-                    if (adminGuideLoaded) notifyFieldChange();
+                    if (ctx.isLoaded()) notifyFieldChange();
                 }
                 itemDragStartIndex = -1;
             });
@@ -1385,16 +1413,16 @@ const AdminModule = (function() {
         return item;
     }
 
-    function addChapter(container, addChapterBtn) {
+    function addChapter(container, addChapterBtn, ctx) {
         var newChapter = { chapter: 'New Chapter', items: [] };
-        var accordion = buildInstructionsAccordion(newChapter, container);
+        var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guides-manual-accordion--editing');
         syncInstructionsAccordionUi(accordion);
         var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
         if (nameInput) { nameInput.select(); nameInput.focus(); }
-        if (adminGuideLoaded) notifyFieldChange();
+        if (ctx.isLoaded()) notifyFieldChange();
     }
 
     /* --------------------------------------------------------------------------
@@ -1510,7 +1538,7 @@ const AdminModule = (function() {
             );
         }
         
-        // Save modified admin guide (uses save-admin-settings endpoint)
+        // Save modified admin guide
         var adminGuidePayload = getModifiedAdminGuide();
         if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_ids.length > 0) {
             savePromises.push(
@@ -1521,25 +1549,45 @@ const AdminModule = (function() {
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
-                    if (!data.success) {
-                        throw new Error(data.message || 'Failed to save admin guide');
-                    }
-                    var manualContainer = document.getElementById('admin-guides-manual-container');
-                    if (manualContainer) {
-                        // Clear is_new on newly saved items and assign their real IDs
+                    if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
+                    var c = document.getElementById('admin-guides-manual-container');
+                    if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = manualContainer.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
+                            var newItems = c.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
-                                if (newItems[i]) {
-                                    newItems[i].dataset.isNew = '';
-                                    newItems[i].dataset.itemId = newId;
-                                }
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
-                        // Clear deleted IDs tracker
-                        delete manualContainer.dataset.deletedIds;
+                        delete c.dataset.deletedIds;
                     }
                     updateCompositeBaseline('admin_guide');
+                })
+            );
+        }
+
+        // Save modified user guide
+        var userGuidePayload = getModifiedUserGuide();
+        if (userGuidePayload.items.length > 0 || userGuidePayload.deleted_ids.length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_guide: userGuidePayload.items, deleted_user_guide_ids: userGuidePayload.deleted_ids })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) throw new Error(data.message || 'Failed to save user guide');
+                    var c = document.getElementById('user-guides-manual-container');
+                    if (c) {
+                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                            var newItems = c.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
+                            data.new_item_ids.forEach(function(newId, i) {
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
+                            });
+                        }
+                        delete c.dataset.deletedIds;
+                    }
+                    updateCompositeBaseline('user_guide');
                 })
             );
         }
@@ -1753,6 +1801,7 @@ const AdminModule = (function() {
         resetCheckoutOptionsToOriginal();
         resetMapTabToOriginal();
         resetInstructionsToOriginal();
+        resetUserGuideToOriginal();
         
         // Reset field registry values (current = original) instead of clearing
         // This preserves registrations so fields don't need to re-register

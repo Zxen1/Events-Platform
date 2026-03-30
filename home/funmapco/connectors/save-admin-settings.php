@@ -112,9 +112,10 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, system_images, and admin_guide from settings
+    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, checkout_coupon, system_images, admin_guide, and user_guide from settings
     $messages = null;
     $admin_guide = null;
+    $user_guide = null;
     $fieldsetTooltips = null;
     $fieldTooltips = null;
     $checkoutOptions = null;
@@ -133,6 +134,15 @@ try {
     if (isset($data['deleted_admin_guide_ids']) && is_array($data['deleted_admin_guide_ids'])) {
         $deletedInstructionIds = $data['deleted_admin_guide_ids'];
         unset($settings['deleted_admin_guide_ids']);
+    }
+    if (isset($data['user_guide']) && is_array($data['user_guide'])) {
+        $user_guide = $data['user_guide'];
+        unset($settings['user_guide']);
+    }
+    $deletedUserGuideIds = null;
+    if (isset($data['deleted_user_guide_ids']) && is_array($data['deleted_user_guide_ids'])) {
+        $deletedUserGuideIds = $data['deleted_user_guide_ids'];
+        unset($settings['deleted_user_guide_ids']);
     }
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
@@ -642,6 +652,53 @@ try {
         }
     }
 
+    // Save user_guide if provided
+    $user_guideUpdated = 0;
+    $userGuideNewItemIds = [];
+    $userTableExists = null;
+    if (($user_guide !== null && !empty($user_guide)) || ($deletedUserGuideIds !== null && !empty($deletedUserGuideIds))) {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
+        $userTableExists = $stmt->rowCount() > 0;
+    }
+    if ($userTableExists && $deletedUserGuideIds !== null && !empty($deletedUserGuideIds)) {
+        $deleteStmt = $pdo->prepare('DELETE FROM `user_guide` WHERE `id` = :id');
+        foreach ($deletedUserGuideIds as $delId) {
+            $deleteStmt->execute([':id' => (int)$delId]);
+        }
+    }
+    if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
+        $updateStmt = $pdo->prepare('
+            UPDATE `user_guide`
+            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            WHERE `id` = :id
+        ');
+        $insertStmt = $pdo->prepare('
+            INSERT INTO `user_guide` (`chapter`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :title, :description, :sort_order)
+        ');
+        foreach ($user_guide as $item) {
+            if (!empty($item['is_new'])) {
+                $insertStmt->execute([
+                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                $userGuideNewItemIds[] = (int)$pdo->lastInsertId();
+                $user_guideUpdated++;
+            } elseif (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => (string)($item['chapter'] ?? ''),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $user_guideUpdated++;
+            }
+        }
+    }
+
     $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
@@ -683,6 +740,13 @@ try {
     }
     if (!empty($newItemIds)) {
         $response['new_item_ids'] = $newItemIds;
+    }
+
+    if ($user_guideUpdated > 0) {
+        $response['user_guide_updated'] = $user_guideUpdated;
+    }
+    if (!empty($userGuideNewItemIds)) {
+        $response['new_item_ids'] = $userGuideNewItemIds;
     }
 
     echo json_encode($response);
