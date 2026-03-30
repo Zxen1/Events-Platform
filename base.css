@@ -1504,6 +1504,84 @@ body {
   flex-wrap: nowrap;
 }
 
+.welcome-user-guide {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.welcome-user-guide-header {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.welcome-user-guide-chapter {
+  margin-bottom: 6px;
+}
+
+.welcome-user-guide-chapter-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  padding: 10px 0;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.welcome-user-guide-chapter-header::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid rgba(255,255,255,0.5);
+  border-bottom: 2px solid rgba(255,255,255,0.5);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.welcome-user-guide-chapter-header--open::after {
+  transform: rotate(-135deg);
+}
+
+.welcome-user-guide-chapter-body {
+  padding: 6px 0;
+}
+
+.welcome-user-guide-chapter-body--hidden {
+  display: none;
+}
+
+.welcome-user-guide-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.welcome-user-guide-item:last-child {
+  border-bottom: 0;
+}
+
+.welcome-user-guide-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 6px;
+}
+
+.welcome-user-guide-item-description {
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.5;
+}
+
 /* ============================================================================
    TERMS MODAL
    ============================================================================ */

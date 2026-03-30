@@ -6219,6 +6219,8 @@ const WelcomeModalComponent = (function() {
     var messageElement = null;
     var titleElement = null;
     var contentElement = null;
+    var userGuideElement = null;
+    var userGuideLoaded = false;
     var isOpen = false;
     
     /**
@@ -6243,6 +6245,7 @@ const WelcomeModalComponent = (function() {
                 '<div class="welcome-modal-message">' +
                 '<div class="welcome-modal-message-title"></div>' +
                 '<div class="welcome-modal-message-content"></div>' +
+                '<div class="welcome-user-guide"></div>' +
                 '</div>' +
                 '</div>' +
                 '</div>';
@@ -6255,6 +6258,7 @@ const WelcomeModalComponent = (function() {
         messageElement = modal.querySelector('.welcome-modal-message');
         titleElement = modal.querySelector('.welcome-modal-message-title');
         contentElement = modal.querySelector('.welcome-modal-message-content');
+        userGuideElement = modal.querySelector('.welcome-user-guide');
         
         // Create map controls using MapControlRowComponent if available
         if (controlsElement && window.MapControlRowComponent) {
@@ -6313,6 +6317,88 @@ const WelcomeModalComponent = (function() {
         
         // Prevent background scrolling
         document.body.style.overflow = 'hidden';
+
+        // Lazy-load user guide on first open
+        if (!userGuideLoaded && userGuideElement) {
+            userGuideLoaded = true;
+            fetch('/gateway.php?action=get-admin-settings&lite=1&include_user_guide=true')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success && data.user_guide && data.user_guide.length) {
+                        renderUserGuide(data.user_guide);
+                    }
+                })
+                .catch(function(err) {
+                    console.error('[WelcomeModal] Failed to load user guide:', err);
+                });
+        }
+    }
+
+    function renderUserGuide(items) {
+        if (!userGuideElement) return;
+        userGuideElement.innerHTML = '';
+
+        var header = document.createElement('div');
+        header.className = 'welcome-user-guide-header';
+        header.textContent = 'User Guide';
+        userGuideElement.appendChild(header);
+
+        // Group by chapter
+        var chapters = [];
+        var chapterMap = {};
+        items.forEach(function(item) {
+            if (!chapterMap[item.chapter]) {
+                chapterMap[item.chapter] = { chapter: item.chapter, items: [] };
+                chapters.push(chapterMap[item.chapter]);
+            }
+            if (item.title || item.description) {
+                chapterMap[item.chapter].items.push(item);
+            }
+        });
+
+        chapters.forEach(function(chapterData) {
+            if (!chapterData.items.length) return;
+
+            var chapter = document.createElement('div');
+            chapter.className = 'welcome-user-guide-chapter';
+
+            var chapterHeader = document.createElement('div');
+            chapterHeader.className = 'welcome-user-guide-chapter-header';
+            chapterHeader.textContent = chapterData.chapter;
+
+            var chapterBody = document.createElement('div');
+            chapterBody.className = 'welcome-user-guide-chapter-body welcome-user-guide-chapter-body--hidden';
+
+            chapterData.items.forEach(function(item) {
+                var itemEl = document.createElement('div');
+                itemEl.className = 'welcome-user-guide-item';
+
+                var itemTitle = document.createElement('div');
+                itemTitle.className = 'welcome-user-guide-item-title';
+                itemTitle.textContent = item.title;
+
+                itemEl.appendChild(itemTitle);
+
+                if (item.description) {
+                    var itemDesc = document.createElement('div');
+                    itemDesc.className = 'welcome-user-guide-item-description';
+                    itemDesc.innerHTML = item.description;
+                    itemEl.appendChild(itemDesc);
+                }
+
+                chapterBody.appendChild(itemEl);
+            });
+
+            chapterHeader.addEventListener('click', function() {
+                var isOpen = !chapterBody.classList.contains('welcome-user-guide-chapter-body--hidden');
+                chapterBody.classList.toggle('welcome-user-guide-chapter-body--hidden', isOpen);
+                chapterHeader.classList.toggle('welcome-user-guide-chapter-header--open', !isOpen);
+            });
+
+            chapter.appendChild(chapterHeader);
+            chapter.appendChild(chapterBody);
+            userGuideElement.appendChild(chapter);
+        });
     }
     
     /**
