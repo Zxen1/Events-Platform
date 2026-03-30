@@ -65,82 +65,7 @@ const PostModule = (function() {
   // Excluded from animation: fromMap opens, marquee opens, deeplink opens
   // ─────────────────────────────────────────────────────────────────────────────
   var _POST_ANIMATE  = true;
-  var _POST_ANIM_DUR = 0.3;
-
-  function getEffectiveThemePresetKey(themeActive) {
-    var active = themeActive || 'theme_auto';
-    if (active === 'theme_auto') {
-      if (!window.matchMedia) {
-        throw new Error('[Post] window.matchMedia is required for theme_auto.');
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme_dark' : 'theme_light';
-    }
-    if (active === 'theme_light' || active === 'theme_dark') {
-      return active;
-    }
-    throw new Error('[Post] Invalid theme_active "' + String(active) + '".');
-  }
-
-  function getThemePresetFromSettings() {
-    var settings = (window.App && typeof App.getState === 'function') ? App.getState('settings') : null;
-    if (!settings || settings.theme_presets === undefined) {
-      throw new Error('[Post] settings.theme_presets must be loaded before resolving post interaction settings.');
-    }
-    var presets = settings.theme_presets;
-    if (!presets || typeof presets !== 'object' || Array.isArray(presets)) {
-      throw new Error('[Post] settings.theme_presets must be a JSON object.');
-    }
-    var presetKey = getEffectiveThemePresetKey(localStorage.getItem('theme_active') || 'theme_auto');
-    var preset = presets[presetKey];
-    if (!preset) {
-      throw new Error('[Post] Missing theme preset "' + String(presetKey) + '".');
-    }
-    return preset;
-  }
-
-  function getPostInteractionMode() {
-    var mode = null;
-    if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
-      var user = MemberModule.getCurrentUser();
-      if (user && user.post_interaction) {
-        mode = String(user.post_interaction).trim().toLowerCase();
-      }
-    }
-    if (!mode) {
-      var stored = localStorage.getItem('post_interaction');
-      if (stored) {
-        mode = String(stored).trim().toLowerCase();
-      }
-    }
-    if (!mode) {
-      var preset = getThemePresetFromSettings();
-      if (preset.post_interaction === undefined) {
-        throw new Error('[Post] Missing post_interaction in theme preset.');
-      }
-      mode = String(preset.post_interaction).trim().toLowerCase();
-    }
-    if (mode === 'instant' || mode === 'fast' || mode === 'smooth' || mode === 'slow') return mode;
-    throw new Error('[Post] No valid post interaction mode found in theme settings.');
-  }
-
-  function applyPostInteractionSettings() {
-    var mode = getPostInteractionMode();
-    if (mode === 'instant') {
-      _POST_ANIMATE = false;
-      _POST_ANIM_DUR = 0.3;
-      return;
-    }
-    _POST_ANIMATE = true;
-    if (mode === 'fast') {
-      _POST_ANIM_DUR = 0.3;
-      return;
-    }
-    if (mode === 'smooth') {
-      _POST_ANIM_DUR = 0.6;
-      return;
-    }
-    _POST_ANIM_DUR = 0.9;
-  }
+  var _POST_ANIM_DUR = 2.0;
 
   var postPanelEl = null;
   var postPanelContentEl = null;
@@ -195,14 +120,6 @@ const PostModule = (function() {
     // Capture initial mode (HeaderModule already ran, but PostModule may have missed the event).
     currentMode = inferCurrentModeFromHeader() || 'map';
     applyMode(currentMode);
-
-    // Theme presets load asynchronously during startup.
-    // Apply post interaction settings only after startup settings are ready.
-    if (window.App && typeof App.whenStartupSettingsReady === 'function') {
-      App.whenStartupSettingsReady().then(function() {
-        applyPostInteractionSettings();
-      });
-    }
 
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
@@ -3153,7 +3070,6 @@ const PostModule = (function() {
    * @param {Object} options - { fromRecent: boolean, originEl: HTMLElement, postMapCardId: string }
    */
   function openPost(post, options) {
-    applyPostInteractionSettings();
     options = options || {};
     var fromRecent = options.fromRecent || false;
     var originEl = options.originEl || null;
@@ -3308,7 +3224,7 @@ const PostModule = (function() {
             slot.appendChild(_posteditorExitClone);
             slot.__exitClone = _posteditorExitClone;
             _posteditorExitClone.getBoundingClientRect();
-            _posteditorExitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            _posteditorExitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _posteditorExitClone.style.transform = 'translateY(-' + _posteditorExitRect.height + 'px)';
             setTimeout(function() {
               if (_posteditorExitClone.parentNode) _posteditorExitClone.parentNode.removeChild(_posteditorExitClone);
@@ -3349,10 +3265,10 @@ const PostModule = (function() {
             slot.__animDetail = detail;
             slot.__animSiblings = _posteditorSiblings;
             slot.getBoundingClientRect();
-            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             detail.style.transform = 'translateY(0)';
             for (var _peoi2 = 0; _peoi2 < _posteditorSiblings.length; _peoi2++) {
-              _posteditorSiblings[_peoi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+              _posteditorSiblings[_peoi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               _posteditorSiblings[_peoi2].style.transform = 'translateY(0)';
             }
             slot.__animTimer = setTimeout(function() {
@@ -3405,7 +3321,7 @@ const PostModule = (function() {
           slot.appendChild(_exitClone);
           slot.__exitClone = _exitClone;
           _exitClone.getBoundingClientRect(); // force reflow
-          _exitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+          _exitClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _exitClone.style.transform = 'translateY(-' + _exitRect.height + 'px)';
           setTimeout(function() {
             if (_exitClone.parentNode) _exitClone.parentNode.removeChild(_exitClone);
@@ -3465,10 +3381,10 @@ const PostModule = (function() {
             slot.__animDetail = detail;
             slot.__animSiblings = _sfSiblings;
             slot.getBoundingClientRect(); // force reflow
-            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             detail.style.transform = 'translateY(0)';
             for (var _sfi2 = 0; _sfi2 < _sfSiblings.length; _sfi2++) {
-              _sfSiblings[_sfi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+              _sfSiblings[_sfi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
               _sfSiblings[_sfi2].style.transform = 'translateY(0)';
             }
             slot.__animTimer = setTimeout(function() {
@@ -3512,10 +3428,10 @@ const PostModule = (function() {
           slot.__animDetail = detail;
           slot.__animSiblings = _openSiblings;
           slot.getBoundingClientRect(); // force reflow
-          detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+          detail.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           detail.style.transform = 'translateY(0)';
           for (var _osi2 = 0; _osi2 < _openSiblings.length; _osi2++) {
-            _openSiblings[_osi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            _openSiblings[_osi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _openSiblings[_osi2].style.transform = 'translateY(0)';
           }
           slot.__animTimer = setTimeout(function() {
@@ -4061,8 +3977,6 @@ const PostModule = (function() {
     // Store the ordered location list used by the UI so event handlers use the same index mapping.
     wrap.__postLocationList = locationList;
 
-    var isStorefrontMode = !!(storefrontPosts && storefrontPosts.length > 1);
-
     // Location wallpaper integration (reuses LocationWallpaperComponent pattern):
     // - Only activates when post is expanded (handled in setupPostDetailEvents)
     // - Uses lat/lng from first map card (already provided by API)
@@ -4305,9 +4219,8 @@ const PostModule = (function() {
     contentWrap.className = 'component-locationwallpaper-content';
     wrap.appendChild(contentWrap);
 
-    // Hidden lat/lng inputs for LocationWallpaperComponent to read.
-    // Storefront shell should not own wallpaper; storefront sub-post containers do.
-    if (!isStorefrontMode && lat !== null && lng !== null) {
+    // Hidden lat/lng inputs for LocationWallpaperComponent to read
+    if (lat !== null && lng !== null) {
       wrap.classList.add('component-locationwallpaper-container');
       
       // Store post ID for missing wallpaper flagging
@@ -4612,14 +4525,6 @@ const PostModule = (function() {
 
           var outgoingSub = _keptSub;
           var outgoingTrack = outgoingSub ? outgoingSub.firstChild : null;
-          function _destroyStorefrontWallpaper(subEl) {
-            if (!subEl) return;
-            try {
-              if (subEl.__locationWallpaperCtrl && typeof subEl.__locationWallpaperCtrl.destroy === 'function') {
-                subEl.__locationWallpaperCtrl.destroy();
-              }
-            } catch (_eSfWallpaperDestroy) {}
-          }
 
           var incomingSub = document.createElement('div');
           incomingSub.dataset.sfSwapId = String(selectedPost.id);
@@ -4638,11 +4543,6 @@ const PostModule = (function() {
             if (contentEl.__sfSwapGen !== _swapGen) return;
             if (!fullPost) { incomingSub.remove(); return; }
             if (!incomingSub.parentNode) return;
-
-            // Storefront wallpaper must live inside the active sub-post container,
-            // not on the outer storefront shell.
-            incomingSub.classList.add('component-locationwallpaper-container');
-            incomingTrack.classList.add('component-locationwallpaper-content');
 
             if (fullPost.subcategory_color) {
               var _sfHex = fullPost.subcategory_color.replace('#', '');
@@ -4698,43 +4598,9 @@ const PostModule = (function() {
             }
             if (postBody) incomingTrack.appendChild(postBody);
 
-            try {
-              var _sfLoc = (fullPost.map_cards && fullPost.map_cards[mcIdx]) || (fullPost.map_cards && fullPost.map_cards[0]) || null;
-              var _sfLat = _sfLoc && _sfLoc.latitude !== undefined && _sfLoc.latitude !== null ? Number(_sfLoc.latitude) : null;
-              var _sfLng = _sfLoc && _sfLoc.longitude !== undefined && _sfLoc.longitude !== null ? Number(_sfLoc.longitude) : null;
-              if (Number.isFinite(_sfLat) && Number.isFinite(_sfLng)) {
-                var _sfLatEl = document.createElement('input');
-                _sfLatEl.type = 'hidden';
-                _sfLatEl.className = 'fieldset-lat';
-                _sfLatEl.value = String(_sfLat);
-                var _sfLngEl = document.createElement('input');
-                _sfLngEl.type = 'hidden';
-                _sfLngEl.className = 'fieldset-lng';
-                _sfLngEl.value = String(_sfLng);
-                incomingSub.appendChild(_sfLatEl);
-                incomingSub.appendChild(_sfLngEl);
-              } else {
-                incomingSub.classList.remove('component-locationwallpaper-container');
-              }
-              if (fullPost && fullPost.id) incomingSub.dataset.postId = String(fullPost.id);
-              if (_sfLoc && _sfLoc.location_type) incomingSub.dataset.locationType = _sfLoc.location_type;
-
-              if (incomingSub.classList.contains('component-locationwallpaper-container') &&
-                  window.LocationWallpaperComponent &&
-                  typeof LocationWallpaperComponent.install === 'function' &&
-                  typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-                incomingSub.setAttribute('data-active', 'true');
-                LocationWallpaperComponent.install(incomingSub);
-                LocationWallpaperComponent.handleActiveContainerChange(incomingSub, incomingSub);
-              }
-            } catch (_eSfWallpaperSetup) {}
-
             if (!_sfFirstLoadFired && sfOnFirstLoadRef && typeof sfOnFirstLoadRef.fn === 'function') {
               _sfFirstLoadFired = true;
-              if (outgoingSub && outgoingSub.parentNode) {
-                _destroyStorefrontWallpaper(outgoingSub);
-                outgoingSub.remove();
-              }
+              if (outgoingSub && outgoingSub.parentNode) outgoingSub.remove();
               sfOnFirstLoadRef.fn();
             } else if (outgoingSub && outgoingSub.parentNode && outgoingTrack && _POST_ANIMATE) {
               // ── STOREFRONT SWAP ANIMATION ──────────────────────────────────────
@@ -4788,7 +4654,7 @@ const PostModule = (function() {
 
               contentEl.getBoundingClientRect();
 
-              var _swapTrans = 'transform ' + _POST_ANIM_DUR + 's ease';
+              var _swapTrans = 'transform ' + _POST_ANIM_DUR + 's linear';
 
               // Incoming: content slides down into view
               incomingTrack.style.transition = _swapTrans;
@@ -4810,7 +4676,6 @@ const PostModule = (function() {
               }
 
               contentEl.__sfSwapTimer = setTimeout(function() {
-                _destroyStorefrontWallpaper(outgoingSub);
                 outgoingSub.remove();
                 incomingSub.style.overflow = '';
                 incomingTrack.style.transition = '';
@@ -4824,7 +4689,6 @@ const PostModule = (function() {
               }, Math.round(_POST_ANIM_DUR * 1000) + 20);
               // ── END STOREFRONT SWAP ANIMATION ──────────────────────────────────
             } else if (outgoingSub && outgoingSub.parentNode) {
-              _destroyStorefrontWallpaper(outgoingSub);
               outgoingSub.remove();
             }
 
@@ -5430,7 +5294,6 @@ const PostModule = (function() {
       });
 
       function _animateCollapse() {
-        applyPostInteractionSettings();
         // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
         var _realWrap = descEl.closest('.post') || wrap;
         var _bodyEl   = _realWrap.querySelector('.post-body');
@@ -5492,9 +5355,9 @@ const PostModule = (function() {
           }
 
           // Fade out expanded content over full 1s — content stays visible throughout the animation
-          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's ease'; _infoEl.style.opacity   = '0'; }
-          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's ease'; _memberEl.style.opacity = '0'; }
-          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's ease';
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '0'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '0'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
           descEl.style.opacity    = '0';
 
           // Clip body so empty space below the rising image doesn't show
@@ -5506,10 +5369,10 @@ const PostModule = (function() {
           // Animate image container, thumbs, and siblings UP — all locked to same duration.
           // Container travels _imgOffset, thumbs travel an additional _thumbsOffset within the container,
           // so thumbs total screen travel = _imgOffset + _thumbsOffset = _delta = same as siblings.
-          if (_imgEl) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
-          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
+          if (_imgEl) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(-' + _imgOffset + 'px)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(-' + _thumbsOffset + 'px)'; }
           for (var _ei = 0; _ei < _expSiblings.length; _ei++) {
-            _expSiblings[_ei].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            _expSiblings[_ei].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _expSiblings[_ei].style.transform  = 'translateY(-' + _delta + 'px)';
           }
 
@@ -5530,7 +5393,7 @@ const PostModule = (function() {
             descEl.style.opacity    = '0';
             descEl.style.transition = 'none';
             descEl.getBoundingClientRect();
-            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's ease';
+            descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
             descEl.style.opacity    = '1';
             setTimeout(function() { descEl.style.opacity = ''; descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 200) + 20);
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
@@ -5544,7 +5407,6 @@ const PostModule = (function() {
       }
 
       function _animateExpand() {
-        applyPostInteractionSettings();
         // For storefront sub-posts, wrap is a detached tempDetail node; resolve the real DOM wrap.
         var _realWrap = descEl.closest('.post') || wrap;
         var _bodyEl   = _realWrap.querySelector('.post-body');
@@ -5558,7 +5420,7 @@ const PostModule = (function() {
         var _bodyFirstH   = _bodyEl ? _bodyEl.offsetHeight : 0;
 
         // Fade out the current description before swapping content
-        descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's ease';
+        descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.2) + 's linear';
         descEl.style.opacity    = '0';
 
         // DOM swap
@@ -5624,14 +5486,14 @@ const PostModule = (function() {
           if (_imgEl) _imgEl.getBoundingClientRect();
 
           // Animate everything to final positions over 1s — all locked to same duration
-          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease'; _imgEl.style.transform = 'translateY(0)'; }
-          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease'; _thumbsEl.style.transform = 'translateY(0)'; }
-          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's ease'; _infoEl.style.opacity   = '1'; }
-          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's ease'; _memberEl.style.opacity = '1'; }
-          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's ease';
+          if (_imgEl && _imgOffset !== 0) { _imgEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _imgEl.style.transform = 'translateY(0)'; }
+          if (_thumbsOffset > 0) { _thumbsEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear'; _thumbsEl.style.transform = 'translateY(0)'; }
+          if (_infoEl)   { _infoEl.style.transition   = 'opacity ' + _POST_ANIM_DUR + 's linear'; _infoEl.style.opacity   = '1'; }
+          if (_memberEl) { _memberEl.style.transition  = 'opacity ' + _POST_ANIM_DUR + 's linear'; _memberEl.style.opacity = '1'; }
+          descEl.style.transition = 'opacity ' + _POST_ANIM_DUR + 's linear';
           descEl.style.opacity    = '1';
           for (var _ei2 = 0; _ei2 < _expSiblings.length; _ei2++) {
-            _expSiblings[_ei2].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+            _expSiblings[_ei2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
             _expSiblings[_ei2].style.transform  = 'translateY(0)';
           }
 
@@ -5649,7 +5511,7 @@ const PostModule = (function() {
           }, Math.round(_POST_ANIM_DUR * 1000) + 20);
         } else {
           // No height change — just restore description opacity
-          descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.3) + 's ease';
+          descEl.style.transition = 'opacity ' + (_POST_ANIM_DUR * 0.3) + 's linear';
           descEl.style.opacity    = '1';
           setTimeout(function() { descEl.style.transition = ''; }, Math.round(_POST_ANIM_DUR * 300) + 20);
         }
@@ -5714,7 +5576,6 @@ const PostModule = (function() {
    * @param {string|number} postId - Post ID
    */
   function closePost(postId) {
-    applyPostInteractionSettings();
     var openPostEl = document.querySelector('.post[data-id="' + postId + '"]');
     if (!openPostEl) return;
 
@@ -5837,14 +5698,14 @@ const PostModule = (function() {
         slot.getBoundingClientRect(); // force reflow
 
         var _closeOffset = _closeStartH - _cardH;
-        openPostEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+        openPostEl.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
         openPostEl.style.transform = 'translateY(-' + _closeOffset + 'px)';
         for (var _csi2 = 0; _csi2 < _closeSiblings.length; _csi2++) {
-          _closeSiblings[_csi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+          _closeSiblings[_csi2].style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _closeSiblings[_csi2].style.transform = 'translateY(-' + _closeOffset + 'px)';
         }
         if (_cardEnterClone) {
-          _cardEnterClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's ease';
+          _cardEnterClone.style.transition = 'transform ' + _POST_ANIM_DUR + 's linear';
           _cardEnterClone.style.transform = 'translateY(0)';
         }
 

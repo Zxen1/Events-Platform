@@ -6373,7 +6373,15 @@ const WelcomeModalComponent = (function() {
 
             var chapterHeader = document.createElement('div');
             chapterHeader.className = 'welcome-user-guide-chapter-header';
-            chapterHeader.textContent = chapterData.chapter;
+
+            var chapterTitle = document.createElement('span');
+            chapterTitle.textContent = chapterData.chapter;
+
+            var chapterArrow = document.createElement('span');
+            chapterArrow.className = 'welcome-user-guide-chapter-arrow';
+
+            chapterHeader.appendChild(chapterTitle);
+            chapterHeader.appendChild(chapterArrow);
 
             var chapterBody = document.createElement('div');
             chapterBody.className = 'welcome-user-guide-chapter-body welcome-user-guide-chapter-body--hidden';
@@ -6401,7 +6409,7 @@ const WelcomeModalComponent = (function() {
             chapterHeader.addEventListener('click', function() {
                 var isOpen = !chapterBody.classList.contains('welcome-user-guide-chapter-body--hidden');
                 chapterBody.classList.toggle('welcome-user-guide-chapter-body--hidden', isOpen);
-                chapterHeader.classList.toggle('welcome-user-guide-chapter-header--open', !isOpen);
+                chapterArrow.classList.toggle('welcome-user-guide-chapter-arrow--open', !isOpen);
             });
 
             chapter.appendChild(chapterHeader);
