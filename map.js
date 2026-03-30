@@ -2034,7 +2034,7 @@ const MapModule = (function() {
           100, '#651fff',
           300, '#aa00ff'
         ],
-        'circle-opacity': 0.9,
+        'circle-opacity': 1,
         'circle-stroke-width': 2.5,
         'circle-stroke-color': '#ffffff',
         'circle-stroke-opacity': 1
