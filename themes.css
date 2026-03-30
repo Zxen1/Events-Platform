@@ -134,6 +134,29 @@
   }
 }
 
+/* ─── Inputs ────────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .input-class-1 {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: #ccc;
+  color: #222;
+  caret-color: #222;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .input-class-1:hover {
+    border-color: #aaa;
+  }
+}
+
+:root[data-theme="light"] .input-class-1:focus {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+:root[data-theme="light"] .input-class-1::placeholder {
+  color: #999;
+}
+
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
