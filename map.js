@@ -2036,7 +2036,8 @@ const MapModule = (function() {
         ],
         'circle-opacity': 0.9,
         'circle-stroke-width': 2.5,
-        'circle-stroke-color': '#ffffff'
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-opacity': 1
       }
     });
 
