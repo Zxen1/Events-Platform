@@ -225,6 +225,7 @@
 :root[data-theme="light"] .member-panel-header,
 :root[data-theme="light"] .member-panel-body {
   background: #ffffff;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme="light"] .member-panel-contents {
@@ -232,7 +233,7 @@
 }
 
 :root[data-theme="light"] .member-panel-header-title {
-  color: rgba(0, 0, 0, 0.85);
+  color: rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme="light"] .member-panel-actions-icon-btn-icon {
