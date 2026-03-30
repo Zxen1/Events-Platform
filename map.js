@@ -2029,9 +2029,10 @@ const MapModule = (function() {
           6, ['interpolate', ['linear'], ['get', 'count'], 1, 18, 20, 30, 100, 48, 500, 65]
         ],
         'circle-color': ['interpolate', ['linear'], ['get', 'count'],
-          1,   '#1e90ff',
-          50,  '#ff8c00',
-          200, '#ff1744'
+          0,   '#00cfff',
+          25,  '#00e676',
+          100, '#ffea00',
+          300, '#ff6d00'
         ],
         'circle-opacity': 0.9,
         'circle-stroke-width': 2.5,
