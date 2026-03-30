@@ -685,6 +685,17 @@ const App = (function() {
           }
           if (showWelcome) {
             WelcomeModalComponent.open();
+            var welcomeBody = document.querySelector('.welcome-modal-body');
+            if (welcomeBody) {
+              var isMobileWelcome = false;
+              try { isMobileWelcome = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530); } catch(_e) {}
+              if (isMobileWelcome) {
+                MobileSlack.attach(welcomeBody);
+              } else {
+                BottomSlack.attach(welcomeBody, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+                TopSlack.attach(welcomeBody, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+              }
+            }
             // Mark that they've visited (for new_users mode)
             try {
               localStorage.setItem('funmap-visited', '1');
@@ -837,7 +848,7 @@ const App = (function() {
     // REGISTRY: every scroll container that needs TopSlack/BottomSlack MUST be listed here.
     // BottomSlack.get(el) returns null for any element not in this list — hold(), forceOff(),
     // and all slack behaviour will silently do nothing. Add new scroll containers here first.
-    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content'];
+    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body', '.post-list', '.recent-panel-content', '.welcome-modal-body'];
     var isMobile = false;
     try {
       isMobile = (window.matchMedia && window.matchMedia('(max-width: 530px)').matches) || (window.innerWidth <= 530);
@@ -900,6 +911,7 @@ const App = (function() {
 
     // Anti-jank: Slack (top & bottom, per-tab config)
     initSlack();
+
     
     // Global Escape key handler - closes modals, menus, panels in order of focus
     // Priority: Dialogs (capture phase) > Menus (MenuManager) > Panels (panelStack)
