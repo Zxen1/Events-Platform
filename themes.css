@@ -50,6 +50,11 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* container-class-3 */
+:root[data-theme="light"] .container-class-3 {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* button-class-2 tab states */
 :root[data-theme="light"] .button-class-2 {
   background: rgba(255, 255, 255, 0.18);
