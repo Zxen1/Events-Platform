@@ -1,0 +1,253 @@
+MOBILE SCROLLING FINDINGS - CRITICAL FOR NEXT AGENT
+====================================================
+
+PROBLEM:
+- iOS Safari in portrait mode shows browser UI (address bar, toolbar) that takes ~20% of screen
+- The safe area at top shows black bar blocking content
+- Landscape mode works fine - gives 100% screen coverage
+- Safari only hides its UI when the user scrolls
+
+WHAT WORKS:
+1. Making body scrollable triggers Safari to collapse its UI
+2. Header with position: relative scrolls off screen correctly
+3. Panels pushing header up works
+4. The top safe area black bar disappears when scrolling is enabled
+5. Map can extend to all edges with viewport-fit=cover
+6. Setting html { height: auto } and body { height: auto } on mobile is critical.
+7. Panels must be position: relative and height: auto to join the main scroll flow.
+8. Setting overscroll-behavior: auto on body allows natural scroll hand-off to browser UI.
+
+====================================================
+STEP-BY-STEP INSTRUCTIONS TO IMPLEMENT FROM SCRATCH
+====================================================
+
+STEP 1: Fix viewport meta tag in index.html
+-------------------------------------------
+Change:
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual">
+
+To:
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
+
+STEP 2: Standardize breakpoints to 530px
+----------------------------------------
+Search and replace all mobile breakpoints in *-new.css files:
+- Change 440px to 530px
+- Change 480px to 530px  
+- Change 600px to 530px
+- Change 601px to 531px (for min-width)
+- Change 768px to 530px
+
+KEEP these unchanged:
+- 1900px in marquee-new.css (min-width for marquee)
+- 900px in header-new.css (min-width for map controls in header)
+
+
+STEP 3: Add to base-new.css (inside new mobile media query)
+-----------------------------------------------------------
+@media (max-width: 530px) {
+  html {
+    height: auto;
+  }
+
+  body {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 0;
+    overscroll-behavior: auto;
+  }
+}
+
+
+STEP 4: Add to header-new.css (after .header-bar rule)
+------------------------------------------------------
+@media (max-width: 530px) {
+  .header-bar {
+    position: relative;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--header-h, 56px) + env(safe-area-inset-top, 0px));
+  }
+}
+
+
+STEP 5: Add to header-new.css (for Recent button only becoming icon)
+--------------------------------------------------------------------
+Change the modeswitch text/icon behavior so only Recent becomes icon at mobile.
+Posts and Map always show text.
+
+.header-modeswitch-button-text {
+  display: block;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.header-modeswitch-posts,
+.header-modeswitch-map {
+  width: auto;
+  height: 36px;
+  padding: 0 14px;
+}
+
+.header-modeswitch-posts .header-modeswitch-button-icon,
+.header-modeswitch-map .header-modeswitch-button-icon {
+  display: none;
+}
+
+.header-modeswitch-recent .header-modeswitch-button-text {
+  display: none;
+}
+
+@media (min-width: 531px) {
+  .header-modeswitch-recent {
+    width: auto;
+    height: 36px;
+    padding: 0 14px;
+  }
+  
+  .header-modeswitch-recent .header-modeswitch-button-icon {
+    display: none;
+  }
+  
+  .header-modeswitch-recent .header-modeswitch-button-text {
+    display: block;
+  }
+}
+
+
+STEP 6: Add to map-new.css (after .map-area rule)
+-------------------------------------------------
+@media (max-width: 530px) {
+  .map-area {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+  }
+}
+
+
+STEP 7: Modify post-new.css mobile query for .post-panel
+--------------------------------------------------------
+@media (max-width: 530px) {
+  .post-panel {
+    position: relative;
+    height: auto;
+  }
+  
+  .post-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+
+STEP 8: Modify post-new.css mobile query for .recent-panel
+----------------------------------------------------------
+@media (max-width: 530px) {
+  .recent-panel {
+    position: relative;
+    height: auto;
+  }
+  
+  .recent-panel-content {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+STEP 9: Modify filter/member/admin panels for full-screen scroll
+----------------------------------------------------------
+@media (max-width: 530px) {
+  .filter-panel, .member-panel, .admin-panel {
+    position: relative;
+    height: auto;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+  }
+  
+  .filter-panel-content, .member-panel-contents, .admin-panel-contents {
+    position: relative;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top));
+    overscroll-behavior: auto;
+  }
+
+  .filter-panel-body, .member-panel-body, .admin-panel-body {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+
+====================================================
+SUCCESSFUL IMPLEMENTATION - ALL PANELS
+====================================================
+- All 5 panels (Post, Recent, Filter, Member, Admin) now support full-screen scroll.
+- Browser UI (address bar) collapses correctly on scroll.
+- Panels fill the screen to the bottom even with minimal content (min-height).
+- Exclusivity logic in header-new.js ensures only one panel is open at a time.
+- State synchronization ensures header buttons reflect actual panel visibility.
+
+====================================================
+IMPORTANT RULES
+====================================================
+- All changes must be inside @media (max-width: 530px) except where noted
+- Desktop must remain completely unaffected
+- Map must remain interactive (Mapbox handles its own touch events)
+- Read Agent Essentials before making any changes
+
+
+====================================================
+POST-MORTEM (Jan 2026) - WHAT WENT WRONG (DO NOT REPEAT)
+====================================================
+
+Context:
+- Paul reported that Post/Recent scrolling worked, but Filter/Member/Admin got stuck/bonded on mobile.
+- Paul explicitly stated a known-good shortcut: when panels accidentally "double up" so multiple panels scroll together, iOS Safari behaves and nothing gets stuck.
+- Goal was to make the 3 problem panels behave like the known-good scroll model and stop panel-to-panel transition blending.
+
+What I changed (these changes were later deleted by Paul during restoration):
+- Added touch-device hover suppression rules, so iOS Safari wouldn't "stick" hover after a tap.
+- Added "fixed backdrop" pseudo-elements for Filter/Member/Admin to reduce the visual bonding when panels stack.
+- Added "instant panel-to-panel switching" by temporarily forcing --panel-transition-duration: 0s for panel↔panel switches, while keeping map↔panel transitions.
+- Adjusted close logic to not wait for transitionend when transitions were forced to 0s.
+- Added guards so TopSlack/BottomSlack would only attach to real scroll containers (overflow-y:auto/scroll).
+
+What went wrong (user-visible failures):
+- The website became worse: header went missing, multiple panels stacked incorrectly, and the stuck behavior still occurred.
+- The attempted fixes introduced new failure modes and complexity without delivering the intended outcome.
+
+Root causes / lessons:
+1) Do NOT mix scroll-model changes + slack system changes + transition logic changes in one pass.
+   - Mobile scroll behavior is fragile; changing multiple interacting systems at once makes failures hard to isolate.
+
+2) The known-good "double-up scrolls together" behavior is the strongest clue.
+   - If stacked panels scrolling together is proven stable, the next agent should directly replicate the *same material/structure* used by Post/Recent panels (and/or the exact layering relationship where Post/Recent sit under Filter).
+   - Avoid inventing new backdrop/overlay tricks. Copy the proven pattern exactly.
+
+3) Avoid global CSS behavior changes when debugging layout (even if "touch-only").
+   - Even scoped changes can create unexpected side effects across unrelated UI (e.g., header interactions/visual states).
+
+4) Avoid JS-based transition overrides for core navigation unless absolutely necessary.
+   - Forcing transition durations to 0 can break any code that depends on transitionend timing and can desync UI state.
+
+5) If a change causes the header to disappear, STOP and revert immediately.
+   - A missing header indicates a critical layout/stacking regression (z-index/positioning/flow) and invalidates further testing.
+
+Recommendation for next agent (what to do instead):
+- Implement the "encase panels in the same material as Post/Recent" approach by copying the existing Post/Recent panel structure and layering strategy for Filter/Member/Admin on mobile, rather than trying to patch around it.
+- Keep changes minimal and isolated: fix ONE panel first (e.g., Filter) until it is stable on iPhone Safari, then repeat the same pattern for Member/Admin.
+

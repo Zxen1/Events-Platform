@@ -1,0 +1,254 @@
+POST DESIGN - Tracker
+=====================================
+
+WHAT IS A POST?
+---------------
+A post is opened by:
+- Clicking on a map card
+- Clicking on a postcard
+- Clicking on the marquee
+- Arriving at the website via a direct link
+
+STATES:
+- Collapsed
+- Expanded
+
+WHERE POSTS APPEAR:
+- Post panel
+- Recent panel
+- My Posts panel
+
+POST HEADER (same for collapsed and expanded):
+----------------------------------------------
+- 50x50 mini thumb on the left (actually 100x100 from Bunny for retina)
+- Post title (1-2 lines)
+- Share button
+- Favorites button
+
+POST BODY:
+----------
+1. Post info container (most complex - will need components)
+2. Post description
+3. Post images
+
+=====================================
+POST INFO CONTAINER
+=====================================
+
+Current contents (in order):
+
+1. Subcategory row - Icon + subcategory display name
+2. Venue info - Venue name (bold), address line, city
+3. Location button - "X locations" (only if multiple locations)
+4. Session button - "dates text" (only if sessions exist)
+5. Price button - Price with currency flag (only if price exists)
+6. Website URL - clickable link
+7. Tickets URL - clickable link
+8. Public email - mailto link
+9. Phone - tel link
+10. Amenities - Amenity summary text
+11. Coupon code
+12. Age rating
+13. Custom fields (5 types: text, textarea, dropdown, checklist, radio)
+
+Items 3-12 are conditional (only render if data exists).
+Items 3, 4, 5 are interactive buttons with dropdown arrows.
+
+COMPLEXITY NOTES:
+- Multiple locations to handle
+- Multiple sessions to handle
+- Multiple items for sale
+- This container is the heart of the post
+- Will likely need dedicated components for its ingredients
+
+=====================================
+PLANNED CHANGES:
+=====================================
+
+PostLocationComponent redesign:
+- Remove separate venue info display
+- First location becomes first item in dropdown (not separate)
+- Dropdown shows ALL locations (including currently selected)
+- Each location option: 70px height
+- Button shows currently selected location info
+- Clicking expands to show all locations as selectable options
+
+FUTURE (to discuss):
+- Map flies to selected location when changed
+
+=====================================
+POST LOCATION MINI-MAP PLAN
+=====================================
+
+PURPOSE:
+- Show all locations for a post on a flat 2D map
+- Auto-fit bounds to show all points with padding
+- Subcategory icons as interactive markers at each location
+
+3-MAP RULE:
+1. Main map - interactive map panel (globe projection)
+2. Secondary map - wallpaper only: orbit animation, still capture (globe projection)
+3. Mini map - location dropdown menus only (mercator/flat projection)
+
+NEVER 4 MAPS. Each map has one dedicated purpose.
+MOST RECENT WINS: Only one location dropdown can use Mini Map at a time.
+
+MINI-MAP TYPE: Live SecondaryMap with interactive markers
+- Reference tool - shows all locations at a glance
+- No zoom/pan - disabled, purely for reference
+- Markers ARE interactive:
+  - Hover marker → highlight corresponding list item
+  - Hover list item → highlight corresponding marker
+  - Click marker → select that location
+  - FUTURE: popup asks "fly to this location?"
+  - If yes, main map flies there, button updates to show that location
+
+MARKER STATES (CSS):
+- Neutral: icon only, transparent border
+- Hover: 2px blue border (var(--accent))
+- Active: blue border + blue background tint
+- Current: brighter icon + glow effect
+
+MAP LAYOUT:
+- Full width of dropdown
+- Aspect ratio 2:1 (width:height) - e.g., 500px wide = 250px high
+- Position: directly under first result (at top of menu)
+- Part of scroll content (scrolls out of view)
+- Style: matches main map's current style
+
+DROPDOWN CONSTRAINTS:
+- Max height: 600px
+- After 600px: scroll wheel activates
+- Click outside closes dropdown
+
+BUTTON TEXT BEHAVIOR:
+- Shows currently selected/viewed location
+- If user flies to location 2, button shows location 2's info
+- Not always showing first location
+
+FLOW WHEN LOCATION DROPDOWN OPENS:
+1. Claim MiniMap for live display
+2. Move MiniMap element into dropdown container
+3. Fit bounds to locations
+4. Add interactive Mapbox markers with CSS states
+(No wallpaper coordination needed - MiniMap is independent)
+
+FLOW WHEN LOCATION DROPDOWN CLOSES (any reason):
+1. Release MiniMap (moves back off-screen)
+(Wallpaper unaffected - uses separate SecondaryMap)
+
+MOST RECENT WINS RULE:
+- MiniMap tracks currentOwner
+- New claim() kicks off previous owner (calls onDisconnect callback)
+- Previous dropdown closes if kicked off
+- No queue, no reservation - always serves newest caller
+
+=====================================
+COMPLETED CHANGES:
+=====================================
+
+[2026-02-03] Created menu-class-4 in base-new.css:
+- Post info menu styling (location, session, price)
+- 600px max height with scroll
+- 70px min-height options
+- Background: rgba(0,0,0,0.35) - matches other menu classes
+- Optional embedded map (.menu-map with 2:1 aspect ratio)
+- Bridge classes: menu-button, menu-arrow, menu-options, menu-option
+- State classes: menu-button--open, menu-arrow--open, menu-option--highlighted, menu-option--hover
+
+[2026-02-03] Created four post info components in components-new.js:
+
+1. PostLocationMapComponent (uses MiniMap - dedicated 3rd map)
+   - render() - returns .post-location-map container
+   - init() - claims MiniMap for live display, returns ownerId
+   - release() - releases MiniMap, moves back off-screen
+   - setActiveMarker(index) - update current marker highlight
+   - highlightMarker(index) - coordinate hover with list items
+   - No wallpaper coordination needed (MiniMap is independent)
+
+2. PostLocationComponent
+   - Container: .post-location-container.menu-class-4
+   - Button: .post-location-button.menu-button
+   - Text: .post-location-text.menu-text + -main/-secondary
+   - Arrow: .post-location-arrow.menu-arrow
+   - Options: .post-location-options.menu-options
+   - Option: .post-location-option.menu-option
+   - Includes PostLocationMapComponent at top of dropdown
+
+3. PostSessionComponent
+   - Container: .post-session-container.menu-class-4
+   - Button: .post-session-button.menu-button
+   - Text: .post-session-text.menu-text + -main
+   - Arrow: .post-session-arrow.menu-arrow
+
+4. PostPriceComponent
+   - Container: .post-price-container.menu-class-4
+   - Button: .post-price-button.menu-button
+   - Text: .post-price-text.menu-text + -main
+   - Arrow: .post-price-arrow.menu-arrow
+   - Badge: .post-price-badge (currency flag)
+
+[2026-02-03] Created MiniMap (dedicated 3rd map for location dropdowns):
+- Always mercator (flat) projection - no switching needed
+- claim(ownerId, container, options, callback) - claim for live display
+  - Tracks currentOwner (most recent wins)
+  - Kicks off previous owner with onDisconnect callback
+  - Moves map into target container
+  - Adds interactive Mapbox markers with hover/click events
+- release(ownerId) - release map, move back off-screen
+- setActiveMarker(index) - update active marker styling
+- highlightMarker(index) - update hover marker styling
+- getOwner() - check current owner
+- destroy() - completely remove the map
+
+[2026-02-03] SecondaryMap restored to wallpaper-only:
+- Removed claim/release methods (moved to MiniMap)
+- Only used for orbit animation and still capture
+- No longer shared with location dropdowns
+
+[2026-02-03] Updated post-new.css:
+- .post-location-container, .post-session-container, .post-price-container
+- .post-location-map - 2:1 ratio, full width, reserved space
+- .post-location-map-marker - interactive marker with states:
+  - Neutral: transparent border
+  - --hover: blue border (var(--accent))
+  - --active: blue border + blue background
+  - --current: brightness filter + glow
+
+[2026-02-03] Updated post-new.js:
+- Location dropdown open: freeze wallpaper, claim SecondaryMap for live map
+- Location dropdown close: release SecondaryMap, resume wallpaper
+- Bidirectional hover coordination: marker ↔ list item
+- Marker click selects location
+- Click-outside handler closes dropdown
+- Uses post.map_cards for locations, post.subcategory_icon_url for markers
+
+TODO (FUTURE):
+- Implement "fly to location" popup when marker/option clicked
+- Main map flies to selected location
+- Update address display to match selected location
+
+CLEANUP COMPLETED:
+- Deleted unused createPostMap() from map-new.js
+- Deleted unused removePostMap() from map-new.js
+- Deleted unused postMaps variable from map-new.js
+- Removed exports for deleted functions
+- PostLocationMapComponent no longer uses static capture (uses live map instead)
+- SecondaryMap.captureWithBounds() retained for potential future use
+
+[2026-02-03] Fixed LocationWallpaperComponent click-back detection:
+- Global click handler now detects clicks inside wallpaper containers
+- Clicking back inside container after freeze now activates and refreshes (resumes orbit)
+- Fixed: freeze + clear activeCtrl wasn't allowing re-activation
+
+FILES MODIFIED THIS SESSION:
+- base-new.css: Added menu-class-4, added menu-option--hover state
+- components-new.js: 
+  - Created MiniMap (dedicated 3rd map for location dropdowns, always mercator)
+  - Restored SecondaryMap to wallpaper-only (removed claim/release)
+  - Updated PostLocationMapComponent to use MiniMap instead of SecondaryMap
+  - LocationWallpaperComponent click handler fix
+- post-new.css: Component styles, marker state styles (matches header avatar pattern)
+- post-new.js: Location dropdown open/close (no wallpaper coordination needed), bidirectional hover, click-outside handler
+- map-new.js: Removed unused post mini-map code
+- Agent/agent essentials.md: Added MAP RULES (3-MAP MAXIMUM) section
