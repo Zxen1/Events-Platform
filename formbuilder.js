@@ -4636,7 +4636,7 @@
         
         // STEP 5: Create Form Checkout container (centralized source of truth)
         var checkoutContainer = document.createElement('div');
-        checkoutContainer.className = 'member-checkout-container';
+        checkoutContainer.className = 'member-checkout-container container-class-3';
         container.appendChild(checkoutContainer);
         
         // Set up centralized click tracking for all form containers (event delegation)

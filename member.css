@@ -109,17 +109,6 @@
   border-color: rgba(59, 130, 245, 0.6);
 }
 
-.member-registrationform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
 .member-registrationform-container > * {
   margin-bottom: 10px;
 }
@@ -500,16 +489,6 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
-}
-
-.member-style-container {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
 }
 
 .member-style-container > .member-panel-field {
@@ -1105,17 +1084,6 @@
   margin-bottom: 12px;
 }
 
-.member-profileform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
 .member-profileform-container > * {
   margin-bottom: 10px;
 }
@@ -1154,17 +1122,6 @@
 /* ============================================================================
    LOGIN FORM CONTAINER
    ============================================================================ */
-
-.member-loginform-container {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 10px 10px 0;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-}
 
 .member-loginform-container > * {
   margin-bottom: 10px;

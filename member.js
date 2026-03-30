@@ -3571,7 +3571,7 @@ const MemberModule = (function() {
         var wrapper = formFields.querySelector('.member-checkout-container');
         if (!wrapper) {
             wrapper = document.createElement('div');
-            wrapper.className = 'member-checkout-container';
+            wrapper.className = 'member-checkout-container container-class-3';
             formFields.appendChild(wrapper);
         }
         
@@ -3926,7 +3926,7 @@ const MemberModule = (function() {
         var checkoutContainer = formFields.querySelector('.member-checkout-container');
         if (!checkoutContainer) {
             checkoutContainer = document.createElement('div');
-            checkoutContainer.className = 'member-checkout-container fieldset member-checkout-wrapper';
+            checkoutContainer.className = 'member-checkout-container container-class-3 fieldset member-checkout-wrapper';
             formFields.appendChild(checkoutContainer);
         }
         
@@ -6691,7 +6691,7 @@ const MemberModule = (function() {
 
         // Create container
         var container = document.createElement('div');
-        container.className = 'member-loginform-container';
+        container.className = 'member-loginform-container container-class-3';
 
         // Create form
         var form = document.createElement('form');

@@ -1226,7 +1226,7 @@ if (empty($ogTitle)) {
               role="region"
               aria-labelledby="admin-themes-light-header"
             >
-              <div class="member-style-container">
+              <div class="member-style-container container-class-3">
                 <div class="member-panel-field">
                   <label class="member-settings-field-label">Post Interaction</label>
                   <div class="member-postinteraction-buttons toggle-class-1">
@@ -1345,7 +1345,7 @@ if (empty($ogTitle)) {
               role="region"
               aria-labelledby="admin-themes-dark-header"
             >
-              <div class="member-style-container">
+              <div class="member-style-container container-class-3">
                 <div class="member-panel-field">
                   <label class="member-settings-field-label">Post Interaction</label>
                   <div class="member-postinteraction-buttons toggle-class-1">
@@ -1549,7 +1549,7 @@ if (empty($ogTitle)) {
         <section id="member-tab-profile" class="member-tab-contents member-tab-contents--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
           <!-- Map Settings (always visible) -->
-          <div class="member-style-container">
+          <div class="member-style-container container-class-3">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Theme</label>
               <div class="member-theme-buttons toggle-class-1">
@@ -1785,7 +1785,7 @@ if (empty($ogTitle)) {
               <button type="button" id="member-profileform-toggle" class="member-profileform-toggle button-class-2">Update Profile</button>
               
               <!-- Profile Form Container (hidden by default) -->
-              <div id="member-profileform-container" class="member-profileform-container" hidden>
+              <div id="member-profileform-container" class="member-profileform-container container-class-3" hidden>
                 <div id="member-avatar-grid-profile" aria-label="Avatar choices"></div>
                 <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
                   <div id="member-profileform-fieldsets" class="member-profileform-fieldsets"></div>
@@ -1855,7 +1855,7 @@ if (empty($ogTitle)) {
           <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
             <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
 
-            <div id="member-registrationform-container" class="member-registrationform-container">
+            <div id="member-registrationform-container" class="member-registrationform-container container-class-3">
               <div class="member-supporter-payment-presets" aria-label="Support amount presets">
                 <button type="button" class="member-supporterpayment-button button-class-2c" data-amount="2" aria-pressed="false">$2</button>
                 <button type="button" class="member-supporterpayment-button button-class-2c" data-amount="5" aria-pressed="false">$5</button>
