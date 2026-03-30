@@ -802,7 +802,7 @@ const AdminModule = (function() {
         if (guidesTabInitialized) return;
         guidesTabInitialized = true;
 
-        // Load and render instructions accordions first, then load iframe
+        // Load and render admin guide accordions first, then load iframe
         var manualContainer = document.getElementById('admin-guides-manual-container');
 
         fetch('/gateway.php?action=get-admin-settings&lite=1&include_admin_guide=true')
@@ -819,8 +819,8 @@ const AdminModule = (function() {
                 }
             })
             .catch(function(err) {
-                console.error('[Admin] Failed to load instructions:', err);
-                // Load iframe even if instructions fail
+                console.error('[Admin] Failed to load admin guide:', err);
+                // Load iframe even if admin guide fails
                 var iframe = document.getElementById('admin-guides-iframe');
                 if (iframe) {
                     var src = iframe.getAttribute('data-src');
@@ -1163,13 +1163,13 @@ const AdminModule = (function() {
         return accordion;
     }
 
-    function renderAdminGuideAccordions(container, instructions) {
+    function renderAdminGuideAccordions(container, items) {
         container.innerHTML = '';
 
         // Group rows by chapter
         var chapters = [];
         var chapterMap = {};
-        instructions.forEach(function(item) {
+        items.forEach(function(item) {
             if (!chapterMap[item.chapter]) {
                 chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
                 chapters.push(chapterMap[item.chapter]);
@@ -1510,19 +1510,19 @@ const AdminModule = (function() {
             );
         }
         
-        // Save modified instructions (uses save-admin-settings endpoint)
-        var instructionsPayload = getModifiedAdminGuide();
-        if (instructionsPayload.items.length > 0 || instructionsPayload.deleted_ids.length > 0) {
+        // Save modified admin guide (uses save-admin-settings endpoint)
+        var adminGuidePayload = getModifiedAdminGuide();
+        if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_guide: instructionsPayload.items, deleted_admin_guide_ids: instructionsPayload.deleted_ids })
+                    body: JSON.stringify({ admin_guide: adminGuidePayload.items, deleted_admin_guide_ids: adminGuidePayload.deleted_ids })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
-                        throw new Error(data.message || 'Failed to save instructions');
+                        throw new Error(data.message || 'Failed to save admin guide');
                     }
                     var manualContainer = document.getElementById('admin-guides-manual-container');
                     if (manualContainer) {

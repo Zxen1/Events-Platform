@@ -184,27 +184,27 @@ try {
     }
     $response['system_images'] = $systemImages;
 
-    // Optionally include admin instructions if requested
-    $includeInstructions = isset($_GET['include_admin_guide']) && $_GET['include_admin_guide'] === 'true';
-    if ($includeInstructions) {
+    // Optionally include admin guide if requested
+    $includeAdminGuide = isset($_GET['include_admin_guide']) && $_GET['include_admin_guide'] === 'true';
+    if ($includeAdminGuide) {
         try {
             $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
             if ($stmt->rowCount() > 0) {
                 $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description`, `sort_order` FROM `admin_guide` ORDER BY `sort_order` ASC, `id` ASC');
                 $rows = $stmt->fetchAll();
-                $instructions = [];
+                $adminGuideItems = [];
                 foreach ($rows as $row) {
-                    $instructions[] = [
+                    $adminGuideItems[] = [
                         'id'          => (int)$row['id'],
                         'chapter'     => $row['chapter'],
                         'title'       => $row['title'],
                         'description' => $row['description'],
                     ];
                 }
-                $response['admin_guide'] = $instructions;
+                $response['admin_guide'] = $adminGuideItems;
             }
-        } catch (Throwable $instructionsError) {
-            // If instructions fail, don't break the whole response
+        } catch (Throwable $adminGuideError) {
+            // If admin guide fails, don't break the whole response
         }
     }
 
