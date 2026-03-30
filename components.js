@@ -6331,7 +6331,8 @@ const WelcomeModalComponent = (function() {
         var helpBtn = document.createElement('button');
         helpBtn.className = 'welcome-user-guide-help-btn button-class-10';
         helpBtn.textContent = 'Help';
-        helpBtn.addEventListener('click', function() {
+        helpBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             userGuideLoaded = true;
             userGuideElement.innerHTML = '';
             buildGuideShell();
@@ -6364,7 +6365,8 @@ const WelcomeModalComponent = (function() {
         var closeBtn = document.createElement('div');
         closeBtn.className = 'welcome-user-guide-close';
         closeBtn.innerHTML = '&times;';
-        closeBtn.addEventListener('click', function() {
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             buildHelpButton();
         });
 
