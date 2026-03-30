@@ -159,6 +159,7 @@
 
 :root[data-theme="light"] .button-class-2[aria-selected="true"],
 :root[data-theme="light"] .button-class-2.button--selected {
+  background: var(--blue-600);
   color: #ffffff;
 }
 
