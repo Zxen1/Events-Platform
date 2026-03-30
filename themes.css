@@ -28,7 +28,7 @@
 
 :root[data-theme="light"] {
   --website-gray: #555;
-  --website-white: #111;
+  /* --website-white: #111; */
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────── */
