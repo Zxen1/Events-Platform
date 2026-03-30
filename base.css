@@ -1528,6 +1528,7 @@ body {
 .welcome-user-guide-chapter-header {
   font-size: 15px;
   font-weight: 600;
+  line-height: 1;
   color: rgba(255,255,255,0.9);
   padding: 10px 0;
   cursor: pointer;
