@@ -64,8 +64,13 @@
 
 /* button-class-2f reset button states */
 :root[data-theme="light"] .button-class-2f:not(:disabled) {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
+}
+:root[data-theme="light"] .button-class-2f:disabled {
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
 }
 
 :root[data-theme="light"] .button-class-2[aria-selected="true"],
@@ -76,7 +81,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   :root[data-theme="light"] .button-class-2:hover {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.18);
     color: #ffffff;
   }
@@ -85,6 +90,11 @@
   :root[data-theme="light"] .button-class-2.button--selected:hover {
     background: var(--blue-600);
     border-color: transparent;
+    color: #ffffff;
+  }
+
+  :root[data-theme="light"] .button-class-2f:hover {
+    background: var(--blue-600);
     color: #ffffff;
   }
 }
@@ -114,7 +124,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   :root[data-theme="light"] .toggle-class-1 .toggle-button:hover {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.5);
     color: #ffffff;
   }
 
