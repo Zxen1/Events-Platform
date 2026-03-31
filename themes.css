@@ -448,7 +448,7 @@
   color: rgba(0, 0, 0, 0.85);
 }
 
-:root[data-theme="light"] .admin-panel-actions-icon-btn-icon {
+:root[data-theme="light"] .admin-panel-actions-icon-btn-icon:not(.admin-panel-actions-icon-btn-icon--save-enabled):not(.admin-panel-actions-icon-btn-icon--discard-enabled) {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
