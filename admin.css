@@ -2181,7 +2181,8 @@
   color: rgba(150, 200, 255, 1);
 }
 
-.admin-message-text-input {
+.admin-message-text-input,
+.admin-guides-description-input {
   width: 100%;
   padding: 10px;
   margin: 0;
@@ -2192,7 +2193,8 @@
   box-sizing: border-box;
 }
 
-.admin-message-text-input + .component-textarearesize-handle {
+.admin-message-text-input + .component-textarearesize-handle,
+.admin-guides-description-input + .component-textarearesize-handle {
   margin-bottom: 10px;
 }
 
