@@ -1342,7 +1342,7 @@ const AdminModule = (function() {
 
         // Description textarea (hidden by default)
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden input-class-1';
         textInput.value = description || '';
         textInput.rows = 3;
 
