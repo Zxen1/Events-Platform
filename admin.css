@@ -2119,7 +2119,7 @@
 }
 
 .admin-message-text-display,
-.admin-guides-description-text {
+.admin-guide-description-text {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
   margin: 0 0 10px 0;
@@ -2131,7 +2131,7 @@
 }
 
 .admin-message-text-display:hover,
-.admin-guides-description-text:hover {
+.admin-guide-description-text:hover {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
   text-decoration-style: dotted;
@@ -2139,7 +2139,7 @@
 }
 
 .admin-message-text-display--hidden,
-.admin-guides-description-text--hidden {
+.admin-guide-description-text--hidden {
   display: none;
 }
 
@@ -2182,7 +2182,7 @@
 }
 
 .admin-message-text-input,
-.admin-guides-description-input {
+.admin-guide-description-input {
   width: 100%;
   padding: 10px;
   margin: 0;
@@ -2194,17 +2194,17 @@
 }
 
 .admin-message-text-input + .component-textarearesize-handle,
-.admin-guides-description-input + .component-textarearesize-handle {
+.admin-guide-description-input + .component-textarearesize-handle {
   margin-bottom: 10px;
 }
 
 .admin-message-text-input--hidden,
-.admin-guides-description-input--hidden {
+.admin-guide-description-input--hidden {
   display: none;
 }
 
 .admin-message-text-input--hidden + .component-textarearesize-handle,
-.admin-guides-description-input--hidden + .component-textarearesize-handle {
+.admin-guide-description-input--hidden + .component-textarearesize-handle {
   display: none;
 }
 
@@ -2976,7 +2976,7 @@
    GUIDES TAB
    ============================================================================ */
 
-.admin-guides-section-header {
+.admin-guide-section-header {
   width: 100%;
   max-width: 420px;
   margin: 0 auto 10px auto;
@@ -2990,33 +2990,33 @@
   box-sizing: border-box;
 }
 
-.admin-guides-manual-container {
+.admin-guide-container {
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
   box-sizing: border-box;
 }
 
-.admin-guides-manual-accordion {
+.admin-guide-accordion {
   width: 100%;
   margin: 0 0 12px 0;
   overflow: visible;
 }
 
 
-.admin-guides-manual-accordion-header {
+.admin-guide-accordion-header {
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 10px;
 }
 
-.admin-guides-manual-accordion-header-text {
+.admin-guide-accordion-header-text {
   flex: 1;
   font-weight: bold;
 }
 
-.admin-guides-manual-accordion-header-arrow {
+.admin-guide-accordion-header-arrow {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3024,7 +3024,7 @@
   justify-content: center;
 }
 
-.admin-guides-manual-accordion-header-arrow::before {
+.admin-guide-accordion-header-arrow::before {
   content: '';
   display: block;
   width: 14px;
@@ -3042,11 +3042,11 @@
   transform-origin: center;
 }
 
-.admin-guides-manual-accordion-header-arrow--open::before {
+.admin-guide-accordion-header-arrow--open::before {
   transform: rotate(180deg);
 }
 
-.admin-guides-manual-accordion-header-drag {
+.admin-guide-accordion-header-drag {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3057,7 +3057,7 @@
   -webkit-user-select: none;
 }
 
-.admin-guides-manual-accordion-header-drag-icon {
+.admin-guide-accordion-header-drag-icon {
   width: 16px;
   height: 16px;
   background-color: #888;
@@ -3071,15 +3071,15 @@
   mask-position: center;
 }
 
-.admin-guides-manual-accordion-header-drag:hover .admin-guides-manual-accordion-header-drag-icon {
+.admin-guide-accordion-header-drag:hover .admin-guide-accordion-header-drag-icon {
   background-color: #fff;
 }
 
-.admin-guides-manual-accordion.dragging {
+.admin-guide-accordion.dragging {
   opacity: 0.5;
 }
 
-.admin-guides-manual-accordion-header-editarea {
+.admin-guide-accordion-header-editarea {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3089,7 +3089,7 @@
   color: #888;
 }
 
-.admin-guides-manual-accordion-header-edit {
+.admin-guide-accordion-header-edit {
   width: 16px;
   height: 16px;
   background-color: currentColor;
@@ -3103,27 +3103,27 @@
   mask-position: center;
 }
 
-.admin-guides-manual-accordion-header-editarea:hover,
-.admin-guides-manual-accordion-header-editarea--editing {
+.admin-guide-accordion-header-editarea:hover,
+.admin-guide-accordion-header-editarea--editing {
   color: var(--blue-500);
 }
 
-.admin-guides-manual-accordion-editpanel {
+.admin-guide-accordion-editpanel {
   display: none;
   padding: 10px;
   background: var(--blue-950);
 }
 
-.admin-guides-manual-accordion-editpanel--editing {
+.admin-guide-accordion-editpanel--editing {
   display: block;
 }
 
-.admin-guides-manual-accordion-editpanel-row {
+.admin-guide-accordion-editpanel-row {
   display: flex;
   margin: 0 0 10px 0;
 }
 
-.admin-guides-manual-accordion-editpanel-input {
+.admin-guide-accordion-editpanel-input {
   flex: 1;
   height: 36px;
   padding: 0 10px;
@@ -3131,7 +3131,7 @@
   font-size: 13px;
 }
 
-.admin-guides-manual-accordion-editpanel-more {
+.admin-guide-accordion-editpanel-more {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3145,7 +3145,7 @@
   position: relative;
 }
 
-.admin-guides-manual-accordion-editpanel-more-icon {
+.admin-guide-accordion-editpanel-more-icon {
   width: 16px;
   height: 16px;
   background-color: #fff;
@@ -3159,11 +3159,11 @@
   mask-position: center;
 }
 
-.admin-guides-manual-accordion-editpanel-more:hover {
+.admin-guide-accordion-editpanel-more:hover {
   border-color: var(--blue-500);
 }
 
-.admin-guides-manual-accordion-editpanel-more-menu {
+.admin-guide-accordion-editpanel-more-menu {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
@@ -3176,11 +3176,11 @@
   display: none;
 }
 
-.admin-guides-manual-accordion-editpanel-more-menu--open {
+.admin-guide-accordion-editpanel-more-menu--open {
   display: block;
 }
 
-.admin-guides-manual-accordion-editpanel-more-item {
+.admin-guide-accordion-editpanel-more-item {
   height: 36px;
   display: flex;
   align-items: center;
@@ -3190,27 +3190,27 @@
   font-size: 13px;
 }
 
-.admin-guides-manual-accordion-editpanel-more-item:hover {
+.admin-guide-accordion-editpanel-more-item:hover {
   background: #222;
 }
 
-.admin-guides-manual-accordion-editpanel-more-delete {
+.admin-guide-accordion-editpanel-more-delete {
   color: #f87171;
 }
 
-.admin-guides-manual-accordion-editpanel-more-delete:hover {
+.admin-guide-accordion-editpanel-more-delete:hover {
   background: #7f1d1d;
 }
 
-.admin-guides-manual-accordion-body {
+.admin-guide-accordion-body {
   padding: 10px 10px 0 10px;
 }
 
-.admin-guides-manual-accordion-body--hidden {
+.admin-guide-accordion-body--hidden {
   display: none;
 }
 
-.admin-guides-manual-add-chapter {
+.admin-guide-add-chapter {
   width: 100%;
   height: 36px;
   display: flex;
@@ -3225,12 +3225,12 @@
   margin-top: 10px;
 }
 
-.admin-guides-manual-add-chapter:hover {
+.admin-guide-add-chapter:hover {
   border-color: var(--blue-500);
   color: #fff;
 }
 
-.admin-guides-manual-add-item {
+.admin-guide-add-item {
   width: 100%;
   height: 36px;
   display: flex;
@@ -3246,22 +3246,22 @@
   margin-bottom: 10px;
 }
 
-.admin-guides-manual-add-item:hover {
+.admin-guide-add-item:hover {
   border-color: var(--blue-500);
   color: #fff;
 }
 
-.admin-guides-manual-item {
+.admin-guide-item {
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.admin-guides-manual-item:last-of-type {
+.admin-guide-item:last-of-type {
   border-bottom: none;
 }
 
-.admin-guides-manual-item-title-display {
+.admin-guide-item-title-display {
   font-size: 13px;
   font-weight: 600;
   color: var(--blue-500);
@@ -3272,11 +3272,11 @@
   line-height: 1.2;
 }
 
-.admin-guides-manual-item-title-display:hover {
+.admin-guide-item-title-display:hover {
   color: #fff;
 }
 
-.admin-guides-manual-item-title-input {
+.admin-guide-item-title-input {
   width: 100%;
   height: 36px;
   padding: 0 10px;
@@ -3285,23 +3285,23 @@
   box-sizing: border-box;
 }
 
-.admin-guides-manual-item-header {
+.admin-guide-item-header {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
 }
 
-.admin-guides-manual-item-header .admin-guides-manual-item-title-display {
+.admin-guide-item-header .admin-guide-item-title-display {
   flex: 1;
   margin: 0;
 }
 
-.admin-guides-manual-item-header .admin-guides-manual-item-title-input {
+.admin-guide-item-header .admin-guide-item-title-input {
   flex: 1;
   margin-bottom: 0;
 }
 
-.admin-guides-manual-item-drag {
+.admin-guide-item-drag {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3313,7 +3313,7 @@
   -webkit-user-select: none;
 }
 
-.admin-guides-manual-item-drag-icon {
+.admin-guide-item-drag-icon {
   width: 16px;
   height: 16px;
   background-color: #888;
@@ -3325,11 +3325,11 @@
   mask-repeat: no-repeat;
 }
 
-.admin-guides-manual-item-drag:hover .admin-guides-manual-item-drag-icon {
+.admin-guide-item-drag:hover .admin-guide-item-drag-icon {
   background-color: #fff;
 }
 
-.admin-guides-manual-item-delete {
+.admin-guide-item-delete {
   width: 36px;
   height: 36px;
   display: flex;
@@ -3348,11 +3348,11 @@
   mask-position: center;
 }
 
-.admin-guides-manual-item-delete:hover {
+.admin-guide-item-delete:hover {
   background-color: var(--red-500);
 }
 
-.admin-guides-manual-item.dragging {
+.admin-guide-item.dragging {
   opacity: 0.5;
 }
 

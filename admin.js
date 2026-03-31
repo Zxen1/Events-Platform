@@ -802,11 +802,11 @@ const AdminModule = (function() {
         if (guidesTabInitialized) return;
         guidesTabInitialized = true;
 
-        var adminContainer = document.getElementById('admin-guides-manual-container');
-        var userContainer = document.getElementById('user-guides-manual-container');
+        var adminContainer = document.getElementById('admin-guide-container');
+        var userContainer = document.getElementById('user-guide-manual-container');
 
         function loadIframe() {
-            var iframe = document.getElementById('admin-guides-iframe');
+            var iframe = document.getElementById('admin-guide-iframe');
             if (iframe) {
                 var src = iframe.getAttribute('data-src');
                 if (src) iframe.setAttribute('src', src);
@@ -846,34 +846,34 @@ const AdminModule = (function() {
     var userGuideLoaded = false;
 
     var adminGuideCtx = {
-        containerId: 'admin-guides-manual-container',
+        containerId: 'admin-guide-container',
         compositeKey: 'admin_guide',
         isLoaded: function() { return adminGuideLoaded; },
         setLoaded: function() { adminGuideLoaded = true; },
-        getContainer: function() { return document.getElementById('admin-guides-manual-container'); }
+        getContainer: function() { return document.getElementById('admin-guide-container'); }
     };
     var userGuideCtx = {
-        containerId: 'user-guides-manual-container',
+        containerId: 'user-guide-manual-container',
         compositeKey: 'user_guide',
         isLoaded: function() { return userGuideLoaded; },
         setLoaded: function() { userGuideLoaded = true; },
-        getContainer: function() { return document.getElementById('user-guides-manual-container'); }
+        getContainer: function() { return document.getElementById('user-guide-manual-container'); }
     };
 
     function captureGuideState(containerId) {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
-            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
+            var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
             state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
             state.itemOrder[chapterKey] = [];
-            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
+            accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
-                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
-                var textInput = itemEl.querySelector('.admin-guides-description-input');
+                var titleInput = itemEl.querySelector('.admin-guide-item-title-input');
+                var textInput = itemEl.querySelector('.admin-guide-description-input');
                 state.itemOrder[chapterKey].push(id);
                 state.items[id] = {
                     title: titleInput ? titleInput.value : '',
@@ -884,8 +884,8 @@ const AdminModule = (function() {
         return state;
     }
 
-    function captureAdminGuideState() { return captureGuideState('admin-guides-manual-container'); }
-    function captureUserGuideState() { return captureGuideState('user-guides-manual-container'); }
+    function captureAdminGuideState() { return captureGuideState('admin-guide-container'); }
+    function captureUserGuideState() { return captureGuideState('user-guide-manual-container'); }
 
     function resetGuideToOriginal(containerId, registryKey) {
         var manualContainer = document.getElementById(containerId);
@@ -894,38 +894,38 @@ const AdminModule = (function() {
         if (!entry || entry.type !== 'composite') return;
         var originalState = JSON.parse(entry.original);
 
-        var addChapterBtn = manualContainer.querySelector('.admin-guides-manual-add-chapter');
+        var addChapterBtn = manualContainer.querySelector('.admin-guide-add-chapter');
         if (originalState.chapterOrder) {
             originalState.chapterOrder.forEach(function(chapterKey) {
-                var accordion = manualContainer.querySelector('.admin-guides-manual-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
+                var accordion = manualContainer.querySelector('.admin-guide-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
                 if (accordion) manualContainer.insertBefore(accordion, addChapterBtn);
             });
         }
 
-        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var chapterKey = accordion.dataset.chapter || '';
-            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
-            var headerText = accordion.querySelector('.admin-guides-manual-accordion-header-text');
+            var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
+            var headerText = accordion.querySelector('.admin-guide-accordion-header-text');
             if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
                 nameInput.value = originalState.chapterNames[chapterKey];
                 if (headerText) headerText.textContent = originalState.chapterNames[chapterKey];
             }
-            var addItemBtn = accordion.querySelector('.admin-guides-manual-add-item');
+            var addItemBtn = accordion.querySelector('.admin-guide-add-item');
             var originalItemOrder = originalState.itemOrder ? originalState.itemOrder[chapterKey] : null;
             if (originalItemOrder) {
                 originalItemOrder.forEach(function(itemId) {
-                    var itemEl = accordion.querySelector('.admin-guides-manual-item[data-item-id="' + itemId + '"]');
-                    if (itemEl) accordion.querySelector('.admin-guides-manual-accordion-body').insertBefore(itemEl, addItemBtn);
+                    var itemEl = accordion.querySelector('.admin-guide-item[data-item-id="' + itemId + '"]');
+                    if (itemEl) accordion.querySelector('.admin-guide-accordion-body').insertBefore(itemEl, addItemBtn);
                 });
             }
-            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
+            accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
                 if (!originalState.items || !originalState.items[id]) return;
                 var orig = originalState.items[id];
-                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
-                var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
-                var textInput = itemEl.querySelector('.admin-guides-description-input');
-                var textDisplay = itemEl.querySelector('.admin-guides-description-text');
+                var titleInput = itemEl.querySelector('.admin-guide-item-title-input');
+                var titleDisplay = itemEl.querySelector('.admin-guide-item-title-display');
+                var textInput = itemEl.querySelector('.admin-guide-description-input');
+                var textDisplay = itemEl.querySelector('.admin-guide-description-text');
                 if (titleInput) { titleInput.value = orig.title; }
                 if (titleDisplay) { titleDisplay.textContent = orig.title || 'Click to add title'; }
                 if (textInput) { textInput.value = orig.description; }
@@ -936,8 +936,8 @@ const AdminModule = (function() {
         delete manualContainer.dataset.deletedIds;
     }
 
-    function resetInstructionsToOriginal() { resetGuideToOriginal('admin-guides-manual-container', 'admin_guide'); }
-    function resetUserGuideToOriginal() { resetGuideToOriginal('user-guides-manual-container', 'user_guide'); }
+    function resetInstructionsToOriginal() { resetGuideToOriginal('admin-guide-container', 'admin_guide'); }
+    function resetUserGuideToOriginal() { resetGuideToOriginal('user-guide-manual-container', 'user_guide'); }
 
     function getModifiedGuide(containerId) {
         var modified = [];
@@ -946,8 +946,8 @@ const AdminModule = (function() {
         if (!manualContainer) return { items: modified, deleted_ids: deletedIds };
 
         var globalOrder = 0;
-        manualContainer.querySelectorAll('.admin-guides-manual-accordion').forEach(function(accordion) {
-            var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
             var chapterName = nameInput.value.trim() || 'New Chapter';
             if (accordion.dataset.isNew === '1') {
@@ -958,9 +958,9 @@ const AdminModule = (function() {
                 globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
-            accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
-                var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
-                var textInput = itemEl.querySelector('.admin-guides-description-input');
+            accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
+                var titleInput = itemEl.querySelector('.admin-guide-item-title-input');
+                var textInput = itemEl.querySelector('.admin-guide-description-input');
                 var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
                 var title = titleInput ? titleInput.value : '';
                 var description = textInput ? textInput.value : '';
@@ -983,35 +983,35 @@ const AdminModule = (function() {
         return { items: modified, deleted_ids: deletedIds };
     }
 
-    function getModifiedAdminGuide() { return getModifiedGuide('admin-guides-manual-container'); }
-    function getModifiedUserGuide() { return getModifiedGuide('user-guides-manual-container'); }
+    function getModifiedAdminGuide() { return getModifiedGuide('admin-guide-container'); }
+    function getModifiedUserGuide() { return getModifiedGuide('user-guide-manual-container'); }
 
     function closeAllInstructionsEditPanels(containerEl) {
         if (!containerEl) return;
-        containerEl.querySelectorAll('.admin-guides-manual-accordion--editing').forEach(function(el) {
-            el.classList.remove('admin-guides-manual-accordion--editing');
+        containerEl.querySelectorAll('.admin-guide-accordion--editing').forEach(function(el) {
+            el.classList.remove('admin-guide-accordion--editing');
             syncInstructionsAccordionUi(el);
         });
     }
 
     function syncInstructionsAccordionUi(accordion) {
         if (!accordion) return;
-        var isOpen = accordion.classList.contains('admin-guides-manual-accordion--open');
-        var isEditing = accordion.classList.contains('admin-guides-manual-accordion--editing');
-        var arrow = accordion.querySelector('.admin-guides-manual-accordion-header-arrow');
-        var editArea = accordion.querySelector('.admin-guides-manual-accordion-header-editarea');
-        var editPanel = accordion.querySelector('.admin-guides-manual-accordion-editpanel');
-        var body = accordion.querySelector('.admin-guides-manual-accordion-body');
+        var isOpen = accordion.classList.contains('admin-guide-accordion--open');
+        var isEditing = accordion.classList.contains('admin-guide-accordion--editing');
+        var arrow = accordion.querySelector('.admin-guide-accordion-header-arrow');
+        var editArea = accordion.querySelector('.admin-guide-accordion-header-editarea');
+        var editPanel = accordion.querySelector('.admin-guide-accordion-editpanel');
+        var body = accordion.querySelector('.admin-guide-accordion-body');
         accordion.classList.toggle('accordion-class-1--open', isOpen || isEditing);
-        if (arrow) arrow.classList.toggle('admin-guides-manual-accordion-header-arrow--open', !!isOpen);
-        if (editArea) editArea.classList.toggle('admin-guides-manual-accordion-header-editarea--editing', !!isEditing);
-        if (editPanel) editPanel.classList.toggle('admin-guides-manual-accordion-editpanel--editing', !!isEditing);
-        if (body) body.classList.toggle('admin-guides-manual-accordion-body--hidden', !isOpen);
+        if (arrow) arrow.classList.toggle('admin-guide-accordion-header-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('admin-guide-accordion-header-editarea--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('admin-guide-accordion-editpanel--editing', !!isEditing);
+        if (body) body.classList.toggle('admin-guide-accordion-body--hidden', !isOpen);
     }
 
     function buildInstructionsAccordion(chapterData, container, ctx) {
         var accordion = document.createElement('div');
-        accordion.className = 'admin-guides-manual-accordion accordion-class-1';
+        accordion.className = 'admin-guide-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
         accordion.setAttribute('data-slack-anchor', '');
         if (chapterData.placeholderRowId) {
@@ -1019,25 +1019,25 @@ const AdminModule = (function() {
         }
 
         var header = document.createElement('div');
-        header.className = 'admin-guides-manual-accordion-header accordion-header';
+        header.className = 'admin-guide-accordion-header accordion-header';
 
         var headerText = document.createElement('span');
-        headerText.className = 'admin-guides-manual-accordion-header-text';
+        headerText.className = 'admin-guide-accordion-header-text';
         headerText.textContent = chapterData.chapter;
 
         var headerArrow = document.createElement('span');
-        headerArrow.className = 'admin-guides-manual-accordion-header-arrow';
+        headerArrow.className = 'admin-guide-accordion-header-arrow';
 
         var headerDrag = document.createElement('div');
-        headerDrag.className = 'admin-guides-manual-accordion-header-drag';
+        headerDrag.className = 'admin-guide-accordion-header-drag';
         var headerDragIcon = document.createElement('div');
-        headerDragIcon.className = 'admin-guides-manual-accordion-header-drag-icon';
+        headerDragIcon.className = 'admin-guide-accordion-header-drag-icon';
         headerDrag.appendChild(headerDragIcon);
 
         var headerEditArea = document.createElement('div');
-        headerEditArea.className = 'admin-guides-manual-accordion-header-editarea';
+        headerEditArea.className = 'admin-guide-accordion-header-editarea';
         var headerEdit = document.createElement('div');
-        headerEdit.className = 'admin-guides-manual-accordion-header-edit';
+        headerEdit.className = 'admin-guide-accordion-header-edit';
         headerEditArea.appendChild(headerEdit);
 
         header.appendChild(headerText);
@@ -1046,14 +1046,14 @@ const AdminModule = (function() {
         header.appendChild(headerEditArea);
 
         var editPanel = document.createElement('div');
-        editPanel.className = 'admin-guides-manual-accordion-editpanel';
+        editPanel.className = 'admin-guide-accordion-editpanel';
 
         var nameRow = document.createElement('div');
-        nameRow.className = 'admin-guides-manual-accordion-editpanel-row';
+        nameRow.className = 'admin-guide-accordion-editpanel-row';
 
         var nameInput = document.createElement('input');
         nameInput.type = 'text';
-        nameInput.className = 'admin-guides-manual-accordion-editpanel-input input-class-1';
+        nameInput.className = 'admin-guide-accordion-editpanel-input input-class-1';
         nameInput.value = chapterData.chapter;
         nameInput.dataset.chapterKey = chapterData.chapter;
         nameInput.addEventListener('input', function() {
@@ -1064,17 +1064,17 @@ const AdminModule = (function() {
         nameRow.appendChild(nameInput);
 
         var moreBtn = document.createElement('div');
-        moreBtn.className = 'admin-guides-manual-accordion-editpanel-more';
-        moreBtn.innerHTML = '<div class="admin-guides-manual-accordion-editpanel-more-icon"></div><div class="admin-guides-manual-accordion-editpanel-more-menu"><div class="admin-guides-manual-accordion-editpanel-more-item admin-guides-manual-accordion-editpanel-more-delete">Delete Chapter</div></div>';
-        var moreMenuEl = moreBtn.querySelector('.admin-guides-manual-accordion-editpanel-more-menu');
+        moreBtn.className = 'admin-guide-accordion-editpanel-more';
+        moreBtn.innerHTML = '<div class="admin-guide-accordion-editpanel-more-icon"></div><div class="admin-guide-accordion-editpanel-more-menu"><div class="admin-guide-accordion-editpanel-more-item admin-guide-accordion-editpanel-more-delete">Delete Chapter</div></div>';
+        var moreMenuEl = moreBtn.querySelector('.admin-guide-accordion-editpanel-more-menu');
 
         moreBtn.addEventListener('click', function(e) {
-            moreMenuEl.classList.toggle('admin-guides-manual-accordion-editpanel-more-menu--open');
+            moreMenuEl.classList.toggle('admin-guide-accordion-editpanel-more-menu--open');
         });
 
-        var deleteBtn = moreBtn.querySelector('.admin-guides-manual-accordion-editpanel-more-delete');
+        var deleteBtn = moreBtn.querySelector('.admin-guide-accordion-editpanel-more-delete');
         deleteBtn.addEventListener('click', function(e) {
-            moreMenuEl.classList.remove('admin-guides-manual-accordion-editpanel-more-menu--open');
+            moreMenuEl.classList.remove('admin-guide-accordion-editpanel-more-menu--open');
             var chapterName = headerText.textContent.trim() || 'this chapter';
             if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
                 ConfirmDialogComponent.show({
@@ -1101,10 +1101,10 @@ const AdminModule = (function() {
         editPanel.appendChild(nameRow);
 
         var body = document.createElement('div');
-        body.className = 'admin-guides-manual-accordion-body accordion-body admin-guides-manual-accordion-body--hidden';
+        body.className = 'admin-guide-accordion-body accordion-body admin-guide-accordion-body--hidden';
 
         var addItemBtn = document.createElement('div');
-        addItemBtn.className = 'admin-guides-manual-add-item';
+        addItemBtn.className = 'admin-guide-add-item';
         addItemBtn.textContent = '+ Add Item';
         addItemBtn.setAttribute('data-slack-anchor', '');
         addItemBtn.addEventListener('click', function(e) {
@@ -1139,9 +1139,9 @@ const AdminModule = (function() {
             accordion.draggable = false;
         });
         accordion.addEventListener('dragstart', function(e) {
-            if (e.target.closest('.admin-guides-manual-item')) return;
+            if (e.target.closest('.admin-guide-item')) return;
             if (!accordion.draggable) { e.preventDefault(); return; }
-            var siblings = Array.from(container.querySelectorAll('.admin-guides-manual-accordion'));
+            var siblings = Array.from(container.querySelectorAll('.admin-guide-accordion'));
             chapterDragStartIndex = siblings.indexOf(accordion);
             e.dataTransfer.effectAllowed = 'move';
             accordion.classList.add('dragging');
@@ -1149,7 +1149,7 @@ const AdminModule = (function() {
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
             accordion.draggable = false;
-            var siblings = Array.from(container.querySelectorAll('.admin-guides-manual-accordion'));
+            var siblings = Array.from(container.querySelectorAll('.admin-guide-accordion'));
             if (siblings.indexOf(accordion) !== chapterDragStartIndex) {
                 if (ctx.isLoaded()) notifyFieldChange();
             }
@@ -1157,7 +1157,7 @@ const AdminModule = (function() {
         });
         accordion.addEventListener('dragover', function(e) {
             e.preventDefault();
-            var dragging = container.querySelector('.admin-guides-manual-accordion.dragging');
+            var dragging = container.querySelector('.admin-guide-accordion.dragging');
             if (dragging && dragging !== accordion) {
                 var rect = accordion.getBoundingClientRect();
                 var midY = rect.top + rect.height / 2;
@@ -1170,19 +1170,19 @@ const AdminModule = (function() {
         });
 
         headerEditArea.addEventListener('click', function(e) {
-            var isEditing = accordion.classList.contains('admin-guides-manual-accordion--editing');
+            var isEditing = accordion.classList.contains('admin-guide-accordion--editing');
             closeAllInstructionsEditPanels(container);
-            if (!isEditing) accordion.classList.add('admin-guides-manual-accordion--editing');
+            if (!isEditing) accordion.classList.add('admin-guide-accordion--editing');
             syncInstructionsAccordionUi(accordion);
         });
 
         header.addEventListener('click', function(e) {
-            if (e.target.closest('.admin-guides-manual-accordion-header-editarea')) return;
-            if (e.target.closest('.admin-guides-manual-accordion-header-drag')) return;
-            if (!accordion.classList.contains('admin-guides-manual-accordion--editing')) {
+            if (e.target.closest('.admin-guide-accordion-header-editarea')) return;
+            if (e.target.closest('.admin-guide-accordion-header-drag')) return;
+            if (!accordion.classList.contains('admin-guide-accordion--editing')) {
                 closeAllInstructionsEditPanels(container);
             }
-            accordion.classList.toggle('admin-guides-manual-accordion--open');
+            accordion.classList.toggle('admin-guide-accordion--open');
             syncInstructionsAccordionUi(accordion);
         });
 
@@ -1213,7 +1213,7 @@ const AdminModule = (function() {
         });
 
         var addChapterBtn = document.createElement('div');
-        addChapterBtn.className = 'admin-guides-manual-add-chapter';
+        addChapterBtn.className = 'admin-guide-add-chapter';
         addChapterBtn.textContent = '+ Add Chapter';
         addChapterBtn.addEventListener('click', function(e) {
             addChapter(container, addChapterBtn, ctx);
@@ -1221,9 +1221,9 @@ const AdminModule = (function() {
         container.appendChild(addChapterBtn);
 
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.admin-guides-manual-accordion-editpanel') &&
-                !e.target.closest('.admin-guides-manual-accordion-header-editarea') &&
-                !e.target.closest('.admin-guides-manual-accordion-header')) {
+            if (!e.target.closest('.admin-guide-accordion-editpanel') &&
+                !e.target.closest('.admin-guide-accordion-header-editarea') &&
+                !e.target.closest('.admin-guide-accordion-header')) {
                 closeAllInstructionsEditPanels(container);
             }
         });
@@ -1244,7 +1244,7 @@ const AdminModule = (function() {
         var itemEl = createGuideItem('', '', body, ctx);
         itemEl.dataset.isNew = '1';
         body.insertBefore(itemEl, addItemBtn);
-        var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
+        var titleDisplay = itemEl.querySelector('.admin-guide-item-title-display');
         if (titleDisplay) titleDisplay.click();
         if (ctx.isLoaded()) notifyFieldChange();
     }
@@ -1258,29 +1258,29 @@ const AdminModule = (function() {
 
     function createGuideItem(title, description, body, ctx) {
         var item = document.createElement('div');
-        item.className = 'admin-guides-manual-item';
+        item.className = 'admin-guide-item';
         item.setAttribute('data-slack-anchor', '');
 
         // Item header row: drag handle + title display/input + delete button
         var itemHeader = document.createElement('div');
-        itemHeader.className = 'admin-guides-manual-item-header';
+        itemHeader.className = 'admin-guide-item-header';
 
         // Drag handle
         var dragHandle = document.createElement('div');
-        dragHandle.className = 'admin-guides-manual-item-drag';
+        dragHandle.className = 'admin-guide-item-drag';
         var dragIcon = document.createElement('div');
-        dragIcon.className = 'admin-guides-manual-item-drag-icon';
+        dragIcon.className = 'admin-guide-item-drag-icon';
         dragHandle.appendChild(dragIcon);
 
         // Title display (click to edit)
         var titleDisplay = document.createElement('div');
-        titleDisplay.className = 'admin-guides-manual-item-title-display';
+        titleDisplay.className = 'admin-guide-item-title-display';
         titleDisplay.textContent = title || 'Click to add title';
 
         // Title input (hidden by default)
         var titleInput = document.createElement('input');
         titleInput.type = 'text';
-        titleInput.className = 'admin-guides-manual-item-title-input input-class-1';
+        titleInput.className = 'admin-guide-item-title-input input-class-1';
         titleInput.value = title || '';
         titleInput.placeholder = 'Title';
         titleInput.style.display = 'none';
@@ -1302,7 +1302,7 @@ const AdminModule = (function() {
 
         // Delete button
         var deleteBtn = document.createElement('div');
-        deleteBtn.className = 'admin-guides-manual-item-delete';
+        deleteBtn.className = 'admin-guide-item-delete';
         deleteBtn.setAttribute('title', 'Delete item');
         deleteBtn.addEventListener('click', function() {
             var itemTitle = titleInput.value.trim() || 'this item';
@@ -1336,19 +1336,19 @@ const AdminModule = (function() {
 
         // Description display (click to edit)
         var textDisplay = document.createElement('div');
-        textDisplay.className = 'admin-guides-description-text';
+        textDisplay.className = 'admin-guide-description-text';
         textDisplay.innerHTML = description || 'Click to add description';
         textDisplay.title = 'Click to edit';
 
         // Description textarea (hidden by default)
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-guides-description-input admin-guides-description-input--hidden input-class-1';
+        textInput.className = 'admin-guide-description-input admin-guide-description-input--hidden input-class-1';
         textInput.value = description || '';
         textInput.rows = 3;
 
         textDisplay.addEventListener('click', function() {
-            textDisplay.classList.add('admin-guides-description-text--hidden');
-            textInput.classList.remove('admin-guides-description-input--hidden');
+            textDisplay.classList.add('admin-guide-description-text--hidden');
+            textInput.classList.remove('admin-guide-description-input--hidden');
             textInput.style.display = 'block';
             textInput.focus();
         });
@@ -1358,8 +1358,8 @@ const AdminModule = (function() {
         });
         textInput.addEventListener('blur', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
-            textDisplay.classList.remove('admin-guides-description-text--hidden');
-            textInput.classList.add('admin-guides-description-input--hidden');
+            textDisplay.classList.remove('admin-guide-description-text--hidden');
+            textInput.classList.add('admin-guide-description-input--hidden');
             textInput.style.display = 'none';
         });
 
@@ -1381,7 +1381,7 @@ const AdminModule = (function() {
             });
             item.addEventListener('dragstart', function(e) {
                 if (!item.draggable) { e.preventDefault(); return; }
-                var siblings = Array.from(body.querySelectorAll('.admin-guides-manual-item'));
+                var siblings = Array.from(body.querySelectorAll('.admin-guide-item'));
                 itemDragStartIndex = siblings.indexOf(item);
                 e.dataTransfer.effectAllowed = 'move';
                 item.classList.add('dragging');
@@ -1389,7 +1389,7 @@ const AdminModule = (function() {
             item.addEventListener('dragend', function() {
                 item.classList.remove('dragging');
                 item.draggable = false;
-                var siblings = Array.from(body.querySelectorAll('.admin-guides-manual-item'));
+                var siblings = Array.from(body.querySelectorAll('.admin-guide-item'));
                 if (siblings.indexOf(item) !== itemDragStartIndex) {
                     if (ctx.isLoaded()) notifyFieldChange();
                 }
@@ -1397,7 +1397,7 @@ const AdminModule = (function() {
             });
             item.addEventListener('dragover', function(e) {
                 e.preventDefault();
-                var dragging = body.querySelector('.admin-guides-manual-item.dragging');
+                var dragging = body.querySelector('.admin-guide-item.dragging');
                 if (dragging && dragging !== item) {
                     var rect = item.getBoundingClientRect();
                     var midY = rect.top + rect.height / 2;
@@ -1418,9 +1418,9 @@ const AdminModule = (function() {
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
-        accordion.classList.add('admin-guides-manual-accordion--editing');
+        accordion.classList.add('admin-guide-accordion--editing');
         syncInstructionsAccordionUi(accordion);
-        var nameInput = accordion.querySelector('.admin-guides-manual-accordion-editpanel-input');
+        var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
         if (nameInput) { nameInput.select(); nameInput.focus(); }
         if (ctx.isLoaded()) notifyFieldChange();
     }
@@ -1550,10 +1550,10 @@ const AdminModule = (function() {
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
-                    var c = document.getElementById('admin-guides-manual-container');
+                    var c = document.getElementById('admin-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = c.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
@@ -1577,10 +1577,10 @@ const AdminModule = (function() {
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
-                    var c = document.getElementById('user-guides-manual-container');
+                    var c = document.getElementById('user-guide-manual-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = c.querySelectorAll('.admin-guides-manual-item[data-is-new="1"]');
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
