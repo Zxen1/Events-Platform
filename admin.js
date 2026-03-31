@@ -5367,7 +5367,7 @@ const AdminModule = (function() {
         apiContainer.appendChild(explanation);
         
         if (typeof window.getMessage === 'function') {
-            window.getMessage('msg_admin_imagesync_explanation', {}, false).then(function(message) {
+            window.getMessage('msg_admin_imagesync_explanation', {}, true).then(function(message) {
                 if (message) explanation.innerHTML = message;
             });
         }
