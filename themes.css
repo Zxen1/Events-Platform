@@ -186,6 +186,59 @@
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+/* ─── Map control rows ──────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .filter-mapcontrol-row,
+:root[data-theme="light"] .map-mapcontrol-row,
+:root[data-theme="light"] .welcome-mapcontrol-row {
+  background-color: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-row:focus-within,
+:root[data-theme="light"] .map-mapcontrol-row:focus-within,
+:root[data-theme="light"] .welcome-mapcontrol-row:focus-within {
+  background-color: #ffffff;
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .filter-mapcontrol-row:hover,
+  :root[data-theme="light"] .map-mapcontrol-row:hover,
+  :root[data-theme="light"] .welcome-mapcontrol-row:hover {
+    border-color: #aaa;
+  }
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-main,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-main,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-main {
+  color: #222;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-secondary,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-secondary,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-secondary {
+  color: #888;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item--active,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item--active,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item--active {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
 :root[data-theme="light"] .component-textarearesize-handle {
   background: rgba(0, 0, 0, 0.03);
   border-color: #ccc;
