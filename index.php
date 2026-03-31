@@ -390,7 +390,7 @@ if (empty($ogTitle)) {
         </div>
         
         <!-- Filter Basics Container -->
-        <section class="filter-basics-container" aria-label="Filters">
+        <section class="filter-basics-container container-class-3" aria-label="Filters">
           <div class="filter-keyword-row">
             <div class="filter-keyword-input-wrap">
               <input class="filter-keyword-input input-class-1" type="text" placeholder="Keywords" aria-label="Keywords">
