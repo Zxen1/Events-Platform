@@ -3681,7 +3681,7 @@ const MapControlRowComponent = (function(){
         // Our styled input
         var input = document.createElement('input');
         input.type = 'text';
-        input.className = prefix + '-geocoder-input';
+        input.className = prefix + '-geocoder-input input-class-2';
         input.placeholder = placeholder;
         input.autocomplete = 'off';
         geocoderEl.appendChild(input);

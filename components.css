@@ -1639,21 +1639,9 @@
     width: 100%;
     height: 100%;
     padding: 0 36px 0 12px;
-    background-color: transparent;
-    border: none;
     border-radius: 18px 0 0 18px;
     font-size: 14px;
-    color: #ffffff;
-    caret-color: #ffffff;
     box-sizing: border-box;
-}
-
-.filter-mapcontrol-geocoder-input:focus {
-    outline: none;
-}
-
-.filter-mapcontrol-geocoder-input::placeholder {
-    color: #888888;
 }
 
 .filter-mapcontrol-geocoder-dropdown {
@@ -1827,21 +1815,9 @@
     width: 100%;
     height: 100%;
     padding: 0 36px 0 8px;
-    background-color: transparent;
-    border: none;
     border-radius: 18px 0 0 18px;
     font-size: 14px;
-    color: #ffffff;
-    caret-color: #ffffff;
     box-sizing: border-box;
-}
-
-.map-mapcontrol-geocoder-input:focus {
-    outline: none;
-}
-
-.map-mapcontrol-geocoder-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
 }
 
 .map-mapcontrol-geocoder-dropdown {
@@ -2023,21 +1999,9 @@
     width: 100%;
     height: 100%;
     padding: 0 36px 0 8px;
-    background-color: transparent;
-    border: none;
     border-radius: 18px 0 0 18px;
     font-size: 14px;
-    color: #ffffff;
-    caret-color: #ffffff;
     box-sizing: border-box;
-}
-
-.welcome-mapcontrol-geocoder-input:focus {
-    outline: none;
-}
-
-.welcome-mapcontrol-geocoder-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
 }
 
 .welcome-mapcontrol-geocoder-dropdown {
@@ -2181,12 +2145,6 @@
    STATES (shared)
    ---------------------------------------------------------------------------- */
 
-.filter-mapcontrol-geocoder-input:focus,
-.map-mapcontrol-geocoder-input:focus,
-.welcome-mapcontrol-geocoder-input:focus {
-    outline: none;
-    border-color: var(--blue-500);
-}
 
 .filter-mapcontrol-geocoder-dropdown-item:hover {
     background-color: rgba(255,255,255,0.1);
