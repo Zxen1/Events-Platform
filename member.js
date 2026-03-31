@@ -1029,6 +1029,11 @@ const MemberModule = (function() {
             document.documentElement.removeAttribute('data-theme');
         }
 
+        document.querySelectorAll('[data-compass-default]').forEach(function(img) {
+            var url = (mode === 'light' && img.dataset.compassLight) ? img.dataset.compassLight : img.dataset.compassDefault;
+            if (url && img.src !== url) img.src = url;
+        });
+
         document.documentElement.style.setProperty('--bg-opacity', preset.bg_opacity);
         localStorage.setItem('color_theme', mode);
         localStorage.setItem('bg_opacity', preset.bg_opacity);

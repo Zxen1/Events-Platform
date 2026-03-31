@@ -4093,17 +4093,23 @@ const MapControlRowComponent = (function(){
                 // Also avoid broken-image icons by only setting src after a successful load.
                 if (compassImg && compassFilename) {
                     var compassUrl = App.getImageUrl('systemImages', compassFilename);
+                    compassImg.dataset.compassDefault = compassUrl;
+                    var compass2Filename = sys.icon_compass_2 || '';
+                    if (compass2Filename) {
+                        compassImg.dataset.compassLight = App.getImageUrl('systemImages', compass2Filename);
+                    }
+                    var activeUrl = (document.documentElement.getAttribute('data-theme') === 'light' && compassImg.dataset.compassLight)
+                        ? compassImg.dataset.compassLight : compassUrl;
                     var testImg = new Image();
                     testImg.onload = function() {
-                        compassImg.src = compassUrl;
+                        compassImg.src = activeUrl;
                         compassImg.style.display = 'block';
                     };
                     testImg.onerror = function() {
-                        // Leave hidden on error
                         compassImg.removeAttribute('src');
                         compassImg.style.display = 'none';
                     };
-                    testImg.src = compassUrl;
+                    testImg.src = activeUrl;
                 }
             }
         } catch (e) {
