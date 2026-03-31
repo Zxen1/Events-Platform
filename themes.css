@@ -213,21 +213,21 @@
 :root[data-theme="light"] .filter-mapcontrol-geocoder-clear,
 :root[data-theme="light"] .map-mapcontrol-geocoder-clear,
 :root[data-theme="light"] .welcome-mapcontrol-geocoder-clear,
-:root[data-theme="light"] .filter-mapcontrol-geolocate,
-:root[data-theme="light"] .map-mapcontrol-geolocate,
-:root[data-theme="light"] .welcome-mapcontrol-geolocate {
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading),
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading),
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading) {
   color: rgba(0, 0, 0, 0.4);
 }
 
 :root[data-theme="light"] .filter-mapcontrol-geocoder-clear:hover,
 :root[data-theme="light"] .map-mapcontrol-geocoder-clear:hover,
 :root[data-theme="light"] .welcome-mapcontrol-geocoder-clear:hover,
-:root[data-theme="light"] .filter-mapcontrol-geolocate:hover,
-:root[data-theme="light"] .filter-mapcontrol-geolocate:focus-visible,
-:root[data-theme="light"] .map-mapcontrol-geolocate:hover,
-:root[data-theme="light"] .map-mapcontrol-geolocate:focus-visible,
-:root[data-theme="light"] .welcome-mapcontrol-geolocate:hover,
-:root[data-theme="light"] .welcome-mapcontrol-geolocate:focus-visible {
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):focus-visible,
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):focus-visible,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):focus-visible {
   background-color: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.7);
 }
