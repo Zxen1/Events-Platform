@@ -6717,7 +6717,7 @@ const MemberModule = (function() {
         var emailInput = document.createElement('input');
         emailInput.type = 'email';
         emailInput.id = 'memberLoginEmail';
-        emailInput.className = 'member-panel-field-input';
+        emailInput.className = 'member-panel-field-input input-class-1';
         emailInput.name = 'loginEmail';
         emailInput.autocomplete = 'username';
         emailField.appendChild(emailLabel);
@@ -6733,7 +6733,7 @@ const MemberModule = (function() {
         var passInput = document.createElement('input');
         passInput.type = 'password';
         passInput.id = 'memberLoginPassword';
-        passInput.className = 'member-panel-field-input';
+        passInput.className = 'member-panel-field-input input-class-1';
         passInput.name = 'loginPassword';
         passInput.autocomplete = 'current-password';
         passField.appendChild(passLabel);
@@ -6845,7 +6845,7 @@ const MemberModule = (function() {
         var loginEmail = document.createElement('input');
         loginEmail.type = 'email';
         loginEmail.id = 'memberCreateLoginEmail';
-        loginEmail.className = 'member-panel-field-input';
+        loginEmail.className = 'member-panel-field-input input-class-1';
         loginEmail.name = 'loginEmail';
         loginEmail.autocomplete = 'username';
         emailField.appendChild(loginLabelEmail);
@@ -6860,7 +6860,7 @@ const MemberModule = (function() {
         var loginPass = document.createElement('input');
         loginPass.type = 'password';
         loginPass.id = 'memberCreateLoginPassword';
-        loginPass.className = 'member-panel-field-input';
+        loginPass.className = 'member-panel-field-input input-class-1';
         loginPass.name = 'loginPassword';
         loginPass.autocomplete = 'current-password';
         passField.appendChild(loginLabelPass);

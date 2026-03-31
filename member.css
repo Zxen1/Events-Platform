@@ -553,17 +553,8 @@
 
 .member-panel-field-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  border-radius: 5px;
   padding: 8px 12px;
-  color: var(--input-text, #fff);
   font-size: 14px;
-}
-
-.member-panel-field-input:focus {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
 }
 
 .member-panel-field-textarea {
