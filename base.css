@@ -431,7 +431,6 @@
   box-sizing: border-box;
 }
 .button-class-2f:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -593,7 +592,6 @@
 }
 
 .button-class-2g:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
