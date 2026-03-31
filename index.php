@@ -516,27 +516,27 @@ if (empty($ogTitle)) {
           <div class="admin-settings-general-container">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteName">Website Name</label>
-              <input type="text" class="admin-settings-field-input" id="adminWebsiteName" data-setting-key="website_name" autocomplete="off" placeholder="Enter website name" />
+              <input type="text" class="admin-settings-field-input input-class-1" id="adminWebsiteName" data-setting-key="website_name" autocomplete="off" placeholder="Enter website name" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteTagline">Website Tagline</label>
-              <input type="text" class="admin-settings-field-input" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
+              <input type="text" class="admin-settings-field-input input-class-1" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteUrl">Website URL</label>
-              <input type="text" class="admin-settings-field-input" id="adminWebsiteUrl" data-setting-key="website_url" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="https://example.com" />
+              <input type="text" class="admin-settings-field-input input-class-1" id="adminWebsiteUrl" data-setting-key="website_url" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="https://example.com" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteDescription">Website Description</label>
-              <textarea class="admin-settings-field-textarea" id="adminWebsiteDescription" data-setting-key="website_description" rows="4" placeholder="Enter website description for social sharing"></textarea>
+              <textarea class="admin-settings-field-textarea input-class-1" id="adminWebsiteDescription" data-setting-key="website_description" rows="4" placeholder="Enter website description for social sharing"></textarea>
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminContactEmail">Contact Email</label>
-              <input type="email" class="admin-settings-field-input" id="adminContactEmail" data-setting-key="contact_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="contact@example.com" />
+              <input type="email" class="admin-settings-field-input input-class-1" id="adminContactEmail" data-setting-key="contact_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="contact@example.com" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminSupportEmail">Support Email</label>
-              <input type="email" class="admin-settings-field-input" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="support@example.com" />
+              <input type="email" class="admin-settings-field-input input-class-1" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="support@example.com" />
             </div>
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
@@ -557,11 +557,11 @@ if (empty($ogTitle)) {
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWelcomeTitle">Welcome Title</label>
-              <input type="text" class="admin-settings-field-input" id="adminWelcomeTitle" data-setting-key="welcome_title" autocomplete="off" placeholder="Enter welcome title" />
+              <input type="text" class="admin-settings-field-input input-class-1" id="adminWelcomeTitle" data-setting-key="welcome_title" autocomplete="off" placeholder="Enter welcome title" />
             </div>
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWelcomeMessage">Welcome Message</label>
-              <textarea class="admin-settings-field-textarea" id="adminWelcomeMessage" data-setting-key="welcome_message" rows="4" placeholder="Enter welcome message (HTML supported)"></textarea>
+              <textarea class="admin-settings-field-textarea input-class-1" id="adminWelcomeMessage" data-setting-key="welcome_message" rows="4" placeholder="Enter welcome message (HTML supported)"></textarea>
             </div>
             <div class="admin-settings-field admin-settings-field--imagepicker">
               <label class="admin-settings-field-label">Big Logo</label>
@@ -839,81 +839,81 @@ if (empty($ogTitle)) {
               <div class="admin-settings-folders-container">
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderAgeRatings">Age Ratings Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderAgeRatings" data-setting-key="folder_age_ratings" autocomplete="off" placeholder="age-ratings/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderAgeRatings" data-setting-key="folder_age_ratings" autocomplete="off" placeholder="age-ratings/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderAmenities">Amenities Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderAvatars">Avatars Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderAvatars" data-setting-key="folder_avatars" autocomplete="off" placeholder="avatars/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderAvatars" data-setting-key="folder_avatars" autocomplete="off" placeholder="avatars/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderCategoryIcons">Category Icons Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderCountries">Countries Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderCountries" data-setting-key="folder_countries" autocomplete="off" placeholder="flags/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderCountries" data-setting-key="folder_countries" autocomplete="off" placeholder="flags/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderDummyImages">Dummy Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderFieldsetIcons">Fieldset Icons Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderFieldsetIcons" data-setting-key="folder_fieldset_icons" autocomplete="off" placeholder="system-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderFieldsetIcons" data-setting-key="folder_fieldset_icons" autocomplete="off" placeholder="system-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderLinks">Links Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderLinks" data-setting-key="folder_links" autocomplete="off" placeholder="Links/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderLinks" data-setting-key="folder_links" autocomplete="off" placeholder="Links/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderMapImages">Map Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderMapImages" data-setting-key="folder_map_images" autocomplete="off" placeholder="map-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderMapImages" data-setting-key="folder_map_images" autocomplete="off" placeholder="map-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderPhonePrefixes">Phone Prefixes Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderPhonePrefixes" data-setting-key="folder_phone_prefixes" autocomplete="off" placeholder="phone-prefixes/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderPhonePrefixes" data-setting-key="folder_phone_prefixes" autocomplete="off" placeholder="phone-prefixes/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderPostImages">Post Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderPostSystemImages">Post System Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderPostSystemImages" data-setting-key="folder_post_system_images" autocomplete="off" placeholder="system-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderPostSystemImages" data-setting-key="folder_post_system_images" autocomplete="off" placeholder="system-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderRecentSystemImages">Recent System Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderRecentSystemImages" data-setting-key="folder_recent_system_images" autocomplete="off" placeholder="system-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderRecentSystemImages" data-setting-key="folder_recent_system_images" autocomplete="off" placeholder="system-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderSiteAvatars">Site Avatars Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteAvatars" data-setting-key="folder_site_avatars" autocomplete="off" placeholder="site-avatars/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderSiteAvatars" data-setting-key="folder_site_avatars" autocomplete="off" placeholder="site-avatars/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderSiteImages">Site Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteImages" data-setting-key="folder_site_images" autocomplete="off" placeholder="site-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderSiteImages" data-setting-key="folder_site_images" autocomplete="off" placeholder="site-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderSystemImages">System Images Folder</label>
-                  <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
                 </div>
               </div>
               <div class="admin-settings-api-container">
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password</label>
-                  <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter Storage Zone password (must allow uploads)" />
+                  <input type="password" class="admin-settings-field-input input-class-1" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter Storage Zone password (must allow uploads)" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminStorageZoneName">Bunny Storage Zone Name</label>
-                  <input type="text" class="admin-settings-field-input" id="adminStorageZoneName" data-setting-key="storage_zone_name" autocomplete="off" placeholder="Enter storage zone name" />
+                  <input type="text" class="admin-settings-field-input input-class-1" id="adminStorageZoneName" data-setting-key="storage_zone_name" autocomplete="off" placeholder="Enter storage zone name" />
                 </div>
               </div>
             </div>

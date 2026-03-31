@@ -2681,21 +2681,7 @@
   width: 100%;
   height: 36px;
   padding: 0 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
-  color: #fff;
   font-size: 13px;
-  caret-color: #fff;
-}
-
-.admin-settings-field-input:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
-
-.admin-settings-field-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
 }
 
 .admin-settings-field-input--secret {
@@ -2706,31 +2692,9 @@
   width: 100%;
   min-height: 120px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
-  color: #fff;
   font-size: 13px;
   font-family: inherit;
   resize: none;
-  caret-color: #fff;
-}
-
-.admin-settings-field-textarea:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
-
-.admin-settings-field-textarea + .component-textarearesize-handle {
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.admin-settings-field-textarea:focus + .component-textarearesize-handle {
-  border-color: var(--blue-500);
-}
-
-.admin-settings-field-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Toggle Fields */
