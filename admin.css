@@ -1395,18 +1395,8 @@
   flex: 1;
   height: 36px;
   padding: 0 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #fff;
   font-size: 14px;
   font-weight: 500;
-  caret-color: #fff;
-}
-
-.admin-checkout-option-input-title:focus {
-  outline: none;
-  border-color: var(--blue-500);
 }
 
 .admin-checkout-option-tier-badge {
@@ -1490,27 +1480,9 @@
   width: 100%;
   min-height: 80px;
   padding: 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #ccc;
   font-size: 14px;
   resize: none;
   line-height: 1.4;
-  caret-color: #fff;
-}
-
-.admin-checkout-option-input-description:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
-
-.admin-checkout-option-input-description:focus + .component-textarearesize-handle {
-  border-color: var(--blue-500);
-}
-
-.admin-checkout-option-input-description::placeholder {
-  color: #555;
 }
 
 .admin-checkout-option-field {
@@ -1770,22 +1742,7 @@
 .admin-checkout-option-input-calcsurcharge {
   height: 36px;
   padding: 0 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #fff;
   font-size: 14px;
-  caret-color: #fff;
-}
-
-.admin-checkout-option-input-price:focus,
-.admin-checkout-option-input-basicdayrate:focus,
-.admin-checkout-option-input-discountdayrate:focus,
-.admin-checkout-option-input-calcdays:focus,
-.admin-checkout-option-input-calclocations:focus,
-.admin-checkout-option-input-calcsurcharge:focus {
-  outline: none;
-  border-color: var(--blue-500);
 }
 
 .admin-checkout-option-input-calcdays,
@@ -1894,43 +1851,6 @@
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 8px;
-}
-
-.admin-checkout-accordion-body-input {
-  height: 36px;
-  padding: 0 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 14px;
-  caret-color: #fff;
-}
-
-.admin-checkout-accordion-body-input:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
-
-.admin-checkout-accordion-body-textarea {
-  min-height: 80px;
-  padding: 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 14px;
-  resize: none;
-  caret-color: #fff;
-}
-
-.admin-checkout-accordion-body-textarea:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
-
-.admin-checkout-accordion-body-textarea:focus + .component-textarearesize-handle {
-  border-color: var(--blue-500);
 }
 
 .admin-checkout-accordion-body-checkbox {

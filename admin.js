@@ -5642,7 +5642,7 @@ const AdminModule = (function() {
 
             var titleInput = document.createElement('input');
             titleInput.type = 'text';
-            titleInput.className = 'admin-checkout-option-input-title';
+            titleInput.className = 'admin-checkout-option-input-title input-class-1';
             titleInput.value = String(option.checkout_title).trim();
             titleInput.placeholder = 'Title';
 
@@ -5666,7 +5666,7 @@ const AdminModule = (function() {
             restOfPanel.innerHTML =
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Description</label>' +
-                    '<textarea class="admin-checkout-option-input-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
+                    '<textarea class="admin-checkout-option-input-description input-class-1" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row admin-checkout-accordion-body-row--checkboxes admin-checkout-accordion-body-row--disabled">' +
                     '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-featured" disabled' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
@@ -5674,30 +5674,30 @@ const AdminModule = (function() {
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Flagfall Price</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-price input-class-1" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Basic Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-basicdayrate" value="' + basicDayRate + '" placeholder="N/A" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-basicdayrate input-class-1" value="' + basicDayRate + '" placeholder="N/A" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Discount Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-discountdayrate" value="' + discountDayRate + '" placeholder="N/A" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-discountdayrate input-class-1" value="' + discountDayRate + '" placeholder="N/A" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Price Calculator (Sandbox)</label>' +
                     '<div class="admin-checkout-accordion-body-calc">' +
                         '<div class="admin-checkout-accordion-body-calc-field">' +
                             '<label class="admin-checkout-accordion-body-label">Days</label>' +
-                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calcdays" value="" placeholder="Days" />' +
+                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calcdays input-class-1" value="" placeholder="Days" />' +
                         '</div>' +
                         '<div class="admin-checkout-accordion-body-calc-field">' +
                             '<label class="admin-checkout-accordion-body-label">Locations</label>' +
-                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calclocations" value="1" placeholder="Locations" />' +
+                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calclocations input-class-1" value="1" placeholder="Locations" />' +
                         '</div>' +
                         '<div class="admin-checkout-accordion-body-calc-field">' +
                             '<label class="admin-checkout-accordion-body-label">Surcharge %</label>' +
-                            '<input type="text" inputmode="decimal" class="admin-checkout-option-input-calcsurcharge" value="0" placeholder="Surcharge %" />' +
+                            '<input type="text" inputmode="decimal" class="admin-checkout-option-input-calcsurcharge input-class-1" value="0" placeholder="Surcharge %" />' +
                         '</div>' +
                         '<span class="admin-checkout-accordion-body-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
@@ -5709,8 +5709,6 @@ const AdminModule = (function() {
                 body.appendChild(restOfPanel.firstChild);
             }
             
-            // Calculator inputs have their --calc class baked into the markup above.
-
             // Set hidden class if hidden
             if (isHidden) {
                 accordion.classList.add('admin-checkout-accordion--hidden');
