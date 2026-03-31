@@ -375,7 +375,22 @@
 
 :root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info,
 :root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-image-badge,
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-row-cat .post-card-icon-sub,
+:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-image-badge,
+:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-row-cat .recent-card-icon-sub {
+  opacity: 1;
+}
+
+:root[data-theme="light"] .posteditor-statusbar-countdown {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .posteditor-statusbar-date {
+  color: rgba(0, 0, 0, 0.8);
 }
 
 /* ─── Filter Panel ───────────────────────────────────────────────────────── */
