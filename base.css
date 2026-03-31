@@ -583,8 +583,8 @@
   height: 36px;
   padding: 0 12px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
   color: var(--website-white);
   font-weight: 600;
   cursor: pointer;
@@ -599,13 +599,11 @@
 
 .button-class-2g:not(:disabled) {
   background: #cc6600;
-  border-color: #cc6600;
   color: #fff;
 }
 
 .button-class-2g:not(:disabled):hover {
   background: #e67300;
-  border-color: #e67300;
 }
 
 /* ============================================================================
