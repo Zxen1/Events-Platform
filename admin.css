@@ -1391,22 +1391,22 @@
   text-overflow: ellipsis;
 }
 
-.admin-checkout-option-title {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.admin-checkout-option-input-title {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 5px;
-  padding: 8px 12px;
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   caret-color: #fff;
 }
 
-.admin-checkout-option-title:focus {
+.admin-checkout-option-input-title:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--blue-500);
 }
 
 .admin-checkout-option-tier-badge {
@@ -1486,35 +1486,30 @@
   display: none;
 }
 
-.admin-checkout-option-description {
+.admin-checkout-option-input-description {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  min-height: 80px;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 5px;
-  padding: 10px 12px;
   color: #ccc;
-  font-size: 13px;
+  font-size: 14px;
   resize: none;
-  min-height: 60px;
   line-height: 1.4;
   caret-color: #fff;
 }
 
-.admin-checkout-option-description:focus {
+.admin-checkout-option-input-description:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--blue-500);
 }
 
-.admin-checkout-option-description + .component-textarearesize-handle {
-  border-color: rgba(255, 255, 255, 0.15);
+.admin-checkout-option-input-description:focus + .component-textarearesize-handle {
+  border-color: var(--blue-500);
 }
 
-.admin-checkout-option-description:focus + .component-textarearesize-handle {
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.admin-checkout-option-description::placeholder {
+.admin-checkout-option-input-description::placeholder {
   color: #555;
 }
 
@@ -1767,8 +1762,36 @@
   gap: 10px;
 }
 
-.admin-checkout-accordion-body-input--title {
-  flex: 1;
+.admin-checkout-option-input-price,
+.admin-checkout-option-input-basicdayrate,
+.admin-checkout-option-input-discountdayrate,
+.admin-checkout-option-input-calcdays,
+.admin-checkout-option-input-calclocations,
+.admin-checkout-option-input-calcsurcharge {
+  height: 36px;
+  padding: 0 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 14px;
+  caret-color: #fff;
+}
+
+.admin-checkout-option-input-price:focus,
+.admin-checkout-option-input-basicdayrate:focus,
+.admin-checkout-option-input-discountdayrate:focus,
+.admin-checkout-option-input-calcdays:focus,
+.admin-checkout-option-input-calclocations:focus,
+.admin-checkout-option-input-calcsurcharge:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+
+.admin-checkout-option-input-calcdays,
+.admin-checkout-option-input-calclocations,
+.admin-checkout-option-input-calcsurcharge {
+  width: 100px;
 }
 
 .admin-checkout-accordion-body-row--checkboxes {
@@ -1934,9 +1957,6 @@
   flex-wrap: wrap;
 }
 
-.admin-checkout-accordion-body-input--calc {
-  width: 100px;
-}
 
 .admin-checkout-accordion-body-calc-equals {
   font-weight: 600;

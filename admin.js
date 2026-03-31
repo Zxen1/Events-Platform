@@ -5642,8 +5642,7 @@ const AdminModule = (function() {
 
             var titleInput = document.createElement('input');
             titleInput.type = 'text';
-            titleInput.className = 'admin-checkout-accordion-body-input admin-checkout-option-title';
-            titleInput.classList.add('admin-checkout-accordion-body-input--title');
+            titleInput.className = 'admin-checkout-option-input-title';
             titleInput.value = String(option.checkout_title).trim();
             titleInput.placeholder = 'Title';
 
@@ -5667,7 +5666,7 @@ const AdminModule = (function() {
             restOfPanel.innerHTML =
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Description</label>' +
-                    '<textarea class="admin-checkout-accordion-body-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
+                    '<textarea class="admin-checkout-option-input-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row admin-checkout-accordion-body-row--checkboxes admin-checkout-accordion-body-row--disabled">' +
                     '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-featured" disabled' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
@@ -5675,22 +5674,22 @@ const AdminModule = (function() {
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Flagfall Price</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Basic Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-basicdayrate" value="' + basicDayRate + '" placeholder="N/A" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Discount Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-option-input-discountdayrate" value="' + discountDayRate + '" placeholder="N/A" />' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Price Calculator (Sandbox)</label>' +
                     '<div class="admin-checkout-accordion-body-calc">' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-days" value="" placeholder="Days" />' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calcdays" value="" placeholder="Days" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calclocations" value="1" placeholder="Locations" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-option-input-calcsurcharge" value="0" placeholder="Surcharge %" />' +
                         '<span class="admin-checkout-accordion-body-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
@@ -5761,7 +5760,7 @@ const AdminModule = (function() {
             });
 
             // Description textarea
-            var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
+            var descriptionInput = accordion.querySelector('.admin-checkout-option-input-description');
             if (descriptionInput) {
                 descriptionInput.addEventListener('input', function() {
                     markDirty();
@@ -5789,13 +5788,13 @@ const AdminModule = (function() {
             }
 
             // Price calculator logic
-            var calcDaysInput = accordion.querySelector('.admin-checkout-option-calc-days');
-            var calcLocationsInput = accordion.querySelector('.admin-checkout-option-calc-locations');
-            var calcSurchargeInput = accordion.querySelector('.admin-checkout-option-calc-surcharge');
+            var calcDaysInput = accordion.querySelector('.admin-checkout-option-input-calcdays');
+            var calcLocationsInput = accordion.querySelector('.admin-checkout-option-input-calclocations');
+            var calcSurchargeInput = accordion.querySelector('.admin-checkout-option-input-calcsurcharge');
             var calcTotalSpan = accordion.querySelector('.admin-checkout-option-calc-total');
-            var priceInput = accordion.querySelector('.admin-checkout-option-price');
-            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
-            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
+            var priceInput = accordion.querySelector('.admin-checkout-option-input-price');
+            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-input-basicdayrate');
+            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-input-discountdayrate');
 
             // Prevent letters and scroll wheel on number inputs
             function setupNumericInput(input, allowDecimal) {
@@ -5960,16 +5959,16 @@ const AdminModule = (function() {
 
         var options = [];
         container.querySelectorAll('.admin-checkout-accordion').forEach(function(accordion) {
-            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
-            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
-            var priceInput = accordion.querySelector('.admin-checkout-option-price');
+            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-input-basicdayrate');
+            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-input-discountdayrate');
+            var priceInput = accordion.querySelector('.admin-checkout-option-input-price');
 
             var flagfallPrice = priceInput ? Math.round((parseFloat(priceInput.value) || 0) * 100) / 100 : 0;
             var basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : 0;
             var discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : 0;
 
-            var titleInput = accordion.querySelector('.admin-checkout-option-title');
-            var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
+            var titleInput = accordion.querySelector('.admin-checkout-option-input-title');
+            var descriptionInput = accordion.querySelector('.admin-checkout-option-input-description');
             var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
             var hiddenSwitchInput = accordion.querySelector('.component-switch-input');
