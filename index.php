@@ -383,10 +383,10 @@ if (empty($ogTitle)) {
       <div class="filter-panel-body">
         <div class="filter-map-controls"></div>
         <div class="filter-reset-box">
-          <button class="filter-reset-btn" type="button" data-reset="filters" disabled>Reset All Filters</button>
+          <button class="filter-reset-btn button-class-2g" type="button" data-reset="filters" disabled>Reset All Filters</button>
         </div>
         <div class="filter-reset-box">
-          <button class="filter-reset-btn" type="button" data-reset="categories" disabled>Reset All Categories</button>
+          <button class="filter-reset-btn button-class-2g" type="button" data-reset="categories" disabled>Reset All Categories</button>
         </div>
         
         <!-- Filter Basics Container -->

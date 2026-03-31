@@ -251,32 +251,9 @@
 
 .filter-reset-btn {
   width: 100%;
-  height: 36px;
-  border-radius: 5px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #666;
   font: inherit;
   font-size: 14px;
-  font-weight: bold;
   text-align: left;
-  padding: 0 12px;
-  cursor: default;
-  opacity: 0.5;
-  box-sizing: border-box;
-}
-
-.filter-reset-btn:not(:disabled) {
-  background: #cc6600;
-  border-color: #cc6600;
-  color: #fff;
-  opacity: 1;
-  cursor: pointer;
-}
-
-.filter-reset-btn:not(:disabled):hover {
-  background: #e67300;
-  border-color: #e67300;
 }
 
 /* Favourites button */

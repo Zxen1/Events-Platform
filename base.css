@@ -578,6 +578,36 @@
   border-color: rgba(255,255,255,0.3);
 }
 
+/* Button Class 2g: Orange action (modelled on 2f, orange instead of blue) */
+.button-class-2g {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--website-white);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.button-class-2g:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-class-2g:not(:disabled) {
+  background: #cc6600;
+  border-color: #cc6600;
+  color: #fff;
+}
+
+.button-class-2g:not(:disabled):hover {
+  background: #e67300;
+  border-color: #e67300;
+}
+
 /* ============================================================================
    INPUT CLASSES
    
