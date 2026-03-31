@@ -408,9 +408,13 @@
   opacity: 0.5;
 }
 
-:root[data-theme="light"] .filter-keyword-clear,
-:root[data-theme="light"] .filter-price-clear,
-:root[data-theme="light"] .filter-daterange-clear {
+:root[data-theme="light"] .filter-keyword-clear:not(.active),
+:root[data-theme="light"] .filter-price-clear:not(.active),
+:root[data-theme="light"] .filter-daterange-clear:not(.active) {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] .filter-amenities-accordion-header-text {
   color: rgba(0, 0, 0, 0.5);
 }
 
@@ -440,8 +444,17 @@
 
 :root[data-theme="light"] .filter-amenities-clear:not(.active) {
   color: rgba(0, 0, 0, 0.5);
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
   border-color: transparent;
+}
+
+:root[data-theme="light"] .filter-categoryfilter-accordion-option-image {
+  opacity: 0.5;
+}
+
+:root[data-theme="light"] .filter-categoryfilter-accordion-option-text,
+:root[data-theme="light"] .filter-categoryfilter-count {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 :root[data-theme="light"] .filter-show18plus-label {
