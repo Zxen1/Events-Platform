@@ -1927,16 +1927,7 @@
   flex: 1;
   height: 100%;
   padding: 0 10px;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #fff;
   font-size: 14px;
-  caret-color: #fff;
-}
-
-.admin-messages-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
 }
 
 .admin-messages-container {

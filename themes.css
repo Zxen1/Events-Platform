@@ -157,6 +157,15 @@
   color: #999;
 }
 
+:root[data-theme="light"] .input-class-2 {
+  color: #222;
+  caret-color: #222;
+}
+
+:root[data-theme="light"] .input-class-2::placeholder {
+  color: #999;
+}
+
 :root[data-theme="light"] .component-textarearesize-handle {
   background: rgba(0, 0, 0, 0.03);
   border-color: #ccc;

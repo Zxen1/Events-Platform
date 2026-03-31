@@ -1966,7 +1966,7 @@ const AdminModule = (function() {
         
         var searchInput = document.createElement('input');
         searchInput.type = 'text';
-        searchInput.className = 'admin-messages-search-input';
+        searchInput.className = 'admin-messages-search-input input-class-2';
         searchInput.placeholder = 'Search messages...';
         searchInput.setAttribute('aria-label', 'Search messages');
         

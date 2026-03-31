@@ -694,6 +694,18 @@
   color: #888;
 }
 
+.input-class-2 {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  caret-color: #fff;
+}
+
+.input-class-2::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 
 /* ============================================================================
    ROW CLASSES
