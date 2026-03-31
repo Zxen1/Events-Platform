@@ -803,7 +803,7 @@ const AdminModule = (function() {
         guidesTabInitialized = true;
 
         var adminContainer = document.getElementById('admin-guide-container');
-        var userContainer = document.getElementById('user-guide-manual-container');
+        var userContainer = document.getElementById('user-guide-container');
 
         function loadIframe() {
             var iframe = document.getElementById('admin-guide-iframe');
@@ -853,11 +853,11 @@ const AdminModule = (function() {
         getContainer: function() { return document.getElementById('admin-guide-container'); }
     };
     var userGuideCtx = {
-        containerId: 'user-guide-manual-container',
+        containerId: 'user-guide-container',
         compositeKey: 'user_guide',
         isLoaded: function() { return userGuideLoaded; },
         setLoaded: function() { userGuideLoaded = true; },
-        getContainer: function() { return document.getElementById('user-guide-manual-container'); }
+        getContainer: function() { return document.getElementById('user-guide-container'); }
     };
 
     function captureGuideState(containerId) {
@@ -885,7 +885,7 @@ const AdminModule = (function() {
     }
 
     function captureAdminGuideState() { return captureGuideState('admin-guide-container'); }
-    function captureUserGuideState() { return captureGuideState('user-guide-manual-container'); }
+    function captureUserGuideState() { return captureGuideState('user-guide-container'); }
 
     function resetGuideToOriginal(containerId, registryKey) {
         var manualContainer = document.getElementById(containerId);
@@ -937,7 +937,7 @@ const AdminModule = (function() {
     }
 
     function resetInstructionsToOriginal() { resetGuideToOriginal('admin-guide-container', 'admin_guide'); }
-    function resetUserGuideToOriginal() { resetGuideToOriginal('user-guide-manual-container', 'user_guide'); }
+    function resetUserGuideToOriginal() { resetGuideToOriginal('user-guide-container', 'user_guide'); }
 
     function getModifiedGuide(containerId) {
         var modified = [];
@@ -984,7 +984,7 @@ const AdminModule = (function() {
     }
 
     function getModifiedAdminGuide() { return getModifiedGuide('admin-guide-container'); }
-    function getModifiedUserGuide() { return getModifiedGuide('user-guide-manual-container'); }
+    function getModifiedUserGuide() { return getModifiedGuide('user-guide-container'); }
 
     function closeAllInstructionsEditPanels(containerEl) {
         if (!containerEl) return;
@@ -1577,7 +1577,7 @@ const AdminModule = (function() {
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
-                    var c = document.getElementById('user-guide-manual-container');
+                    var c = document.getElementById('user-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
                             var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');

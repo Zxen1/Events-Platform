@@ -1502,7 +1502,7 @@ if (empty($ogTitle)) {
           <div class="admin-guide-section-header">Admin Guide</div>
           <div id="admin-guide-container" class="admin-guide-container"></div>
           <div class="admin-guide-section-header">User Guide</div>
-          <div id="user-guide-manual-container" class="admin-guide-container"></div>
+          <div id="user-guide-container" class="admin-guide-container"></div>
           <iframe id="admin-guide-iframe" title="Guides" data-src="sitemap.html" loading="lazy" style="width: 100%; height: 980px; border: 0; display: block; background: transparent;"></iframe>
         </section>
 
