@@ -232,6 +232,15 @@
   color: rgba(0, 0, 0, 0.7);
 }
 
+:root[data-theme="light"] .filter-mapcontrol-compass:hover,
+:root[data-theme="light"] .filter-mapcontrol-compass:focus-visible,
+:root[data-theme="light"] .map-mapcontrol-compass:hover,
+:root[data-theme="light"] .map-mapcontrol-compass:focus-visible,
+:root[data-theme="light"] .welcome-mapcontrol-compass:hover,
+:root[data-theme="light"] .welcome-mapcontrol-compass:focus-visible {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
 :root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown,
 :root[data-theme="light"] .map-mapcontrol-geocoder-dropdown,
 :root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown {
@@ -453,11 +462,11 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-:root[data-theme="light"] .filter-show18plus-label {
-  color: rgba(0, 0, 0, 0.3);
+:root[data-theme="light"] .filter-show18plus-row:not(:has(.filter-show18plus-input:checked)) {
+  opacity: 0.5;
 }
 
-:root[data-theme="light"] .filter-show18plus-row:has(.filter-show18plus-input:checked) .filter-show18plus-label {
+:root[data-theme="light"] .filter-show18plus-label {
   color: rgba(0, 0, 0, 0.5);
 }
 
