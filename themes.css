@@ -470,6 +470,10 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+:root[data-theme="light"] .filter-show18plus-row:has(.filter-show18plus-input:checked) .filter-show18plus-label {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 /* ─── Filter Panel ───────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .filter-panel-content,
