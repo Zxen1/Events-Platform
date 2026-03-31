@@ -1002,22 +1002,6 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Fallback input (when Google Places not available) */
-.admin-map-controls-starting-fallback-input {
-  width: 100%;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.35);
-  color: #fff;
-  font: inherit;
-  caret-color: #fff;
-}
-
-.admin-map-controls-starting-fallback-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
 
 /* ============================================================================
    MAP THEME CONTAINER

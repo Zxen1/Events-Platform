@@ -180,6 +180,22 @@
   }
 }
 
+/* ─── Starting location geocoder ────────────────────────────────────────── */
+
+:root[data-theme="light"] .mapboxgl-ctrl-geocoder.admin-mapbox-geocoder--starting {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .admin-mapbox-geocoder-input--starting {
+  color: #222 !important;
+  caret-color: #222 !important;
+}
+
+:root[data-theme="light"] .admin-mapbox-geocoder-input--starting::placeholder {
+  color: #999;
+}
+
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
