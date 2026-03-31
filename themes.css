@@ -210,6 +210,28 @@
   }
 }
 
+:root[data-theme="light"] .filter-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .map-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .filter-mapcontrol-geolocate,
+:root[data-theme="light"] .map-mapcontrol-geolocate,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .map-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:hover,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:focus-visible,
+:root[data-theme="light"] .map-mapcontrol-geolocate:hover,
+:root[data-theme="light"] .map-mapcontrol-geolocate:focus-visible,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:hover,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:focus-visible {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
 :root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown,
 :root[data-theme="light"] .map-mapcontrol-geocoder-dropdown,
 :root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown {
