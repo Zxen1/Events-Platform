@@ -695,6 +695,10 @@ if (empty($ogTitle)) {
                   <div id="adminIconCompassPicker" data-setting-key="icon_compass"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
+                  <label class="admin-settings-field-label">Map Control Icon: Compass 2</label>
+                  <div id="adminIconCompass2Picker" data-setting-key="icon_compass_2"></div>
+                </div>
+                <div class="admin-settings-field admin-settings-field--imagepicker">
                   <label class="admin-settings-field-label">Map Lighting Icon: Sunrise</label>
                   <div id="adminIconLightingDawnPicker" data-setting-key="icon_lighting_dawn"></div>
                 </div>

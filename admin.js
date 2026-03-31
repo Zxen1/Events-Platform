@@ -5285,6 +5285,7 @@ const AdminModule = (function() {
         initImagePicker('adminIconFullscreenExitPicker', 'icon_fullscreen_exit');
         initImagePicker('adminIconGeolocatePicker', 'icon_geolocate');
         initImagePicker('adminIconCompassPicker', 'icon_compass');
+        initImagePicker('adminIconCompass2Picker', 'icon_compass_2');
         initImagePicker('adminIconLightingDawnPicker', 'icon_lighting_dawn');
         initImagePicker('adminIconLightingDayPicker', 'icon_lighting_day');
         initImagePicker('adminIconLightingDuskPicker', 'icon_lighting_dusk');

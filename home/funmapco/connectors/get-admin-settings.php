@@ -160,7 +160,7 @@ try {
         'marker_cluster_icon', 'msg_category_fieldset-tooltips_icon', 'msg_category_field-tooltips_icon', 'big_logo', 'small_logo',
         'favicon', 'icon_filter', 'icon_filter_worldwide', 'icon_recent', 'icon_posts', 'icon_map',
         'icon_member', 'icon_admin', 'icon_fullscreen', 'icon_fullscreen_exit',
-        'icon_geolocate', 'icon_compass',
+        'icon_geolocate', 'icon_compass', 'icon_compass_2',
         'icon_lighting_dawn', 'icon_lighting_day', 'icon_lighting_dusk', 'icon_lighting_night',
         'icon_save', 'icon_discard', 'icon_close', 'icon_clear', 'icon_favourite_off', 'icon_favourite_on',
         'icon_add_image',
