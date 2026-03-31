@@ -2217,10 +2217,10 @@
 }
 
 .admin-settings-explanation {
-  padding: 15px;
-  margin-top: 20px;
+  padding: 10px;
+  margin: 10px 0 10px 0;
   background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 13px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.9);
