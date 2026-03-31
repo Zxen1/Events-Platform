@@ -5687,9 +5687,18 @@ const AdminModule = (function() {
                 '<div class="admin-checkout-accordion-body-row">' +
                     '<label class="admin-checkout-accordion-body-label">Price Calculator (Sandbox)</label>' +
                     '<div class="admin-checkout-accordion-body-calc">' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calcdays" value="" placeholder="Days" />' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calclocations" value="1" placeholder="Locations" />' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-option-input-calcsurcharge" value="0" placeholder="Surcharge %" />' +
+                        '<div class="admin-checkout-accordion-body-calc-field">' +
+                            '<label class="admin-checkout-accordion-body-label">Days</label>' +
+                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calcdays" value="" placeholder="Days" />' +
+                        '</div>' +
+                        '<div class="admin-checkout-accordion-body-calc-field">' +
+                            '<label class="admin-checkout-accordion-body-label">Locations</label>' +
+                            '<input type="text" inputmode="numeric" class="admin-checkout-option-input-calclocations" value="1" placeholder="Locations" />' +
+                        '</div>' +
+                        '<div class="admin-checkout-accordion-body-calc-field">' +
+                            '<label class="admin-checkout-accordion-body-label">Surcharge %</label>' +
+                            '<input type="text" inputmode="decimal" class="admin-checkout-option-input-calcsurcharge" value="0" placeholder="Surcharge %" />' +
+                        '</div>' +
                         '<span class="admin-checkout-accordion-body-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +

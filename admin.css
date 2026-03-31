@@ -1953,8 +1953,14 @@
 .admin-checkout-accordion-body-calc {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.admin-checkout-accordion-body-calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 
