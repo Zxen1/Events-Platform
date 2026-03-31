@@ -166,6 +166,26 @@
   color: #999;
 }
 
+:root[data-theme="light"] .admin-messages-search {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .admin-messages-search:focus-within {
+  background: #ffffff;
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .admin-messages-search:hover {
+    border-color: #aaa;
+  }
+}
+
+:root[data-theme="light"] .admin-messages-search-icon {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
 :root[data-theme="light"] .component-textarearesize-handle {
   background: rgba(0, 0, 0, 0.03);
   border-color: #ccc;
