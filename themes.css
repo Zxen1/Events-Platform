@@ -157,6 +157,29 @@
   color: #999;
 }
 
+:root[data-theme="light"] .component-textarearesize-handle {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .component-textarearesize-handle-grip {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="light"] .input-class-1:focus + .component-textarearesize-handle {
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .input-class-1:hover + .component-textarearesize-handle {
+    border-color: #aaa;
+  }
+
+  :root[data-theme="light"] .component-textarearesize-handle:hover .component-textarearesize-handle-grip {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
 /* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
