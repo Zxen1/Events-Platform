@@ -2118,7 +2118,8 @@
   color: rgba(150, 200, 255, 0.9);
 }
 
-.admin-message-text-display {
+.admin-message-text-display,
+.admin-guides-description-text {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
   margin: 0 0 10px 0;
@@ -2129,14 +2130,16 @@
   word-break: break-word;
 }
 
-.admin-message-text-display:hover {
+.admin-message-text-display:hover,
+.admin-guides-description-text:hover {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
   text-decoration-style: dotted;
   text-decoration-color: rgba(255, 255, 255, 0.3);
 }
 
-.admin-message-text-display--hidden {
+.admin-message-text-display--hidden,
+.admin-guides-description-text--hidden {
   display: none;
 }
 
@@ -2182,40 +2185,24 @@
   width: 100%;
   padding: 10px;
   margin: 0;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 5px;
-  color: var(--button-text);
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   min-height: 24px;
   box-sizing: border-box;
-  transition: all 0.2s ease;
-  caret-color: #fff;
-}
-
-.admin-message-text-input:focus {
-  outline: none;
-  border-color: rgba(100, 150, 255, 0.5);
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.1);
 }
 
 .admin-message-text-input + .component-textarearesize-handle {
-  border-color: rgba(255, 255, 255, 0.2);
   margin-bottom: 10px;
 }
 
-.admin-message-text-input:focus + .component-textarearesize-handle {
-  border-color: rgba(100, 150, 255, 0.5);
-}
-
-.admin-message-text-input--hidden {
+.admin-message-text-input--hidden,
+.admin-guides-description-input--hidden {
   display: none;
 }
 
-.admin-message-text-input--hidden + .component-textarearesize-handle {
+.admin-message-text-input--hidden + .component-textarearesize-handle,
+.admin-guides-description-input--hidden + .component-textarearesize-handle {
   display: none;
 }
 

@@ -873,7 +873,7 @@ const AdminModule = (function() {
             accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
                 var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
-                var textInput = itemEl.querySelector('.admin-message-text-input');
+                var textInput = itemEl.querySelector('.admin-guides-description-input');
                 state.itemOrder[chapterKey].push(id);
                 state.items[id] = {
                     title: titleInput ? titleInput.value : '',
@@ -924,8 +924,8 @@ const AdminModule = (function() {
                 var orig = originalState.items[id];
                 var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
                 var titleDisplay = itemEl.querySelector('.admin-guides-manual-item-title-display');
-                var textInput = itemEl.querySelector('.admin-message-text-input');
-                var textDisplay = itemEl.querySelector('.admin-message-text-display');
+                var textInput = itemEl.querySelector('.admin-guides-description-input');
+                var textDisplay = itemEl.querySelector('.admin-guides-description-text');
                 if (titleInput) { titleInput.value = orig.title; }
                 if (titleDisplay) { titleDisplay.textContent = orig.title || 'Click to add title'; }
                 if (textInput) { textInput.value = orig.description; }
@@ -960,7 +960,7 @@ const AdminModule = (function() {
             }
             accordion.querySelectorAll('.admin-guides-manual-item').forEach(function(itemEl) {
                 var titleInput = itemEl.querySelector('.admin-guides-manual-item-title-input');
-                var textInput = itemEl.querySelector('.admin-message-text-input');
+                var textInput = itemEl.querySelector('.admin-guides-description-input');
                 var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
                 var title = titleInput ? titleInput.value : '';
                 var description = textInput ? textInput.value : '';
@@ -1336,19 +1336,19 @@ const AdminModule = (function() {
 
         // Description display (click to edit)
         var textDisplay = document.createElement('div');
-        textDisplay.className = 'admin-message-text-display';
+        textDisplay.className = 'admin-guides-description-text';
         textDisplay.innerHTML = description || 'Click to add description';
         textDisplay.title = 'Click to edit';
 
         // Description textarea (hidden by default)
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-message-text-input admin-message-text-input--hidden input-class-1';
+        textInput.className = 'admin-guides-description-input admin-guides-description-input--hidden input-class-1';
         textInput.value = description || '';
         textInput.rows = 3;
 
         textDisplay.addEventListener('click', function() {
-            textDisplay.classList.add('admin-message-text-display--hidden');
-            textInput.classList.remove('admin-message-text-input--hidden');
+            textDisplay.classList.add('admin-guides-description-text--hidden');
+            textInput.classList.remove('admin-guides-description-input--hidden');
             textInput.style.display = 'block';
             textInput.focus();
         });
@@ -1358,8 +1358,8 @@ const AdminModule = (function() {
         });
         textInput.addEventListener('blur', function() {
             textDisplay.innerHTML = textInput.value || 'Click to add description';
-            textDisplay.classList.remove('admin-message-text-display--hidden');
-            textInput.classList.add('admin-message-text-input--hidden');
+            textDisplay.classList.remove('admin-guides-description-text--hidden');
+            textInput.classList.add('admin-guides-description-input--hidden');
             textInput.style.display = 'none';
         });
 
@@ -2520,7 +2520,7 @@ const AdminModule = (function() {
         
         // Text input (hidden by default)
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden input-class-1';
         textInput.value = originalValue;
         textInput.rows = 3;
         textInput.dataset.messageKey = message.message_key;
@@ -2644,7 +2644,7 @@ const AdminModule = (function() {
         
         // Text input
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden input-class-1';
         textInput.value = originalValue;
         textInput.rows = 3;
         textInput.placeholder = 'Enter field tooltip help text';
@@ -2751,7 +2751,7 @@ const AdminModule = (function() {
         
         // Text input
         var textInput = document.createElement('textarea');
-        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden input-class-1';
         textInput.value = originalValue;
         textInput.rows = 3;
         textInput.placeholder = 'Enter tooltip help text';
