@@ -188,12 +188,17 @@
 
 /* ─── Tooltips (info-icon hover popups) ─────────────────────────────────── */
 
+:root[data-theme="light"] .fieldset-label-tooltipbox,
 :root[data-theme="light"] .admin-tooltip-text,
 :root[data-theme="light"] .member-refresh-tooltip-text {
   background: #ffffff;
   border-color: #ccc;
   color: #222;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="light"] .fieldset-label-tooltip:hover .fieldset-label-tooltip-icon {
+  background-color: #222;
 }
 
 :root[data-theme="light"] .admin-tooltip:hover .admin-tooltip-icon,
