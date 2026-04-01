@@ -109,10 +109,12 @@ const HeaderModule = (function() {
         var exp = st.expired;
         var hasExpired = (exp === true || exp === 1 || exp === '1' || String(exp).toLowerCase() === 'true');
 
+        var hasAmenities = !!(st.amenities && typeof st.amenities === 'object' && Object.keys(st.amenities).length > 0);
+
         // Category/subcategory toggles also affect orange icon state (any toggle OFF = orange).
         var hasCategoryOff = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
 
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryOff;
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasAmenities || hasCategoryOff;
     }
     
     function setHeaderFilterIconActive(active) {
