@@ -186,6 +186,21 @@
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+/* ─── Tooltips (info-icon hover popups) ─────────────────────────────────── */
+
+:root[data-theme="light"] .admin-tooltip-text,
+:root[data-theme="light"] .member-refresh-tooltip-text {
+  background: #ffffff;
+  border-color: #ccc;
+  color: #222;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="light"] .admin-tooltip:hover .admin-tooltip-icon,
+:root[data-theme="light"] .member-refresh-tooltip:hover .member-refresh-tooltip-icon {
+  stroke: #222;
+}
+
 /* ─── Map control rows ──────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .filter-mapcontrol-row,
