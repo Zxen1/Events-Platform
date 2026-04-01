@@ -369,6 +369,7 @@
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
+  user-select: none;
   z-index: 5;
   min-width: 72px;
   text-align: center;
