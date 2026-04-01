@@ -522,6 +522,11 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+:root[data-theme="light"] .member-profile-avatar {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: #e5e5e5;
+}
+
 /* Member panel labels */
 :root[data-theme="light"] .member-panel-contents [class*="-label"],
 :root[data-theme="light"] .member-panel-contents [class*="-sublabel"] {
