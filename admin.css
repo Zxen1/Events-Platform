@@ -797,14 +797,8 @@
    SETTINGS CONTAINERS
    ============================================================================ */
 
-.admin-settings-container {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  padding: 10px 10px 0;
-  border-radius: 5px;
+.admin-map-settings-container {
+  /* background, border, border-radius, padding from container-class-3 */
 }
 
 
@@ -813,35 +807,16 @@
    ============================================================================ */
 
 .admin-map-spin-container {
-  width: 100%;
+  /* background, border, border-radius, padding from container-class-3 */
   max-width: none;
   margin: 0 0 12px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
-  box-sizing: border-box;
-}
-
-.admin-map-lighting-container {
-  width: 100%;
-  max-width: none;
-  margin: 0 0 12px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
   box-sizing: border-box;
 }
 
 .admin-extra-map-options-container {
-  width: 100%;
+  /* background, border, border-radius, padding from container-class-3 */
   max-width: none;
   margin: 0 0 12px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
   box-sizing: border-box;
 }
 
@@ -875,13 +850,9 @@
    ============================================================================ */
 
 .admin-map-defaults-container {
-  width: 100%;
+  /* background, border, border-radius, padding from container-class-3 */
   max-width: none;
   margin: 0 0 12px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 10px 10px 0;
   box-sizing: border-box;
 }
 
@@ -2225,13 +2196,7 @@
 .admin-settings-folders-container,
 .admin-settings-api-container,
 .admin-checkout-options-container {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  padding: 10px 10px 0;
-  border-radius: 5px;
+  /* background, border, border-radius, padding from container-class-3 */
 }
 
 /* -------------------------------------------------------------------------
@@ -2239,13 +2204,7 @@
    ------------------------------------------------------------------------- */
 
 .admin-checkout-coupon-container {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  padding: 10px 10px 0;
-  border-radius: 5px;
+  /* background, border, border-radius, padding from container-class-3 */
 }
 
 .admin-checkout-coupon-header-label {
@@ -3682,13 +3641,7 @@
    ============================================================================ */
 
 .admin-settings-color-swatches {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto 12px auto;
-  padding: 10px 10px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  /* background, border, border-radius, padding from container-class-3 */
 }
 
 .admin-settings-color-swatches-title {

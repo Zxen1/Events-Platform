@@ -513,7 +513,7 @@ if (empty($ogTitle)) {
         <!-- Settings Tab -->
         <section id="admin-tab-settings" class="admin-tab-contents admin-tab-contents--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
           <form id="adminSettingsForm" style="display: contents;" onsubmit="return false;">
-          <div class="admin-settings-general-container">
+          <div class="admin-settings-general-container container-class-3">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteName">Website Name</label>
               <input type="text" class="admin-settings-field-input input-class-1" id="adminWebsiteName" data-setting-key="website_name" autocomplete="off" placeholder="Enter website name" />
@@ -616,7 +616,7 @@ if (empty($ogTitle)) {
           </div>
           
           <!-- Countdown Container -->
-          <div class="admin-settings-countdown-container">
+          <div class="admin-settings-countdown-container container-class-3">
             <div class="admin-settings-field admin-settings-field--toggle row-class-1">
               <span class="admin-settings-field-label admin-settings-field-label--toggle admin-settings-field-label--has-tooltip"><span class="admin-settings-field-label-text">Countdown in Posts</span><span class="admin-tooltip"><svg class="admin-tooltip-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 4.5v.5" stroke-linecap="round"/></svg></span><div class="admin-tooltip-text admin-countdown-tooltip"></div></span>
               <label class="component-switch">
@@ -934,7 +934,7 @@ if (empty($ogTitle)) {
           </div>
 
           <!-- Tailwind Color Swatches -->
-          <div class="admin-settings-color-swatches">
+          <div class="admin-settings-color-swatches container-class-3">
             <div class="admin-settings-color-swatches-title">Tailwind Blue Scale</div>
             <div class="admin-settings-color-swatches-grid">
               <div class="admin-settings-color-swatch" style="background: var(--blue-50);"><span>50</span></div>
@@ -1019,7 +1019,7 @@ if (empty($ogTitle)) {
         <section id="admin-tab-map" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-map-btn">
           
           <!-- Starting Location -->
-          <div class="admin-map-defaults-container">
+          <div class="admin-map-defaults-container container-class-3">
             <div class="admin-panel-field">
               <label class="admin-settings-field-label" for="adminStartingAddress">Starting Location</label>
               <div id="admin-starting-address-display" class="admin-starting-address-value" hidden></div>
@@ -1089,7 +1089,7 @@ if (empty($ogTitle)) {
           </div>
           
           <!-- Spin Settings -->
-          <div class="admin-map-spin-container">
+          <div class="admin-map-spin-container container-class-3">
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Spin on Logo</span>
@@ -1135,7 +1135,7 @@ if (empty($ogTitle)) {
           </div>
           
           <!-- Extra Map Options -->
-          <div class="admin-extra-map-options-container" id="admin-extra-map-options-container">
+          <div class="admin-extra-map-options-container container-class-3" id="admin-extra-map-options-container">
             <div class="admin-panel-field">
               <div class="admin-option-label row-class-1">
                 <span>Wait for Map Tiles</span>
@@ -1162,7 +1162,7 @@ if (empty($ogTitle)) {
           </div>
           
           <!-- Map Card Image Pickers -->
-          <div class="admin-settings-container">
+          <div class="admin-map-settings-container container-class-3">
             <div class="admin-settings-field admin-settings-field--imagepicker">
               <label class="admin-settings-field-label">Small Map Card Pill</label>
               <div id="adminSmallMapCardPillPicker" data-setting-key="small_map_card_pill"></div>
@@ -1195,13 +1195,13 @@ if (empty($ogTitle)) {
         <!-- Checkout Tab -->
         <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
           <div class="admin-checkout-settings-message" data-message-key="msg_checkout_settings"></div>
-          <div class="admin-checkout-options-container">
+          <div class="admin-checkout-options-container container-class-3">
             <span class="admin-checkout-options-header-label">Checkout Options</span>
             <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
               <!-- Checkout options will be populated by JavaScript -->
             </div>
           </div>
-          <div class="admin-checkout-coupon-container">
+          <div class="admin-checkout-coupon-container container-class-3">
             <span class="admin-checkout-coupon-header-label">Coupon Codes</span>
             <div class="admin-checkout-coupon-list" id="adminCheckoutCouponList">
               <!-- populated by JS -->
