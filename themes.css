@@ -527,6 +527,14 @@
   background: #e5e5e5;
 }
 
+:root[data-theme="light"] .member-profile-name {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .member-profile-email {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 /* Member panel labels */
 :root[data-theme="light"] .member-panel-contents [class*="-label"],
 :root[data-theme="light"] .member-panel-contents [class*="-sublabel"] {
