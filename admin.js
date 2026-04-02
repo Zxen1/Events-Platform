@@ -978,10 +978,7 @@ const AdminModule = (function() {
                 ? parseInt(accordion.dataset.chapterId, 10)
                 : null;
 
-            // Skip chapters whose immediate INSERT is still pending (no chapter_id, no existing row)
-            if (chapterId === null && !accordion.dataset.chapterRowId) return;
-
-            // Update existing placeholder row or send a placeholder for legacy null-chapter_id rows
+            // Update existing placeholder row or send a placeholder for new/legacy null-chapter_id rows
             if (accordion.dataset.chapterRowId) {
                 globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
