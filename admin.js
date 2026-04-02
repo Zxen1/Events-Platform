@@ -902,9 +902,18 @@ const AdminModule = (function() {
             });
         }
 
-        // Remove only pending accordions (INSERT in-flight, no chapter_id yet)
+        // Remove pending accordions (INSERT in-flight, no chapter_id yet)
         manualContainer.querySelectorAll('.admin-guide-accordion[data-chapter-id=""]').forEach(function(accordion) {
             accordion.parentNode.removeChild(accordion);
+        });
+
+        // Remove newly-added chapters (have a chapter_id not present in the original state)
+        var originalKeys = originalState.chapterOrder || [];
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var key = accordion.dataset.chapterId;
+            if (key && originalKeys.indexOf(key) === -1) {
+                accordion.parentNode.removeChild(accordion);
+            }
         });
 
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
@@ -961,7 +970,7 @@ const AdminModule = (function() {
             if (!rawName) {
                 var now = new Date();
                 var pad = function(n) { return String(n).padStart(2, '0'); };
-                rawName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+                rawName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
             }
             var chapterName = rawName;
 
@@ -1460,7 +1469,7 @@ const AdminModule = (function() {
     function addChapter(container, addChapterBtn, ctx) {
         var now = new Date();
         var pad = function(n) { return String(n).padStart(2, '0'); };
-        var timestamp = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        var timestamp = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
         var newChapter = { chapter: timestamp, chapterId: null, items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         container.insertBefore(accordion, addChapterBtn);
@@ -1468,25 +1477,7 @@ const AdminModule = (function() {
         syncInstructionsAccordionUi(accordion);
         var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
         if (nameInput) { nameInput.select(); nameInput.focus(); }
-
-        var payload = {};
-        payload[ctx.compositeKey] = [{ chapter_id: null, chapter: timestamp, title: '', description: '', sort_order: 0 }];
-        fetch('/gateway.php?action=save-admin-settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.success) throw new Error(data.message || 'Failed to create chapter');
-            var newId = data['new_' + ctx.compositeKey + '_chapter_id'];
-            if (newId) accordion.dataset.chapterId = newId;
-            if (ctx.isLoaded()) notifyFieldChange();
-        })
-        .catch(function(err) {
-            console.error('[Admin] Failed to create chapter:', err);
-            if (accordion.parentNode) accordion.parentNode.removeChild(accordion);
-        });
+        if (ctx.isLoaded()) notifyFieldChange();
     }
 
     /* --------------------------------------------------------------------------

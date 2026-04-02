@@ -635,7 +635,21 @@ try {
         }
     }
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
-        $nullAdminChapterId = null;
+        $newAdminGuideChapterId = null;
+        $newAdminGuideChapterRowId = null;
+        // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
+        $adminNullNameMap = [];
+        $maxAdminCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
+        $nextAdminCid = (int)$maxAdminCidStmt->fetch()['max_id'] + 1;
+        foreach ($admin_guide as $item) {
+            if (!isset($item['chapter_id']) || $item['chapter_id'] === null) {
+                $name = trim((string)($item['chapter'] ?? ''));
+                if ($name === '') $name = date('Y-m-d H:i:s');
+                if (!isset($adminNullNameMap[$name])) {
+                    $adminNullNameMap[$name] = $nextAdminCid++;
+                }
+            }
+        }
         $updateStmt = $pdo->prepare('
             UPDATE `admin_guide`
             SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
@@ -646,19 +660,10 @@ try {
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($admin_guide as $item) {
-            $cid = isset($item['chapter_id']) && $item['chapter_id'] !== null ? (int)$item['chapter_id'] : null;
-            if ($cid === null) {
-                if ($nullAdminChapterId === null) {
-                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
-                    $nullAdminChapterId = (int)$maxStmt->fetch()['max_id'] + 1;
-                    $newAdminGuideChapterId = $nullAdminChapterId;
-                }
-                $cid = $nullAdminChapterId;
-            }
+            $origCidNull = !isset($item['chapter_id']) || $item['chapter_id'] === null;
             $chapterName = trim((string)($item['chapter'] ?? ''));
-            if ($chapterName === '') {
-                $chapterName = date('Y-m-d H:i');
-            }
+            if ($chapterName === '') $chapterName = date('Y-m-d H:i:s');
+            $cid = $origCidNull ? $adminNullNameMap[$chapterName] : (int)$item['chapter_id'];
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
@@ -677,8 +682,13 @@ try {
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
                 ]);
+                $insertedId = (int)$pdo->lastInsertId();
                 if (!empty($item['is_new'])) {
-                    $newAdminGuideItemIds[] = (int)$pdo->lastInsertId();
+                    $newAdminGuideItemIds[] = $insertedId;
+                }
+                if ($origCidNull && $newAdminGuideChapterId === null) {
+                    $newAdminGuideChapterId = $cid;
+                    $newAdminGuideChapterRowId = $insertedId;
                 }
                 $admin_guideUpdated++;
             }
@@ -705,7 +715,21 @@ try {
         }
     }
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
-        $nullUserChapterId = null;
+        $newUserGuideChapterId = null;
+        $newUserGuideChapterRowId = null;
+        // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
+        $userNullNameMap = [];
+        $maxUserCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
+        $nextUserCid = (int)$maxUserCidStmt->fetch()['max_id'] + 1;
+        foreach ($user_guide as $item) {
+            if (!isset($item['chapter_id']) || $item['chapter_id'] === null) {
+                $name = trim((string)($item['chapter'] ?? ''));
+                if ($name === '') $name = date('Y-m-d H:i:s');
+                if (!isset($userNullNameMap[$name])) {
+                    $userNullNameMap[$name] = $nextUserCid++;
+                }
+            }
+        }
         $updateStmt = $pdo->prepare('
             UPDATE `user_guide`
             SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
@@ -716,19 +740,10 @@ try {
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($user_guide as $item) {
-            $cid = isset($item['chapter_id']) && $item['chapter_id'] !== null ? (int)$item['chapter_id'] : null;
-            if ($cid === null) {
-                if ($nullUserChapterId === null) {
-                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
-                    $nullUserChapterId = (int)$maxStmt->fetch()['max_id'] + 1;
-                    $newUserGuideChapterId = $nullUserChapterId;
-                }
-                $cid = $nullUserChapterId;
-            }
+            $origCidNull = !isset($item['chapter_id']) || $item['chapter_id'] === null;
             $chapterName = trim((string)($item['chapter'] ?? ''));
-            if ($chapterName === '') {
-                $chapterName = date('Y-m-d H:i');
-            }
+            if ($chapterName === '') $chapterName = date('Y-m-d H:i:s');
+            $cid = $origCidNull ? $userNullNameMap[$chapterName] : (int)$item['chapter_id'];
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
@@ -747,8 +762,13 @@ try {
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
                 ]);
+                $insertedId = (int)$pdo->lastInsertId();
                 if (!empty($item['is_new'])) {
-                    $newUserGuideItemIds[] = (int)$pdo->lastInsertId();
+                    $newUserGuideItemIds[] = $insertedId;
+                }
+                if ($origCidNull && $newUserGuideChapterId === null) {
+                    $newUserGuideChapterId = $cid;
+                    $newUserGuideChapterRowId = $insertedId;
                 }
                 $user_guideUpdated++;
             }
@@ -799,6 +819,7 @@ try {
     }
     if (isset($newAdminGuideChapterId)) {
         $response['new_admin_guide_chapter_id'] = $newAdminGuideChapterId;
+        $response['new_admin_guide_chapter_row_id'] = $newAdminGuideChapterRowId;
     }
 
     if ($user_guideUpdated > 0) {
@@ -809,6 +830,7 @@ try {
     }
     if (isset($newUserGuideChapterId)) {
         $response['new_user_guide_chapter_id'] = $newUserGuideChapterId;
+        $response['new_user_guide_chapter_row_id'] = $newUserGuideChapterRowId;
     }
 
     echo json_encode($response);
