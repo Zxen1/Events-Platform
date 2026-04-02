@@ -1159,7 +1159,8 @@ const AdminModule = (function() {
             e.preventDefault();
             var dragging = container.querySelector('.admin-guide-accordion.dragging');
             if (dragging && dragging !== accordion) {
-                var rect = accordion.getBoundingClientRect();
+                var headerEl = accordion.querySelector('.admin-guide-accordion-header');
+                var rect = headerEl ? headerEl.getBoundingClientRect() : accordion.getBoundingClientRect();
                 var midY = rect.top + rect.height / 2;
                 if (e.clientY < midY) {
                     accordion.parentNode.insertBefore(dragging, accordion);
@@ -1265,7 +1266,6 @@ const AdminModule = (function() {
             var itemId = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
             if (itemId) ids.push(itemId);
         });
-        console.error('[DEBUG] trackDeletedChapter — chapterRowId:', accordion.dataset.chapterRowId, 'collected ids:', ids);
         if (ids.length === 0) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + ids.join(',');
