@@ -844,6 +844,7 @@ const AdminModule = (function() {
 
     var adminGuideLoaded = false;
     var userGuideLoaded = false;
+    var nextTempChapterId = -1;
 
     var adminGuideCtx = {
         containerId: 'admin-guide-container',
@@ -865,10 +866,10 @@ const AdminModule = (function() {
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-            var chapterKey = accordion.dataset.chapter || '';
+            var chapterKey = accordion.dataset.chapterId !== undefined ? accordion.dataset.chapterId : '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
-            state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
+            state.chapterNames[chapterKey] = nameInput ? nameInput.value : '';
             state.itemOrder[chapterKey] = [];
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
@@ -897,13 +898,21 @@ const AdminModule = (function() {
         var addChapterBtn = manualContainer.querySelector('.admin-guide-add-chapter');
         if (originalState.chapterOrder) {
             originalState.chapterOrder.forEach(function(chapterKey) {
-                var accordion = manualContainer.querySelector('.admin-guide-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
+                var accordion = manualContainer.querySelector('.admin-guide-accordion[data-chapter-id="' + chapterKey + '"]');
                 if (accordion) manualContainer.insertBefore(accordion, addChapterBtn);
             });
         }
 
+        // Remove chapters added after initial load (not in original state)
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-            var chapterKey = accordion.dataset.chapter || '';
+            var chapterKey = accordion.dataset.chapterId !== undefined ? accordion.dataset.chapterId : '';
+            if (originalState.chapterOrder && originalState.chapterOrder.indexOf(chapterKey) === -1) {
+                accordion.parentNode.removeChild(accordion);
+            }
+        });
+
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapterId !== undefined ? accordion.dataset.chapterId : '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             var headerText = accordion.querySelector('.admin-guide-accordion-header-text');
             if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
@@ -934,6 +943,7 @@ const AdminModule = (function() {
         });
 
         delete manualContainer.dataset.deletedIds;
+        delete manualContainer.dataset.deletedChapterIds;
     }
 
     function resetInstructionsToOriginal() { resetGuideToOriginal('admin-guide-container', 'admin_guide'); }
@@ -941,23 +951,38 @@ const AdminModule = (function() {
 
     function getModifiedGuide(containerId) {
         var modified = [];
-        var deletedIds = [];
+        var deletedChapterIds = [];
+        var deletedItemIds = [];
         var manualContainer = document.getElementById(containerId);
-        if (!manualContainer) return { items: modified, deleted_ids: deletedIds };
+        if (!manualContainer) return { items: modified, deleted_chapter_ids: deletedChapterIds, deleted_item_ids: deletedItemIds };
 
         var globalOrder = 0;
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
-            var chapterName = nameInput.value.trim() || 'New Chapter';
-            if (accordion.dataset.isNew === '1') {
-                modified.push({ chapter: chapterName, is_new: true });
-                return;
+
+            var rawName = nameInput.value.trim();
+            if (!rawName) {
+                var now = new Date();
+                var pad = function(n) { return String(n).padStart(2, '0'); };
+                rawName = '' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes());
             }
+            var chapterName = rawName;
+
+            var chapterId = accordion.dataset.chapterId !== undefined && accordion.dataset.chapterId !== ''
+                ? parseInt(accordion.dataset.chapterId, 10)
+                : null;
+
+            // Update existing placeholder row or send a placeholder for new/null-chapter_id chapters
             if (accordion.dataset.chapterRowId) {
                 globalOrder++;
-                modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
+                modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
+            } else if (chapterId === null || chapterId < 0) {
+                // New chapter — send placeholder so it persists in DB even if empty
+                globalOrder++;
+                modified.push({ chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
+
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var titleInput = itemEl.querySelector('.admin-guide-item-title-input');
                 var textInput = itemEl.querySelector('.admin-guide-description-input');
@@ -965,22 +990,31 @@ const AdminModule = (function() {
                 var title = titleInput ? titleInput.value : '';
                 var description = textInput ? textInput.value : '';
                 globalOrder++;
-                if (itemEl.dataset.isNew === '1') {
-                    modified.push({ chapter: chapterName, title: title, description: description, sort_order: globalOrder, is_new: true });
-                } else if (id) {
-                    modified.push({ id: id, chapter: chapterName, title: title, description: description, sort_order: globalOrder });
+                var itemEntry = { chapter_id: chapterId, chapter: chapterName, title: title, description: description, sort_order: globalOrder };
+                if (id) {
+                    itemEntry.id = id;
+                } else {
+                    itemEntry.is_new = true;
                 }
+                modified.push(itemEntry);
             });
         });
+
+        if (manualContainer.dataset.deletedChapterIds) {
+            manualContainer.dataset.deletedChapterIds.split(',').forEach(function(v) {
+                var n = parseInt(v, 10);
+                if (n) deletedChapterIds.push(n);
+            });
+        }
 
         if (manualContainer.dataset.deletedIds) {
             manualContainer.dataset.deletedIds.split(',').forEach(function(v) {
                 var n = parseInt(v, 10);
-                if (n) deletedIds.push(n);
+                if (n) deletedItemIds.push(n);
             });
         }
 
-        return { items: modified, deleted_ids: deletedIds };
+        return { items: modified, deleted_chapter_ids: deletedChapterIds, deleted_item_ids: deletedItemIds };
     }
 
     function getModifiedAdminGuide() { return getModifiedGuide('admin-guide-container'); }
@@ -1012,7 +1046,7 @@ const AdminModule = (function() {
     function buildInstructionsAccordion(chapterData, container, ctx) {
         var accordion = document.createElement('div');
         accordion.className = 'admin-guide-accordion accordion-class-1';
-        accordion.dataset.chapter = chapterData.chapter;
+        accordion.dataset.chapterId = (chapterData.chapterId !== null && chapterData.chapterId !== undefined) ? chapterData.chapterId : '';
         accordion.setAttribute('data-slack-anchor', '');
         if (chapterData.placeholderRowId) {
             accordion.dataset.chapterRowId = chapterData.placeholderRowId;
@@ -1057,7 +1091,7 @@ const AdminModule = (function() {
         nameInput.value = chapterData.chapter;
         nameInput.dataset.chapterKey = chapterData.chapter;
         nameInput.addEventListener('input', function() {
-            headerText.textContent = nameInput.value || chapterData.chapter;
+            headerText.textContent = nameInput.value || 'Untitled';
             if (ctx.isLoaded()) notifyFieldChange();
         });
 
@@ -1085,6 +1119,7 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
+                        trackDeletedChapter(accordion, ctx.getContainer());
                         accordion.parentNode.removeChild(accordion);
                         if (ctx.isLoaded()) notifyFieldChange();
                     }
@@ -1092,6 +1127,7 @@ const AdminModule = (function() {
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
+                trackDeletedChapter(accordion, ctx.getContainer());
                 accordion.parentNode.removeChild(accordion);
                 if (ctx.isLoaded()) notifyFieldChange();
             }
@@ -1195,14 +1231,16 @@ const AdminModule = (function() {
         var chapters = [];
         var chapterMap = {};
         items.forEach(function(item) {
-            if (!chapterMap[item.chapter]) {
-                chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
-                chapters.push(chapterMap[item.chapter]);
+            var key = (item.chapter_id !== null && item.chapter_id !== undefined) ? String(item.chapter_id) : 'null';
+            if (!chapterMap[key]) {
+                var assignedChapterId = (item.chapter_id !== null && item.chapter_id !== undefined) ? item.chapter_id : nextTempChapterId--;
+                chapterMap[key] = { chapter: item.chapter, chapterId: assignedChapterId, items: [], placeholderRowId: null };
+                chapters.push(chapterMap[key]);
             }
             if (!item.title && !item.description) {
-                chapterMap[item.chapter].placeholderRowId = item.id;
+                chapterMap[key].placeholderRowId = item.id;
             } else {
-                chapterMap[item.chapter].items.push(item);
+                chapterMap[key].items.push(item);
             }
         });
 
@@ -1254,6 +1292,13 @@ const AdminModule = (function() {
         if (!id || !containerEl) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + id;
+    }
+
+    function trackDeletedChapter(accordion, containerEl) {
+        var chapterId = accordion.dataset.chapterId ? parseInt(accordion.dataset.chapterId, 10) : 0;
+        if (!chapterId || chapterId < 0 || !containerEl) return;
+        var prev = containerEl.dataset.deletedChapterIds ? containerEl.dataset.deletedChapterIds + ',' : '';
+        containerEl.dataset.deletedChapterIds = prev + chapterId;
     }
 
     function createGuideItem(title, description, body, ctx) {
@@ -1414,9 +1459,8 @@ const AdminModule = (function() {
     }
 
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: 'New Chapter', items: [] };
+        var newChapter = { chapter: '', chapterId: nextTempChapterId--, items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
-        accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guide-accordion--editing');
         syncInstructionsAccordionUi(accordion);
@@ -1540,25 +1584,33 @@ const AdminModule = (function() {
         
         // Save modified admin guide
         var adminGuidePayload = getModifiedAdminGuide();
-        if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_ids.length > 0) {
+        if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_chapter_ids.length > 0 || adminGuidePayload.deleted_item_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_guide: adminGuidePayload.items, deleted_admin_guide_ids: adminGuidePayload.deleted_ids })
+                    body: JSON.stringify({ admin_guide: adminGuidePayload.items, deleted_admin_guide_chapter_ids: adminGuidePayload.deleted_chapter_ids, deleted_admin_guide_item_ids: adminGuidePayload.deleted_item_ids })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
                     var c = document.getElementById('admin-guide-container');
                     if (c) {
-                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                        if (data.new_admin_guide_item_ids && Array.isArray(data.new_admin_guide_item_ids)) {
                             var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
-                            data.new_item_ids.forEach(function(newId, i) {
+                            data.new_admin_guide_item_ids.forEach(function(newId, i) {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
+                        if (data.new_admin_guide_chapter_id_map) {
+                            Object.keys(data.new_admin_guide_chapter_id_map).forEach(function(tempId) {
+                                var realId = data.new_admin_guide_chapter_id_map[tempId];
+                                var acc = c.querySelector('.admin-guide-accordion[data-chapter-id="' + tempId + '"]');
+                                if (acc) acc.dataset.chapterId = realId;
+                            });
+                        }
                         delete c.dataset.deletedIds;
+                        delete c.dataset.deletedChapterIds;
                     }
                     updateCompositeBaseline('admin_guide');
                 })
@@ -1567,25 +1619,33 @@ const AdminModule = (function() {
 
         // Save modified user guide
         var userGuidePayload = getModifiedUserGuide();
-        if (userGuidePayload.items.length > 0 || userGuidePayload.deleted_ids.length > 0) {
+        if (userGuidePayload.items.length > 0 || userGuidePayload.deleted_chapter_ids.length > 0 || userGuidePayload.deleted_item_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_guide: userGuidePayload.items, deleted_user_guide_ids: userGuidePayload.deleted_ids })
+                    body: JSON.stringify({ user_guide: userGuidePayload.items, deleted_user_guide_chapter_ids: userGuidePayload.deleted_chapter_ids, deleted_user_guide_item_ids: userGuidePayload.deleted_item_ids })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
                     var c = document.getElementById('user-guide-container');
                     if (c) {
-                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                        if (data.new_user_guide_item_ids && Array.isArray(data.new_user_guide_item_ids)) {
                             var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
-                            data.new_item_ids.forEach(function(newId, i) {
+                            data.new_user_guide_item_ids.forEach(function(newId, i) {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
+                        if (data.new_user_guide_chapter_id_map) {
+                            Object.keys(data.new_user_guide_chapter_id_map).forEach(function(tempId) {
+                                var realId = data.new_user_guide_chapter_id_map[tempId];
+                                var acc = c.querySelector('.admin-guide-accordion[data-chapter-id="' + tempId + '"]');
+                                if (acc) acc.dataset.chapterId = realId;
+                            });
+                        }
                         delete c.dataset.deletedIds;
+                        delete c.dataset.deletedChapterIds;
                     }
                     updateCompositeBaseline('user_guide');
                 })
