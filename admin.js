@@ -864,11 +864,11 @@ const AdminModule = (function() {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion, idx) {
-            var chapterKey = accordion.dataset.chapterRowId || ('new-' + idx);
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapter || '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
-            state.chapterNames[chapterKey] = nameInput ? nameInput.value : (accordion.dataset.chapter || '');
+            state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
             state.itemOrder[chapterKey] = [];
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
@@ -949,11 +949,13 @@ const AdminModule = (function() {
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
-            var chapterName = nameInput.value.trim() || accordion.dataset.chapter || '';
-            globalOrder++;
+            var chapterName = nameInput.value.trim() || 'New Chapter';
             if (accordion.dataset.isNew === '1') {
-                modified.push({ chapter: chapterName, title: '', description: '', sort_order: globalOrder, is_new: true });
-            } else if (accordion.dataset.chapterRowId) {
+                modified.push({ chapter: chapterName, is_new: true });
+                return;
+            }
+            if (accordion.dataset.chapterRowId) {
+                globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
@@ -1083,7 +1085,6 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
-                        trackDeletedChapter(accordion, ctx.getContainer());
                         accordion.parentNode.removeChild(accordion);
                         if (ctx.isLoaded()) notifyFieldChange();
                     }
@@ -1091,7 +1092,6 @@ const AdminModule = (function() {
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
-                trackDeletedChapter(accordion, ctx.getContainer());
                 accordion.parentNode.removeChild(accordion);
                 if (ctx.isLoaded()) notifyFieldChange();
             }
@@ -1159,8 +1159,7 @@ const AdminModule = (function() {
             e.preventDefault();
             var dragging = container.querySelector('.admin-guide-accordion.dragging');
             if (dragging && dragging !== accordion) {
-                var headerEl = accordion.querySelector('.admin-guide-accordion-header');
-                var rect = headerEl ? headerEl.getBoundingClientRect() : accordion.getBoundingClientRect();
+                var rect = accordion.getBoundingClientRect();
                 var midY = rect.top + rect.height / 2;
                 if (e.clientY < midY) {
                     accordion.parentNode.insertBefore(dragging, accordion);
@@ -1194,13 +1193,16 @@ const AdminModule = (function() {
         container.innerHTML = '';
 
         var chapters = [];
-        var currentChapter = null;
+        var chapterMap = {};
         items.forEach(function(item) {
+            if (!chapterMap[item.chapter]) {
+                chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
+                chapters.push(chapterMap[item.chapter]);
+            }
             if (!item.title && !item.description) {
-                currentChapter = { chapter: item.chapter, items: [], placeholderRowId: item.id };
-                chapters.push(currentChapter);
-            } else if (currentChapter) {
-                currentChapter.items.push(item);
+                chapterMap[item.chapter].placeholderRowId = item.id;
+            } else {
+                chapterMap[item.chapter].items.push(item);
             }
         });
 
@@ -1252,20 +1254,6 @@ const AdminModule = (function() {
         if (!id || !containerEl) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + id;
-    }
-
-    function trackDeletedChapter(accordion, containerEl) {
-        if (!containerEl) return;
-        var ids = [];
-        var chapterRowId = accordion.dataset.chapterRowId ? parseInt(accordion.dataset.chapterRowId, 10) : 0;
-        if (chapterRowId) ids.push(chapterRowId);
-        accordion.querySelectorAll('.admin-guide-item').forEach(function(item) {
-            var itemId = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
-            if (itemId) ids.push(itemId);
-        });
-        if (ids.length === 0) return;
-        var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
-        containerEl.dataset.deletedIds = prev + ids.join(',');
     }
 
     function createGuideItem(title, description, body, ctx) {
@@ -1425,17 +1413,8 @@ const AdminModule = (function() {
         return item;
     }
 
-    function newChapterName() {
-        var now = new Date();
-        var mm = String(now.getMonth() + 1).padStart(2, '0');
-        var dd = String(now.getDate()).padStart(2, '0');
-        var hh = String(now.getHours()).padStart(2, '0');
-        var min = String(now.getMinutes()).padStart(2, '0');
-        return 'New Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ')';
-    }
-
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: newChapterName(), items: [] };
+        var newChapter = { chapter: 'New Chapter', items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
@@ -1574,15 +1553,9 @@ const AdminModule = (function() {
                     var c = document.getElementById('admin-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newEls = c.querySelectorAll('.admin-guide-accordion[data-is-new="1"], .admin-guide-item[data-is-new="1"]');
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
-                                if (!newEls[i]) return;
-                                newEls[i].dataset.isNew = '';
-                                if (newEls[i].classList.contains('admin-guide-accordion')) {
-                                    newEls[i].dataset.chapterRowId = newId;
-                                } else {
-                                    newEls[i].dataset.itemId = newId;
-                                }
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
                         delete c.dataset.deletedIds;
@@ -1607,15 +1580,9 @@ const AdminModule = (function() {
                     var c = document.getElementById('user-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newEls = c.querySelectorAll('.admin-guide-accordion[data-is-new="1"], .admin-guide-item[data-is-new="1"]');
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
-                                if (!newEls[i]) return;
-                                newEls[i].dataset.isNew = '';
-                                if (newEls[i].classList.contains('admin-guide-accordion')) {
-                                    newEls[i].dataset.chapterRowId = newId;
-                                } else {
-                                    newEls[i].dataset.itemId = newId;
-                                }
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
                         delete c.dataset.deletedIds;
