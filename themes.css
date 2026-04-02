@@ -178,7 +178,13 @@
 
 :root[data-theme="light"] .component-systemimagepicker-menu-button-image[src*=".svg"],
 :root[data-theme="light"] .component-systemimagepicker-menu-option-image[src*=".svg"],
+:root[data-theme="light"] .component-iconpicker-menu-button-image[src*=".svg"],
+:root[data-theme="light"] .component-iconpicker-menu-option-image[src*=".svg"],
+:root[data-theme="light"] .component-fieldseticonpicker-menu-button-image[src*=".svg"],
+:root[data-theme="light"] .component-fieldseticonpicker-menu-option-image[src*=".svg"],
 :root[data-theme="light"] .component-amenitiespicker-menu-option-image[src*=".svg"],
+:root[data-theme="light"] .component-ageratingpicker-menu-button-image[src*=".svg"],
+:root[data-theme="light"] .component-ageratingpicker-menu-option-image[src*=".svg"],
 :root[data-theme="light"] .component-linkpicker-menu-button-image[src*=".svg"],
 :root[data-theme="light"] .component-linkpicker-menu-option-image[src*=".svg"] {
   filter: brightness(0) invert(0.25);
