@@ -1414,7 +1414,12 @@ const AdminModule = (function() {
     }
 
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: 'New Chapter', items: [] };
+        var now = new Date();
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var dd = String(now.getDate()).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var min = String(now.getMinutes()).padStart(2, '0');
+        var newChapter = { chapter: 'New Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ')', items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
