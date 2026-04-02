@@ -1540,6 +1540,7 @@ const AdminModule = (function() {
         
         // Save modified admin guide
         var adminGuidePayload = getModifiedAdminGuide();
+        console.error('[DEBUG] adminGuidePayload:', JSON.stringify(adminGuidePayload));
         if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {

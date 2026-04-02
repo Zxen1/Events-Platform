@@ -877,6 +877,10 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+:root[data-theme="light"] .admin-checkout-accordion-body-checkbox {
+  color: rgba(0, 0, 0, 0.7);
+}
+
 /* Starting location */
 :root[data-theme="light"] .admin-starting-address-value {
   color: rgba(0, 0, 0, 0.65);
