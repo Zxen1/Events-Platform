@@ -950,12 +950,10 @@ const AdminModule = (function() {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
             var chapterName = nameInput.value.trim() || 'New Chapter';
+            globalOrder++;
             if (accordion.dataset.isNew === '1') {
-                modified.push({ chapter: chapterName, is_new: true });
-                return;
-            }
-            if (accordion.dataset.chapterRowId) {
-                globalOrder++;
+                modified.push({ chapter: chapterName, title: '', description: '', sort_order: globalOrder, is_new: true });
+            } else if (accordion.dataset.chapterRowId) {
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
@@ -1085,6 +1083,7 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
+                        trackDeletedChapter(accordion, ctx.getContainer());
                         accordion.parentNode.removeChild(accordion);
                         if (ctx.isLoaded()) notifyFieldChange();
                     }
@@ -1092,6 +1091,7 @@ const AdminModule = (function() {
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
+                trackDeletedChapter(accordion, ctx.getContainer());
                 accordion.parentNode.removeChild(accordion);
                 if (ctx.isLoaded()) notifyFieldChange();
             }
@@ -1254,6 +1254,20 @@ const AdminModule = (function() {
         if (!id || !containerEl) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + id;
+    }
+
+    function trackDeletedChapter(accordion, containerEl) {
+        if (!containerEl) return;
+        var ids = [];
+        var chapterRowId = accordion.dataset.chapterRowId ? parseInt(accordion.dataset.chapterRowId, 10) : 0;
+        if (chapterRowId) ids.push(chapterRowId);
+        accordion.querySelectorAll('.admin-guide-item').forEach(function(item) {
+            var itemId = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
+            if (itemId) ids.push(itemId);
+        });
+        if (ids.length === 0) return;
+        var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
+        containerEl.dataset.deletedIds = prev + ids.join(',');
     }
 
     function createGuideItem(title, description, body, ctx) {
@@ -1540,7 +1554,6 @@ const AdminModule = (function() {
         
         // Save modified admin guide
         var adminGuidePayload = getModifiedAdminGuide();
-        console.error('[DEBUG] adminGuidePayload:', JSON.stringify(adminGuidePayload));
         if (adminGuidePayload.items.length > 0 || adminGuidePayload.deleted_ids.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
@@ -1554,9 +1567,15 @@ const AdminModule = (function() {
                     var c = document.getElementById('admin-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
+                            var newEls = c.querySelectorAll('.admin-guide-accordion[data-is-new="1"], .admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
-                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
+                                if (!newEls[i]) return;
+                                newEls[i].dataset.isNew = '';
+                                if (newEls[i].classList.contains('admin-guide-accordion')) {
+                                    newEls[i].dataset.chapterRowId = newId;
+                                } else {
+                                    newEls[i].dataset.itemId = newId;
+                                }
                             });
                         }
                         delete c.dataset.deletedIds;
@@ -1581,9 +1600,15 @@ const AdminModule = (function() {
                     var c = document.getElementById('user-guide-container');
                     if (c) {
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
+                            var newEls = c.querySelectorAll('.admin-guide-accordion[data-is-new="1"], .admin-guide-item[data-is-new="1"]');
                             data.new_item_ids.forEach(function(newId, i) {
-                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
+                                if (!newEls[i]) return;
+                                newEls[i].dataset.isNew = '';
+                                if (newEls[i].classList.contains('admin-guide-accordion')) {
+                                    newEls[i].dataset.chapterRowId = newId;
+                                } else {
+                                    newEls[i].dataset.itemId = newId;
+                                }
                             });
                         }
                         delete c.dataset.deletedIds;
