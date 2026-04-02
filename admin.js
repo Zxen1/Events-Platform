@@ -949,7 +949,7 @@ const AdminModule = (function() {
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
-            var chapterName = nameInput.value.trim() || 'New Chapter';
+            var chapterName = nameInput.value.trim() || accordion.dataset.chapter || '';
             globalOrder++;
             if (accordion.dataset.isNew === '1') {
                 modified.push({ chapter: chapterName, title: '', description: '', sort_order: globalOrder, is_new: true });
@@ -1425,8 +1425,17 @@ const AdminModule = (function() {
         return item;
     }
 
+    function newChapterName() {
+        var now = new Date();
+        var mm = String(now.getMonth() + 1).padStart(2, '0');
+        var dd = String(now.getDate()).padStart(2, '0');
+        var hh = String(now.getHours()).padStart(2, '0');
+        var min = String(now.getMinutes()).padStart(2, '0');
+        return 'New Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ')';
+    }
+
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: 'New Chapter', items: [] };
+        var newChapter = { chapter: newChapterName(), items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
