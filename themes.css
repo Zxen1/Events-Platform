@@ -385,14 +385,6 @@
   color: #7c3aed;
 }
 
-/* Post editor statusbar */
-:root[data-theme="light"] .posteditor-statusbar-countdown {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .posteditor-statusbar-date {
-  color: rgba(0, 0, 0, 0.8);
-}
 
 /* Post description */
 :root[data-theme="light"] .post-description-container {
@@ -803,6 +795,12 @@
 
 :root[data-theme="light"] .admin-messages-search-icon {
   background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Guide section headers */
+:root[data-theme="light"] .admin-guide-section-header {
+  color: rgba(0, 0, 0, 0.5);
+  border-bottom-color: rgba(0, 0, 0, 0.15);
 }
 
 /* Guide + message text displays */

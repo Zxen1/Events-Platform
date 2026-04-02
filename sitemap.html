@@ -293,8 +293,13 @@
       .sitemap-btn-member { background: #a21caf; }
       .sitemap-btn-admin { background: #db2777; }
 
-      /* Light theme */
-      :root[data-theme="light"] body {
+      /* Light theme — only flip text OUTSIDE the coloured boxes */
+      :root[data-theme="light"] .sitemap-title,
+      :root[data-theme="light"] .sitemap-intro,
+      :root[data-theme="light"] .sitemap-label,
+      :root[data-theme="light"] .sitemap-sections-header,
+      :root[data-theme="light"] .sitemap-element,
+      :root[data-theme="light"] .sitemap-dims {
         color: rgba(0, 0, 0, 0.85);
       }
 
