@@ -485,6 +485,10 @@
 }
 
 /* Storefront menu */
+:root[data-theme="light"] .post-storefront-menu-item {
+  --subcat-hover-alpha: 1;
+}
+
 :root[data-theme="light"] .post-storefront-menu-container {
   background: rgba(255, 255, 255, 1);
   border-color: rgba(0, 0, 0, 0.1);
@@ -776,7 +780,7 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-:root[data-theme="light"] .admin-message-label {
+:root[data-theme="light"] .admin-panel-contents .admin-message-label {
   color: var(--blue-500);
 }
 
