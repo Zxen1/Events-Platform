@@ -31,28 +31,15 @@
   /* --website-white: #111; */
 }
 
-/* ─── Header ─────────────────────────────────────────────────────────────── */
+/* ============================================================================
+   BASE CLASSES
+   Reusable appearance classes from base.css / fieldsets.css
+   ============================================================================ */
 
-:root[data-theme="light"] .header-bar {
-  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
-}
+/* ─── Buttons ───────────────────────────────────────────────────────────── */
 
-:root[data-theme="light"] .header-bar .header-modeswitch-recent[aria-pressed="true"],
-:root[data-theme="light"] .header-bar .header-modeswitch-recent.button--active,
-:root[data-theme="light"] .header-bar .header-modeswitch-recent.header-modeswitch-button--active {
-  color: #7c3aed;
-}
-
-/* ─── Buttons ────────────────────────────────────────────────────────────── */
-
-/* button-class-1 hover is hardcoded in base.css, so light theme overrides it here */
 :root[data-theme="light"] .button-class-1:hover {
   background: rgba(0, 0, 0, 0.08);
-}
-
-/* container-class-3 */
-:root[data-theme="light"] .container-class-3 {
-  background: rgba(0, 0, 0, 0.1);
 }
 
 /* button-class-2 tab states */
@@ -62,7 +49,6 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* button-class-2f reset button states */
 :root[data-theme="light"] .button-class-2f:not(:disabled) {
   background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
@@ -94,7 +80,14 @@
   }
 }
 
-/* toggle-class-1 segmented switches */
+/* ─── Containers ────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .container-class-3 {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Toggles ───────────────────────────────────────────────────────────── */
+
 :root[data-theme="light"] .toggle-class-1 {
   background: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
@@ -166,27 +159,85 @@
   color: #999;
 }
 
-:root[data-theme="light"] .admin-messages-search {
-  background: #ffffff;
-  border-color: #ccc;
+/* ─── Menus ─────────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .menu-class-1 {
+  --menu-bg: #ffffff;
+  --menu-bg-focus: #ffffff;
+  --menu-border: #ccc;
+  --menu-border-hover: #aaa;
+  --menu-border-focus: var(--blue-500);
+  --menu-text: #222;
+  --menu-placeholder: #999;
+  --menu-muted: #666;
+  --menu-hover: rgba(0, 0, 0, 0.06);
+  --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-:root[data-theme="light"] .admin-messages-search:focus-within {
+/* ─── Fieldsets ──────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .fieldset-label-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-label-required--complete {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-sublabel {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-radio {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-radio-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-radio-icon {
+  filter: brightness(0) invert(0.35);
+}
+
+:root[data-theme="light"] .fieldset-radio-icon-selected {
+  filter: brightness(0) invert(0.15);
+}
+
+:root[data-theme="light"] .fieldset-customchecklist-row {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-customchecklist-row-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .fieldset-customchecklist-row-boximg {
+  filter: brightness(0) invert(0.35);
+}
+
+:root[data-theme="light"] .fieldset-customchecklist-row--selected .fieldset-customchecklist-row-boximg {
+  filter: brightness(0) invert(0.15);
+}
+
+:root[data-theme="light"] .fieldset-select {
   background: #ffffff;
-  border-color: var(--blue-500);
+  border-color: #ccc;
+  color: #222;
+}
+
+:root[data-theme="light"] .fieldset-select option {
+  background: #ffffff;
+  color: #222;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :root[data-theme="light"] .admin-messages-search:hover {
+  :root[data-theme="light"] .fieldset-select:hover {
     border-color: #aaa;
   }
 }
 
-:root[data-theme="light"] .admin-messages-search-icon {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-/* ─── Tooltips (info-icon hover popups) ─────────────────────────────────── */
+/* ─── Tooltips ──────────────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .fieldset-label-tooltipbox,
 :root[data-theme="light"] .admin-tooltip-text,
@@ -206,93 +257,27 @@
   stroke: #222;
 }
 
-/* ─── Map control rows ──────────────────────────────────────────────────── */
+/* ─── Accordions ────────────────────────────────────────────────────────── */
 
-:root[data-theme="light"] .filter-mapcontrol-row,
-:root[data-theme="light"] .map-mapcontrol-row,
-:root[data-theme="light"] .welcome-mapcontrol-row {
-  background-color: #ffffff;
-  border-color: #ccc;
+:root[data-theme="light"] .accordion-class-1 {
+  --accordion-header-bg: var(--blue-600);
+  --accordion-header-bg-hover: var(--blue-600);
+  --accordion-header-border: transparent;
+  --accordion-header-text: #ffffff;
+  --accordion-body-bg: rgba(0, 0, 0, 0.1);
+  --accordion-body-border: transparent;
 }
 
-:root[data-theme="light"] .filter-mapcontrol-row:focus-within,
-:root[data-theme="light"] .map-mapcontrol-row:focus-within,
-:root[data-theme="light"] .welcome-mapcontrol-row:focus-within {
-  background-color: #ffffff;
-  border-color: var(--blue-500);
+:root[data-theme="light"] .accordion-class-2 {
+  --accordion-header-bg: rgba(0, 0, 0, 0.1);
+  --accordion-header-bg-hover: rgba(0, 0, 0, 0.1);
+  --accordion-header-border: transparent;
+  --accordion-header-text: rgba(0, 0, 0, 0.5);
+  --accordion-body-bg: rgba(0, 0, 0, 0.1);
+  --accordion-body-border: transparent;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  :root[data-theme="light"] .filter-mapcontrol-row:hover,
-  :root[data-theme="light"] .map-mapcontrol-row:hover,
-  :root[data-theme="light"] .welcome-mapcontrol-row:hover {
-    border-color: #aaa;
-  }
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-clear,
-:root[data-theme="light"] .map-mapcontrol-geocoder-clear,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear,
-:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading),
-:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading),
-:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading) {
-  color: rgba(0, 0, 0, 0.4);
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-clear:hover,
-:root[data-theme="light"] .map-mapcontrol-geocoder-clear:hover,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear:hover,
-:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):hover,
-:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):focus-visible,
-:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):hover,
-:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):focus-visible,
-:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):hover,
-:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):focus-visible {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .filter-mapcontrol-compass:hover,
-:root[data-theme="light"] .filter-mapcontrol-compass:focus-visible,
-:root[data-theme="light"] .map-mapcontrol-compass:hover,
-:root[data-theme="light"] .map-mapcontrol-compass:focus-visible,
-:root[data-theme="light"] .welcome-mapcontrol-compass:hover,
-:root[data-theme="light"] .welcome-mapcontrol-compass:focus-visible {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown,
-:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: #ccc;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-main,
-:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-main,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-main {
-  color: #222;
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-secondary,
-:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-secondary,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-secondary {
-  color: #888;
-}
-
-:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item:hover,
-:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item--active,
-:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item:hover,
-:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item--active,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item:hover,
-:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item--active {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-:root[data-theme="light"] .welcome-user-guide-item-description {
-  color: rgba(0, 0, 0, 0.85);
-}
+/* ─── Textarea resize handle ────────────────────────────────────────────── */
 
 :root[data-theme="light"] .component-textarearesize-handle {
   background: rgba(0, 0, 0, 0.03);
@@ -317,30 +302,99 @@
   }
 }
 
-/* ─── Starting location geocoder ────────────────────────────────────────── */
+/* ============================================================================
+   HEADER
+   ============================================================================ */
 
-:root[data-theme="light"] .mapboxgl-ctrl-geocoder.admin-mapbox-geocoder--starting {
-  background: #ffffff;
-  border-color: #ccc;
+:root[data-theme="light"] .header-bar {
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
 }
 
-:root[data-theme="light"] .admin-mapbox-geocoder-input--starting {
-  color: #222 !important;
-  caret-color: #222 !important;
+:root[data-theme="light"] .header-bar .header-modeswitch-recent[aria-pressed="true"],
+:root[data-theme="light"] .header-bar .header-modeswitch-recent.button--active,
+:root[data-theme="light"] .header-bar .header-modeswitch-recent.header-modeswitch-button--active {
+  color: #7c3aed;
 }
 
-:root[data-theme="light"] .admin-mapbox-geocoder-input--starting::placeholder {
-  color: #999;
-}
-
-/* ─── Wallpaper dimmer ───────────────────────────────────────────────────── */
+/* ============================================================================
+   WALLPAPER
+   ============================================================================ */
 
 :root[data-theme="light"] .component-locationwallpaper::after {
   background: rgba(255, 255, 255, var(--locationwallpaper-whiten, 0.4));
 }
 
-/* ─── Post description ───────────────────────────────────────────────────── */
+/* ============================================================================
+   POST PANEL
+   ============================================================================ */
 
+/* Panel backgrounds */
+:root[data-theme="light"] .post-panel-content {
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .recent-panel-content {
+  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
+}
+
+:root[data-theme="light"] .post-list {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+:root[data-theme="light"] .post-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Ghost posts (backdrop placeholder cards) */
+:root[data-theme="light"] .post-backdrop-card-image,
+:root[data-theme="light"] .post-backdrop-card-title,
+:root[data-theme="light"] .post-backdrop-card-badge,
+:root[data-theme="light"] .post-backdrop-card-line {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Postcards and recent cards at rest */
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-text-title,
+:root[data-theme="light"] .recent-card:not(:hover) .recent-card-text-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info,
+:root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-image-badge,
+:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-row-cat .post-card-icon-sub,
+:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-image-badge,
+:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-row-cat .recent-card-icon-sub {
+  opacity: 1;
+}
+
+/* Favourite star */
+:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav,
+:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
+  background-color: #fbbf24;
+}
+
+/* Recent statusbar */
+:root[data-theme="light"] .recent-statusbar {
+  color: #7c3aed;
+}
+
+/* Post editor statusbar */
+:root[data-theme="light"] .posteditor-statusbar-countdown {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .posteditor-statusbar-date {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Post description */
 :root[data-theme="light"] .post-description-container {
   color: rgba(0, 0, 0, 0.85);
 }
@@ -359,74 +413,12 @@
   color: rgba(0, 0, 0, 0.6);
 }
 
-/* ─── Post Panel ─────────────────────────────────────────────────────────── */
-
-/* Ghost posts (backdrop placeholder cards) */
-:root[data-theme="light"] .post-backdrop-card-image,
-:root[data-theme="light"] .post-backdrop-card-title,
-:root[data-theme="light"] .post-backdrop-card-badge,
-:root[data-theme="light"] .post-backdrop-card-line {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-
-:root[data-theme="light"] .post-panel-content {
-  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
-}
-
-:root[data-theme="light"] .recent-panel-content {
-  background: rgba(255, 255, 255, var(--bg-opacity, 0.6));
-}
-
-:root[data-theme="light"] .post-list {
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-}
-
-:root[data-theme="light"] .post-list::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-/* Favourite star — active state keeps original yellow on white cards */
-:root[data-theme="light"] .post-card:hover .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
-:root[data-theme="light"] .post-card.post-card--map-highlight .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
-:root[data-theme="light"] .post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
-:root[data-theme="light"] .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav,
-:root[data-theme="light"] .recent-card:hover .recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
-  background-color: #fbbf24;
-}
-
-/* Recent statusbar */
-:root[data-theme="light"] .recent-statusbar {
-  color: #7c3aed;
-}
-
-/* Postcards and recent cards at rest — dark text (hover keeps solid bg + white text unchanged) */
-:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-text-title,
-:root[data-theme="light"] .recent-card:not(:hover) .recent-card-text-title {
+/* Post custom fieldset rows */
+:root[data-theme="light"] .post-info-row-custom {
   color: rgba(0, 0, 0, 0.85);
 }
 
-:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-container-info,
-:root[data-theme="light"] .recent-card:not(:hover) .recent-card-container-info {
-  color: rgba(0, 0, 0, 0.8);
-}
-
-:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-image-badge,
-:root[data-theme="light"] .post-card:not(:hover):not(.post-card--map-highlight) .post-card-row-cat .post-card-icon-sub,
-:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-image-badge,
-:root[data-theme="light"] .recent-card:not(:hover):not(.recent-card--active) .recent-card-row-cat .recent-card-icon-sub {
-  opacity: 1;
-}
-
-:root[data-theme="light"] .posteditor-statusbar-countdown {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .posteditor-statusbar-date {
-  color: rgba(0, 0, 0, 0.8);
-}
-
-/* Post amenities icons */
+/* Post amenities */
 :root[data-theme="light"] .post-amenities-icon {
   background-color: rgba(0, 0, 0, 0.35);
 }
@@ -435,7 +427,12 @@
   background-color: rgba(0, 0, 0, 0.85);
 }
 
-/* Post contact row + strip */
+:root[data-theme="light"] .post-amenities-item:hover .post-amenities-icon,
+:root[data-theme="light"] .post-contact-item:hover .post-contact-icon {
+  background-color: #fff;
+}
+
+/* Post contact */
 :root[data-theme="light"] .post-contact-link {
   color: rgba(0, 0, 0, 0.85);
 }
@@ -493,7 +490,7 @@
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-:root[data-theme="light"] .post-storefront-menu-item {
+:root[data-theme="light"] .post-storefront-menu-item:not(:hover):not(.post-storefront-menu-item--selected) {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -519,38 +516,135 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
-/* ─── Accordion Class 1 ─────────────────────────────────────────────────── */
+/* ============================================================================
+   FILTER PANEL
+   ============================================================================ */
 
-:root[data-theme="light"] .accordion-class-1 {
-  --accordion-header-bg: var(--blue-600);
-  --accordion-header-bg-hover: var(--blue-600);
-  --accordion-header-border: transparent;
-  --accordion-header-text: #ffffff;
-  --accordion-body-bg: rgba(0, 0, 0, 0.1);
-  --accordion-body-border: transparent;
+/* Panel layout */
+:root[data-theme="light"] .filter-panel-content,
+:root[data-theme="light"] .filter-panel-header,
+:root[data-theme="light"] .filter-panel-body {
+  background: #ffffff;
 }
 
-/* ─── Accordion Class 2 ─────────────────────────────────────────────────── */
-
-:root[data-theme="light"] .accordion-class-2 {
-  --accordion-header-bg: rgba(0, 0, 0, 0.1);
-  --accordion-header-bg-hover: rgba(0, 0, 0, 0.1);
-  --accordion-header-border: transparent;
-  --accordion-header-text: rgba(0, 0, 0, 0.5);
-  --accordion-body-bg: rgba(0, 0, 0, 0.1);
-  --accordion-body-border: transparent;
+:root[data-theme="light"] .filter-panel-content {
+  box-shadow: 10px 0 14px -12px rgba(0, 0, 0, 0.28), -10px 0 14px -12px rgba(0, 0, 0, 0.28);
 }
 
+:root[data-theme="light"] .filter-panel-header-title {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Map control rows */
+:root[data-theme="light"] .filter-mapcontrol-row,
+:root[data-theme="light"] .map-mapcontrol-row,
+:root[data-theme="light"] .welcome-mapcontrol-row {
+  background-color: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-row:focus-within,
+:root[data-theme="light"] .map-mapcontrol-row:focus-within,
+:root[data-theme="light"] .welcome-mapcontrol-row:focus-within {
+  background-color: #ffffff;
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .filter-mapcontrol-row:hover,
+  :root[data-theme="light"] .map-mapcontrol-row:hover,
+  :root[data-theme="light"] .welcome-mapcontrol-row:hover {
+    border-color: #aaa;
+  }
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .map-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading),
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading),
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading) {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .map-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-clear:hover,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .filter-mapcontrol-geolocate:not(.filter-mapcontrol-geolocate--active):not(.filter-mapcontrol-geolocate--loading):focus-visible,
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .map-mapcontrol-geolocate:not(.map-mapcontrol-geolocate--active):not(.map-mapcontrol-geolocate--loading):focus-visible,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):hover,
+:root[data-theme="light"] .welcome-mapcontrol-geolocate:not(.welcome-mapcontrol-geolocate--active):not(.welcome-mapcontrol-geolocate--loading):focus-visible {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .filter-mapcontrol-compass:hover,
+:root[data-theme="light"] .filter-mapcontrol-compass:focus-visible,
+:root[data-theme="light"] .map-mapcontrol-compass:hover,
+:root[data-theme="light"] .map-mapcontrol-compass:focus-visible,
+:root[data-theme="light"] .welcome-mapcontrol-compass:hover,
+:root[data-theme="light"] .welcome-mapcontrol-compass:focus-visible {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Geocoder dropdowns */
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-main,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-main,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-main {
+  color: #222;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-secondary,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-secondary,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-secondary {
+  color: #888;
+}
+
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .filter-mapcontrol-geocoder-dropdown-item--active,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .map-mapcontrol-geocoder-dropdown-item--active,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item:hover,
+:root[data-theme="light"] .welcome-mapcontrol-geocoder-dropdown-item--active {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Category filters */
 :root[data-theme="light"] .filter-categoryfilter-accordion-header-image {
   filter: brightness(0) invert(0) opacity(0.5);
 }
 
+:root[data-theme="light"] .filter-categoryfilter-accordion-option-text,
+:root[data-theme="light"] .filter-categoryfilter-count {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* Keyword / price / date clear buttons */
 :root[data-theme="light"] .filter-keyword-clear:not(.active),
 :root[data-theme="light"] .filter-price-clear:not(.active),
 :root[data-theme="light"] .filter-daterange-clear:not(.active) {
   color: rgba(0, 0, 0, 0.5);
 }
 
+/* Amenities filters */
 :root[data-theme="light"] .filter-amenities-accordion-header-text {
   color: rgba(0, 0, 0, 0.5);
 }
@@ -585,11 +679,7 @@
   border-color: transparent;
 }
 
-:root[data-theme="light"] .filter-categoryfilter-accordion-option-text,
-:root[data-theme="light"] .filter-categoryfilter-count {
-  color: rgba(0, 0, 0, 0.5);
-}
-
+/* 18+ filter */
 :root[data-theme="light"] .filter-show18plus-row:not(:has(.filter-show18plus-input:checked)) {
   opacity: 0.5;
 }
@@ -602,32 +692,11 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* ─── Filter Panel ───────────────────────────────────────────────────────── */
+/* ============================================================================
+   MEMBER PANEL
+   ============================================================================ */
 
-:root[data-theme="light"] .filter-panel-content,
-:root[data-theme="light"] .filter-panel-header,
-:root[data-theme="light"] .filter-panel-body {
-  background: #ffffff;
-}
-
-:root[data-theme="light"] .filter-panel-content {
-  box-shadow: 10px 0 14px -12px rgba(0, 0, 0, 0.28), -10px 0 14px -12px rgba(0, 0, 0, 0.28);
-}
-
-:root[data-theme="light"] .filter-panel-header-title {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .filter-panel-actions-icon-btn-icon {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="light"] .filter-panel-actions-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-/* ─── Member Panel ───────────────────────────────────────────────────────── */
-
+/* Panel layout */
 :root[data-theme="light"] .member-panel-contents,
 :root[data-theme="light"] .member-panel-header,
 :root[data-theme="light"] .member-panel-body {
@@ -650,6 +719,7 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* Profile */
 :root[data-theme="light"] .member-profile-avatar {
   border-color: rgba(0, 0, 0, 0.15);
   background: #e5e5e5;
@@ -673,8 +743,11 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* ─── Admin Panel ────────────────────────────────────────────────────────── */
+/* ============================================================================
+   ADMIN PANEL
+   ============================================================================ */
 
+/* Panel layout */
 :root[data-theme="light"] .admin-panel-contents,
 :root[data-theme="light"] .admin-panel-header,
 :root[data-theme="light"] .admin-panel-body {
@@ -703,12 +776,32 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* Admin message label — keep blue (wildcard [class*="-label"] override must not flatten this) */
 :root[data-theme="light"] .admin-message-label {
   color: var(--blue-500);
 }
 
-/* Admin guide + message text displays */
+/* Messages search */
+:root[data-theme="light"] .admin-messages-search {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .admin-messages-search:focus-within {
+  background: #ffffff;
+  border-color: var(--blue-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .admin-messages-search:hover {
+    border-color: #aaa;
+  }
+}
+
+:root[data-theme="light"] .admin-messages-search-icon {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Guide + message text displays */
 :root[data-theme="light"] .admin-message-text-display,
 :root[data-theme="light"] .admin-guide-description-text {
   color: rgba(0, 0, 0, 0.6);
@@ -720,12 +813,11 @@
   text-decoration-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Admin checkout settings message */
+/* Checkout */
 :root[data-theme="light"] .admin-checkout-settings-message {
   color: rgba(0, 0, 0, 0.7);
 }
 
-/* Admin checkout coupon card text */
 :root[data-theme="light"] .admin-checkout-coupon-card-code-text {
   color: rgba(0, 0, 0, 0.85);
 }
@@ -739,18 +831,32 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
-/* Admin starting location display */
+/* Starting location */
 :root[data-theme="light"] .admin-starting-address-value {
   color: rgba(0, 0, 0, 0.65);
 }
 
-/* Admin settings explanation */
+:root[data-theme="light"] .mapboxgl-ctrl-geocoder.admin-mapbox-geocoder--starting {
+  background: #ffffff;
+  border-color: #ccc;
+}
+
+:root[data-theme="light"] .admin-mapbox-geocoder-input--starting {
+  color: #222 !important;
+  caret-color: #222 !important;
+}
+
+:root[data-theme="light"] .admin-mapbox-geocoder-input--starting::placeholder {
+  color: #999;
+}
+
+/* Settings explanation */
 :root[data-theme="light"] .admin-settings-explanation {
   background-color: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.75);
 }
 
-/* Admin moderation tab text */
+/* Moderation tab */
 :root[data-theme="light"] .admin-moderation-accordion-title,
 :root[data-theme="light"] .admin-moderation-item-name {
   color: rgba(0, 0, 0, 0.85);
@@ -769,7 +875,7 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
-/* Admin colour swatches title */
+/* Colour swatches */
 :root[data-theme="light"] .admin-settings-color-swatches-title {
   color: rgba(0, 0, 0, 0.75);
 }
@@ -780,6 +886,18 @@
 :root[data-theme="light"] .admin-range-group-value {
   color: rgba(0, 0, 0, 0.85);
 }
+
+/* ============================================================================
+   WELCOME PANEL
+   ============================================================================ */
+
+:root[data-theme="light"] .welcome-user-guide-item-description {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* ============================================================================
+   MOBILE
+   ============================================================================ */
 
 @media (max-width: 530px) {
   :root[data-theme="light"] .filter-panel-content,
