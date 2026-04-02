@@ -174,23 +174,13 @@
   --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* ─── Menu icon images (only SVGs — attribute selector skips non-SVG files) */
+/* ─── Menu icon images (JS detects white SVGs → adds .menu-image--white-svg) ─ */
 
-:root[data-theme="light"] .component-systemimagepicker-menu-button-image[src*=".svg"],
-:root[data-theme="light"] .component-systemimagepicker-menu-option-image[src*=".svg"],
-:root[data-theme="light"] .component-iconpicker-menu-button-image[src*=".svg"],
-:root[data-theme="light"] .component-iconpicker-menu-option-image[src*=".svg"],
-:root[data-theme="light"] .component-fieldseticonpicker-menu-button-image[src*=".svg"],
-:root[data-theme="light"] .component-fieldseticonpicker-menu-option-image[src*=".svg"],
-:root[data-theme="light"] .component-amenitiespicker-menu-option-image[src*=".svg"],
-:root[data-theme="light"] .component-ageratingpicker-menu-button-image[src*=".svg"],
-:root[data-theme="light"] .component-ageratingpicker-menu-option-image[src*=".svg"],
-:root[data-theme="light"] .component-linkpicker-menu-button-image[src*=".svg"],
-:root[data-theme="light"] .component-linkpicker-menu-option-image[src*=".svg"] {
+:root[data-theme="light"] .menu-image--white-svg {
   filter: brightness(0) invert(0.25);
 }
 
-:root[data-theme="light"] .component-amenitiespicker-menu-option-image--selected[src*=".svg"] {
+:root[data-theme="light"] .component-amenitiespicker-menu-option-image--selected.menu-image--white-svg {
   filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
 }
 

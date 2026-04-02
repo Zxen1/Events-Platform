@@ -64,6 +64,34 @@ const ImageAddTileComponent = (function(){
 
 
 /* ============================================================================
+   WHITE SVG DETECTION (for light theme icon flipping)
+   Draws menu icon images to a canvas on load. If all visible pixels are white,
+   adds .menu-image--white-svg so CSS can safely invert them in light theme.
+   Coloured icons and non-SVGs are never touched.
+   ============================================================================ */
+
+function onWhiteSvgLoad() {
+    var img = this;
+    img.classList.remove('menu-image--white-svg');
+    if (!img.src || img.src.toLowerCase().indexOf('.svg') === -1) return;
+    try {
+        var c = document.createElement('canvas');
+        var w = img.naturalWidth || 24;
+        var h = img.naturalHeight || 24;
+        c.width = w;
+        c.height = h;
+        var ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        var d = ctx.getImageData(0, 0, w, h).data;
+        for (var i = 0; i < d.length; i += 4) {
+            if (d[i + 3] < 10) continue;
+            if (d[i] < 200 || d[i + 1] < 200 || d[i + 2] < 200) return;
+        }
+        img.classList.add('menu-image--white-svg');
+    } catch (e) {}
+}
+
+/* ============================================================================
    MENU MANAGER
    Global manager to close all open menus when clicking outside or opening another.
    
@@ -3282,6 +3310,8 @@ const IconPickerComponent = (function(){
         
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-iconpicker-menu-button-image';
+        buttonImage.crossOrigin = 'anonymous';
+        buttonImage.addEventListener('load', onWhiteSvgLoad);
         buttonImage.src = currentIcon || '';
         buttonImage.alt = '';
         if (!currentIcon) buttonImage.style.display = 'none';
@@ -3370,6 +3400,8 @@ const IconPickerComponent = (function(){
                     
                     var optImg = document.createElement('img');
                     optImg.className = 'component-iconpicker-menu-option-image';
+                    optImg.crossOrigin = 'anonymous';
+                    optImg.addEventListener('load', onWhiteSvgLoad);
                     optImg.src = iconPath;
                     optImg.alt = '';
                     
@@ -4967,6 +4999,8 @@ const SystemImagePickerComponent = (function(){
         
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-systemimagepicker-menu-button-image';
+        buttonImage.crossOrigin = 'anonymous';
+        buttonImage.addEventListener('load', onWhiteSvgLoad);
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
@@ -5055,6 +5089,8 @@ const SystemImagePickerComponent = (function(){
                     
                     var optImg = document.createElement('img');
                     optImg.className = 'component-systemimagepicker-menu-option-image';
+                    optImg.crossOrigin = 'anonymous';
+                    optImg.addEventListener('load', onWhiteSvgLoad);
                     optImg.src = imagePath;
                     optImg.alt = '';
                     
@@ -5299,6 +5335,8 @@ const FieldsetIconPickerComponent = (function(){
 
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-fieldseticonpicker-menu-button-image';
+        buttonImage.crossOrigin = 'anonymous';
+        buttonImage.addEventListener('load', onWhiteSvgLoad);
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
@@ -5375,6 +5413,8 @@ const FieldsetIconPickerComponent = (function(){
 
                     var optImg = document.createElement('img');
                     optImg.className = 'component-fieldseticonpicker-menu-option-image';
+                    optImg.crossOrigin = 'anonymous';
+                    optImg.addEventListener('load', onWhiteSvgLoad);
                     optImg.src = imagePath;
                     optImg.alt = '';
 
@@ -5598,6 +5638,8 @@ const AmenitiesMenuComponent = (function(){
                 // Icon - EXACT same structure as SystemImagePickerComponent
                 var optImg = document.createElement('img');
                 optImg.className = 'component-amenitiespicker-menu-option-image';
+                optImg.crossOrigin = 'anonymous';
+                optImg.addEventListener('load', onWhiteSvgLoad);
                 if (amenity.filename && window.App) {
                     var iconUrl = window.App.getImageUrl('amenities', amenity.filename);
                     optImg.src = iconUrl;
@@ -9322,6 +9364,8 @@ const AgeRatingComponent = (function(){
         
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-ageratingpicker-menu-button-image';
+        buttonImage.crossOrigin = 'anonymous';
+        buttonImage.addEventListener('load', onWhiteSvgLoad);
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
@@ -9400,6 +9444,8 @@ const AgeRatingComponent = (function(){
                 
                 var optImg = document.createElement('img');
                 optImg.className = 'component-ageratingpicker-menu-option-image';
+                optImg.crossOrigin = 'anonymous';
+                optImg.addEventListener('load', onWhiteSvgLoad);
                 var itemImgUrl = getImageUrl(item.filename);
                 if (itemImgUrl) {
                     optImg.src = itemImgUrl;
@@ -9566,6 +9612,8 @@ const LinksComponent = (function(){
         
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-linkpicker-menu-button-image';
+        buttonImage.crossOrigin = 'anonymous';
+        buttonImage.addEventListener('load', onWhiteSvgLoad);
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
@@ -9642,6 +9690,8 @@ const LinksComponent = (function(){
                 
                 var optImg = document.createElement('img');
                 optImg.className = 'component-linkpicker-menu-option-image';
+                optImg.crossOrigin = 'anonymous';
+                optImg.addEventListener('load', onWhiteSvgLoad);
                 var itemImgUrl = getImageUrl(item.filename);
                 if (itemImgUrl) {
                     optImg.src = itemImgUrl;
