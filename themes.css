@@ -426,6 +426,99 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
+/* Post amenities icons */
+:root[data-theme="light"] .post-amenities-icon {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="light"] .post-amenities-item--active .post-amenities-icon {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Post contact row + strip */
+:root[data-theme="light"] .post-contact-link {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-contact-icon {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-contact-label--restricted {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="light"] .post-contact-item--restricted .post-contact-icon,
+:root[data-theme="light"] .post-contact-row--restricted .post-contact-icon {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* Post session ticket */
+:root[data-theme="light"] .post-session-container {
+  --ps-text: rgba(0, 0, 0, 0.85);
+  --ps-text-secondary: rgba(0, 0, 0, 0.6);
+  --ps-muted: rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"] .post-session-ticket-prompt {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"] .post-session-ticket-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* Post item (name, variants, price row) */
+:root[data-theme="light"] .post-item-container {
+  --pi-chip-bg: rgba(0, 0, 0, 0.06);
+  --pi-chip-border: rgba(0, 0, 0, 0.12);
+  --pi-chip-text: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="light"] .post-item-name {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-item-price-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .post-item-price-original {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Storefront menu */
+:root[data-theme="light"] .post-storefront-menu-container {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .post-storefront-menu-item {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .post-storefront-menu-item-title {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] .post-storefront-menu-item-sub {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="light"] .post-storefront-menu-item:hover .post-storefront-menu-item-title,
+:root[data-theme="light"] .post-storefront-menu-item--selected .post-storefront-menu-item-title {
+  color: #fff;
+}
+
+:root[data-theme="light"] .post-storefront-menu-item:hover .post-storefront-menu-item-sub,
+:root[data-theme="light"] .post-storefront-menu-item--selected .post-storefront-menu-item-sub {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme="light"] .post-storefront-loading {
+  color: rgba(0, 0, 0, 0.45);
+}
+
 /* ─── Accordion Class 1 ─────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .accordion-class-1 {
@@ -610,6 +703,11 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+/* Admin message label — keep blue (wildcard [class*="-label"] override must not flatten this) */
+:root[data-theme="light"] .admin-message-label {
+  color: var(--blue-500);
+}
+
 /* Admin guide + message text displays */
 :root[data-theme="light"] .admin-message-text-display,
 :root[data-theme="light"] .admin-guide-description-text {
@@ -650,6 +748,25 @@
 :root[data-theme="light"] .admin-settings-explanation {
   background-color: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.75);
+}
+
+/* Admin moderation tab text */
+:root[data-theme="light"] .admin-moderation-accordion-title,
+:root[data-theme="light"] .admin-moderation-item-name {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .admin-moderation-accordion-count {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:root[data-theme="light"] .admin-moderation-empty,
+:root[data-theme="light"] .admin-moderation-item-meta {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"] .admin-moderation-item-days {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 /* Admin colour swatches title */
