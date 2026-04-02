@@ -864,11 +864,11 @@ const AdminModule = (function() {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-            var chapterKey = accordion.dataset.chapter || '';
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion, idx) {
+            var chapterKey = accordion.dataset.chapterRowId || ('new-' + idx);
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
-            state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
+            state.chapterNames[chapterKey] = nameInput ? nameInput.value : (accordion.dataset.chapter || '');
             state.itemOrder[chapterKey] = [];
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
@@ -1194,16 +1194,13 @@ const AdminModule = (function() {
         container.innerHTML = '';
 
         var chapters = [];
-        var chapterMap = {};
+        var currentChapter = null;
         items.forEach(function(item) {
-            if (!chapterMap[item.chapter]) {
-                chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
-                chapters.push(chapterMap[item.chapter]);
-            }
             if (!item.title && !item.description) {
-                chapterMap[item.chapter].placeholderRowId = item.id;
-            } else {
-                chapterMap[item.chapter].items.push(item);
+                currentChapter = { chapter: item.chapter, items: [], placeholderRowId: item.id };
+                chapters.push(currentChapter);
+            } else if (currentChapter) {
+                currentChapter.items.push(item);
             }
         });
 
