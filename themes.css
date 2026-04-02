@@ -290,6 +290,10 @@
   background-color: rgba(0, 0, 0, 0.06);
 }
 
+:root[data-theme="light"] .welcome-user-guide-item-description {
+  color: rgba(0, 0, 0, 0.85);
+}
+
 :root[data-theme="light"] .component-textarearesize-handle {
   background: rgba(0, 0, 0, 0.03);
   border-color: #ccc;
@@ -555,6 +559,10 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+:root[data-theme="light"] .member-supporter-message {
+  color: rgba(0, 0, 0, 0.55);
+}
+
 /* Member panel labels */
 :root[data-theme="light"] .member-panel-contents [class*="-label"],
 :root[data-theme="light"] .member-panel-contents [class*="-sublabel"] {
@@ -589,6 +597,55 @@
 :root[data-theme="light"] .admin-panel-contents [class*="-label"],
 :root[data-theme="light"] .admin-panel-contents [class*="-sublabel"] {
   color: rgba(0, 0, 0, 0.5);
+}
+
+/* Admin guide + message text displays */
+:root[data-theme="light"] .admin-message-text-display,
+:root[data-theme="light"] .admin-guide-description-text {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .admin-message-text-display:hover,
+:root[data-theme="light"] .admin-guide-description-text:hover {
+  color: rgba(0, 0, 0, 0.85);
+  text-decoration-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Admin checkout settings message */
+:root[data-theme="light"] .admin-checkout-settings-message {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Admin checkout coupon card text */
+:root[data-theme="light"] .admin-checkout-coupon-card-code-text {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="light"] .admin-checkout-coupon-card-desc-text {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .admin-checkout-coupon-card-dates-text,
+:root[data-theme="light"] .admin-checkout-coupon-card-usage-text {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Admin starting location display */
+:root[data-theme="light"] .admin-starting-address-value {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* Admin settings explanation */
+:root[data-theme="light"] .admin-settings-explanation {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.75);
+}
+
+/* Slider and range values */
+:root[data-theme="light"] .admin-slider-value,
+:root[data-theme="light"] .admin-range-wrap-value,
+:root[data-theme="light"] .admin-range-group-value {
+  color: rgba(0, 0, 0, 0.85);
 }
 
 @media (max-width: 530px) {
