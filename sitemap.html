@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sitemap</title>
     <link rel="stylesheet" href="base.css?v=20251228i">
+    <link rel="stylesheet" href="themes.css?v=20260317a">
+    <script>
+      (function() {
+        try {
+          var themeActive = localStorage.getItem('theme_active');
+          if (!themeActive) return;
+          var mode = themeActive === 'theme_light' ? 'light'
+                   : themeActive === 'theme_dark'  ? 'dark'
+                   : themeActive === 'theme_auto'
+                     ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                     : null;
+          if (mode === 'light' || mode === 'dark') {
+            document.documentElement.setAttribute('data-theme', mode);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <style>
       :root{
         --sitemap-header-h: 40px;
@@ -275,6 +292,35 @@
       .sitemap-btn-marquee { background: #7e22ce; }
       .sitemap-btn-member { background: #a21caf; }
       .sitemap-btn-admin { background: #db2777; }
+
+      /* Light theme */
+      :root[data-theme="light"] body {
+        color: rgba(0, 0, 0, 0.85);
+      }
+
+      :root[data-theme="light"] .sitemap-viewport {
+        background: #f1f5f9;
+        border-color: rgba(0, 0, 0, 0.15);
+      }
+
+      :root[data-theme="light"] .sitemap-viewport-header {
+        border-bottom-color: rgba(0, 0, 0, 0.15);
+      }
+
+      :root[data-theme="light"] .sitemap-landscape-panel-left {
+        border-right-color: rgba(0, 0, 0, 0.15);
+      }
+
+      :root[data-theme="light"] .sitemap-landscape-panel-right {
+        border-left-color: rgba(0, 0, 0, 0.15);
+      }
+
+      :root[data-theme="light"] .sitemap-panel-item:hover,
+      :root[data-theme="light"] .sitemap-portrait-item:hover,
+      :root[data-theme="light"] .sitemap-header-btn:hover,
+      :root[data-theme="light"] .sitemap-section-title:hover {
+        outline-color: rgba(0, 0, 0, 0.3);
+      }
     </style>
   </head>
   <body>

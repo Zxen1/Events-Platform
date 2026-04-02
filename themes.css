@@ -860,14 +860,9 @@
   color: rgba(0, 0, 0, 0.75);
 }
 
-/* Moderation tab */
-:root[data-theme="light"] .admin-moderation-accordion-title,
+/* Moderation tab (body content only — header text inherits white from accordion-class-1) */
 :root[data-theme="light"] .admin-moderation-item-name {
   color: rgba(0, 0, 0, 0.85);
-}
-
-:root[data-theme="light"] .admin-moderation-accordion-count {
-  color: rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme="light"] .admin-moderation-empty,
