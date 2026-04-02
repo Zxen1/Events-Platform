@@ -657,7 +657,7 @@ try {
             }
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') {
-                $chapterName = date('YmdHi');
+                $chapterName = date('Y-m-d H:i');
             }
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([
@@ -727,7 +727,7 @@ try {
             }
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') {
-                $chapterName = date('YmdHi');
+                $chapterName = date('Y-m-d H:i');
             }
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([

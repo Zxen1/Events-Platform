@@ -961,7 +961,7 @@ const AdminModule = (function() {
             if (!rawName) {
                 var now = new Date();
                 var pad = function(n) { return String(n).padStart(2, '0'); };
-                rawName = '' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes());
+                rawName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
             }
             var chapterName = rawName;
 
@@ -1458,7 +1458,10 @@ const AdminModule = (function() {
     }
 
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: '', chapterId: null, items: [] };
+        var now = new Date();
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        var timestamp = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        var newChapter = { chapter: timestamp, chapterId: null, items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guide-accordion--editing');
@@ -1467,7 +1470,7 @@ const AdminModule = (function() {
         if (nameInput) { nameInput.select(); nameInput.focus(); }
 
         var payload = {};
-        payload[ctx.compositeKey] = [{ chapter_id: null, chapter: '', title: '', description: '', sort_order: 0 }];
+        payload[ctx.compositeKey] = [{ chapter_id: null, chapter: timestamp, title: '', description: '', sort_order: 0 }];
         fetch('/gateway.php?action=save-admin-settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
