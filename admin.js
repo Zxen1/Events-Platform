@@ -950,7 +950,7 @@ const AdminModule = (function() {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
             var chapterName = nameInput.value.trim() || accordion.dataset.chapter || '';
-            var chapterId = accordion.dataset.chapterId ? parseInt(accordion.dataset.chapterId, 10) : null;
+            var chapterId = parseInt(accordion.dataset.chapterId, 10);
             var itemEls = accordion.querySelectorAll('.admin-guide-item');
 
             itemEls.forEach(function(itemEl) {
@@ -958,17 +958,14 @@ const AdminModule = (function() {
                 var textInput = itemEl.querySelector('.admin-guide-description-input');
                 var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
                 globalOrder++;
-                var entry = { chapter: chapterName, title: titleInput ? titleInput.value : '', description: textInput ? textInput.value : '', sort_order: globalOrder };
-                if (chapterId) entry.chapter_id = chapterId;
+                var entry = { chapter: chapterName, chapter_id: chapterId, title: titleInput ? titleInput.value : '', description: textInput ? textInput.value : '', sort_order: globalOrder };
                 if (id) entry.id = id;
                 modified.push(entry);
             });
 
             if (itemEls.length === 0) {
                 globalOrder++;
-                var entry = { chapter: chapterName, title: '', description: '', sort_order: globalOrder };
-                if (chapterId) entry.chapter_id = chapterId;
-                modified.push(entry);
+                modified.push({ chapter: chapterName, chapter_id: chapterId, title: '', description: '', sort_order: globalOrder });
             }
         });
 
@@ -1428,11 +1425,22 @@ const AdminModule = (function() {
         var dd = String(now.getDate()).padStart(2, '0');
         var hh = String(now.getHours()).padStart(2, '0');
         var min = String(now.getMinutes()).padStart(2, '0');
-        return 'Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ')';
+        var sec = String(now.getSeconds()).padStart(2, '0');
+        return 'Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ':' + sec + ')';
+    }
+
+    function nextChapterId(container) {
+        var max = 0;
+        container.querySelectorAll('.admin-guide-accordion').forEach(function(a) {
+            var cid = parseInt(a.dataset.chapterId, 10);
+            if (cid > max) max = cid;
+        });
+        return max + 1;
     }
 
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: newChapterName(), items: [] };
+        var cid = nextChapterId(container);
+        var newChapter = { chapter: newChapterName(), chapter_id: cid, items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guide-accordion--editing');
@@ -1569,12 +1577,6 @@ const AdminModule = (function() {
                     if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
                     var c = document.getElementById('admin-guide-container');
                     if (c) {
-                        if (data.new_chapter_ids && Array.isArray(data.new_chapter_ids)) {
-                            var accordions = c.querySelectorAll('.admin-guide-accordion:not([data-chapter-id])');
-                            data.new_chapter_ids.forEach(function(cid, i) {
-                                if (accordions[i]) accordions[i].dataset.chapterId = cid;
-                            });
-                        }
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
                             var items = c.querySelectorAll('.admin-guide-item:not([data-item-id])');
                             data.new_item_ids.forEach(function(newId, i) {
@@ -1602,12 +1604,6 @@ const AdminModule = (function() {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
                     var c = document.getElementById('user-guide-container');
                     if (c) {
-                        if (data.new_chapter_ids && Array.isArray(data.new_chapter_ids)) {
-                            var accordions = c.querySelectorAll('.admin-guide-accordion:not([data-chapter-id])');
-                            data.new_chapter_ids.forEach(function(cid, i) {
-                                if (accordions[i]) accordions[i].dataset.chapterId = cid;
-                            });
-                        }
                         if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
                             var items = c.querySelectorAll('.admin-guide-item:not([data-item-id])');
                             data.new_item_ids.forEach(function(newId, i) {

@@ -608,7 +608,6 @@ try {
     // Save admin_guide if provided
     $admin_guideUpdated = 0;
     $newItemIds = [];
-    $newChapterIds = [];
     $tableExists = null;
     if (($admin_guide !== null && !empty($admin_guide)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds))) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
@@ -630,22 +629,9 @@ try {
             INSERT INTO `admin_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
-        $lastChapterName = null;
-        $lastChapterId = null;
         foreach ($admin_guide as $item) {
-            $chapterId = isset($item['chapter_id']) ? (int)$item['chapter_id'] : null;
+            $chapterId = (int)($item['chapter_id'] ?? 0);
             $chapterName = (string)($item['chapter'] ?? '');
-            if ($chapterId === null) {
-                if ($lastChapterName !== $chapterName) {
-                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(chapter_id), 0) + 1 AS next_id FROM admin_guide');
-                    $chapterId = (int)$maxStmt->fetch()['next_id'];
-                    $lastChapterId = $chapterId;
-                    $lastChapterName = $chapterName;
-                    $newChapterIds[] = $chapterId;
-                } else {
-                    $chapterId = $lastChapterId;
-                }
-            }
             if (isset($item['id'])) {
                 $updateStmt->execute([
                     ':id'         => (int)$item['id'],
@@ -675,7 +661,6 @@ try {
     // Save user_guide if provided
     $user_guideUpdated = 0;
     $userGuideNewItemIds = [];
-    $userGuideNewChapterIds = [];
     $userTableExists = null;
     if (($user_guide !== null && !empty($user_guide)) || ($deletedUserGuideIds !== null && !empty($deletedUserGuideIds))) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
@@ -697,22 +682,9 @@ try {
             INSERT INTO `user_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
-        $lastChapterName = null;
-        $lastChapterId = null;
         foreach ($user_guide as $item) {
-            $chapterId = isset($item['chapter_id']) ? (int)$item['chapter_id'] : null;
+            $chapterId = (int)($item['chapter_id'] ?? 0);
             $chapterName = (string)($item['chapter'] ?? '');
-            if ($chapterId === null) {
-                if ($lastChapterName !== $chapterName) {
-                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(chapter_id), 0) + 1 AS next_id FROM user_guide');
-                    $chapterId = (int)$maxStmt->fetch()['next_id'];
-                    $lastChapterId = $chapterId;
-                    $lastChapterName = $chapterName;
-                    $userGuideNewChapterIds[] = $chapterId;
-                } else {
-                    $chapterId = $lastChapterId;
-                }
-            }
             if (isset($item['id'])) {
                 $updateStmt->execute([
                     ':id'         => (int)$item['id'],
@@ -781,18 +753,12 @@ try {
     if (!empty($newItemIds)) {
         $response['new_item_ids'] = $newItemIds;
     }
-    if (!empty($newChapterIds)) {
-        $response['new_chapter_ids'] = $newChapterIds;
-    }
 
     if ($user_guideUpdated > 0) {
         $response['user_guide_updated'] = $user_guideUpdated;
     }
     if (!empty($userGuideNewItemIds)) {
         $response['new_item_ids'] = $userGuideNewItemIds;
-    }
-    if (!empty($userGuideNewChapterIds)) {
-        $response['new_chapter_ids'] = $userGuideNewChapterIds;
     }
 
     echo json_encode($response);
