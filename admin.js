@@ -965,7 +965,10 @@ const AdminModule = (function() {
 
             if (itemEls.length === 0) {
                 globalOrder++;
-                modified.push({ chapter: chapterName, chapter_id: chapterId, title: '', description: '', sort_order: globalOrder });
+                var entry = { chapter: chapterName, chapter_id: chapterId, title: '', description: '', sort_order: globalOrder };
+                var anchorId = accordion.dataset.anchorId ? parseInt(accordion.dataset.anchorId, 10) : null;
+                if (anchorId) entry.id = anchorId;
+                modified.push(entry);
             }
         });
 
@@ -1576,15 +1579,20 @@ const AdminModule = (function() {
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
                     var c = document.getElementById('admin-guide-container');
-                    if (c) {
-                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var items = c.querySelectorAll('.admin-guide-item:not([data-item-id])');
-                            data.new_item_ids.forEach(function(newId, i) {
-                                if (items[i]) items[i].dataset.itemId = newId;
-                            });
-                        }
-                        delete c.dataset.deletedIds;
+                    if (c && data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                        var idx = 0;
+                        c.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+                            var noIdItems = accordion.querySelectorAll('.admin-guide-item:not([data-item-id])');
+                            if (noIdItems.length > 0) {
+                                noIdItems.forEach(function(item) {
+                                    if (data.new_item_ids[idx] !== undefined) item.dataset.itemId = data.new_item_ids[idx++];
+                                });
+                            } else if (accordion.querySelectorAll('.admin-guide-item').length === 0 && !accordion.dataset.anchorId) {
+                                if (data.new_item_ids[idx] !== undefined) accordion.dataset.anchorId = data.new_item_ids[idx++];
+                            }
+                        });
                     }
+                    if (c) delete c.dataset.deletedIds;
                     updateCompositeBaseline('admin_guide');
                 })
             );
@@ -1603,15 +1611,20 @@ const AdminModule = (function() {
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
                     var c = document.getElementById('user-guide-container');
-                    if (c) {
-                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                            var items = c.querySelectorAll('.admin-guide-item:not([data-item-id])');
-                            data.new_item_ids.forEach(function(newId, i) {
-                                if (items[i]) items[i].dataset.itemId = newId;
-                            });
-                        }
-                        delete c.dataset.deletedIds;
+                    if (c && data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                        var idx = 0;
+                        c.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+                            var noIdItems = accordion.querySelectorAll('.admin-guide-item:not([data-item-id])');
+                            if (noIdItems.length > 0) {
+                                noIdItems.forEach(function(item) {
+                                    if (data.new_item_ids[idx] !== undefined) item.dataset.itemId = data.new_item_ids[idx++];
+                                });
+                            } else if (accordion.querySelectorAll('.admin-guide-item').length === 0 && !accordion.dataset.anchorId) {
+                                if (data.new_item_ids[idx] !== undefined) accordion.dataset.anchorId = data.new_item_ids[idx++];
+                            }
+                        });
                     }
+                    if (c) delete c.dataset.deletedIds;
                     updateCompositeBaseline('user_guide');
                 })
             );

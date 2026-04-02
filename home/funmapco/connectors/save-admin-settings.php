@@ -650,9 +650,7 @@ try {
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
-                if (!empty($item['title']) || !empty($item['description'])) {
-                    $newItemIds[] = (int)$pdo->lastInsertId();
-                }
+                $newItemIds[] = (int)$pdo->lastInsertId();
                 $admin_guideUpdated++;
             }
         }
@@ -703,9 +701,7 @@ try {
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
-                if (!empty($item['title']) || !empty($item['description'])) {
-                    $userGuideNewItemIds[] = (int)$pdo->lastInsertId();
-                }
+                $userGuideNewItemIds[] = (int)$pdo->lastInsertId();
                 $user_guideUpdated++;
             }
         }
