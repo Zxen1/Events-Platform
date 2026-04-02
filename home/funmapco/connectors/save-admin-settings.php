@@ -618,7 +618,6 @@ try {
     // Save admin_guide if provided
     $admin_guideUpdated = 0;
     $newAdminGuideItemIds = [];
-    $newAdminGuideChapterIdMap = [];
     $tableExists = null;
     if (($admin_guide !== null && !empty($admin_guide)) || !empty($deletedAdminGuideChapterIds) || !empty($deletedInstructionIds)) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
@@ -636,21 +635,7 @@ try {
         }
     }
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
-        $tempAdminChapterIds = [];
-        foreach ($admin_guide as $item) {
-            $cid = isset($item['chapter_id']) ? (int)$item['chapter_id'] : 0;
-            if ($cid < 0 && !isset($tempAdminChapterIds[$cid])) {
-                $tempAdminChapterIds[$cid] = true;
-            }
-        }
-        if (!empty($tempAdminChapterIds)) {
-            $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
-            $maxChapterId = (int)$maxStmt->fetch()['max_id'];
-            foreach (array_keys($tempAdminChapterIds) as $tempId) {
-                $tempAdminChapterIds[$tempId] = ++$maxChapterId;
-                $newAdminGuideChapterIdMap[(string)$tempId] = $maxChapterId;
-            }
-        }
+        $nullAdminChapterId = null;
         $updateStmt = $pdo->prepare('
             UPDATE `admin_guide`
             SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
@@ -661,8 +646,15 @@ try {
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($admin_guide as $item) {
-            $tempCid = isset($item['chapter_id']) ? (int)$item['chapter_id'] : 0;
-            $realChapterId = ($tempCid < 0) ? ($tempAdminChapterIds[$tempCid] ?? null) : ($tempCid ?: null);
+            $cid = isset($item['chapter_id']) && $item['chapter_id'] !== null ? (int)$item['chapter_id'] : null;
+            if ($cid === null) {
+                if ($nullAdminChapterId === null) {
+                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
+                    $nullAdminChapterId = (int)$maxStmt->fetch()['max_id'] + 1;
+                    $newAdminGuideChapterId = $nullAdminChapterId;
+                }
+                $cid = $nullAdminChapterId;
+            }
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') {
                 $chapterName = date('YmdHi');
@@ -671,7 +663,7 @@ try {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
                     ':chapter'     => $chapterName,
-                    ':chapter_id'  => $realChapterId,
+                    ':chapter_id'  => $cid,
                     ':title'       => (string)($item['title'] ?? ''),
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
@@ -680,7 +672,7 @@ try {
             } else {
                 $insertStmt->execute([
                     ':chapter'     => $chapterName,
-                    ':chapter_id'  => $realChapterId,
+                    ':chapter_id'  => $cid,
                     ':title'       => (string)($item['title'] ?? ''),
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
@@ -696,7 +688,6 @@ try {
     // Save user_guide if provided
     $user_guideUpdated = 0;
     $newUserGuideItemIds = [];
-    $newUserGuideChapterIdMap = [];
     $userTableExists = null;
     if (($user_guide !== null && !empty($user_guide)) || !empty($deletedUserGuideChapterIds) || !empty($deletedUserGuideIds)) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
@@ -714,21 +705,7 @@ try {
         }
     }
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
-        $userTempChapterIds = [];
-        foreach ($user_guide as $item) {
-            $cid = isset($item['chapter_id']) ? (int)$item['chapter_id'] : 0;
-            if ($cid < 0 && !isset($userTempChapterIds[$cid])) {
-                $userTempChapterIds[$cid] = true;
-            }
-        }
-        if (!empty($userTempChapterIds)) {
-            $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
-            $maxUserChapterId = (int)$maxStmt->fetch()['max_id'];
-            foreach (array_keys($userTempChapterIds) as $tempId) {
-                $userTempChapterIds[$tempId] = ++$maxUserChapterId;
-                $newUserGuideChapterIdMap[(string)$tempId] = $maxUserChapterId;
-            }
-        }
+        $nullUserChapterId = null;
         $updateStmt = $pdo->prepare('
             UPDATE `user_guide`
             SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
@@ -739,8 +716,15 @@ try {
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($user_guide as $item) {
-            $tempCid = isset($item['chapter_id']) ? (int)$item['chapter_id'] : 0;
-            $realChapterId = ($tempCid < 0) ? ($userTempChapterIds[$tempCid] ?? null) : ($tempCid ?: null);
+            $cid = isset($item['chapter_id']) && $item['chapter_id'] !== null ? (int)$item['chapter_id'] : null;
+            if ($cid === null) {
+                if ($nullUserChapterId === null) {
+                    $maxStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
+                    $nullUserChapterId = (int)$maxStmt->fetch()['max_id'] + 1;
+                    $newUserGuideChapterId = $nullUserChapterId;
+                }
+                $cid = $nullUserChapterId;
+            }
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') {
                 $chapterName = date('YmdHi');
@@ -749,7 +733,7 @@ try {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
                     ':chapter'     => $chapterName,
-                    ':chapter_id'  => $realChapterId,
+                    ':chapter_id'  => $cid,
                     ':title'       => (string)($item['title'] ?? ''),
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
@@ -758,7 +742,7 @@ try {
             } else {
                 $insertStmt->execute([
                     ':chapter'     => $chapterName,
-                    ':chapter_id'  => $realChapterId,
+                    ':chapter_id'  => $cid,
                     ':title'       => (string)($item['title'] ?? ''),
                     ':description' => (string)($item['description'] ?? ''),
                     ':sort_order'  => (int)($item['sort_order'] ?? 0),
@@ -813,8 +797,8 @@ try {
     if (!empty($newAdminGuideItemIds)) {
         $response['new_admin_guide_item_ids'] = $newAdminGuideItemIds;
     }
-    if (!empty($newAdminGuideChapterIdMap)) {
-        $response['new_admin_guide_chapter_id_map'] = $newAdminGuideChapterIdMap;
+    if (isset($newAdminGuideChapterId)) {
+        $response['new_admin_guide_chapter_id'] = $newAdminGuideChapterId;
     }
 
     if ($user_guideUpdated > 0) {
@@ -823,8 +807,8 @@ try {
     if (!empty($newUserGuideItemIds)) {
         $response['new_user_guide_item_ids'] = $newUserGuideItemIds;
     }
-    if (!empty($newUserGuideChapterIdMap)) {
-        $response['new_user_guide_chapter_id_map'] = $newUserGuideChapterIdMap;
+    if (isset($newUserGuideChapterId)) {
+        $response['new_user_guide_chapter_id'] = $newUserGuideChapterId;
     }
 
     echo json_encode($response);

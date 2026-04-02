@@ -844,7 +844,6 @@ const AdminModule = (function() {
 
     var adminGuideLoaded = false;
     var userGuideLoaded = false;
-    var nextTempChapterId = -1;
 
     var adminGuideCtx = {
         containerId: 'admin-guide-container',
@@ -903,12 +902,9 @@ const AdminModule = (function() {
             });
         }
 
-        // Remove chapters added after initial load (not in original state)
-        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-            var chapterKey = accordion.dataset.chapterId !== undefined ? accordion.dataset.chapterId : '';
-            if (originalState.chapterOrder && originalState.chapterOrder.indexOf(chapterKey) === -1) {
-                accordion.parentNode.removeChild(accordion);
-            }
+        // Remove only pending accordions (INSERT in-flight, no chapter_id yet)
+        manualContainer.querySelectorAll('.admin-guide-accordion[data-chapter-id=""]').forEach(function(accordion) {
+            accordion.parentNode.removeChild(accordion);
         });
 
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
@@ -973,14 +969,17 @@ const AdminModule = (function() {
                 ? parseInt(accordion.dataset.chapterId, 10)
                 : null;
 
-            // Update existing placeholder row or send a placeholder for new/null-chapter_id chapters
+            // Skip chapters whose immediate INSERT is still pending (no chapter_id, no existing row)
+            if (chapterId === null && !accordion.dataset.chapterRowId) return;
+
+            // Update existing placeholder row or send a placeholder for legacy null-chapter_id rows
             if (accordion.dataset.chapterRowId) {
                 globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
-            } else if (chapterId === null || chapterId < 0) {
-                // New chapter — send placeholder so it persists in DB even if empty
+            } else if (chapterId === null) {
+                // Legacy null-chapter_id row — send placeholder so it gets a real chapter_id on save
                 globalOrder++;
-                modified.push({ chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
+                modified.push({ chapter_id: null, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
             }
 
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
@@ -1233,7 +1232,7 @@ const AdminModule = (function() {
         items.forEach(function(item) {
             var key = (item.chapter_id !== null && item.chapter_id !== undefined) ? String(item.chapter_id) : 'null';
             if (!chapterMap[key]) {
-                var assignedChapterId = (item.chapter_id !== null && item.chapter_id !== undefined) ? item.chapter_id : nextTempChapterId--;
+                var assignedChapterId = (item.chapter_id !== null && item.chapter_id !== undefined) ? item.chapter_id : null;
                 chapterMap[key] = { chapter: item.chapter, chapterId: assignedChapterId, items: [], placeholderRowId: null };
                 chapters.push(chapterMap[key]);
             }
@@ -1296,7 +1295,7 @@ const AdminModule = (function() {
 
     function trackDeletedChapter(accordion, containerEl) {
         var chapterId = accordion.dataset.chapterId ? parseInt(accordion.dataset.chapterId, 10) : 0;
-        if (!chapterId || chapterId < 0 || !containerEl) return;
+        if (!chapterId || !containerEl) return;
         var prev = containerEl.dataset.deletedChapterIds ? containerEl.dataset.deletedChapterIds + ',' : '';
         containerEl.dataset.deletedChapterIds = prev + chapterId;
     }
@@ -1459,14 +1458,32 @@ const AdminModule = (function() {
     }
 
     function addChapter(container, addChapterBtn, ctx) {
-        var newChapter = { chapter: '', chapterId: nextTempChapterId--, items: [] };
+        var newChapter = { chapter: '', chapterId: null, items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guide-accordion--editing');
         syncInstructionsAccordionUi(accordion);
         var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
         if (nameInput) { nameInput.select(); nameInput.focus(); }
-        if (ctx.isLoaded()) notifyFieldChange();
+
+        var payload = {};
+        payload[ctx.compositeKey] = [{ chapter_id: null, chapter: '', title: '', description: '', sort_order: 0 }];
+        fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) throw new Error(data.message || 'Failed to create chapter');
+            var newId = data['new_' + ctx.compositeKey + '_chapter_id'];
+            if (newId) accordion.dataset.chapterId = newId;
+            if (ctx.isLoaded()) notifyFieldChange();
+        })
+        .catch(function(err) {
+            console.error('[Admin] Failed to create chapter:', err);
+            if (accordion.parentNode) accordion.parentNode.removeChild(accordion);
+        });
     }
 
     /* --------------------------------------------------------------------------
@@ -1602,12 +1619,9 @@ const AdminModule = (function() {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
-                        if (data.new_admin_guide_chapter_id_map) {
-                            Object.keys(data.new_admin_guide_chapter_id_map).forEach(function(tempId) {
-                                var realId = data.new_admin_guide_chapter_id_map[tempId];
-                                var acc = c.querySelector('.admin-guide-accordion[data-chapter-id="' + tempId + '"]');
-                                if (acc) acc.dataset.chapterId = realId;
-                            });
+                        if (data.new_admin_guide_chapter_id) {
+                            var nullAcc = c.querySelector('.admin-guide-accordion[data-chapter-id=""]');
+                            if (nullAcc) nullAcc.dataset.chapterId = data.new_admin_guide_chapter_id;
                         }
                         delete c.dataset.deletedIds;
                         delete c.dataset.deletedChapterIds;
@@ -1637,12 +1651,9 @@ const AdminModule = (function() {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
-                        if (data.new_user_guide_chapter_id_map) {
-                            Object.keys(data.new_user_guide_chapter_id_map).forEach(function(tempId) {
-                                var realId = data.new_user_guide_chapter_id_map[tempId];
-                                var acc = c.querySelector('.admin-guide-accordion[data-chapter-id="' + tempId + '"]');
-                                if (acc) acc.dataset.chapterId = realId;
-                            });
+                        if (data.new_user_guide_chapter_id) {
+                            var nullAcc = c.querySelector('.admin-guide-accordion[data-chapter-id=""]');
+                            if (nullAcc) nullAcc.dataset.chapterId = data.new_user_guide_chapter_id;
                         }
                         delete c.dataset.deletedIds;
                         delete c.dataset.deletedChapterIds;
