@@ -635,10 +635,9 @@ try {
         }
     }
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
-        $newAdminGuideChapterId = null;
-        $newAdminGuideChapterRowId = null;
         // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
         $adminNullNameMap = [];
+        $adminNullRowMap  = [];
         $maxAdminCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
         $nextAdminCid = (int)$maxAdminCidStmt->fetch()['max_id'] + 1;
         foreach ($admin_guide as $item) {
@@ -686,9 +685,8 @@ try {
                 if (!empty($item['is_new'])) {
                     $newAdminGuideItemIds[] = $insertedId;
                 }
-                if ($origCidNull && $newAdminGuideChapterId === null) {
-                    $newAdminGuideChapterId = $cid;
-                    $newAdminGuideChapterRowId = $insertedId;
+                if ($origCidNull && !isset($adminNullRowMap[$chapterName])) {
+                    $adminNullRowMap[$chapterName] = $insertedId;
                 }
                 $admin_guideUpdated++;
             }
@@ -715,10 +713,9 @@ try {
         }
     }
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
-        $newUserGuideChapterId = null;
-        $newUserGuideChapterRowId = null;
         // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
         $userNullNameMap = [];
+        $userNullRowMap  = [];
         $maxUserCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
         $nextUserCid = (int)$maxUserCidStmt->fetch()['max_id'] + 1;
         foreach ($user_guide as $item) {
@@ -766,9 +763,8 @@ try {
                 if (!empty($item['is_new'])) {
                     $newUserGuideItemIds[] = $insertedId;
                 }
-                if ($origCidNull && $newUserGuideChapterId === null) {
-                    $newUserGuideChapterId = $cid;
-                    $newUserGuideChapterRowId = $insertedId;
+                if ($origCidNull && !isset($userNullRowMap[$chapterName])) {
+                    $userNullRowMap[$chapterName] = $insertedId;
                 }
                 $user_guideUpdated++;
             }
@@ -817,9 +813,12 @@ try {
     if (!empty($newAdminGuideItemIds)) {
         $response['new_admin_guide_item_ids'] = $newAdminGuideItemIds;
     }
-    if (isset($newAdminGuideChapterId)) {
-        $response['new_admin_guide_chapter_id'] = $newAdminGuideChapterId;
-        $response['new_admin_guide_chapter_row_id'] = $newAdminGuideChapterRowId;
+    if (!empty($adminNullNameMap)) {
+        $newAdminGuideChapters = [];
+        foreach ($adminNullNameMap as $name => $cid) {
+            $newAdminGuideChapters[] = ['chapter' => $name, 'chapter_id' => $cid, 'row_id' => $adminNullRowMap[$name] ?? null];
+        }
+        $response['new_admin_guide_chapters'] = $newAdminGuideChapters;
     }
 
     if ($user_guideUpdated > 0) {
@@ -828,9 +827,12 @@ try {
     if (!empty($newUserGuideItemIds)) {
         $response['new_user_guide_item_ids'] = $newUserGuideItemIds;
     }
-    if (isset($newUserGuideChapterId)) {
-        $response['new_user_guide_chapter_id'] = $newUserGuideChapterId;
-        $response['new_user_guide_chapter_row_id'] = $newUserGuideChapterRowId;
+    if (!empty($userNullNameMap)) {
+        $newUserGuideChapters = [];
+        foreach ($userNullNameMap as $name => $cid) {
+            $newUserGuideChapters[] = ['chapter' => $name, 'chapter_id' => $cid, 'row_id' => $userNullRowMap[$name] ?? null];
+        }
+        $response['new_user_guide_chapters'] = $newUserGuideChapters;
     }
 
     echo json_encode($response);

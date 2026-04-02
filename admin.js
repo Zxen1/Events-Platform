@@ -865,6 +865,7 @@ const AdminModule = (function() {
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            if (accordion.classList.contains('admin-guide-accordion--pending-delete')) return;
             var chapterKey = accordion.dataset.chapterId !== undefined ? accordion.dataset.chapterId : '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
@@ -947,6 +948,10 @@ const AdminModule = (function() {
             });
         });
 
+        manualContainer.querySelectorAll('.admin-guide-accordion--pending-delete').forEach(function(accordion) {
+            accordion.classList.remove('admin-guide-accordion--pending-delete');
+        });
+
         delete manualContainer.dataset.deletedIds;
         delete manualContainer.dataset.deletedChapterIds;
     }
@@ -963,6 +968,7 @@ const AdminModule = (function() {
 
         var globalOrder = 0;
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            if (accordion.classList.contains('admin-guide-accordion--pending-delete')) return;
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
 
@@ -971,6 +977,9 @@ const AdminModule = (function() {
                 var now = new Date();
                 var pad = function(n) { return String(n).padStart(2, '0'); };
                 rawName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+                var headerText = accordion.querySelector('.admin-guide-accordion-header-text');
+                nameInput.value = rawName;
+                if (headerText) headerText.textContent = rawName;
             }
             var chapterName = rawName;
 
@@ -1124,16 +1133,24 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
-                        trackDeletedChapter(accordion, ctx.getContainer());
-                        accordion.parentNode.removeChild(accordion);
+                        if (accordion.dataset.chapterId) {
+                            trackDeletedChapter(accordion, ctx.getContainer());
+                            accordion.classList.add('admin-guide-accordion--pending-delete');
+                        } else {
+                            accordion.parentNode.removeChild(accordion);
+                        }
                         if (ctx.isLoaded()) notifyFieldChange();
                     }
                 });
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
-                trackDeletedChapter(accordion, ctx.getContainer());
-                accordion.parentNode.removeChild(accordion);
+                if (accordion.dataset.chapterId) {
+                    trackDeletedChapter(accordion, ctx.getContainer());
+                    accordion.classList.add('admin-guide-accordion--pending-delete');
+                } else {
+                    accordion.parentNode.removeChild(accordion);
+                }
                 if (ctx.isLoaded()) notifyFieldChange();
             }
         });
@@ -1610,10 +1627,20 @@ const AdminModule = (function() {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
-                        if (data.new_admin_guide_chapter_id) {
-                            var nullAcc = c.querySelector('.admin-guide-accordion[data-chapter-id=""]');
-                            if (nullAcc) nullAcc.dataset.chapterId = data.new_admin_guide_chapter_id;
+                        if (data.new_admin_guide_chapters && Array.isArray(data.new_admin_guide_chapters)) {
+                            data.new_admin_guide_chapters.forEach(function(entry) {
+                                c.querySelectorAll('.admin-guide-accordion[data-chapter-id=""]').forEach(function(acc) {
+                                    var nameInput = acc.querySelector('.admin-guide-accordion-editpanel-input');
+                                    if (nameInput && nameInput.value === entry.chapter) {
+                                        acc.dataset.chapterId = entry.chapter_id;
+                                        if (entry.row_id) acc.dataset.chapterRowId = entry.row_id;
+                                    }
+                                });
+                            });
                         }
+                        c.querySelectorAll('.admin-guide-accordion--pending-delete').forEach(function(acc) {
+                            acc.parentNode.removeChild(acc);
+                        });
                         delete c.dataset.deletedIds;
                         delete c.dataset.deletedChapterIds;
                     }
@@ -1642,10 +1669,20 @@ const AdminModule = (function() {
                                 if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
                             });
                         }
-                        if (data.new_user_guide_chapter_id) {
-                            var nullAcc = c.querySelector('.admin-guide-accordion[data-chapter-id=""]');
-                            if (nullAcc) nullAcc.dataset.chapterId = data.new_user_guide_chapter_id;
+                        if (data.new_user_guide_chapters && Array.isArray(data.new_user_guide_chapters)) {
+                            data.new_user_guide_chapters.forEach(function(entry) {
+                                c.querySelectorAll('.admin-guide-accordion[data-chapter-id=""]').forEach(function(acc) {
+                                    var nameInput = acc.querySelector('.admin-guide-accordion-editpanel-input');
+                                    if (nameInput && nameInput.value === entry.chapter) {
+                                        acc.dataset.chapterId = entry.chapter_id;
+                                        if (entry.row_id) acc.dataset.chapterRowId = entry.row_id;
+                                    }
+                                });
+                            });
                         }
+                        c.querySelectorAll('.admin-guide-accordion--pending-delete').forEach(function(acc) {
+                            acc.parentNode.removeChild(acc);
+                        });
                         delete c.dataset.deletedIds;
                         delete c.dataset.deletedChapterIds;
                     }

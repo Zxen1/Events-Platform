@@ -3059,6 +3059,10 @@
   display: none;
 }
 
+.admin-guide-accordion--pending-delete {
+  display: none;
+}
+
 .admin-guide-add-chapter {
   width: 100%;
   height: 36px;
