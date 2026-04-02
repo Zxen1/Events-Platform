@@ -1265,6 +1265,7 @@ const AdminModule = (function() {
             var itemId = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
             if (itemId) ids.push(itemId);
         });
+        console.error('[DEBUG] trackDeletedChapter — chapterRowId:', accordion.dataset.chapterRowId, 'collected ids:', ids);
         if (ids.length === 0) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + ids.join(',');
