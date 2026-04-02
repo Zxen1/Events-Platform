@@ -864,11 +864,11 @@ const AdminModule = (function() {
         var state = { chapterOrder: [], chapterNames: {}, itemOrder: {}, items: {} };
         var manualContainer = document.getElementById(containerId);
         if (!manualContainer) return state;
-        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion, idx) {
-            var chapterKey = accordion.dataset.chapterId || ('new-' + idx);
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapter || '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             state.chapterOrder.push(chapterKey);
-            state.chapterNames[chapterKey] = nameInput ? nameInput.value : (accordion.dataset.chapter || '');
+            state.chapterNames[chapterKey] = nameInput ? nameInput.value : chapterKey;
             state.itemOrder[chapterKey] = [];
             accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var id = itemEl.dataset.itemId || '';
@@ -897,13 +897,13 @@ const AdminModule = (function() {
         var addChapterBtn = manualContainer.querySelector('.admin-guide-add-chapter');
         if (originalState.chapterOrder) {
             originalState.chapterOrder.forEach(function(chapterKey) {
-                var accordion = manualContainer.querySelector('.admin-guide-accordion[data-chapter-id="' + CSS.escape(chapterKey) + '"]');
+                var accordion = manualContainer.querySelector('.admin-guide-accordion[data-chapter="' + CSS.escape(chapterKey) + '"]');
                 if (accordion) manualContainer.insertBefore(accordion, addChapterBtn);
             });
         }
 
-        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion, idx) {
-            var chapterKey = accordion.dataset.chapterId || ('new-' + idx);
+        manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
+            var chapterKey = accordion.dataset.chapter || '';
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             var headerText = accordion.querySelector('.admin-guide-accordion-header-text');
             if (nameInput && originalState.chapterNames && originalState.chapterNames[chapterKey] !== undefined) {
@@ -949,27 +949,28 @@ const AdminModule = (function() {
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
-            var chapterName = nameInput.value.trim() || accordion.dataset.chapter || '';
-            var chapterId = parseInt(accordion.dataset.chapterId, 10);
-            var itemEls = accordion.querySelectorAll('.admin-guide-item');
-
-            itemEls.forEach(function(itemEl) {
+            var chapterName = nameInput.value.trim() || 'New Chapter';
+            if (accordion.dataset.isNew === '1') {
+                modified.push({ chapter: chapterName, is_new: true });
+                return;
+            }
+            if (accordion.dataset.chapterRowId) {
+                globalOrder++;
+                modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter: chapterName, title: '', description: '', sort_order: globalOrder });
+            }
+            accordion.querySelectorAll('.admin-guide-item').forEach(function(itemEl) {
                 var titleInput = itemEl.querySelector('.admin-guide-item-title-input');
                 var textInput = itemEl.querySelector('.admin-guide-description-input');
                 var id = itemEl.dataset.itemId ? parseInt(itemEl.dataset.itemId, 10) : null;
+                var title = titleInput ? titleInput.value : '';
+                var description = textInput ? textInput.value : '';
                 globalOrder++;
-                var entry = { chapter: chapterName, chapter_id: chapterId, title: titleInput ? titleInput.value : '', description: textInput ? textInput.value : '', sort_order: globalOrder };
-                if (id) entry.id = id;
-                modified.push(entry);
+                if (itemEl.dataset.isNew === '1') {
+                    modified.push({ chapter: chapterName, title: title, description: description, sort_order: globalOrder, is_new: true });
+                } else if (id) {
+                    modified.push({ id: id, chapter: chapterName, title: title, description: description, sort_order: globalOrder });
+                }
             });
-
-            if (itemEls.length === 0) {
-                globalOrder++;
-                var entry = { chapter: chapterName, chapter_id: chapterId, title: '', description: '', sort_order: globalOrder };
-                var anchorId = accordion.dataset.anchorId ? parseInt(accordion.dataset.anchorId, 10) : null;
-                if (anchorId) entry.id = anchorId;
-                modified.push(entry);
-            }
         });
 
         if (manualContainer.dataset.deletedIds) {
@@ -1013,8 +1014,8 @@ const AdminModule = (function() {
         accordion.className = 'admin-guide-accordion accordion-class-1';
         accordion.dataset.chapter = chapterData.chapter;
         accordion.setAttribute('data-slack-anchor', '');
-        if (chapterData.chapter_id) {
-            accordion.dataset.chapterId = chapterData.chapter_id;
+        if (chapterData.placeholderRowId) {
+            accordion.dataset.chapterRowId = chapterData.placeholderRowId;
         }
 
         var header = document.createElement('div');
@@ -1084,7 +1085,6 @@ const AdminModule = (function() {
                     focusCancel: true
                 }).then(function(confirmed) {
                     if (confirmed) {
-                        trackDeletedChapter(accordion, container);
                         accordion.parentNode.removeChild(accordion);
                         if (ctx.isLoaded()) notifyFieldChange();
                     }
@@ -1092,7 +1092,6 @@ const AdminModule = (function() {
                 return;
             }
             if (confirm('Delete "' + chapterName + '" and all its items?')) {
-                trackDeletedChapter(accordion, container);
                 accordion.parentNode.removeChild(accordion);
                 if (ctx.isLoaded()) notifyFieldChange();
             }
@@ -1196,12 +1195,15 @@ const AdminModule = (function() {
         var chapters = [];
         var chapterMap = {};
         items.forEach(function(item) {
-            var cid = item.chapter_id;
-            if (!chapterMap[cid]) {
-                chapterMap[cid] = { chapter: item.chapter, chapter_id: cid, items: [] };
-                chapters.push(chapterMap[cid]);
+            if (!chapterMap[item.chapter]) {
+                chapterMap[item.chapter] = { chapter: item.chapter, items: [], placeholderRowId: null };
+                chapters.push(chapterMap[item.chapter]);
             }
-            chapterMap[cid].items.push(item);
+            if (!item.title && !item.description) {
+                chapterMap[item.chapter].placeholderRowId = item.id;
+            } else {
+                chapterMap[item.chapter].items.push(item);
+            }
         });
 
         chapters.forEach(function(chapterData) {
@@ -1240,6 +1242,7 @@ const AdminModule = (function() {
 
     function addItem(body, addItemBtn, ctx) {
         var itemEl = createGuideItem('', '', body, ctx);
+        itemEl.dataset.isNew = '1';
         body.insertBefore(itemEl, addItemBtn);
         var titleDisplay = itemEl.querySelector('.admin-guide-item-title-display');
         if (titleDisplay) titleDisplay.click();
@@ -1251,18 +1254,6 @@ const AdminModule = (function() {
         if (!id || !containerEl) return;
         var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
         containerEl.dataset.deletedIds = prev + id;
-    }
-
-    function trackDeletedChapter(accordion, containerEl) {
-        if (!containerEl) return;
-        var ids = [];
-        accordion.querySelectorAll('.admin-guide-item').forEach(function(item) {
-            var itemId = item.dataset.itemId ? parseInt(item.dataset.itemId, 10) : 0;
-            if (itemId) ids.push(itemId);
-        });
-        if (ids.length === 0) return;
-        var prev = containerEl.dataset.deletedIds ? containerEl.dataset.deletedIds + ',' : '';
-        containerEl.dataset.deletedIds = prev + ids.join(',');
     }
 
     function createGuideItem(title, description, body, ctx) {
@@ -1422,29 +1413,10 @@ const AdminModule = (function() {
         return item;
     }
 
-    function newChapterName() {
-        var now = new Date();
-        var mm = String(now.getMonth() + 1).padStart(2, '0');
-        var dd = String(now.getDate()).padStart(2, '0');
-        var hh = String(now.getHours()).padStart(2, '0');
-        var min = String(now.getMinutes()).padStart(2, '0');
-        var sec = String(now.getSeconds()).padStart(2, '0');
-        return 'Chapter (' + now.getFullYear() + '-' + mm + '-' + dd + ' ' + hh + ':' + min + ':' + sec + ')';
-    }
-
-    function nextChapterId(container) {
-        var max = 0;
-        container.querySelectorAll('.admin-guide-accordion').forEach(function(a) {
-            var cid = parseInt(a.dataset.chapterId, 10);
-            if (cid > max) max = cid;
-        });
-        return max + 1;
-    }
-
     function addChapter(container, addChapterBtn, ctx) {
-        var cid = nextChapterId(container);
-        var newChapter = { chapter: newChapterName(), chapter_id: cid, items: [] };
+        var newChapter = { chapter: 'New Chapter', items: [] };
         var accordion = buildInstructionsAccordion(newChapter, container, ctx);
+        accordion.dataset.isNew = '1';
         container.insertBefore(accordion, addChapterBtn);
         accordion.classList.add('admin-guide-accordion--editing');
         syncInstructionsAccordionUi(accordion);
@@ -1579,20 +1551,15 @@ const AdminModule = (function() {
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save admin guide');
                     var c = document.getElementById('admin-guide-container');
-                    if (c && data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                        var idx = 0;
-                        c.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-                            var noIdItems = accordion.querySelectorAll('.admin-guide-item:not([data-item-id])');
-                            if (noIdItems.length > 0) {
-                                noIdItems.forEach(function(item) {
-                                    if (data.new_item_ids[idx] !== undefined) item.dataset.itemId = data.new_item_ids[idx++];
-                                });
-                            } else if (accordion.querySelectorAll('.admin-guide-item').length === 0 && !accordion.dataset.anchorId) {
-                                if (data.new_item_ids[idx] !== undefined) accordion.dataset.anchorId = data.new_item_ids[idx++];
-                            }
-                        });
+                    if (c) {
+                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
+                            data.new_item_ids.forEach(function(newId, i) {
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
+                            });
+                        }
+                        delete c.dataset.deletedIds;
                     }
-                    if (c) delete c.dataset.deletedIds;
                     updateCompositeBaseline('admin_guide');
                 })
             );
@@ -1611,20 +1578,15 @@ const AdminModule = (function() {
                 .then(function(data) {
                     if (!data.success) throw new Error(data.message || 'Failed to save user guide');
                     var c = document.getElementById('user-guide-container');
-                    if (c && data.new_item_ids && Array.isArray(data.new_item_ids)) {
-                        var idx = 0;
-                        c.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
-                            var noIdItems = accordion.querySelectorAll('.admin-guide-item:not([data-item-id])');
-                            if (noIdItems.length > 0) {
-                                noIdItems.forEach(function(item) {
-                                    if (data.new_item_ids[idx] !== undefined) item.dataset.itemId = data.new_item_ids[idx++];
-                                });
-                            } else if (accordion.querySelectorAll('.admin-guide-item').length === 0 && !accordion.dataset.anchorId) {
-                                if (data.new_item_ids[idx] !== undefined) accordion.dataset.anchorId = data.new_item_ids[idx++];
-                            }
-                        });
+                    if (c) {
+                        if (data.new_item_ids && Array.isArray(data.new_item_ids)) {
+                            var newItems = c.querySelectorAll('.admin-guide-item[data-is-new="1"]');
+                            data.new_item_ids.forEach(function(newId, i) {
+                                if (newItems[i]) { newItems[i].dataset.isNew = ''; newItems[i].dataset.itemId = newId; }
+                            });
+                        }
+                        delete c.dataset.deletedIds;
                     }
-                    if (c) delete c.dataset.deletedIds;
                     updateCompositeBaseline('user_guide');
                 })
             );

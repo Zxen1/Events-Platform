@@ -190,14 +190,13 @@ try {
         try {
             $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
             if ($stmt->rowCount() > 0) {
-                $stmt = $pdo->query('SELECT `id`, `chapter`, `chapter_id`, `title`, `description`, `sort_order` FROM `admin_guide` ORDER BY `sort_order` ASC, `id` ASC');
+                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description`, `sort_order` FROM `admin_guide` ORDER BY `sort_order` ASC, `id` ASC');
                 $rows = $stmt->fetchAll();
                 $adminGuideItems = [];
                 foreach ($rows as $row) {
                     $adminGuideItems[] = [
                         'id'          => (int)$row['id'],
                         'chapter'     => $row['chapter'],
-                        'chapter_id'  => $row['chapter_id'] !== null ? (int)$row['chapter_id'] : null,
                         'title'       => $row['title'],
                         'description' => $row['description'],
                     ];
@@ -215,14 +214,13 @@ try {
         try {
             $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
             if ($stmt->rowCount() > 0) {
-                $stmt = $pdo->query('SELECT `id`, `chapter`, `chapter_id`, `title`, `description`, `sort_order` FROM `user_guide` ORDER BY `sort_order` ASC, `id` ASC');
+                $stmt = $pdo->query('SELECT `id`, `chapter`, `title`, `description`, `sort_order` FROM `user_guide` ORDER BY `sort_order` ASC, `id` ASC');
                 $rows = $stmt->fetchAll();
                 $userGuideItems = [];
                 foreach ($rows as $row) {
                     $userGuideItems[] = [
                         'id'          => (int)$row['id'],
                         'chapter'     => $row['chapter'],
-                        'chapter_id'  => $row['chapter_id'] !== null ? (int)$row['chapter_id'] : null,
                         'title'       => $row['title'],
                         'description' => $row['description'],
                     ];

@@ -622,36 +622,32 @@ try {
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
         $updateStmt = $pdo->prepare('
             UPDATE `admin_guide`
-            SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
             WHERE `id` = :id
         ');
         $insertStmt = $pdo->prepare('
-            INSERT INTO `admin_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
-            VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
+            INSERT INTO `admin_guide` (`chapter`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :title, :description, :sort_order)
         ');
         foreach ($admin_guide as $item) {
-            $chapterId = (int)($item['chapter_id'] ?? 0);
-            $chapterName = (string)($item['chapter'] ?? '');
-            if (isset($item['id'])) {
-                $updateStmt->execute([
-                    ':id'         => (int)$item['id'],
-                    ':chapter'    => $chapterName,
-                    ':chapter_id' => $chapterId,
-                    ':title'      => (string)($item['title'] ?? ''),
-                    ':description'=> (string)($item['description'] ?? ''),
-                    ':sort_order' => (int)($item['sort_order'] ?? 0),
-                ]);
-                if ($updateStmt->rowCount() > 0) $admin_guideUpdated++;
-            } else {
+            if (!empty($item['is_new'])) {
                 $insertStmt->execute([
-                    ':chapter'    => $chapterName,
-                    ':chapter_id' => $chapterId,
+                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
                     ':title'      => (string)($item['title'] ?? ''),
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
                 $newItemIds[] = (int)$pdo->lastInsertId();
                 $admin_guideUpdated++;
+            } elseif (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => (string)($item['chapter'] ?? ''),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $admin_guideUpdated++;
             }
         }
     }
@@ -673,36 +669,32 @@ try {
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
         $updateStmt = $pdo->prepare('
             UPDATE `user_guide`
-            SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
             WHERE `id` = :id
         ');
         $insertStmt = $pdo->prepare('
-            INSERT INTO `user_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
-            VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
+            INSERT INTO `user_guide` (`chapter`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :title, :description, :sort_order)
         ');
         foreach ($user_guide as $item) {
-            $chapterId = (int)($item['chapter_id'] ?? 0);
-            $chapterName = (string)($item['chapter'] ?? '');
-            if (isset($item['id'])) {
-                $updateStmt->execute([
-                    ':id'         => (int)$item['id'],
-                    ':chapter'    => $chapterName,
-                    ':chapter_id' => $chapterId,
-                    ':title'      => (string)($item['title'] ?? ''),
-                    ':description'=> (string)($item['description'] ?? ''),
-                    ':sort_order' => (int)($item['sort_order'] ?? 0),
-                ]);
-                if ($updateStmt->rowCount() > 0) $user_guideUpdated++;
-            } else {
+            if (!empty($item['is_new'])) {
                 $insertStmt->execute([
-                    ':chapter'    => $chapterName,
-                    ':chapter_id' => $chapterId,
+                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
                     ':title'      => (string)($item['title'] ?? ''),
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
                 $userGuideNewItemIds[] = (int)$pdo->lastInsertId();
                 $user_guideUpdated++;
+            } elseif (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => (string)($item['chapter'] ?? ''),
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $user_guideUpdated++;
             }
         }
     }
