@@ -426,6 +426,17 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
+/* ─── Accordion Class 1 ─────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .accordion-class-1 {
+  --accordion-header-bg: var(--blue-600);
+  --accordion-header-bg-hover: var(--blue-600);
+  --accordion-header-border: transparent;
+  --accordion-header-text: #ffffff;
+  --accordion-body-bg: rgba(0, 0, 0, 0.1);
+  --accordion-body-border: transparent;
+}
+
 /* ─── Accordion Class 2 ─────────────────────────────────────────────────── */
 
 :root[data-theme="light"] .accordion-class-2 {
