@@ -135,6 +135,11 @@ try {
         $deletedInstructionIds = $data['deleted_admin_guide_ids'];
         unset($settings['deleted_admin_guide_ids']);
     }
+    $deletedAdminChapterIds = null;
+    if (isset($data['deleted_admin_guide_chapter_ids']) && is_array($data['deleted_admin_guide_chapter_ids'])) {
+        $deletedAdminChapterIds = $data['deleted_admin_guide_chapter_ids'];
+        unset($settings['deleted_admin_guide_chapter_ids']);
+    }
     if (isset($data['user_guide']) && is_array($data['user_guide'])) {
         $user_guide = $data['user_guide'];
         unset($settings['user_guide']);
@@ -143,6 +148,11 @@ try {
     if (isset($data['deleted_user_guide_ids']) && is_array($data['deleted_user_guide_ids'])) {
         $deletedUserGuideIds = $data['deleted_user_guide_ids'];
         unset($settings['deleted_user_guide_ids']);
+    }
+    $deletedUserChapterIds = null;
+    if (isset($data['deleted_user_guide_chapter_ids']) && is_array($data['deleted_user_guide_chapter_ids'])) {
+        $deletedUserChapterIds = $data['deleted_user_guide_chapter_ids'];
+        unset($settings['deleted_user_guide_chapter_ids']);
     }
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
@@ -609,9 +619,15 @@ try {
     $admin_guideUpdated = 0;
     $newItemIds = [];
     $tableExists = null;
-    if (($admin_guide !== null && !empty($admin_guide)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds))) {
+    if (($admin_guide !== null && !empty($admin_guide)) || ($deletedInstructionIds !== null && !empty($deletedInstructionIds)) || ($deletedAdminChapterIds !== null && !empty($deletedAdminChapterIds))) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'admin_guide'");
         $tableExists = $stmt->rowCount() > 0;
+    }
+    if ($tableExists && $deletedAdminChapterIds !== null && !empty($deletedAdminChapterIds)) {
+        $deleteChapterStmt = $pdo->prepare('DELETE FROM `admin_guide` WHERE `chapter_id` = :cid');
+        foreach ($deletedAdminChapterIds as $cid) {
+            $deleteChapterStmt->execute([':cid' => (int)$cid]);
+        }
     }
     if ($tableExists && $deletedInstructionIds !== null && !empty($deletedInstructionIds)) {
         $deleteStmt = $pdo->prepare('DELETE FROM `admin_guide` WHERE `id` = :id');
@@ -622,32 +638,36 @@ try {
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
         $updateStmt = $pdo->prepare('
             UPDATE `admin_guide`
-            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
             WHERE `id` = :id
         ');
         $insertStmt = $pdo->prepare('
-            INSERT INTO `admin_guide` (`chapter`, `title`, `description`, `sort_order`)
-            VALUES (:chapter, :title, :description, :sort_order)
+            INSERT INTO `admin_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($admin_guide as $item) {
-            if (!empty($item['is_new'])) {
+            $chapterId = (int)($item['chapter_id'] ?? 0);
+            $chapterName = (string)($item['chapter'] ?? '');
+            if (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => $chapterName,
+                    ':chapter_id' => $chapterId,
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $admin_guideUpdated++;
+            } else {
                 $insertStmt->execute([
-                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
+                    ':chapter'    => $chapterName,
+                    ':chapter_id' => $chapterId,
                     ':title'      => (string)($item['title'] ?? ''),
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
                 $newItemIds[] = (int)$pdo->lastInsertId();
                 $admin_guideUpdated++;
-            } elseif (isset($item['id'])) {
-                $updateStmt->execute([
-                    ':id'         => (int)$item['id'],
-                    ':chapter'    => (string)($item['chapter'] ?? ''),
-                    ':title'      => (string)($item['title'] ?? ''),
-                    ':description'=> (string)($item['description'] ?? ''),
-                    ':sort_order' => (int)($item['sort_order'] ?? 0),
-                ]);
-                if ($updateStmt->rowCount() > 0) $admin_guideUpdated++;
             }
         }
     }
@@ -656,9 +676,15 @@ try {
     $user_guideUpdated = 0;
     $userGuideNewItemIds = [];
     $userTableExists = null;
-    if (($user_guide !== null && !empty($user_guide)) || ($deletedUserGuideIds !== null && !empty($deletedUserGuideIds))) {
+    if (($user_guide !== null && !empty($user_guide)) || ($deletedUserGuideIds !== null && !empty($deletedUserGuideIds)) || ($deletedUserChapterIds !== null && !empty($deletedUserChapterIds))) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'user_guide'");
         $userTableExists = $stmt->rowCount() > 0;
+    }
+    if ($userTableExists && $deletedUserChapterIds !== null && !empty($deletedUserChapterIds)) {
+        $deleteChapterStmt = $pdo->prepare('DELETE FROM `user_guide` WHERE `chapter_id` = :cid');
+        foreach ($deletedUserChapterIds as $cid) {
+            $deleteChapterStmt->execute([':cid' => (int)$cid]);
+        }
     }
     if ($userTableExists && $deletedUserGuideIds !== null && !empty($deletedUserGuideIds)) {
         $deleteStmt = $pdo->prepare('DELETE FROM `user_guide` WHERE `id` = :id');
@@ -669,32 +695,36 @@ try {
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
         $updateStmt = $pdo->prepare('
             UPDATE `user_guide`
-            SET `chapter` = :chapter, `title` = :title, `description` = :description, `sort_order` = :sort_order
+            SET `chapter` = :chapter, `chapter_id` = :chapter_id, `title` = :title, `description` = :description, `sort_order` = :sort_order
             WHERE `id` = :id
         ');
         $insertStmt = $pdo->prepare('
-            INSERT INTO `user_guide` (`chapter`, `title`, `description`, `sort_order`)
-            VALUES (:chapter, :title, :description, :sort_order)
+            INSERT INTO `user_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
+            VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
         foreach ($user_guide as $item) {
-            if (!empty($item['is_new'])) {
+            $chapterId = (int)($item['chapter_id'] ?? 0);
+            $chapterName = (string)($item['chapter'] ?? '');
+            if (isset($item['id'])) {
+                $updateStmt->execute([
+                    ':id'         => (int)$item['id'],
+                    ':chapter'    => $chapterName,
+                    ':chapter_id' => $chapterId,
+                    ':title'      => (string)($item['title'] ?? ''),
+                    ':description'=> (string)($item['description'] ?? ''),
+                    ':sort_order' => (int)($item['sort_order'] ?? 0),
+                ]);
+                if ($updateStmt->rowCount() > 0) $user_guideUpdated++;
+            } else {
                 $insertStmt->execute([
-                    ':chapter'    => (string)($item['chapter'] ?? 'New Chapter'),
+                    ':chapter'    => $chapterName,
+                    ':chapter_id' => $chapterId,
                     ':title'      => (string)($item['title'] ?? ''),
                     ':description'=> (string)($item['description'] ?? ''),
                     ':sort_order' => (int)($item['sort_order'] ?? 0),
                 ]);
                 $userGuideNewItemIds[] = (int)$pdo->lastInsertId();
                 $user_guideUpdated++;
-            } elseif (isset($item['id'])) {
-                $updateStmt->execute([
-                    ':id'         => (int)$item['id'],
-                    ':chapter'    => (string)($item['chapter'] ?? ''),
-                    ':title'      => (string)($item['title'] ?? ''),
-                    ':description'=> (string)($item['description'] ?? ''),
-                    ':sort_order' => (int)($item['sort_order'] ?? 0),
-                ]);
-                if ($updateStmt->rowCount() > 0) $user_guideUpdated++;
             }
         }
     }
