@@ -652,6 +652,11 @@
   color: rgba(0, 0, 0, 0.75);
 }
 
+/* Admin colour swatches title */
+:root[data-theme="light"] .admin-settings-color-swatches-title {
+  color: rgba(0, 0, 0, 0.75);
+}
+
 /* Slider and range values */
 :root[data-theme="light"] .admin-slider-value,
 :root[data-theme="light"] .admin-range-wrap-value,
