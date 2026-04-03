@@ -1076,6 +1076,8 @@ const MemberModule = (function() {
     function persistThemeState(themeActive, themePrefs, persistUser) {
         var resolved = getResolvedThemeState(themeActive, themePrefs);
         var prefsString = JSON.stringify(resolved.themePrefs);
+        var previousThemeActive = currentUser ? currentUser.theme_active : null;
+        var previousThemePrefs = currentUser ? currentUser.theme_prefs : null;
 
         localStorage.setItem('theme_active', resolved.themeActive);
         localStorage.setItem('theme_prefs', prefsString);
@@ -1083,8 +1085,8 @@ const MemberModule = (function() {
 
         if (!currentUser) return resolved;
 
-        var themeActiveChanged = currentUser.theme_active !== resolved.themeActive;
-        var themePrefsChanged = currentUser.theme_prefs !== prefsString;
+        var themeActiveChanged = previousThemeActive !== resolved.themeActive;
+        var themePrefsChanged = previousThemePrefs !== prefsString;
         currentUser.theme_active = resolved.themeActive;
         currentUser.theme_prefs = prefsString;
         storeCurrent(currentUser);
