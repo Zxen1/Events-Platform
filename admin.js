@@ -903,16 +903,11 @@ const AdminModule = (function() {
             });
         }
 
-        // Remove pending accordions (INSERT in-flight, no chapter_id yet)
-        manualContainer.querySelectorAll('.admin-guide-accordion[data-chapter-id=""]').forEach(function(accordion) {
-            accordion.parentNode.removeChild(accordion);
-        });
-
-        // Remove newly-added chapters (have a chapter_id not present in the original state)
+        // Remove unsaved new chapters (empty chapter_id) and any saved-this-session chapters not in the original state
         var originalKeys = originalState.chapterOrder || [];
         manualContainer.querySelectorAll('.admin-guide-accordion').forEach(function(accordion) {
             var key = accordion.dataset.chapterId;
-            if (key && originalKeys.indexOf(key) === -1) {
+            if (!key || originalKeys.indexOf(key) === -1) {
                 accordion.parentNode.removeChild(accordion);
             }
         });
@@ -972,22 +967,20 @@ const AdminModule = (function() {
             var nameInput = accordion.querySelector('.admin-guide-accordion-editpanel-input');
             if (!nameInput) return;
 
-            var rawName = nameInput.value.trim();
-            if (!rawName) {
+            var chapterName = nameInput.value.trim();
+            if (!chapterName) {
                 var now = new Date();
                 var pad = function(n) { return String(n).padStart(2, '0'); };
-                rawName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+                chapterName = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
                 var headerText = accordion.querySelector('.admin-guide-accordion-header-text');
-                nameInput.value = rawName;
-                if (headerText) headerText.textContent = rawName;
+                nameInput.value = chapterName;
+                if (headerText) headerText.textContent = chapterName;
             }
-            var chapterName = rawName;
 
             var chapterId = accordion.dataset.chapterId !== undefined && accordion.dataset.chapterId !== ''
                 ? parseInt(accordion.dataset.chapterId, 10)
                 : null;
 
-            // Update existing placeholder row or send a placeholder for new/legacy null-chapter_id rows
             if (accordion.dataset.chapterRowId) {
                 globalOrder++;
                 modified.push({ id: parseInt(accordion.dataset.chapterRowId, 10), chapter_id: chapterId, chapter: chapterName, title: '', description: '', sort_order: globalOrder });
