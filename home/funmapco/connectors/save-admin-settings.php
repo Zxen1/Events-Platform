@@ -635,18 +635,17 @@ try {
         }
     }
     if ($tableExists && $admin_guide !== null && !empty($admin_guide)) {
-        // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
-        $adminNullNameMap = [];
-        $adminNullRowMap  = [];
+        $adminNullKeyMap = [];
+        $adminNullRowMap = [];
         $maxAdminCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `admin_guide`');
         $nextAdminCid = (int)$maxAdminCidStmt->fetch()['max_id'] + 1;
+        // Each placeholder row (null chapter_id + empty title + empty description) marks a new chapter
+        $adminNullCounter = 0;
         foreach ($admin_guide as $item) {
-            if (!isset($item['chapter_id']) || $item['chapter_id'] === null) {
-                $name = trim((string)($item['chapter'] ?? ''));
-                if ($name === '') $name = date('Y-m-d H:i:s');
-                if (!isset($adminNullNameMap[$name])) {
-                    $adminNullNameMap[$name] = $nextAdminCid++;
-                }
+            if ((!isset($item['chapter_id']) || $item['chapter_id'] === null)
+                && trim((string)($item['title'] ?? '')) === ''
+                && trim((string)($item['description'] ?? '')) === '') {
+                $adminNullKeyMap[$adminNullCounter++] = $nextAdminCid++;
             }
         }
         $updateStmt = $pdo->prepare('
@@ -658,11 +657,20 @@ try {
             INSERT INTO `admin_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
+        $currentAdminNullIdx = -1;
         foreach ($admin_guide as $item) {
             $origCidNull = !isset($item['chapter_id']) || $item['chapter_id'] === null;
+            $isPlaceholder = false;
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') $chapterName = date('Y-m-d H:i:s');
-            $cid = $origCidNull ? $adminNullNameMap[$chapterName] : (int)$item['chapter_id'];
+            if ($origCidNull) {
+                $isPlaceholder = trim((string)($item['title'] ?? '')) === '' && trim((string)($item['description'] ?? '')) === '';
+                if ($isPlaceholder) $currentAdminNullIdx++;
+                if (!isset($adminNullKeyMap[$currentAdminNullIdx])) throw new \RuntimeException('admin_guide: null chapter_id item received before its placeholder row');
+                $cid = $adminNullKeyMap[$currentAdminNullIdx];
+            } else {
+                $cid = (int)$item['chapter_id'];
+            }
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
@@ -685,8 +693,8 @@ try {
                 if (!empty($item['is_new'])) {
                     $newAdminGuideItemIds[] = $insertedId;
                 }
-                if ($origCidNull && !isset($adminNullRowMap[$chapterName])) {
-                    $adminNullRowMap[$chapterName] = $insertedId;
+                if ($origCidNull && $isPlaceholder && !isset($adminNullRowMap[$currentAdminNullIdx])) {
+                    $adminNullRowMap[$currentAdminNullIdx] = $insertedId;
                 }
                 $admin_guideUpdated++;
             }
@@ -713,18 +721,16 @@ try {
         }
     }
     if ($userTableExists && $user_guide !== null && !empty($user_guide)) {
-        // Build a name→chapter_id map for new chapters (chapter_id === null) so each unique name gets its own id
-        $userNullNameMap = [];
-        $userNullRowMap  = [];
+        $userNullKeyMap = [];
+        $userNullRowMap = [];
         $maxUserCidStmt = $pdo->query('SELECT COALESCE(MAX(`chapter_id`), 0) AS max_id FROM `user_guide`');
         $nextUserCid = (int)$maxUserCidStmt->fetch()['max_id'] + 1;
+        $userNullCounter = 0;
         foreach ($user_guide as $item) {
-            if (!isset($item['chapter_id']) || $item['chapter_id'] === null) {
-                $name = trim((string)($item['chapter'] ?? ''));
-                if ($name === '') $name = date('Y-m-d H:i:s');
-                if (!isset($userNullNameMap[$name])) {
-                    $userNullNameMap[$name] = $nextUserCid++;
-                }
+            if ((!isset($item['chapter_id']) || $item['chapter_id'] === null)
+                && trim((string)($item['title'] ?? '')) === ''
+                && trim((string)($item['description'] ?? '')) === '') {
+                $userNullKeyMap[$userNullCounter++] = $nextUserCid++;
             }
         }
         $updateStmt = $pdo->prepare('
@@ -736,11 +742,20 @@ try {
             INSERT INTO `user_guide` (`chapter`, `chapter_id`, `title`, `description`, `sort_order`)
             VALUES (:chapter, :chapter_id, :title, :description, :sort_order)
         ');
+        $currentUserNullIdx = -1;
         foreach ($user_guide as $item) {
             $origCidNull = !isset($item['chapter_id']) || $item['chapter_id'] === null;
+            $isPlaceholder = false;
             $chapterName = trim((string)($item['chapter'] ?? ''));
             if ($chapterName === '') $chapterName = date('Y-m-d H:i:s');
-            $cid = $origCidNull ? $userNullNameMap[$chapterName] : (int)$item['chapter_id'];
+            if ($origCidNull) {
+                $isPlaceholder = trim((string)($item['title'] ?? '')) === '' && trim((string)($item['description'] ?? '')) === '';
+                if ($isPlaceholder) $currentUserNullIdx++;
+                if (!isset($userNullKeyMap[$currentUserNullIdx])) throw new \RuntimeException('user_guide: null chapter_id item received before its placeholder row');
+                $cid = $userNullKeyMap[$currentUserNullIdx];
+            } else {
+                $cid = (int)$item['chapter_id'];
+            }
             if (isset($item['id']) && $item['id']) {
                 $updateStmt->execute([
                     ':id'          => (int)$item['id'],
@@ -763,8 +778,8 @@ try {
                 if (!empty($item['is_new'])) {
                     $newUserGuideItemIds[] = $insertedId;
                 }
-                if ($origCidNull && !isset($userNullRowMap[$chapterName])) {
-                    $userNullRowMap[$chapterName] = $insertedId;
+                if ($origCidNull && $isPlaceholder && !isset($userNullRowMap[$currentUserNullIdx])) {
+                    $userNullRowMap[$currentUserNullIdx] = $insertedId;
                 }
                 $user_guideUpdated++;
             }
@@ -813,10 +828,10 @@ try {
     if (!empty($newAdminGuideItemIds)) {
         $response['new_admin_guide_item_ids'] = $newAdminGuideItemIds;
     }
-    if (!empty($adminNullNameMap)) {
+    if (!empty($adminNullKeyMap)) {
         $newAdminGuideChapters = [];
-        foreach ($adminNullNameMap as $name => $cid) {
-            $newAdminGuideChapters[] = ['chapter' => $name, 'chapter_id' => $cid, 'row_id' => $adminNullRowMap[$name] ?? null];
+        foreach ($adminNullKeyMap as $key => $cid) {
+            $newAdminGuideChapters[] = ['new_chapter_key' => $key, 'chapter_id' => $cid, 'row_id' => $adminNullRowMap[$key] ?? null];
         }
         $response['new_admin_guide_chapters'] = $newAdminGuideChapters;
     }
@@ -827,10 +842,10 @@ try {
     if (!empty($newUserGuideItemIds)) {
         $response['new_user_guide_item_ids'] = $newUserGuideItemIds;
     }
-    if (!empty($userNullNameMap)) {
+    if (!empty($userNullKeyMap)) {
         $newUserGuideChapters = [];
-        foreach ($userNullNameMap as $name => $cid) {
-            $newUserGuideChapters[] = ['chapter' => $name, 'chapter_id' => $cid, 'row_id' => $userNullRowMap[$name] ?? null];
+        foreach ($userNullKeyMap as $key => $cid) {
+            $newUserGuideChapters[] = ['new_chapter_key' => $key, 'chapter_id' => $cid, 'row_id' => $userNullRowMap[$key] ?? null];
         }
         $response['new_user_guide_chapters'] = $newUserGuideChapters;
     }
