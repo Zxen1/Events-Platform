@@ -859,6 +859,10 @@
   text-decoration-color: rgba(0, 0, 0, 0.3);
 }
 
+:root[data-theme="light"] .admin-guide-item-title-display:hover {
+  color: var(--blue-700);
+}
+
 /* Checkout */
 :root[data-theme="light"] .admin-checkout-settings-message {
   color: rgba(0, 0, 0, 0.7);
