@@ -233,7 +233,7 @@ foreach ($events as $event) {
          (`post_key`,`member_id`,`member_role`,`member_name`,`subcategory_key`,
           `loc_qty`,`loc_paid`,`visibility`,`moderation_status`,
           `checkout_key`,`days_purchased`,`payment_status`,`expires_at`)
-         VALUES ('TEMP',?,?,?,?,1,1,'active','clean','standard',0,'paid',?)"
+         VALUES ('TEMP',?,?,?,?,1,1,'active','clean','premium',0,'paid',?)"
     );
     $stmt->bind_param('issss', TM_MEMBER_ID, TM_MEMBER_ROLE, TM_MEMBER_NAME, $subcategoryKey, $expiresAt);
     $stmt->execute();
