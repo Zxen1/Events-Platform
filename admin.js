@@ -1025,6 +1025,7 @@ const AdminModule = (function() {
             var isNew = el.dataset.chapterId === '';
             if (isNew && nameInput && !nameInput.value.trim()) {
                 if (el.parentNode) el.parentNode.removeChild(el);
+                notifyFieldChange();
             }
         });
     }
