@@ -1270,7 +1270,8 @@ const AdminModule = (function() {
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.admin-guide-accordion-editpanel') &&
                 !e.target.closest('.admin-guide-accordion-header-editarea') &&
-                !e.target.closest('.admin-guide-accordion-header')) {
+                !e.target.closest('.admin-guide-accordion-header') &&
+                !e.target.closest('.admin-guide-add-chapter')) {
                 closeAllInstructionsEditPanels(container);
             }
         });
