@@ -974,13 +974,19 @@ const MemberModule = (function() {
     }
 
     function getStoredThemeActive() {
-        if (currentUser && currentUser.theme_active) return String(currentUser.theme_active);
+        if (currentUser) {
+            return currentUser.theme_active ? String(currentUser.theme_active) : 'theme_auto';
+        }
         return localStorage.getItem('theme_active') || 'theme_auto';
     }
 
     function getStoredThemePrefs() {
-        var raw = localStorage.getItem('theme_prefs');
-        if (!raw && currentUser && currentUser.theme_prefs) raw = currentUser.theme_prefs;
+        var raw = null;
+        if (currentUser) {
+            raw = currentUser.theme_prefs ? String(currentUser.theme_prefs) : null;
+        } else {
+            raw = localStorage.getItem('theme_prefs');
+        }
         return raw ? parseThemePrefs(raw) : null;
     }
 
