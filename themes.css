@@ -936,6 +936,22 @@
   color: rgba(0, 0, 0, 0.85);
 }
 
+/* Guides tab — Add Chapter / Add Item buttons */
+:root[data-theme="light"] .admin-guide-add-chapter,
+:root[data-theme="light"] .admin-guide-add-item {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.4);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-theme="light"] .admin-guide-add-chapter:hover,
+  :root[data-theme="light"] .admin-guide-add-item:hover {
+    border-color: var(--blue-500);
+    color: var(--blue-600);
+  }
+}
+
 /* ============================================================================
    MOBILE
    ============================================================================ */
