@@ -1306,7 +1306,7 @@ const PostModule = (function() {
 
   /**
    * Get subcategory icon URL
-   * @param {string} subcategoryKey - Subcategory key (e.g., 'live-gigs')
+   * @param {string} subcategoryKey - Subcategory key (e.g., 'live-music')
    * @returns {string} Icon URL or empty string
    */
   /**

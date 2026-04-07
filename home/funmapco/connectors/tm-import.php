@@ -39,7 +39,7 @@ const TM_ATTRIBUTION = 'Powered by Ticketmaster';
 const MIN_IMAGE_WIDTH = 1000;
 
 const SEGMENT_MAP = [
-    'Music'          => 'live-gigs',
+    'Music'          => 'live-music',
     'Sports'         => 'live-sport',
     'Arts & Theatre' => 'live-theatre',
     'Film'           => 'screenings',
