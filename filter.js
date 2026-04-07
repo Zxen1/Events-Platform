@@ -205,24 +205,22 @@ const FilterModule = (function() {
 
         var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
 
-        // Solo mode: return only keys from the solo selection
+        // Solo mode: return only keys from the solo selection, respecting switch state
         if (soloSet.size > 0) {
             var soloKeys = [];
             accordions.forEach(function(accordion) {
                 var catNameEl = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
                 var catName = catNameEl ? catNameEl.textContent.trim() : '';
                 var catInSolo = soloSet.has('cat:' + catName);
+                var catEnabled = !accordion.classList.contains('filter-categoryfilter-accordion--disabled');
                 accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                     var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
                     if (!subKey) return;
                     var subInSolo = soloSet.has('sub:' + subKey);
-                    if (subInSolo) {
-                        // Direct sub solo: always include (penetrative)
+                    var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                    var subOn = subToggle && subToggle.checked;
+                    if ((subInSolo || catInSolo) && catEnabled && subOn) {
                         soloKeys.push(subKey);
-                    } else if (catInSolo) {
-                        // Category solo: include subs the user hasn't individually turned off
-                        var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
-                        if (subToggle && subToggle.checked) soloKeys.push(subKey);
                     }
                 });
             });
@@ -277,11 +275,7 @@ const FilterModule = (function() {
 
             if (header) {
                 header.classList.toggle('filter-categoryfilter-accordion-header--solooff', active && !catInSolo);
-                if (active && catInSolo) {
-                    // Awaken: temporarily suppress --disabled on header (visual only; accordion class is source of truth)
-                    header.classList.remove('filter-categoryfilter-accordion-header--disabled');
-                } else if (!active) {
-                    // Solo ended: restore header disabled state from accordion class
+                if (!active) {
                     header.classList.toggle('filter-categoryfilter-accordion-header--disabled', catDisabled);
                 }
             }
@@ -289,22 +283,19 @@ const FilterModule = (function() {
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                 var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
                 var subInSolo = subKey && soloSet.has('sub:' + subKey);
-                var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
-                var subUserOff = subToggle && !subToggle.checked;
+                var inSolo = catInSolo || subInSolo;
+                var switchEl = opt.querySelector('.filter-categoryfilter-toggle');
+                var subToggleInput = switchEl ? switchEl.querySelector('input') : null;
+                var subUserOff = subToggleInput && !subToggleInput.checked;
 
-                // Category solo does NOT awaken individually-greyed subs (first-level greyout)
-                var awakened = subInSolo || (catInSolo && !subUserOff);
+                opt.classList.toggle('filter-categoryfilter-accordion-option--solooff', active && !inSolo);
 
-                opt.classList.toggle('filter-categoryfilter-accordion-option--solooff', active && !awakened);
-
-                if (active && awakened) {
-                    opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
-                    opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
-                } else if (active && !awakened) {
-                    // Restore first-level greyout for non-awakened items
-                    if (subUserOff) opt.classList.add('filter-categoryfilter-accordion-option--suboff');
-                } else if (!active) {
-                    // Solo ended: restore from switch state
+                if (active) {
+                    // Disable switch for non-solo rows
+                    if (switchEl) switchEl.style.pointerEvents = inSolo ? '' : 'none';
+                } else {
+                    // Solo ended: re-enable all switches and restore visual state from switch
+                    if (switchEl) switchEl.style.pointerEvents = '';
                     opt.classList.toggle('filter-categoryfilter-accordion-option--suboff', subUserOff);
                     opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', catDisabled);
                 }
@@ -981,6 +972,8 @@ const FilterModule = (function() {
                 opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
                 opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
                 opt.classList.remove('filter-categoryfilter-accordion-option--solooff');
+                var switchEl = opt.querySelector('.filter-categoryfilter-toggle');
+                if (switchEl) switchEl.style.pointerEvents = '';
             });
         });
         
