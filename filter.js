@@ -278,8 +278,6 @@ const FilterModule = (function() {
                 if (!active) {
                     header.classList.toggle('filter-categoryfilter-accordion-header--disabled', catDisabled);
                 }
-                var toggleArea = header.querySelector('.filter-categoryfilter-accordion-header-togglearea');
-                if (toggleArea) toggleArea.style.pointerEvents = (active && !catInSolo) ? 'none' : '';
             }
 
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
