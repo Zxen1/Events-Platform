@@ -2130,6 +2130,7 @@ const FilterModule = (function() {
                         }
                     });
                 });
+                console.error('[Filter DEBUG] filter_rules:', categories.map(function(c){return {name:c.name, rules:c.filter_rules};}), 'worldwideCounts:', worldwideCounts, 'mergedSubs:', mergedSubs);
                 
                 categories.forEach(function(cat) {
                     var accordion = document.createElement('div');
