@@ -2192,6 +2192,7 @@ const MapModule = (function() {
     var qs = new URLSearchParams();
     qs.set('action', 'get-clusters');
     qs.set('zoom', String(zoom));
+    var emptySubcategorySelection = false;
     try {
       var raw = localStorage.getItem('funmap_filters');
       if (raw) {
@@ -2204,9 +2205,12 @@ const MapModule = (function() {
           if (saved.dateEnd) qs.set('date_end', String(saved.dateEnd));
           if (saved.expired) qs.set('expired', '1');
           if (saved.show18Plus) qs.set('show18_plus', '1');
-          // Subcategory selection: send list of enabled subcategory keys if present
-          if (Array.isArray(saved.subcategoryKeys) && saved.subcategoryKeys.length) {
-            qs.set('subcategory_keys', saved.subcategoryKeys.map(String).join(','));
+          if (Array.isArray(saved.subcategoryKeys)) {
+            if (saved.subcategoryKeys.length === 0) {
+              emptySubcategorySelection = true;
+            } else {
+              qs.set('subcategory_keys', saved.subcategoryKeys.map(String).join(','));
+            }
           }
           if (saved.amenities && typeof saved.amenities === 'object' && Object.keys(saved.amenities).length > 0) {
             qs.set('amenities', JSON.stringify(saved.amenities));
@@ -2214,6 +2218,10 @@ const MapModule = (function() {
         }
       }
     } catch (_e) {}
+
+    if (emptySubcategorySelection) {
+      return Promise.resolve({ clusters: [], totalCount: 0 });
+    }
 
     return fetch('/gateway.php?' + qs.toString(), signal ? { signal: signal } : undefined)
       .then(function(response) { return response.json(); })

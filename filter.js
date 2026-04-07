@@ -98,7 +98,10 @@ const FilterModule = (function() {
     // by any module via getFilterSummaryText without depending on panel DOM).
     var lastSummaryText = '';
 
-    // Solo mode: Set of active solo keys ('cat:CategoryName' or 'sub:subcategoryKey')
+    // Solo mode: isolate specific categories/subcategories so ONLY they produce results.
+    // Keys are prefixed: 'cat:CategoryName' or 'sub:subcategoryKey'.
+    // Active when soloSet.size > 0. Empty set = normal (non-solo) filtering.
+    // Persisted in localStorage and DB as the `solo` array in filters_json.
     var soloSet = new Set();
 
 
@@ -194,11 +197,15 @@ const FilterModule = (function() {
 
     /**
      * Get selected subcategory keys for filtering posts.
-     * This matches the live-site "selection.subs" concept, but uses subcategory_key
-     * because the new API returns `post.subcategory_key` as the source-of-truth.
      *
-     * - Category OFF => none of its subs are included
-     * - Category ON + no subs selected => yields zero keys for that category (filters out those posts)
+     * Return value semantics (consumers MUST respect these):
+     *   null  → Category panel not built yet. No category filter. Show everything.
+     *   []    → Category filter IS active but nothing is selected. Show ZERO results.
+     *   [...] → Filter to these specific subcategory keys.
+     *
+     * When solo mode is active (soloSet.size > 0), only solo'd items that are also
+     * enabled (switch ON, parent category ON) contribute keys. This means solo mode
+     * can legitimately produce [] if every solo'd item is toggled OFF.
      */
     function getSelectedSubcategoryKeys() {
         var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
@@ -2616,7 +2623,8 @@ const FilterModule = (function() {
         if (st.amenities && typeof st.amenities === 'object' && Object.keys(st.amenities).length > 0) {
             qs.set('amenities', JSON.stringify(st.amenities));
         }
-        if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
+        var emptySubcategorySelection = Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length === 0;
+        if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length > 0) {
             qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
         }
 
@@ -2640,7 +2648,8 @@ const FilterModule = (function() {
                 }
                 setCategoryCountsLoading(false);
                 serverCountsOk = true;
-                updateFilterCounts(Number(res.total_showing || 0), Number(res.total_available || 0), !!res.area_active);
+                var showingCount = emptySubcategorySelection ? 0 : Number(res.total_showing || 0);
+                updateFilterCounts(showingCount, Number(res.total_available || 0), !!res.area_active);
                 if (res.facet_subcategories && typeof res.facet_subcategories === 'object') {
                     applyFacetCounts(res.facet_subcategories);
                 }
@@ -2770,11 +2779,11 @@ const FilterModule = (function() {
             if (saved.categories) {
                 applyCategoryState(saved.categories);
             }
-            if (Array.isArray(saved.solo) && saved.solo.length > 0) {
-                soloSet.clear();
+            soloSet.clear();
+            if (Array.isArray(saved.solo)) {
                 saved.solo.forEach(function(k) { soloSet.add(k); });
-                applySoloVisuals();
             }
+            applySoloVisuals();
 
             updateClearButtons();
 
