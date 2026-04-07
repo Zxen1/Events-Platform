@@ -2216,6 +2216,13 @@ const FilterModule = (function() {
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
+                        // In solo mode, non-solo category toggle area is inert — swallow the click
+                        // so it neither toggles the switch nor opens the drawer.
+                        if (soloSet.size > 0 && !soloSet.has('cat:' + cat.name)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
                         // IMPORTANT:
                         // SwitchComponent renders a <label><input type="checkbox">...</label>.
                         // Clicking it will toggle the checkbox by default. We also toggle manually below.
