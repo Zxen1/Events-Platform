@@ -133,7 +133,8 @@ const FilterModule = (function() {
                 amenities:       Object.keys(amenitiesState).length > 0 ? amenitiesState : null,
                 categories:      getCategoryState(),
                 map:             getMapState(),
-                subcategoryKeys: getSelectedSubcategoryKeys()
+                subcategoryKeys: getSelectedSubcategoryKeys(),
+                solo:            Array.from(soloSet)
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             
@@ -1457,7 +1458,8 @@ const FilterModule = (function() {
             amenities: Object.keys(amenitiesState).length > 0 ? amenitiesState : null,
             // Category filter
             categories: getCategoryState(),
-            subcategoryKeys: getSelectedSubcategoryKeys()
+            subcategoryKeys: getSelectedSubcategoryKeys(),
+            solo: Array.from(soloSet)
         };
     }
     
@@ -2177,11 +2179,17 @@ const FilterModule = (function() {
                             e.stopPropagation();
                             var subK = option.dataset.subcategoryKey || '';
                             if (!subK) return;
+                            // Inert if parent category is already solo'd
+                            if (soloSet.has('cat:' + cat.name)) return;
                             var soloKey = 'sub:' + subK;
                             if (soloSet.has(soloKey)) {
                                 soloSet.delete(soloKey);
                             } else {
                                 soloSet.add(soloKey);
+                                // Force sub switch on if it was off
+                                if (!optSwitch.isChecked()) {
+                                    optSwitch.toggle();
+                                }
                             }
                             applySoloVisuals();
                             applyFilters();
@@ -2261,6 +2269,12 @@ const FilterModule = (function() {
                             soloSet.delete(catKey);
                         } else {
                             soloSet.add(catKey);
+                            // Force category switch on if it was off
+                            if (!headerSwitch.isChecked()) {
+                                headerSwitch.toggle();
+                                setAccordionDisabled(false);
+                                updateCategoryPartialState();
+                            }
                         }
                         applySoloVisuals();
                         applyFilters();
@@ -2280,6 +2294,11 @@ const FilterModule = (function() {
                 var saved = loadFilters();
                 if (saved && saved.categories) {
                     applyCategoryState(saved.categories);
+                }
+                if (saved && Array.isArray(saved.solo) && saved.solo.length > 0) {
+                    soloSet.clear();
+                    saved.solo.forEach(function(k) { soloSet.add(k); });
+                    applySoloVisuals();
                 }
 
                 // The category DOM is built async (get-form). The initial requestCounts() can complete
@@ -2750,6 +2769,11 @@ const FilterModule = (function() {
 
             if (saved.categories) {
                 applyCategoryState(saved.categories);
+            }
+            if (Array.isArray(saved.solo) && saved.solo.length > 0) {
+                soloSet.clear();
+                saved.solo.forEach(function(k) { soloSet.add(k); });
+                applySoloVisuals();
             }
 
             updateClearButtons();
