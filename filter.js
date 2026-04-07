@@ -176,6 +176,18 @@ const FilterModule = (function() {
             // IMPORTANT: use the accordion disabled class as the source of truth.
             // The checkbox state can drift if events are prevented/cancelled; the class is what the UI uses.
             var catEnabled = !accordion.classList.contains('filter-categoryfilter-accordion--disabled');
+
+            // Solo mode: treat non-solo categories as disabled so the backend
+            // doesn't fall back to them when subcategoryKeys is empty.
+            if (soloSet.size > 0) {
+                var catInSolo = soloSet.has('cat:' + catKey);
+                var hasSoloSub = false;
+                accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                    var dk = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                    if (dk && soloSet.has('sub:' + dk)) hasSoloSub = true;
+                });
+                if (!catInSolo && !hasSoloSub) catEnabled = false;
+            }
             
             var subs = {};
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
