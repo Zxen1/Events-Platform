@@ -386,6 +386,7 @@ function fetchCategories(PDO $pdo, array $columns): array
                 : null,
             'fieldset_ids' => $fieldsetIds,
             'fieldset_names' => $fieldsetNames,
+            'filter_rules' => isset($row['filter_rules']) ? $row['filter_rules'] : null,
         ];
     }
 
