@@ -42,7 +42,7 @@ const SEGMENT_MAP = [
     'Music'          => 'live-music',
     'Sports'         => 'live-sport',
     'Arts & Theatre' => 'performing-arts',
-    'Film'           => 'screenings',
+    'Film'           => 'cinema',
     'Miscellaneous'  => 'other-events',
 ];
 
