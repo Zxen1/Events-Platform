@@ -300,7 +300,7 @@ const FilterModule = (function() {
 
                 if (active) {
                     // Sub switches inside a solo'd category stay interactive; everything else is locked
-                    if (switchEl) switchEl.style.pointerEvents = catInSolo ? '' : 'none';
+                    if (switchEl) switchEl.style.pointerEvents = inSolo ? '' : 'none';
                 } else {
                     // Solo ended: re-enable all switches and restore visual state from switch
                     if (switchEl) switchEl.style.pointerEvents = '';
@@ -2269,17 +2269,10 @@ const FilterModule = (function() {
                                 headerSwitch.toggle();
                                 setAccordionDisabled(false);
                             }
-                            // Clear any stale sub solos within this category and force all sub switches on
+                            // Clear any stale sub solos within this category (category-level solo supersedes them)
                             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                                 var subK = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
                                 if (subK) soloSet.delete('sub:' + subK);
-                                var subInput = opt.querySelector('.filter-categoryfilter-toggle input');
-                                var subSlider = opt.querySelector('.filter-categoryfilter-toggle span');
-                                if (subInput && !subInput.checked) {
-                                    subInput.checked = true;
-                                    if (subSlider) subSlider.classList.add('component-switch-slider--on-default');
-                                    opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
-                                }
                             });
                             updateCategoryPartialState();
                         }
