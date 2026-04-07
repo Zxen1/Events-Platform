@@ -176,16 +176,6 @@ const FilterModule = (function() {
             // IMPORTANT: use the accordion disabled class as the source of truth.
             // The checkbox state can drift if events are prevented/cancelled; the class is what the UI uses.
             var catEnabled = !accordion.classList.contains('filter-categoryfilter-accordion--disabled');
-
-            // Solo mode: categories not in the solo selection are treated as disabled
-            if (soloSet.size > 0 && !soloSet.has('cat:' + catKey)) {
-                var hasSoloSub = false;
-                accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-                    var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
-                    if (subKey && soloSet.has('sub:' + subKey)) hasSoloSub = true;
-                });
-                if (!hasSoloSub) catEnabled = false;
-            }
             
             var subs = {};
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
@@ -288,6 +278,8 @@ const FilterModule = (function() {
                 if (!active) {
                     header.classList.toggle('filter-categoryfilter-accordion-header--disabled', catDisabled);
                 }
+                var toggleArea = header.querySelector('.filter-categoryfilter-accordion-header-togglearea');
+                if (toggleArea) toggleArea.style.pointerEvents = (active && !catInSolo) ? 'none' : '';
             }
 
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
@@ -977,6 +969,8 @@ const FilterModule = (function() {
             if (header) {
                 header.classList.remove('filter-categoryfilter-accordion-header--disabled');
                 header.classList.remove('filter-categoryfilter-accordion-header--solooff');
+                var toggleArea = header.querySelector('.filter-categoryfilter-accordion-header-togglearea');
+                if (toggleArea) toggleArea.style.pointerEvents = '';
             }
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                 opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
@@ -2222,13 +2216,6 @@ const FilterModule = (function() {
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
-                        // In solo mode, non-solo category toggle area is inert — swallow the click entirely
-                        // so it neither toggles the switch nor opens the drawer.
-                        if (soloSet.size > 0 && !soloSet.has('cat:' + cat.name)) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return;
-                        }
                         // IMPORTANT:
                         // SwitchComponent renders a <label><input type="checkbox">...</label>.
                         // Clicking it will toggle the checkbox by default. We also toggle manually below.
