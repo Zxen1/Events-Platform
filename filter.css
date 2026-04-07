@@ -718,6 +718,17 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Solo ON: blue border around solo'd items */
+.filter-categoryfilter-accordion--soloed {
+  border: 1px solid #3B82F6;
+  border-radius: 5px;
+}
+
+.filter-categoryfilter-accordion-option--soloed {
+  border: 1px solid #3B82F6;
+  border-radius: 5px;
+}
+
 /* Solo OFF: non-solo items dimmed when solo mode is active */
 .filter-categoryfilter-accordion-header--solooff {
   opacity: 0.2;

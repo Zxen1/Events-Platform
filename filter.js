@@ -281,6 +281,8 @@ const FilterModule = (function() {
             var catDisabled = accordion.classList.contains('filter-categoryfilter-accordion--disabled');
             var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
 
+            accordion.classList.toggle('filter-categoryfilter-accordion--soloed', active && catInSolo);
+
             if (header) {
                 header.classList.toggle('filter-categoryfilter-accordion-header--solooff', active && !catInSolo);
                 if (!active) {
@@ -296,6 +298,7 @@ const FilterModule = (function() {
                 var subToggleInput = switchEl ? switchEl.querySelector('input') : null;
                 var subUserOff = subToggleInput && !subToggleInput.checked;
 
+                opt.classList.toggle('filter-categoryfilter-accordion-option--soloed', active && subInSolo && !catInSolo);
                 opt.classList.toggle('filter-categoryfilter-accordion-option--solooff', active && !inSolo);
 
                 if (active) {
@@ -971,6 +974,7 @@ const FilterModule = (function() {
         var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
         accordions.forEach(function(accordion) {
             accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+            accordion.classList.remove('filter-categoryfilter-accordion--soloed');
             var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
             if (header) {
                 header.classList.remove('filter-categoryfilter-accordion-header--disabled');
@@ -982,6 +986,7 @@ const FilterModule = (function() {
                 opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
                 opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
                 opt.classList.remove('filter-categoryfilter-accordion-option--solooff');
+                opt.classList.remove('filter-categoryfilter-accordion-option--soloed');
                 var switchEl = opt.querySelector('.filter-categoryfilter-toggle');
                 if (switchEl) switchEl.style.pointerEvents = '';
             });
