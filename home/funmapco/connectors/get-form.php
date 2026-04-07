@@ -270,6 +270,13 @@ try {
     }
     $formData['password_settings'] = $passwordSettings;
 
+    $worldwideCounts = [];
+    $wcStmt = $pdo->query("SELECT subcategory_key, COUNT(*) AS cnt FROM posts GROUP BY subcategory_key");
+    while ($wcRow = $wcStmt->fetch(PDO::FETCH_ASSOC)) {
+        $worldwideCounts[$wcRow['subcategory_key']] = (int)$wcRow['cnt'];
+    }
+    $formData['worldwide_counts'] = $worldwideCounts;
+
     // Flush output immediately
     echo json_encode([
         'success' => true,
@@ -338,6 +345,9 @@ function fetchCategories(PDO $pdo, array $columns): array
         } elseif (in_array('fieldset_name', $columns, true)) {
             $selectColumns[] = '`fieldset_name`';
         }
+    }
+    if (in_array('filter_rules', $columns, true)) {
+        $selectColumns[] = '`filter_rules`';
     }
     if (!$selectColumns) {
         $selectColumns[] = '*';
@@ -971,6 +981,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
             'sort_order' => $category['sort_order'] ?? null,
             'subIds' => [],
             'subFees' => [],
+            'filter_rules' => isset($category['filter_rules']) ? json_decode($category['filter_rules'], true) : null,
         ];
 
         $iconHtml = '';

@@ -104,7 +104,37 @@ const FilterModule = (function() {
     // Persisted in localStorage and DB as the `solo` array in filters_json.
     var soloSet = new Set();
 
+    // Merge threshold: subcategories with worldwide counts below the category's
+    // catchall_threshold are visually merged into the catchall subcategory in the
+    // filter panel. Posts keep their real subcategory in the DB and on postcards.
+    // mergedSubs maps merged subcategory_key → catchall subcategory_key.
+    var mergedSubs = {};
 
+    function syncMergedToggles(container) {
+        if (!container) return;
+        container.querySelectorAll('.filter-categoryfilter-accordion-body').forEach(function(body) {
+            var catchallKeys = {};
+            body.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var k = opt.dataset.subcategoryKey || '';
+                if (!k) return;
+                for (var mk in mergedSubs) {
+                    if (!mergedSubs.hasOwnProperty(mk)) continue;
+                    if (mergedSubs[mk] === k) { catchallKeys[k] = opt; break; }
+                }
+            });
+            for (var ck in catchallKeys) {
+                var catchallOpt = catchallKeys[ck];
+                var catchallToggle = catchallOpt.querySelector('.filter-categoryfilter-toggle input');
+                if (!catchallToggle) continue;
+                var state = catchallToggle.checked;
+                body.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(mOpt) {
+                    if (mOpt.dataset.mergedInto !== ck) return;
+                    var mToggle = mOpt.querySelector('.filter-categoryfilter-toggle input');
+                    if (mToggle) mToggle.checked = state;
+                });
+            }
+        });
+    }
 
     /* --------------------------------------------------------------------------
        PERSISTENCE - Save/Load filter state to localStorage
@@ -1998,12 +2028,21 @@ const FilterModule = (function() {
         var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
         if (!container) return;
 
+        var adjustedMap = {};
+        var key;
+        for (key in facetMap) {
+            if (!facetMap.hasOwnProperty(key)) continue;
+            var target = mergedSubs[key] || key;
+            adjustedMap[target] = (adjustedMap[target] || 0) + Number(facetMap[key] || 0);
+        }
+
         // Subcategory counts
         container.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-            var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+            var k = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+            if (opt.dataset.mergedInto) return;
             var countEl = opt ? opt.querySelector('.filter-categoryfilter-count') : null;
             if (!countEl) return;
-            var val = key && facetMap.hasOwnProperty(key) ? Number(facetMap[key] || 0) : 0;
+            var val = k && adjustedMap.hasOwnProperty(k) ? Number(adjustedMap[k] || 0) : 0;
             var nextText = String(val);
             if (countEl.textContent !== nextText) {
                 countEl.textContent = nextText;
@@ -2011,22 +2050,22 @@ const FilterModule = (function() {
         });
 
         // Category header counts:
-        // - If all subs are enabled => show a single number (total).
-        // - If any sub is disabled => show a fraction enabled/total (even if disabled subs are 0),
+        // - If all visible subs are enabled => show a single number (total).
+        // - If any visible sub is disabled => show a fraction enabled/total,
         //   so users can see at a glance that the drawer has internal filters.
-        // Sub counts always show "would be" counts regardless of enabled state.
         container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(acc) {
             var enabledTotal = 0;
             var allTotal = 0;
             var anySubOff = false;
             acc.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                if (opt.dataset.mergedInto) return;
                 var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
                 var subEnabled = !!(subToggle && subToggle.checked);
                 if (!subEnabled) anySubOff = true;
-                var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
-                if (!key) return;
-                if (facetMap.hasOwnProperty(key)) {
-                    var n = Number(facetMap[key] || 0);
+                var k = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                if (!k) return;
+                if (adjustedMap.hasOwnProperty(k)) {
+                    var n = Number(adjustedMap[k] || 0);
                     allTotal += n;
                     if (subEnabled) enabledTotal += n;
                 }
@@ -2064,12 +2103,33 @@ const FilterModule = (function() {
                 var categories = res.formData.categories || [];
                 var categoryIconPaths = res.formData.categoryIconPaths || {};
                 var subcategoryIconPaths = res.formData.subcategoryIconPaths || {};
+                var worldwideCounts = res.formData.worldwide_counts || {};
                 
                 // Categories loaded
                 if (categories.length === 0) {
                     console.warn('[Filter] No categories found in formData');
                     return;
                 }
+
+                mergedSubs = {};
+                categories.forEach(function(c) {
+                    var rules = c.filter_rules;
+                    if (!rules) return;
+                    var catchallKey = rules.catchall_key || '';
+                    var threshold  = Number(rules.catchall_threshold) || 0;
+                    if (!catchallKey || threshold <= 0) return;
+                    (c.subs || []).forEach(function(s) {
+                        var sName = (typeof s === 'string') ? s : (s && s.name);
+                        if (!sName) return;
+                        var feeInfo = c.subFees && c.subFees[sName];
+                        var sKey = feeInfo && feeInfo.subcategory_key ? String(feeInfo.subcategory_key) : '';
+                        if (!sKey || sKey === catchallKey) return;
+                        var wCount = worldwideCounts[sKey] || 0;
+                        if (wCount < threshold) {
+                            mergedSubs[sKey] = catchallKey;
+                        }
+                    });
+                });
                 
                 categories.forEach(function(cat) {
                     var accordion = document.createElement('div');
@@ -2161,6 +2221,24 @@ const FilterModule = (function() {
                                 try {
                                     option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
                                 } catch (_eSubOff) {}
+                                var myKey = option.dataset.subcategoryKey || '';
+                                if (myKey) {
+                                    var isCatchall = false;
+                                    for (var mk in mergedSubs) {
+                                        if (!mergedSubs.hasOwnProperty(mk)) continue;
+                                        if (mergedSubs[mk] === myKey) { isCatchall = true; break; }
+                                    }
+                                    if (isCatchall) {
+                                        var catchallState = optSwitch.isChecked();
+                                        body.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(mOpt) {
+                                            if (!mOpt.dataset.mergedInto) return;
+                                            var mToggle = mOpt.querySelector('.filter-categoryfilter-toggle input');
+                                            if (mToggle && mToggle.checked !== catchallState) {
+                                                mToggle.checked = catchallState;
+                                            }
+                                        });
+                                    }
+                                }
                                 updateCategoryPartialState();
                                 applyFilters();
                                 updateResetCategoriesButton();
@@ -2195,6 +2273,11 @@ const FilterModule = (function() {
                             applyFilters();
                         });
 
+                        var subKeyForMerge = option.dataset.subcategoryKey || '';
+                        if (subKeyForMerge && mergedSubs[subKeyForMerge]) {
+                            option.style.display = 'none';
+                            option.dataset.mergedInto = mergedSubs[subKeyForMerge];
+                        }
                         
                         body.appendChild(option);
                     });
@@ -2305,6 +2388,8 @@ const FilterModule = (function() {
                     saved.solo.forEach(function(k) { soloSet.add(k); });
                     applySoloVisuals();
                 }
+
+                syncMergedToggles(container);
 
                 // The category DOM is built async (get-form). The initial requestCounts() can complete
                 // before the accordions exist, so facet counters have nowhere to render.
