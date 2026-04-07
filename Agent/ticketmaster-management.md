@@ -149,7 +149,25 @@ WHERE post_id IN (SELECT id FROM posts WHERE member_id = 213);
 
 ---
 
-## Resetting Staging
+## Deduplication — Critical
+
+Every Ticketmaster event has a permanent unique ID (`tm_event_id`, e.g. `1ku8vN-eGA19Ti5`). This ID never changes and is never reused by Ticketmaster.
+
+The system uses this at two levels to guarantee no event is ever collected or imported twice:
+
+**Collection level:** `tm_staging.tm_event_id` has a `UNIQUE KEY`. The collector uses `INSERT IGNORE`, so if an event ID already exists in staging it is silently skipped — no matter how many times you run the collector, for any country, on any day.
+
+**Import level:** Before importing an attraction, the importer checks `tm_staging` for any row with that `attraction_id` and `status = 'imported'`. If found, the entire attraction is skipped and no duplicate post is created.
+
+### ⚠️ The staging table must NEVER be truncated between runs
+
+`tm_staging` is a **permanent deduplication log**, not a temporary buffer. Imported rows must remain in the table with `status = 'imported'` indefinitely. They are the only record the system has of what has already been collected and imported.
+
+If you truncate `tm_staging` without also deleting all imported posts:
+- The collector will re-collect everything from scratch
+- The importer will find no `imported` rows and will create duplicate posts for everything
+
+**The only safe time to truncate is a full reset** — where you also run `DELETE FROM posts WHERE member_id = 213` at the same time to wipe all imported posts.
 
 ### Re-queue skipped events for another import attempt
 ```sql
@@ -157,14 +175,11 @@ UPDATE tm_staging SET status = 'pending', skip_reason = NULL, processed_at = NUL
 WHERE status = 'skipped';
 ```
 
-### Wipe all staging data and start fresh
+### Full reset — wipe everything and start from scratch
 ```sql
-TRUNCATE TABLE tm_staging;
-```
-
-### Delete all Ticketmaster-imported posts (cascade deletes map cards, sessions, pricing)
-```sql
+-- Run BOTH of these together, never one without the other
 DELETE FROM posts WHERE member_id = 213;
+TRUNCATE TABLE tm_staging;
 ```
 
 ---
