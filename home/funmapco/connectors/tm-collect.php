@@ -23,18 +23,18 @@ declare(strict_types=1);
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 $configDbCandidates = [
-    __DIR__ . '/../home/funmapco/config/config-db.php',
-    __DIR__ . '/../home/config/config-db.php',
-    dirname(__DIR__, 2) . '/config/config-db.php',
-    dirname(__DIR__, 2) . '/../config/config-db.php',
     __DIR__ . '/../config/config-db.php',
+    dirname(__DIR__) . '/config/config-db.php',
+    dirname(__DIR__, 2) . '/config/config-db.php',
+    dirname(__DIR__, 3) . '/../config/config-db.php',
+    dirname(__DIR__) . '/../config/config-db.php',
 ];
 $configAppCandidates = [
-    __DIR__ . '/../home/funmapco/config/config-app.php',
-    __DIR__ . '/../home/config/config-app.php',
-    dirname(__DIR__, 2) . '/config/config-app.php',
-    dirname(__DIR__, 2) . '/../config/config-app.php',
     __DIR__ . '/../config/config-app.php',
+    dirname(__DIR__) . '/config/config-app.php',
+    dirname(__DIR__, 2) . '/config/config-app.php',
+    dirname(__DIR__, 3) . '/../config/config-app.php',
+    dirname(__DIR__) . '/../config/config-app.php',
 ];
 
 $mysqli = null;
