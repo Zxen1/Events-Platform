@@ -692,6 +692,44 @@
   pointer-events: none;
 }
 
+/* Solo button (36px hit zone around icon, no layout change) */
+.filter-categoryfilter-accordion-header-solobtn,
+.filter-categoryfilter-accordion-option-solobtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  flex-shrink: 0;
+  border-radius: 5px;
+}
+
+.filter-categoryfilter-accordion-header-solobtn {
+  padding: 6px;
+  margin: -6px;
+}
+
+.filter-categoryfilter-accordion-option-solobtn {
+  padding: 8px;
+  margin: -8px;
+}
+
+.filter-categoryfilter-accordion-header-solobtn:hover,
+.filter-categoryfilter-accordion-option-solobtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Solo OFF: non-solo items dimmed when solo mode is active */
+.filter-categoryfilter-accordion-header--solooff {
+  opacity: 0.6;
+}
+
+.filter-categoryfilter-accordion-option--solooff {
+  opacity: 0.6;
+}
+
 
 /* ============================================================================
    AMENITY FILTER

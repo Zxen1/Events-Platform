@@ -98,6 +98,9 @@ const FilterModule = (function() {
     // by any module via getFilterSummaryText without depending on panel DOM).
     var lastSummaryText = '';
 
+    // Solo mode: Set of active solo keys ('cat:CategoryName' or 'sub:subcategoryKey')
+    var soloSet = new Set();
+
 
 
     /* --------------------------------------------------------------------------
@@ -199,9 +202,39 @@ const FilterModule = (function() {
     function getSelectedSubcategoryKeys() {
         var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
         if (!container) return null;
+
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+
+        // Solo mode: return only keys from the solo selection
+        if (soloSet.size > 0) {
+            var soloKeys = [];
+            accordions.forEach(function(accordion) {
+                var catNameEl = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
+                var catName = catNameEl ? catNameEl.textContent.trim() : '';
+                var catInSolo = soloSet.has('cat:' + catName);
+                accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                    var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                    if (!subKey) return;
+                    var subInSolo = soloSet.has('sub:' + subKey);
+                    if (subInSolo) {
+                        // Direct sub solo: always include (penetrative)
+                        soloKeys.push(subKey);
+                    } else if (catInSolo) {
+                        // Category solo: include subs the user hasn't individually turned off
+                        var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                        if (subToggle && subToggle.checked) soloKeys.push(subKey);
+                    }
+                });
+            });
+            var seenSolo = {};
+            return soloKeys.filter(function(k) {
+                if (!k || seenSolo[k]) return false;
+                seenSolo[k] = true;
+                return true;
+            });
+        }
         
         var keys = [];
-        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
         accordions.forEach(function(accordion) {
             // Category OFF => none of its subs are included.
             // Use the accordion disabled class as the source-of-truth (it is what the UI sets),
@@ -226,6 +259,55 @@ const FilterModule = (function() {
             if (seen[k]) return false;
             seen[k] = true;
             return true;
+        });
+    }
+
+    function applySoloVisuals() {
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return;
+        var active = soloSet.size > 0;
+
+        container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(accordion) {
+            var catNameEl = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
+            var catName = catNameEl ? catNameEl.textContent.trim() : '';
+            var catInSolo = soloSet.has('cat:' + catName);
+            var catDisabled = accordion.classList.contains('filter-categoryfilter-accordion--disabled');
+            var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
+
+            if (header) {
+                header.classList.toggle('filter-categoryfilter-accordion-header--solooff', active && !catInSolo);
+                if (active && catInSolo) {
+                    // Awaken: temporarily suppress --disabled on header (visual only; accordion class is source of truth)
+                    header.classList.remove('filter-categoryfilter-accordion-header--disabled');
+                } else if (!active) {
+                    // Solo ended: restore header disabled state from accordion class
+                    header.classList.toggle('filter-categoryfilter-accordion-header--disabled', catDisabled);
+                }
+            }
+
+            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                var subInSolo = subKey && soloSet.has('sub:' + subKey);
+                var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                var subUserOff = subToggle && !subToggle.checked;
+
+                // Category solo does NOT awaken individually-greyed subs (first-level greyout)
+                var awakened = subInSolo || (catInSolo && !subUserOff);
+
+                opt.classList.toggle('filter-categoryfilter-accordion-option--solooff', active && !awakened);
+
+                if (active && awakened) {
+                    opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
+                    opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
+                } else if (active && !awakened) {
+                    // Restore first-level greyout for non-awakened items
+                    if (subUserOff) opt.classList.add('filter-categoryfilter-accordion-option--suboff');
+                } else if (!active) {
+                    // Solo ended: restore from switch state
+                    opt.classList.toggle('filter-categoryfilter-accordion-option--suboff', subUserOff);
+                    opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', catDisabled);
+                }
+            });
         });
     }
     
@@ -882,15 +964,22 @@ const FilterModule = (function() {
             }
         });
         
-        // Remove disabled state from all accordions
+        // Clear solo state
+        soloSet.clear();
+
+        // Remove disabled state and solo state from all accordions
         var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
         accordions.forEach(function(accordion) {
             accordion.classList.remove('filter-categoryfilter-accordion--disabled');
             var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
-            if (header) header.classList.remove('filter-categoryfilter-accordion-header--disabled');
+            if (header) {
+                header.classList.remove('filter-categoryfilter-accordion-header--disabled');
+                header.classList.remove('filter-categoryfilter-accordion-header--solooff');
+            }
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                 opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
                 opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
+                opt.classList.remove('filter-categoryfilter-accordion-option--solooff');
             });
         });
         
@@ -1979,7 +2068,13 @@ const FilterModule = (function() {
                     headerImg.className = 'filter-categoryfilter-accordion-header-image';
                     headerImg.src = categoryIconPaths[cat.name] || '';
                     headerImg.alt = '';
-                    
+
+                    var headerSoloBtn = document.createElement('button');
+                    headerSoloBtn.className = 'filter-categoryfilter-accordion-header-solobtn';
+                    headerSoloBtn.type = 'button';
+                    headerSoloBtn.setAttribute('aria-label', 'Solo ' + cat.name);
+                    headerSoloBtn.appendChild(headerImg);
+
                     var headerText = document.createElement('span');
                     headerText.className = 'filter-categoryfilter-accordion-header-text';
                     headerText.textContent = cat.name;
@@ -1999,7 +2094,7 @@ const FilterModule = (function() {
                     headerSwitch.element.classList.add('filter-categoryfilter-toggle');
                     headerToggleArea.appendChild(headerSwitch.element);
                     
-                    header.appendChild(headerImg);
+                    header.appendChild(headerSoloBtn);
                     header.appendChild(headerText);
                     header.appendChild(headerCount);
                     header.appendChild(headerArrow);
@@ -2029,7 +2124,13 @@ const FilterModule = (function() {
                         optImg.className = 'filter-categoryfilter-accordion-option-image';
                         optImg.src = subcategoryIconPaths[subName] || '';
                         optImg.alt = '';
-                        
+
+                        var optSoloBtn = document.createElement('button');
+                        optSoloBtn.className = 'filter-categoryfilter-accordion-option-solobtn';
+                        optSoloBtn.type = 'button';
+                        optSoloBtn.setAttribute('aria-label', 'Solo ' + subName);
+                        optSoloBtn.appendChild(optImg);
+
                         var optText = document.createElement('span');
                         optText.className = 'filter-categoryfilter-accordion-option-text';
                         optText.textContent = subName;
@@ -2053,14 +2154,30 @@ const FilterModule = (function() {
                         });
                         optSwitch.element.classList.add('filter-categoryfilter-toggle');
                         
-                        option.appendChild(optImg);
+                        option.appendChild(optSoloBtn);
                         option.appendChild(optText);
                         option.appendChild(optCount);
                         option.appendChild(optSwitch.element);
-                        
-                        // Click anywhere on option toggles the switch
+
+                        // Solo button: toggle this subcategory in/out of solo selection
+                        optSoloBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            var subK = option.dataset.subcategoryKey || '';
+                            if (!subK) return;
+                            var soloKey = 'sub:' + subK;
+                            if (soloSet.has(soloKey)) {
+                                soloSet.delete(soloKey);
+                            } else {
+                                soloSet.add(soloKey);
+                            }
+                            applySoloVisuals();
+                            applyFilters();
+                        });
+
+                        // Click anywhere on option (except solo button and switch) toggles the switch
                         option.addEventListener('click', function(e) {
                             if (e.target === optSwitch.element || optSwitch.element.contains(e.target)) return;
+                            if (e.target === optSoloBtn || optSoloBtn.contains(e.target)) return;
                             optSwitch.toggle();
                         });
                         
@@ -2122,9 +2239,23 @@ const FilterModule = (function() {
                         updateClearButtons();
                     });
                     
-                    // Click anywhere except toggle area expands/collapses
+                    // Solo button: toggle this category in/out of solo selection
+                    headerSoloBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var catKey = 'cat:' + cat.name;
+                        if (soloSet.has(catKey)) {
+                            soloSet.delete(catKey);
+                        } else {
+                            soloSet.add(catKey);
+                        }
+                        applySoloVisuals();
+                        applyFilters();
+                    });
+
+                    // Click anywhere except toggle area and solo button expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
+                        if (e.target === headerSoloBtn || headerSoloBtn.contains(e.target)) return;
                         setAccordionOpen(!accordion.classList.contains('filter-categoryfilter-accordion--open'));
                     });
                     
