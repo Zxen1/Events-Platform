@@ -41,7 +41,7 @@ const MIN_IMAGE_WIDTH = 1000;
 const SEGMENT_MAP = [
     'Music'          => 'live-music',
     'Sports'         => 'live-sport',
-    'Arts & Theatre' => 'live-theatre',
+    'Arts & Theatre' => 'performing-arts',
     'Film'           => 'screenings',
     'Miscellaneous'  => 'other-events',
 ];

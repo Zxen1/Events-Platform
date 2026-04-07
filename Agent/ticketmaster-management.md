@@ -203,7 +203,7 @@ Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 |---|---|
 | Music | `live-gigs` |
 | Sports | `live-sport` |
-| Arts & Theatre | `live-theatre` |
+| Arts & Theatre | `performing-arts` |
 | Film | `screenings` |
 | Miscellaneous | `other-events` |
 | Genre = Festival / Festivals | `festivals` |
