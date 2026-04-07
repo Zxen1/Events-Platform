@@ -177,18 +177,6 @@ const FilterModule = (function() {
             // IMPORTANT: use the accordion disabled class as the source of truth.
             // The checkbox state can drift if events are prevented/cancelled; the class is what the UI uses.
             var catEnabled = !accordion.classList.contains('filter-categoryfilter-accordion--disabled');
-
-            // Solo mode: treat non-solo categories as disabled so the backend
-            // doesn't fall back to them when subcategoryKeys is empty.
-            if (soloSet.size > 0) {
-                var catInSolo = soloSet.has('cat:' + catKey);
-                var hasSoloSub = false;
-                accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-                    var dk = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
-                    if (dk && soloSet.has('sub:' + dk)) hasSoloSub = true;
-                });
-                if (!catInSolo && !hasSoloSub) catEnabled = false;
-            }
             
             var subs = {};
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
@@ -304,8 +292,8 @@ const FilterModule = (function() {
                 opt.classList.toggle('filter-categoryfilter-accordion-option--solooff', active && !inSolo);
 
                 if (active) {
-                    // Disable switch for non-solo rows
-                    if (switchEl) switchEl.style.pointerEvents = inSolo ? '' : 'none';
+                    // Sub switches inside a solo'd category stay interactive; everything else is locked
+                    if (switchEl) switchEl.style.pointerEvents = catInSolo ? '' : 'none';
                 } else {
                     // Solo ended: re-enable all switches and restore visual state from switch
                     if (switchEl) switchEl.style.pointerEvents = '';
@@ -2273,8 +2261,20 @@ const FilterModule = (function() {
                             if (!headerSwitch.isChecked()) {
                                 headerSwitch.toggle();
                                 setAccordionDisabled(false);
-                                updateCategoryPartialState();
                             }
+                            // Clear any stale sub solos within this category and force all sub switches on
+                            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                                var subK = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                                if (subK) soloSet.delete('sub:' + subK);
+                                var subInput = opt.querySelector('.filter-categoryfilter-toggle input');
+                                var subSlider = opt.querySelector('.filter-categoryfilter-toggle span');
+                                if (subInput && !subInput.checked) {
+                                    subInput.checked = true;
+                                    if (subSlider) subSlider.classList.add('component-switch-slider--on-default');
+                                    opt.classList.remove('filter-categoryfilter-accordion-option--suboff');
+                                }
+                            });
+                            updateCategoryPartialState();
                         }
                         applySoloVisuals();
                         applyFilters();
