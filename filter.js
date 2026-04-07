@@ -259,6 +259,10 @@ const FilterModule = (function() {
                     var subOn = subToggle && subToggle.checked;
                     if ((subInSolo || catInSolo) && catEnabled && subOn) {
                         soloKeys.push(subKey);
+                        for (var mk in mergedSubs) {
+                            if (!mergedSubs.hasOwnProperty(mk)) continue;
+                            if (mergedSubs[mk] === subKey) soloKeys.push(mk);
+                        }
                     }
                 });
             });
