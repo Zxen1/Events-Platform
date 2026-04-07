@@ -266,6 +266,7 @@ const FilterModule = (function() {
         var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
         if (!container) return;
         var active = soloSet.size > 0;
+        updateResetCategoriesButton();
 
         container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(accordion) {
             var catNameEl = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
@@ -1022,10 +1023,15 @@ const FilterModule = (function() {
     }
     
     function updateResetCategoriesButton() {
-        // Check if any category or subcategory toggle is OFF
+        // Check if any category or subcategory toggle is OFF, or solo mode is active
         var container = panelEl.querySelector('.filter-categoryfilter-container');
         if (!container) return;
         
+        if (soloSet.size > 0) {
+            setResetCategoriesActive(true);
+            return;
+        }
+
         // Check all toggles
         var allToggles = container.querySelectorAll('.filter-categoryfilter-toggle');
         var anyOff = false;
