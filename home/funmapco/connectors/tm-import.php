@@ -476,19 +476,40 @@ foreach ($groups as $groupKey => $events) {
             $stmt->close();
 
             foreach (($event['priceRanges'] ?? []) as $pr) {
-                $prPrice    = isset($pr['min']) ? (float) $pr['min'] : null;
+                $prMin      = isset($pr['min']) ? (float) $pr['min'] : null;
+                $prMax      = isset($pr['max']) ? (float) $pr['max'] : null;
                 $prCurrency = $pr['currency'] ?? null;
-                $prTier     = isset($pr['type']) ? ucfirst(strtolower($pr['type'])) : null;
-                if ($prPrice === null || !$prCurrency) continue;
+                $prArea     = isset($pr['type']) ? ucfirst(strtolower($pr['type'])) : null;
+                if ($prMin === null || !$prCurrency) continue;
 
+                // Named type (Standard, Platinum, etc.) → allocated seating area
+                // No type → general admission (allocated_areas = 0, area label is hardcoded by frontend)
+                $allocatedAreas = $prArea ? 1 : 0;
+                $ticketArea     = $prArea ?: null;
+
+                // Tier 1 — minimum price
+                $tier1 = 'Tier 1';
                 $stmt = $mysqli->prepare(
                     "INSERT INTO `post_ticket_pricing`
-                     (`post_map_card_id`,`ticket_group_key`,`allocated_areas`,`pricing_tier`,`price`,`currency`)
-                     VALUES (?,?,0,?,?,?)"
+                     (`post_map_card_id`,`ticket_group_key`,`allocated_areas`,`ticket_area`,`pricing_tier`,`price`,`currency`)
+                     VALUES (?,?,?,?,?,?,?)"
                 );
-                $stmt->bind_param('issds', $mapCardId, $gk, $prTier, $prPrice, $prCurrency);
+                $stmt->bind_param('isissds', $mapCardId, $gk, $allocatedAreas, $ticketArea, $tier1, $prMin, $prCurrency);
                 $stmt->execute();
                 $stmt->close();
+
+                // Tier 2 — maximum price (only if different from minimum)
+                if ($prMax !== null && $prMax > $prMin) {
+                    $tier2 = 'Tier 2';
+                    $stmt = $mysqli->prepare(
+                        "INSERT INTO `post_ticket_pricing`
+                         (`post_map_card_id`,`ticket_group_key`,`allocated_areas`,`ticket_area`,`pricing_tier`,`price`,`currency`)
+                         VALUES (?,?,?,?,?,?,?)"
+                    );
+                    $stmt->bind_param('isissds', $mapCardId, $gk, $allocatedAreas, $ticketArea, $tier2, $prMax, $prCurrency);
+                    $stmt->execute();
+                    $stmt->close();
+                }
             }
             $totalSessions++;
         }
