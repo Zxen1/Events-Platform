@@ -831,7 +831,7 @@ try {
         }
 
         // Ticket Pricing
-        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
+        $priceRes = $mysqli->query("SELECT post_map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, promo_option, promo_code, promo_type, promo_value, promo_price FROM post_ticket_pricing WHERE post_map_card_id IN ($cardIdsCsv)");
         if ($priceRes) {
             while ($pRow = $priceRes->fetch_assoc()) {
                 $cid = (int)$pRow['post_map_card_id'];
@@ -841,7 +841,7 @@ try {
                 
                 $seat = $pRow['ticket_area'];
                 if (!isset($pricingByCard[$cid][$gk][$seat])) {
-                    $pricingByCard[$cid][$gk][$seat] = ['ticket_area' => $seat, 'tiers' => []];
+                    $pricingByCard[$cid][$gk][$seat] = ['ticket_area' => $seat, 'allocated_areas' => (int)$pRow['allocated_areas'], 'tiers' => []];
                 }
                 $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
                     'pricing_tier' => $pRow['pricing_tier'],

@@ -173,38 +173,57 @@ foreach ($discoveredAttractions as $attractionId => $_) {
         continue;
     }
 
-    $url  = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query([
+    $baseParams = [
         'apikey'        => $TICKETMASTER_CONSUMER_KEY,
         'attractionId'  => $attractionId,
         'size'          => 200,
         'sort'          => 'date,asc',
         'startDateTime' => date('Y-m-d') . 'T00:00:00Z',
-    ]);
+    ];
 
-    $data = tmFetch($url);
-    if ($data === null) break; // rate limit — stop
-    $apiCalls++;
+    $allEvents = [];
+    $page = 0;
+    $attractionName = $attractionId;
+    while (true) {
+        $baseParams['page'] = $page;
+        $url = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query($baseParams);
 
-    $events = $data['_embedded']['events'] ?? [];
-    if (empty($events)) {
+        $data = tmFetch($url);
+        if ($data === null) break 2; // rate limit — stop entirely
+        $apiCalls++;
+
+        $events = $data['_embedded']['events'] ?? [];
+        if (empty($events)) break;
+
+        $allEvents = array_merge($allEvents, $events);
+        if ($page === 0) {
+            $attractionName = $events[0]['_embedded']['attractions'][0]['name'] ?? $attractionId;
+        }
+
+        $totalPages = $data['page']['totalPages'] ?? 1;
+        $page++;
+        if ($page >= $totalPages) break;
+        usleep(250000);
+    }
+
+    if (empty($allEvents)) {
         echo "  [{$attractionId}] — no events returned\n";
         usleep(250000);
         continue;
     }
 
-    $r = stageEvents($mysqli, $events);
+    $r = stageEvents($mysqli, $allEvents);
     $totalNew     += $r['new'];
     $totalDup     += $r['dup'];
     $attractionsHit++;
 
-    $attractionName = $events[0]['_embedded']['attractions'][0]['name'] ?? $attractionId;
-    $venueCount     = count(array_unique(array_filter(
-        array_map(fn($e) => $e['_embedded']['venues'][0]['id'] ?? null, $events)
+    $venueCount = count(array_unique(array_filter(
+        array_map(fn($e) => $e['_embedded']['venues'][0]['id'] ?? null, $allEvents)
     )));
-    echo "OK  [{$attractionId}] {$attractionName} — " . count($events)
+    echo "OK  [{$attractionId}] {$attractionName} — " . count($allEvents)
         . " events across {$venueCount} venue(s) — +{$r['new']} new\n";
 
-    usleep(250000); // 4 calls/sec max — well within 5,000/day
+    usleep(250000);
 }
 
 // ── Summary ────────────────────────────────────────────────────────────────────

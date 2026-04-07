@@ -201,10 +201,10 @@ Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 
 | Ticketmaster Segment | FunMap Subcategory |
 |---|---|
-| Music | `live-gigs` |
+| Music | `live-music` |
 | Sports | `live-sport` |
 | Arts & Theatre | `performing-arts` |
-| Film | `screenings` |
+| Film | `cinema` |
 | Miscellaneous | `other-events` |
 | Genre = Festival / Festivals | `festivals` |
 

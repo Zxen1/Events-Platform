@@ -488,7 +488,7 @@ foreach ($groups as $groupKey => $events) {
                 $ticketArea     = $prArea ?: null;
 
                 // Tier 1 — minimum price
-                $tier1 = 'Tier 1';
+                $tier1 = 'From';
                 $stmt = $mysqli->prepare(
                     "INSERT INTO `post_ticket_pricing`
                      (`post_map_card_id`,`ticket_group_key`,`allocated_areas`,`ticket_area`,`pricing_tier`,`price`,`currency`)
@@ -500,7 +500,7 @@ foreach ($groups as $groupKey => $events) {
 
                 // Tier 2 — maximum price (only if different from minimum)
                 if ($prMax !== null && $prMax > $prMin) {
-                    $tier2 = 'Tier 2';
+                    $tier2 = 'To';
                     $stmt = $mysqli->prepare(
                         "INSERT INTO `post_ticket_pricing`
                          (`post_map_card_id`,`ticket_group_key`,`allocated_areas`,`ticket_area`,`pricing_tier`,`price`,`currency`)
