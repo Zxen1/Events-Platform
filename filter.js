@@ -2180,12 +2180,6 @@ const FilterModule = (function() {
                             applyFilters();
                         });
 
-                        // Click anywhere on option (except solo button and switch) toggles the switch
-                        option.addEventListener('click', function(e) {
-                            if (e.target === optSwitch.element || optSwitch.element.contains(e.target)) return;
-                            if (e.target === optSoloBtn || optSoloBtn.contains(e.target)) return;
-                            optSwitch.toggle();
-                        });
                         
                         body.appendChild(option);
                     });

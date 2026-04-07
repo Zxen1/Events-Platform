@@ -623,13 +623,10 @@
   align-items: center;
   padding: 0 10px;
   border-radius: 0;
-  cursor: pointer;
+  cursor: default;
   margin-bottom: 0;
 }
 
-.filter-categoryfilter-accordion-option:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
 
 /* Subcategory OFF (still clickable, but visually subdued) */
 .filter-categoryfilter-accordion-option--suboff {
@@ -723,11 +720,11 @@
 
 /* Solo OFF: non-solo items dimmed when solo mode is active */
 .filter-categoryfilter-accordion-header--solooff {
-  opacity: 0.6;
+  opacity: 0.2;
 }
 
 .filter-categoryfilter-accordion-option--solooff {
-  opacity: 0.6;
+  opacity: 0.2;
 }
 
 
