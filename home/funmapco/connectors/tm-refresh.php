@@ -148,6 +148,8 @@ if (empty($attractions)) {
 // ── Output header ──────────────────────────────────────────────────────────────
 
 header('Content-Type: text/html; charset=utf-8');
+@ob_end_flush();
+ob_implicit_flush(true);
 echo '<pre>';
 echo "Ticketmaster refresh — " . count($attractions) . " attractions to check\n";
 echo str_repeat('─', 72) . "\n\n";

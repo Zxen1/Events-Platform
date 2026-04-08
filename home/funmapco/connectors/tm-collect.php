@@ -95,6 +95,8 @@ $excludedSegments = ['Miscellaneous'];
 // ── Output ─────────────────────────────────────────────────────────────────────
 
 header('Content-Type: text/html; charset=utf-8');
+@ob_end_flush();
+ob_implicit_flush(true);
 echo '<pre>';
 echo "Ticketmaster collector — country={$country}, pages={$pages}, start_page={$startPage}\n";
 echo "Excluded segments: " . implode(', ', $excludedSegments) . "\n";

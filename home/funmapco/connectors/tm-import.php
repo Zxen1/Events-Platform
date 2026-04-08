@@ -205,6 +205,8 @@ unset($evts);
 // ── Output header ──────────────────────────────────────────────────────────────
 
 header('Content-Type: text/html; charset=utf-8');
+@ob_end_flush();
+ob_implicit_flush(true);
 echo '<pre>';
 $totalRows = array_sum(array_map('count', $rowsByKey));
 echo "Ticketmaster import — {$totalRows} staged events → " . count($groups) . " attractions\n";
