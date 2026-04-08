@@ -1,17 +1,18 @@
 <?php
 /**
- * tm-refresh.php — Weekly update of existing TM-imported posts
+ * tm-refresh.php — Daily update of existing TM-imported posts
  *
  * Re-fetches event data from the Ticketmaster API for attractions that
- * already have posts. Compares fresh data against existing post/map card/
- * session/pricing rows and updates any columns that differ.
+ * already have active (non-expired) posts. Selects the least-recently
+ * refreshed attractions first, so every post cycles through over time.
  *
  * Post IDs, map card IDs, and URLs are never changed or deleted.
  * New venues get new map cards. Sessions and pricing are replaced in full
  * for each map card (nothing external references their IDs).
  *
  * Parameters:
- *   limit — max attractions to refresh per run (default: 50, max: 200)
+ *   limit    — max attractions to refresh per run (default: 200)
+ *   max_api  — hard API call ceiling for this run (default: 2000)
  */
 
 declare(strict_types=1);
@@ -169,15 +170,23 @@ function coordKey(float $lat, float $lng): string {
 
 // ── Parameters ─────────────────────────────────────────────────────────────────
 
-$limit = min(200, max(1, intval($_GET['limit'] ?? 50)));
+$limit  = min(500, max(1, intval($_GET['limit']   ?? 200)));
+$maxApi = min(5000, max(1, intval($_GET['max_api'] ?? 2000)));
 
-// ── Find imported attractions with post IDs ─────────────────────────────────────
+// ── Find active attractions, least-recently refreshed first ─────────────────────
 
 $attractions = []; // attraction_id => post_id
 $res = $mysqli->query(
-    "SELECT DISTINCT attraction_id, post_id FROM tm_staging
-     WHERE status = 'imported' AND post_id IS NOT NULL AND attraction_id IS NOT NULL
-     ORDER BY post_id ASC LIMIT {$limit}"
+    "SELECT ts.attraction_id, ts.post_id, MIN(ts.processed_at) AS oldest
+     FROM tm_staging ts
+     JOIN posts p ON p.id = ts.post_id
+     WHERE ts.status = 'imported'
+       AND ts.post_id IS NOT NULL
+       AND ts.attraction_id IS NOT NULL
+       AND p.expires_at > NOW()
+     GROUP BY ts.attraction_id, ts.post_id
+     ORDER BY oldest ASC
+     LIMIT {$limit}"
 );
 while ($row = $res->fetch_assoc()) {
     $attractions[$row['attraction_id']] = (int) $row['post_id'];
@@ -204,6 +213,11 @@ $errors     = 0;
 // ── Process each attraction ────────────────────────────────────────────────────
 
 foreach ($attractions as $attractionId => $postId) {
+
+    if ($apiCalls >= $maxApi) {
+        echo "API budget reached ({$maxApi}) — stopping.\n";
+        break;
+    }
 
     // ── Re-fetch all events from TM API ────────────────────────────────────────
 
@@ -536,6 +550,14 @@ foreach ($attractions as $attractionId => $postId) {
     }
 
     // ── Report ─────────────────────────────────────────────────────────────────
+
+    // ── Mark this attraction as freshly refreshed ─────────────────────────────
+
+    $attEsc = $mysqli->real_escape_string($attractionId);
+    $mysqli->query(
+        "UPDATE tm_staging SET processed_at = NOW()
+         WHERE attraction_id = '{$attEsc}' AND status = 'imported'"
+    );
 
     if (empty($changes) && $updatedCards === 0 && $newVenues === 0) {
         echo "  [{$attractionId}] {$attractionName} — no changes\n";

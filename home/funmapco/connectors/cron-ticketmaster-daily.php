@@ -1,8 +1,10 @@
 <?php
-// cron-ticketmaster-daily.php — Collects new attractions, then imports them as posts.
+// cron-ticketmaster-daily.php — Full daily TM pipeline: collect → import → refresh.
 //
-// Collects from multiple countries sequentially, then imports all pending.
-// API budget: ~5,000 calls/day. As attractions are collected, daily usage drops.
+// Phase 1: Collect new attractions across all countries (rotating pages).
+// Phase 2: Import all pending staging rows into posts (loops until empty).
+// Phase 3: Refresh existing active posts (least-recently updated first).
+// API budget: ~5,000 calls/day split between collect (~2,000) and refresh (~2,000).
 //
 // cPanel cron (daily, 3am):
 //   /usr/local/bin/php -q /home/funmapco/public_html/home/funmapco/connectors/cron-ticketmaster-daily.php
@@ -14,6 +16,19 @@ if (php_sapi_name() !== 'cli') {
 
 $php = PHP_BINARY;
 $dir = __DIR__;
+
+// ── Cleanup: purge staging rows for expired posts (older than 6 months past expiry) ──
+
+$cleanupCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
+    'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
+    . '$r = $mysqli->query("DELETE ts FROM tm_staging ts '
+    . 'JOIN posts p ON p.id = ts.post_id '
+    . 'WHERE ts.status IN (\'imported\',\'skipped\') '
+    . 'AND p.expires_at < DATE_SUB(NOW(), INTERVAL 6 MONTH)");'
+    . 'echo $mysqli->affected_rows . \" expired staging rows purged\";'
+);
+echo "=== CLEANUP ===\n";
+echo trim(shell_exec($cleanupCmd)) . "\n\n";
 
 $countries = [
     // Large (~210 calls each)
@@ -106,5 +121,26 @@ foreach ($countries as $code => $params) {
     echo "\n";
 }
 
+// ── Phase 2: Import all pending (loop until none remain) ─────────────────────
+
 echo "=== TM IMPORT ===\n";
-passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-import.php") . ' ' . escapeshellarg('limit=200'));
+$importRound = 0;
+while (true) {
+    $importRound++;
+    echo "--- Import round {$importRound} ---\n";
+    passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-import.php") . ' ' . escapeshellarg('limit=200'));
+
+    $checkCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
+        'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
+        . '$r = $mysqli->query("SELECT COUNT(*) c FROM tm_staging WHERE status=\'pending\'");'
+        . 'echo $r->fetch_assoc()["c"];'
+    );
+    $pending = (int) trim(shell_exec($checkCmd));
+    if ($pending === 0 || $importRound >= 10) break;
+    echo "{$pending} still pending, importing more...\n\n";
+}
+
+// ── Phase 3: Refresh existing posts (least-recently updated first) ───────────
+
+echo "\n=== TM REFRESH ===\n";
+passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-refresh.php") . ' ' . escapeshellarg('limit=200&max_api=2000'));
