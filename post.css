@@ -1578,6 +1578,7 @@
 /* Description text */
 .post-description-text {
   margin-top: 8px;
+  margin-bottom: 20px;
   cursor: pointer;
   font-size: 14px;
   line-height: 1.4;
@@ -1625,7 +1626,6 @@
   gap: 10px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 10px;
 }
 
 .post-description-avatar {
