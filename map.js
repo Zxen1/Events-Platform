@@ -396,6 +396,18 @@ const MapModule = (function() {
   // Keep hover clear effectively instant; avoids "sticky" hover feeling.
   const HOVER_CLEAR_DELAY_MS = 0;
   const CLICK_MOVE_THRESHOLD_PX = 6;
+
+  // ── NATIVE CIRCLE LAYER (icon/dot overflow markers) ──────────────────────
+  const NC_SOURCE              = 'native-circles-source';
+  const NC_LAYER               = 'native-circles-layer';
+  const NC_HOVER_DELAY_MS      = 80; // pause before promoting to DOM hover card
+
+  let _ncDataByKey      = {};   // locationKey → markerData (for hover card promotion)
+  let _ncHoveredId      = null; // Mapbox auto-generated feature id of highlighted circle
+  let _ncHoverTimer     = null; // setTimeout handle for NC_HOVER_DELAY_MS promotion
+  let _ncPromoted       = null; // { marker: mapboxgl.Marker, leaveTimer } or null
+  let _ncLastFeatures   = [];   // preserved across style reloads so layer can be rebuilt
+  // ─────────────────────────────────────────────────────────────────────────
   
   // Settings cache
   let adminSettings = {};
@@ -1165,6 +1177,9 @@ const MapModule = (function() {
         
         // Initialize clusters
         initClusters();
+
+        // Initialize native circle layer (icon/dot overflow markers)
+        initNativeCircleLayers();
         
       });
       
@@ -3036,6 +3051,210 @@ const MapModule = (function() {
 
 
   /* ==========================================================================
+     SECTION 7B: NATIVE CIRCLE LAYER
+     Replaces DOM icon/dot markers with a single GPU-rendered Mapbox circle layer.
+     Cards and multi-post/storefront markers remain as DOM markers (map.js Section 6).
+     ========================================================================== */
+
+  /**
+   * Create the GeoJSON source + circle layer on the main map.
+   * Safe to call multiple times (no-ops if already added).
+   * Must be called after map load and after every style reload.
+   */
+  function initNativeCircleLayers() {
+    if (!map) return;
+
+    // Remove stale layer/source from previous style load before re-adding
+    try { if (map.getLayer(NC_LAYER))  map.removeLayer(NC_LAYER);  } catch (_e) {}
+    try { if (map.getSource(NC_SOURCE)) map.removeSource(NC_SOURCE); } catch (_e) {}
+
+    map.addSource(NC_SOURCE, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+      generateId: true  // Mapbox assigns numeric IDs — required for feature-state hover
+    });
+
+    map.addLayer({
+      id:     NC_LAYER,
+      type:   'circle',
+      source: NC_SOURCE,
+      paint: {
+        'circle-radius': ['case', ['boolean', ['feature-state', 'hovered'], false], 10, 7],
+        'circle-color':  ['get', 'color'],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': ['case',
+          ['boolean', ['feature-state', 'hovered'], false],
+          'rgba(255,255,255,0.85)',
+          'rgba(0,0,0,0.35)'
+        ],
+        'circle-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 1, 0.88]
+      }
+    });
+
+    // Re-apply last known features after style reload
+    if (_ncLastFeatures.length) {
+      map.getSource(NC_SOURCE).setData({ type: 'FeatureCollection', features: _ncLastFeatures });
+    }
+
+    _bindNativeCircleEvents();
+  }
+
+  /**
+   * Replace the native circle source data with a new feature set.
+   * Called by PostModule on every renderMapMarkers pass.
+   * @param {Array}  features    - GeoJSON Feature array (points with color/postId properties)
+   * @param {Object} dataByKey   - locationKey → markerData (for hover card promotion)
+   */
+  function updateNativeCircleLayer(features, dataByKey) {
+    _ncLastFeatures = features || [];
+    _ncDataByKey    = dataByKey || {};
+
+    // Clear any active hover state — features are replaced so old Mapbox IDs are gone
+    _clearNativeCircleHover();
+
+    if (!map) return;
+    var src = map.getSource(NC_SOURCE);
+    if (!src) return;
+    src.setData({ type: 'FeatureCollection', features: _ncLastFeatures });
+  }
+
+  /** Clear hover highlight, promotion timer, and promoted DOM card. */
+  function _clearNativeCircleHover() {
+    clearTimeout(_ncHoverTimer);
+    _ncHoverTimer = null;
+
+    if (_ncHoveredId !== null && map && map.getSource(NC_SOURCE)) {
+      try { map.setFeatureState({ source: NC_SOURCE, id: _ncHoveredId }, { hovered: false }); } catch (_e) {}
+      _ncHoveredId = null;
+    }
+
+    if (_ncPromoted) {
+      clearTimeout(_ncPromoted.leaveTimer);
+      try { _ncPromoted.marker.remove(); } catch (_e) {}
+      _ncPromoted = null;
+    }
+  }
+
+  /**
+   * After NC_HOVER_DELAY_MS pause: create a temporary DOM hover card at the circle position.
+   * Destroyed when the cursor leaves both the circle layer and the promoted card.
+   */
+  function _promoteNativeCircleHover(featureId, props, lng, lat) {
+    // Guard: feature may have changed while timer was running
+    if (_ncHoveredId !== featureId) return;
+
+    var locationKey = props.locationKey;
+    var md = _ncDataByKey[locationKey];
+    if (!md) return;
+
+    // Build hover card element (matches DOM marker 'hover' state)
+    var el = document.createElement('div');
+    el.className = 'map-card-container is-hovered';
+    var subcatColor = md.subcategory_color || '';
+    if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
+    if (subcatColor) {
+      var _h = subcatColor.replace('#', '');
+      var _r = parseInt(_h.substring(0, 2), 16);
+      var _g = parseInt(_h.substring(2, 4), 16);
+      var _b = parseInt(_h.substring(4, 6), 16);
+      el.style.setProperty('--pill-fill', 'rgb(' + _r + ',' + _g + ',' + _b + ')');
+    }
+    el.innerHTML = buildMapCardHTML(md, 'hover');
+
+    // Click on promoted card → open post (same as DOM card click)
+    el.addEventListener('pointerup', function(e) {
+      if (Math.abs(e.clientX - _ncPointerDownX) > CLICK_MOVE_THRESHOLD_PX) return;
+      if (Math.abs(e.clientY - _ncPointerDownY) > CLICK_MOVE_THRESHOLD_PX) return;
+      App.emit('map:cardClicked', {
+        postId:          props.postId,
+        post_map_card_id: props.postMapCardId,
+        locationKey:     locationKey
+      });
+    });
+
+    // Keep card alive while cursor is over it; destroy on leave
+    el.addEventListener('pointerenter', function() {
+      if (_ncPromoted) clearTimeout(_ncPromoted.leaveTimer);
+    });
+    el.addEventListener('pointerleave', function() {
+      if (!_ncPromoted) return;
+      _ncPromoted.leaveTimer = setTimeout(function() { _clearNativeCircleHover(); }, 80);
+    });
+
+    var marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+    _ncPromoted = { marker: marker, leaveTimer: null };
+  }
+
+  // Pointer-down coords for click-threshold check on promoted card
+  var _ncPointerDownX = 0;
+  var _ncPointerDownY = 0;
+
+  /** Attach mousemove/mouseleave/click events to the circle layer (called once per style load). */
+  function _bindNativeCircleEvents() {
+    if (!map) return;
+
+    map.on('mousemove', NC_LAYER, function(e) {
+      if (!e.features || !e.features.length) return;
+      var f   = e.features[0];
+      var fid = f.id;
+
+      // Same feature — no change needed
+      if (fid === _ncHoveredId) return;
+
+      // New feature — clear previous state immediately, start fresh
+      _clearNativeCircleHover();
+
+      _ncHoveredId = fid;
+      try { map.setFeatureState({ source: NC_SOURCE, id: _ncHoveredId }, { hovered: true }); } catch (_e) {}
+
+      var props = f.properties;
+      var coords = f.geometry.coordinates;
+      _ncHoverTimer = setTimeout(function() {
+        _promoteNativeCircleHover(fid, props, coords[0], coords[1]);
+      }, NC_HOVER_DELAY_MS);
+    });
+
+    map.on('mouseleave', NC_LAYER, function() {
+      // Delay before clearing — gives the pointer time to reach the promoted card
+      if (_ncPromoted) return; // promoted card handles its own leave
+      clearTimeout(_ncHoverTimer);
+      _ncHoverTimer = null;
+      if (_ncHoveredId !== null) {
+        try { map.setFeatureState({ source: NC_SOURCE, id: _ncHoveredId }, { hovered: false }); } catch (_e) {}
+        _ncHoveredId = null;
+      }
+    });
+
+    map.on('pointerdown', NC_LAYER, function(e) {
+      _ncPointerDownX = e.originalEvent ? e.originalEvent.clientX : 0;
+      _ncPointerDownY = e.originalEvent ? e.originalEvent.clientY : 0;
+    });
+
+    map.on('click', NC_LAYER, function(e) {
+      if (!e.features || !e.features.length) return;
+      var props = e.features[0].properties;
+      stopSpin();
+      App.emit('map:cardClicked', {
+        postId:           props.postId,
+        post_map_card_id: props.postMapCardId,
+        locationKey:      props.locationKey
+      });
+    });
+
+    // Pointer cursor on hover
+    map.on('mouseenter', NC_LAYER, function() {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', NC_LAYER, function() {
+      map.getCanvas().style.cursor = '';
+    });
+  }
+
+
+  /* ==========================================================================
      SECTION 8: ZOOM INDICATOR (Mapbox)
      ========================================================================== */
   
@@ -3188,6 +3407,8 @@ const MapModule = (function() {
             return;
           }
           setupClusterLayers();
+          // Re-add native circle layer after style reload (style wipes all sources/layers)
+          initNativeCircleLayers();
         }).catch(function(err) {
           console.error('[Map] loadClusterIcons failed:', err);
         });
@@ -3341,6 +3562,9 @@ const MapModule = (function() {
     getPillUrl,
     getIconUrl,
     
+    // Native circle layer (icon/dot overflow markers)
+    updateNativeCircleLayer,
+
     // Clusters
     createClusterLayers,
     refreshClusters,

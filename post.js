@@ -2393,13 +2393,42 @@ const PostModule = (function() {
       appearanceByKey[item.locationKey] = appearance;
     });
 
-    // All marker types are the same HTML marker — prepare all for DOM rendering.
+    // All marker types — assign appearance and build sig/data maps.
     allMarkerData.forEach(function(markerData) {
       markerData.markerAppearance = appearanceByKey[markerData.locationKey] || 'card';
       markerData.dotColor = dotColorByKey[markerData.locationKey] || '';
       nextMarkerDataByKey[markerData.locationKey] = markerData;
       nextSigByKey[markerData.locationKey] = buildMarkerSignature(markerData);
     });
+
+    // ── NATIVE CIRCLE SPLIT ───────────────────────────────────────────────
+    // Single-post icon/dot markers → native Mapbox circle layer (no DOM, GPU only).
+    // Cards and multi-post/storefront → DOM markers as before.
+    var _circleFeatures  = [];
+    var _circleDataByKey = {};
+
+    Object.keys(nextMarkerDataByKey).forEach(function(locationKey) {
+      var md = nextMarkerDataByKey[locationKey];
+      var isNativeCircle = (md.markerAppearance === 'icon' || md.markerAppearance === 'dot')
+                           && !md.isMultiPost && !md.isStorefront;
+      if (!isNativeCircle) return;
+      _circleFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [md.lng, md.lat] },
+        properties: {
+          locationKey:  locationKey,
+          color:        md.subcategory_color || '#888888',
+          postId:       String(md.id),
+          postMapCardId: String(md.post_map_card_id || '')
+        }
+      });
+      _circleDataByKey[locationKey] = md;
+    });
+
+    if (mapModule.updateNativeCircleLayer) {
+      mapModule.updateNativeCircleLayer(_circleFeatures, _circleDataByKey);
+    }
+    // ─────────────────────────────────────────────────────────────────────
 
     // Remove markers that are no longer needed (including those that switched to dots/icons)
     if (mapModule.removeMapCardMarker) {
@@ -2431,13 +2460,27 @@ const PostModule = (function() {
         return; // keep existing marker as-is
       }
 
-      // Changed: remove then recreate (MapModule does not expose an update-by-key API)
+      // Changed: remove old DOM marker then recreate if still a DOM marker type.
       if (prevSig && mapModule.removeMapCardMarker) {
         mapModule.removeMapCardMarker(locationKey);
       }
-      if (mapModule.createMapCardMarker) {
+
+      // ── NATIVE CIRCLES: skip DOM creation for single-post icon/dot markers ──
+      // [RESTORE] To revert to DOM icon/dot markers, remove the isNativeCircle guard
+      // below and uncomment the original createMapCardMarker call.
+      //
+      // ORIGINAL (DOM icon/dot — commented out):
+      // if (mapModule.createMapCardMarker) {
+      //   mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
+      // }
+      //
+      // NATIVE (active):
+      var _isNativeCircle = (markerData.markerAppearance === 'icon' || markerData.markerAppearance === 'dot')
+                            && !markerData.isMultiPost && !markerData.isStorefront;
+      if (!_isNativeCircle && mapModule.createMapCardMarker) {
         mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
       }
+      // ─────────────────────────────────────────────────────────────────────
     });
 
     lastRenderedLocationMarkerSigByKey = nextSigByKey;
