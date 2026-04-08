@@ -2179,6 +2179,10 @@ const PostModule = (function() {
 
     // Live-site style: update markers in-place (diff by locationKey) to avoid flashing.
 
+    // Only render map cards within the current viewport — out-of-bounds map cards on
+    // multi-location posts must not consume card slots or create DOM markers.
+    var _renderBounds = getMapBounds();
+
     // First pass: collect all map cards and group by venue coordinates
     // Multi-post venues (same location, different posts) use multi_post_icon
     var COORD_PRECISION = 6;
@@ -2215,7 +2219,8 @@ const PostModule = (function() {
         var lat = mapCard.latitude;
         var lng = mapCard.longitude;
         if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-        
+        if (_renderBounds && !pointWithinBounds(lng, lat, _renderBounds)) return;
+
         var locationKey = lng.toFixed(COORD_PRECISION) + ',' + lat.toFixed(COORD_PRECISION);
         if (!locationGroups[locationKey]) {
           locationGroups[locationKey] = [];
@@ -2364,9 +2369,6 @@ const PostModule = (function() {
 
     var priorityList = firstPass.concat(secondPass);
 
-    // TEMP DEBUG
-    var _cardCount = 0, _iconCount = 0, _dotCount = 0;
-
     // Assign appearance: top MAX_MAP_CARDS become cards, rest become icons or dots.
     // Only the lowest checkout_sort_order can become dots — all others become icons.
     // All are the same map card marker — appearance is CSS only.
@@ -2389,12 +2391,7 @@ const PostModule = (function() {
       }
 
       appearanceByKey[item.locationKey] = appearance;
-      if (appearance === 'card') _cardCount++;
-      else if (appearance === 'icon') _iconCount++;
-      else _dotCount++;
     });
-
-    console.error('[MapCards DEBUG] MAX_MAP_CARDS:', MAX_MAP_CARDS, '| totalLocations:', totalResultCount, '| isHighDensity:', isHighDensity, '| cards:', _cardCount, '| icons:', _iconCount, '| dots:', _dotCount, '| firstPass:', firstPass.length, '| secondPass:', secondPass.length);
 
     // All marker types are the same HTML marker — prepare all for DOM rendering.
     allMarkerData.forEach(function(markerData) {
