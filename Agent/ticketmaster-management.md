@@ -44,6 +44,7 @@ All three are registered in `gateway.php` and accessed via:
 | `pages` | `3` | `25` | Number of discovery pages to scan |
 | `start_page` | `0` | — | Discovery page offset (for resuming) |
 | `size` | `200` | `200` | Events per discovery page |
+| `segment` | — | — | TM segment filter (Music, Sports, Arts & Theatre, Film) |
 
 ### How it works
 
@@ -52,11 +53,9 @@ All three are registered in `gateway.php` and accessed via:
 
 ### API pagination limit (CRITICAL)
 
-The Ticketmaster Discovery API caps deep pagination at approximately **page 5** (~1,200 events). Requesting page 6+ returns HTTP 400. This means a single query for a country can never discover more than ~200-300 attractions.
+The Ticketmaster Discovery API caps deep pagination at approximately **page 5** (~1,200 events). Requesting page 6+ returns HTTP 400. This means a single unsegmented query for a country can never discover more than ~200-300 attractions.
 
-**Current workaround:** The cron scans page 0 plus a rotating window of deeper pages. This provides some variety but cannot reach beyond page 5.
-
-**TODO — Segment-based slicing:** To reach more attractions, the collector needs to make separate queries per segment (Music, Sports, Arts & Theatre). Each segment gets its own 5-page window, tripling discovery reach. This has NOT been implemented yet.
+**Solution — Segment-based slicing:** The cron makes separate queries per segment (Music, Sports, Arts & Theatre, Film) for each country. Each segment gets its own full page window, multiplying discovery reach by 4×. The `segment` parameter on `tm-collect.php` passes `segmentName` to the TM Discovery API.
 
 ### Exclusions
 
@@ -66,17 +65,17 @@ The Ticketmaster Discovery API caps deep pagination at approximately **page 5** 
 ### Examples
 
 ```
-# Small test — 3 pages, up to 10 attractions
-gateway.php?action=tm-collect&country=GB&limit=10
+# Small test — Music only, 3 pages, up to 10 attractions
+gateway.php?action=tm-collect&country=GB&limit=10&segment=Music
 
-# Standard run — 100 attractions
-gateway.php?action=tm-collect&country=GB&limit=100
+# Standard run — Sports in AU, 5 pages
+gateway.php?action=tm-collect&country=AU&limit=100&pages=5&segment=Sports
 
-# Large run — 500 attractions, 5 pages (max useful depth)
-gateway.php?action=tm-collect&country=GB&limit=500&pages=5
+# Arts & Theatre (URL-encoded space/ampersand)
+gateway.php?action=tm-collect&country=GB&limit=50&pages=5&segment=Arts+%26+Theatre
 
-# US events
-gateway.php?action=tm-collect&country=US&limit=100
+# All segments (no filter) — limited by 5-page pagination cap
+gateway.php?action=tm-collect&country=GB&limit=100&pages=5
 ```
 
 ### API limits
@@ -225,7 +224,7 @@ gateway.php?action=tm-refresh&limit=200&max_api=2000
 ### What it does (in order)
 
 1. **Cleanup** — Purges staging rows for posts that expired 6+ months ago (prevents infinite table growth)
-2. **Collect** — Runs `tm-collect.php` for all countries (page 0 + rotating deep pages per country)
+2. **Collect** — Runs `tm-collect.php` for all countries × all segments (Music, Sports, Arts & Theatre, Film)
 3. **Import** — Runs `tm-import.php` in a loop (up to 10 rounds) until no pending rows remain
 4. **Refresh** — Runs `tm-refresh.php` with `limit=200&max_api=2000`
 
@@ -233,23 +232,22 @@ gateway.php?action=tm-refresh&limit=200&max_api=2000
 
 | Phase | Estimated daily calls | Notes |
 |---|---|---|
-| Collect (all countries) | ~2,000-2,800 | Drops after initial seeding as most attractions are already staged |
+| Collect — discovery pages | ~400 | 58 countries × 4 segments × tier pages (5/3/2/1) |
+| Collect — attraction fetches | ~600-2,600 | Drops after initial seeding as most attractions are already staged |
 | Import | 0 | No API calls — reads from staging only |
 | Refresh | up to 2,000 | Hard ceiling via `max_api` parameter |
-| **Total** | **~4,800 max** | 200-call buffer for safety |
+| **Total** | **~5,000 max** | Minimal buffer — attraction fetches drop fast after seeding |
 
 ### Countries collected (58 total)
 
-| Tier | Countries | Limit per country | Pages |
+Limits and pages are **per segment** (each country is queried 4 times: Music, Sports, Arts & Theatre, Film).
+
+| Tier | Countries | Limit/segment | Pages/segment |
 |---|---|---|---|
-| Large | GB, US | 200 | 5 |
-| Medium | CA, AU, DE, FR, ES, IT, MX, NL | 100 | 3 |
-| Small | IE, NZ, SE, DK, NO, FI, PL, AT, CH, CZ, TR, BE, BR, ZA, AE, JP, KR, IN | 50 | 2 |
-| Tiny | HK, MY, IL, AR, CL, PE, GR, HU, BG, IS, EE, LV, LT, LU, MT, AD, GI, FO, BH, GE, AZ, GH, DO, EC, JM, BB, BM, BS, AI, LB | 20 | 1 |
-
-### Page rotation (partially broken)
-
-The cron scans page 0 every day (catches imminent events) plus a window of deeper pages that advances daily. **However**, the TM API returns HTTP 400 for pages beyond ~5, so the rotation only provides variety within those first 5 pages. Segment-based slicing is needed to reach deeper into the catalogue (see TODO below).
+| Large | GB, US | 50 | 5 |
+| Medium | CA, AU, DE, FR, ES, IT, MX, NL | 25 | 3 |
+| Small | IE, NZ, SE, DK, NO, FI, PL, AT, CH, CZ, TR, BE, BR, ZA, AE, JP, KR, IN | 12 | 2 |
+| Tiny | HK, MY, IL, AR, CL, PE, GR, HU, BG, IS, EE, LV, LT, LU, MT, AD, GI, FO, BH, GE, AZ, GH, DO, EC, JM, BB, BM, BS, AI, LB | 5 | 1 |
 
 ### Weekly cron — `cron-ticketmaster-weekly.php`
 
@@ -362,7 +360,7 @@ All imported posts are assigned to member ID **213** (Ticketmaster). The descrip
 ## Known Limitations
 
 ### API pagination cap
-The Discovery API returns HTTP 400 for pages beyond ~5. A single country query can only discover ~200-300 attractions. Segment-based slicing (separate queries for Music, Sports, Arts & Theatre) would triple this but has not been implemented yet.
+The Discovery API returns HTTP 400 for pages beyond ~5. A single query can only discover ~200-300 attractions. This is mitigated by segment-based slicing — each segment (Music, Sports, Arts & Theatre, Film) gets its own 5-page window, multiplying discovery reach by 4×.
 
 ### Description quality
 The TM Discovery API has no dedicated "description" field. The importer uses `info` and `pleaseNote` fields plus venue-level data (box office, accessibility, parking, child rules). For single-venue posts this produces rich descriptions. For multi-venue or events without venue data, descriptions are thin.
@@ -372,10 +370,46 @@ Most events in the TM Discovery API have no `priceRanges` data. Major shows (Pha
 
 ---
 
+## Collection Strategy — Genre-Based Rotation
+
+### Two-tier country system
+
+**Segmented countries (11):** US, GB, CA, AU, DE, MX, FR, ES, IT, NL, JP
+These countries have too many events for a single unsegmented query (exceed the 5-page API cap). They are collected using genre-level rotation — one genre at a time, cycling through all genres over ~30 days.
+
+**Unsegmented countries (47):** Everything else.
+These fit within 5 pages total. During **seeding**, they get a full 5-page scan. After seeding, they drop to **page 1 once a week** for maintenance (47 API calls per week).
+
+### Genre rotation (segmented countries)
+
+The TM API supports `classificationName` as a query parameter for genre-level filtering. Each genre gets up to 5 pages (1,000 events). Zero crossover between genres — each event belongs to exactly one genre.
+
+**Music** (24 genres): Alternative, Ballads/Romantic, Blues, Chanson Francaise, Children's Music, Classical, Country, Dance/Electronic, Folk, Hip-Hop/Rap, Holiday, Jazz, Latin, Medieval/Renaissance, Metal, New Age, Other, Pop, R&B, Reggae, Religious, Rock, Soul, World
+
+**Sports** (~30 genres): Aquatics, Baseball, Basketball, Boxing, Cricket, Cycling, Equestrian, eSports, Extreme Sports, Football, Golf, Gymnastics, Hockey, Ice Skating, Lacrosse, Martial Arts, Motorsports/Racing, Netball, Rodeo, Rugby, Skiing, Soccer, Softball, Surfing, Swimming, Tennis, Track & Field, Volleyball, Wrestling, and others
+
+**Arts & Theatre** (~20 genres): Children's Theatre, Circus & Specialty Acts, Classical, Comedy, Community/Civic, Cultural, Dance, Fashion, Fine Art, Magic & Illusion, Music, Opera, Performance Art, Puppetry, Spectacular, Theatre, Variety
+
+**Film** (~12 genres): Action/Adventure, Animation, Comedy, Documentary, Drama, Family, Foreign, Horror, Music, Sci-Fi/Fantasy, Thriller, Urban
+
+The rotation order will be interleaved across genres so the site gets variety from day one (not 30 days of hip-hop before anything else appears). Each day the cron picks up where it left off — advancing through the genre list per country. When a genre runs dry before 5 pages, it immediately moves to the next genre. Full cycle completes in ~30 days, then starts again (catching newly listed events on the second pass).
+
+### Seeding vs maintenance
+
+**Seeding (first pass):** All countries scanned deep. Segmented countries cycle through all genres over ~30 days. Unsegmented countries get full 5-page scans.
+
+**Maintenance (ongoing):** Segmented countries continue the genre rotation (same cycle). Unsegmented countries drop to page 1 once a week (47 calls/week). Most attractions already in staging — discovery calls mostly find duplicates, detail fetches are skipped.
+
+### Cursor position
+
+The genre rotation cursor (which country, which genre, which page) is tracked in the `tm_staging` table so the cron can resume where it left off each day.
+
+---
+
 ## TODO — Outstanding Work
 
-### Segment-based slicing (HIGH PRIORITY)
-Replace the page rotation system in `cron-ticketmaster-daily.php` with segment-based slicing. Instead of scanning pages 0-4 of "all events", scan pages 0-4 for each segment separately (Music, Sports, Arts & Theatre). This triples discovery reach from ~300 to ~900 attractions per country.
+### Implement genre rotation system
+Build the genre rotation into `tm-collect.php` and `cron-ticketmaster-daily.php` as described above. Requires: `classificationName` parameter on the collector, cursor tracking in `tm_staging`, interleaved genre order, seeding vs maintenance mode.
 
 ### Remove weekly cron from cPanel
 `cron-ticketmaster-weekly.php` is no longer needed. Refresh runs daily as part of the daily cron. Remove the Sunday midnight cron entry.
@@ -395,7 +429,7 @@ The verification meta tag is already in `index.php`:
 
 ---
 
-## Files Modified This Session
+## Files Modified — Session 3 (8 Apr 2026)
 
 | File | Changes |
 |---|---|
@@ -403,3 +437,10 @@ The verification meta tag is already in `index.php`:
 | `tm-refresh.php` | Same `groupDescription()` rewrite. Query fixed: filters expired posts, orders by staleness (`processed_at ASC`), updates `processed_at` after each attraction. Added `max_api` budget ceiling. |
 | `cron-ticketmaster-daily.php` | Added all 58 TM countries. Added page rotation (page 0 + rotating deeper pages). Split limits between invocations to stay within API budget. Added import loop (up to 10 rounds). Added refresh as Phase 3. Added cleanup step for expired staging rows. |
 | `post.css` | `margin-bottom: 20px` added to `.post-description-text`; `margin-top` removed from `.post-description-member` |
+
+## Files Modified — Session 4 (9 Apr 2026)
+
+| File | Changes |
+|---|---|
+| `tm-collect.php` | Added `segment` parameter — passes `segmentName` to the TM Discovery API URL when provided |
+| `cron-ticketmaster-daily.php` | Replaced page rotation with segment-based slicing. Each country now queried 4× (Music, Sports, Arts & Theatre, Film). Limits rebalanced per-segment. |

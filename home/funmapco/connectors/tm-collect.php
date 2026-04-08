@@ -16,6 +16,7 @@
  *   pages      — discovery pages to scan (default: 3, max: 25)
  *   start_page — discovery page offset (default: 0)
  *   size       — events per discovery page (default: 200, max: 200)
+ *   segment    — TM segment name filter (Music, Sports, Arts & Theatre, Film)
  */
 
 declare(strict_types=1);
@@ -89,6 +90,7 @@ $pages          = min(25,  max(1, intval($_GET['pages']      ?? 3)));
 $startPage      = max(0,          intval($_GET['start_page'] ?? 0));
 $size           = min(200, max(1, intval($_GET['size']       ?? 200)));
 $maxAttractions = min(500, max(1, intval($_GET['limit']      ?? 50)));
+$segment        = $_GET['segment'] ?? '';
 
 // ── Excluded segments ───────────────────────────────────────────────────────────
 // Miscellaneous = venue admissions (Sea Life, London Eye, Madame Tussauds, etc.)
@@ -102,7 +104,8 @@ header('Content-Type: text/html; charset=utf-8');
 @ob_end_flush();
 ob_implicit_flush(true);
 echo '<pre>';
-echo "Ticketmaster collector — country={$country}, pages={$pages}, start_page={$startPage}\n";
+echo "Ticketmaster collector — country={$country}, pages={$pages}, start_page={$startPage}"
+    . ($segment ? ", segment={$segment}" : '') . "\n";
 echo "Excluded segments: " . implode(', ', $excludedSegments) . "\n";
 echo str_repeat('─', 72) . "\n\n";
 
@@ -123,14 +126,18 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
         break;
     }
 
-    $url  = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query([
+    $discoveryParams = [
         'apikey'        => $TICKETMASTER_CONSUMER_KEY,
         'countryCode'   => $country,
         'size'          => $size,
         'page'          => $p,
         'sort'          => 'date,asc',
         'startDateTime' => date('Y-m-d') . 'T00:00:00Z',
-    ]);
+    ];
+    if ($segment !== '') {
+        $discoveryParams['segmentName'] = $segment;
+    }
+    $url = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query($discoveryParams);
 
     $data = tmFetch($url);
     if (isset($data['_error'])) {
