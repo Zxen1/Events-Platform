@@ -2393,6 +2393,22 @@ const PostModule = (function() {
       appearanceByKey[item.locationKey] = appearance;
     });
 
+    // If a post is open, its active map card location must always appear as a card.
+    var _openPostEl = null;
+    try { _openPostEl = document.querySelector('.post[data-id]'); } catch (_eOpEl) {}
+    if (_openPostEl) {
+      var _openPostId = _openPostEl.getAttribute('data-id') || '';
+      var _openCardId = _openPostEl.getAttribute('data-post-map-card-id') || '';
+      for (var _opi = 0; _opi < allMarkerData.length; _opi++) {
+        var _opItem = allMarkerData[_opi];
+        if (String(_opItem.id) === _openPostId && String(_opItem.post_map_card_id) === _openCardId) {
+          appearanceByKey[_opItem.locationKey] = 'card';
+          delete dotColorByKey[_opItem.locationKey];
+          break;
+        }
+      }
+    }
+
     // All marker types — assign appearance and build sig/data maps.
     allMarkerData.forEach(function(markerData) {
       markerData.markerAppearance = appearanceByKey[markerData.locationKey] || 'card';

@@ -3102,6 +3102,11 @@ const MapModule = (function() {
       map.getSource(NC_SOURCE).setData({ type: 'FeatureCollection', features: _ncLastFeatures });
     }
 
+    // Set initial visibility to match current zoom threshold
+    var _initZoom = map.getZoom();
+    var _initShow = _initZoom >= getMarkerZoomThreshold();
+    map.setLayoutProperty(NC_LAYER, 'visibility', _initShow ? 'visible' : 'none');
+
     _bindNativeCircleEvents();
   }
 
