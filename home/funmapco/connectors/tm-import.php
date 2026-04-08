@@ -446,19 +446,6 @@ foreach ($groups as $groupKey => $events) {
         $mapCardId = $mysqli->insert_id;
         $stmt->close();
 
-        // post_links — "Get Tickets" button target (skip if no URL)
-        if ($venueTicketUrl) {
-            $linkType = 'tickets';
-            $isActive = 1;
-            $stmt = $mysqli->prepare(
-                "INSERT INTO `post_links` (`post_map_card_id`,`link_type`,`external_url`,`is_active`)
-                 VALUES (?,?,?,?)"
-            );
-            $stmt->bind_param('issi', $mapCardId, $linkType, $venueTicketUrl, $isActive);
-            $stmt->execute();
-            $stmt->close();
-        }
-
         // Sessions + pricing for this venue
         foreach ($vEvts as $i => $event) {
             $gk        = sessionKey($i);
