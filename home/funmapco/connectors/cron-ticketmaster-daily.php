@@ -19,7 +19,7 @@ if (php_sapi_name() !== 'cli') {
 $php = PHP_BINARY;
 $dir = __DIR__;
 
-// ── Cleanup: purge staging rows for expired posts (older than 6 months past expiry) ──
+// ── Cleanup: purge expired staging rows ──────────────────────────────────────
 
 $cleanupCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
     'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
@@ -144,7 +144,18 @@ while (true) {
     echo "{$pending} still pending, importing more...\n\n";
 }
 
-// ── Phase 3: Refresh existing posts (least-recently updated first) ───────────
+// ── Phase 3: Clear event_json from processed rows (no longer needed) ─────────
 
-echo "\n=== TM REFRESH ===\n";
-passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-refresh.php") . ' ' . escapeshellarg('limit=200&max_api=2000'));
+$clearCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
+    'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
+    . '$r = $mysqli->query("UPDATE tm_staging SET event_json = \'\' '
+    . 'WHERE status IN (\'imported\',\'skipped\') AND event_json != \'\'");'
+    . 'echo $mysqli->affected_rows . \" event_json blobs cleared\";'
+);
+echo "\n=== CLEAR JSON ===\n";
+echo trim(shell_exec($clearCmd)) . "\n\n";
+
+// ── Phase 4: Refresh existing posts (least-recently updated first) ───────────
+
+echo "=== TM REFRESH ===\n";
+passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-refresh.php") . ' ' . escapeshellarg('limit=200&max_api=3000'));
