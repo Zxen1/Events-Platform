@@ -12546,7 +12546,9 @@ const PostLocationComponent = (function() {
         html.push('</div>');
 
         var _locCount = locationList.length;
-        html.push('<div class="post-location-count">' + _locCount + ' location' + (_locCount !== 1 ? 's' : '') + '</div>');
+        if (_locCount > 1) {
+            html.push('<div class="post-location-count">' + _locCount + ' locations</div>');
+        }
 
         return html.join('');
     }
@@ -12966,10 +12968,12 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-        // Session count
+        // Session count (hidden when 0 — sessions load asynchronously)
         var _tst = 0;
         sessions.forEach(function(s) { _tst += (s && Array.isArray(s.times)) ? s.times.length : 0; });
-        html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        if (_tst > 0) {
+            html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        }
         // Prompt (directly below session count, above price summary)
         html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         // Ticket container (underneath prompt)
@@ -13136,10 +13140,12 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-        // Session count
+        // Session count (hidden when 0 — sessions load asynchronously)
         var _tst = 0;
         sessions.forEach(function(s) { _tst += (s && Array.isArray(s.times)) ? s.times.length : 0; });
-        html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        if (_tst > 0) {
+            html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        }
         // Prompt (directly below session count, above price summary)
         html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         // Ticket container (underneath prompt)
@@ -14147,6 +14153,18 @@ const PostSessionComponent = (function() {
         ensureSessionsLoaded().then(function() {
             updateSessionButtonText();
             updateTicketContainer();
+            var countEl = wrap.querySelector('.post-session-count');
+            if (countEl && sessionItems) {
+                countEl.textContent = sessionItems.length + ' session' + (sessionItems.length !== 1 ? 's' : '');
+            } else if (!countEl && sessionItems && sessionItems.length > 0) {
+                var el = document.createElement('div');
+                el.className = 'post-session-count';
+                el.textContent = sessionItems.length + ' session' + (sessionItems.length !== 1 ? 's' : '');
+                var prompt = wrap.querySelector('.post-session-ticket-prompt');
+                if (prompt && prompt.parentNode) {
+                    prompt.parentNode.insertBefore(el, prompt);
+                }
+            }
         });
 
         // Initial promo check (before sessions are loaded, use pricing_groups directly)
