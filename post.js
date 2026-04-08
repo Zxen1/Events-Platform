@@ -2364,6 +2364,9 @@ const PostModule = (function() {
 
     var priorityList = firstPass.concat(secondPass);
 
+    // TEMP DEBUG
+    var _cardCount = 0, _iconCount = 0, _dotCount = 0;
+
     // Assign appearance: top MAX_MAP_CARDS become cards, rest become icons or dots.
     // Only the lowest checkout_sort_order can become dots — all others become icons.
     // All are the same map card marker — appearance is CSS only.
@@ -2386,7 +2389,12 @@ const PostModule = (function() {
       }
 
       appearanceByKey[item.locationKey] = appearance;
+      if (appearance === 'card') _cardCount++;
+      else if (appearance === 'icon') _iconCount++;
+      else _dotCount++;
     });
+
+    console.error('[MapCards DEBUG] MAX_MAP_CARDS:', MAX_MAP_CARDS, '| totalLocations:', totalResultCount, '| isHighDensity:', isHighDensity, '| cards:', _cardCount, '| icons:', _iconCount, '| dots:', _dotCount, '| firstPass:', firstPass.length, '| secondPass:', secondPass.length);
 
     // All marker types are the same HTML marker — prepare all for DOM rendering.
     allMarkerData.forEach(function(markerData) {
