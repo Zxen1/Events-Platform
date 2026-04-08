@@ -1560,11 +1560,10 @@
 
 .post-details .post-location-count {
   margin-left: 10px;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   font-size: 13px;
   font-style: italic;
-  color: var(--pl-muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .post-details .post-session-ticket-prompt,
