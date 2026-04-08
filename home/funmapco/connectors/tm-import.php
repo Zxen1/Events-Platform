@@ -173,53 +173,44 @@ if (empty($attractionIds)) {
     die('<pre>No pending events in tm_staging. Run tm-collect.php first.</pre>');
 }
 
-// ── Load ALL rows for each attraction (no partial groups) ───────────────────────
-
-$groups    = [];  // groupKey => [event, ...]
-$rowsByKey = [];  // groupKey => [staging_id, ...]
-
-foreach ($attractionIds as $attId) {
-    $attEsc = $mysqli->real_escape_string($attId);
-    $attRes = $mysqli->query(
-        "SELECT id, tm_event_id, attraction_id, venue_id, event_json
-         FROM tm_staging WHERE attraction_id = '{$attEsc}' AND status = 'pending'
-         ORDER BY id ASC"
-    );
-    while ($row = $attRes->fetch_assoc()) {
-        $row['event'] = json_decode($row['event_json'], true);
-        $key = tmGroupKey($row['event']);
-        $groups[$key][]    = $row['event'];
-        $rowsByKey[$key][] = $row['id'];
-    }
-}
-
-// Sort each group chronologically
-foreach ($groups as $key => &$evts) {
-    usort($evts, fn($a, $b) => strcmp(
-        $a['dates']['start']['localDate'] ?? '',
-        $b['dates']['start']['localDate'] ?? ''
-    ));
-}
-unset($evts);
-
 // ── Output header ──────────────────────────────────────────────────────────────
 
 header('Content-Type: text/html; charset=utf-8');
 @ob_end_flush();
 ob_implicit_flush(true);
 echo '<pre>';
-$totalRows = array_sum(array_map('count', $rowsByKey));
-echo "Ticketmaster import — {$totalRows} staged events → " . count($groups) . " attractions\n";
+echo "Ticketmaster import — " . count($attractionIds) . " attractions to process\n";
 echo str_repeat('─', 72) . "\n\n";
 
 $imported      = 0;
 $skippedGroups = 0;
 
-// ── Process each attraction group ─────────────────────────────────────────────
+// ── Process each attraction one at a time (keeps memory low) ─────────────────
 
-foreach ($groups as $groupKey => $events) {
+foreach ($attractionIds as $attId) {
 
-    $stagingIds = $rowsByKey[$groupKey];
+    // Load rows for this attraction only
+    $events    = [];
+    $stagingIds = [];
+    $attEsc = $mysqli->real_escape_string($attId);
+    $attRes = $mysqli->query(
+        "SELECT id, event_json
+         FROM tm_staging WHERE attraction_id = '{$attEsc}' AND status = 'pending'
+         ORDER BY id ASC"
+    );
+    while ($row = $attRes->fetch_assoc()) {
+        $events[]    = json_decode($row['event_json'], true);
+        $stagingIds[] = $row['id'];
+    }
+    $attRes->free();
+
+    if (empty($events)) continue;
+
+    usort($events, fn($a, $b) => strcmp(
+        $a['dates']['start']['localDate'] ?? '',
+        $b['dates']['start']['localDate'] ?? ''
+    ));
+
     $firstEvent = $events[0];
     $idList     = implode(',', array_map('intval', $stagingIds));
 
