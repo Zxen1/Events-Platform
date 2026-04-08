@@ -2,13 +2,15 @@
 
 ## Overview
 
-Three connector scripts form the pipeline:
+Three connector scripts form the pipeline, all running daily via a single cron orchestrator:
 
-| Script | Location | Purpose | Frequency |
-|---|---|---|---|
-| `tm-collect.php` | `connectors/` | Fetches events from Ticketmaster API → stores raw JSON in `tm_staging` | Daily |
-| `tm-import.php` | `connectors/` | Reads `tm_staging` → creates FunMap posts, map cards, sessions, pricing | Daily |
-| `tm-refresh.php` | `connectors/` | Re-fetches data for already-imported attractions → updates existing posts in place | Weekly |
+| Script | Location | Purpose |
+|---|---|---|
+| `tm-collect.php` | `connectors/` | Fetches events from Ticketmaster API → stores raw JSON in `tm_staging` |
+| `tm-import.php` | `connectors/` | Reads `tm_staging` → creates FunMap posts, map cards, sessions, pricing |
+| `tm-refresh.php` | `connectors/` | Re-fetches data for already-imported attractions → updates existing posts in place |
+
+**Orchestrator:** `cron-ticketmaster-daily.php` runs all three phases daily: cleanup → collect → import → refresh.
 
 The staging table acts as a safe buffer. Nothing appears on the site until `tm-import.php` is run.
 
@@ -48,6 +50,14 @@ All three are registered in `gateway.php` and accessed via:
 1. **Phase 1 — Discovery:** Scans `pages` × `size` events to find attraction IDs.
 2. **Phase 2 — Targeted fetch:** For each new attraction, queries ALL its events across ALL venues (so multi-city tours are complete). Already-collected attractions are skipped automatically.
 
+### API pagination limit (CRITICAL)
+
+The Ticketmaster Discovery API caps deep pagination at approximately **page 5** (~1,200 events). Requesting page 6+ returns HTTP 400. This means a single query for a country can never discover more than ~200-300 attractions.
+
+**Current workaround:** The cron scans page 0 plus a rotating window of deeper pages. This provides some variety but cannot reach beyond page 5.
+
+**TODO — Segment-based slicing:** To reach more attractions, the collector needs to make separate queries per segment (Music, Sports, Arts & Theatre). Each segment gets its own 5-page window, tripling discovery reach. This has NOT been implemented yet.
+
 ### Exclusions
 
 - **Segment "Miscellaneous"** is excluded (venue admissions: Sea Life, London Eye, Madame Tussauds, etc.). These are daily entry tickets, not events.
@@ -62,14 +72,11 @@ gateway.php?action=tm-collect&country=GB&limit=10
 # Standard run — 100 attractions
 gateway.php?action=tm-collect&country=GB&limit=100
 
-# Large run — 500 attractions, 10 pages
-gateway.php?action=tm-collect&country=GB&limit=500&pages=10
+# Large run — 500 attractions, 5 pages (max useful depth)
+gateway.php?action=tm-collect&country=GB&limit=500&pages=5
 
 # US events
 gateway.php?action=tm-collect&country=US&limit=100
-
-# Resume from page 10
-gateway.php?action=tm-collect&country=GB&pages=5&start_page=10
 ```
 
 ### API limits
@@ -96,6 +103,19 @@ Free tier: **5,000 calls/day**. The script pauses 250ms between calls (~4/sec). 
 - Downloads the best image (≥1000px wide) and uploads it to Bunny CDN
 - Writes `post_id` back to all staging rows for the attraction
 - Marks all processed rows as `imported` or `skipped`
+
+### Description enrichment
+
+For **single-venue posts**, the description includes all available venue data from the JSON:
+- Event info (`info` field) and please note (`pleaseNote`)
+- Age/Children rules (`generalInfo.childRule`)
+- General rules (`generalInfo.generalRule`)
+- Accessibility info (`accessibleSeatingDetail`)
+- Box office: hours, phone, payment, collection (`boxOfficeInfo.*`)
+- Parking (`parkingDetail`)
+- Attribution sign-off
+
+For **multi-venue posts** (touring shows), only event-level info is included (venue-specific details would be misleading for a post with 30+ venues).
 
 ### Session keys
 
@@ -142,15 +162,26 @@ gateway.php?action=tm-import&limit=200
 
 | Parameter | Default | Max | Description |
 |---|---|---|---|
-| `limit` | `50` | `200` | Max attractions to refresh per run |
+| `limit` | `200` | `500` | Max attractions to refresh per run |
+| `max_api` | `2000` | `5000` | Hard API call ceiling for this run |
 
 ### How it works
 
-1. Finds imported attractions (those with a `post_id` in `tm_staging`)
-2. Re-fetches all events from the Ticketmaster API for each attraction
-3. Updates `event_json` in staging with fresh data; inserts new events
-4. Compares fresh values against existing post, map card, session, and pricing data
-5. Updates any columns that differ
+1. Finds imported attractions with **active (non-expired) posts** — `posts.expires_at > NOW()`
+2. Orders by **least-recently refreshed first** — `MIN(processed_at) ASC`
+3. Re-fetches all events from the Ticketmaster API for each attraction
+4. Updates `event_json` in staging with fresh data; inserts new events
+5. Compares fresh values against existing post, map card, session, and pricing data
+6. Updates any columns that differ
+7. Updates `processed_at = NOW()` for the attraction's staging rows (pushes it to back of queue)
+8. Stops when `limit` attractions processed OR `max_api` API calls reached
+
+### Cycling behavior
+
+The staleness-based ordering ensures every active post gets refreshed over time:
+- With 2,000 active posts at 200/day → full cycle every 10 days
+- With 30,000 active posts at ~1,500/day → full cycle every 20 days
+- Expired posts are never refreshed (zero wasted API calls)
 
 ### What gets compared and updated
 
@@ -175,12 +206,54 @@ Existing map cards are matched to TM venues by coordinates (latitude/longitude r
 ### Examples
 
 ```
-# Refresh all imported attractions (up to 50)
-gateway.php?action=tm-refresh&limit=50
+# Refresh 5 attractions (testing)
+gateway.php?action=tm-refresh&limit=5
 
-# Large refresh
-gateway.php?action=tm-refresh&limit=200
+# Standard daily run
+gateway.php?action=tm-refresh&limit=200&max_api=2000
 ```
+
+---
+
+## Daily Cron — `cron-ticketmaster-daily.php`
+
+**cPanel cron (daily, 3am):**
+```
+/usr/local/bin/php -q /home/funmapco/public_html/home/funmapco/connectors/cron-ticketmaster-daily.php
+```
+
+### What it does (in order)
+
+1. **Cleanup** — Purges staging rows for posts that expired 6+ months ago (prevents infinite table growth)
+2. **Collect** — Runs `tm-collect.php` for all countries (page 0 + rotating deep pages per country)
+3. **Import** — Runs `tm-import.php` in a loop (up to 10 rounds) until no pending rows remain
+4. **Refresh** — Runs `tm-refresh.php` with `limit=200&max_api=2000`
+
+### API budget (5,000 calls/day)
+
+| Phase | Estimated daily calls | Notes |
+|---|---|---|
+| Collect (all countries) | ~2,000-2,800 | Drops after initial seeding as most attractions are already staged |
+| Import | 0 | No API calls — reads from staging only |
+| Refresh | up to 2,000 | Hard ceiling via `max_api` parameter |
+| **Total** | **~4,800 max** | 200-call buffer for safety |
+
+### Countries collected (58 total)
+
+| Tier | Countries | Limit per country | Pages |
+|---|---|---|---|
+| Large | GB, US | 200 | 5 |
+| Medium | CA, AU, DE, FR, ES, IT, MX, NL | 100 | 3 |
+| Small | IE, NZ, SE, DK, NO, FI, PL, AT, CH, CZ, TR, BE, BR, ZA, AE, JP, KR, IN | 50 | 2 |
+| Tiny | HK, MY, IL, AR, CL, PE, GR, HU, BG, IS, EE, LV, LT, LU, MT, AD, GI, FO, BH, GE, AZ, GH, DO, EC, JM, BB, BM, BS, AI, LB | 20 | 1 |
+
+### Page rotation (partially broken)
+
+The cron scans page 0 every day (catches imminent events) plus a window of deeper pages that advances daily. **However**, the TM API returns HTTP 400 for pages beyond ~5, so the rotation only provides variety within those first 5 pages. Segment-based slicing is needed to reach deeper into the catalogue (see TODO below).
+
+### Weekly cron — `cron-ticketmaster-weekly.php`
+
+**No longer needed.** Refresh is now part of the daily cron. Remove this cron entry from cPanel.
 
 ---
 
@@ -263,23 +336,6 @@ TRUNCATE TABLE tm_staging;
 
 ---
 
-## Daily Cron Job (Recommended Setup)
-
-Run collect and import daily. Run refresh weekly. Suggested sequence:
-
-**Daily (3am):**
-1. Collect new events for each target country
-2. Import pending events
-
-**Weekly (Sunday 3am):**
-3. Refresh existing posts
-
-Ask your host to set up PHP CLI cron jobs pointing to the gateway URLs. Suggested schedule: **3am** (low traffic, API quota resets at midnight UTC).
-
-Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
-
----
-
 ## Subcategory Mapping
 
 | Ticketmaster Segment | FunMap Subcategory |
@@ -295,17 +351,34 @@ Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 
 ## Attribution
 
-All imported posts are assigned to member ID **213** (Ticketmaster). The description of every post ends with "Powered by Ticketmaster" as required by Ticketmaster's API terms.
+All imported posts are assigned to member ID **213** (Ticketmaster). The description of every post ends with:
+
+> Powered by Ticketmaster
+>
+> Click the Get Tickets button for full event details, pricing, and availability.
 
 ---
 
 ## Known Limitations
 
+### API pagination cap
+The Discovery API returns HTTP 400 for pages beyond ~5. A single country query can only discover ~200-300 attractions. Segment-based slicing (separate queries for Music, Sports, Arts & Theatre) would triple this but has not been implemented yet.
+
 ### Description quality
-The TM Discovery API has no dedicated "description" field. The importer uses `info` and `pleaseNote` fields, which venues fill with whatever they want — sometimes show details, sometimes bag policies or age restrictions. There is no reliable way to filter these automatically.
+The TM Discovery API has no dedicated "description" field. The importer uses `info` and `pleaseNote` fields plus venue-level data (box office, accessibility, parking, child rules). For single-venue posts this produces rich descriptions. For multi-venue or events without venue data, descriptions are thin.
 
 ### Pricing data is sparse
 Most events in the TM Discovery API have no `priceRanges` data. Major shows (Phantom, Wicked, Lion King) often return no pricing. Events without pricing are imported normally — the pricing section is empty on the frontend.
+
+---
+
+## TODO — Outstanding Work
+
+### Segment-based slicing (HIGH PRIORITY)
+Replace the page rotation system in `cron-ticketmaster-daily.php` with segment-based slicing. Instead of scanning pages 0-4 of "all events", scan pages 0-4 for each segment separately (Music, Sports, Arts & Theatre). This triples discovery reach from ~300 to ~900 attractions per country.
+
+### Remove weekly cron from cPanel
+`cron-ticketmaster-weekly.php` is no longer needed. Refresh runs daily as part of the daily cron. Remove the Sunday midnight cron entry.
 
 ---
 
@@ -319,3 +392,14 @@ The verification meta tag is already in `index.php`:
 ```html
 <meta name="impact-site-verification" value="8b1854e8-4501-4440-8c23-bb7fda5cdeba">
 ```
+
+---
+
+## Files Modified This Session
+
+| File | Changes |
+|---|---|
+| `tm-import.php` | `groupDescription()` rewritten to extract venue details (box office, accessibility, parking, child rules) for single-venue posts |
+| `tm-refresh.php` | Same `groupDescription()` rewrite. Query fixed: filters expired posts, orders by staleness (`processed_at ASC`), updates `processed_at` after each attraction. Added `max_api` budget ceiling. |
+| `cron-ticketmaster-daily.php` | Added all 58 TM countries. Added page rotation (page 0 + rotating deeper pages). Split limits between invocations to stay within API budget. Added import loop (up to 10 rounds). Added refresh as Phase 3. Added cleanup step for expired staging rows. |
+| `post.css` | `margin-bottom: 20px` added to `.post-description-text`; `margin-top` removed from `.post-description-member` |
