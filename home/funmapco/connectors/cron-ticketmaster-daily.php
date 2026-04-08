@@ -83,10 +83,26 @@ $countries = [
     'LB' => ['limit' => 20, 'pages' => 1],
 ];
 
+$dayIndex = (int) date('z'); // 0-365
+
 foreach ($countries as $code => $params) {
-    echo "=== TM COLLECT — {$code} ===\n";
-    $qs = "country={$code}&limit={$params['limit']}&pages={$params['pages']}";
-    passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-collect.php") . ' ' . escapeshellarg($qs));
+    $pages = $params['pages'];
+
+    // Always scan page 0, plus rotate through deeper pages.
+    // Rotation pages advance daily based on day-of-year.
+    $rotatePages = max(1, $pages - 1);
+    $startPage   = ($dayIndex * $rotatePages) + 1;
+
+    echo "=== TM COLLECT — {$code} (page 0 + {$rotatePages} from page {$startPage}) ===\n";
+
+    // Page 0 scan
+    $qs0 = "country={$code}&limit={$params['limit']}&pages=1&start_page=0";
+    passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-collect.php") . ' ' . escapeshellarg($qs0));
+
+    // Rotating deep scan
+    $qsR = "country={$code}&limit={$params['limit']}&pages={$rotatePages}&start_page={$startPage}";
+    passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-collect.php") . ' ' . escapeshellarg($qsR));
+
     echo "\n";
 }
 
