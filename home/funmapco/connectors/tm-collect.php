@@ -6,13 +6,13 @@
  * Phase 2: For each new attraction, queries ALL its events across ALL venues
  *          so that tm-import.php always has the complete picture for each act.
  *
- * Events with no attraction ID are stored directly from the discovery page.
+ * Events with no attraction ID are ignored.
+ * Segment "Miscellaneous" (venue admissions) is excluded.
  * Already-collected attractions are skipped (checked against tm_staging).
- *
- * Run: Agent/tm-collect.php?country=GB&pages=3&start_page=0
  *
  * Parameters:
  *   country    — ISO country code (default: GB)
+ *   limit      — max attractions to fetch (default: 50, max: 500)
  *   pages      — discovery pages to scan (default: 3, max: 25)
  *   start_page — discovery page offset (default: 0)
  *   size       — events per discovery page (default: 200, max: 200)
@@ -47,15 +47,16 @@ $mysqli->set_charset('utf8mb4');
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function tmFetch(string $url): ?array {
+function tmFetch(string $url): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30]);
     $resp     = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    if ($httpCode === 429) { echo "RATE LIMIT hit — stop.\n"; return null; }
-    if ($httpCode !== 200 || !$resp) { echo "ERROR: HTTP {$httpCode}\n"; return null; }
-    return json_decode($resp, true);
+    if ($httpCode === 429) return ['_error' => 'rate_limit'];
+    if ($httpCode !== 200 || !$resp) return ['_error' => 'http_' . $httpCode];
+    $decoded = json_decode($resp, true);
+    return is_array($decoded) ? $decoded : ['_error' => 'bad_json'];
 }
 
 function stageEvents(mysqli $db, array $events): array {
@@ -126,7 +127,10 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
     ]);
 
     $data = tmFetch($url);
-    if ($data === null) break;
+    if (isset($data['_error'])) {
+        echo "Phase 1 error: {$data['_error']} — stopping discovery.\n";
+        break;
+    }
     $apiCalls++;
 
     if ($totalPages === null) {
@@ -138,7 +142,7 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
     $events = $data['_embedded']['events'] ?? [];
     if (empty($events)) { echo "Page {$p}: empty.\n"; break; }
 
-    // Collect attraction IDs from this page; store no-attraction events directly
+    // Collect attraction IDs from this page (skip excluded segments and no-ID events)
     $excludedCount = 0;
     foreach ($events as $event) {
         $segment = $event['classifications'][0]['segment']['name'] ?? '';
@@ -198,7 +202,15 @@ foreach ($discoveredAttractions as $attractionId => $_) {
         $url = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query($baseParams);
 
         $data = tmFetch($url);
-        if ($data === null) break 2; // rate limit — stop entirely
+        if (isset($data['_error'])) {
+            if ($data['_error'] === 'rate_limit') {
+                echo "RATE LIMIT — stopping entirely.\n";
+                break 2;
+            }
+            echo "WARN [{$attractionId}] — {$data['_error']} on page {$page}, skipping attraction\n";
+            $allEvents = [];
+            break;
+        }
         $apiCalls++;
 
         $events = $data['_embedded']['events'] ?? [];

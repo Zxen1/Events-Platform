@@ -6,8 +6,6 @@
  * One map card per venue within that attraction.
  * One session row per performance at that venue.
  *
- * Run: Agent/tm-import.php?limit=2000
- *
  * Parameters:
  *   limit — max attractions to process per run (default: 50, max: 200)
  */
@@ -53,16 +51,8 @@ const GENRE_OVERRIDES = [
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/**
- * Grouping key: by attraction_id alone (all venues = one post).
- * For events with no attraction_id, fall back to title_hash + venue_id.
- */
 function tmGroupKey(array $event): string {
-    $attractionId = $event['_embedded']['attractions'][0]['id'] ?? null;
-    if ($attractionId) return 'A_' . $attractionId;
-    $slug    = strtolower(preg_replace('/[^a-z0-9]/i', '', $event['name'] ?? ''));
-    $venueId = $event['_embedded']['venues'][0]['id'] ?? 'nv';
-    return 'T_' . md5($slug) . '_' . $venueId;
+    return 'A_' . ($event['_embedded']['attractions'][0]['id'] ?? 'unknown');
 }
 
 /**
@@ -179,17 +169,7 @@ while ($row = $res->fetch_assoc()) {
     $attractionIds[] = $row['attraction_id'];
 }
 
-$noAttractionRes = $mysqli->query(
-    "SELECT DISTINCT tm_event_id FROM tm_staging
-     WHERE status = 'pending' AND attraction_id IS NULL
-     ORDER BY id ASC LIMIT {$limit}"
-);
-$standaloneIds = [];
-while ($row = $noAttractionRes->fetch_assoc()) {
-    $standaloneIds[] = $row['tm_event_id'];
-}
-
-if (empty($attractionIds) && empty($standaloneIds)) {
+if (empty($attractionIds)) {
     die('<pre>No pending events in tm_staging. Run tm-collect.php first.</pre>');
 }
 
@@ -206,22 +186,6 @@ foreach ($attractionIds as $attId) {
          ORDER BY id ASC"
     );
     while ($row = $attRes->fetch_assoc()) {
-        $row['event'] = json_decode($row['event_json'], true);
-        $key = tmGroupKey($row['event']);
-        $groups[$key][]    = $row['event'];
-        $rowsByKey[$key][] = $row['id'];
-    }
-}
-
-foreach ($standaloneIds as $tmEvtId) {
-    $tmEsc = $mysqli->real_escape_string($tmEvtId);
-    $stRes = $mysqli->query(
-        "SELECT id, tm_event_id, attraction_id, venue_id, event_json
-         FROM tm_staging WHERE tm_event_id = '{$tmEsc}' AND status = 'pending'
-         LIMIT 1"
-    );
-    $row = $stRes->fetch_assoc();
-    if ($row) {
         $row['event'] = json_decode($row['event_json'], true);
         $key = tmGroupKey($row['event']);
         $groups[$key][]    = $row['event'];
