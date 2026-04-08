@@ -16,6 +16,10 @@
 
 declare(strict_types=1);
 
+if (php_sapi_name() === 'cli' && isset($argv[1])) {
+    parse_str($argv[1], $_GET);
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 $configDbCandidates = [
