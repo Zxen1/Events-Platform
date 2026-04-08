@@ -59,6 +59,8 @@ $map = [
   'payment-order' => $connectorDir . '/payment-order.php',
   'send-verification-code' => $connectorDir . '/send-verification-code.php',
   'verify-email-code' => $connectorDir . '/verify-email-code.php',
+  'tm-collect' => $connectorDir . '/tm-collect.php',
+  'tm-import' => $connectorDir . '/tm-import.php',
 ];
 
 if (!$action || !isset($map[$action])) {
