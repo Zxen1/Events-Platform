@@ -2,20 +2,27 @@
 
 ## Overview
 
-Two connector scripts form a two-phase pipeline:
+Three connector scripts form the pipeline:
 
-| Script | Location | Purpose |
-|---|---|---|
-| `tm-collect.php` | `connectors/` | Fetches events from Ticketmaster API → stores raw JSON in `tm_staging` |
-| `tm-import.php` | `connectors/` | Reads `tm_staging` → creates FunMap posts, map cards, sessions, pricing |
+| Script | Location | Purpose | Frequency |
+|---|---|---|---|
+| `tm-collect.php` | `connectors/` | Fetches events from Ticketmaster API → stores raw JSON in `tm_staging` | Daily |
+| `tm-import.php` | `connectors/` | Reads `tm_staging` → creates FunMap posts, map cards, sessions, pricing | Daily |
+| `tm-refresh.php` | `connectors/` | Re-fetches data for already-imported attractions → updates existing posts in place | Weekly |
 
 The staging table acts as a safe buffer. Nothing appears on the site until `tm-import.php` is run.
+
+All three are registered in `gateway.php` and accessed via:
+- `gateway.php?action=tm-collect`
+- `gateway.php?action=tm-import`
+- `gateway.php?action=tm-refresh`
 
 ---
 
 ## Prerequisites
 
 - `tm_staging` table exists in the database ✓
+- `tm_staging` has `post_id` column (INT UNSIGNED, after `status`) ✓
 - `$TICKETMASTER_CONSUMER_KEY` is set in `config-app.php` ✓
 - Ticketmaster member account exists (ID 213, username: Ticketmaster) ✓
 - Bunny CDN credentials are in `admin_settings` (`storage_api_key`, `storage_zone_name`, `folder_post_images`) ✓
@@ -24,13 +31,14 @@ The staging table acts as a safe buffer. Nothing appears on the site until `tm-i
 
 ## Phase 1 — Collecting Events
 
-**URL:** `connectors/tm-collect.php`
+**URL:** `gateway.php?action=tm-collect`
 
 ### Parameters
 
 | Parameter | Default | Max | Description |
 |---|---|---|---|
 | `country` | `GB` | — | ISO country code (GB, US, AU, CA, IE, etc.) |
+| `limit` | `50` | `500` | Max attractions to fetch (only successfully staged ones count) |
 | `pages` | `3` | `25` | Number of discovery pages to scan |
 | `start_page` | `0` | — | Discovery page offset (for resuming) |
 | `size` | `200` | `200` | Events per discovery page |
@@ -39,39 +47,46 @@ The staging table acts as a safe buffer. Nothing appears on the site until `tm-i
 
 1. **Phase 1 — Discovery:** Scans `pages` × `size` events to find attraction IDs.
 2. **Phase 2 — Targeted fetch:** For each new attraction, queries ALL its events across ALL venues (so multi-city tours are complete). Already-collected attractions are skipped automatically.
-3. Events with no attraction ID are stored directly from the discovery page.
+
+### Exclusions
+
+- **Segment "Miscellaneous"** is excluded (venue admissions: Sea Life, London Eye, Madame Tussauds, etc.). These are daily entry tickets, not events.
+- **Events with no attraction ID** are ignored (cannot be grouped into posts).
 
 ### Examples
 
 ```
-# Small test — 1 page of GB events
-tm-collect.php?country=GB&pages=1
+# Small test — 3 pages, up to 10 attractions
+gateway.php?action=tm-collect&country=GB&limit=10
 
-# Full GB collection — 5 pages
-tm-collect.php?country=GB&pages=5
+# Standard run — 100 attractions
+gateway.php?action=tm-collect&country=GB&limit=100
+
+# Large run — 500 attractions, 10 pages
+gateway.php?action=tm-collect&country=GB&limit=500&pages=10
 
 # US events
-tm-collect.php?country=US&pages=3
+gateway.php?action=tm-collect&country=US&limit=100
 
 # Resume from page 10
-tm-collect.php?country=GB&pages=5&start_page=10
+gateway.php?action=tm-collect&country=GB&pages=5&start_page=10
 ```
 
 ### API limits
 
-Free tier: **5,000 calls/day**. The script pauses 250ms between calls (~4/sec). Each run uses approximately `pages + (new attractions found)` API calls. Monitor usage via the Ticketmaster developer portal.
+Free tier: **5,000 calls/day**. The script pauses 250ms between calls (~4/sec). Each run uses approximately `pages + (new attractions found)` API calls. HTTP errors skip the bad attraction and continue — only rate limits (429) stop the run.
 
 ---
 
 ## Phase 2 — Importing to Posts
 
-**URL:** `connectors/tm-import.php`
+**URL:** `gateway.php?action=tm-import`
 
 ### Parameters
 
 | Parameter | Default | Max | Description |
 |---|---|---|---|
-| `limit` | `2000` | `5000` | Max staging rows to process per run |
+| `limit` | `50` | `200` | Max **attractions** to process per run (each attraction loads ALL its staging rows — no partial posts) |
 
 ### How it works
 
@@ -79,8 +94,12 @@ Free tier: **5,000 calls/day**. The script pauses 250ms between calls (~4/sec). 
 - Sub-groups by **venue** (one map card per venue/city)
 - Each map card gets its own sessions and pricing
 - Downloads the best image (≥1000px wide) and uploads it to Bunny CDN
+- Writes `post_id` back to all staging rows for the attraction
 - Marks all processed rows as `imported` or `skipped`
-- Phase 2 of `tm-collect.php` paginates per-attraction fetches (200 events per page, loops until all pages fetched)
+
+### Session keys
+
+Each session at a venue gets a ticket group key: A, B, C … Z, AA, AB … ZZ. Supports up to 702 sessions per venue — sufficient for long-running shows.
 
 ### Pricing tiers
 
@@ -96,20 +115,71 @@ Each TM event's `priceRanges` array produces pricing rows per seating area:
 |---|---|
 | No venue coordinates | `no venues with coordinates` |
 | No image ≥ 1000px wide | `no qualifying image` |
-| No price data at all | `no price data` |
 | Already imported | `already imported` |
+
+**Note:** There is no price gate. Events without pricing are imported normally — the pricing section is simply empty.
 
 ### Examples
 
 ```
-# Test run — 100 events (2–10 posts depending on session count)
-tm-import.php?limit=100
+# Test run — 3 attractions
+gateway.php?action=tm-import&limit=3
 
-# Full run
-tm-import.php?limit=2000
+# Standard run
+gateway.php?action=tm-import&limit=50
 
-# Run again to continue if events remain
-tm-import.php?limit=2000
+# Run again to continue if attractions remain
+gateway.php?action=tm-import&limit=200
+```
+
+---
+
+## Phase 3 — Refreshing Existing Posts
+
+**URL:** `gateway.php?action=tm-refresh`
+
+### Parameters
+
+| Parameter | Default | Max | Description |
+|---|---|---|---|
+| `limit` | `50` | `200` | Max attractions to refresh per run |
+
+### How it works
+
+1. Finds imported attractions (those with a `post_id` in `tm_staging`)
+2. Re-fetches all events from the Ticketmaster API for each attraction
+3. Updates `event_json` in staging with fresh data; inserts new events
+4. Compares fresh values against existing post, map card, session, and pricing data
+5. Updates any columns that differ
+
+### What gets compared and updated
+
+| Level | Columns compared |
+|---|---|
+| **Post** | `subcategory_key`, `loc_qty`, `loc_paid`, `expires_at` |
+| **Map card** | `subcategory_key`, `title`, `description`, `venue_name`, `address_line`, `city`, `state`, `postcode`, `country_name`, `country_code`, `timezone`, `ticket_url`, `session_summary`, `price_summary` |
+| **Sessions** | Fully replaced per map card (delete + re-insert) |
+| **Pricing** | Fully replaced per map card (delete + re-insert) |
+
+### What is never changed
+
+- Post IDs (URLs and external links preserved)
+- Map card IDs (bookmarks/favorites preserved)
+- Post images (no re-upload on refresh)
+- `post_key` (URL slug stays the same)
+
+### Map card matching
+
+Existing map cards are matched to TM venues by coordinates (latitude/longitude rounded to 4 decimal places, ~11m precision). Unmatched venues get new map cards inserted.
+
+### Examples
+
+```
+# Refresh all imported attractions (up to 50)
+gateway.php?action=tm-refresh&limit=50
+
+# Large refresh
+gateway.php?action=tm-refresh&limit=200
 ```
 
 ---
@@ -170,7 +240,7 @@ The system uses this at two levels to guarantee no event is ever collected or im
 
 ### ⚠️ The staging table must NEVER be truncated between runs
 
-`tm_staging` is a **permanent deduplication log**, not a temporary buffer. Imported rows must remain in the table with `status = 'imported'` indefinitely. They are the only record the system has of what has already been collected and imported.
+`tm_staging` is a **permanent deduplication log**, not a temporary buffer. Imported rows must remain in the table with `status = 'imported'` indefinitely. They are the only record the system has of what has already been collected and imported. The `post_id` column links each attraction back to the post it became.
 
 If you truncate `tm_staging` without also deleting all imported posts:
 - The collector will re-collect everything from scratch
@@ -195,12 +265,16 @@ TRUNCATE TABLE tm_staging;
 
 ## Daily Cron Job (Recommended Setup)
 
-Run both scripts daily to keep events fresh. Suggested sequence:
+Run collect and import daily. Run refresh weekly. Suggested sequence:
 
+**Daily (3am):**
 1. Collect new events for each target country
 2. Import pending events
 
-Ask your host to set up PHP CLI cron jobs pointing to the connector files. Suggested schedule: **3am daily** (low traffic, API quota resets at midnight UTC).
+**Weekly (Sunday 3am):**
+3. Refresh existing posts
+
+Ask your host to set up PHP CLI cron jobs pointing to the gateway URLs. Suggested schedule: **3am** (low traffic, API quota resets at midnight UTC).
 
 Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 
@@ -214,14 +288,24 @@ Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 | Sports | `live-sport` |
 | Arts & Theatre | `performing-arts` |
 | Film | `cinema` |
-| Miscellaneous | `other-events` |
-| Genre = Festival / Festivals | `festivals` |
+| Miscellaneous | excluded at collection (venue admissions) |
+| Genre = Festival / Festivals | `festivals` (overrides segment) |
 
 ---
 
 ## Attribution
 
 All imported posts are assigned to member ID **213** (Ticketmaster). The description of every post ends with "Powered by Ticketmaster" as required by Ticketmaster's API terms.
+
+---
+
+## Known Limitations
+
+### Description quality
+The TM Discovery API has no dedicated "description" field. The importer uses `info` and `pleaseNote` fields, which venues fill with whatever they want — sometimes show details, sometimes bag policies or age restrictions. There is no reliable way to filter these automatically.
+
+### Pricing data is sparse
+Most events in the TM Discovery API have no `priceRanges` data. Major shows (Phantom, Wicked, Lion King) often return no pricing. Events without pricing are imported normally — the pricing section is empty on the frontend.
 
 ---
 
