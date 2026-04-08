@@ -43,7 +43,7 @@ $mysqli->set_charset('utf8mb4');
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const TM_ATTRIBUTION  = 'Powered by Ticketmaster';
+const TM_ATTRIBUTION  = "Powered by Ticketmaster\n\nClick the Get Tickets button for full event details, pricing, and availability.";
 const COORD_PRECISION = 4;
 
 const SEGMENT_MAP = [

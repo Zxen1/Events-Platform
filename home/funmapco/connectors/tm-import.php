@@ -33,7 +33,7 @@ $mysqli->set_charset('utf8mb4');
 const TM_MEMBER_ID   = 213;
 const TM_MEMBER_ROLE = 'member';
 const TM_MEMBER_NAME = 'Ticketmaster';
-const TM_ATTRIBUTION = 'Powered by Ticketmaster';
+const TM_ATTRIBUTION = "Powered by Ticketmaster\n\nClick the Get Tickets button for full event details, pricing, and availability.";
 const MIN_IMAGE_WIDTH = 1000;
 
 const SEGMENT_MAP = [
