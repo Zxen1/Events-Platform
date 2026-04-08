@@ -2364,12 +2364,17 @@ const MapModule = (function() {
    */
   function updateMarkersVisibility(zoom) {
     const shouldShow = zoom >= getMarkerZoomThreshold();
-    
+
     mapCardMarkers.forEach((entry) => {
       if (entry.element) {
         entry.element.style.display = shouldShow ? '' : 'none';
       }
     });
+
+    // Native circle layer follows the same zoom threshold as DOM markers
+    if (map && map.getLayer(NC_LAYER)) {
+      map.setLayoutProperty(NC_LAYER, 'visibility', shouldShow ? 'visible' : 'none');
+    }
   }
 
   /**
@@ -3087,7 +3092,8 @@ const MapModule = (function() {
           'rgba(255,255,255,0.85)',
           'rgba(0,0,0,0.35)'
         ],
-        'circle-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 1, 0.88]
+        'circle-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 1, 0.88],
+        'circle-emissive-strength': 1
       }
     });
 
