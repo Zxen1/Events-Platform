@@ -239,7 +239,6 @@ foreach ($discoveredAttractions as $attractionId => $_) {
     }
     if (!$hasPrice) {
         echo "SKIP [{$attractionId}] {$attractionName} — no price data\n";
-        $attractionsHit++;
         usleep(250000);
         continue;
     }
