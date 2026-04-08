@@ -1114,6 +1114,15 @@ const MapModule = (function() {
           console.warn('[Map] Initial lighting failed:', e);
         }
       }
+
+      // TEST: Disable 3D buildings to measure performance impact
+      try {
+        if (typeof map.setConfigProperty === 'function') {
+          map.setConfigProperty('basemap', 'show3dObjects', false);
+        }
+      } catch (e) {
+        console.warn('[Map] Disabling 3D objects failed:', e);
+      }
       
       // Start spin immediately (while tiles are still loading)
       // This way the map appears already spinning when first visible
