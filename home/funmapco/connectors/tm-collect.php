@@ -84,11 +84,18 @@ $pages     = min(25,  max(1, intval($_GET['pages']      ?? 3)));
 $startPage = max(0,          intval($_GET['start_page'] ?? 0));
 $size      = min(200, max(1, intval($_GET['size']       ?? 200)));
 
+// ── Excluded segments ───────────────────────────────────────────────────────────
+// Miscellaneous = venue admissions (Sea Life, London Eye, Madame Tussauds, etc.)
+// These are daily entry tickets, not events. Excluded from discovery.
+
+$excludedSegments = ['Miscellaneous'];
+
 // ── Output ─────────────────────────────────────────────────────────────────────
 
 header('Content-Type: text/html; charset=utf-8');
 echo '<pre>';
 echo "Ticketmaster collector — country={$country}, pages={$pages}, start_page={$startPage}\n";
+echo "Excluded segments: " . implode(', ', $excludedSegments) . "\n";
 echo str_repeat('─', 72) . "\n\n";
 
 $apiCalls        = 0;
@@ -131,26 +138,22 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
     if (empty($events)) { echo "Page {$p}: empty.\n"; break; }
 
     // Collect attraction IDs from this page; store no-attraction events directly
-    $noAttractionEvents = [];
+    $excludedCount = 0;
     foreach ($events as $event) {
+        $segment = $event['classifications'][0]['segment']['name'] ?? '';
+        if (in_array($segment, $excludedSegments, true)) {
+            $excludedCount++;
+            continue;
+        }
         $attractionId = $event['_embedded']['attractions'][0]['id'] ?? null;
         if ($attractionId) {
             $discoveredAttractions[$attractionId] = true;
-        } else {
-            $noAttractionEvents[] = $event;
         }
     }
 
-    // Stage no-attraction events immediately
-    if ($noAttractionEvents) {
-        $r = stageEvents($mysqli, $noAttractionEvents);
-        $totalNew += $r['new'];
-        $totalDup += $r['dup'];
-        echo "Page {$p}: {$r['new']} standalone events staged (no attraction ID)\n";
-    } else {
-        echo "Page {$p}: scanned — " . count($events) . " events, "
-            . count($discoveredAttractions) . " attractions found so far\n";
-    }
+    echo "Page {$p}: scanned — " . count($events) . " events, "
+        . count($discoveredAttractions) . " attractions found so far"
+        . ($excludedCount ? ", {$excludedCount} excluded (Miscellaneous)" : "") . "\n";
 
     if ($p < $startPage + $pages - 1) usleep(250000);
 }
