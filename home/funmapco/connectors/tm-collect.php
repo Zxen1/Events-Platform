@@ -79,10 +79,11 @@ function stageEvents(mysqli $db, array $events): array {
 
 // ── Parameters ─────────────────────────────────────────────────────────────────
 
-$country   = preg_replace('/[^A-Z]/', '', strtoupper($_GET['country']    ?? 'GB'));
-$pages     = min(25,  max(1, intval($_GET['pages']      ?? 3)));
-$startPage = max(0,          intval($_GET['start_page'] ?? 0));
-$size      = min(200, max(1, intval($_GET['size']       ?? 200)));
+$country        = preg_replace('/[^A-Z]/', '', strtoupper($_GET['country']    ?? 'GB'));
+$pages          = min(25,  max(1, intval($_GET['pages']      ?? 3)));
+$startPage      = max(0,          intval($_GET['start_page'] ?? 0));
+$size           = min(200, max(1, intval($_GET['size']       ?? 200)));
+$maxAttractions = min(500, max(1, intval($_GET['limit']      ?? 50)));
 
 // ── Excluded segments ───────────────────────────────────────────────────────────
 // Miscellaneous = venue admissions (Sea Life, London Eye, Madame Tussauds, etc.)
@@ -165,6 +166,11 @@ echo "Phase 2: Fetching all events per attraction...\n\n";
 // ── Phase 2: Targeted fetch per attraction ─────────────────────────────────────
 
 foreach ($discoveredAttractions as $attractionId => $_) {
+
+    if ($attractionsHit >= $maxAttractions) {
+        echo "Reached attraction limit ({$maxAttractions}).\n";
+        break;
+    }
 
     // Skip if this attraction is already in staging (previously collected)
     $attEsc = $mysqli->real_escape_string($attractionId);
