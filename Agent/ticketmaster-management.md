@@ -229,7 +229,7 @@ All imported posts are assigned to member ID **213** (Ticketmaster). The descrip
 
 The site owner has applied for the Ticketmaster affiliate program via **Impact** (their tracking/payment partner). Status: under review (applied 8 Apr 2026, estimated 10-day review).
 
-Once approved, the Impact Publisher ID must be embedded into ticket URLs in `tm-import.php` before running the cron. This ensures commission tracking on all outbound ticket links from day one. Do NOT run bulk imports until the affiliate ID is integrated.
+Once approved, the Impact Publisher ID should be embedded into ticket URLs in `tm-import.php` for commission tracking on outbound ticket links. The site owner decides whether to wait for approval or proceed with imports beforehand.
 
 The verification meta tag is already in `index.php`:
 ```html
