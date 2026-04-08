@@ -80,6 +80,15 @@ Free tier: **5,000 calls/day**. The script pauses 250ms between calls (~4/sec). 
 - Each map card gets its own sessions and pricing
 - Downloads the best image (≥1000px wide) and uploads it to Bunny CDN
 - Marks all processed rows as `imported` or `skipped`
+- Phase 2 of `tm-collect.php` paginates per-attraction fetches (200 events per page, loops until all pages fetched)
+
+### Pricing tiers
+
+Each TM event's `priceRanges` array produces pricing rows per seating area:
+- `ticket_area` = TM's `type` field, title-cased (e.g. "Standard", "Vip"). NULL if no type (general admission).
+- `allocated_areas` = `1` if named area, `0` if general admission. Frontend shows "General Admission" when `0`.
+- `pricing_tier` = `"From"` (minimum price) and `"To"` (maximum price, only if different from min).
+- Member-created posts use their own descriptive tier names (e.g. "Adult", "Child"). "From"/"To" is TM-import only.
 
 ### Quality gates — events are skipped if:
 
@@ -213,3 +222,16 @@ Target countries to rotate through daily: GB, US, AU, CA, IE, NZ
 ## Attribution
 
 All imported posts are assigned to member ID **213** (Ticketmaster). The description of every post ends with "Powered by Ticketmaster" as required by Ticketmaster's API terms.
+
+---
+
+## Affiliate Program
+
+The site owner has applied for the Ticketmaster affiliate program via **Impact** (their tracking/payment partner). Status: under review (applied 8 Apr 2026, estimated 10-day review).
+
+Once approved, the Impact Publisher ID must be embedded into ticket URLs in `tm-import.php` before running the cron. This ensures commission tracking on all outbound ticket links from day one. Do NOT run bulk imports until the affiliate ID is integrated.
+
+The verification meta tag is already in `index.php`:
+```html
+<meta name="impact-site-verification" value="8b1854e8-4501-4440-8c23-bb7fda5cdeba">
+```
