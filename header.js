@@ -113,8 +113,9 @@ const HeaderModule = (function() {
 
         // Category/subcategory toggles also affect orange icon state (any toggle OFF = orange).
         var hasCategoryOff = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
+        var hasSolo = !!(st.solo && Array.isArray(st.solo) && st.solo.length > 0);
 
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasAmenities || hasCategoryOff;
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasAmenities || hasCategoryOff || hasSolo;
     }
     
     function setHeaderFilterIconActive(active) {
