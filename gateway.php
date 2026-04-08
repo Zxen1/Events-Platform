@@ -61,6 +61,7 @@ $map = [
   'verify-email-code' => $connectorDir . '/verify-email-code.php',
   'tm-collect' => $connectorDir . '/tm-collect.php',
   'tm-import' => $connectorDir . '/tm-import.php',
+  'tm-refresh' => $connectorDir . '/tm-refresh.php',
 ];
 
 if (!$action || !isset($map[$action])) {

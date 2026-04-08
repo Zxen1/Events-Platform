@@ -493,7 +493,7 @@ foreach ($groups as $groupKey => $events) {
     // ── Mark all staging rows for this attraction as imported ──────────────────
 
     $mysqli->query(
-        "UPDATE tm_staging SET status='imported', processed_at=NOW() WHERE id IN ({$idList})"
+        "UPDATE tm_staging SET status='imported', post_id={$postId}, processed_at=NOW() WHERE id IN ({$idList})"
     );
 
     $venueCount = count($validVenueGroups);
