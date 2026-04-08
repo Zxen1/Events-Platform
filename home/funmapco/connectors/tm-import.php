@@ -274,18 +274,6 @@ foreach ($groups as $groupKey => $events) {
         continue;
     }
 
-    // ── Gate: at least one event must have price data ──────────────────────────
-
-    $hasPrice = false;
-    foreach ($events as $e) {
-        if (!empty($e['priceRanges'])) { $hasPrice = true; break; }
-    }
-    if (!$hasPrice) {
-        $skip('no price data');
-        echo "SKIP [{$firstEvent['name']}] — no price data\n";
-        continue;
-    }
-
     // ── Deduplication ─────────────────────────────────────────────────────────
 
     $attractionId = $firstEvent['_embedded']['attractions'][0]['id'] ?? null;
