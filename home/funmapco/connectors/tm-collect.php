@@ -233,6 +233,17 @@ foreach ($discoveredAttractions as $attractionId => $_) {
         continue;
     }
 
+    $hasPrice = false;
+    foreach ($allEvents as $e) {
+        if (!empty($e['priceRanges'])) { $hasPrice = true; break; }
+    }
+    if (!$hasPrice) {
+        echo "SKIP [{$attractionId}] {$attractionName} — no price data\n";
+        $attractionsHit++;
+        usleep(250000);
+        continue;
+    }
+
     $r = stageEvents($mysqli, $allEvents);
     $totalNew     += $r['new'];
     $totalDup     += $r['dup'];
