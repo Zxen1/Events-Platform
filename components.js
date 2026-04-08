@@ -12803,7 +12803,7 @@ const PostLocationComponent = (function() {
                             postsBtn.click();
                             setTimeout(function() {
                                 if (callbacks && callbacks.openPostById) {
-                                    callbacks.openPostById(post.id, { postMapCardId: String(loc.id), autoExpand: true });
+                                    callbacks.openPostById(post.id, { postMapCardId: String(loc.id), autoExpand: true, fromMap: true });
                                 }
                             }, 50);
                         }
