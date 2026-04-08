@@ -12543,10 +12543,10 @@ const PostLocationComponent = (function() {
         }
         html.push('</div>');
 
+        html.push('</div>');
+
         var _locCount = locationList.length;
         html.push('<div class="post-location-count">' + _locCount + ' location' + (_locCount !== 1 ? 's' : '') + '</div>');
-
-        html.push('</div>');
 
         return html.join('');
     }
