@@ -1545,14 +1545,13 @@
   padding-right: 10px;
 }
 
-.post-details .post-location-container,
-.post-details .post-session-container {
+.post-details .post-session-button {
+  margin-bottom: 6px;
 }
 
 .post-details .post-session-count {
   margin-left: 10px;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   font-size: 13px;
   font-style: italic;
   color: var(--ps-muted);

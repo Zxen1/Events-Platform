@@ -3319,7 +3319,7 @@ body.image-modal-open > *:not(.image-modal) {
   --pl-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   --pl-radius: 5px;
   position: relative;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements */
+  margin-bottom: 6px;
 }
 
 /* Button */
