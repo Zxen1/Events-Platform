@@ -16,7 +16,8 @@
  *   pages      — discovery pages to scan (default: 3, max: 25)
  *   start_page — discovery page offset (default: 0)
  *   size       — events per discovery page (default: 200, max: 200)
- *   segment    — TM segment name filter (Music, Sports, Arts & Theatre, Film)
+ *   segment    — TM segment filter: Music, Sports, Arts & Theatre, Film (segmentName)
+ *   genre      — TM genre filter: Rock, Pop, Football, Comedy, etc. (classificationName)
  */
 
 declare(strict_types=1);
@@ -90,7 +91,8 @@ $pages          = min(25,  max(1, intval($_GET['pages']      ?? 3)));
 $startPage      = max(0,          intval($_GET['start_page'] ?? 0));
 $size           = min(200, max(1, intval($_GET['size']       ?? 200)));
 $maxAttractions = min(500, max(1, intval($_GET['limit']      ?? 50)));
-$segment        = $_GET['segment'] ?? '';
+$segmentFilter  = $_GET['segment'] ?? '';
+$genreFilter    = $_GET['genre']   ?? '';
 
 // ── Excluded segments ───────────────────────────────────────────────────────────
 // Miscellaneous = venue admissions (Sea Life, London Eye, Madame Tussauds, etc.)
@@ -105,7 +107,8 @@ header('Content-Type: text/html; charset=utf-8');
 ob_implicit_flush(true);
 echo '<pre>';
 echo "Ticketmaster collector — country={$country}, pages={$pages}, start_page={$startPage}"
-    . ($segment ? ", segment={$segment}" : '') . "\n";
+    . ($segmentFilter ? ", segment={$segmentFilter}" : '')
+    . ($genreFilter   ? ", genre={$genreFilter}"     : '') . "\n";
 echo "Excluded segments: " . implode(', ', $excludedSegments) . "\n";
 echo str_repeat('─', 72) . "\n\n";
 
@@ -134,8 +137,11 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
         'sort'          => 'date,asc',
         'startDateTime' => date('Y-m-d') . 'T00:00:00Z',
     ];
-    if ($segment !== '') {
-        $discoveryParams['segmentName'] = $segment;
+    if ($segmentFilter !== '') {
+        $discoveryParams['segmentName'] = $segmentFilter;
+    }
+    if ($genreFilter !== '') {
+        $discoveryParams['classificationName'] = $genreFilter;
     }
     $url = 'https://app.ticketmaster.com/discovery/v2/events.json?' . http_build_query($discoveryParams);
 
@@ -158,8 +164,8 @@ for ($p = $startPage; $p < $startPage + $pages; $p++) {
     // Collect attraction IDs from this page (skip excluded segments and no-ID events)
     $excludedCount = 0;
     foreach ($events as $event) {
-        $segment = $event['classifications'][0]['segment']['name'] ?? '';
-        if (in_array($segment, $excludedSegments, true)) {
+        $eventSegment = $event['classifications'][0]['segment']['name'] ?? '';
+        if (in_array($eventSegment, $excludedSegments, true)) {
             $excludedCount++;
             continue;
         }
@@ -269,4 +275,5 @@ echo "API calls used: {$apiCalls}  |  Attractions fetched: {$attractionsHit}\n";
 echo "New events staged: {$totalNew}  |  Duplicates skipped: {$totalDup}\n";
 echo "Total pending in staging: {$pending}\n";
 echo "\nRun tm-import.php to process staged events into posts.\n";
+echo "[API_CALLS:{$apiCalls}]\n";
 echo '</pre>';

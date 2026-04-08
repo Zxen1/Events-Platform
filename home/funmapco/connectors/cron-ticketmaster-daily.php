@@ -1,14 +1,16 @@
 <?php
 // cron-ticketmaster-daily.php — Full daily TM pipeline: collect → import → refresh.
 //
-// Phase 1: Collect new attractions across all countries, split by segment.
-//           Each segment (Music, Sports, Arts & Theatre, Film) gets its own
-//           full page window per country, bypassing the API's 5-page pagination cap.
-// Phase 2: Import all pending staging rows into posts (loops until empty).
-// Phase 3: Refresh existing active posts (least-recently updated first).
-// API budget: ~5,000 calls/day split between collect (~3,000) and refresh (~2,000).
+// Phase 1: Collect — 949-item genre rotation queue. Each item = 1 discovery page.
+//          Seeding mode scans pages 0-4 across passes. Maintenance scans page 0 only.
+// Phase 2: Import — processes all pending staging rows into posts.
+// Phase 3: Clear — NULLs event_json on imported/skipped rows to reclaim storage.
+// Phase 4: Refresh — updates existing active posts from TM API.
 //
-// cPanel cron (daily, 3am):
+// API budget: 5,000/day. Collection + refresh share the budget with ~1,000 spare.
+// Global counter tracks all API calls across phases and stops when limit reached.
+//
+// cPanel cron (daily, 3am UTC):
 //   /usr/local/bin/php -q /home/funmapco/public_html/home/funmapco/connectors/cron-ticketmaster-daily.php
 
 if (php_sapi_name() !== 'cli') {
@@ -19,143 +21,256 @@ if (php_sapi_name() !== 'cli') {
 $php = PHP_BINARY;
 $dir = __DIR__;
 
+require __DIR__ . '/../config/config-db.php';
+
+$DAILY_BUDGET    = 5000;
+$RESERVE         = 1000;
+$REFRESH_CEILING = 3000;
+$COLLECT_CEILING = $DAILY_BUDGET - $RESERVE - $REFRESH_CEILING;
+$globalApiCalls  = 0;
+
 // ── Cleanup: purge expired staging rows ──────────────────────────────────────
 
-$cleanupCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
-    'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
-    . '$r = $mysqli->query("DELETE ts FROM tm_staging ts '
-    . 'JOIN posts p ON p.id = ts.post_id '
-    . 'WHERE ts.status IN (\'imported\',\'skipped\') '
-    . 'AND p.expires_at < DATE_SUB(NOW(), INTERVAL 6 MONTH)");'
-    . 'echo $mysqli->affected_rows . \" expired staging rows purged\";'
+$mysqli->query(
+    "DELETE ts FROM tm_staging ts
+     JOIN posts p ON p.id = ts.post_id
+     WHERE ts.status IN ('imported','skipped')
+     AND p.expires_at < DATE_SUB(NOW(), INTERVAL 6 MONTH)"
 );
 echo "=== CLEANUP ===\n";
-echo trim(shell_exec($cleanupCmd)) . "\n\n";
+echo $mysqli->affected_rows . " expired staging rows purged\n\n";
 
-// ── Segments — each gets its own full page window per country ─────────────────
-// Miscellaneous is excluded (venue admissions, not events).
+// ── Genre rotation queue (82 genres, interleaved Music/Sports/Arts/Film) ─────
 
-$segments = ['Music', 'Sports', 'Arts & Theatre', 'Film'];
-
-// Limits are per-segment (total attraction limit for the country ÷ 4 segments).
-// Pages = max useful depth per segment (API caps at page 5).
-//
-// Budget breakdown (discovery calls only):
-//   Large:  4 seg × 5 pages × 2 countries =  40
-//   Medium: 4 seg × 3 pages × 8 countries =  96
-//   Small:  4 seg × 2 pages × 18 countries = 144
-//   Tiny:   4 seg × 1 page  × 30 countries = 120
-//   Total discovery: ~400 calls + attraction detail fetches (~2,600 budget)
-
-$countries = [
-    // Large — 50 attractions/segment, 5 pages/segment
-    'GB' => ['limit' => 50, 'pages' => 5],
-    'US' => ['limit' => 50, 'pages' => 5],
-
-    // Medium — 25 attractions/segment, 3 pages/segment
-    'CA' => ['limit' => 25, 'pages' => 3],
-    'AU' => ['limit' => 25, 'pages' => 3],
-    'DE' => ['limit' => 25, 'pages' => 3],
-    'FR' => ['limit' => 25, 'pages' => 3],
-    'ES' => ['limit' => 25, 'pages' => 3],
-    'IT' => ['limit' => 25, 'pages' => 3],
-    'MX' => ['limit' => 25, 'pages' => 3],
-    'NL' => ['limit' => 25, 'pages' => 3],
-
-    // Small — 12 attractions/segment, 2 pages/segment
-    'IE' => ['limit' => 12, 'pages' => 2],
-    'NZ' => ['limit' => 12, 'pages' => 2],
-    'SE' => ['limit' => 12, 'pages' => 2],
-    'DK' => ['limit' => 12, 'pages' => 2],
-    'NO' => ['limit' => 12, 'pages' => 2],
-    'FI' => ['limit' => 12, 'pages' => 2],
-    'PL' => ['limit' => 12, 'pages' => 2],
-    'AT' => ['limit' => 12, 'pages' => 2],
-    'CH' => ['limit' => 12, 'pages' => 2],
-    'CZ' => ['limit' => 12, 'pages' => 2],
-    'TR' => ['limit' => 12, 'pages' => 2],
-    'BE' => ['limit' => 12, 'pages' => 2],
-    'BR' => ['limit' => 12, 'pages' => 2],
-    'ZA' => ['limit' => 12, 'pages' => 2],
-    'AE' => ['limit' => 12, 'pages' => 2],
-    'JP' => ['limit' => 12, 'pages' => 2],
-    'KR' => ['limit' => 12, 'pages' => 2],
-    'IN' => ['limit' => 12, 'pages' => 2],
-
-    // Tiny — 5 attractions/segment, 1 page/segment
-    'HK' => ['limit' => 5, 'pages' => 1],
-    'MY' => ['limit' => 5, 'pages' => 1],
-    'IL' => ['limit' => 5, 'pages' => 1],
-    'AR' => ['limit' => 5, 'pages' => 1],
-    'CL' => ['limit' => 5, 'pages' => 1],
-    'PE' => ['limit' => 5, 'pages' => 1],
-    'GR' => ['limit' => 5, 'pages' => 1],
-    'HU' => ['limit' => 5, 'pages' => 1],
-    'BG' => ['limit' => 5, 'pages' => 1],
-    'IS' => ['limit' => 5, 'pages' => 1],
-    'EE' => ['limit' => 5, 'pages' => 1],
-    'LV' => ['limit' => 5, 'pages' => 1],
-    'LT' => ['limit' => 5, 'pages' => 1],
-    'LU' => ['limit' => 5, 'pages' => 1],
-    'MT' => ['limit' => 5, 'pages' => 1],
-    'AD' => ['limit' => 5, 'pages' => 1],
-    'GI' => ['limit' => 5, 'pages' => 1],
-    'FO' => ['limit' => 5, 'pages' => 1],
-    'BH' => ['limit' => 5, 'pages' => 1],
-    'GE' => ['limit' => 5, 'pages' => 1],
-    'AZ' => ['limit' => 5, 'pages' => 1],
-    'GH' => ['limit' => 5, 'pages' => 1],
-    'DO' => ['limit' => 5, 'pages' => 1],
-    'EC' => ['limit' => 5, 'pages' => 1],
-    'JM' => ['limit' => 5, 'pages' => 1],
-    'BB' => ['limit' => 5, 'pages' => 1],
-    'BM' => ['limit' => 5, 'pages' => 1],
-    'BS' => ['limit' => 5, 'pages' => 1],
-    'AI' => ['limit' => 5, 'pages' => 1],
-    'LB' => ['limit' => 5, 'pages' => 1],
+$genreQueue = [
+    ['Music', 'Alternative'],
+    ['Sports', 'Aquatics'],
+    ['Arts & Theatre', 'Children\'s Theatre'],
+    ['Film', 'Action/Adventure'],
+    ['Music', 'Ballads/Romantic'],
+    ['Sports', 'Baseball'],
+    ['Arts & Theatre', 'Circus & Specialty Acts'],
+    ['Film', 'Animation'],
+    ['Music', 'Blues'],
+    ['Sports', 'Basketball'],
+    ['Arts & Theatre', 'Classical'],
+    ['Film', 'Comedy'],
+    ['Music', 'Chanson Francaise'],
+    ['Sports', 'Boxing'],
+    ['Arts & Theatre', 'Comedy'],
+    ['Film', 'Documentary'],
+    ['Music', 'Children\'s Music'],
+    ['Sports', 'Cricket'],
+    ['Arts & Theatre', 'Community/Civic'],
+    ['Film', 'Drama'],
+    ['Music', 'Classical'],
+    ['Sports', 'Cycling'],
+    ['Arts & Theatre', 'Cultural'],
+    ['Film', 'Family'],
+    ['Music', 'Country'],
+    ['Sports', 'Equestrian'],
+    ['Arts & Theatre', 'Dance'],
+    ['Film', 'Foreign'],
+    ['Music', 'Dance/Electronic'],
+    ['Sports', 'eSports'],
+    ['Arts & Theatre', 'Fashion'],
+    ['Film', 'Horror'],
+    ['Music', 'Folk'],
+    ['Sports', 'Extreme Sports'],
+    ['Arts & Theatre', 'Fine Art'],
+    ['Film', 'Music'],
+    ['Music', 'Hip-Hop/Rap'],
+    ['Sports', 'Football'],
+    ['Arts & Theatre', 'Magic & Illusion'],
+    ['Film', 'Sci-Fi/Fantasy'],
+    ['Music', 'Holiday'],
+    ['Sports', 'Golf'],
+    ['Arts & Theatre', 'Music'],
+    ['Film', 'Thriller'],
+    ['Music', 'Jazz'],
+    ['Sports', 'Gymnastics'],
+    ['Arts & Theatre', 'Opera'],
+    ['Film', 'Urban'],
+    ['Music', 'Latin'],
+    ['Sports', 'Hockey'],
+    ['Arts & Theatre', 'Performance Art'],
+    ['Music', 'Medieval/Renaissance'],
+    ['Sports', 'Ice Skating'],
+    ['Arts & Theatre', 'Puppetry'],
+    ['Music', 'Metal'],
+    ['Sports', 'Lacrosse'],
+    ['Arts & Theatre', 'Spectacular'],
+    ['Music', 'New Age'],
+    ['Sports', 'Martial Arts'],
+    ['Arts & Theatre', 'Theatre'],
+    ['Music', 'Other'],
+    ['Sports', 'Motorsports/Racing'],
+    ['Arts & Theatre', 'Variety'],
+    ['Music', 'Pop'],
+    ['Sports', 'Netball'],
+    ['Music', 'R&B'],
+    ['Sports', 'Rodeo'],
+    ['Music', 'Reggae'],
+    ['Sports', 'Rugby'],
+    ['Music', 'Religious'],
+    ['Sports', 'Skiing'],
+    ['Music', 'Rock'],
+    ['Sports', 'Soccer'],
+    ['Music', 'Soul'],
+    ['Sports', 'Softball'],
+    ['Music', 'World'],
+    ['Sports', 'Surfing'],
+    ['Sports', 'Swimming'],
+    ['Sports', 'Tennis'],
+    ['Sports', 'Track & Field'],
+    ['Sports', 'Volleyball'],
+    ['Sports', 'Wrestling'],
 ];
 
-foreach ($countries as $code => $params) {
-    foreach ($segments as $seg) {
-        $segLabel = urlencode($seg);
-        echo "=== TM COLLECT — {$code} / {$seg} (pages 0-" . ($params['pages'] - 1) . ") ===\n";
-        $qs = "country={$code}&limit={$params['limit']}&pages={$params['pages']}&start_page=0&segment={$segLabel}";
-        passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-collect.php") . ' ' . escapeshellarg($qs));
-        echo "\n";
+$segmented   = ['GB','US','CA','AU','DE','MX','FR','ES','IT','NL','JP'];
+$unsegmented = [
+    'IE','NZ','SE','DK','NO','FI','PL','AT','CH','CZ','TR','BE','BR','ZA','AE','KR','IN',
+    'HK','MY','IL','AR','CL','PE','GR','HU','BG','IS','EE','LV','LT','LU','MT','AD','GI','FO',
+    'BH','GE','AZ','GH','DO','EC','JM','BB','BM','BS','AI','LB',
+];
+
+// Build segmented items: each genre × each country
+$segItems = [];
+foreach ($genreQueue as [$segment, $genre]) {
+    foreach ($segmented as $cc) {
+        $segItems[] = ['country' => $cc, 'segment' => $segment, 'genre' => $genre];
     }
 }
 
+// Interleave unsegmented countries evenly through the queue
+$interval  = (int) floor(count($segItems) / max(1, count($unsegmented)));
+$fullQueue = [];
+$unsegIdx  = 0;
+foreach ($segItems as $i => $item) {
+    $fullQueue[] = $item;
+    if (($i + 1) % $interval === 0 && $unsegIdx < count($unsegmented)) {
+        $fullQueue[] = ['country' => $unsegmented[$unsegIdx++], 'segment' => null, 'genre' => null];
+    }
+}
+while ($unsegIdx < count($unsegmented)) {
+    $fullQueue[] = ['country' => $unsegmented[$unsegIdx++], 'segment' => null, 'genre' => null];
+}
+
+$queueSize = count($fullQueue);
+
+// ── Read cursor (marker row in tm_staging with tm_event_id = '_cursor') ──────
+
+$cursor = $mysqli->query("SELECT skip_reason FROM tm_staging WHERE tm_event_id = '_cursor' LIMIT 1");
+if (!$cursor || $cursor->num_rows === 0) {
+    die("ERROR: cursor marker row missing from tm_staging. Insert it first.\n");
+}
+$curData         = json_decode($cursor->fetch_assoc()['skip_reason'], true) ?: [];
+$position        = (int) ($curData['position'] ?? 0);
+$pass            = (int) ($curData['pass'] ?? 0);
+$seedingComplete = (int) ($curData['seeded'] ?? 0);
+
+$page = $seedingComplete ? 0 : $pass;
+
+echo "=== TM COLLECT (pass {$pass}, position {$position}/{$queueSize}, "
+    . ($seedingComplete ? 'MAINTENANCE' : 'SEEDING') . ") ===\n\n";
+
+// ── Phase 1: Collection ─────────────────────────────────────────────────────
+
+$itemsProcessed = 0;
+$rateLimited    = false;
+
+while ($globalApiCalls < $COLLECT_CEILING) {
+    if ($position >= $queueSize) {
+        if ($seedingComplete) {
+            $position = 0;
+            echo "Maintenance cycle complete, wrapping to start.\n";
+            break;
+        }
+        $pass++;
+        $position = 0;
+        if ($pass >= 5) {
+            $seedingComplete = 1;
+            $pass = 0;
+            echo "=== SEEDING COMPLETE — switching to maintenance mode ===\n";
+            break;
+        }
+        $page = $pass;
+        echo "=== Pass {$pass} starting (page {$page}) ===\n";
+    }
+
+    $item = $fullQueue[$position];
+    $cc   = $item['country'];
+
+    $qs = "country={$cc}&limit=200&pages=1&start_page={$page}";
+    if ($item['segment'] !== null) {
+        $qs .= '&segment=' . urlencode($item['segment']);
+    }
+    if ($item['genre'] !== null) {
+        $qs .= '&genre=' . urlencode($item['genre']);
+    }
+
+    $label = $item['genre'] ? "{$cc}/{$item['genre']}" : "{$cc} (unsegmented)";
+    echo "--- [{$position}] {$label}, page {$page} ---\n";
+
+    $output = shell_exec(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-collect.php") . ' ' . escapeshellarg($qs));
+    echo $output;
+
+    if (preg_match('/\[API_CALLS:(\d+)\]/', $output ?? '', $m)) {
+        $globalApiCalls += (int) $m[1];
+    }
+
+    if ($output && strpos($output, 'RATE LIMIT') !== false) {
+        echo "Rate limited — stopping collection.\n";
+        $rateLimited = true;
+        break;
+    }
+
+    $position++;
+    $itemsProcessed++;
+}
+
+echo "\nCollection done. Items processed: {$itemsProcessed}, API calls: {$globalApiCalls}\n";
+
+// ── Save cursor ──────────────────────────────────────────────────────────────
+
+$curJson = json_encode(['position' => $position, 'pass' => $pass, 'seeded' => $seedingComplete]);
+$stmt = $mysqli->prepare("UPDATE tm_staging SET skip_reason = ? WHERE tm_event_id = '_cursor'");
+$stmt->bind_param('s', $curJson);
+$stmt->execute();
+$stmt->close();
+
 // ── Phase 2: Import all pending (loop until none remain) ─────────────────────
 
-echo "=== TM IMPORT ===\n";
+echo "\n=== TM IMPORT ===\n";
 $importRound = 0;
 while (true) {
     $importRound++;
     echo "--- Import round {$importRound} ---\n";
     passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-import.php") . ' ' . escapeshellarg('limit=200'));
 
-    $checkCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
-        'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
-        . '$r = $mysqli->query("SELECT COUNT(*) c FROM tm_staging WHERE status=\'pending\'");'
-        . 'echo $r->fetch_assoc()["c"];'
-    );
-    $pending = (int) trim(shell_exec($checkCmd));
+    $r = $mysqli->query("SELECT COUNT(*) c FROM tm_staging WHERE status = 'pending'");
+    $pending = (int) $r->fetch_assoc()['c'];
     if ($pending === 0 || $importRound >= 10) break;
     echo "{$pending} still pending, importing more...\n\n";
 }
 
-// ── Phase 3: Clear event_json from processed rows (no longer needed) ─────────
+// ── Phase 3: Clear event_json from processed rows ───────────────────────────
 
-$clearCmd = escapeshellarg($php) . ' -r ' . escapeshellarg(
-    'require "' . addslashes("{$dir}/../config/config-db.php") . '";'
-    . '$r = $mysqli->query("UPDATE tm_staging SET event_json = \'\' '
-    . 'WHERE status IN (\'imported\',\'skipped\') AND event_json != \'\'");'
-    . 'echo $mysqli->affected_rows . \" event_json blobs cleared\";'
+$mysqli->query(
+    "UPDATE tm_staging SET event_json = '' WHERE status IN ('imported','skipped') AND event_json != ''"
 );
 echo "\n=== CLEAR JSON ===\n";
-echo trim(shell_exec($clearCmd)) . "\n\n";
+echo $mysqli->affected_rows . " event_json blobs cleared\n";
 
-// ── Phase 4: Refresh existing posts (least-recently updated first) ───────────
+// ── Phase 4: Refresh existing posts ─────────────────────────────────────────
 
-echo "=== TM REFRESH ===\n";
-passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-refresh.php") . ' ' . escapeshellarg('limit=200&max_api=3000'));
+$refreshBudget = min($REFRESH_CEILING, $DAILY_BUDGET - $RESERVE - $globalApiCalls);
+if ($refreshBudget < 100) {
+    echo "\n=== TM REFRESH SKIPPED (only {$refreshBudget} calls remaining) ===\n";
+} else {
+    echo "\n=== TM REFRESH (max_api={$refreshBudget}) ===\n";
+    passthru(escapeshellarg($php) . ' -q ' . escapeshellarg("{$dir}/tm-refresh.php") . ' ' . escapeshellarg("limit=200&max_api={$refreshBudget}"));
+}
+
+echo "\n=== DAILY CRON COMPLETE ===\n";
+echo "Total collection API calls: {$globalApiCalls}\n";

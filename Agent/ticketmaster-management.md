@@ -44,7 +44,8 @@ All three are registered in `gateway.php` and accessed via:
 | `pages` | `3` | `25` | Number of discovery pages to scan |
 | `start_page` | `0` | — | Discovery page offset (for resuming) |
 | `size` | `200` | `200` | Events per discovery page |
-| `segment` | — | — | TM segment filter (Music, Sports, Arts & Theatre, Film) |
+| `segment` | — | — | TM segment filter: Music, Sports, Arts & Theatre, Film (`segmentName`) |
+| `genre` | — | — | TM genre filter: Rock, Pop, Football, Comedy, etc. (`classificationName`) |
 
 ### How it works
 
@@ -223,31 +224,43 @@ gateway.php?action=tm-refresh&limit=200&max_api=2000
 
 ### What it does (in order)
 
-1. **Cleanup** — Purges staging rows for posts that expired 6+ months ago (prevents infinite table growth)
-2. **Collect** — Runs `tm-collect.php` for all countries × all segments (Music, Sports, Arts & Theatre, Film)
+1. **Cleanup** — Purges staging rows for posts that expired 6+ months ago
+2. **Collect** — 949-item genre rotation queue. Each item = 1 discovery page. Stops when collection budget is hit.
 3. **Import** — Runs `tm-import.php` in a loop (up to 10 rounds) until no pending rows remain
-4. **Refresh** — Runs `tm-refresh.php` with `limit=200&max_api=2000`
+4. **Clear JSON** — NULLs `event_json` on imported/skipped rows to reclaim storage
+5. **Refresh** — Runs `tm-refresh.php` with dynamic budget (whatever remains after collection, up to 3,000)
 
 ### API budget (5,000 calls/day)
 
-| Phase | Estimated daily calls | Notes |
+| Phase | Budget | Notes |
 |---|---|---|
-| Collect — discovery pages | ~400 | 58 countries × 4 segments × tier pages (5/3/2/1) |
-| Collect — attraction fetches | ~600-2,600 | Drops after initial seeding as most attractions are already staged |
+| Collect | ~1,000 | 949 discovery pages + detail fetches for new attractions |
 | Import | 0 | No API calls — reads from staging only |
-| Refresh | up to 2,000 | Hard ceiling via `max_api` parameter |
-| **Total** | **~5,000 max** | Minimal buffer — attraction fetches drop fast after seeding |
+| Refresh | up to 3,000 | Dynamic ceiling based on remaining budget after collection |
+| **Reserve** | **1,000** | Spare for manual searches |
 
-### Countries collected (58 total)
+### Seeding vs maintenance
 
-Limits and pages are **per segment** (each country is queried 4 times: Music, Sports, Arts & Theatre, Film).
+**Seeding (automatic):** Runs 5 passes over the 949-item queue — pass 0 scans page 0 of each item, pass 1 scans page 1, etc. Takes ~5-7 days depending on how many new attractions are found. The cursor tracks position and pass between runs.
 
-| Tier | Countries | Limit/segment | Pages/segment |
-|---|---|---|---|
-| Large | GB, US | 50 | 5 |
-| Medium | CA, AU, DE, FR, ES, IT, MX, NL | 25 | 3 |
-| Small | IE, NZ, SE, DK, NO, FI, PL, AT, CH, CZ, TR, BE, BR, ZA, AE, JP, KR, IN | 12 | 2 |
-| Tiny | HK, MY, IL, AR, CL, PE, GR, HU, BG, IS, EE, LV, LT, LU, MT, AD, GI, FO, BH, GE, AZ, GH, DO, EC, JM, BB, BM, BS, AI, LB | 5 | 1 |
+**Maintenance (automatic):** After all 5 passes complete, the cron auto-switches. Every item gets page 0 only (949 discovery calls per cycle). Most attractions already in staging — detail fetches are minimal. Frees up most of the budget for refresh.
+
+### Cursor tracking
+
+State is stored as a JSON string in the `skip_reason` column of a marker row in `tm_staging` (where `tm_event_id = '_cursor'`):
+- `position` — current item in the 949-item queue (0-948)
+- `pass` — current page pass (0-4 during seeding)
+- `seeded` — flips to 1 after pass 4 finishes
+
+### The 949-item queue
+
+**Segmented countries (11):** GB, US, CA, AU, DE, MX, FR, ES, IT, NL, JP — queried per genre (82 genres × 11 = 902 items)
+
+**Unsegmented countries (47):** Everything else — single unsegmented query each (47 items)
+
+Unsegmented countries are interleaved evenly through the segmented queue for variety.
+
+Genre order is round-robin: Music → Sports → Arts & Theatre → Film, cycling through all genres in each segment. See `cron-ticketmaster-daily.php` for the full ordered list.
 
 ### Weekly cron — `cron-ticketmaster-weekly.php`
 
@@ -408,11 +421,18 @@ The genre rotation cursor (which country, which genre, which page) is tracked in
 
 ## TODO — Outstanding Work
 
-### Implement genre rotation system
-Build the genre rotation into `tm-collect.php` and `cron-ticketmaster-daily.php` as described above. Requires: `classificationName` parameter on the collector, cursor tracking in `tm_staging`, interleaved genre order, seeding vs maintenance mode.
+### ~~Genre rotation system~~ ✓ DONE
+Implemented. 949-item queue with cursor tracking, seeding/maintenance auto-switch, global API counter.
 
 ### Remove weekly cron from cPanel
 `cron-ticketmaster-weekly.php` is no longer needed. Refresh runs daily as part of the daily cron. Remove the Sunday midnight cron entry.
+
+### Insert cursor marker row
+Run this SQL to create the cursor tracking row in tm_staging:
+```sql
+INSERT IGNORE INTO tm_staging (tm_event_id, event_json, status, skip_reason)
+VALUES ('_cursor', '', 'imported', '{"position":0,"pass":0,"seeded":0}');
+```
 
 ---
 
@@ -442,5 +462,5 @@ The verification meta tag is already in `index.php`:
 
 | File | Changes |
 |---|---|
-| `tm-collect.php` | Added `segment` parameter — passes `segmentName` to the TM Discovery API URL when provided |
-| `cron-ticketmaster-daily.php` | Replaced page rotation with segment-based slicing. Each country now queried 4× (Music, Sports, Arts & Theatre, Film). Limits rebalanced per-segment. |
+| `tm-collect.php` | Added `segment` and `genre` parameters (`segmentName` + `classificationName` on API). Fixed variable collision in discovery loop. Added `[API_CALLS:N]` output for cron parsing. |
+| `cron-ticketmaster-daily.php` | Complete rewrite. 949-item genre rotation queue (82 genres × 11 segmented countries + 47 unsegmented, interleaved). Cursor tracking via `tm_collect_cursor` table. Auto seeding→maintenance switch after 5 passes. Global API counter across phases. JSON cleanup after import. Dynamic refresh budget. |
