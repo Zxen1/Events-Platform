@@ -459,7 +459,9 @@
   --ps-muted: rgba(0, 0, 0, 0.45);
 }
 
-:root[data-theme="light"] .post-session-ticket-prompt {
+:root[data-theme="light"] .post-session-ticket-prompt,
+:root[data-theme="light"] .post-session-count,
+:root[data-theme="light"] .post-location-count {
   color: rgba(0, 0, 0, 0.45);
 }
 
