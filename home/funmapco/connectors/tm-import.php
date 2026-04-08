@@ -84,16 +84,51 @@ function bestImage(array $events): ?array {
 }
 
 /**
- * Description from the first event in the group that has info text.
+ * Build a rich description from event info + venue details.
+ * Venue-specific sections only included for single-venue posts.
  */
-function groupDescription(array $events): string {
+function groupDescription(array $events, int $venueCount = 1): string {
+    $sections = [];
+
     foreach ($events as $event) {
-        $info  = trim($event['info']       ?? '');
-        $note  = trim($event['pleaseNote'] ?? '');
-        $parts = array_filter([$info, $note ? 'Please note: ' . $note : '']);
-        if ($parts) return implode("\n\n", $parts) . "\n\n" . TM_ATTRIBUTION;
+        $info = trim($event['info'] ?? '');
+        if ($info) { $sections[] = $info; break; }
     }
-    return TM_ATTRIBUTION;
+
+    foreach ($events as $event) {
+        $note = trim($event['pleaseNote'] ?? '');
+        if ($note) { $sections[] = 'Please note: ' . $note; break; }
+    }
+
+    if ($venueCount === 1) {
+        $venue = $events[0]['_embedded']['venues'][0] ?? [];
+
+        $childRule = trim($venue['generalInfo']['childRule'] ?? '');
+        if ($childRule) $sections[] = "Age/Children: " . $childRule;
+
+        $generalRule = trim($venue['generalInfo']['generalRule'] ?? '');
+        if ($generalRule) $sections[] = "General Rules: " . $generalRule;
+
+        $accessible = trim($venue['accessibleSeatingDetail'] ?? '');
+        if ($accessible) $sections[] = "Accessibility: " . $accessible;
+
+        $boxParts = [];
+        $hours   = trim($venue['boxOfficeInfo']['openHoursDetail']      ?? '');
+        $phone   = trim($venue['boxOfficeInfo']['phoneNumberDetail']    ?? '');
+        $payment = trim($venue['boxOfficeInfo']['acceptedPaymentDetail'] ?? '');
+        $collect = trim($venue['boxOfficeInfo']['willCallDetail']       ?? '');
+        if ($hours)   $boxParts[] = "Hours: "      . $hours;
+        if ($phone)   $boxParts[] = "Phone: "      . $phone;
+        if ($payment) $boxParts[] = "Payment: "    . $payment;
+        if ($collect) $boxParts[] = "Collection: " . $collect;
+        if ($boxParts) $sections[] = "Box Office\n" . implode("\n", $boxParts);
+
+        $parking = trim($venue['parkingDetail'] ?? '');
+        if ($parking) $sections[] = "Parking: " . $parking;
+    }
+
+    $sections[] = TM_ATTRIBUTION;
+    return implode("\n\n", $sections);
 }
 
 /**
@@ -291,9 +326,9 @@ foreach ($attractionIds as $attId) {
     // ── Metadata ───────────────────────────────────────────────────────────────
 
     $title       = trim($firstEvent['_embedded']['attractions'][0]['name'] ?? $firstEvent['name'] ?? '');
-    $description = groupDescription($events);
-    $subcatKey   = groupSubcategory($events);
     $locQty      = count($validVenueGroups);
+    $description = groupDescription($events, $locQty);
+    $subcatKey   = groupSubcategory($events);
 
     // Latest last-date across all venues
     $allDates = [];
