@@ -1549,6 +1549,14 @@
 .post-details .post-session-container {
 }
 
+.post-details .post-session-count,
+.post-details .post-location-count {
+  margin-left: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .post-details .post-session-ticket-prompt,
 .post-details .post-session-ticket-container {
   margin-left: 10px;

@@ -12543,6 +12543,9 @@ const PostLocationComponent = (function() {
         }
         html.push('</div>');
 
+        var _locCount = locationList.length;
+        html.push('<div class="post-location-count">' + _locCount + ' location' + (_locCount !== 1 ? 's' : '') + '</div>');
+
         html.push('</div>');
 
         return html.join('');
@@ -12963,7 +12966,11 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-        // Prompt (directly below session menu, above price summary)
+        // Session count
+        var _tst = 0;
+        sessions.forEach(function(s) { _tst += (s && Array.isArray(s.times)) ? s.times.length : 0; });
+        html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        // Prompt (directly below session count, above price summary)
         html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         // Ticket container (underneath prompt)
         html.push('<div class="post-session-ticket-container">');
@@ -13129,7 +13136,11 @@ const PostSessionComponent = (function() {
         html.push('<div class="post-session-times-list" aria-label="Session times"></div>');
         html.push('</div>');
         html.push('</div>');
-        // Prompt (directly below session menu, above price summary)
+        // Session count
+        var _tst = 0;
+        sessions.forEach(function(s) { _tst += (s && Array.isArray(s.times)) ? s.times.length : 0; });
+        html.push('<div class="post-session-count">' + _tst + ' session' + (_tst !== 1 ? 's' : '') + '</div>');
+        // Prompt (directly below session count, above price summary)
         html.push('<div class="post-session-ticket-prompt" data-message-key="msg_session_select_prompt"></div>');
         // Ticket container (underneath prompt)
         html.push('<div class="post-session-ticket-container">');
