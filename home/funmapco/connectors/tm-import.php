@@ -9,7 +9,7 @@
  * Run: Agent/tm-import.php?limit=2000
  *
  * Parameters:
- *   limit — max staging rows to read per run (default: 2000)
+ *   limit — max attractions to process per run (default: 50, max: 200)
  */
 
 declare(strict_types=1);
@@ -145,7 +145,7 @@ function priceSummary(array $events): ?string {
 
 // ── Parameters ─────────────────────────────────────────────────────────────────
 
-$limit = min(5000, max(1, intval($_GET['limit'] ?? 2000)));
+$limit = min(200, max(1, intval($_GET['limit'] ?? 50)));
 
 // ── Storage settings ───────────────────────────────────────────────────────────
 
@@ -167,31 +167,66 @@ if (!$postImagesFolder || !$storageApiKey || !$storageZoneName) {
 $monthFolder = date('Y-m');
 $cdnBasePath = rtrim(preg_replace('#^https?://[^/]+/#', '', $postImagesFolder), '/');
 
-// ── Read pending staging rows ──────────────────────────────────────────────────
+// ── Find distinct attractions to process ────────────────────────────────────────
 
-$rows = [];
-$res  = $mysqli->query(
-    "SELECT id, tm_event_id, attraction_id, venue_id, event_json
-     FROM tm_staging WHERE status = 'pending' ORDER BY id ASC LIMIT {$limit}"
+$attractionIds = [];
+$res = $mysqli->query(
+    "SELECT DISTINCT attraction_id FROM tm_staging
+     WHERE status = 'pending' AND attraction_id IS NOT NULL
+     ORDER BY id ASC LIMIT {$limit}"
 );
 while ($row = $res->fetch_assoc()) {
-    $row['event'] = json_decode($row['event_json'], true);
-    $rows[] = $row;
+    $attractionIds[] = $row['attraction_id'];
 }
 
-if (empty($rows)) {
+$noAttractionRes = $mysqli->query(
+    "SELECT DISTINCT tm_event_id FROM tm_staging
+     WHERE status = 'pending' AND attraction_id IS NULL
+     ORDER BY id ASC LIMIT {$limit}"
+);
+$standaloneIds = [];
+while ($row = $noAttractionRes->fetch_assoc()) {
+    $standaloneIds[] = $row['tm_event_id'];
+}
+
+if (empty($attractionIds) && empty($standaloneIds)) {
     die('<pre>No pending events in tm_staging. Run tm-collect.php first.</pre>');
 }
 
-// ── Group by attraction (one post per attraction) ──────────────────────────────
+// ── Load ALL rows for each attraction (no partial groups) ───────────────────────
 
 $groups    = [];  // groupKey => [event, ...]
 $rowsByKey = [];  // groupKey => [staging_id, ...]
 
-foreach ($rows as $row) {
-    $key = tmGroupKey($row['event']);
-    $groups[$key][]    = $row['event'];
-    $rowsByKey[$key][] = $row['id'];
+foreach ($attractionIds as $attId) {
+    $attEsc = $mysqli->real_escape_string($attId);
+    $attRes = $mysqli->query(
+        "SELECT id, tm_event_id, attraction_id, venue_id, event_json
+         FROM tm_staging WHERE attraction_id = '{$attEsc}' AND status = 'pending'
+         ORDER BY id ASC"
+    );
+    while ($row = $attRes->fetch_assoc()) {
+        $row['event'] = json_decode($row['event_json'], true);
+        $key = tmGroupKey($row['event']);
+        $groups[$key][]    = $row['event'];
+        $rowsByKey[$key][] = $row['id'];
+    }
+}
+
+foreach ($standaloneIds as $tmEvtId) {
+    $tmEsc = $mysqli->real_escape_string($tmEvtId);
+    $stRes = $mysqli->query(
+        "SELECT id, tm_event_id, attraction_id, venue_id, event_json
+         FROM tm_staging WHERE tm_event_id = '{$tmEsc}' AND status = 'pending'
+         LIMIT 1"
+    );
+    $row = $stRes->fetch_assoc();
+    if ($row) {
+        $row['event'] = json_decode($row['event_json'], true);
+        $key = tmGroupKey($row['event']);
+        $groups[$key][]    = $row['event'];
+        $rowsByKey[$key][] = $row['id'];
+    }
 }
 
 // Sort each group chronologically
@@ -207,7 +242,8 @@ unset($evts);
 
 header('Content-Type: text/html; charset=utf-8');
 echo '<pre>';
-echo "Ticketmaster import — " . count($rows) . " staged events → " . count($groups) . " attractions\n";
+$totalRows = array_sum(array_map('count', $rowsByKey));
+echo "Ticketmaster import — {$totalRows} staged events → " . count($groups) . " attractions\n";
 echo str_repeat('─', 72) . "\n\n";
 
 $imported      = 0;
