@@ -2431,6 +2431,11 @@ const MapModule = (function() {
     if (map && map.getLayer(NC_LABEL_LAYER)) {
       map.setLayoutProperty(NC_LABEL_LAYER, 'visibility', shouldShow ? 'visible' : 'none');
     }
+
+    // Promoted hover card is a standalone Marker not in mapCardMarkers — clear it on hide
+    if (!shouldShow) {
+      _clearNativeCircleHover();
+    }
   }
 
   /**
