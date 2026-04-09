@@ -2703,10 +2703,8 @@ const PostModule = (function() {
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', locationName);
 
-    // Position: top = panel header height + 20px, bottom = 20px
-    var headerWrap = postPanelContentEl.querySelector('.post-panel-header-wrap');
-    var headerH = headerWrap ? headerWrap.offsetHeight : 0;
-    modal.style.top    = (headerH + 20) + 'px';
+    // Position: 20px from top and bottom of the panel content area
+    modal.style.top    = '20px';
     modal.style.bottom = '20px';
 
     // ── Header ──
