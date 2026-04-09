@@ -2623,26 +2623,40 @@ const MapModule = (function() {
     App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: false });
   }
   
+  // Highlight/clear a native circle feature by postId (called from panel card hover).
+  function _setNativeCircleHoverByPostId(postId, isHovering) {
+    var pid = String(postId);
+    if (!map || !map.getSource(NC_SOURCE)) return;
+    Object.keys(_ncDataByKey).forEach(function(key) {
+      var md = _ncDataByKey[key];
+      if (String(md.id) !== pid) return;
+      var featureId = Number(md.post_map_card_id) || 0;
+      try { map.setFeatureState({ source: NC_SOURCE, id: featureId }, { hovered: isHovering }); } catch (_e) {}
+    });
+  }
+
   // Hover coming from PostModule (post card hover): apply hover to all markers for that postId.
   // This should NOT emit map:cardHover back to PostModule (prevents event loops / double work).
   function onMapCardHoverByPostId(postId, isHovering) {
     const pid = String(postId);
     const token = ++hoverToken;
-    
+
     if (isHovering) {
       if (currentHoverPostIds && currentHoverPostIds.length) {
         setHoverGroupForPostIds(currentHoverPostIds, false);
       }
       setCurrentHoverPostIds([pid]);
       setHoverGroupForPostIds([pid], true);
+      _setNativeCircleHoverByPostId(pid, true);
       return;
     }
-    
+
     if (token !== hoverToken) return;
     if (currentHoverPostIds && currentHoverPostIds.length) {
       setHoverGroupForPostIds(currentHoverPostIds, false);
     }
     setCurrentHoverPostIds([]);
+    _setNativeCircleHoverByPostId(pid, false);
   }
 
   /**
@@ -2771,6 +2785,7 @@ const MapModule = (function() {
     if (!target || typeof target.closest !== 'function') return '';
     const container = target.closest('.map-card-container');
     if (!container || !container.dataset) return '';
+    if (container.dataset.ncHoverCard) return ''; // promoted native circle hover card — not a DOM marker
     return container.dataset.locationKey ? String(container.dataset.locationKey) : '';
   }
 
@@ -3165,6 +3180,7 @@ const MapModule = (function() {
     // Build hover card element (matches DOM marker 'hover' state)
     var el = document.createElement('div');
     el.className = 'map-card-container is-hovered';
+    el.dataset.ncHoverCard = '1'; // prevents pointer manager treating this as a DOM marker
     var subcatColor = md.subcategory_color || '';
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (subcatColor) {
@@ -3176,14 +3192,14 @@ const MapModule = (function() {
     }
     el.innerHTML = buildMapCardHTML(md, 'hover');
 
-    // Click on promoted card → open post (same as DOM card click)
-    el.addEventListener('pointerup', function(e) {
-      if (Math.abs(e.clientX - _ncPointerDownX) > CLICK_MOVE_THRESHOLD_PX) return;
-      if (Math.abs(e.clientY - _ncPointerDownY) > CLICK_MOVE_THRESHOLD_PX) return;
+    // Click on promoted card → open post (same as DOM card click).
+    // Use click (not pointerup + threshold) because the pill extends far from the GL dot,
+    // and comparing against the NC_LAYER pointerdown coordinates would always fail.
+    el.addEventListener('click', function() {
       App.emit('map:cardClicked', {
-        postId:          props.postId,
+        postId:           props.postId,
         post_map_card_id: props.postMapCardId,
-        locationKey:     locationKey
+        locationKey:      locationKey
       });
     });
 

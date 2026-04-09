@@ -2433,6 +2433,7 @@ const PostModule = (function() {
       if (!isNativeCircle) return;
       _circleFeatures.push({
         type: 'Feature',
+        id: Number(md.post_map_card_id) || 0, // stable numeric ID for setFeatureState
         geometry: { type: 'Point', coordinates: [md.lng, md.lat] },
         properties: {
           locationKey:  locationKey,
