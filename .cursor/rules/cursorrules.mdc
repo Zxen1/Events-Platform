@@ -6,25 +6,11 @@ alwaysApply: true
 
 # AGENT ESSENTIALS
 
-**THE `commit/` FOLDER SYSTEM — MANDATORY FOR ALL FILE EDITS**
+**LIVE SITE REFERENCE: THE `backups/` FOLDER**
 
-There are two locations. The **workspace** is the live site — what the user sees on the website. The **`commit/` folder** is the staging area — only the agent can see files here. The user will say "move it to the workspace" when approving changes.
-
-Never edit workspace files directly. All edits go through `commit/`:
-
-1. **Copy** the target file into `commit/`, mirroring its path (e.g., `commit/post.js` for root files, `commit/home/funmapco/connectors/get-form.php` for nested files).
-2. **Edit** only the copy inside `commit/`. The workspace file stays untouched.
-3. **Discuss** the changes with the user. The user CANNOT see these changes — they are invisible until moved to the workspace.
-4. **When the user says "move it to the workspace"**: first, save the current workspace file as `commit/{path}.prev` (undo backup). Then overwrite the workspace file with the `commit/` copy. Keep the `commit/` copy and `.prev` until the user commits.
-5. The user presses the Commit button. The change goes live. Delete the `commit/` copy and `.prev` backup.
-6. **Undo ("put it back")**: If the user changes their mind before committing, restore `commit/{path}.prev` to the workspace, move the proposed file back to `commit/`, and delete the `.prev`.
-
-**Rules:**
-- If `commit/` contains files at the start of a session, ASK the user about them before doing anything — they are unapproved changes from a previous session.
-- The `commit/` folder is gitignored — it never gets committed to the repo.
-- Never ask the user about visual details of changes still in `commit/`. If it's in `commit/`, the user cannot see it.
-- **Workspace** = live site, what the user sees. **`commit/`** = proposed changes, only the agent sees.
-- If the user says changes aren't showing or won't commit, check `commit/` first — files there are gitignored and invisible to git. Remind the user the files need to be moved to the workspace before they can be committed.
+The `backups/` folder contains timestamped snapshots of every file after each commit. The most recent backup of any file represents what is live on the website.
+To check whether your changes are live: search the most recent backup for your changes. If they're not there, the user has not committed them yet.
+Never ask the user whether they've committed — check the backups yourself.
 
 Read this file at the start of every conversation. Follow these rules without exception.
 When adding new rules to this file, keep each entry to 3 lines maximum.

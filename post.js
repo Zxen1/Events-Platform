@@ -2674,16 +2674,7 @@ const PostModule = (function() {
       if (p) orderedPosts.push(p);
     });
 
-    // Scroll to the first matching card in the panel
-    for (var i = 0; i < allCards.length; i++) {
-      var cid = allCards[i].dataset && allCards[i].dataset.id ? allCards[i].dataset.id : '';
-      if (postIds.indexOf(cid) !== -1) {
-        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        break;
-      }
-    }
-
-    closeMultipostModal(); // Remove any existing modal first
+    closeMultipostModal({ skipClearMapCards: true }); // Remove any existing modal (keep marker active)
     _multipostModalPostIds = postIds; // Store for filter-driven refresh
 
     // Build header strings
@@ -2810,7 +2801,7 @@ const PostModule = (function() {
   /**
    * Close and remove the multipost modal (if open).
    */
-  function closeMultipostModal() {
+  function closeMultipostModal(options) {
     var wasOpen = !!_multipostModalEl;
     if (_multipostModalEl) {
       if (_multipostModalEl.parentNode) {
@@ -2823,7 +2814,8 @@ const PostModule = (function() {
       _multipostModalKeydownHandler = null;
     }
     _multipostModalPostIds = null;
-    if (wasOpen && window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
+    var skipClear = options && options.skipClearMapCards;
+    if (wasOpen && !skipClear && window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
       MapModule.clearActiveMapCards();
     }
   }
