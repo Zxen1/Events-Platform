@@ -3189,10 +3189,7 @@ const MapModule = (function() {
       type:   'circle',
       source: NC_SOURCE,
       paint: {
-        'circle-radius': ['+',
-          ['interpolate', ['linear'], ['zoom'], 11, 5, 16, 10],
-          ['case', ['boolean', ['feature-state', 'hovered'], false], 5, 0]
-        ],
+        'circle-radius': ['case', ['boolean', ['feature-state', 'hovered'], false], 15, 10],
         'circle-color':  ['get', 'color'],
         'circle-stroke-width': 2,
         'circle-stroke-color': ['case',
