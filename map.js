@@ -627,9 +627,19 @@ const MapModule = (function() {
    * Multi-post markers use multi_post_icon, single posts use subcategory icon
    */
   function getSmallIconUrl(post) {
-    // Storefront and multi-post markers both use the multi-post icon at small size
-    if (post.isStorefront || post.isMultiPost) {
+    // ORIGINAL: Storefront and multi-post markers both use the admin-configured multi-post icon
+    // if (post.isStorefront || post.isMultiPost) {
+    //   return getMultiPostIconUrl();
+    // }
+
+    // Storefront markers use the admin-configured multi-post icon
+    if (post.isStorefront) {
       return getMultiPostIconUrl();
+    }
+    // Multi-post markers use the dominant subcategory icon (set during renderMapMarkers)
+    if (post.isMultiPost) {
+      if (post.iconUrl) return post.iconUrl;
+      throw new Error('[Map] Missing iconUrl for multi-post marker (post ID ' + post.id + ')');
     }
     
     // Single post: subcategory icon from post data is REQUIRED.

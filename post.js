@@ -2316,6 +2316,15 @@ const PostModule = (function() {
           if (_mpColourCounts[_c] > _mpDomMax) { _mpDomMax = _mpColourCounts[_c]; _mpDomColour = _c; }
         });
         markerData.subcategory_color = _mpDomColour;
+        // Use the icon from the first post whose colour matches the dominant colour
+        var _mpDomIcon = markerData.iconUrl || '';
+        for (var _mpi = 0; _mpi < group.length; _mpi++) {
+          if ((group[_mpi].post.subcategory_color || '') === _mpDomColour && group[_mpi].post.iconUrl) {
+            _mpDomIcon = group[_mpi].post.iconUrl;
+            break;
+          }
+        }
+        markerData.iconUrl = _mpDomIcon;
       }
 
       // Store all map card IDs in this location group so activation lookup can match
