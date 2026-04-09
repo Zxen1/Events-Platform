@@ -1,9 +1,6 @@
 db/database.json
 .gitignore
 
-# Commit staging folder — agent-only, never committed
-commit/
-
 # Agent folder - ignore scripts and large files
 Agent/*.py
 Agent/*.json

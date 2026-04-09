@@ -2674,6 +2674,15 @@ const PostModule = (function() {
       if (p) orderedPosts.push(p);
     });
 
+    // Scroll to the first matching card in the panel
+    for (var i = 0; i < allCards.length; i++) {
+      var cid = allCards[i].dataset && allCards[i].dataset.id ? allCards[i].dataset.id : '';
+      if (postIds.indexOf(cid) !== -1) {
+        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      }
+    }
+
     closeMultipostModal(); // Remove any existing modal first
     _multipostModalPostIds = postIds; // Store for filter-driven refresh
 
