@@ -1009,8 +1009,6 @@ const MapModule = (function() {
         z-index: 3;
         pointer-events: none;
         display: block;
-        border: 3px solid rgba(0,0,0,0.7);
-        border-radius: 50%;
       }
       .map-card-container.is-hovered .map-card-multipost-dot,
       .map-card-container.is-active  .map-card-multipost-dot { display: none; }
@@ -2473,9 +2471,16 @@ const MapModule = (function() {
     var subcatColor = post.isStorefront ? '#ffffff' : (post.subcategory_color || '');
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
     if (post.isMultiPost) {
+      // Multi-post: coloured dot (dominant subcategory colour) + count badge
       var _mpCount = post.locationPostCount || 2;
       el.dataset.multipostCount = String(_mpCount);
-      el.style.setProperty('--pill-fill', '#1e3a8a');
+      if (subcatColor) {
+        var _mh = subcatColor.replace('#', '');
+        var _mr = parseInt(_mh.substring(0,2), 16);
+        var _mg = parseInt(_mh.substring(2,4), 16);
+        var _mb = parseInt(_mh.substring(4,6), 16);
+        el.style.setProperty('--pill-fill', 'rgb(' + _mr + ',' + _mg + ',' + _mb + ')');
+      }
     } else if (post.isStorefront) {
       el.dataset.multipost = '1';
       el.style.setProperty('--pill-fill', '#222222');
@@ -2508,7 +2513,7 @@ const MapModule = (function() {
     if (post.isMultiPost && post.locationPostCount > 1 && appearance !== 'card') {
       var _dotImg = document.createElement('img');
       _dotImg.className = 'map-card-multipost-dot';
-      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, '#1e3a8a');
+      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, post.subcategory_color || '#888888');
       _dotImg.width  = 30;
       _dotImg.height = 30;
       _dotImg.alt = '';
