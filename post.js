@@ -516,6 +516,7 @@ const PostModule = (function() {
         openMultipostModal(data);
         return;
       }
+      closeMultipostModal();
       openPostById(data.postId, { fromMap: true, postMapCardId: data.post_map_card_id ? String(data.post_map_card_id) : '' });
     });
 
@@ -7481,6 +7482,7 @@ const PostModule = (function() {
     openPost: openPost,
     openPostById: openPostById,
     closePost: closePost,
+    closeMultipostModal: closeMultipostModal,
     renderPostCard: renderPostCard,
     renderMapMarkers: renderMapMarkers,
     highlightMapMarker: highlightMapMarker,

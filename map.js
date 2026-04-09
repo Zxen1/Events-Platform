@@ -2843,8 +2843,13 @@ const MapModule = (function() {
       return;
     }
 
-    // Desktop behavior: If map card is already active, close the post (toggle behavior)
+    // Desktop behavior: If map card is already active, close whatever is open (toggle behavior)
     if (entry.state === 'big') {
+      if (entry.post && entry.post.isMultiPost) {
+        if (window.PostModule && typeof PostModule.closeMultipostModal === 'function') {
+          PostModule.closeMultipostModal();
+        }
+      }
       if (window.PostModule && typeof PostModule.closePost === 'function') {
         PostModule.closePost(entry.post && entry.post.id ? entry.post.id : '');
       }
