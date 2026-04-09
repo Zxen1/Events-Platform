@@ -516,6 +516,7 @@ const PostModule = (function() {
         openMultipostModal(data);
         return;
       }
+      closeMultipostModal();
       openPostById(data.postId, { fromMap: true, postMapCardId: data.post_map_card_id ? String(data.post_map_card_id) : '' });
     });
 
@@ -2810,7 +2811,6 @@ const PostModule = (function() {
    * Close and remove the multipost modal (if open).
    */
   function closeMultipostModal() {
-    var wasOpen = !!_multipostModalEl;
     if (_multipostModalEl) {
       if (_multipostModalEl.parentNode) {
         _multipostModalEl.parentNode.removeChild(_multipostModalEl);
@@ -2822,7 +2822,7 @@ const PostModule = (function() {
       _multipostModalKeydownHandler = null;
     }
     _multipostModalPostIds = null;
-    if (wasOpen && window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
+    if (window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
       MapModule.clearActiveMapCards();
     }
   }
