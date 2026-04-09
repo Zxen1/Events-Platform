@@ -2425,4 +2425,163 @@
   display: flex;
 }
 
+/* ============================================================================
+   MULTIPOST MODAL
+   ============================================================================ */
+
+/* Full-panel dim overlay — sits inside .post-panel-content */
+.multipost-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--layer-modal, 90);
+  pointer-events: auto;
+}
+
+/* Floating modal box — top/bottom set by JS, left/right fixed */
+.multipost-modal {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, var(--bg-opacity, 0.6));
+  border-radius: 5px;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* Header — dark panel-header-style background */
+.multipost-modal-header {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 0;
+  background: var(--blue-900);
+}
+
+.multipost-modal-header > * {
+  margin-bottom: 10px;
+}
+
+/* Top row: meta + close button side by side */
+.multipost-modal-header-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.multipost-modal-header-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Location name — 16px, bold, matches post header title size */
+.multipost-modal-header-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+/* Location (suburb, city) — 14px muted */
+.multipost-modal-header-location {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0;
+}
+
+/* Result count — 13px muted, matches panel counter style */
+.multipost-modal-header-count {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Close button — matches filter-panel-actions-icon-btn pattern */
+.multipost-modal-close {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.multipost-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--blue-500);
+}
+
+/* Close icon — uses --ui-icon-close CSS variable (set from admin settings) */
+.multipost-modal-close-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  -webkit-mask-image: var(--ui-icon-close);
+  mask-image: var(--ui-icon-close);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Scrollable body holding post cards */
+.multipost-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  scrollbar-color: #888 transparent;
+}
+
+.multipost-modal-body::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.multipost-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.multipost-modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+/* Post cards inside modal: 12px between siblings (10-12-6 rule) */
+.multipost-modal-body .post-card {
+  margin-bottom: 12px;
+}
+
+.multipost-modal-body .post-card:last-child {
+  margin-bottom: 10px;
+}
+
+/* Empty state */
+.multipost-modal-empty {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 10px 0;
+}
 

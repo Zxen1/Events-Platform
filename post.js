@@ -174,6 +174,10 @@ const PostModule = (function() {
     recent: { token: 0, hideHandler: null, hideTimeoutId: 0 }
   };
 
+  // Multipost modal state
+  var _multipostModalEl = null;
+  var _multipostModalKeydownHandler = null;
+
   /* --------------------------------------------------------------------------
      INIT
      -------------------------------------------------------------------------- */
@@ -288,6 +292,9 @@ const PostModule = (function() {
       if (!data || !data.mode) return;
       currentMode = data.mode;
       applyMode(currentMode);
+
+      // Close multipost modal on any mode switch (post panel is leaving view)
+      closeMultipostModal();
 
       // Requirement: no map card should remain active when panels are closed / no open post is visible.
       // When we return to Map mode, clear active/big markers.
@@ -504,6 +511,10 @@ const PostModule = (function() {
     // Listen for map marker clicks
     App.on('map:cardClicked', function(data) {
       if (!data || !data.postId) return;
+      if (data.isMultiPost && Array.isArray(data.postIds) && data.postIds.length > 1) {
+        openMultipostModal(data);
+        return;
+      }
       openPostById(data.postId, { fromMap: true, postMapCardId: data.post_map_card_id ? String(data.post_map_card_id) : '' });
     });
 
@@ -2614,6 +2625,197 @@ const PostModule = (function() {
 
   // Last posts array passed to renderMapMarkers — used to re-run marker promotion when a post opens.
   var _lastRenderedPosts = null;
+
+  /* --------------------------------------------------------------------------
+     MULTIPOST MODAL
+     -------------------------------------------------------------------------- */
+
+  /**
+   * Open the multipost modal over the post panel, showing all posts at a multi-post location.
+   * @param {Object} data - map:cardClicked event data (isMultiPost, postIds, venue, suburb, city, state)
+   */
+  function openMultipostModal(data) {
+    if (!postPanelContentEl || !postListEl) return;
+
+    var postIds = (data.postIds || []).map(String);
+    if (!postIds.length) return;
+
+    // If not in posts mode, open posts panel first, then re-invoke
+    if (currentMode !== 'posts') {
+      var postsBtn = getModeButton('posts');
+      if (postsBtn && postsEnabled) {
+        postsBtn.click();
+        setTimeout(function() { openMultipostModal(data); }, 100);
+        return;
+      }
+    }
+
+    // Collect matching post cards from the list in DOM order (respects current sort)
+    var allCards = Array.from(postListEl.querySelectorAll('.post-card'));
+    var orderedPostIds = [];
+    allCards.forEach(function(card) {
+      var cid = card.dataset && card.dataset.id ? card.dataset.id : '';
+      if (cid && postIds.indexOf(cid) !== -1) {
+        orderedPostIds.push(cid);
+      }
+    });
+
+    // Find post objects in _lastRenderedPosts for each collected ID
+    var orderedPosts = [];
+    orderedPostIds.forEach(function(pid) {
+      var p = (_lastRenderedPosts || []).filter(function(post) { return String(post.id) === pid; })[0];
+      if (p) orderedPosts.push(p);
+    });
+
+    // Scroll to the first matching card in the panel
+    for (var i = 0; i < allCards.length; i++) {
+      var cid = allCards[i].dataset && allCards[i].dataset.id ? allCards[i].dataset.id : '';
+      if (postIds.indexOf(cid) !== -1) {
+        allCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      }
+    }
+
+    closeMultipostModal(); // Remove any existing modal first
+
+    // Build header strings
+    var locationName = data.venue || '';
+    var locationStr = '';
+    if (data.suburb && data.city) {
+      locationStr = data.suburb + ', ' + data.city;
+    } else {
+      locationStr = data.suburb || data.city || data.state || '';
+    }
+    if (!locationName) locationName = locationStr || 'Multiple Events';
+
+    var filteredCount = orderedPosts.length;
+    var totalCount    = postIds.length;
+    var countStr = filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + ' showing of ' + totalCount + ' at this location';
+
+    // Build overlay (covers full panel content, dims background)
+    var overlay = document.createElement('div');
+    overlay.className = 'multipost-modal-overlay';
+
+    // Build modal container (positioned within overlay by JS)
+    var modal = document.createElement('div');
+    modal.className = 'multipost-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', locationName);
+
+    // Position: top = panel header height + 20px, bottom = 20px
+    var headerWrap = postPanelContentEl.querySelector('.post-panel-header-wrap');
+    var headerH = headerWrap ? headerWrap.offsetHeight : 0;
+    modal.style.top    = (headerH + 20) + 'px';
+    modal.style.bottom = '20px';
+
+    // ── Header ──
+    var header = document.createElement('div');
+    header.className = 'multipost-modal-header';
+
+    var headerTop = document.createElement('div');
+    headerTop.className = 'multipost-modal-header-top';
+
+    var headerMeta = document.createElement('div');
+    headerMeta.className = 'multipost-modal-header-meta';
+
+    var nameEl = document.createElement('div');
+    nameEl.className = 'multipost-modal-header-name';
+    nameEl.textContent = locationName;
+    headerMeta.appendChild(nameEl);
+
+    if (locationStr) {
+      var locEl = document.createElement('div');
+      locEl.className = 'multipost-modal-header-location';
+      locEl.textContent = locationStr;
+      headerMeta.appendChild(locEl);
+    }
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'multipost-modal-close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    var closeIcon = document.createElement('span');
+    closeIcon.className = 'multipost-modal-close-icon';
+    closeIcon.setAttribute('aria-hidden', 'true');
+    closeBtn.appendChild(closeIcon);
+
+    headerTop.appendChild(headerMeta);
+    headerTop.appendChild(closeBtn);
+    header.appendChild(headerTop);
+
+    var countEl = document.createElement('div');
+    countEl.className = 'multipost-modal-header-count';
+    countEl.textContent = countStr;
+    header.appendChild(countEl);
+
+    // ── Body (post cards) ──
+    var body = document.createElement('div');
+    body.className = 'multipost-modal-body';
+
+    if (orderedPosts.length) {
+      orderedPosts.forEach(function(post) {
+        var card = renderPostCard(post, { skipDefaultOpenHandlers: true });
+        var _postMapCardId = (card.dataset && card.dataset.postMapCardId) ? String(card.dataset.postMapCardId) : '';
+        card.addEventListener('click', function(e) {
+          if (e.target.closest && e.target.closest('.post-card-button-fav')) return;
+          closeMultipostModal();
+          openPostById(post.id, { fromMap: true, postMapCardId: _postMapCardId });
+        });
+        card.addEventListener('keydown', function(e) {
+          var k = String(e.key || '');
+          if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar') return;
+          if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
+          e.preventDefault();
+          closeMultipostModal();
+          openPostById(post.id, { fromMap: true, postMapCardId: _postMapCardId });
+        });
+        body.appendChild(card);
+      });
+    } else {
+      var emptyEl = document.createElement('div');
+      emptyEl.className = 'multipost-modal-empty';
+      emptyEl.textContent = 'No results match current filters.';
+      body.appendChild(emptyEl);
+    }
+
+    modal.appendChild(header);
+    modal.appendChild(body);
+    overlay.appendChild(modal);
+    postPanelContentEl.appendChild(overlay);
+    _multipostModalEl = overlay;
+
+    // ── Close behaviors ──
+    closeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeMultipostModal();
+    });
+
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeMultipostModal();
+    });
+
+    _multipostModalKeydownHandler = function(e) {
+      if (e.key === 'Escape') closeMultipostModal();
+    };
+    document.addEventListener('keydown', _multipostModalKeydownHandler);
+  }
+
+  /**
+   * Close and remove the multipost modal (if open).
+   */
+  function closeMultipostModal() {
+    if (_multipostModalEl) {
+      if (_multipostModalEl.parentNode) {
+        _multipostModalEl.parentNode.removeChild(_multipostModalEl);
+      }
+      _multipostModalEl = null;
+    }
+    if (_multipostModalKeydownHandler) {
+      document.removeEventListener('keydown', _multipostModalKeydownHandler);
+      _multipostModalKeydownHandler = null;
+    }
+  }
 
   /**
    * Count map cards in visible map area (for filter counts)

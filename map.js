@@ -2830,9 +2830,15 @@ const MapModule = (function() {
       // Second tap (already active): open.
       stopSpin();
       App.emit('map:cardClicked', {
-        postId: entry.post && entry.post.id ? entry.post.id : null,
+        postId:           entry.post && entry.post.id ? entry.post.id : null,
         post_map_card_id: entry.post && entry.post.post_map_card_id ? entry.post.post_map_card_id : null,
-        locationKey: entry.locationKey
+        locationKey:      entry.locationKey,
+        isMultiPost:      !!(entry.post && entry.post.isMultiPost),
+        postIds:          entry.postIds || [],
+        venue:            entry.post && entry.post.venue  ? entry.post.venue  : '',
+        suburb:           entry.post && entry.post.suburb ? entry.post.suburb : '',
+        city:             entry.post && entry.post.city   ? entry.post.city   : '',
+        state:            entry.post && entry.post.state  ? entry.post.state  : ''
       });
       return;
     }
@@ -2853,9 +2859,15 @@ const MapModule = (function() {
 
     // Emit event for post module to open the post
     App.emit('map:cardClicked', {
-      postId: entry.post && entry.post.id ? entry.post.id : null,
+      postId:           entry.post && entry.post.id ? entry.post.id : null,
       post_map_card_id: entry.post && entry.post.post_map_card_id ? entry.post.post_map_card_id : null,
-      locationKey: entry.locationKey
+      locationKey:      entry.locationKey,
+      isMultiPost:      !!(entry.post && entry.post.isMultiPost),
+      postIds:          entry.postIds || [],
+      venue:            entry.post && entry.post.venue  ? entry.post.venue  : '',
+      suburb:           entry.post && entry.post.suburb ? entry.post.suburb : '',
+      city:             entry.post && entry.post.city   ? entry.post.city   : '',
+      state:            entry.post && entry.post.state  ? entry.post.state  : ''
     });
   }
 
