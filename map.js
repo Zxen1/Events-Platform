@@ -2495,14 +2495,6 @@ const MapModule = (function() {
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
 
-    // Count badge for multi-post markers (all appearance tiers)
-    if (post.isMultiPost && post.locationPostCount > 1) {
-      var _badge = document.createElement('span');
-      _badge.className = 'map-card-count';
-      _badge.textContent = String(post.locationPostCount);
-      el.appendChild(_badge);
-    }
-
     // Create Mapbox marker
     const marker = new mapboxgl.Marker({
       element: el,
@@ -3222,10 +3214,7 @@ const MapModule = (function() {
       layout: {
         'text-field':        ['to-string', ['get', 'count']],
         'text-font':         ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size':         ['+',
-          ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 13],
-          ['case', ['boolean', ['feature-state', 'hovered'], false], 4, 0]
-        ],
+        'text-size':         ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 13],
         'text-allow-overlap': true,
         'text-ignore-placement': true
       },
