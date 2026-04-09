@@ -949,29 +949,19 @@ const MapModule = (function() {
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        background: rgba(0,0,0,0.7);
+        background: var(--dot-color);
+        border: 3px solid rgba(0,0,0,0.7);
+        box-sizing: border-box;
         left: 0;
         top: 0;
         z-index: 1;
         pointer-events: none;
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
-        transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+        transition: transform 0.2s ease, opacity 0.2s ease;
       }
       .map-card-appearance--dot::after {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--dot-color);
-        left: 0;
-        top: 0;
-        z-index: 2;
-        pointer-events: none;
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-        transition: transform 0.2s ease, opacity 0.2s ease;
+        display: none;
       }
       .map-card-appearance--dot.is-hovered::before,
       .map-card-appearance--dot.is-hovered::after,
@@ -1005,13 +995,18 @@ const MapModule = (function() {
         position: absolute;
         left: 0;
         top: 0;
+        width: 30px;
+        height: 30px;
         transform: translate(-50%, -50%);
         z-index: 3;
         pointer-events: none;
         display: block;
+        transition: width 0.2s ease, height 0.2s ease;
       }
-      .map-card-container.is-hovered .map-card-multipost-dot,
-      .map-card-container.is-active  .map-card-multipost-dot { display: none; }
+      .map-card-container.is-active .map-card-multipost-dot {
+        width: 50px;
+        height: 50px;
+      }
 
     `;
     
@@ -2416,12 +2411,12 @@ const MapModule = (function() {
    * Used for multi-post DOM dot markers so the number and circle are one unit.
    */
   function generateMultiPostDotDataUrl(count, color) {
-    var SIZE = 30;
+    var SIZE = 50;
     var canvas = document.createElement('canvas');
     canvas.width  = SIZE;
     canvas.height = SIZE;
     var ctx = canvas.getContext('2d');
-    var cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 1.5;
+    var cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 2;
 
     // Circle fill
     ctx.beginPath();
@@ -2430,7 +2425,7 @@ const MapModule = (function() {
     ctx.fill();
 
     // Number
-    var fontSize = count >= 10 ? 14 : 17;
+    var fontSize = count >= 10 ? 23 : 28;
     ctx.font = 'bold ' + fontSize + 'px "DIN Offc Pro Bold", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -2513,7 +2508,7 @@ const MapModule = (function() {
     if (post.isMultiPost && post.locationPostCount > 1 && appearance !== 'card') {
       var _dotImg = document.createElement('img');
       _dotImg.className = 'map-card-multipost-dot';
-      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, post.subcategory_color || '#888888');
+      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, '#1e3a8a');
       _dotImg.width  = 30;
       _dotImg.height = 30;
       _dotImg.alt = '';
