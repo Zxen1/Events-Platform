@@ -2822,6 +2822,9 @@ const PostModule = (function() {
       _multipostModalKeydownHandler = null;
     }
     _multipostModalPostIds = null;
+    if (window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
+      MapModule.clearActiveMapCards();
+    }
   }
 
   /**
