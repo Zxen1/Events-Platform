@@ -2144,6 +2144,7 @@ const PostModule = (function() {
    * @param {Array} posts - Array of post data from API
    */
   function renderMapMarkers(posts) {
+    _lastRenderedPosts = posts || _lastRenderedPosts;
     // Agent Essentials: Never load or process if not required.
     var threshold = getPostsMinZoom();
     if (typeof lastZoom !== 'number' || lastZoom < threshold) {
@@ -2572,6 +2573,9 @@ const PostModule = (function() {
   // Bounds captured at fetch time — used by renderMapMarkers to filter map cards consistently.
   // Must match the bounds sent to the server, not the live viewport at render time.
   var _lastFetchBounds = null;
+
+  // Last posts array passed to renderMapMarkers — used to re-run marker promotion when a post opens.
+  var _lastRenderedPosts = null;
 
   /**
    * Count map cards in visible map area (for filter counts)
@@ -3629,6 +3633,12 @@ const PostModule = (function() {
       try { topSlack = container.querySelector('.topSlack'); } catch (_eTopSlack) { topSlack = null; }
       var insertBeforeNode = topSlack ? topSlack.nextSibling : container.firstChild;
       container.insertBefore(slot, insertBeforeNode);
+    }
+
+    // Promote the open post's native circle dot to a DOM card marker now that the
+    // post element is in the DOM and data-post-map-card-id is set.
+    if (_lastRenderedPosts) {
+      renderMapMarkers(_lastRenderedPosts);
     }
 
     // Wallpaper: activate now that the element is in the DOM.
