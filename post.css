@@ -2447,19 +2447,19 @@
   right: 10px;
   display: flex;
   flex-direction: column;
-  background: #222222;
+  background: rgba(0, 0, 0, 0.82);
   border-radius: 5px;
   overflow: hidden;
   color: #fff;
 }
 
-/* Header — same neutral dark as filter panel header */
+/* Header — blue accent */
 .multipost-modal-header {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   padding: 10px 10px 0;
-  background: #222222;
+  background: var(--blue-900);
 }
 
 .multipost-modal-header > * {
