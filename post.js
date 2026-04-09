@@ -2304,6 +2304,18 @@ const PostModule = (function() {
         markerData.isMultiPost = true;
         markerData.locationPostIds = Object.keys(uniquePostIds);
         markerData.locationPostCount = markerData.locationPostIds.length;
+        // Dominant subcategory colour: whichever colour appears most across all posts at this venue.
+        var _mpColourCounts = {};
+        group.forEach(function(gi) {
+          var _c = gi.post.subcategory_color || '';
+          if (_c) _mpColourCounts[_c] = (_mpColourCounts[_c] || 0) + 1;
+        });
+        var _mpDomColour = markerData.subcategory_color || '';
+        var _mpDomMax = 0;
+        Object.keys(_mpColourCounts).forEach(function(_c) {
+          if (_mpColourCounts[_c] > _mpDomMax) { _mpDomMax = _mpColourCounts[_c]; _mpDomColour = _c; }
+        });
+        markerData.subcategory_color = _mpDomColour;
       }
 
       // Store all map card IDs in this location group so activation lookup can match

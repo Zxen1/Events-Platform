@@ -929,10 +929,9 @@ const MapModule = (function() {
       .map-card-appearance--dot:not(.is-hovered):not(.is-active) .map-card-icon {
         opacity: 0;
       }
-      .map-card-appearance--dot[data-multipost]:not(.is-active)::after {
-        background-image: var(--dot-icon);
-        background-size: cover;
-        background-color: transparent;
+      /* Multi-post dot uses subcategory colour via --pill-fill, same as single-post */
+      .map-card-appearance--dot[data-multipost-count]::after {
+        background: var(--pill-fill);
       }
       .map-card-appearance--dot::before {
         content: '';
@@ -986,6 +985,49 @@ const MapModule = (function() {
           opacity: 0;
         }
       }
+
+      /* ── MULTI-POST COUNT BADGE ───────────────────────────────────────────────
+         White number, dark outline (no blur), centred on the dot.
+         Scales in three steps: small (1–3), medium (4–9), large (10+).
+      ──────────────────────────────────────────────────────────────────────────── */
+      .map-card-count {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        pointer-events: none;
+        color: #ffffff;
+        font-size: 8px;
+        font-weight: 700;
+        line-height: 1;
+        text-shadow:
+          -1px -1px 0 rgba(0,0,0,0.85),
+           1px -1px 0 rgba(0,0,0,0.85),
+          -1px  1px 0 rgba(0,0,0,0.85),
+           1px  1px 0 rgba(0,0,0,0.85);
+        transition: font-size 0.2s ease;
+      }
+      [data-multipost-count="4"] .map-card-count,
+      [data-multipost-count="5"] .map-card-count,
+      [data-multipost-count="6"] .map-card-count,
+      [data-multipost-count="7"] .map-card-count,
+      [data-multipost-count="8"] .map-card-count,
+      [data-multipost-count="9"] .map-card-count { font-size: 10px; }
+      [data-multipost-count="10"] .map-card-count,
+      [data-multipost-count="11"] .map-card-count,
+      [data-multipost-count="12"] .map-card-count,
+      [data-multipost-count="13"] .map-card-count,
+      [data-multipost-count="14"] .map-card-count,
+      [data-multipost-count="15"] .map-card-count,
+      [data-multipost-count="16"] .map-card-count,
+      [data-multipost-count="17"] .map-card-count,
+      [data-multipost-count="18"] .map-card-count,
+      [data-multipost-count="19"] .map-card-count,
+      [data-multipost-count="20"] .map-card-count { font-size: 12px; }
+      /* Hide badge when hovered/active — the pill label shows instead */
+      .map-card-container.is-hovered .map-card-count,
+      .map-card-container.is-active  .map-card-count { opacity: 0; }
 
     `;
     
@@ -2393,9 +2435,20 @@ const MapModule = (function() {
 
     /* Marker appearance inputs
        Shared colour/icon variables feed the CSS marker system above. */
-    var subcatColor = (post.isMultiPost || post.isStorefront) ? '#ffffff' : (post.subcategory_color || '');
+    var subcatColor = post.isStorefront ? '#ffffff' : (post.subcategory_color || '');
     if (subcatColor) el.style.setProperty('--subcat-color', subcatColor);
-    if (post.isMultiPost || post.isStorefront) {
+    if (post.isMultiPost) {
+      // Multi-post: coloured dot (dominant subcategory colour) + count badge
+      var _mpCount = post.locationPostCount || 2;
+      el.dataset.multipostCount = String(_mpCount);
+      if (subcatColor) {
+        var _mh = subcatColor.replace('#', '');
+        var _mr = parseInt(_mh.substring(0,2), 16);
+        var _mg = parseInt(_mh.substring(2,4), 16);
+        var _mb = parseInt(_mh.substring(4,6), 16);
+        el.style.setProperty('--pill-fill', 'rgb(' + _mr + ',' + _mg + ',' + _mb + ')');
+      }
+    } else if (post.isStorefront) {
       el.dataset.multipost = '1';
       el.style.setProperty('--pill-fill', '#222222');
       el.style.setProperty('--pill-bg-icon', 'url(' + getMultiPostIconUrl() + ')');
@@ -2417,11 +2470,19 @@ const MapModule = (function() {
       }
       el.classList.add('map-card-appearance--dot');
       if (dotColor) el.style.setProperty('--dot-color', dotColor);
-      if (post.isMultiPost || post.isStorefront) {
+      if (post.isStorefront) {
         el.style.setProperty('--dot-icon', 'url(' + getMultiPostIconUrl() + ')');
       }
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
+
+    // Count badge for multi-post markers (all appearance tiers)
+    if (post.isMultiPost && post.locationPostCount > 1) {
+      var _badge = document.createElement('span');
+      _badge.className = 'map-card-count';
+      _badge.textContent = String(post.locationPostCount);
+      el.appendChild(_badge);
+    }
 
     // Create Mapbox marker
     const marker = new mapboxgl.Marker({
