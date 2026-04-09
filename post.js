@@ -2423,12 +2423,17 @@ const PostModule = (function() {
     // ── NATIVE CIRCLE SPLIT ───────────────────────────────────────────────
     // Single-post icon/dot markers → native Mapbox circle layer (no DOM, GPU only).
     // Cards and multi-post/storefront → DOM markers as before.
+    //
+    // ★ SWITCH: set to false to revert to DOM icon/dot markers (old behaviour).
+    var USE_NATIVE_CIRCLES = true;
+    //
     var _circleFeatures  = [];
     var _circleDataByKey = {};
 
     Object.keys(nextMarkerDataByKey).forEach(function(locationKey) {
       var md = nextMarkerDataByKey[locationKey];
-      var isNativeCircle = (md.markerAppearance === 'icon' || md.markerAppearance === 'dot')
+      var isNativeCircle = USE_NATIVE_CIRCLES
+                           && (md.markerAppearance === 'icon' || md.markerAppearance === 'dot')
                            && !md.isMultiPost && !md.isStorefront;
       if (!isNativeCircle) return;
       _circleFeatures.push({
@@ -2494,8 +2499,9 @@ const PostModule = (function() {
       //   mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
       // }
       //
-      // NATIVE (active):
-      var _isNativeCircle = (markerData.markerAppearance === 'icon' || markerData.markerAppearance === 'dot')
+      // NATIVE (active when USE_NATIVE_CIRCLES = true):
+      var _isNativeCircle = USE_NATIVE_CIRCLES
+                            && (markerData.markerAppearance === 'icon' || markerData.markerAppearance === 'dot')
                             && !markerData.isMultiPost && !markerData.isStorefront;
       if (!_isNativeCircle && mapModule.createMapCardMarker) {
         mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
