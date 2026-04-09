@@ -7501,4 +7501,3 @@ App.registerModule('post', PostModule);
 
 // Expose globally for consistency with other modules
 window.PostModule = PostModule;
-
