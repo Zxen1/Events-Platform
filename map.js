@@ -3140,9 +3140,13 @@ const MapModule = (function() {
     }
 
     if (_ncPromoted) {
+      var _clearedPostId = _ncPromoted.postId || '';
       clearTimeout(_ncPromoted.leaveTimer);
       try { _ncPromoted.marker.remove(); } catch (_e) {}
       _ncPromoted = null;
+      if (_clearedPostId) {
+        App.emit('map:cardHover', { postId: _clearedPostId, postIds: [_clearedPostId], isHovering: false });
+      }
     }
   }
 
@@ -3196,7 +3200,10 @@ const MapModule = (function() {
       .setLngLat([lng, lat])
       .addTo(map);
 
-    _ncPromoted = { marker: marker, leaveTimer: null };
+    _ncPromoted = { marker: marker, leaveTimer: null, postId: String(props.postId || '') };
+
+    // Glow the matching post card in the panel
+    App.emit('map:cardHover', { postId: String(props.postId || ''), postIds: [String(props.postId || '')], isHovering: true });
   }
 
   // Pointer-down coords for click-threshold check on promoted card
