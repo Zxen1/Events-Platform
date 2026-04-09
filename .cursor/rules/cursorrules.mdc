@@ -15,8 +15,9 @@ Never edit workspace files directly. All edits go through `commit/`:
 1. **Copy** the target file into `commit/`, mirroring its path (e.g., `commit/post.js` for root files, `commit/home/funmapco/connectors/get-form.php` for nested files).
 2. **Edit** only the copy inside `commit/`. The workspace file stays untouched.
 3. **Discuss** the changes with the user. The user CANNOT see these changes — they are invisible until moved to the workspace.
-4. **When the user says "move it to the workspace"**: overwrite the workspace file with the `commit/` copy, then delete the `commit/` copy.
-5. The user presses the Commit button. The change goes live.
+4. **When the user says "move it to the workspace"**: first, save the current workspace file as `commit/{path}.prev` (undo backup). Then overwrite the workspace file with the `commit/` copy. Keep the `commit/` copy and `.prev` until the user commits.
+5. The user presses the Commit button. The change goes live. Delete the `commit/` copy and `.prev` backup.
+6. **Undo ("put it back")**: If the user changes their mind before committing, restore `commit/{path}.prev` to the workspace, move the proposed file back to `commit/`, and delete the `.prev`.
 
 **Rules:**
 - If `commit/` contains files at the start of a session, ASK the user about them before doing anything — they are unapproved changes from a previous session.
