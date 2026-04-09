@@ -1,7 +1,0 @@
-db/database.json
-.gitignore
-
-# Agent folder - ignore scripts and large files
-Agent/*.py
-Agent/*.json
-Agent/*.zim
