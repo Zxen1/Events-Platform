@@ -2429,13 +2429,8 @@ const MapModule = (function() {
     ctx.fillStyle = color;
     ctx.fill();
 
-    // Border
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-    ctx.stroke();
-
     // Number
-    var fontSize = count >= 10 ? 11 : 14;
+    var fontSize = count >= 10 ? 14 : 17;
     ctx.font = 'bold ' + fontSize + 'px "DIN Offc Pro Bold", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
