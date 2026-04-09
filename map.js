@@ -401,7 +401,7 @@ const MapModule = (function() {
   const NC_SOURCE              = 'native-circles-source';
   const NC_LAYER               = 'native-circles-layer';
   const NC_LABEL_LAYER         = 'native-circles-labels';
-  const NC_HOVER_DELAY_MS      = 80; // pause before promoting to DOM hover card
+  const NC_HOVER_DELAY_MS      = 0; // no delay — dot promotes to hover card instantly
 
   let _ncDataByKey      = {};   // locationKey → markerData (for hover card promotion)
   let _ncHoveredId      = null; // Mapbox auto-generated feature id of highlighted circle
@@ -3189,7 +3189,7 @@ const MapModule = (function() {
       type:   'circle',
       source: NC_SOURCE,
       paint: {
-        'circle-radius': ['case', ['boolean', ['feature-state', 'hovered'], false], 15, 10],
+        'circle-radius': 10,
         'circle-color':  ['get', 'color'],
         'circle-stroke-width': 2,
         'circle-stroke-color': 'rgba(0,0,0,0.5)',
