@@ -940,7 +940,12 @@ const MapModule = (function() {
       .map-card-appearance--dot:not(.is-hovered):not(.is-active) .map-card-icon {
         opacity: 0;
       }
-      /* Multi-post dot uses subcategory colour via --pill-fill, same as single-post */
+      /* Multi-post dot: 30px diameter (matches icon size), dominant subcategory colour */
+      .map-card-appearance--dot[data-multipost-count]::after {
+        width: 30px;
+        height: 30px;
+      }
+      /* Single-post dot uses --dot-color; multi-post dot uses --pill-fill */
       .map-card-appearance--dot[data-multipost-count]::after {
         background: var(--pill-fill);
       }
@@ -2495,6 +2500,14 @@ const MapModule = (function() {
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
 
+    // Count badge for multi-post DOM dots (shown at dot/icon tier, hidden at hover/active)
+    if (post.isMultiPost && post.locationPostCount > 1) {
+      var _badge = document.createElement('span');
+      _badge.className = 'map-card-count';
+      _badge.textContent = String(post.locationPostCount);
+      el.appendChild(_badge);
+    }
+
     // Create Mapbox marker
     const marker = new mapboxgl.Marker({
       element: el,
@@ -3191,7 +3204,7 @@ const MapModule = (function() {
       paint: {
         'circle-radius': 10,
         'circle-color':  ['get', 'color'],
-        'circle-stroke-width': 5,
+        'circle-stroke-width': 3,
         'circle-stroke-color': 'rgba(0,0,0,0.7)',
         'circle-opacity': 1,
         'circle-emissive-strength': 1
