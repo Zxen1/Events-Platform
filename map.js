@@ -3197,7 +3197,10 @@ const MapModule = (function() {
       type:   'circle',
       source: NC_SOURCE,
       paint: {
-        'circle-radius': ['case', ['boolean', ['feature-state', 'hovered'], false], 10, 7],
+        'circle-radius': ['+',
+          ['interpolate', ['linear'], ['zoom'], 11, 5, 16, 10],
+          ['case', ['boolean', ['feature-state', 'hovered'], false], 5, 0]
+        ],
         'circle-color':  ['get', 'color'],
         'circle-stroke-width': 2,
         'circle-stroke-color': ['case',
@@ -3219,7 +3222,10 @@ const MapModule = (function() {
       layout: {
         'text-field':        ['to-string', ['get', 'count']],
         'text-font':         ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size':         9,
+        'text-size':         ['+',
+          ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 13],
+          ['case', ['boolean', ['feature-state', 'hovered'], false], 4, 0]
+        ],
         'text-allow-overlap': true,
         'text-ignore-placement': true
       },
