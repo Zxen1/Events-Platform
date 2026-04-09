@@ -995,18 +995,13 @@ const MapModule = (function() {
         position: absolute;
         left: 0;
         top: 0;
-        width: 30px;
-        height: 30px;
         transform: translate(-50%, -50%);
         z-index: 3;
         pointer-events: none;
         display: block;
-        transition: width 0.2s ease, height 0.2s ease;
       }
-      .map-card-container.is-active .map-card-multipost-dot {
-        width: 50px;
-        height: 50px;
-      }
+      .map-card-container.is-hovered .map-card-multipost-dot,
+      .map-card-container.is-active  .map-card-multipost-dot { display: none; }
 
     `;
     
@@ -2411,12 +2406,12 @@ const MapModule = (function() {
    * Used for multi-post DOM dot markers so the number and circle are one unit.
    */
   function generateMultiPostDotDataUrl(count, color) {
-    var SIZE = 50;
+    var SIZE = 30;
     var canvas = document.createElement('canvas');
     canvas.width  = SIZE;
     canvas.height = SIZE;
     var ctx = canvas.getContext('2d');
-    var cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 2;
+    var cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 1.5;
 
     // Circle fill
     ctx.beginPath();
@@ -2425,7 +2420,7 @@ const MapModule = (function() {
     ctx.fill();
 
     // Number
-    var fontSize = count >= 10 ? 23 : 28;
+    var fontSize = count >= 10 ? 14 : 17;
     ctx.font = 'bold ' + fontSize + 'px "DIN Offc Pro Bold", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
