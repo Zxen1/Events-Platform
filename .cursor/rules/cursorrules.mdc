@@ -6,7 +6,24 @@ alwaysApply: true
 
 # AGENT ESSENTIALS
 
-99% of the time I will discuss changes with you before committing. This means that the changes you have made are not on the website and are not visible to me. They are going to be discussed prior to being committed and synced. You need to be able to differentiate between what's happening on the live website and what's happening in the commit queue at all times. How you achieve this is up to you, but it is essential that you do not confuse the two. They are completely different. Any changes in the commit queue are invisible to me.
+**THE `commit/` FOLDER SYSTEM — MANDATORY FOR ALL FILE EDITS**
+
+There are two locations. The **workspace** is the live site — what the user sees on the website. The **`commit/` folder** is the staging area — only the agent can see files here. The user will say "move it to the workspace" when approving changes.
+
+Never edit workspace files directly. All edits go through `commit/`:
+
+1. **Copy** the target file into `commit/`, mirroring its path (e.g., `commit/post.js` for root files, `commit/home/funmapco/connectors/get-form.php` for nested files).
+2. **Edit** only the copy inside `commit/`. The workspace file stays untouched.
+3. **Discuss** the changes with the user. The user CANNOT see these changes — they are invisible until moved to the workspace.
+4. **When the user says "move it to the workspace"**: overwrite the workspace file with the `commit/` copy, then delete the `commit/` copy.
+5. The user presses the Commit button. The change goes live.
+
+**Rules:**
+- If `commit/` contains files at the start of a session, ASK the user about them before doing anything — they are unapproved changes from a previous session.
+- The `commit/` folder is gitignored — it never gets committed to the repo.
+- Never ask the user about visual details of changes still in `commit/`. If it's in `commit/`, the user cannot see it.
+- **Workspace** = live site, what the user sees. **`commit/`** = proposed changes, only the agent sees.
+- If the user says changes aren't showing or won't commit, check `commit/` first — files there are gitignored and invisible to git. Remind the user the files need to be moved to the workspace before they can be committed.
 
 Read this file at the start of every conversation. Follow these rules without exception.
 When adding new rules to this file, keep each entry to 3 lines maximum.
