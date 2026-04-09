@@ -940,15 +940,9 @@ const MapModule = (function() {
       .map-card-appearance--dot:not(.is-hovered):not(.is-active) .map-card-icon {
         opacity: 0;
       }
-      /* Multi-post dot: 30px diameter (matches icon size), dominant subcategory colour */
-      .map-card-appearance--dot[data-multipost-count]::after {
-        width: 30px;
-        height: 30px;
-      }
-      /* Single-post dot uses --dot-color; multi-post dot uses --pill-fill */
-      .map-card-appearance--dot[data-multipost-count]::after {
-        background: var(--pill-fill);
-      }
+      /* Multi-post dot: canvas image handles the circle+number — suppress ::before/::after */
+      .map-card-appearance--dot[data-multipost-count]::before,
+      .map-card-appearance--dot[data-multipost-count]::after { display: none; }
       .map-card-appearance--dot::before {
         content: '';
         position: absolute;
@@ -1006,44 +1000,18 @@ const MapModule = (function() {
          White number, dark outline (no blur), centred on the dot.
          Scales in three steps: small (1–3), medium (4–9), large (10+).
       ──────────────────────────────────────────────────────────────────────────── */
-      .map-card-count {
+      /* Multi-post canvas dot: circle+number as one unit, centred on anchor */
+      .map-card-multipost-dot {
         position: absolute;
         left: 0;
         top: 0;
         transform: translate(-50%, -50%);
         z-index: 3;
         pointer-events: none;
-        color: #ffffff;
-        font-size: 8px;
-        font-weight: 700;
-        line-height: 1;
-        text-shadow:
-          -1px -1px 0 rgba(0,0,0,0.85),
-           1px -1px 0 rgba(0,0,0,0.85),
-          -1px  1px 0 rgba(0,0,0,0.85),
-           1px  1px 0 rgba(0,0,0,0.85);
-        transition: font-size 0.2s ease;
+        display: block;
       }
-      [data-multipost-count="4"] .map-card-count,
-      [data-multipost-count="5"] .map-card-count,
-      [data-multipost-count="6"] .map-card-count,
-      [data-multipost-count="7"] .map-card-count,
-      [data-multipost-count="8"] .map-card-count,
-      [data-multipost-count="9"] .map-card-count { font-size: 10px; }
-      [data-multipost-count="10"] .map-card-count,
-      [data-multipost-count="11"] .map-card-count,
-      [data-multipost-count="12"] .map-card-count,
-      [data-multipost-count="13"] .map-card-count,
-      [data-multipost-count="14"] .map-card-count,
-      [data-multipost-count="15"] .map-card-count,
-      [data-multipost-count="16"] .map-card-count,
-      [data-multipost-count="17"] .map-card-count,
-      [data-multipost-count="18"] .map-card-count,
-      [data-multipost-count="19"] .map-card-count,
-      [data-multipost-count="20"] .map-card-count { font-size: 12px; }
-      /* Hide badge when hovered/active — the pill label shows instead */
-      .map-card-container.is-hovered .map-card-count,
-      .map-card-container.is-active  .map-card-count { opacity: 0; }
+      .map-card-container.is-hovered .map-card-multipost-dot,
+      .map-card-container.is-active  .map-card-multipost-dot { display: none; }
 
     `;
     
@@ -2444,6 +2412,52 @@ const MapModule = (function() {
   }
 
   /**
+   * Generate a data-URL image of a coloured circle with a count number baked in.
+   * Used for multi-post DOM dot markers so the number and circle are one unit.
+   */
+  function generateMultiPostDotDataUrl(count, color) {
+    var SIZE = 30;
+    var canvas = document.createElement('canvas');
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
+    var ctx = canvas.getContext('2d');
+    var cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 1.5;
+
+    // Circle fill
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Border
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+    ctx.stroke();
+
+    // Number
+    var fontSize = count >= 10 ? 11 : 14;
+    ctx.font = 'bold ' + fontSize + 'px "DIN Offc Pro Bold", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Dark outline
+    var hex = color.replace('#', '');
+    var dr = Math.round(parseInt(hex.substring(0,2),16)*0.45);
+    var dg = Math.round(parseInt(hex.substring(2,4),16)*0.45);
+    var db = Math.round(parseInt(hex.substring(4,6),16)*0.45);
+    ctx.strokeStyle = 'rgb('+dr+','+dg+','+db+')';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(String(count), cx, cy);
+
+    // White text
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(String(count), cx, cy);
+
+    return canvas.toDataURL();
+  }
+
+  /**
    * Create a map card marker for a post
    */
   function createMapCardMarker(post, lng, lat, appearance, dotColor) {
@@ -2500,12 +2514,15 @@ const MapModule = (function() {
     }
     el.innerHTML = buildMapCardHTML(post, 'small');
 
-    // Count badge for multi-post DOM dots (shown at dot/icon tier, hidden at hover/active)
-    if (post.isMultiPost && post.locationPostCount > 1) {
-      var _badge = document.createElement('span');
-      _badge.className = 'map-card-count';
-      _badge.textContent = String(post.locationPostCount);
-      el.appendChild(_badge);
+    // Multi-post dot: canvas-generated circle+number image (circle and number as one unit)
+    if (post.isMultiPost && post.locationPostCount > 1 && appearance !== 'card') {
+      var _dotImg = document.createElement('img');
+      _dotImg.className = 'map-card-multipost-dot';
+      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, post.subcategory_color || '#888888');
+      _dotImg.width  = 30;
+      _dotImg.height = 30;
+      _dotImg.alt = '';
+      el.appendChild(_dotImg);
     }
 
     // Create Mapbox marker
