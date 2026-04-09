@@ -3191,9 +3191,9 @@ const MapModule = (function() {
       paint: {
         'circle-radius': 10,
         'circle-color':  ['get', 'color'],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': 'rgba(0,0,0,0.5)',
-        'circle-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 1, 0.88],
+        'circle-stroke-width': 5,
+        'circle-stroke-color': 'rgba(0,0,0,0.7)',
+        'circle-opacity': 1,
         'circle-emissive-strength': 1
       }
     });
@@ -3208,14 +3208,14 @@ const MapModule = (function() {
         'text-field':        ['to-string', ['get', 'count']],
         'text-font':         ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
         'text-size':         ['interpolate', ['linear'], ['zoom'], 11, 14, 16, 18],
-        'text-allow-overlap': true,
-        'text-ignore-placement': true
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'symbol-z-order':    'viewport-y'
       },
       paint: {
-        'text-color':             '#ffffff',
-        'text-halo-color':        ['get', 'darkColor'],
-        'text-halo-width':        1.5,
-        'text-emissive-strength': 1
+        'text-color':       '#ffffff',
+        'text-halo-color':  ['get', 'darkColor'],
+        'text-halo-width':  1.5
       }
     });
 
