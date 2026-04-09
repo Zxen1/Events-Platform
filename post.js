@@ -177,6 +177,7 @@ const PostModule = (function() {
   // Multipost modal state
   var _multipostModalEl = null;
   var _multipostModalKeydownHandler = null;
+  var _multipostModalPostIds = null; // post IDs known at open time — used to refresh on filter change
 
   /* --------------------------------------------------------------------------
      INIT
@@ -2556,6 +2557,11 @@ const PostModule = (function() {
     // Preserve the active (big) state for the currently open post (if any).
     // Markers may have been updated above, so we re-apply the association here.
     restoreActiveMapCardFromOpenPost();
+
+    // Refresh multipost modal if open (post list DOM is fully updated at this point)
+    if (_multipostModalEl) {
+      _refreshMultipostModal();
+    }
   }
 
   function getOpenPostIdFromDom() {
@@ -2677,6 +2683,7 @@ const PostModule = (function() {
     }
 
     closeMultipostModal(); // Remove any existing modal first
+    _multipostModalPostIds = postIds; // Store for filter-driven refresh
 
     // Build header strings
     var locationName = data.venue || '';
@@ -2703,9 +2710,9 @@ const PostModule = (function() {
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-label', locationName);
 
-    // Position: 20px from top and bottom of the panel content area
-    modal.style.top    = '20px';
-    modal.style.bottom = '20px';
+    // Position: 20px from top; max-height caps at 20px from bottom; shrinks to fit if content is shorter
+    modal.style.top       = '20px';
+    modal.style.maxHeight = 'calc(100% - 40px)';
 
     // ── Header ──
     var header = document.createElement('div');
@@ -2812,6 +2819,64 @@ const PostModule = (function() {
     if (_multipostModalKeydownHandler) {
       document.removeEventListener('keydown', _multipostModalKeydownHandler);
       _multipostModalKeydownHandler = null;
+    }
+    _multipostModalPostIds = null;
+  }
+
+  /**
+   * Refresh the multipost modal body to reflect the current filter state.
+   * Called from renderMapMarkers after each new post render cycle.
+   */
+  function _refreshMultipostModal() {
+    if (!_multipostModalEl || !_multipostModalPostIds || !postListEl) return;
+
+    // Collect posts at this location in current DOM order (respects active sort + filters)
+    var allCards = Array.from(postListEl.querySelectorAll('.post-card'));
+    var orderedPosts = [];
+    allCards.forEach(function(card) {
+      var cid = card.dataset && card.dataset.id ? card.dataset.id : '';
+      if (!cid || _multipostModalPostIds.indexOf(cid) === -1) return;
+      var post = (_lastRenderedPosts || []).filter(function(p) { return String(p.id) === cid; })[0];
+      if (post) orderedPosts.push(post);
+    });
+
+    // Rebuild body
+    var body = _multipostModalEl.querySelector('.multipost-modal-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    if (orderedPosts.length) {
+      orderedPosts.forEach(function(post) {
+        var card = renderPostCard(post, { skipDefaultOpenHandlers: true });
+        var _postMapCardId = (card.dataset && card.dataset.postMapCardId) ? String(card.dataset.postMapCardId) : '';
+        card.addEventListener('click', function(e) {
+          if (e.target.closest && e.target.closest('.post-card-button-fav')) return;
+          closeMultipostModal();
+          openPostById(post.id, { fromMap: true, postMapCardId: _postMapCardId });
+        });
+        card.addEventListener('keydown', function(e) {
+          var k = String(e.key || '');
+          if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar') return;
+          if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
+          e.preventDefault();
+          closeMultipostModal();
+          openPostById(post.id, { fromMap: true, postMapCardId: _postMapCardId });
+        });
+        body.appendChild(card);
+      });
+    } else {
+      var emptyEl = document.createElement('div');
+      emptyEl.className = 'multipost-modal-empty';
+      emptyEl.textContent = 'No results match current filters.';
+      body.appendChild(emptyEl);
+    }
+
+    // Update the result count in the header
+    var countEl = _multipostModalEl.querySelector('.multipost-modal-header-count');
+    if (countEl) {
+      var filteredCount = orderedPosts.length;
+      var totalCount = _multipostModalPostIds.length;
+      countEl.textContent = filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + ' showing of ' + totalCount + ' at this location';
     }
   }
 
