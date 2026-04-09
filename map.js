@@ -2623,15 +2623,32 @@ const MapModule = (function() {
     App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: false });
   }
   
-  // Highlight/clear a native circle feature by postId (called from panel card hover).
+  // Highlight/clear a Mapbox dot by postId (called from panel card hover).
+  // Shows the small hover card pill, identical to hovering the dot directly.
   function _setNativeCircleHoverByPostId(postId, isHovering) {
     var pid = String(postId);
+
+    if (!isHovering) {
+      _clearNativeCircleHover();
+      return;
+    }
+
     if (!map || !map.getSource(NC_SOURCE)) return;
+
     Object.keys(_ncDataByKey).forEach(function(key) {
       var md = _ncDataByKey[key];
       if (String(md.id) !== pid) return;
       var featureId = Number(md.post_map_card_id) || 0;
-      try { map.setFeatureState({ source: NC_SOURCE, id: featureId }, { hovered: isHovering }); } catch (_e) {}
+      // Set GL dot glow
+      try { map.setFeatureState({ source: NC_SOURCE, id: featureId }, { hovered: true }); } catch (_e) {}
+      // Track as hovered so the promote guard passes
+      _ncHoveredId = featureId;
+      // Promote the hover card immediately (no delay — panel hover is deliberate)
+      _promoteNativeCircleHover(featureId, {
+        locationKey:  key,
+        postId:       String(md.id),
+        postMapCardId: String(md.post_map_card_id || '')
+      }, md.lng, md.lat);
     });
   }
 
