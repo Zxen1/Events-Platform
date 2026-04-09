@@ -2179,9 +2179,11 @@ const PostModule = (function() {
 
     // Live-site style: update markers in-place (diff by locationKey) to avoid flashing.
 
-    // Only render map cards within the current viewport — out-of-bounds map cards on
+    // Only render map cards within the fetch viewport — out-of-bounds map cards on
     // multi-location posts must not consume card slots or create DOM markers.
-    var _renderBounds = getMapBounds();
+    // Use _lastFetchBounds (captured at fetch time) not getMapBounds() (live viewport),
+    // because the map can drift between when posts are fetched and when markers are rendered.
+    var _renderBounds = _lastFetchBounds || getMapBounds();
 
     // First pass: collect all map cards and group by venue coordinates
     // Multi-post venues (same location, different posts) use multi_post_icon
@@ -2567,6 +2569,10 @@ const PostModule = (function() {
   // Track last viewport used for server-side post loads (prevents refetch on same bounds)
   var lastLoadedBoundsKey = '';
 
+  // Bounds captured at fetch time — used by renderMapMarkers to filter map cards consistently.
+  // Must match the bounds sent to the server, not the live viewport at render time.
+  var _lastFetchBounds = null;
+
   /**
    * Count map cards in visible map area (for filter counts)
    * @param {Array} posts - Array of posts to count
@@ -2680,6 +2686,7 @@ const PostModule = (function() {
     var threshold = getPostsMinZoom();
     if (typeof lastZoom === 'number' && lastZoom >= threshold) {
       var b = getMapBounds();
+      _lastFetchBounds = b || null;
       var boundsParam = b ? boundsToApiParam(b) : '';
       // Live-site behavior: keep current cards/markers visible while the server recalculates,
       // then swap to the new results when they arrive (avoids flashing).
