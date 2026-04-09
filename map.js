@@ -949,19 +949,29 @@ const MapModule = (function() {
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        background: var(--dot-color);
-        border: 3px solid rgba(0,0,0,0.7);
-        box-sizing: border-box;
+        background: rgba(0,0,0,0.7);
         left: 0;
         top: 0;
         z-index: 1;
         pointer-events: none;
         transform: translate(-50%, -50%) scale(1);
         opacity: 1;
-        transition: transform 0.2s ease, opacity 0.2s ease;
+        transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
       }
       .map-card-appearance--dot::after {
-        display: none;
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--dot-color);
+        left: 0;
+        top: 0;
+        z-index: 2;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        transition: transform 0.2s ease, opacity 0.2s ease;
       }
       .map-card-appearance--dot.is-hovered::before,
       .map-card-appearance--dot.is-hovered::after,
@@ -2503,7 +2513,7 @@ const MapModule = (function() {
     if (post.isMultiPost && post.locationPostCount > 1 && appearance !== 'card') {
       var _dotImg = document.createElement('img');
       _dotImg.className = 'map-card-multipost-dot';
-      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, '#1e3a8a');
+      _dotImg.src = generateMultiPostDotDataUrl(post.locationPostCount, post.subcategory_color || '#888888');
       _dotImg.width  = 30;
       _dotImg.height = 30;
       _dotImg.alt = '';
