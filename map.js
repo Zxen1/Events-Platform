@@ -400,6 +400,7 @@ const MapModule = (function() {
   // ── NATIVE CIRCLE LAYER (icon/dot overflow markers) ──────────────────────
   const NC_SOURCE              = 'native-circles-source';
   const NC_LAYER               = 'native-circles-layer';
+  const NC_LABEL_LAYER         = 'native-circles-labels';
   const NC_HOVER_DELAY_MS      = 80; // pause before promoting to DOM hover card
 
   let _ncDataByKey      = {};   // locationKey → markerData (for hover card promotion)
@@ -2425,7 +2426,10 @@ const MapModule = (function() {
 
     // Native circle layer follows the same zoom threshold as DOM markers
     if (map && map.getLayer(NC_LAYER)) {
-      map.setLayoutProperty(NC_LAYER, 'visibility', shouldShow ? 'visible' : 'none');
+      map.setLayoutProperty(NC_LAYER,       'visibility', shouldShow ? 'visible' : 'none');
+    }
+    if (map && map.getLayer(NC_LABEL_LAYER)) {
+      map.setLayoutProperty(NC_LABEL_LAYER, 'visibility', shouldShow ? 'visible' : 'none');
     }
   }
 
@@ -3172,9 +3176,10 @@ const MapModule = (function() {
   function initNativeCircleLayers() {
     if (!map) return;
 
-    // Remove stale layer/source from previous style load before re-adding
-    try { if (map.getLayer(NC_LAYER))  map.removeLayer(NC_LAYER);  } catch (_e) {}
-    try { if (map.getSource(NC_SOURCE)) map.removeSource(NC_SOURCE); } catch (_e) {}
+    // Remove stale layers/source from previous style load before re-adding
+    try { if (map.getLayer(NC_LABEL_LAYER)) map.removeLayer(NC_LABEL_LAYER); } catch (_e) {}
+    try { if (map.getLayer(NC_LAYER))       map.removeLayer(NC_LAYER);       } catch (_e) {}
+    try { if (map.getSource(NC_SOURCE))     map.removeSource(NC_SOURCE);     } catch (_e) {}
 
     map.addSource(NC_SOURCE, {
       type: 'geojson',
@@ -3200,6 +3205,27 @@ const MapModule = (function() {
       }
     });
 
+    // Symbol layer: count badge for multi-post circles (shows number when count > 1)
+    map.addLayer({
+      id:     NC_LABEL_LAYER,
+      type:   'symbol',
+      source: NC_SOURCE,
+      filter: ['>', ['get', 'count'], 1],
+      layout: {
+        'text-field':        ['to-string', ['get', 'count']],
+        'text-font':         ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size':         9,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+      },
+      paint: {
+        'text-color':       '#ffffff',
+        'text-halo-color':  'rgba(0,0,0,0.85)',
+        'text-halo-width':  1,
+        'text-emissive-strength': 1
+      }
+    });
+
     // Re-apply last known features after style reload
     if (_ncLastFeatures.length) {
       map.getSource(NC_SOURCE).setData({ type: 'FeatureCollection', features: _ncLastFeatures });
@@ -3208,7 +3234,8 @@ const MapModule = (function() {
     // Set initial visibility to match current zoom threshold
     var _initZoom = map.getZoom();
     var _initShow = _initZoom >= getMarkerZoomThreshold();
-    map.setLayoutProperty(NC_LAYER, 'visibility', _initShow ? 'visible' : 'none');
+    map.setLayoutProperty(NC_LAYER,       'visibility', _initShow ? 'visible' : 'none');
+    map.setLayoutProperty(NC_LABEL_LAYER, 'visibility', _initShow ? 'visible' : 'none');
 
     _bindNativeCircleEvents();
   }

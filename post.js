@@ -2442,8 +2442,9 @@ const PostModule = (function() {
     });
 
     // ── NATIVE CIRCLE SPLIT ───────────────────────────────────────────────
-    // Single-post icon/dot markers → native Mapbox circle layer (no DOM, GPU only).
-    // Cards and multi-post/storefront → DOM markers as before.
+    // Single-post icon/dot markers AND multi-post icon/dot markers →
+    //   native Mapbox circle layer (no DOM, GPU only).
+    // Cards and storefronts → DOM markers as before.
     //
     // ★ SWITCH: set to false to revert to DOM icon/dot markers (old behaviour).
     var USE_NATIVE_CIRCLES = true;
@@ -2455,17 +2456,18 @@ const PostModule = (function() {
       var md = nextMarkerDataByKey[locationKey];
       var isNativeCircle = USE_NATIVE_CIRCLES
                            && (md.markerAppearance === 'icon' || md.markerAppearance === 'dot')
-                           && !md.isMultiPost && !md.isStorefront;
+                           && !md.isStorefront;
       if (!isNativeCircle) return;
       _circleFeatures.push({
         type: 'Feature',
         id: Number(md.post_map_card_id) || 0, // stable numeric ID for setFeatureState
         geometry: { type: 'Point', coordinates: [md.lng, md.lat] },
         properties: {
-          locationKey:  locationKey,
-          color:        md.subcategory_color || '#888888',
-          postId:       String(md.id),
-          postMapCardId: String(md.post_map_card_id || '')
+          locationKey:   locationKey,
+          color:         md.subcategory_color || '#888888',
+          postId:        String(md.id),
+          postMapCardId: String(md.post_map_card_id || ''),
+          count:         md.isMultiPost ? (md.locationPostCount || 1) : 1
         }
       });
       _circleDataByKey[locationKey] = md;
@@ -2523,7 +2525,7 @@ const PostModule = (function() {
       // NATIVE (active when USE_NATIVE_CIRCLES = true):
       var _isNativeCircle = USE_NATIVE_CIRCLES
                             && (markerData.markerAppearance === 'icon' || markerData.markerAppearance === 'dot')
-                            && !markerData.isMultiPost && !markerData.isStorefront;
+                            && !markerData.isStorefront;
       if (!_isNativeCircle && mapModule.createMapCardMarker) {
         mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat, markerData.markerAppearance, markerData.dotColor);
       }
