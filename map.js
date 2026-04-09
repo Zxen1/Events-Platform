@@ -2603,8 +2603,12 @@ const MapModule = (function() {
     }
     
     // Icon is at center (0,0 = lat/lng), pill extends to the right
+    // Multi-post markers show dominant subcategory colour circle instead of category icon
+    const iconEl = post.isMultiPost
+      ? `<div class="map-card-icon" style="width:${iconSize}px;height:${iconSize}px;background:var(--subcat-color);border-radius:50%;"></div>`
+      : `<img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">`;
     return `
-      <img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">
+      ${iconEl}
       <div class="map-card-pill ${pillClass}" data-id="${post.id}" data-state="${state}">
         <div class="map-card-labels">
           ${labelHTML}
