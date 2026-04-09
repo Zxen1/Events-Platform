@@ -2462,13 +2462,22 @@ const PostModule = (function() {
         type: 'Feature',
         id: Number(md.post_map_card_id) || 0, // stable numeric ID for setFeatureState
         geometry: { type: 'Point', coordinates: [md.lng, md.lat] },
-        properties: {
-          locationKey:   locationKey,
-          color:         md.subcategory_color || '#888888',
-          postId:        String(md.id),
-          postMapCardId: String(md.post_map_card_id || ''),
-          count:         md.isMultiPost ? (md.locationPostCount || 1) : 1
-        }
+        properties: (function() {
+          var _col = md.subcategory_color || '#888888';
+          var _hx  = _col.replace('#', '');
+          var _dr  = Math.round(parseInt(_hx.substring(0,2), 16) * 0.45);
+          var _dg  = Math.round(parseInt(_hx.substring(2,4), 16) * 0.45);
+          var _db  = Math.round(parseInt(_hx.substring(4,6), 16) * 0.45);
+          var _dark = 'rgb(' + _dr + ',' + _dg + ',' + _db + ')';
+          return {
+            locationKey:   locationKey,
+            color:         _col,
+            darkColor:     _dark,
+            postId:        String(md.id),
+            postMapCardId: String(md.post_map_card_id || ''),
+            count:         md.isMultiPost ? (md.locationPostCount || 1) : 1
+          };
+        })()
       });
       _circleDataByKey[locationKey] = md;
     });

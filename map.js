@@ -3192,11 +3192,7 @@ const MapModule = (function() {
         'circle-radius': ['case', ['boolean', ['feature-state', 'hovered'], false], 15, 10],
         'circle-color':  ['get', 'color'],
         'circle-stroke-width': 2,
-        'circle-stroke-color': ['case',
-          ['boolean', ['feature-state', 'hovered'], false],
-          'rgba(255,255,255,0.85)',
-          'rgba(0,0,0,0.35)'
-        ],
+        'circle-stroke-color': 'rgba(0,0,0,0.5)',
         'circle-opacity': ['case', ['boolean', ['feature-state', 'hovered'], false], 1, 0.88],
         'circle-emissive-strength': 1
       }
@@ -3211,14 +3207,14 @@ const MapModule = (function() {
       layout: {
         'text-field':        ['to-string', ['get', 'count']],
         'text-font':         ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size':         ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 13],
+        'text-size':         ['interpolate', ['linear'], ['zoom'], 11, 14, 16, 18],
         'text-allow-overlap': true,
         'text-ignore-placement': true
       },
       paint: {
-        'text-color':       '#ffffff',
-        'text-halo-color':  'rgba(0,0,0,0.85)',
-        'text-halo-width':  1,
+        'text-color':             '#ffffff',
+        'text-halo-color':        ['get', 'darkColor'],
+        'text-halo-width':        1.5,
         'text-emissive-strength': 1
       }
     });
