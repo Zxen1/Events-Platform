@@ -1,6 +1,6 @@
 <?php
 /**
- * tm-import.php — tm_staging → posts
+ * tm-collate.php — tm_staging → posts
  *
  * One FunMap post per attraction (touring act / named event).
  * One map card per venue within that attraction.
